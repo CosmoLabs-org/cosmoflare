@@ -1,0 +1,91 @@
+# R2Go2 .gitignore
+
+# Binaries
+r2go2
+r2go2.exe
+*.exe
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Test files
+*.test
+coverage.out
+coverage.html
+test-*.txt
+test-*.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go specific
+*.mod.bak
+*.sum.bak
+
+# Environment and configuration files (SECURITY)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.r2go2.yaml
+.r2go2.yml
+.r2go2.json
+config/
+credentials/
+secrets/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Debug files
+debug
+debug-*
+perf
+cpu.prof
+mem.prof
+trace.out
+
+# Documentation build
+docs/build/
+docs/_build/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Local development
+.local/
+local/
+
+# Cloudflare-specific
+cloudflare-token-*
+account-id-*
+
+# Session files that might contain sensitive data
+session-*
+work-session-*
