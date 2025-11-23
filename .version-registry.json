@@ -1,0 +1,15 @@
+{
+  "repository": {
+    "version": "0.1.0",
+    "build": 0,
+    "description": "R2Go2 - A production-ready CLI tool for managing Cloudflare R2 buckets",
+    "strategy": "independent",
+    "projectType": "go",
+    "company": "CosmoLabs",
+    "github": "CosmoLabs-org"
+  },
+  "apps": {},
+  "libs": {},
+  "commands": {},
+  "agents": {}
+}
