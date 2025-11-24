@@ -23,7 +23,8 @@ BUILD_DIR=build
 DIST_DIR=dist
 
 # Cross-compilation targets
-PLATFORMS=linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64
+PLATFORMS=linux/amd64 linux/arm64 linux/armv7 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64
+PLATFORMS_MAP=linux_amd64:linux-x86_64 linux_arm64:linux-aarch64 linux_armv7:linux-armv7 windows_amd64:windows-x86_64 windows_arm64:windows-aarch64 darwin_amd64:darwin-x86_64 darwin_arm64:darwin-aarch64
 
 # Docker settings
 DOCKER_IMAGE=r2go2
@@ -62,6 +63,23 @@ build-all:
 	done
 	@echo "✅ All builds complete in $(DIST_DIR)/"
 
+# Build specific platform
+.PHONY: build-platform
+build-platform:
+	@if [ -z "$(TARGET)" ]; then \
+		echo "Usage: make build-platform TARGET=linux/amd64"; \
+		exit 1; \
+	fi
+	@echo "🏗️  Building $(BINARY_NAME) for $(TARGET)..."
+	@mkdir -p $(DIST_DIR)
+	@os=$$(echo $(TARGET) | cut -d'/' -f1); \
+	arch=$$(echo $(TARGET) | cut -d'/' -f2); \
+	output_name=$(BINARY_NAME)-$$os-$$arch; \
+	if [ $$os = "windows" ]; then output_name=$$output_name.exe; fi; \
+	echo "Building $$os/$$arch -> $$output_name"; \
+	CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$$output_name .; \
+	echo "✅ Build complete: $(DIST_DIR)/$$output_name"
+
 # Create distribution archives
 .PHONY: dist
 dist: build-all
@@ -73,12 +91,92 @@ dist: build-all
 		output_name=$(BINARY_NAME)-$$os-$$arch; \
 		if [ $$os = "windows" ]; then output_name=$$output_name.exe; fi; \
 		if [ $$os = "windows" ]; then \
-			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$output_name ../README.md ../LICENSE; \
+			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$output_name ../README.md ../LICENSE ../docs/; \
 		else \
-			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$output_name ../README.md ../LICENSE; \
+			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$output_name ../README.md ../LICENSE ../docs/; \
 		fi; \
 	done
 	@echo "✅ Distribution archives created in $(DIST_DIR)/"
+
+# Create checksums for distribution files
+.PHONY: checksums
+checksums: dist
+	@echo "🔐 Creating checksums..."
+	@cd $(DIST_DIR); \
+	for file in $(BINARY_NAME)-$(VERSION)-*.{tar.gz,zip}; do \
+		if [ -f "$$file" ]; then \
+			sha256sum "$$file" >> $(BINARY_NAME)-$(VERSION)-checksums.txt; \
+		fi; \
+	done
+	@echo "✅ Checksums created: $(DIST_DIR)/$(BINARY_NAME)-$(VERSION)-checksums.txt"
+
+# Install with Homebrew (local)
+.PHONY: install-brew
+install-brew: build
+	@echo "🍺 Installing with Homebrew..."
+	@if [ -d "$(HOME)/.brew" ] || command -v brew >/dev/null; then \
+		brew install --cask $(BUILD_DIR)/$(BINARY_NAME); \
+	else \
+		echo "❌ Homebrew not found. Please install Homebrew first."; \
+		exit 1; \
+	fi
+
+# Create DEB package
+.PHONY: deb
+deb: build
+	@echo "📦 Creating DEB package..."
+	@mkdir -p $(DIST_DIR)/deb/DEBIAN
+	@mkdir -p $(DIST_DIR)/deb/usr/local/bin
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(DIST_DIR)/deb/usr/local/bin/
+	@echo "Package: r2go2" > $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Version: $(VERSION)" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Section: utils" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Priority: optional" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Architecture: amd64" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Maintainer: CosmoLabs <support@cosmolabs.org>" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Description: Cloudflare R2 CLI management tool" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Depends: " >> $(DIST_DIR)/deb/DEBIAN/control
+	@dpkg-deb --build $(DIST_DIR)/deb $(DIST_DIR)/r2go2_$(VERSION)_amd64.deb
+	@rm -rf $(DIST_DIR)/deb
+	@echo "✅ DEB package created: $(DIST_DIR)/r2go2_$(VERSION)_amd64.deb"
+
+# Create RPM package
+.PHONY: rpm
+rpm: build
+	@echo "📦 Creating RPM package..."
+	@mkdir -p $(DIST_DIR)/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(DIST_DIR)/rpmbuild/BUILD/
+	@echo "Name: r2go2" > $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "Version: $(VERSION)" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "Release: 1%{?dist}" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "Summary: Cloudflare R2 CLI management tool" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "License: MIT" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "URL: https://github.com/CosmoLabs-org/CosmoDev-R2Go2" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "%description" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "A CLI tool for managing Cloudflare R2 storage buckets and objects." >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "%prep" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "%build" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "%install" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "mkdir -p %{buildroot}/usr/local/bin" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "install -m 755 r2go2 %{buildroot}/usr/local/bin/" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "%files" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "/usr/local/bin/r2go2" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@cd $(DIST_DIR)/rpmbuild && rpmbuild -bb SPECS/r2go2.spec --define "_topdir $(PWD)"
+	@find $(DIST_DIR)/rpmbuild/RPMS -name "*.rpm" -exec cp {} $(DIST_DIR)/ \;
+	@rm -rf $(DIST_DIR)/rpmbuild
+	@echo "✅ RPM package created in $(DIST_DIR)/"
+
+# Generate SBOM (Software Bill of Materials)
+.PHONY: sbom
+sbom:
+	@echo "📋 Generating SBOM..."
+	@if command -v syft >/dev/null 2>&1; then \
+		syft . -o cyclonedx-json > $(DIST_DIR)/sbom.cyclonedx.json; \
+		syft . -o spdx-json > $(DIST_DIR)/sbom.spdx.json; \
+		echo "✅ SBOM created in $(DIST_DIR)/"; \
+	else \
+		echo "⚠️  Syft not found. Install with: go install github.com/anchore/syft@latest"; \
+	fi
 
 # Run tests
 .PHONY: test
@@ -179,10 +277,12 @@ docker-run:
 
 # Release preparation
 .PHONY: release-prepare
-release-prepare: clean deps test build-all dist
+release-prepare: clean deps test build-all dist checksums sbom
 	@echo "🚀 Release preparation complete!"
 	@echo "📦 Distribution files:"
-	@ls -la $(DIST_DIR)/*.{tar.gz,zip} 2>/dev/null || echo "No distribution files found"
+	@ls -la $(DIST_DIR)/*.{tar.gz,zip,deb,rpm} 2>/dev/null || echo "No distribution files found"
+	@echo "🔐 Security files:"
+	@ls -la $(DIST_DIR)/*checksums* $(DIST_DIR)/sbom.* 2>/dev/null || echo "No security files found"
 
 # Version management
 .PHONY: version
@@ -254,8 +354,16 @@ help:
 	@echo ""
 	@echo "Release:"
 	@echo "  release-prepare Prepare full release with builds and dists"
+	@echo "  checksums     Create SHA256 checksums for release files"
+	@echo "  deb           Create DEB package (Ubuntu/Debian)"
+	@echo "  rpm           Create RPM package (RHEL/Fedora)"
+	@echo "  sbom          Generate Software Bill of Materials"
 	@echo "  deps          Install/update dependencies"
 	@echo "  run           Build and run the application"
+	@echo ""
+	@echo "Package Management:"
+	@echo "  build-platform Build for specific platform: TARGET=linux/amd64"
+	@echo "  install-brew  Install locally via Homebrew"
 	@echo ""
 	@echo "Other:"
 	@echo "  help          Show this help message"
