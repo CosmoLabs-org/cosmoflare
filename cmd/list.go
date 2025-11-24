@@ -29,7 +29,11 @@ Examples:
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create API client
-		client, err := api.NewClient(AccountID)
+		opts := &api.ClientOptions{
+			AccountID: AccountID,
+			APIToken:  APIToken,
+		}
+		client, err := api.NewClient(opts)
 		if err != nil {
 			printErrorAndExit(err, "Failed to create API client")
 		}

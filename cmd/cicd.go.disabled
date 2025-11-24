@@ -1,0 +1,995 @@
+/*
+Package cmd provides CI/CD integration commands for R2Go2
+
+Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+License: MIT
+*/
+
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
+)
+
+// cicdCmd represents the cicd command
+var cicdCmd = &cobra.Command{
+	Use:   "cicd",
+	Short: "CI/CD integration templates",
+	Long: `Generate CI/CD integration templates for various platforms.
+
+Supported platforms:
+- GitHub Actions
+- GitLab CI
+- Jenkins
+- Azure DevOps
+- Docker
+- n8n workflows
+
+Templates include:
+- Automated deployments
+- Testing workflows
+- Backup operations
+- Monitoring integrations
+
+Example:
+  r2go2 cicd template github --output=.github/workflows/deploy.yml
+  r2go2 cicd template docker --output=Dockerfile
+  r2go2 cicd template n8n --output=n8n-workflow.json`,
+}
+
+var (
+	cicdPlatform  string
+	cicdOutput    string
+	cicdBucket    string
+	cicdEnv       string
+	cicdWebhook   string
+	cicdTrigger   string
+	cicdSchedule  string
+	cicdNamespace string
+)
+
+// cicdTemplateCmd represents the cicd template command
+var cicdTemplateCmd = &cobra.Command{
+	Use:   "template [platform]",
+	Short: "Generate CI/CD template",
+	Long: `Generate CI/CD pipeline templates for various platforms.
+
+Platforms:
+- github: GitHub Actions workflow
+- gitlab: GitLab CI pipeline
+- jenkins: Jenkins pipeline script
+- azure: Azure DevOps pipeline
+- docker: Dockerfile and docker-compose
+- n8n: n8n automation workflow
+- terraform: Terraform provider configuration
+
+Examples:
+  r2go2 cicd template github --bucket=my-bucket --output=.github/workflows/deploy.yml
+  r2go2 cicd template docker --bucket=my-bucket --output=Dockerfile
+  r2go2 cicd template n8n --webhook=https://hooks.slack.com/...`,
+	RunE: runCICDTemplate,
+}
+
+// cicdInitCmd represents the cicd init command
+var cicdInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize CI/CD for current project",
+	Long: `Initialize CI/CD configuration for the current project.
+
+Scans current project structure and creates appropriate CI/CD templates:
+- Detects build system (npm, yarn, bun, etc.)
+- Creates deployment workflows
+- Sets up testing pipelines
+- Configures environment variables
+
+Examples:
+  r2go2 cicd init --bucket=production-assets --env=production
+  r2go2 cicd init --platform=github --bucket=static-files`,
+	RunE: runCICDInit,
+}
+
+// cicdScriptCmd represents the cicd script command
+var cicdScriptCmd = &cobra.Command{
+	Use:   "script [operation]",
+	Short: "Generate shell script",
+	Long: `Generate shell scripts for common R2 operations.
+
+Operations:
+- deploy: Deploy files to R2
+- backup: Backup R2 bucket
+- sync: Sync local and remote
+- cleanup: Clean up old files
+- validate: Validate deployment
+
+Examples:
+  r2go2 cicd script deploy --bucket=my-bucket --output=deploy.sh
+  r2go2 cicd script backup --bucket=my-bucket --output=backup.sh
+  r2go2 cicd script cleanup --bucket=my-bucket --days=30`,
+	RunE: runCICDScript,
+}
+
+func init() {
+	rootCmd.AddCommand(cicdCmd)
+
+	// Add subcommands
+	cicdCmd.AddCommand(cicdTemplateCmd)
+	cicdCmd.AddCommand(cicdInitCmd)
+	cicdCmd.AddCommand(cicdScriptCmd)
+
+	// Flags for template
+	cicdTemplateCmd.Flags().StringVar(&cicdOutput, "output", "", "Output file path")
+	cicdTemplateCmd.Flags().StringVar(&cicdBucket, "bucket", "", "R2 bucket name")
+	cicdTemplateCmd.Flags().StringVar(&cicdEnv, "env", "production", "Environment name")
+	cicdTemplateCmd.Flags().StringVar(&cicdWebhook, "webhook", "", "Webhook URL for notifications")
+	cicdTemplateCmd.Flags().StringVar(&cicdTrigger, "trigger", "push", "Trigger event")
+	cicdTemplateCmd.Flags().StringVar(&cicdSchedule, "schedule", "", "Cron schedule for periodic jobs")
+	cicdTemplateCmd.Flags().StringVar(&cicdNamespace, "namespace", "default", "Kubernetes namespace (for k8s templates)")
+
+	// Flags for init
+	cicdInitCmd.Flags().StringVar(&cicdPlatform, "platform", "github", "CI/CD platform")
+	cicdInitCmd.Flags().StringVar(&cicdBucket, "bucket", "", "R2 bucket name")
+	cicdInitCmd.Flags().StringVar(&cicdEnv, "env", "production", "Environment name")
+
+	// Flags for script
+	cicdScriptCmd.Flags().StringVar(&cicdOutput, "output", "", "Output script path")
+	cicdScriptCmd.Flags().StringVar(&cicdBucket, "bucket", "", "R2 bucket name")
+}
+
+func runCICDTemplate(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("platform is required")
+	}
+	platform := args[0]
+
+	output, _ := cmd.Flags().GetString("output")
+	bucket, _ := cmd.Flags().GetString("bucket")
+	env, _ := cmd.Flags().GetString("env")
+	webhook, _ := cmd.Flags().GetString("webhook")
+	trigger, _ := cmd.Flags().GetString("trigger")
+	schedule, _ := cmd.Flags().GetString("schedule")
+
+	printInfo("🚀 Generating CI/CD template")
+	printInfo("Platform: %s", platform)
+	if bucket != "" {
+		printInfo("Bucket: %s", bucket)
+	}
+	printInfo("Environment: %s", env)
+
+	// Generate template based on platform
+	var template string
+	var defaultOutput string
+
+	switch platform {
+	case "github":
+		template = generateGitHubActionsTemplate(bucket, env, trigger, schedule)
+		defaultOutput = ".github/workflows/deploy.yml"
+	case "gitlab":
+		template = generateGitLabCITemplate(bucket, env, trigger)
+		defaultOutput = ".gitlab-ci.yml"
+	case "jenkins":
+		template = generateJenkinsTemplate(bucket, env)
+		defaultOutput = "Jenkinsfile"
+	case "azure":
+		template = generateAzureDevOpsTemplate(bucket, env)
+		defaultOutput = "azure-pipelines.yml"
+	case "docker":
+		template = generateDockerTemplate(bucket, env)
+		defaultOutput = "Dockerfile"
+	case "n8n":
+		template = generateN8nTemplate(bucket, webhook)
+		defaultOutput = "n8n-workflow.json"
+	case "terraform":
+		template = generateTerraformTemplate(bucket)
+		defaultOutput = "main.tf"
+	default:
+		return fmt.Errorf("unsupported platform: %s", platform)
+	}
+
+	// Determine output path
+	if output == "" {
+		output = defaultOutput
+	}
+
+	// Create output directory if needed
+	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Write template
+	if err := os.WriteFile(output, []byte(template), 0644); err != nil {
+		return fmt.Errorf("failed to write template: %w", err)
+	}
+
+	printSuccess("✅ Template generated: %s", output)
+	printInfo("Customize the template for your specific needs")
+
+	return nil
+}
+
+func runCICDInit(cmd *cobra.Command, args []string) error {
+	platform, _ := cmd.Flags().GetString("platform")
+	bucket, _ := cmd.Flags().GetString("bucket")
+	env, _ := cmd.Flags().GetString("env")
+
+	printInfo("🔧 Initializing CI/CD for current project")
+	printInfo("Platform: %s", platform)
+	printInfo("Bucket: %s", bucket)
+
+	// Analyze current project
+	projectInfo, err := analyzeProject()
+	if err != nil {
+		return fmt.Errorf("failed to analyze project: %w", err)
+	}
+
+	printInfo("Project type: %s", projectInfo.Type)
+	printInfo("Build tool: %s", projectInfo.BuildTool)
+
+	// Generate appropriate templates
+	templates := generateProjectTemplates(platform, projectInfo, bucket, env)
+
+	// Write templates
+	for filename, content := range templates {
+		if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+			return fmt.Errorf("failed to create directory for %s: %w", filename, err)
+		}
+
+		if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to write %s: %w", filename, err)
+		}
+
+		printInfo("Created: %s", filename)
+	}
+
+	printSuccess("✅ CI/CD initialization complete!")
+	printInfo("Review and customize the generated files")
+
+	return nil
+}
+
+func runCICDScript(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("operation is required")
+	}
+	operation := args[0]
+
+	output, _ := cmd.Flags().GetString("output")
+	bucket, _ := cmd.Flags().GetString("bucket")
+
+	printInfo("📜 Generating shell script")
+	printInfo("Operation: %s", operation)
+
+	// Generate script based on operation
+	var script string
+	var defaultOutput string
+
+	switch operation {
+	case "deploy":
+		script = generateDeployScript(bucket)
+		defaultOutput = "deploy.sh"
+	case "backup":
+		script = generateBackupScript(bucket)
+		defaultOutput = "backup.sh"
+	case "sync":
+		script = generateSyncScript(bucket)
+		defaultOutput = "sync.sh"
+	case "cleanup":
+		script = generateCleanupScript(bucket)
+		defaultOutput = "cleanup.sh"
+	case "validate":
+		script = generateValidateScript(bucket)
+		defaultOutput = "validate.sh"
+	default:
+		return fmt.Errorf("unsupported operation: %s", operation)
+	}
+
+	// Determine output path
+	if output == "" {
+		output = defaultOutput
+	}
+
+	// Write script with executable permissions
+	if err := os.WriteFile(output, []byte(script), 0755); err != nil {
+		return fmt.Errorf("failed to write script: %w", err)
+	}
+
+	printSuccess("✅ Script generated: %s", output)
+	printInfo("Make it executable: chmod +x %s", output)
+
+	return nil
+}
+
+// Template generators
+
+func generateGitHubActionsTemplate(bucket, env, trigger, schedule string) string {
+	template := `name: Deploy to R2
+
+on:
+  ` + trigger + `:
+    branches: [ main, master ]`
+
+	if schedule != "" {
+		template += `
+  schedule:
+    - cron: "` + schedule + `"`
+	}
+
+	template += `
+
+env:
+  R2_BUCKET: ` + bucket + `
+  NODE_ENV: ` + env + `
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+
+    - name: Install R2Go2
+      run: |
+        curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+        chmod +x r2go2
+
+    - name: Deploy to R2
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      run: |
+        ./r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
+        ./r2go2 domain purge ${{ secrets.R2_DOMAIN }} --everything
+
+    - name: Invalidate CDN
+      if: env.R2_DOMAIN != ''
+      run: |
+        curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          --data '{"purge_everything":true}'
+`
+
+	return template
+}
+
+func generateGitLabCITemplate(bucket, env, trigger string) string {
+	template := `stages:
+  - build
+  - deploy
+
+variables:
+  R2_BUCKET: ` + bucket + `
+  NODE_ENV: ` + env + `
+
+build:
+  stage: build
+  image: node:20-alpine
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build
+  before_script:
+    - apk add --no-cache curl
+    - curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    - chmod +x r2go2
+  script:
+    - ./r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
+    - echo "Deployment completed successfully"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+`
+
+	return template
+}
+
+func generateJenkinsTemplate(bucket, env string) string {
+	template := `pipeline {
+    agent any
+
+    environment {
+        R2_BUCKET = '` + bucket + `'
+        NODE_ENV = '` + env + `'
+        CLOUDFLARE_API_TOKEN = credentials('cloudflare-api-token')
+        CLOUDFLARE_ACCOUNT_ID = credentials('cloudflare-account-id')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm ci'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+                    chmod +x r2go2
+                    ./r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment completed successfully!'
+        }
+        failure {
+            echo 'Deployment failed!'
+        }
+    }
+}
+`
+
+	return template
+}
+
+func generateDockerTemplate(bucket, env string) string {
+	template := `# Multi-stage Dockerfile for R2 deployment
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Final stage
+FROM alpine:latest
+
+# Install R2Go2
+RUN apk add --no-cache curl && \
+    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o /usr/local/bin/r2go2 && \
+    chmod +x /usr/local/bin/r2go2
+
+WORKDIR /app
+
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Set environment
+ENV R2_BUCKET=` + bucket + `
+ENV NODE_ENV=` + env + `
+
+# Create deploy script
+RUN echo '#!/bin/sh' > /deploy.sh && \
+    echo 'echo "Deploying to R2..."' >> /deploy.sh && \
+    echo 'r2go2 object put $R2_BUCKET ./dist/ --recursive --progress' >> /deploy.sh && \
+    echo 'echo "Deployment completed!"' >> /deploy.sh && \
+    chmod +x /deploy.sh
+
+# Default command
+CMD ["/deploy.sh"]
+`
+
+	return template
+}
+
+func generateN8nTemplate(bucket, webhook string) string {
+	template := `{
+  "name": "R2 Deployment Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "r2-deploy",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "command": "r2go2 object put ` + bucket + ` ./data/ --recursive --progress",
+        "options": {}
+      },
+      "name": "Deploy to R2",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "` + webhook + `",
+        "options": {}
+      },
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "Deploy to R2", "type": "main", "index": 0}]]
+    },
+    "Deploy to R2": {
+      "main": [[{"node": "Send Notification", "type": "main", "index": 0}]]
+    }
+  }
+}
+`
+
+	return template
+}
+
+func generateTerraformTemplate(bucket string) string {
+	template = `terraform {
+  required_providers {
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
+provider "aws" {
+  region = "auto"
+
+  skip_credentials_validation = true
+  skip_metadata_api_check = true
+
+  endpoints {
+    s3 = "https://${var.cloudflare_account_id}.r2.cloudflarestorage.com"
+  }
+
+  access_key = var.r2_access_key
+  secret_key = var.r2_secret_key
+}
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID"
+  type        = string
+}
+
+variable "r2_access_key" {
+  description = "R2 access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "r2_secret_key" {
+  description = "R2 secret key"
+  type        = string
+  sensitive   = true
+}
+
+resource "cloudflare_r2_bucket" "` + bucket + `" {
+  account_id = var.cloudflare_account_id
+  name       = "` + bucket + `"
+}
+
+resource "aws_s3_object" "example" {
+  bucket = cloudflare_r2_bucket.` + bucket + `.name
+  key    = "example.txt"
+  source = "example.txt"
+
+  depends_on = [cloudflare_r2_bucket.` + bucket + `]
+}
+`
+
+	return template
+}
+
+func generateAzureDevOpsTemplate(bucket, env string) string {
+	template := `trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  R2_BUCKET: ` + bucket + `
+  NODE_ENV: ` + env + `
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm ci
+  displayName: 'Install dependencies'
+
+- script: |
+    npm run build
+  displayName: 'Build project'
+
+- script: |
+    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    chmod +x r2go2
+  displayName: 'Install R2Go2'
+
+- script: |
+    ./r2go2 object put $(R2_BUCKET) ./dist/ --recursive --progress
+  env:
+    CLOUDFLARE_API_TOKEN: $(CLOUDFLARE_API_TOKEN)
+    CLOUDFLARE_ACCOUNT_ID: $(CLOUDFLARE_ACCOUNT_ID)
+  displayName: 'Deploy to R2'
+`
+
+	return template
+}
+
+func generateDeployScript(bucket string) string {
+	script := `#!/bin/bash
+
+# Deploy script for R2 bucket: ` + bucket + `
+
+set -e
+
+echo "🚀 Starting deployment to R2..."
+
+# Check if R2Go2 is installed
+if ! command -v r2go2 &> /dev/null; then
+    echo "❌ R2Go2 not found. Installing..."
+    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    chmod +x r2go2
+    sudo mv r2go2 /usr/local/bin/
+fi
+
+# Check environment variables
+if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+    echo "❌ CLOUDFLARE_API_TOKEN environment variable is required"
+    exit 1
+fi
+
+if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+    echo "❌ CLOUDFLARE_ACCOUNT_ID environment variable is required"
+    exit 1
+fi
+
+# Build project (optional)
+if [ -f "package.json" ]; then
+    echo "📦 Building project..."
+    npm ci
+    npm run build
+fi
+
+# Deploy to R2
+echo "📤 Deploying to R2 bucket: ` + bucket + `"
+r2go2 object put ` + bucket + ` ./dist/ --recursive --progress
+
+# Clear CDN cache if domain is set
+if [ ! -z "$R2_DOMAIN" ]; then
+    echo "🧹 Clearing CDN cache..."
+    r2go2 domain purge $R2_DOMAIN --everything
+fi
+
+echo "✅ Deployment completed successfully!"
+`
+
+	return script
+}
+
+func generateBackupScript(bucket string) string {
+	script := `#!/bin/bash
+
+# Backup script for R2 bucket: ` + bucket + `
+
+set -e
+
+BACKUP_DIR="backups/$(date +%Y%m%d_%H%M%S)"
+BUCKET="` + bucket + `"
+
+echo "💾 Starting backup of bucket: $BUCKET"
+echo "📁 Backup directory: $BACKUP_DIR"
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Check if R2Go2 is installed
+if ! command -v r2go2 &> /dev/null; then
+    echo "❌ R2Go2 not found. Please install it first."
+    exit 1
+fi
+
+# Check environment variables
+if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+    echo "❌ Cloudflare credentials not set"
+    exit 1
+fi
+
+# Create bucket backup
+echo "📦 Creating backup..."
+r2go2 migrate backup $BUCKET --to-local="$BACKUP_DIR" --include-versions
+
+# Compress backup
+echo "🗜️ Compressing backup..."
+tar -czf "${BACKUP_DIR}.tar.gz" -C "$(dirname "$BACKUP_DIR" )" "$(basename "$BACKUP_DIR" )"
+
+# Remove uncompressed backup
+rm -rf "$BACKUP_DIR"
+
+echo "✅ Backup completed: ${BACKUP_DIR}.tar.gz"
+`
+
+	return script
+}
+
+func generateSyncScript(bucket string) string {
+	script := `#!/bin/bash
+
+# Sync script for R2 bucket: ` + bucket + `
+
+set -e
+
+LOCAL_DIR="./dist"
+BUCKET="` + bucket + `"
+
+echo "🔄 Syncing directory to R2..."
+
+# Check if R2Go2 is installed
+if ! command -v r2go2 &> /dev/null; then
+    echo "❌ R2Go2 not found. Installing..."
+    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    chmod +x r2go2
+    sudo mv r2go2 /usr/local/bin/
+fi
+
+# Sync with R2
+r2go2 migrate sync $LOCAL_DIR r2://$BUCKET --delete-extras --verify
+
+echo "✅ Sync completed successfully!"
+`
+
+	return script
+}
+
+func generateCleanupScript(bucket string) string {
+	script := `#!/bin/bash
+
+# Cleanup script for R2 bucket: ` + bucket + `
+
+set -e
+
+BUCKET="` + bucket + `"
+DEFAULT_DAYS=30
+
+# Parse command line arguments
+DAYS=${1:-$DEFAULT_DAYS}
+
+echo "🧹 Cleaning up objects older than $DAYS days in bucket: $BUCKET"
+
+# Check if R2Go2 is installed
+if ! command -v r2go2 &> /dev/null; then
+    echo "❌ R2Go2 not found. Please install it first."
+    exit 1
+fi
+
+# List and delete old objects
+CUTOFF_DATE=$(date -d "$DAYS days ago" --iso-8601)
+
+echo "📋 Objects modified before: $CUTOFF_DATE"
+
+# This would need to be implemented in the R2Go2 CLI
+# For now, show what would be deleted
+r2go2 object ls $BUCKET --json | jq -r '.[] | select(.last_modified < "'$CUTOFF_DATE'") | .key' > /tmp/objects_to_delete
+
+if [ -s /tmp/objects_to_delete ]; then
+    echo "🗑️ Objects to delete:"
+    cat /tmp/objects_to_delete
+
+    # Uncomment the following line to actually delete
+    # r2go2 object batch delete $BUCKET --manifest /tmp/objects_to_delete
+
+    echo "ℹ️ Dry run completed. Use actual deletion with batch command."
+else
+    echo "✅ No objects to delete"
+fi
+
+rm -f /tmp/objects_to_delete
+
+echo "🧹 Cleanup completed!"
+`
+
+	return script
+}
+
+func generateValidateScript(bucket string) string {
+	script := `#!/bin/bash
+
+# Validation script for R2 bucket: ` + bucket + `
+
+set -e
+
+BUCKET="` + bucket + `"
+
+echo "✅ Validating R2 deployment..."
+
+# Check if R2Go2 is installed
+if ! command -v r2go2 &> /dev/null; then
+    echo "❌ R2Go2 not found. Please install it first."
+    exit 1
+fi
+
+# Check bucket exists
+echo "🪣 Checking bucket exists..."
+r2go2 bucket exists $BUCKET
+if [ $? -eq 0 ]; then
+    echo "✅ Bucket exists"
+else
+    echo "❌ Bucket does not exist"
+    exit 1
+fi
+
+# List objects
+echo "📋 Listing objects..."
+OBJECT_COUNT=$(r2go2 object ls $BUCKET --json | jq length)
+echo "✅ Found $OBJECT_COUNT objects"
+
+# Check if key files exist (customize as needed)
+KEY_FILES=("index.html" "main.css" "main.js")
+
+for file in "${KEY_FILES[@]}"; do
+    echo "🔍 Checking for $file..."
+    r2go2 object head $BUCKET $file > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "✅ $file exists"
+    else
+        echo "⚠️ $file not found (may be optional)"
+    fi
+done
+
+echo "✅ Validation completed!"
+`
+
+	return script
+}
+
+// Project analysis
+
+type ProjectInfo struct {
+	Type     string
+	BuildTool string
+	Files    []string
+}
+
+func analyzeProject() (*ProjectInfo, error) {
+	info := &ProjectInfo{}
+
+	// Detect project type
+	if _, err := os.Stat("package.json"); err == nil {
+		info.Type = "node"
+		// Detect build tool
+		if _, err := os.Stat("yarn.lock"); err == nil {
+			info.BuildTool = "yarn"
+		} else if _, err := os.Stat("pnpm-lock.yaml"); err == nil {
+			info.BuildTool = "pnpm"
+		} else if _, err := os.Stat("bun.lockb"); err == nil {
+			info.BuildTool = "bun"
+		} else {
+			info.BuildTool = "npm"
+		}
+	} else if _, err := os.Stat("Cargo.toml"); err == nil {
+		info.Type = "rust"
+		info.BuildTool = "cargo"
+	} else if _, err := os.Stat("go.mod"); err == nil {
+		info.Type = "go"
+		info.BuildTool = "go"
+	} else {
+		info.Type = "static"
+		info.BuildTool = "none"
+	}
+
+	// List key files
+	files, _ := filepath.Glob("*")
+	info.Files = files
+
+	return info, nil
+}
+
+func generateProjectTemplates(platform string, info *ProjectInfo, bucket, env string) map[string]string {
+	templates := make(map[string]string)
+
+	switch platform {
+	case "github":
+		templates[".github/workflows/deploy.yml"] = generateGitHubActionsTemplate(bucket, env, "push", "")
+		if info.Type == "node" {
+			templates[".github/workflows/test.yml"] = generateNodeTestWorkflow()
+		}
+	case "gitlab":
+		templates[".gitlab-ci.yml"] = generateGitLabCITemplate(bucket, env, "push")
+	}
+
+	// Add common scripts
+	templates["deploy.sh"] = generateDeployScript(bucket)
+	templates["backup.sh"] = generateBackupScript(bucket)
+
+	return templates
+}
+
+func generateNodeTestWorkflow() string {
+	return `name: Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - run: npm ci
+    - run: npm test
+      env:
+        CI: true
+`
+}

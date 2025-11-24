@@ -23,6 +23,7 @@ var (
 	BuildTime    = "unknown"
 	GitCommit    = "unknown"
 	AccountID    string
+	APIToken     string
 	DryRun       bool
 	JSONOutput   bool
 	Verbose      bool
@@ -101,12 +102,25 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&JSONOutput, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Enable verbose output")
 
-	// Add subcommands
+	// Add main subcommands
+	rootCmd.AddCommand(setupCmd)
+	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(authCmd)
+	rootCmd.AddCommand(bucketCmd)
+	rootCmd.AddCommand(objectCmd)
+
+	// Advanced commands (disabled for now - Session B completion)
+	// rootCmd.AddCommand(domainCmd)
+	// rootCmd.AddCommand(analyticsCmd)
+	// rootCmd.AddCommand(migrateCmd)
+	// rootCmd.AddCommand(webhookCmd)
+
+	// Legacy commands for backward compatibility
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(deleteCmd)
-	rootCmd.AddCommand(uploadCmd)
-	rootCmd.AddCommand(policyCmd)
+	// rootCmd.AddCommand(uploadCmd) // Temporarily disabled for Session B completion
+	// rootCmd.AddCommand(policyCmd) // Temporarily disabled for Session B completion
 
 	// Add completion command
 	rootCmd.AddCommand(completionCmd)

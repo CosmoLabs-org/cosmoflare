@@ -39,7 +39,11 @@ Examples:
 		bucketName := args[0]
 
 		// Create API client
-		client, err := api.NewClient(AccountID)
+		opts := &api.ClientOptions{
+			AccountID: AccountID,
+			APIToken:  APIToken,
+		}
+		client, err := api.NewClient(opts)
 		if err != nil {
 			printErrorAndExit(err, "Failed to create API client")
 		}
