@@ -11,7 +11,7 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Binary info
-BINARY_NAME=r2go2
+BINARY_NAME=R2Go2
 BINARY_UNIX=$(BINARY_NAME)_unix
 VERSION=$(shell cat VERSION)
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
