@@ -19,28 +19,126 @@
 
 ## Overview
 
-R2Go2 is a powerful, user-friendly command-line interface (CLI) tool designed to simplify Cloudflare R2 bucket management. Built with Go 1.21+ and Cobra, R2Go2 provides intuitive commands for creating, listing, deleting, uploading files to, and managing lifecycle policies for R2 buckets.
+R2Go2 is a **revolutionary dual-use CLI tool** that serves both as a **beautiful interactive interface** for human users and a **powerful JSON API backend** for GUI applications. Built with Go 1.21+, it provides comprehensive Cloudflare R2 management with an exceptional user experience and seamless programmatic integration.
+
+## 🎯 Vision
+
+**R2Go2** is designed to be the **foundational CLI component** of a comprehensive Cloudflare management ecosystem. While it provides a beautiful TUI for human interaction, its true power lies in being a **programmable, JSON-based tool** that can drive sophisticated GUI applications for managing Pages, Workers, and other Cloudflare services.
+
+### 🎮 Interactive TUI Mode
+- **Beautiful Visual Interface**: Keyboard navigation, real-time dashboards
+- **Professional UX**: Matches enterprise tools like GitHub CLI
+- **Interactive Wizards**: Guided setup with smart defaults
+- **Real-time Monitoring**: Live progress indicators and statistics
+
+### 🔌 Programmatic API Mode
+- **JSON Output**: Every command supports `--json` flag for structured data
+- **Consistent Format**: Standardized response structure across all operations
+- **Error Handling**: Machine-readable error codes with recovery actions
+- **Streaming Support**: Real-time updates for GUI applications
 
 ## Features
 
-- **🪣 Bucket Management**: Create, list, and delete R2 buckets
-- **📤 File Uploads**: Upload files to buckets with custom object keys
-- **🔄 Lifecycle Policies**: Set automatic object deletion policies
-- **🔍 JSON Output**: Script-friendly output format for automation
-- **🔒 Secure Authentication**: Uses Cloudflare API tokens
-- **✨ Dry Run Mode**: Preview actions without execution
-- **📊 Universal Versioning**: Built with CosmoLabs' universal versioning system
+### 🔐 Authentication & Configuration
+- **Interactive Setup Wizard**: Beautiful guided configuration with password masking
+- **Multi-Profile Support**: Manage multiple Cloudflare accounts and environments
+- **Secure Credential Storage**: Encrypted config file with masked output
+- **Auto-Detection**: Smart account info extraction from API tokens
+- **Environment Variable Support**: Seamless CI/CD integration
 
-## Installation
+### 🎨 Beautiful Interactive Experience
+- **Rich Visual Progress**: Animated spinners, progress bars, and status indicators
+- **Smart Error Handling**: Contextual troubleshooting steps and recovery guidance
+- **Cross-Platform**: Works beautifully on macOS, Linux, and Windows
+- **Accessibility Support**: Screen reader friendly with high contrast options
 
-### Prerequisites
+### 🔧 Core Bucket Management
+- **Full R2 Operations**: Create, list, delete, upload, download objects
+- **Lifecycle Policies**: Automated object deletion rules
+- **Analytics & Monitoring**: Real-time usage statistics and performance metrics
+- **Batch Operations**: Efficient handling of multiple files and operations
+- **Interactive Setup**: Guided configuration for new users
 
-- Go 1.21 or higher
-- Cloudflare API token with R2 permissions
-- Cloudflare Account ID
+### 🪣 Bucket Management
+- **Complete CRUD Operations**: Create, read, update, delete buckets
+- **Metadata Management**: Tags, descriptions, and custom properties
+- **Import/Export**: Bulk operations from YAML/JSON specifications
+- **Existence Checks**: Fast boolean checks for automation
+- **Detailed Information**: Size, object count, location data
 
-### Build from Source
+### 📁 Object Management
+- **Advanced Operations**: Upload, download, copy, delete, search
+- **Batch Processing**: Multiple files with progress bars
+- **Metadata Support**: Custom headers, content types, cache control
+- **Range Downloads**: Partial content support
+- **Search & Filter**: Prefix, regex, glob pattern matching
+- **Multipart Uploads**: Efficient large file handling
 
+### 🌐 Custom Domains & CDN
+- **Domain Management**: Attach, verify, detach custom domains
+- **CDN Configuration**: Cache rules, SSL settings, WAF integration
+- **Cache Purging**: Selective or complete cache invalidation
+- **Edge Analytics**: CDN performance metrics
+- **SSL Automation**: Automatic certificate provisioning
+
+### 📊 Analytics & Monitoring
+- **Usage Analytics**: Storage, operations, bandwidth metrics
+- **Cost Estimation**: Project monthly costs based on usage
+- **Health Monitoring**: Connectivity, performance, availability checks
+- **Alert Management**: Threshold-based notifications
+- **Export Capabilities**: CSV, JSON, PDF report generation
+
+### 🔄 Bulk Operations & Migration
+- **S3 Migration**: Complete AWS S3 to R2 migration tools
+- **Sync Operations**: Two-way bucket synchronization
+- **Backup & Restore**: Complete and incremental backups
+- **Resume Capability**: Interrupted operation recovery
+- **Parallel Processing**: Configurable concurrency for speed
+
+### 🚀 CI/CD Integration
+- **Template Generation**: GitHub Actions, GitLab CI, Jenkins, Azure DevOps
+- **Docker Integration**: Containerized deployment workflows
+- **n8n Automation**: Visual workflow integration
+- **Terraform Support**: Infrastructure as code templates
+- **Shell Scripts**: Ready-to-use deployment scripts
+
+### 🛠️ Developer Experience
+- **JSON Output**: Machine-readable for automation
+- **Dry Run Mode**: Safe operation preview
+- **Progress Indicators**: Visual feedback for long operations
+- **Shell Completion**: Tab completion support
+- **Verbose Logging**: Detailed debugging information
+
+## 🚀 Installation
+
+### ⚡ Quick Install (Recommended)
+
+**macOS & Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/CosmoLabs-org/CosmoDev-R2Go2/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CosmoLabs-org/CosmoDev-R2Go2/main/install.ps1" -UseBasicParsing | Invoke-Expression
+```
+
+That's it! The installer will:
+- ✅ Download the correct binary for your system
+- ✅ Install it to your PATH automatically
+- ✅ Handle all dependencies
+- ✅ Show you exactly what to do next
+
+### 📚 Getting Started Guide
+
+**New to R2Go2?** 🎉 Start with our comprehensive [Getting Started Guide](GETTING_STARTED.md) - it will have you up and running in 5 minutes!
+
+### 🔄 Alternative Installation Methods
+
+#### Pre-built Binaries
+Download the appropriate binary for your platform from our [Releases](https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases) page.
+
+#### Build from Source
 ```bash
 # Clone the repository
 git clone https://github.com/CosmoLabs-org/CosmoDev-R2Go2.git
@@ -56,9 +154,42 @@ make build
 make build-all
 ```
 
-### Binary Installation
+### 📋 Prerequisites
 
-Download the appropriate binary for your platform from the [Releases](https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases) page.
+- Cloudflare API token with R2 permissions
+- Cloudflare Account ID
+
+**Don't have these yet?** Our [Getting Started Guide](GETTING_STARTED.md) shows you exactly how to get them!
+
+## 🎯 Quick Start
+
+Ready to dive in? Here's the fastest path to success:
+
+### 1. Set Up Your Account (2 minutes)
+```bash
+r2go2 setup
+```
+This beautiful wizard will securely guide you through API token setup and account validation.
+
+### 2. Launch the Dashboard (instant)
+```bash
+r2go2 dashboard
+```
+Welcome to your professional R2 management interface! 🎉
+
+### 3. Try Basic Operations
+```bash
+# List your buckets
+r2go2 list
+
+# Create a new bucket
+r2go2 create my-test-bucket
+
+# Upload a file
+r2go2 upload my-test-bucket ./my-file.txt
+```
+
+**Want more guidance?** Our [Getting Started Guide](GETTING_STARTED.md) has detailed walkthroughs, troubleshooting, and pro tips!
 
 ## Configuration
 
@@ -82,68 +213,201 @@ Your Cloudflare API token needs the following permissions:
 
 ## Usage
 
-### Basic Commands
+### 🚀 Quick Start
 
-#### List All Buckets
+#### 1. Interactive Setup (Recommended)
 
 ```bash
-# Simple list output
-r2go2 list
-
-# JSON output for scripting
-r2go2 list --json
-
-# With specific account
-r2go2 list --account-id="your-account-id"
+# Run the beautiful interactive setup wizard
+r2go2 setup
 ```
 
-#### Create a New Bucket
+The setup wizard provides:
+- 🎨 **Beautiful visual interface** with step-by-step guidance
+- 🔐 **Secure password masking** for API token input
+- 🏢 **Smart auto-detection** of account information
+- ✅ **Real-time validation** with your Cloudflare account
+- 🎯 **Professional onboarding** with next steps
+
+#### 2. Programmatic Usage (for GUI Integration)
 
 ```bash
-# Create a bucket
-r2go2 create my-awesome-bucket
+# JSON output for applications
+r2go2 buckets list --json
 
-# Dry run (shows what would happen)
-r2go2 create my-awesome-bucket --dry-run
+# Real-time streaming for dashboards
+r2go2 monitor my-bucket --stream --json
+
+# Background operations
+r2go2 upload ./file.txt my-bucket --json
 ```
 
-#### Delete a Bucket
+#### 3. Traditional Configuration
 
 ```bash
-# Delete a bucket (requires confirmation)
-r2go2 delete my-awesome-bucket
+# Manual environment variable setup
+export CLOUDFLARE_API_TOKEN="your_api_token_here"
+export CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
 
-# Force delete without confirmation
-r2go2 delete my-awesome-bucket --confirm
-
-# Dry run
-r2go2 delete my-awesome-bucket --dry-run
+# Verify configuration
+r2go2 config validate
 ```
 
-#### Upload Files
+#### 2. Bucket Operations
 
 ```bash
-# Upload a file with specific object key
-r2go2 upload my-bucket ./local-file.txt --key="remote-file.txt"
+# List all buckets
+r2go2 bucket list
 
-# Upload with dry run
-r2go2 upload my-bucket ./local-file.txt --key="remote-file.txt" --dry-run
+# Create a new bucket
+r2go2 bucket create my-awesome-bucket
 
-# JSON output
-r2go2 upload my-bucket ./local-file.txt --key="remote-file.txt" --json
+# Get bucket details
+r2go2 bucket get my-awesome-bucket
+
+# Delete a bucket
+r2go2 bucket delete my-awesome-bucket
 ```
 
-#### Manage Lifecycle Policies
+#### 3. Object Management
 
 ```bash
-# Set policy to delete objects after 30 days
-r2go2 policy my-bucket set --days=30
+# Upload files
+r2go2 object put my-bucket ./local-file.txt --key="remote/file.txt"
 
-# Set policy to delete objects after 1 year
-r2go2 policy my-bucket set --days=365
+# List objects
+r2go2 object ls my-bucket
 
-# Dry run
-r2go2 policy my-bucket set --days=30 --dry-run
+# Download objects
+r2go2 object get my-bucket remote/file.txt --output=local-file.txt
+
+# Search objects
+r2go2 object search my-bucket "*.jpg"
+```
+
+### Advanced Workflows
+
+#### Custom Domain Setup
+
+```bash
+# Attach custom domain
+r2go2 domain attach my-bucket --domain=cdn.example.com
+
+# Verify domain configuration
+r2go2 domain verify cdn.example.com
+
+# Purge CDN cache
+r2go2 domain purge cdn.example.com --path=/images/*
+```
+
+#### S3 to R2 Migration
+
+```bash
+# Migrate entire S3 bucket
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket
+
+# With filtering and concurrency
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket \
+  --filter="images/*" --concurrency=20
+
+# Resume interrupted migration
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --resume
+```
+
+#### Backup & Restore
+
+```bash
+# Create backup
+r2go2 migrate backup my-bucket --to-local=/backup/ --compress
+
+# Restore from backup
+r2go2 migrate restore /backup/my-bucket.tar.gz to my-bucket
+
+# Incremental backup
+r2go2 migrate backup my-bucket --to-local=/backup/ --incremental
+```
+
+#### Analytics & Monitoring
+
+```bash
+# Query usage analytics
+r2go2 analytics query my-bucket --start=2025-01-01 --end=2025-01-31
+
+# Export report
+r2go2 analytics export my-bucket --output=report.csv --type=detailed
+
+# Health check
+r2go2 analytics health check
+
+# Cost estimation
+r2go2 analytics cost estimate my-bucket --objects=1000 --size=10GB
+```
+
+#### CI/CD Integration
+
+```bash
+# Generate GitHub Actions workflow
+r2go2 cicd template github --bucket=my-bucket --output=.github/workflows/deploy.yml
+
+# Initialize CI/CD for current project
+r2go2 cicd init --platform=github --bucket=production-assets
+
+# Generate deployment script
+r2go2 cicd script deploy --bucket=my-bucket --output=deploy.sh
+```
+
+### Command Reference
+
+#### Authentication Commands
+```bash
+r2go2 auth login                    # Interactive authentication
+r2go2 auth status                   # Show current auth status
+r2go2 auth rotate                   # Rotate API tokens
+r2go2 auth logout                   # Clear credentials
+```
+
+#### Configuration Commands
+```bash
+r2go2 config init                   # Initialize configuration
+r2go2 config list                   # List all profiles
+r2go2 config show [profile]         # Show profile details
+r2go2 config set [profile]          # Create/update profile
+r2go2 config switch [profile]       # Switch active profile
+r2go2 config export [profile]       # Export as env vars
+```
+
+#### Bucket Commands
+```bash
+r2go2 bucket create [name]          # Create bucket
+r2go2 bucket ls                     # List buckets
+r2go2 bucket get [name]             # Get bucket details
+r2go2 bucket update [name]          # Update metadata
+r2go2 bucket delete [name]          # Delete bucket
+r2go2 bucket exists [name]          # Check if exists
+r2go2 bucket import [spec]          # Bulk create from spec
+```
+
+#### Object Commands
+```bash
+r2go2 object ls [bucket]            # List objects
+r2go2 object get [bucket] [key]     # Download object
+r2go2 object put [bucket] [path]    # Upload object
+r2go2 object delete [bucket] [key]  # Delete object
+r2go2 object copy [src] [dst]       # Copy object
+r2go2 object head [bucket] [key]    # Get metadata
+r2go2 object search [bucket] [q]    # Search objects
+r2go2 object batch [bucket] [spec]  # Batch operations
+```
+
+### Global Flags
+
+All commands support these global flags:
+
+```bash
+--account-id string    Cloudflare Account ID (overrides env var)
+--dry-run             Show what would happen without executing
+--json                Output in JSON format
+--verbose, -v         Enable verbose output
 ```
 
 ### Global Flags
@@ -346,6 +610,83 @@ Enable verbose logging for debugging:
 r2go2 list --debug
 ```
 
+## 🌌 GUI Integration & Ecosystem
+
+### 🔌 Programmatic API for GUI Applications
+
+R2Go2 is designed to be the **backend powerhouse** for sophisticated Cloudflare management GUI applications:
+
+```json
+// Every command supports JSON output
+{
+  "success": true,
+  "data": {
+    "buckets": [
+      {
+        "name": "production-bucket",
+        "size": 2567348257,
+        "object_count": 1247,
+        "created_date": "2025-01-15T10:30:00Z"
+      }
+    ]
+  },
+  "metadata": {
+    "timestamp": "2025-01-24T17:30:00Z",
+    "execution_time_ms": 245
+  }
+}
+```
+
+### 🎯 GUI Integration Examples
+
+**React/Vue.js Frontend:**
+```typescript
+import { R2Go2Client } from '@cosmolabs/r2go2-client';
+
+const client = new R2Go2Client();
+const buckets = await client.listBuckets(); // Returns typed JSON
+```
+
+**Python Desktop Application:**
+```python
+import asyncio
+from r2go2_client import R2Go2Client
+
+async def list_buckets():
+    client = R2Go2Client()
+    response = await client.execute_command(['buckets', 'list', '--json'])
+    return response.data['buckets']
+```
+
+**Electron Desktop Application:**
+```typescript
+// Real-time monitoring for live dashboards
+const updates = client.monitorBucket('production');
+for await (const update of updates) {
+    updateDashboard(update);
+}
+```
+
+### 🏗️ Cloudflare Management Ecosystem
+
+R2Go2 is the **foundation** for a unified Cloudflare management experience:
+
+```bash
+# Current: R2Go2 for storage
+r2go2 buckets list --json              # R2 storage management
+
+# Future ecosystem tools:
+cf-pages deploy --project=my-app --json    # Pages management
+cf-workers deploy --script=api.js --json   # Workers management
+cf-dns list --domain=example.com --json    # DNS management
+cf-manager status --service=all --json     # Unified dashboard
+```
+
+**Learn more:**
+- 📖 [GUI Integration Strategy](docs/roadmap/GUI-INTEGRATION-STRATEGY.md)
+- 🗺️ [Vision & Architecture Roadmap](docs/roadmap/VISION-AND-ARCHITECTURE.md)
+- 🔧 [Parallel Session Coordination](docs/prompts/PARALLEL-SESSION-COORDINATION.md)
+
 ## Version History
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
@@ -364,8 +705,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 R2Go2 is part of the [CosmoDev](https://cosmolabs.org/cosmodev) ecosystem by [CosmoLabs](https://cosmolabs.org), a collection of developer tools designed to simplify modern software development workflows.
 
+**Our Vision**: Create a unified, professional command-line experience that makes Cloudflare management accessible to everyone, from individual developers to enterprise teams, while providing the programmable foundation for next-generation GUI applications.
+
 ---
 
 <p align="center">
   <strong>Built with ❤️ by the CosmoLabs team</strong>
+  <br>
+  <em>"One CLI to rule them all, one JSON to bind them"</em>
 </p>
