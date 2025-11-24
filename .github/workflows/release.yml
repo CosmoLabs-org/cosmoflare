@@ -1,0 +1,346 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: "1.25.3"
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Get version
+        id: version
+        run: echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          # Get commit history since last tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)")
+          fi
+
+          # Escape newlines for GitHub API
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: R2Go2 ${{ github.ref_name }}
+          body: |
+            # R2Go2 ${{ github.ref_name }}
+
+            A production-ready CLI tool for managing Cloudflare R2 storage buckets and objects.
+
+            ## 🚀 Features
+            - 🪣 Bucket management (create, list, delete)
+            - 📁 Object operations (upload, download, delete, sync)
+            - 🌐 Custom domain and CDN management
+            - 📊 Analytics and monitoring
+            - 🔄 S3 migration tools
+            - 🔐 Secure authentication and configuration
+
+            ## 📦 Installation
+
+            ### Homebrew
+            ```bash
+            brew install r2go2
+            ```
+
+            ### Manual Download
+            Download the appropriate binary for your platform from the assets below.
+
+            ## 📋 Changes
+            ${{ steps.release_notes.outputs.changelog }}
+
+            ## 🔐 Verification
+            Verify the downloaded files using the provided SHA256 checksums.
+
+            ## 🐳 Docker
+            ```bash
+            docker pull ghcr.io/cosmolabs-org/cosmodev-r2go2:${{ github.ref_name }}
+            ```
+
+            ## 📚 Documentation
+            Full documentation: https://github.com/CosmoLabs-org/CosmoDev-R2Go2
+          draft: false
+          prerelease: false
+
+  build-and-upload:
+    name: Build and Upload Release Assets
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64, linux/armv7, windows/amd64, windows/arm64, darwin/amd64, darwin/arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Set build variables
+        run: |
+          echo "BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')" >> $GITHUB_ENV
+          echo "GIT_COMMIT=${{ github.sha }}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.platform }}
+          GOARCH: ${{ matrix.platform }}
+        run: |
+          # Extract OS and ARCH from platform string
+          OS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
+          ARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
+
+          # Set GOOS and GOARCH properly
+          export GOOS=$OS
+          export GOARCH=$ARCH
+
+          BINARY_NAME="r2go2-$OS-$ARCH"
+          if [ "$OS" = "windows" ]; then
+            BINARY_NAME="$BINARY_NAME.exe"
+          fi
+
+          echo "Building for $OS/$ARCH -> $BINARY_NAME"
+
+          mkdir -p dist
+          CGO_ENABLED=0 go build \
+            -ldflags "-X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=${{ env.VERSION }} \
+                      -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=${{ env.BUILD_TIME }} \
+                      -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=${{ env.GIT_COMMIT }}" \
+            -o dist/$BINARY_NAME .
+
+      - name: Create archives
+        run: |
+          OS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
+          ARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
+
+          cd dist
+          BINARY_NAME="r2go2-$OS-$ARCH"
+          if [ "$OS" = "windows" ]; then
+            BINARY_NAME="$BINARY_NAME.exe"
+            ARCHIVE_NAME="r2go2-${{ env.VERSION }}-$OS-$ARCH.zip"
+            zip -r "$ARCHIVE_NAME" $BINARY_NAME ../README.md ../LICENSE ../docs/
+          else
+            ARCHIVE_NAME="r2go2-${{ env.VERSION }}-$OS-$ARCH.tar.gz"
+            tar -czf "$ARCHIVE_NAME" $BINARY_NAME ../README.md ../LICENSE ../docs/
+          fi
+
+          # Generate checksum
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$ARCHIVE_NAME" >> "${ARCHIVE_NAME}.sha256"
+          else
+            shasum -a 256 "$ARCHIVE_NAME" >> "${ARCHIVE_NAME}.sha256"
+          fi
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz
+          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset (Windows ZIP)
+        if: contains(matrix.platform, 'windows')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip
+          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload Checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz.sha256
+          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz.sha256
+          asset_content_type: text/plain
+
+      - name: Upload Checksum (Windows)
+        if: contains(matrix.platform, 'windows')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip.sha256
+          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip.sha256
+          asset_content_type: text/plain
+
+  create-packages:
+    name: Create System Packages
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build binary
+        run: |
+          mkdir -p build
+          CGO_ENABLED=0 go build \
+            -ldflags "-X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=${{ github.ref_name }}" \
+            -o build/r2go2 .
+
+      - name: Create DEB package
+        run: |
+          mkdir -p dist/deb/DEBIAN
+          mkdir -p dist/deb/usr/local/bin
+          cp build/r2go2 dist/deb/usr/local/bin/
+
+          cat > dist/deb/DEBIAN/control << EOF
+          Package: r2go2
+          Version: ${{ github.ref_name }}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: CosmoLabs <support@cosmolabs.org>
+          Description: Cloudflare R2 CLI management tool
+           A production-ready CLI tool for managing Cloudflare R2 storage buckets
+           and objects with advanced features like custom domains, analytics,
+           and migration tools.
+          Depends:
+          EOF
+
+          echo "/usr/local/bin/r2go2" > dist/deb/DEBIAN/conffiles
+
+          dpkg-deb --build dist/deb dist/r2go2_${{ github.ref_name }}_amd64.deb
+
+      - name: Create RPM package
+        run: |
+          sudo apt-get update && sudo apt-get install -y rpm
+
+          mkdir -p dist/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp build/r2go2 dist/rpmbuild/BUILD/
+
+          cat > dist/rpmbuild/SPECS/r2go2.spec << EOF
+          Name: r2go2
+          Version: $(echo ${{ github.ref_name }} | sed 's/^v//')
+          Release: 1%{?dist}
+          Summary: Cloudflare R2 CLI management tool
+          License: MIT
+          URL: https://github.com/CosmoLabs-org/CosmoDev-R2Go2
+
+          %description
+          A production-ready CLI tool for managing Cloudflare R2 storage buckets
+          and objects with advanced features like custom domains, analytics,
+          and migration tools.
+
+          %prep
+          %build
+          %install
+          mkdir -p %{buildroot}/usr/local/bin
+          install -m 755 r2go2 %{buildroot}/usr/local/bin/
+
+          %files
+          /usr/local/bin/r2go2
+          EOF
+
+          cd dist/rpmbuild && rpmbuild -bb SPECS/r2go2.spec --define "_topdir $(PWD)"
+          find dist/rpmbuild/RPMS -name "*.rpm" -exec cp {} dist/ \;
+          rm -rf dist/rpmbuild
+
+      - name: Upload DEB package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2_${{ github.ref_name }}_amd64.deb
+          asset_name: r2go2_${{ github.ref_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+      - name: Upload RPM package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: dist/r2go2-*.rpm
+          asset_name: r2go2-${{ github.ref_name }}-1.x86_64.rpm
+          asset_content_type: application/x-rpm
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v4
+        with:
+          token: ${{ secrets.HOMEBREW_TOKEN }}
+          formula: r2go2
+          homebrew-tap: CosmoLabs/homebrew-tap
+          base-branch: main
+          download-url: https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/download/${{ github.ref_name }}/r2go2-${{ github.ref_name }}-darwin-amd64.tar.gz
+          commit-message: |
+            {{formulaName}} {{version}}
+
+            Created by https://github.com/dawidd6/action-homebrew-bump-formula
+
+  update-dockerhub:
+    name: Update Docker Hub Description
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: cosmolabs/r2go2
+          readme-filepath: ./docs/docker-hub.md
+          short-description: Cloudflare R2 CLI management tool

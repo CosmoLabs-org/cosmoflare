@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+
+# Build artifacts
+build/
+dist/
+*.exe
+
+# Test files
+*_test.go
+coverage.out
+coverage.html
+
+# Development files
+.DS_Store
+.vscode/
+.idea/
+
+# CI/CD
+.github/
+
+# Go
+vendor/
+*.mod
+*.sum
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+tmp/
+temp/
+
+# Makefile
+Makefile

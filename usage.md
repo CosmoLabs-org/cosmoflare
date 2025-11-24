@@ -1,474 +1,1222 @@
-# R2Go2 Usage Guide
+# R2Go2 Complete Usage Guide
 
-Complete guide to using R2Go2 - the production-ready CLI tool for managing Cloudflare R2 buckets.
+**The definitive guide to mastering R2Go2 - your production-ready command-line interface for Cloudflare R2**
+
+## 📚 Table of Contents
+
+1. [Quick Start](#-quick-start)
+2. [Authentication & Configuration](#-authentication--configuration)
+3. [Command Categories](#-command-categories)
+4. [Advanced Workflows](#-advanced-workflows)
+5. [Integration Examples](#-integration-examples)
+6. [Troubleshooting](#-troubleshooting)
+7. [Best Practices](#-best-practices)
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Installation
+### Installation
 
-#### Build from Source
 ```bash
+# Option 1: Download binary
+curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+chmod +x r2go2
+sudo mv r2go2 /usr/local/bin/
+
+# Option 2: Build from source
 git clone https://github.com/CosmoLabs-org/CosmoDev-R2Go2.git
 cd CosmoDev-R2Go2
 make build
-sudo make install-system  # or: cp build/r2go2 /usr/local/bin/
+sudo cp build/r2go2 /usr/local/bin/
+
+# Option 3: Install via package manager (when available)
+brew install r2go2  # macOS
+sudo apt install r2go2  # Ubuntu/Debian
 ```
 
-#### Download Binary
-Download the appropriate binary for your platform from the [Releases](https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases) page.
-
-### 2. Authentication
-
-Set up your Cloudflare credentials:
+### Initial Setup
 
 ```bash
+# Interactive configuration (recommended)
+r2go2 config init
+
+# Follow the prompts to set up your Cloudflare credentials
+
+# Verify setup
+r2go2 auth status
+```
+
+### First Operations
+
+```bash
+# Create your first bucket
+r2go2 bucket create my-app-bucket
+
+# Upload files
+r2go2 object put my-app-bucket ./dist/ --recursive
+
+# List objects
+r2go2 object ls my-app-bucket
+
+# Set up custom domain
+r2go2 domain attach my-app-bucket --domain=cdn.example.com
+```
+
+---
+
+## 🔐 Authentication & Configuration
+
+### Interactive Setup
+
+```bash
+# Complete guided setup
+r2go2 config init
+```
+
+**Setup Process:**
+1. Enter Cloudflare API token
+2. Provide Account ID (auto-detected if possible)
+3. Add profile description
+4. Test connection
+5. Save to `~/.r2go2/config.yaml`
+
+### Manual Configuration
+
+```bash
+# Set environment variables
 export CLOUDFLARE_API_TOKEN="your_api_token_here"
 export CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
+
+# Or create profile manually
+r2go2 config set production \
+  --account-id="your_account_id" \
+  --api-token="your_api_token" \
+  --description="Production environment"
 ```
 
-**Required Token Permissions:**
-- `R2:Edit` for full bucket management
-- `Account R2:Read` for listing operations
-
-### 3. Verify Installation
+### Profile Management
 
 ```bash
-r2go2 --version
-r2go2 --help
+# List all profiles
+r2go2 config list
+
+# Switch between profiles
+r2go2 config switch staging
+
+# Show profile details (masked)
+r2go2 config show production
+
+# Export profile as environment variables
+eval $(r2go2 config export production)
+
+# Delete profile
+r2go2 config delete old-profile
 ```
 
-## 📋 Commands Reference
-
-### Global Options
-
-All commands support these global flags:
+### Authentication Commands
 
 ```bash
---account-id string    Override CLOUDFLARE_ACCOUNT_ID
---dry-run             Show what would happen without executing
---json                Output in JSON format
---verbose, -v         Enable verbose output
+# Login with interactive flow
+r2go2 auth login --interactive
+
+# Validate current credentials
+r2go2 auth status
+
+# Rotate API token
+r2go2 auth rotate --profile=production
+
+# Logout (clears session)
+r2go2 auth logout
 ```
+
+### Token Permissions
+
+**Required Permissions:**
+- `R2:Edit` - Full bucket and object management
+- `Account R2:Read` - Read account information
+- `Zone:Cache:Edit` - Cache management (for CDN features)
+- `Zone:Zone:Read` - Zone information (for domains)
+
+---
+
+## 📋 Command Categories
 
 ### 🪣 Bucket Management
 
-#### Create Bucket
+#### Create Buckets
+
 ```bash
-# Basic bucket creation
-r2go2 create my-awesome-bucket
+# Basic creation
+r2go2 bucket create my-new-bucket
 
-# Preview without creating
-r2go2 create my-awesome-bucket --dry-run
+# With location and tags
+r2go2 bucket create my-app-bucket \
+  --location=eu \
+  --tags=env=production,tier=standard
 
-# JSON output
-r2go2 create my-awesome-bucket --json
+# From specification file
+r2go2 bucket import buckets.yaml
 ```
 
-**Naming Rules:**
-- 3-63 characters long
-- Lowercase letters, numbers, hyphens, periods
-- Must start and end with letter or number
-- Globally unique across Cloudflare
+**Specification File (`buckets.yaml`):**
+```yaml
+buckets:
+  - name: production-assets
+    location: us
+    tags:
+      env: prod
+      tier: standard
+    metadata:
+      description: "Production assets bucket"
 
-#### List Buckets
+  - name: staging-assets
+    location: eu
+    tags:
+      env: staging
+      tier: standard
+```
+
+#### List and Inspect Buckets
+
 ```bash
-# Human-readable output
-r2go2 list
+# List all buckets
+r2go2 bucket list
 
-# JSON output for scripting
-r2go2 list --json
+# JSON output for scripts
+r2go2 bucket list --json
 
-# Verbose with account info
-r2go2 list --verbose
+# Filter by prefix
+r2go2 bucket list --prefix=prod-
+
+# Get detailed bucket information
+r2go2 bucket get my-bucket
+
+# Include object count and size
+r2go2 bucket get my-bucket --include-objects
+
+# Check if bucket exists (good for CI/CD)
+r2go2 bucket exists my-bucket && echo "Bucket exists"
 ```
 
-**Example Output:**
-```
-🪣 Buckets:
+#### Update Bucket Metadata
 
-  • my-backups         (Created 7 days ago)
-  • user-uploads       (Created 14 days ago)
-  • log-storage        (Created 30 days ago)
-
-Total: 3 buckets
-```
-
-#### Delete Bucket
 ```bash
-# Interactive deletion (recommended)
-r2go2 delete my-bucket
+# Add tags
+r2go2 bucket update my-bucket --add-tags=environment=staging
 
-# Skip confirmation (use with caution)
-r2go2 delete my-bucket --confirm
+# Replace all tags
+r2go2 bucket update my-bucket --tags=env=prod,tier=premium
+
+# Remove specific tags
+r2go2 bucket update my-bucket --remove-tags=temp,experimental
+
+# Update metadata
+r2go2 bucket update my-bucket --metadata=owner=team-a,project=website
+```
+
+#### Delete Buckets
+
+```bash
+# Interactive deletion (safest)
+r2go2 bucket delete my-bucket
+
+# Force deletion (use with caution)
+r2go2 bucket delete my-bucket --force
 
 # Preview deletion
-r2go2 delete my-bucket --dry-run
+r2go2 bucket delete my-bucket --dry-run
 ```
 
-**⚠️ Warning:** Deleting a bucket permanently removes all objects within it. This action cannot be undone.
+### 📁 Object Management
 
-### 📤 File Uploads
+#### Upload Objects
 
-#### Upload Single File
 ```bash
-# Basic upload
-r2go2 upload my-bucket ./local-file.txt --key="remote-file.txt"
+# Upload single file
+r2go2 object put my-bucket ./file.txt --key="remote/file.txt"
 
-# Upload with custom path
-r2go2 upload my-bucket ./image.jpg --key="photos/2024/profile.jpg"
+# Upload with custom metadata
+r2go2 object put my-bucket ./image.jpg \
+  --key="assets/images/profile.jpg" \
+  --content-type="image/jpeg" \
+  --cache-control="max-age=31536000,immutable" \
+  --metadata=author=admin,department=marketing
+
+# Upload entire directory
+r2go2 object put my-bucket ./dist/ --recursive --progress
+
+# Upload with custom naming
+r2go2 object put my-bucket ./backup.tar.gz \
+  --key="backups/$(date +%Y-%m-%d)/backup.tar.gz"
+
+# Dry run to preview
+r2go2 object put my-bucket ./important-data/ --recursive --dry-run
+```
+
+#### List and Search Objects
+
+```bash
+# List all objects
+r2go2 object ls my-bucket
+
+# List with prefix filtering
+r2go2 object ls my-bucket --prefix="images/"
+
+# Recursive listing
+r2go2 object ls my-bucket --recursive --max-keys=1000
 
 # JSON output
-r2go2 upload my-bucket ./data.json --key="api/data.json" --json
+r2go2 object ls my-bucket --json
+
+# Search objects
+r2go2 object search my-bucket "*.jpg" --type=glob
+
+# Search with regex
+r2go2 object search my-bucket ".*\.png$" --type=regex
+
+# Exact match
+r2go2 object search my-bucket "config.json" --type=exact
 ```
 
-#### Upload Examples
-```bash
-# Upload backup with date
-r2go2 upload backups ./backup.tar.gz --key="backups/$(date +%Y-%m-%d)/backup.tar.gz"
-
-# Upload multiple files (scripting)
-for file in ./logs/*.log; do
-    r2go2 upload log-storage "$file" --key="logs/$(basename $file)"
-done
-
-# Upload with dry-run
-r2go2 upload my-bucket ./important.doc --key="docs/important.doc" --dry-run
-```
-
-**Upload Features:**
-- Automatic content-type detection
-- File size validation
-- Object key validation
-- Progress information (planned)
-- Resume capability (planned)
-
-### ⚙️ Lifecycle Policies
-
-#### Set Basic Policy
-```bash
-# Delete objects after 30 days
-r2go2 policy my-bucket set --days=30
-
-# Delete objects after 1 year
-r2go2 policy my-bucket set --days=365
-
-# Preview policy change
-r2go2 policy my-bucket set --days=90 --dry-run
-```
-
-**Policy Behavior:**
-- Applied to all existing and future objects
-- Automatic deletion after specified days
-- No notification before deletion
-- Can be modified or removed later
-
-### 🔧 Shell Completion
-
-Enable auto-completion for your shell:
+#### Download Objects
 
 ```bash
-# Bash
-eval "$(r2go2 completion bash)"
-# Or add to ~/.bashrc
-echo 'eval "$(r2go2 completion bash)"' >> ~/.bashrc
+# Download single object
+r2go2 object get my-bucket remote/file.txt --output=local-file.txt
 
-# Zsh
-r2go2 completion zsh > "${fpath[1]}/_r2go2"
-# Or add to ~/.zshrc
-echo 'autoload -U compinit; compinit' >> ~/.zshrc
+# Download with progress
+r2go2 object get my-bucket large-file.zip --progress
 
-# Fish
-r2go2 completion fish | source
+# Download specific byte range
+r2go2 object get my-bucket video.mp4 \
+  --range-start=0 --range-end=1048575 \
+  --output=video-header.bin
 
-# PowerShell
-r2go2 completion powershell | Out-String | Invoke-Expression
+# Download to stdout (for piping)
+r2go2 object get my-bucket data.json | jq '.users'
 ```
 
-## 📊 JSON Output Format
+#### Object Metadata
 
-All commands support JSON output with consistent structure:
+```bash
+# Get object metadata without downloading
+r2go2 object head my-bucket remote/file.txt
 
-### Success Response
-```json
-{
-  "success": true,
-  "message": "Operation completed successfully",
-  "data": {
-    // Command-specific data
-  },
-  "dry_run": false
-}
+# JSON output
+r2go2 object head my-bucket remote/file.txt --json
+
+# Example output:
+# Object: remote/file.txt
+# Size: 1.2 KB
+# Last Modified: 2025-01-15T10:30:00Z
+# ETag: "abc123def456"
+# Content-Type: text/plain
+# Cache-Control: max-age=3600
 ```
 
-### Error Response
-```json
-{
-  "success": false,
-  "error": "Error message description",
-  "dry_run": false
-}
+#### Copy and Move Objects
+
+```bash
+# Copy object within same bucket
+r2go2 object copy my-bucket/old-path/file.txt my-bucket/new-path/file.txt
+
+# Copy between buckets
+r2go2 object copy source-bucket/data.csv dest-bucket/backup/data.csv
+
+# Copy with new metadata
+r2go2 object copy my-bucket/temp.txt my-bucket/production.txt \
+  --metadata=environment=prod,status=final
+
+# Delete objects
+r2go2 object delete my-bucket temporary-file.txt
+
+# Delete with dry run
+r2go2 object delete my-bucket old-backup/ --dry-run
 ```
 
-### Bucket List Response
-```json
+#### Batch Operations
+
+```bash
+# Create batch specification
+cat > operations.json << EOF
 {
-  "success": true,
-  "buckets": [
+  "operations": [
     {
-      "name": "my-bucket",
-      "creation_date": "2024-03-15T10:30:00Z"
+      "action": "upload",
+      "local_path": "./dist/app.js",
+      "object_key": "js/app.js"
+    },
+    {
+      "action": "delete",
+      "object_key": "old-version/app.js"
+    },
+    {
+      "action": "copy",
+      "source": "assets/logo.png",
+      "dest": "assets/legacy-logo.png"
     }
-  ],
-  "total": 1,
-  "dry_run": false
+  ]
+}
+EOF
+
+# Execute batch operations
+r2go2 object batch my-bucket operations.json
+
+# Continue on errors
+r2go2 object batch my-bucket operations.json --continue
+
+# Dry run preview
+r2go2 object batch my-bucket operations.json --dry-run
+```
+
+### 🌐 Custom Domains & CDN
+
+#### Domain Management
+
+```bash
+# Attach custom domain
+r2go2 domain attach my-bucket --domain=cdn.example.com
+
+# With SSL mode specification
+r2go2 domain attach my-bucket \
+  --domain=assets.example.com \
+  --ssl-mode=full
+
+# List all domains
+r2go2 domain list
+
+# Filter by bucket
+r2go2 domain list --bucket=my-bucket
+
+# JSON output
+r2go2 domain list --json
+```
+
+#### Domain Verification
+
+```bash
+# Verify domain configuration
+r2go2 domain verify cdn.example.com
+
+# Detailed verification
+r2go2 domain verify cdn.example.com --detailed
+
+# Example output:
+# ✅ Domain Verification Results:
+# CHECK              STATUS   DETAILS
+# DNS Configuration ✅       CNAME record correctly configured
+# SSL Certificate   ✅       Valid certificate installed
+# Origin Connectivity ✅       R2 bucket accessible
+# CDN Status        ✅       Cloudflare edge active
+```
+
+#### Cache Management
+
+```bash
+# Purge entire cache
+r2go2 domain purge cdn.example.com --everything
+
+# Purge specific paths
+r2go2 domain purge cdn.example.com --path="/images/*"
+
+# Purge multiple paths
+r2go2 domain purge cdn.example.com \
+  --path="/css/*" \
+  --path="/js/*" \
+  --path="/assets/*"
+
+# Purge by cache tags
+r2go2 domain purge cdn.example.com --tags=static,versioned
+```
+
+#### Cache Rules
+
+```bash
+# Create cache rule (example)
+r2go2 domain cache create \
+  --domain=cdn.example.com \
+  --name="static-assets" \
+  --ttl=30d \
+  --expression="http.host eq \"cdn.example.com\""
+
+# List cache rules
+r2go2 domain cache list --domain=cdn.example.com
+```
+
+### 📊 Analytics & Monitoring
+
+#### Usage Analytics
+
+```bash
+# Query storage usage
+r2go2 analytics query my-bucket --metric=storage \
+  --start=2025-01-01 --end=2025-01-31
+
+# Query all metrics
+r2go2 analytics query my-bucket --metric=all \
+  --start=2025-01-01 --end=2025-01-31 --format=csv
+
+# JSON output for processing
+r2go2 analytics query my-bucket --metric=operations --json
+```
+
+**Example JSON Output:**
+```json
+{
+  "bucket": "my-bucket",
+  "period": {
+    "start": "2025-01-01T00:00:00Z",
+    "end": "2025-01-31T23:59:59Z"
+  },
+  "storage": {
+    "used_bytes": 1073741824,
+    "object_count": 1000,
+    "average_size": 1073742
+  },
+  "operations": {
+    "class_a_count": 5000,
+    "class_b_count": 50000
+  },
+  "bandwidth": {
+    "inbound_bytes": 1073741824,
+    "outbound_bytes": 10737418240
+  }
 }
 ```
 
-## 🔄 Scripting Examples
+#### Cost Estimation
 
-### Bash Scripting
+```bash
+# Estimate costs based on current usage
+r2go2 analytics cost analyze my-bucket --period=30d
 
-#### Backup Script
+# Estimate costs for planned usage
+r2go2 analytics cost estimate my-bucket \
+  --objects=10000 \
+  --size=100
+
+# Example output:
+# Cost Breakdown (Monthly Estimates):
+# Storage (100 GB)         $1.50
+# Class A Operations (10,000)  $0.05
+# Class B Operations (100,000) $0.40
+# -------------------------------
+# Total Monthly Cost        $1.95
+```
+
+#### Health Monitoring
+
+```bash
+# Comprehensive health check
+r2go2 analytics health check
+
+# Specific bucket health
+r2go2 analytics health check --bucket=my-bucket
+
+# Performance testing
+r2go2 analytics health performance --bucket=my-bucket --count=10
+```
+
+#### Export Capabilities
+
+```bash
+# Export detailed report
+r2go2 analytics export my-bucket \
+  --output=report.csv \
+  --type=detailed \
+  --start=2025-01-01 \
+  --end=2025-01-31
+
+# Export JSON for processing
+r2go2 analytics export my-bucket \
+  --output=data.json \
+  --format=json \
+  --type=billing
+```
+
+### 🔄 Migration & Bulk Operations
+
+#### S3 to R2 Migration
+
+```bash
+# Migrate entire S3 bucket
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket
+
+# With filtering and concurrency
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket \
+  --filter="images/*" \
+  --concurrency=20 \
+  --verify
+
+# Resume interrupted migration
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket \
+  --resume
+
+# Dry run to preview
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket \
+  --dry-run
+
+# With AWS profile
+r2go2 migrate from-s3 my-s3-bucket to-r2 my-r2-bucket \
+  --aws-profile=production \
+  --aws-region=us-west-2
+```
+
+#### Sync Operations
+
+```bash
+# Sync local directory to R2
+r2go2 migrate sync ./dist r2://my-bucket
+
+# Two-way sync
+r2go2 migrate sync r2://source-bucket r2://dest-bucket
+
+# Delete files not in source
+r2go2 migrate sync ./dist r2://my-bucket --delete-extras
+
+# Verify after sync
+r2go2 migrate sync ./dist r2://my-bucket --verify
+
+# Dry run preview
+r2go2 migrate sync ./dist r2://my-bucket --dry-run
+```
+
+#### Backup Operations
+
+```bash
+# Create complete backup
+r2go2 migrate backup my-bucket --to-local=/backups/
+
+# Compressed backup with versions
+r2go2 migrate backup my-bucket \
+  --to-local=/backups/ \
+  --compress \
+  --include-versions
+
+# Incremental backup
+r2go2 migrate backup my-bucket \
+  --to-local=/backups/ \
+  --incremental
+
+# JSON output for automation
+r2go2 migrate backup my-bucket --to-local=/backups/ --json
+```
+
+#### Restore Operations
+
+```bash
+# Restore from backup
+r2go2 migrate restore /backups/my-bucket.tar.gz to my-bucket
+
+# Restore specific paths
+r2go2 migrate restore /backups/my-bucket.tar.gz to my-bucket \
+  --path="images/*"
+
+# Verify after restore
+r2go2 migrate restore /backups/my-bucket.tar.gz to my-bucket \
+  --verify
+
+# Resume interrupted restore
+r2go2 migrate restore /backups/my-bucket.tar.gz to my-bucket \
+  --resume
+```
+
+#### Batch Processing
+
+```bash
+# Batch delete from manifest
+echo "old-file.txt\ntemp-file.json" > files_to_delete.txt
+r2go2 migrate batch my-bucket files_to_delete.txt
+
+# Batch operations with JSON manifest
+r2go2 migrate batch my-bucket operations.json --concurrency=10
+
+# Continue on errors
+r2go2 migrate batch my-bucket operations.json --continue
+```
+
+### 🚀 CI/CD Integration
+
+#### Template Generation
+
+```bash
+# GitHub Actions workflow
+r2go2 cicd template github \
+  --bucket=my-app \
+  --env=production \
+  --output=.github/workflows/deploy.yml
+
+# GitLab CI pipeline
+r2go2 cicd template gitlab \
+  --bucket=my-app \
+  --output=.gitlab-ci.yml
+
+# Jenkins pipeline
+r2go2 cicd template jenkins \
+  --bucket=my-app \
+  --output=Jenkinsfile
+
+# Azure DevOps pipeline
+r2go2 cicd template azure \
+  --bucket=my-app \
+  --output=azure-pipelines.yml
+
+# Dockerfile
+r2go2 cicd template docker \
+  --bucket=my-app \
+  --output=Dockerfile
+
+# n8n workflow
+r2go2 cicd template n8n \
+  --bucket=my-app \
+  --webhook=https://hooks.slack.com/... \
+  --output=n8n-workflow.json
+
+# Terraform configuration
+r2go2 cicd template terraform \
+  --bucket=my-app \
+  --output=main.tf
+```
+
+#### Project Initialization
+
+```bash
+# Auto-detect project and setup CI/CD
+r2go2 cicd init --platform=github --bucket=production-assets
+
+# For specific project type
+r2go2 cicd init \
+  --platform=gitlab \
+  --bucket=staging-assets \
+  --env=staging
+```
+
+#### Script Generation
+
+```bash
+# Deployment script
+r2go2 cicd script deploy \
+  --bucket=my-app \
+  --output=deploy.sh
+
+# Backup script
+r2go2 cicd script backup \
+  --bucket=my-app \
+  --output=backup.sh
+
+# Sync script
+r2go2 cicd script sync \
+  --bucket=my-app \
+  --output=sync.sh
+
+# Cleanup script
+r2go2 cicd script cleanup \
+  --bucket=my-app \
+  --output=cleanup.sh
+```
+
+---
+
+## 🔧 Advanced Workflows
+
+### Multi-Environment Deployment
+
+```bash
+# Setup profiles for different environments
+r2go2 config set development --account-id="dev_account" --api-token="dev_token"
+r2go2 config set staging --account-id="staging_account" --api-token="staging_token"
+r2go2 config set production --account-id="prod_account" --api-token="prod_token"
+
+# Deploy to different environments
+r2go2 config switch development
+r2go2 object put dev-app ./dist-dev/ --recursive
+
+r2go2 config switch staging
+r2go2 object put staging-app ./dist-staging/ --recursive
+
+r2go2 config switch production
+r2go2 object put prod-app ./dist-prod/ --recursive
+```
+
+### Automated Backup Strategy
+
 ```bash
 #!/bin/bash
+# Comprehensive backup script
 
-# Daily backup script
+BACKUP_DATE=$(date +%Y-%m-%d)
 BACKUP_DIR="/backups"
-BUCKET_NAME="daily-backups"
-DATE=$(date +%Y-%m-%d)
+BUCKETS=("app-assets" "user-uploads" "database-backups")
 
-# Create backup
-tar -czf "$BACKUP_DIR/backup-$DATE.tar.gz" /data
+# Create backup directory
+mkdir -p "$BACKUP_DIR/$BACKUP_DATE"
 
-# Upload to R2
-r2go2 upload "$BUCKET_NAME" "$BACKUP_DIR/backup-$DATE.tar.gz" \
-  --key="backups/$DATE/backup.tar.gz" --json
+# Backup each bucket
+for bucket in "${BUCKETS[@]}"; do
+    echo "Backing up $bucket..."
+    r2go2 migrate backup "$bucket" \
+        --to-local="$BACKUP_DIR/$BACKUP_DATE/" \
+        --compress \
+        --include-versions
 
-# Cleanup old backups (keep 7 days)
-find "$BACKUP_DIR" -name "backup-*.tar.gz" -mtime +7 -delete
+    # Generate analytics report
+    r2go2 analytics export "$bucket" \
+        --output="$BACKUP_DIR/$BACKUP_DATE/${bucket}-analytics.csv" \
+        --type=detailed
+done
 
-echo "Backup completed: $DATE"
+# Compress all backups
+tar -czf "$BACKUP_DIR/backup-$BACKUP_DATE.tar.gz" \
+    -C "$BACKUP_DIR" "$BACKUP_DATE"
+
+# Cleanup
+rm -rf "$BACKUP_DIR/$BACKUP_DATE"
+
+echo "Backup completed: backup-$BACKUP_DATE.tar.gz"
 ```
 
-#### Batch Upload
+### Content Delivery Workflow
+
 ```bash
 #!/bin/bash
+# Production deployment with CDN management
 
-# Upload all images from directory
-BUCKET="photo-storage"
-SOURCE_DIR="./photos"
+APP_NAME="my-app"
+DOMAIN="cdn.example.com"
 
-for file in "$SOURCE_DIR"/*.{jpg,jpeg,png,gif}; do
-    if [ -f "$file" ]; then
-        filename=$(basename "$file")
-        r2go2 upload "$BUCKET" "$file" --key="images/$filename"
-        echo "Uploaded: $filename"
-    fi
-done
+# 1. Build application
+npm run build
+
+# 2. Upload to R2
+echo "Uploading assets..."
+r2go2 object put "$APP_NAME" ./dist/ --recursive --progress
+
+# 3. Setup custom domain (if not already)
+echo "Configuring domain..."
+r2go2 domain attach "$APP_NAME" --domain="$DOMAIN" || \
+echo "Domain already configured"
+
+# 4. Verify domain configuration
+echo "Verifying domain..."
+r2go2 domain verify "$DOMAIN"
+
+# 5. Clear CDN cache
+echo "Clearing CDN cache..."
+r2go2 domain purge "$DOMAIN" --everything
+
+# 6. Generate deployment report
+echo "Generating report..."
+r2go2 analytics export "$APP_NAME" \
+    --output="deployment-$(date +%Y%m%d).csv" \
+    --type=summary
+
+echo "Deployment completed successfully!"
+echo "Your site is now available at: https://$DOMAIN"
 ```
 
-#### Bucket Management
+### Migration Automation
+
 ```bash
 #!/bin/bash
+# AWS S3 to R2 migration automation
 
-# Bucket maintenance script
-BUCKETS=$(r2go2 list --json | jq -r '.buckets[].name')
+S3_BUCKET="my-aws-bucket"
+R2_BUCKET="my-r2-bucket"
+AWS_PROFILE="production"
+CONCURRENCY=50
 
-for bucket in $BUCKETS; do
-    echo "Processing bucket: $bucket"
+# 1. Create R2 bucket if it doesn't exist
+if ! r2go2 bucket exists "$R2_BUCKET"; then
+    echo "Creating R2 bucket: $R2_BUCKET"
+    r2go2 bucket create "$R2_BUCKET" --location=auto
+fi
 
-    # Set 30-day retention
-    r2go2 policy "$bucket" set --days=30
+# 2. Start migration
+echo "Starting migration from $S3_BUCKET to $R2_BUCKET"
+r2go2 migrate from-s3 "$S3_BUCKET" to-r2 "$R2_BUCKET" \
+    --aws-profile="$AWS_PROFILE" \
+    --concurrency="$CONCURRENCY" \
+    --verify \
+    --resume
 
-    # Get bucket info
-    r2go2 list --json | jq --arg bucket "$bucket" \
-      '.buckets[] | select(.name == $bucket)'
-done
+# 3. Post-migration verification
+echo "Verifying migration..."
+S3_COUNT=$(aws s3 ls "s3://$S3_BUCKET" --recursive | wc -l)
+R2_COUNT=$(r2go2 object ls "$R2_BUCKET" --json | jq length)
+
+echo "S3 objects: $S3_COUNT"
+echo "R2 objects: $R2_COUNT"
+
+if [ "$S3_COUNT" -eq "$R2_COUNT" ]; then
+    echo "✅ Migration successful!"
+else
+    echo "⚠️ Object count mismatch - investigate"
+fi
 ```
 
-### Python Scripting
+---
 
-#### Python Integration
-```python
-import subprocess
-import json
-import os
+## 🔍 Integration Examples
 
-def list_buckets():
-    """List all R2 buckets"""
-    cmd = ['r2go2', 'list', '--json']
-    result = subprocess.run(cmd, capture_output=True, text=True)
+### GitHub Actions Workflow
 
-    if result.returncode == 0:
-        data = json.loads(result.stdout)
-        return data['buckets']
-    else:
-        raise Exception(f"Command failed: {result.stderr}")
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to R2
 
-def upload_file(bucket, local_path, object_key):
-    """Upload file to R2 bucket"""
-    cmd = ['r2go2', 'upload', bucket, local_path, '--key', object_key, '--json']
-    result = subprocess.run(cmd, capture_output=True, text=True)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-    if result.returncode == 0:
-        return json.loads(result.stdout)
-    else:
-        raise Exception(f"Upload failed: {result.stderr}")
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-# Usage example
-try:
-    buckets = list_buckets()
-    print(f"Found {len(buckets)} buckets")
+    steps:
+    - uses: actions/checkout@v4
 
-    upload_result = upload_file('my-bucket', './test.txt', 'uploads/test.txt')
-    print(f"Upload successful: {upload_result['message']}")
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-except Exception as e:
-    print(f"Error: {e}")
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Install R2Go2
+      run: |
+        curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+        chmod +x r2go2
+
+    - name: Deploy to R2
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      run: |
+        ./r2go2 object put ${{ secrets.R2_BUCKET }} ./dist/ --recursive --progress
+        ./r2go2 domain purge ${{ secrets.R2_DOMAIN }} --everything
+
+    - name: Update deployment info
+      run: |
+        ./r2go2 analytics query ${{ secrets.R2_BUCKET }} --metric=storage --json > deployment-info.json
+        cat deployment-info.json
 ```
+
+### GitLab CI Pipeline
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - build
+  - deploy
+
+variables:
+  R2_BUCKET: $R2_BUCKET
+  NODE_ENV: production
+
+build:
+  stage: build
+  image: node:20-alpine
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build
+  before_script:
+    - apk add --no-cache curl
+    - curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    - chmod +x r2go2
+  script:
+    - r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
+    - echo "Deployment completed successfully"
+  only:
+    - main
+```
+
+### Docker Integration
+
+```dockerfile
+# Dockerfile
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM alpine:latest
+
+# Install R2Go2
+RUN apk add --no-cache curl && \
+    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o /usr/local/bin/r2go2 && \
+    chmod +x /usr/local/bin/r2go2
+
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+
+# Environment variables
+ENV R2_BUCKET=my-app
+ENV CLOUDFLARE_API_TOKEN=""
+ENV CLOUDFLARE_ACCOUNT_ID=""
+
+# Deploy script
+RUN echo '#!/bin/sh' > /deploy.sh && \
+    echo 'r2go2 object put $R2_BUCKET ./dist/ --recursive --progress' >> /deploy.sh && \
+    echo 'r2go2 domain purge $R2_DOMAIN --everything' >> /deploy.sh && \
+    chmod +x /deploy.sh
+
+CMD ["/deploy.sh"]
+```
+
+---
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-#### Authentication Errors
+#### Authentication Problems
+
 ```bash
-❌ Error: Configuration error: CLOUDFLARE_API_TOKEN environment variable is required
-```
-**Solution:** Set your Cloudflare API token:
-```bash
-export CLOUDFLARE_API_TOKEN="your_token_here"
+# Check if token is valid
+curl -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+     https://api.cloudflare.com/client/v4/user/tokens/verify
+
+# Verify account access
+r2go2 auth status
+
+# Test with different profile
+r2go2 auth status --profile=production
 ```
 
-#### Account ID Issues
+#### Connection Issues
+
 ```bash
-❌ Error: Cloudflare Account ID is required
-```
-**Solution:** Set your account ID or use flag:
-```bash
-export CLOUDFLARE_ACCOUNT_ID="your_account_id"
-# OR
-r2go2 list --account-id="your_account_id"
+# Check connectivity
+r2go2 analytics health check
+
+# Verbose output for debugging
+r2go2 bucket list --verbose
+
+# Test API directly
+curl -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+     -H "X-Account-Id: $CLOUDFLARE_ACCOUNT_ID" \
+     https://api.cloudflare.com/client/v4/accounts
 ```
 
 #### Permission Issues
-```bash
-❌ Error: Failed to create bucket: permission denied
-```
-**Solution:** Verify your API token permissions:
-- Token must have `R2:Edit` permission
-- Token must be for the correct account
 
-#### Network Issues
 ```bash
-❌ Error: Failed to list buckets: connection timeout
-```
-**Solution:** Check network connectivity:
-```bash
-# Test API connectivity
-curl -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-     https://api.cloudflare.com/client/v4/user/tokens/verify
+# Verify token permissions
+r2go2 auth status --verbose
+
+# Test basic operation
+r2go2 bucket list --dry-run
+
+# Check account ID format
+echo $CLOUDFLARE_ACCOUNT_ID | grep -E '^[a-f0-9]{32}$'
 ```
 
 ### Debug Mode
 
-Enable verbose output for debugging:
-
 ```bash
-r2go2 list --verbose
-r2go2 upload my-bucket file.txt --key="test.txt" --verbose --dry-run
+# Enable verbose logging
+export R2GO2_DEBUG=1
+
+# Or use verbose flag
+r2go2 bucket list --verbose
+
+# Dry run for safe testing
+r2go2 object put test-bucket ./test.txt --key=test.txt --dry-run --verbose
 ```
 
-### Environment Check
-
-Verify your setup:
+### Environment Validation Script
 
 ```bash
-# Check version
-r2go2 --version
+#!/bin/bash
+# validate-environment.sh
 
-# Check environment
-echo "API Token: ${CLOUDFLARE_API_TOKEN:0:10}..."
-echo "Account ID: $CLOUDFLARE_ACCOUNT_ID"
+echo "🔍 Validating R2Go2 Environment..."
 
-# Test API token
-curl -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-     https://api.cloudflare.com/client/v4/user/tokens/verify
+# Check R2Go2 installation
+if command -v r2go2 &> /dev/null; then
+    echo "✅ R2Go2 is installed: $(r2go2 --version)"
+else
+    echo "❌ R2Go2 is not installed or not in PATH"
+    exit 1
+fi
+
+# Check environment variables
+if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+    echo "❌ CLOUDFLARE_API_TOKEN is not set"
+    exit 1
+fi
+
+if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+    echo "❌ CLOUDFLARE_ACCOUNT_ID is not set"
+    exit 1
+fi
+
+# Validate token
+echo "🔑 Validating API token..."
+response=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                   https://api.cloudflare.com/client/v4/user/tokens/verify)
+
+if echo "$response" | grep -q '"result":true'; then
+    echo "✅ API token is valid"
+else
+    echo "❌ API token is invalid"
+    echo "Response: $response"
+    exit 1
+fi
+
+# Validate account ID
+if [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-f0-9]{32}$ ]]; then
+    echo "✅ Account ID format is valid"
+else
+    echo "❌ Account ID format is invalid (should be 32-character hex)"
+    exit 1
+fi
+
+# Test R2Go2 connectivity
+echo "🌐 Testing R2Go2 connectivity..."
+if r2go2 bucket list --dry-run > /dev/null 2>&1; then
+    echo "✅ R2Go2 can connect to Cloudflare API"
+else
+    echo "❌ R2Go2 cannot connect to Cloudflare API"
+    exit 1
+fi
+
+echo "🎉 Environment validation completed successfully!"
 ```
-
-## 📚 Advanced Usage
-
-### Dry Run Mode
-
-Always use `--dry-run` to preview operations:
-
-```bash
-# Preview all operations
-r2go2 create production-backups --dry-run
-r2go2 upload prod-db ./backup.sql --key="backups/db.sql" --dry-run
-r2go2 delete old-bucket --dry-run --confirm
-```
-
-### JSON Processing with jq
-
-Combine R2Go2 with jq for powerful data processing:
-
-```bash
-# Get bucket names only
-r2go2 list --json | jq -r '.buckets[].name'
-
-# Find buckets created in last 30 days
-r2go2 list --json | jq '.buckets[] | select(.creation_date > (now - 30*24*3600 | strftime("%Y-%m-%dT%H:%M:%SZ")))
-
-# Count total buckets
-r2go2 list --json | jq '.total'
-
-# Format bucket list as CSV
-r2go2 list --json | jq -r '.buckets[] | "\(.name),\(.creation_date)"'
-```
-
-### Automation with Cron
-
-Set up automated tasks:
-
-```bash
-# Edit crontab
-crontab -e
-
-# Daily backup at 2 AM
-0 2 * * * /usr/local/bin/r2go2 upload backups /data/daily-backup.tar.gz --key="backups/$(date +\%Y\%m\%d)/daily.tar.gz"
-
-# Weekly cleanup
-0 3 * * 0 /usr/local/bin/r2go2 policy temp-storage set --days=7
-```
-
-## 🔒 Security Best Practices
-
-### API Token Management
-- Use minimal required permissions
-- Rotate tokens regularly
-- Never commit tokens to version control
-- Use environment variables or secure storage
-
-### Object Key Security
-- Avoid sensitive information in object keys
-- Use random names for sensitive files
-- Implement access controls at bucket level
-
-### Network Security
-- Use HTTPS connections (automatic)
-- Consider VPN for sensitive operations
-- Monitor Cloudflare API usage
 
 ---
 
-## 📞 Support
+## 📈 Best Practices
+
+### Security
+
+```bash
+# Use minimal permissions
+r2go2 config set production \
+  --account-id="your_account_id" \
+  --api-token="token_with_r2_edit_only"
+
+# Rotate tokens regularly
+r2go2 auth rotate --profile=production
+
+# Use environment variables in CI/CD
+export CLOUDFLARE_API_TOKEN="$SECRET_TOKEN"
+
+# Never commit credentials
+echo ".r2go2/" >> .gitignore
+echo "*.env" >> .gitignore
+```
+
+### Performance
+
+```bash
+# Use parallel operations for large datasets
+r2go2 migrate from-s3 large-bucket to-r2 r2-large-bucket --concurrency=50
+
+# Use appropriate batch sizes
+r2go2 object put my-bucket ./large-dataset/ --recursive --batch-size=100
+
+# Monitor performance
+r2go2 analytics health performance --bucket=my-bucket --count=10
+```
+
+### Cost Optimization
+
+```bash
+# Monitor costs regularly
+r2go2 analytics cost analyze my-bucket --period=30d
+
+# Set lifecycle policies for old data
+r2go2 bucket update temp-bucket --add-tags=auto-expire=30d
+
+# Use cache headers appropriately
+r2go2 object put my-bucket ./static.css \
+  --key="css/static.css" \
+  --cache-control="max-age=31536000,immutable"
+
+# Clean up unused buckets
+r2go2 bucket list --json | jq '.buckets[] | select(.creation_date < (now - 90*24*3600 | strftime("%Y-%m-%dT%H:%M:%SZ")))'
+```
+
+### Automation
+
+```bash
+# Use dry run for critical operations
+r2go2 bucket delete production-backup --dry-run
+
+# Implement proper error handling
+#!/bin/bash
+set -euo pipefail
+
+r2go2 object put "$BUCKET" "$FILE" --key="$KEY" || {
+    echo "Upload failed: $FILE"
+    exit 1
+}
+
+# Use JSON output for scripting
+result=$(r2go2 bucket create "my-bucket" --json)
+success=$(echo "$result" | jq -r '.success')
+
+if [ "$success" = "true" ]; then
+    echo "Bucket created successfully"
+else
+    echo "Bucket creation failed: $(echo "$result" | jq -r '.error')"
+    exit 1
+fi
+```
+
+---
+
+## 📞 Support & Resources
 
 - **Documentation**: [README.md](README.md)
+- **Project Roadmap**: [docs/roadmap/roadmap.md](docs/roadmap/roadmap.md)
 - **Issues**: [GitHub Issues](https://github.com/CosmoLabs-org/CosmoDev-R2Go2/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/CosmoLabs-org/CosmoDev-R2Go2/discussions)
-- **Session History**: [docs/sessions/](docs/sessions/)
+- **Change Log**: [CHANGELOG.md](CHANGELOG.md)
+
+### Getting Help
+
+```bash
+# Built-in help
+r2go2 --help
+r2go2 bucket --help
+r2go2 object --help
+
+# Command completion
+r2go2 completion bash > ~/.local/share/bash-completion/completions/r2go2
+
+# Version information
+r2go2 --version
+r2go2 auth status
+```
 
 ---
 
-**Version**: 0.1.0 | **Last Updated**: 2025-11-24 | **License**: MIT
+**Version**: 1.0.0 | **Last Updated**: 2025-01-24 | **License**: MIT
+
+*Built with ❤️ by CosmoLabs for the modern development ecosystem*
