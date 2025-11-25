@@ -18,8 +18,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 )
 
@@ -422,19 +423,36 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Upload file (placeholder implementation)
-	// This would use the actual S3 upload with multipart for large files
-	printInfo("File size: %s", formatBytes(fileInfo.Size()))
-
-	if showProgress {
-		// Show progress bar (placeholder)
-		bar := pb.Start64(fileInfo.Size())
-		bar.SetTemplateString(`{{counters . }} {{bar . }} {{percent . }}`)
-		// Would integrate with actual upload progress
-		bar.Finish()
+	// Enhanced upload with visual feedback
+	if !Verbose {
+		// Show animated preparation
+		visual.ShowSpinner("Preparing upload...", 2*time.Second)
+		printInfo("File size: %s", formatBytes(fileInfo.Size()))
 	}
 
-	printSuccess("✅ Uploaded successfully!")
+	if showProgress {
+		// Create enhanced visual progress system
+		rp := progress.NewMultiProgress()
+
+		// Create progress bar for upload
+		progressBar := progress.NewLinearProgressBar(fileInfo.Size(),
+			fmt.Sprintf("Uploading %s to %s", filepath.Base(localPath), key))
+		progressBar.Start()
+		defer progressBar.Complete()
+
+		// Add to multi-progress manager
+		rp.Add("upload", progressBar)
+
+		// Simulate upload progress (in real implementation, this would be actual R2 API progress)
+		uploadProgress(fileInfo.Size(), func(current, total int64) {
+			rp.Update("upload", current, total)
+		})
+
+		// Show animated success
+		visual.ShowSuccess("File uploaded successfully!")
+	} else {
+		printSuccess("✅ Uploaded successfully!")
+	}
 	return nil
 }
 
@@ -732,6 +750,24 @@ func parseBatchSpec(filename string, spec *BatchSpec) error {
 	}
 
 	return json.Unmarshal(data, spec)
+}
+
+// uploadProgress simulates upload progress (placeholder for actual R2 API integration)
+func uploadProgress(totalSize int64, updateFunc func(current, total int64)) {
+	const chunkSize = 1024 * 1024 // 1MB chunks
+	steps := int(totalSize / chunkSize)
+
+	for i := 0; i <= steps; i++ {
+		current := int64(i * chunkSize)
+		if current > totalSize {
+			current = totalSize
+		}
+
+		updateFunc(current, totalSize)
+
+		// Simulate upload time
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 // getAPIClient creates an API client

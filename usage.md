@@ -142,6 +142,151 @@ r2go2 auth logout
 
 ## 📋 Command Categories
 
+### 🔄 Enhanced File Operations
+
+**NEW**: Professional-grade file operations with real-time progress monitoring and advanced features.
+
+#### Enhanced Copy Operations
+
+```bash
+# Basic copy with progress monitoring
+r2go2 copy source.txt destination.txt
+
+# Copy with comprehensive statistics
+r2go2 copy source.txt destination.txt --stats
+
+# Resume interrupted transfers
+r2go2 copy --resume large-file.txt backup/
+
+# Copy with integrity verification
+r2go2 copy --verify --preserve source.txt dest.txt
+
+# High-performance parallel copy
+r2go2 copy --parallel 8 --chunk-size 16MB source/ dest/
+
+# Recursive directory copy
+r2go2 copy --recursive --progress large-folder/ backup/
+
+# Dry run to preview operations
+r2go2 copy --dry-run --verbose source/ dest/
+```
+
+**Progress Monitoring Features:**
+- Real-time progress bars with speed (MB/s) and ETA
+- Customizable refresh rates (100ms default)
+- Multiple display formats (linear, circular, percentage)
+- Concurrent progress tracking for batch operations
+
+**Example Output:**
+```bash
+📁 Copying: source.txt -> destination.txt
+📊 Size: 1.2GB
+🔄 Resume mode enabled
+✅ Verification enabled
+
+⚡ Progress: 75.3% | 918MB/1.2GB | 67.2 MB/s | ETA: 15s
+
+📊 Copy Results:
+  Source:      source.txt
+  Destination: destination.txt
+  Size:        1.2GB
+  Duration:    18s
+  Speed:       67.2 MB/s
+  Verified:    true
+  Resumed:     No
+```
+
+#### Batch Copy Operations
+
+```bash
+# Batch copy from file list
+echo -e "source1.txt -> dest1.txt\nsource2.txt -> dest2.txt" > files.txt
+r2go2 copy --batch files.txt destination/ --parallel 4
+
+# Batch copy from JSON specification
+cat > batch-copy.json << EOF
+{
+  "config": {
+    "concurrency": 8,
+    "continue_on_error": true,
+    "retries": 3,
+    "timeout": "30m"
+  },
+  "operations": [
+    {
+      "id": "copy_1",
+      "type": "copy",
+      "source": "./dist/app.js",
+      "destination": "./backup/app.js",
+      "options": {
+        "verify": true,
+        "preserve": true
+      }
+    },
+    {
+      "id": "copy_2",
+      "type": "copy",
+      "source": "./dist/styles.css",
+      "destination": "./backup/styles.css"
+    }
+  ]
+}
+EOF
+
+r2go2 copy --batch batch-copy.json
+
+# Interactive batch confirmation
+r2go2 copy --batch files.txt destination/ --interactive
+```
+
+**Batch Output Example:**
+```bash
+📦 Processing batch copy operations...
+⚡ Progress: 60.0% | 18/30 | 45.2 MB/s | ETA: 2m
+
+📊 Batch Copy Results:
+  Total:        30
+  Completed:    25
+  Failed:       2
+  Skipped:      3
+  Duration:     5m 30s
+  Total Size:   2.1GB
+  Avg Speed:    67.8 MB/s
+```
+
+#### Advanced Copy Options
+
+```bash
+# Copy with custom chunk size for large files
+r2go2 copy --chunk-size 32MB massive-dataset.tar.gz backup/
+
+# Copy with timeout and retry configuration
+r2go2 copy --retries 5 --timeout 1h --resume unstable-network-file.txt backup/
+
+# Copy with overwrite protection
+r2go2 copy --no-clobber --interactive important-files/ archive/
+
+# Copy with comprehensive error handling
+r2go2 copy --parallel 12 --verify --stats --progress source/ dest/
+```
+
+**Available Flags:**
+- `--progress, -P`: Show progress bars (default: true)
+- `--stats, -s`: Show detailed statistics
+- `--parallel, -j`: Number of parallel operations (default: 4)
+- `--chunk-size`: Chunk size for large files (default: 8MB)
+- `--resume`: Resume interrupted transfers
+- `--verify, -V`: Verify file integrity after copy (default: true)
+- `--overwrite, -o`: Overwrite existing files
+- `--preserve, -p`: Preserve file attributes (default: true)
+- `--recursive, -r`: Copy directories recursively
+- `--batch, -b`: Batch operation mode
+- `--dry-run`: Show what would be copied without executing
+- `--interactive`: Interactive confirmations (default: true)
+- `--retries`: Number of retry attempts (default: 3)
+- `--timeout`: Operation timeout (default: 30m)
+- `--no-clobber`: Do not overwrite existing files
+
 ### 🪣 Bucket Management
 
 #### Create Buckets

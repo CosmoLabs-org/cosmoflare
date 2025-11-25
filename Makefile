@@ -13,7 +13,7 @@ GOMOD=$(GOCMD) mod
 # Binary info
 BINARY_NAME=R2Go2
 BINARY_UNIX=$(BINARY_NAME)_unix
-VERSION=$(shell cat VERSION)
+VERSION=$(shell jq -r '.repository.version' .version-registry.json)
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=$(GIT_COMMIT)"
@@ -227,17 +227,44 @@ vet:
 	@echo "🔎 Vetting code..."
 	$(GOCMD) vet ./...
 
-# Install binary locally
+# Install binary locally (defaults to ~/.local/bin if GOPATH not set)
 .PHONY: install
 install: build
-	@echo "📥 Installing $(BINARY_NAME) to $(GOPATH)/bin..."
-	cp $(BUILD_DIR)/$(BINARY_NAME) $(GOPATH)/bin/
+	@INSTALL_PATH="$${GOPATH:-$$HOME/.local}"/bin; \
+	mkdir -p "$$INSTALL_PATH"; \
+	echo "📥 Installing $(BINARY_NAME) to $$INSTALL_PATH/r2go2..."; \
+	cp $(BUILD_DIR)/$(BINARY_NAME) "$$INSTALL_PATH/r2go2"; \
+	chmod +x "$$INSTALL_PATH/r2go2"; \
+	echo "✅ Installed successfully!"; \
+	if ! echo "$$PATH" | grep -q "$$INSTALL_PATH"; then \
+		SHELL_RC="$$HOME/.zshrc"; \
+		if [ -f "$$HOME/.bashrc" ] && [ ! -f "$$HOME/.zshrc" ]; then \
+			SHELL_RC="$$HOME/.bashrc"; \
+		fi; \
+		if ! grep -q "$$INSTALL_PATH" "$$SHELL_RC" 2>/dev/null; then \
+			echo "" >> "$$SHELL_RC"; \
+			echo "# R2Go2 CLI" >> "$$SHELL_RC"; \
+			echo "export PATH=\"$$INSTALL_PATH:\$$PATH\"" >> "$$SHELL_RC"; \
+			echo "✅ Added $$INSTALL_PATH to PATH in $$SHELL_RC"; \
+		fi; \
+		echo ""; \
+		echo "🔄 Run this to use r2go2 now:"; \
+		echo "   source $$SHELL_RC"; \
+		echo ""; \
+		echo "   Or just open a new terminal."; \
+	else \
+		echo ""; \
+		echo "🎉 Ready to use! Run: r2go2 --version"; \
+	fi
 
-# Install to /usr/local/bin (requires sudo)
+# Install to /usr/local/bin (system-wide, prompts for password)
 .PHONY: install-system
 install-system: build
-	@echo "📥 Installing $(BINARY_NAME) to /usr/local/bin..."
-	sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/
+	@echo "📥 Installing $(BINARY_NAME) to /usr/local/bin/r2go2..."
+	@echo "🔐 You may be prompted for your password..."
+	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/r2go2
+	@sudo chmod +x /usr/local/bin/r2go2
+	@echo "✅ Installed successfully! Run: r2go2 --version"
 
 # Clean build artifacts
 .PHONY: clean

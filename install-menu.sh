@@ -204,7 +204,7 @@ use_local_build() {
 
     # Check if local build exists
     if [ ! -f "./build/$BINARY_NAME" ]; then
-        error_msg "Local build not found at ./build/$B2GO2"
+        error_msg "Local build not found at ./build/$BINARY_NAME"
         echo -e "${YELLOW}Try running: make build${NC}"
         return 1
     fi
@@ -420,6 +420,11 @@ initialize() {
     # Set up signal handling
     trap 'echo -e "\n${YELLOW}⚠️  Installation interrupted${NC}"; exit 1' INT
 
+    # Binary and installation configuration
+    BINARY_NAME="R2Go2"
+    INSTALL_DIR="$HOME/.local/bin"
+    CONFIG_DIR="$HOME/.config/r2go2"
+
     # Check if running in interactive terminal
     if [ -t 0 ]; then
         # Interactive mode - show colors
@@ -452,7 +457,7 @@ main() {
     initialize
 
     # Check dependencies
-    if [ ! -f "./build/r2go2" ] && ! command_exists curl && ! command_exists wget; then
+    if [ ! -f "./build/R2Go2" ] && ! command_exists curl && ! command_exists wget; then
         handle_error "Neither curl nor wget available for downloading."
     fi
 

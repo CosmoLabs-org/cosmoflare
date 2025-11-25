@@ -95,6 +95,55 @@ func generateMockBuckets(count int) []MockBucket {
 	return buckets
 }
 
+// ListObjects returns mock object data or error
+func (m *MockR2Client) ListObjects(bucketName string, prefix string) ([]MockObject, error) {
+	if m.shouldFail {
+		return nil, fmt.Errorf("mock error: %s", m.errorMessage)
+	}
+	return m.objects, nil
+}
+
+// GetBucket returns a specific mock bucket or error
+func (m *MockR2Client) GetBucket(name string) (*MockBucket, error) {
+	if m.shouldFail {
+		return nil, fmt.Errorf("mock error: %s", m.errorMessage)
+	}
+
+	for _, bucket := range m.buckets {
+		if bucket.Name == name {
+			return &bucket, nil
+		}
+	}
+
+	return nil, fmt.Errorf("bucket not found: %s", name)
+}
+
+// UploadFile simulates file upload
+func (m *MockR2Client) UploadFile(bucketName, objectKey, filePath string) error {
+	if m.shouldFail {
+		return fmt.Errorf("mock error: %s", m.errorMessage)
+	}
+
+	// Simulate adding object
+	newObject := MockObject{
+		Key:          objectKey,
+		Size:         1024, // Mock size
+		LastModified: time.Now(),
+		ETag:         fmt.Sprintf("\"mock-upload-etag-%d\"", len(m.objects)),
+		StorageClass: "STANDARD",
+	}
+	m.objects = append(m.objects, newObject)
+	return nil
+}
+
+// DownloadFile simulates file download
+func (m *MockR2Client) DownloadFile(bucketName, objectKey, filePath string) error {
+	if m.shouldFail {
+		return fmt.Errorf("mock error: %s", m.errorMessage)
+	}
+	return nil
+}
+
 // generateMockObjects creates mock object data
 func generateMockObjects(count int, prefix string) []MockObject {
 	objects := make([]MockObject, count)
