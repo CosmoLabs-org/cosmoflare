@@ -20,16 +20,24 @@ This directory contains session documentation for the R2Go2 project development 
 ## 🎯 **Session Naming Convention**
 
 ### **Session Files**
-- **Format**: `YYYY-MM-DD-session-XXX-session-name.md`
+- **Format**: `Session-XXX-kebab-case-name.md`
+- **XXX**: Zero-padded 3-digit number (001, 002, ... 099, 100)
+- **Name**: Kebab-case descriptive title
 - **Examples**:
-  - `2025-01-24-session-007-advanced-testing-implementation.md`
-  - `2025-01-24-session-008-dual-track-development.md`
+  - `Session-001-initial-bootstrap.md`
+  - `Session-007-advanced-testing.md`
+  - `Session-009-tui-installer-redesign.md`
 
-### **Prompt Files**
-- **Format**: `CONTINUATION-session-XXX-feature-name.md`
+### **Sub-Sessions**
+For related work within the same session number, use letter suffix:
+- **Format**: `Session-XXXa-name.md`, `Session-XXXb-name.md`
+- **Example**: `Session-008b-dual-track-development.md`
+
+### **Prompt Files** (in `docs/prompts/`)
+- **Format**: `YYYY-MM-DD-descriptive-name.md`
 - **Examples**:
+  - `2025-01-25-tui-installer-wizard-implementation.md`
   - `CONTINUATION-session-008-tui-installer.md`
-  - `CONTINUATION-session-008-cli-features.md`
 
 ## 📚 **Session Types**
 
