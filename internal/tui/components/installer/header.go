@@ -180,7 +180,7 @@ func (h *HeaderModel) renderHeaderContent() string {
 	return strings.Join(content, "\n")
 }
 
-// renderProgressBar renders a compact inline progress bar
+// renderProgressBar renders a gradient progress bar
 func (h *HeaderModel) renderProgressBar() string {
 	if h.MaxProgress <= 0 {
 		return ""
@@ -190,14 +190,36 @@ func (h *HeaderModel) renderProgressBar() string {
 	barWidth := 30
 	filledWidth := int(float64(barWidth) * percentage)
 
-	filled := strings.Repeat("█", filledWidth)
-	empty := strings.Repeat("░", barWidth-filledWidth)
+	// Gradient colors from cyan to green to yellow
+	gradientColors := []string{
+		"#00D4AA", "#00D4AA", "#00D4AA", "#00D4AA", "#00D4AA", // Cyan
+		"#10B981", "#10B981", "#10B981", "#10B981", "#10B981", // Green
+		"#34D399", "#34D399", "#34D399", "#34D399", "#34D399", // Light green
+		"#6EE7B7", "#6EE7B7", "#6EE7B7", "#6EE7B7", "#6EE7B7", // Lighter green
+		"#A7F3D0", "#A7F3D0", "#A7F3D0", "#A7F3D0", "#A7F3D0", // Mint
+		"#FCD34D", "#FCD34D", "#FCD34D", "#FCD34D", "#FCD34D", // Yellow/gold
+	}
+
+	// Build gradient filled portion
+	var filled strings.Builder
+	for i := 0; i < filledWidth; i++ {
+		colorIdx := i
+		if colorIdx >= len(gradientColors) {
+			colorIdx = len(gradientColors) - 1
+		}
+		charStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(gradientColors[colorIdx]))
+		filled.WriteString(charStyle.Render("█"))
+	}
+
+	// Empty portion
+	empty := h.styles.Border.Render(strings.Repeat("░", barWidth-filledWidth))
 	pct := fmt.Sprintf("%3d%%", int(percentage*100))
 
-	bar := h.styles.Progress.Render(filled) + h.styles.Border.Render(empty)
+	bar := filled.String() + empty
 
 	if h.Progress >= h.MaxProgress {
-		return fmt.Sprintf("%s %s ✓", bar, pct)
+		checkStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981")).Bold(true)
+		return fmt.Sprintf("%s %s %s", bar, pct, checkStyle.Render("✓"))
 	}
 	return fmt.Sprintf("%s %s", bar, pct)
 }
