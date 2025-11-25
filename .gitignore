@@ -86,6 +86,6 @@ local/
 cloudflare-token-*
 account-id-*
 
-# Session files that might contain sensitive data
-session-*
-work-session-*
+# Temporary session working files (NOT docs/sessions/ which should be committed)
+/session-*
+/work-session-*
