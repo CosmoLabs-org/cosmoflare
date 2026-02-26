@@ -1,0 +1,117 @@
+{
+  "version": "2.0.0",
+  "synced": "2026-02-24T23:56:31+01:00",
+  "source": "ClaudeCodeSetup",
+  "seeded_files": {
+    "docs/FEATURES.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "6429ebfac9ad7840"
+    },
+    "docs/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "6aa3fa593e601679"
+    },
+    "docs/architecture/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "e7aed9b4d11f6a31"
+    },
+    "docs/bookmarks/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "57027f97d9fd3aa4"
+    },
+    "docs/brainstorming/README.md": {
+      "version": "1.1.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "6d1bba4c82d2e5b9"
+    },
+    "docs/brainstorming/SOPs/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "e2050a2191578582"
+    },
+    "docs/brainstorming/collaborative-template.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "ce7bea99600269ac"
+    },
+    "docs/competitive-analysis/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "be92785eec6fef82"
+    },
+    "docs/competitive-analysis/comparison-matrix.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "7a1434293ff393f0"
+    },
+    "docs/feedback/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "ea4bbc79a84eddca"
+    },
+    "docs/handoffs/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "2fad3aa7f2de1e63"
+    },
+    "docs/handoffs/index.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "5b3ca739263a6d48"
+    },
+    "docs/instructions/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "7ceceb2064932f72"
+    },
+    "docs/knowledge-base/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "7e1c1372c2b02dec"
+    },
+    "docs/lessons/LESSONS.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "c5a0f32ae40ccaa2"
+    },
+    "docs/lessons/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "98952f90f109c04d"
+    },
+    "docs/planning-mode/README.md": {
+      "version": "1.1.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "c0e687b7fbdae6c2"
+    },
+    "docs/prompts/README.md": {
+      "version": "1.1.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "dce32bbd28766b62"
+    },
+    "docs/release-notes/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "808d7f64d5c7679f"
+    },
+    "docs/roadmap/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "cc644cfa6b4cc1fd"
+    },
+    "docs/sops/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "1a4f53118eb1fa43"
+    },
+    "docs/workflows/README.md": {
+      "version": "1.0.0",
+      "seeded_at": "2026-02-24T23:56:31+01:00",
+      "original_hash": "aca14e4b02eb1fe3"
+    }
+  }
+}

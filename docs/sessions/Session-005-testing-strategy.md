@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: COMPLETED
+title: Session 005 - 2025-11-24
+---
+
 # Session 005 - 2025-11-24
 
 ## Date

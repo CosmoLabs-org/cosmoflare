@@ -1,3 +1,12 @@
+---
+branch: tui-installer-wizard-implementation
+created: "2025-01-25"
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: 'Continuation Prompt: TUI Installer Post-Installation Wizard Implementation'
+---
+
 # Continuation Prompt: TUI Installer Post-Installation Wizard Implementation
 
 ## Project Context

@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: COMPLETED
+title: 'Session 002: R2Go2 Interactive Setup & Dual-Use Vision'
+---
+
 # Session 002: R2Go2 Interactive Setup & Dual-Use Vision
 
 **Date**: 2025-11-24

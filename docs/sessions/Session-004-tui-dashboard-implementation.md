@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: COMPLETED
+title: Session 004 - 2025-11-24 - TUI Dashboard Implementation
+---
+
 # Session 004 - 2025-11-24 - TUI Dashboard Implementation
 
 ## Date

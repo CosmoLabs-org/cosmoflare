@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: COMPLETED
+title: 'Session 001: Initial Bootstrap & CLI Implementation'
+---
+
 # Session 001: Initial Bootstrap & CLI Implementation
 
 **Date**: 2025-11-24

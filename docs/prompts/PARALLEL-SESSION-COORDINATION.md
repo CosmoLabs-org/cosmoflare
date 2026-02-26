@@ -1,3 +1,13 @@
+---
+created: ""
+goals_completed: 0
+goals_total: 15
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: R2Go2 Parallel Session Coordination Guide
+---
+
 # R2Go2 Parallel Session Coordination Guide
 
 ## 🎯 Overview

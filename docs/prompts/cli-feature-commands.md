@@ -1,3 +1,13 @@
+---
+created: ""
+goals_completed: 0
+goals_total: 5
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: R2Go2 CLI Feature Commands
+---
+
 # R2Go2 CLI Feature Commands
 
 ## Claude Code Integration Prompts

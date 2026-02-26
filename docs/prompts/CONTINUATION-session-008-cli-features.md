@@ -1,3 +1,13 @@
+---
+created: ""
+goals_completed: 0
+goals_total: 48
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: 'Session 008 Prompt: Enhanced CLI Features - Real File Operations'
+---
+
 # Session 008 Prompt: Enhanced CLI Features - Real File Operations
 
 **Objective**: Implement advanced CLI features for R2Go2 with professional progress bars, batch operations, and user-friendly error handling to complement the professional TUI interface.

@@ -1,3 +1,14 @@
+---
+branch: r2go2-initial-development
+created: "2025-11-24"
+goals_completed: 3
+goals_total: 16
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: R2Go2 Initial Development Planning
+---
+
 # R2Go2 Initial Development Planning
 
 **Date**: 2025-11-24

@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: Continuation Prompt - R2Go2 v0.2.0
+---
+
 # Continuation Prompt - R2Go2 v0.2.0
 
 ## Session Focus

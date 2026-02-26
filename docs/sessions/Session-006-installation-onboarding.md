@@ -1,3 +1,11 @@
+---
+created: ""
+origin: migrated by ccs prompts migrate
+priority: medium
+status: COMPLETED
+title: Session 006 - 2025-11-24 - Installation & Onboarding Enhancement
+---
+
 # Session 006 - 2025-11-24 - Installation & Onboarding Enhancement
 
 ## Date

@@ -3,6 +3,7 @@
 # Binaries
 r2go2
 r2go2.exe
+r2go2-*
 *.exe
 
 # Build artifacts
@@ -89,3 +90,4 @@ account-id-*
 # Temporary session working files (NOT docs/sessions/ which should be committed)
 /session-*
 /work-session-*
+plugins/internal
