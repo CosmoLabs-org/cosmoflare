@@ -1,0 +1,83 @@
+version: "1.0"
+project: CosmoDev-R2Go2
+last_updated: 2026-02-26T01:34:25.049006+01:00
+next_bug_id: 7
+next_feat_id: 5
+next_task_id: 4
+next_imp_id: 1
+issues:
+    - id: ""
+      type: ""
+      status: ""
+      title: ""
+    - id: BUG-001
+      type: bug
+      status: open
+      title: 'Speed calculation bug: time.Since(time.Now()) always returns 0'
+      severity: critical
+      created_at: 2026-02-26T01:32:24.221002+01:00
+    - id: BUG-002
+      type: bug
+      status: open
+      title: PersistentPreRun blocks non-API commands
+      severity: high
+      created_at: 2026-02-26T01:32:26.621578+01:00
+    - id: BUG-003
+      type: bug
+      status: open
+      title: CI workflows use non-existent Go version 1.25.3
+      severity: critical
+      created_at: 2026-02-26T01:32:28.678497+01:00
+    - id: BUG-004
+      type: bug
+      status: open
+      title: TUI menu keyboard shortcuts off-by-one
+      severity: high
+      created_at: 2026-02-26T01:32:30.742306+01:00
+    - id: BUG-005
+      type: bug
+      status: open
+      title: YAML parsing not implemented in bucket import
+      severity: high
+      created_at: 2026-02-26T01:32:32.459081+01:00
+    - id: BUG-006
+      type: bug
+      status: open
+      title: Object search regex/glob use fake string matching
+      severity: high
+      created_at: 2026-02-26T01:32:34.4926+01:00
+    - id: FEAT-001
+      type: feature
+      status: open
+      title: TUI command palette with fuzzy search
+      created_at: 2026-02-26T01:33:06.914932+01:00
+    - id: FEAT-002
+      type: feature
+      status: open
+      title: Local HTTP dev server proxying to R2
+      created_at: 2026-02-26T01:33:08.490925+01:00
+    - id: FEAT-003
+      type: feature
+      status: open
+      title: Pipe and stdin support for Unix composition
+      created_at: 2026-02-26T01:33:10.720875+01:00
+    - id: FEAT-004
+      type: feature
+      status: open
+      title: Bucket comparison tool for migration validation
+      created_at: 2026-02-26T01:33:12.685916+01:00
+    - id: TASK-001
+      type: task
+      status: open
+      title: Consolidate formatBytes into internal/util package
+      created_at: 2026-02-26T01:33:14.270224+01:00
+    - id: TASK-002
+      type: task
+      status: open
+      title: Add interface-based API client for testability
+      created_at: 2026-02-26T01:33:15.836584+01:00
+    - id: TASK-003
+      type: task
+      status: open
+      title: Remove dead demo files from cmd_disabled
+      created_at: 2026-02-26T01:33:17.727817+01:00

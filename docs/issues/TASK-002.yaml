@@ -1,0 +1,13 @@
+id: TASK-002
+type: task
+created_at: 2026-02-26T01:33:15.836584+01:00
+updated_at: 2026-02-26T01:33:15.83659+01:00
+source: local
+status: open
+category: refactor
+origin:
+  roadmap_items:
+    - ROAD-000
+
+title: Add interface-based API client for testability
+description: Define BucketService and ObjectService interfaces in internal/api/interfaces.go. Enables mock testing and future provider swapping.

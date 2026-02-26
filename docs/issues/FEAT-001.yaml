@@ -1,0 +1,19 @@
+id: FEAT-001
+type: feature
+created_at: 2026-02-26T01:33:06.914932+01:00
+updated_at: 2026-02-26T01:33:06.914941+01:00
+source: local
+status: open
+origin:
+  roadmap_items:
+    - ROAD-002
+
+title: TUI command palette with fuzzy search
+description: Ctrl+P fuzzy search across all available commands, context-aware, like VS Code/lazygit
+acceptance_criteria:
+    - criterion: Opens on Ctrl+P
+      met: false
+    - criterion: Fuzzy matches commands
+      met: false
+    - criterion: Context-sensitive results
+      met: false

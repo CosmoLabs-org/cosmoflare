@@ -1,0 +1,12 @@
+id: BUG-005
+type: bug
+created_at: 2026-02-26T01:32:32.459081+01:00
+updated_at: 2026-02-26T01:32:32.459094+01:00
+source: local
+severity: high
+status: open
+title: YAML parsing not implemented in bucket import
+description: bucket import help text advertises YAML support but parseSpecFile returns error. gopkg.in/yaml.v3 is already a dependency.
+fix_direction: Add yaml.Unmarshal fallback in parseSpecFile after JSON parsing fails. Import gopkg.in/yaml.v3.
+affected_files:
+    - cmd/bucket.go

@@ -1,0 +1,7 @@
+id: ROAD-001
+created_at: 2026-02-26T01:32:42.300608+01:00
+updated_at: 2026-02-26T01:33:23.430811+01:00
+title: Consolidate duplicated code (formatBytes x9, maskAccountID x3)
+status: captured
+linked_issues:
+    - TASK-001

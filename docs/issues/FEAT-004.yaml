@@ -1,0 +1,15 @@
+id: FEAT-004
+type: feature
+created_at: 2026-02-26T01:33:12.685916+01:00
+updated_at: 2026-02-26T01:33:12.685927+01:00
+source: local
+status: open
+title: Bucket comparison tool for migration validation
+description: 'r2go2 compare command shows differences between two buckets: objects only in A, only in B, different in both. Useful for migration verification.'
+acceptance_criteria:
+    - criterion: Side-by-side diff
+      met: false
+    - criterion: Size and date comparison
+      met: false
+    - criterion: Export results
+      met: false
