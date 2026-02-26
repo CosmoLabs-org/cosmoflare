@@ -57,6 +57,8 @@ R2Go2 is a **revolutionary CLI tool** that combines **professional-grade file op
 
 **R2Go2** is designed to be the **foundational CLI component** of a comprehensive Cloudflare management ecosystem. While it provides a beautiful TUI for human interaction, its true power lies in being a **programmable, JSON-based tool** that can drive sophisticated GUI applications for managing Pages, Workers, and other Cloudflare services.
 
+To understand how R2Go2 fits into the ecosystem of Cloudflare tools, read our [Project Philosophy and Comparison to Wrangler](docs/PROJECT_PHILOSOPHY.md).
+
 ### 🎮 Interactive TUI Mode
 - **Beautiful Visual Interface**: Keyboard navigation, real-time dashboards
 - **Professional UX**: Matches enterprise tools like GitHub CLI
