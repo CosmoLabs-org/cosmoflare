@@ -9,25 +9,16 @@ Master index of persistent learnings. Grouped by category, updated as lessons ac
 
 ## Categories
 
-<!-- Categories are added organically as lessons accumulate -->
-<!--
-Example structure after lessons are added:
+## Go
 
-## API
-- [Rate Limiting](LESSON-001-api-rate-limiting.md) - ⚠️ Updated 2x (latest: 2026-01-15)
-  > Always implement exponential backoff; also applied to webhook retries
+- [HTTP Headers Before WriteHeader](LESSON-001-go-http-header-before-writeheader.md)
+  > `w.Header().Set()` after `w.WriteHeader()` is silently ignored — set headers first
 
-## SwiftUI
-- [State Management](LESSON-002-swiftui-state-management.md)
-  > Use AppState.shared singleton pattern to prevent duplication
+- [json.Marshal HTML Escaping](LESSON-002-go-json-marshal-html-escaping.md)
+  > `json.Marshal` converts `<`/`>` to `\u003c`/`\u003e` — check decoded values for injection detection
 
-## Git
-- [Worktree Isolation](LESSON-003-git-worktree-isolation.md)
-  > Each parallel task needs its own worktree for clean merges
-
--->
-
-*No lessons recorded yet. Run `/session-summary` at end of sessions to capture learnings.*
+- [Case-Sensitive Patterns After ToLower](LESSON-003-case-sensitive-pattern-matching-after-tolower.md)
+  > When lowercasing input, patterns must also be lowercase or they never match
 
 ---
 
@@ -40,6 +31,6 @@ Example structure after lessons are added:
 
 ## Statistics
 
-- **Total Lessons**: 0
+- **Total Lessons**: 3
 - **Most Updated**: -
-- **Last Added**: -
+- **Last Added**: 2026-03-02 (Session 014)
