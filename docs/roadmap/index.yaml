@@ -1,8 +1,72 @@
 version: ""
 project: ""
-last_updated: 2026-03-02T12:31:59.198032+01:00
-next_id: 9
+last_updated: 2026-03-02T23:33:31.439104+01:00
+next_id: 17
 items:
+    - id: ROAD-016
+      title: CORS and access control configuration commands
+      status: captured
+      priority: 52
+      category: security
+      effort: medium
+      created_at: 2026-03-02T23:33:08.526846+01:00
+    - id: ROAD-015
+      title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions
+      status: captured
+      priority: 68
+      category: infra
+      effort: medium
+      linked_issues:
+        - BUG-003
+      created_at: 2026-03-02T23:33:07.711386+01:00
+    - id: ROAD-014
+      title: Retry logic with exponential backoff and error recovery
+      status: captured
+      priority: 76
+      category: infra
+      effort: small
+      linked_issues:
+        - BUG-002
+      created_at: 2026-03-02T23:33:04.050263+01:00
+    - id: ROAD-013
+      title: Multipart uploads and resumable transfers for large files
+      status: captured
+      priority: 77
+      category: core
+      effort: large
+      created_at: 2026-03-02T23:33:03.291987+01:00
+    - id: ROAD-012
+      title: Shell completions (bash, zsh, fish) via Cobra generation
+      status: captured
+      priority: 72
+      category: ux
+      effort: small
+      created_at: 2026-03-02T23:33:02.496126+01:00
+    - id: ROAD-011
+      title: Enhanced bucket management (get metadata, update tags, exists check, bulk import)
+      status: captured
+      priority: 78
+      category: core
+      effort: medium
+      created_at: 2026-03-02T23:32:59.512557+01:00
+    - id: ROAD-010
+      title: Complete object operations (copy, head, delete-version, range downloads)
+      status: captured
+      priority: 82
+      category: core
+      effort: large
+      linked_issues:
+        - BUG-006
+      created_at: 2026-03-02T23:32:58.753636+01:00
+    - id: ROAD-009
+      title: Config profiles system (init, validate, multi-profile switch)
+      status: captured
+      priority: 85
+      category: core
+      effort: medium
+      linked_issues:
+        - FEAT-002
+      created_at: 2026-03-02T23:32:57.861436+01:00
     - id: ROAD-008
       title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
       status: captured

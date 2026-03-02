@@ -1,0 +1,10 @@
+id: ROAD-015
+created_at: 2026-03-02T23:33:07.711386+01:00
+updated_at: 2026-03-02T23:33:27.407401+01:00
+title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions
+status: captured
+priority: 68
+category: infra
+effort: medium
+linked_issues:
+    - BUG-003

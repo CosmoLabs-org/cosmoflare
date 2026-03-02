@@ -1,0 +1,10 @@
+id: ROAD-010
+created_at: 2026-03-02T23:32:58.753636+01:00
+updated_at: 2026-03-02T23:33:25.726273+01:00
+title: Complete object operations (copy, head, delete-version, range downloads)
+status: captured
+priority: 82
+category: core
+effort: large
+linked_issues:
+    - BUG-006
