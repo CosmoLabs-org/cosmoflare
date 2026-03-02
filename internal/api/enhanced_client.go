@@ -58,10 +58,19 @@ type UploadOptions struct {
 	ProgressFunc  UploadProgressCallback `json:"-"`
 }
 
+// S3API defines the S3 operations used by EnhancedClient
+type S3API interface {
+	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	CreateMultipartUpload(ctx context.Context, params *s3.CreateMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.CreateMultipartUploadOutput, error)
+	UploadPart(ctx context.Context, params *s3.UploadPartInput, optFns ...func(*s3.Options)) (*s3.UploadPartOutput, error)
+	CompleteMultipartUpload(ctx context.Context, params *s3.CompleteMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.CompleteMultipartUploadOutput, error)
+	AbortMultipartUpload(ctx context.Context, params *s3.AbortMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.AbortMultipartUploadOutput, error)
+}
+
 // EnhancedClient extends the basic client with enhanced upload capabilities
 type EnhancedClient struct {
 	*Client
-	s3Client *s3.Client
+	s3Client S3API
 }
 
 // NewEnhancedClient creates a new enhanced R2 client
@@ -75,6 +84,18 @@ func NewEnhancedClient(baseClient *Client) (*EnhancedClient, error) {
 	return &EnhancedClient{
 		Client:   baseClient,
 		s3Client: baseClient.s3,
+	}, nil
+}
+
+// NewEnhancedClientWithS3 creates a new enhanced R2 client with an explicit S3 API
+func NewEnhancedClientWithS3(baseClient *Client, s3api S3API) (*EnhancedClient, error) {
+	if baseClient == nil {
+		return nil, fmt.Errorf("base client cannot be nil")
+	}
+
+	return &EnhancedClient{
+		Client:   baseClient,
+		s3Client: s3api,
 	}, nil
 }
 
