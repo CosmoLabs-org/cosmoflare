@@ -1,5 +1,8 @@
 id: ROAD-003
 created_at: 2026-02-26T01:32:44.3795+01:00
-updated_at: 2026-02-26T01:32:44.379522+01:00
+updated_at: 2026-03-02T12:31:38.746255+01:00
 title: rsync-like sync command for directory synchronization
 status: captured
+priority: 75
+category: core
+effort: large

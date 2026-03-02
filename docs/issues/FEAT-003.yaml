@@ -4,6 +4,10 @@ created_at: 2026-02-26T01:33:10.720875+01:00
 updated_at: 2026-02-26T01:33:10.720882+01:00
 source: local
 status: open
+origin:
+  roadmap_items:
+    - ROAD-008
+
 title: Pipe and stdin support for Unix composition
 description: 'Support piping: cat file | r2go2 put bucket/key - and r2go2 get bucket/key | grep pattern. Enables Unix tool composition.'
 acceptance_criteria:

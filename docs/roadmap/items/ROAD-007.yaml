@@ -1,5 +1,10 @@
 id: ROAD-007
 created_at: 2026-02-26T01:32:48.403851+01:00
-updated_at: 2026-02-26T01:32:48.403858+01:00
+updated_at: 2026-03-02T12:31:49.335174+01:00
 title: S3 to R2 migration engine with resume support
 status: captured
+priority: 50
+category: integration
+effort: large
+linked_issues:
+    - FEAT-004

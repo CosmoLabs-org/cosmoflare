@@ -1,9 +1,9 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-02-26T01:34:25.049006+01:00
+last_updated: 2026-03-02T12:43:54.689508+01:00
 next_bug_id: 7
 next_feat_id: 5
-next_task_id: 4
+next_task_id: 5
 next_imp_id: 1
 issues:
     - id: ""
@@ -81,3 +81,8 @@ issues:
       status: open
       title: Remove dead demo files from cmd_disabled
       created_at: 2026-02-26T01:33:17.727817+01:00
+    - id: TASK-004
+      type: task
+      status: open
+      title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
+      created_at: 2026-03-02T12:31:54.567993+01:00

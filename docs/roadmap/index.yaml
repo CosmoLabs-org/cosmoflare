@@ -1,44 +1,81 @@
 version: ""
 project: ""
-last_updated: 2026-02-26T01:33:23.519816+01:00
-next_id: 8
+last_updated: 2026-03-02T12:31:59.198032+01:00
+next_id: 9
 items:
+    - id: ROAD-008
+      title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
+      status: captured
+      priority: 70
+      category: ux
+      effort: large
+      linked_issues:
+        - FEAT-003
+      created_at: 2026-03-02T12:31:53.781451+01:00
     - id: ROAD-007
       title: S3 to R2 migration engine with resume support
       status: captured
+      priority: 50
+      category: integration
+      effort: large
+      linked_issues:
+        - FEAT-004
       created_at: 2026-02-26T01:32:48.403851+01:00
     - id: ROAD-006
       title: Real-time cost calculator and usage analytics
       status: captured
+      priority: 45
+      category: intelligence
+      effort: medium
       created_at: 2026-02-26T01:32:47.355325+01:00
     - id: ROAD-005
       title: 'Watch mode: auto-sync local directory to R2 on file changes'
       status: captured
+      priority: 55
+      category: workflow
+      effort: medium
       created_at: 2026-02-26T01:32:46.485405+01:00
     - id: ROAD-004
       title: Pre-signed URL generation command
       status: captured
+      priority: 60
+      category: core
+      effort: small
       created_at: 2026-02-26T01:32:45.415402+01:00
     - id: ROAD-003
       title: rsync-like sync command for directory synchronization
       status: captured
+      priority: 75
+      category: core
+      effort: large
       created_at: 2026-02-26T01:32:44.3795+01:00
     - id: ROAD-002
       title: TUI Object Browser with split-pane layout
       status: captured
+      priority: 65
+      category: ux
+      effort: large
       linked_issues:
         - FEAT-001
+        - BUG-004
       created_at: 2026-02-26T01:32:43.333657+01:00
     - id: ROAD-001
       title: Consolidate duplicated code (formatBytes x9, maskAccountID x3)
-      status: captured
+      status: planned
+      priority: 80
+      category: infra
+      effort: medium
       linked_issues:
         - TASK-001
       created_at: 2026-02-26T01:32:42.300608+01:00
     - id: ROAD-000
       title: Wire up real S3 API client (replace placeholders)
-      status: captured
+      status: planned
+      priority: 95
+      category: core
+      effort: large
       linked_issues:
         - BUG-001
         - TASK-002
+        - BUG-006
       created_at: 2026-02-26T01:32:40.944335+01:00

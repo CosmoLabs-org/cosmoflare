@@ -5,6 +5,10 @@ updated_at: 2026-02-26T01:32:34.492608+01:00
 source: local
 severity: high
 status: open
+origin:
+  roadmap_items:
+    - ROAD-000
+
 title: Object search regex/glob use fake string matching
 description: object search regex and glob types both use strings.Contains instead of real pattern matching
 fix_direction: Use regexp.MatchString for regex type and filepath.Match for glob type. Both are in Go stdlib.

@@ -5,6 +5,10 @@ updated_at: 2026-02-26T01:32:30.742309+01:00
 source: local
 severity: high
 status: open
+origin:
+  roadmap_items:
+    - ROAD-002
+
 title: TUI menu keyboard shortcuts off-by-one
 description: menu_selection.go line 170 calculates optionIndex as int(num-1)-1 so pressing 1 gives -1 and pressing 2 selects item 1
 fix_direction: Change optionIndex := int(num-'1')-1 to optionIndex := int(num-'1') on line 170
