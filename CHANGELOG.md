@@ -28,6 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.2.1] - 2026-03-02
+
+### Added
+- Upgrade project to CCS 2026.02 standards (migrations, USAGE.md, YAML frontmatter)
+- Comprehensive codebase analysis with 4 Opus agents (architecture, API, TUI, testing)
+- Initialize issues system with 6 bugs, 4 features, 3 tasks
+- Initialize roadmap system with 8 strategic items (ROAD-000 through ROAD-007)
+- initialize issue and roadmap tracking from codebase analysis (commit:896b979a)
+- complete TUI installer with wizard handlers and user-local install (commit:3b963938)
+
+### Changed
+- extract S3API interface for testability (commit:c4a90c86)
+
+### Fixed
+- allow docs/sessions/ files in gitignore (commit:0d71e97d)
+
 ## [0.1.0] - 2025-11-24
 
 ### Added
