@@ -1,0 +1,40 @@
+entries:
+    - id: "0001"
+      task: |-
+        Fix syntax error in tests/tui/accessibility/keyboard/navigation_test.go line 229. The line currently reads:
+        methods: []string{"F1 key", "?" key"},
+        It has a mismatched quote. Fix it to:
+        methods: []string{"F1 key", "? key"},
+        Then verify: go build ./tests/tui/accessibility/keyboard/
+      started: 2026-02-26T01:54:38.140814+01:00
+      completed: 2026-02-26T02:03:48.933348+01:00
+      status: discarded
+      reason: 'cleanup: failed'
+    - id: "0002"
+      task: "Fix UTF-8 character counting in tests/tui/components/dashboard/view_test.go.\n\nProblem: len() returns byte count (3) for UTF-8 chars like █ and ░ instead of rune count (1).\n\nStep-by-step changes:\n1. Add \"unicode/utf8\" to the import block\n2. Line 175: Change len(char) to utf8.RuneCountInString(char)\n3. Line 189: Change len(pattern) to utf8.RuneCountInString(pattern)  \n4. Fix progress patterns (lines 181-184) to all be exactly 20 runes:\n   - Line 181: keep as-is (1 █ + 19 ░ = 20) \n   - Line 182: change to \"████████████████████\" (20 █ chars)\n   - Line 183: change to \"██████████░░░░░░░░░░\" (10 █ + 10 ░ = 20)\n   - Line 184: change to \"░░░░░░░░░░░░░░░░░░░░\" (20 ░ chars)\n5. Fix progress pattern assertions (lines 190-191): Not all patterns contain both chars. Replace the two assert.Contains lines with conditional checks:\n   if utf8.RuneCountInString(strings.ReplaceAll(pattern, \"░\", \"\")) > 0 {\n     assert.Contains(t, pattern, \"█\", \"Should contain filled characters\")\n   }\n   if utf8.RuneCountInString(strings.ReplaceAll(pattern, \"█\", \"\")) > 0 {\n     assert.Contains(t, pattern, \"░\", \"Should contain empty characters\")  \n   }\n   Add \"strings\" to imports if not already present.\n\nVerify: go test -run TestViewRendering ./tests/tui/components/dashboard/"
+      started: 2026-02-26T01:54:45.778774+01:00
+      completed: 2026-02-26T02:03:49.079301+01:00
+      status: discarded
+      reason: 'cleanup: failed'
+    - id: "0003"
+      task: |-
+        Fix platform-specific permission test in tests/platform/cross_platform_test.go.
+
+        Problem: On macOS, /root/ doesn't exist (returns 'no such file or directory' not 'permission denied'). The test at line 273 uses /root/ for both darwin and linux.
+
+        Fix: Replace the 'darwin', 'linux' case (lines 272-273) with separate cases:
+        case "darwin":
+            restrictedDir := filepath.Join(t.TempDir(), "restricted")
+            os.Mkdir(restrictedDir, 0000)
+            restrictedPath = restrictedDir
+        case "linux":
+            restrictedPath = "/root/"
+
+        Add "path/filepath" to imports if not already present.
+        The os.Mkdir with 0000 perms creates a directory that exists but denies access.
+
+        Verify: go test -run TestErrorHandling ./tests/platform/
+      started: 2026-02-26T01:54:49.454579+01:00
+      completed: 2026-02-26T02:03:49.218924+01:00
+      status: discarded
+      reason: 'cleanup: failed'
