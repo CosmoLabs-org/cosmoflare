@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode/utf8"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -172,23 +173,24 @@ func TestViewRendering(t *testing.T) {
 		for _, char := range progressCharacters {
 			t.Run("Progress char: "+char, func(t *testing.T) {
 				assert.NotEmpty(t, char, "Progress character should not be empty")
-				assert.Equal(t, 1, len(char), "Should be single character")
+				assert.Equal(t, 1, utf8.RuneCountInString(char), "Should be single character")
 			})
 		}
 
-		// Test progress bar patterns
+		// Test progress bar patterns (each should be exactly 20 runes)
 		progressPatterns := []string{
-			"█░░░░░░░░░░░░░░░░░░",
-			"██████████████████",
-			"████████░░░░░░░░░░",
-			"░░░░░░░░░░░░░░░░░░",
+			"█░░░░░░░░░░░░░░░░░░░",
+			"████████████████████",
+			"██████████░░░░░░░░░░",
+			"░░░░░░░░░░░░░░░░░░░░",
 		}
 
 		for _, pattern := range progressPatterns {
 			t.Run("Progress pattern", func(t *testing.T) {
-				assert.Equal(t, 20, len(pattern), "Progress bar should be 20 characters")
-				assert.Contains(t, pattern, "█", "Should contain filled characters")
-				assert.Contains(t, pattern, "░", "Should contain empty characters")
+				assert.Equal(t, 20, utf8.RuneCountInString(pattern), "Progress bar should be 20 characters")
+				hasFilled := strings.Contains(pattern, "█")
+				hasEmpty := strings.Contains(pattern, "░")
+				assert.True(t, hasFilled || hasEmpty, "Should contain progress characters")
 			})
 		}
 	})

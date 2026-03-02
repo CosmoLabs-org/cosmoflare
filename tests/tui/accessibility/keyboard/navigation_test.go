@@ -11,9 +11,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	tea "github.com/charmbracelet/bubbletea"
-
-	r2tui "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui"
 )
 
 // TestKeyboardNavigationAccessibility tests comprehensive keyboard navigation
@@ -226,7 +223,7 @@ func TestKeyboardNavigationAccessibility(t *testing.T) {
 			},
 			{
 				name:        "Help access",
-				methods:     []string{"F1 key", "?" key"},
+				methods:     []string{"F1 key", "? key"},
 				description: "Multiple ways to access help",
 			},
 			{

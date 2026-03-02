@@ -8,7 +8,6 @@ License: MIT
 package tui
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -80,10 +79,10 @@ func BenchmarkNavigation(b *testing.B, model *TestModel, iterations int) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < iterations; j++ {
 			// Simulate navigation
-			tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyUp})
-			tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyDown})
-			tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyLeft})
-			tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyRight})
+			model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyUp})
+			model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyDown})
+			model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyLeft})
+			model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyRight})
 		}
 	}
 }
@@ -105,7 +104,7 @@ func BenchmarkUpdates(b *testing.B, model *TestModel, msgCount int) {
 	// Run updates
 	for i := 0; i < b.N; i++ {
 		for _, msg := range messages {
-			tm.model.Update(msg)
+			model.model.Update(msg)
 		}
 	}
 }
@@ -119,11 +118,11 @@ func AssertAccessibleNavigation(t *testing.T, model *TestModel) {
 	// Test that all navigation keys work
 	testCases := []tea.KeyType{
 		tea.KeyUp, tea.KeyDown, tea.KeyLeft, tea.KeyRight,
-		tea.KeyHome, tea.KeyEnd, tea.KeyPgUp, tea.KeyPgDn,
+		tea.KeyHome, tea.KeyEnd, tea.KeyPgUp, tea.KeyPgDown,
 	}
 
 	for _, keyType := range testCases {
-		newModel, cmd := tm.SimulateKeyPress(tea.KeyMsg{Type: keyType})
+		newModel, cmd := model.SimulateKeyPress(tea.KeyMsg{Type: keyType})
 		require.NotNil(t, newModel, "Model should be updated by %v navigation", keyType)
 
 		// Command might be nil for some navigation
@@ -171,7 +170,7 @@ func AssertKeyboardOnly(t *testing.T, model *TestModel) {
 			}
 		}
 
-		newModel, cmd := tm.SimulateKeyPress(keyMsg)
+		newModel, cmd := model.SimulateKeyPress(keyMsg)
 		require.NotNil(t, newModel, "%s should update model", description)
 		_ = cmd // Command might be nil
 	}
@@ -199,6 +198,7 @@ func CloneModel(model *TestModel) *TestModel {
 // AssertModelState asserts that model state meets expectations
 func AssertModelState(t *testing.T, model *TestModel, expectedState map[string]interface{}) {
 	for key, expected := range expectedState {
+		_ = expected // State assertions will be implemented per component
 		switch key {
 		case "loading":
 			// assert loading state
@@ -285,13 +285,13 @@ func RunConcurrentUpdates(t *testing.T, model *TestModel, goroutines int, update
 				// Simulate different types of updates
 				switch j % 4 {
 				case 0:
-					tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyUp})
+					model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyUp})
 				case 1:
-					tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyDown})
+					model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyDown})
 				case 2:
-					tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyLeft})
+					model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyLeft})
 				case 3:
-					tm.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyRight})
+					model.SimulateKeyPress(tea.KeyMsg{Type: tea.KeyRight})
 				}
 			}
 		}(i)

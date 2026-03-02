@@ -9,6 +9,7 @@ package platform
 
 import (
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -269,7 +270,12 @@ func TestErrorHandling(t *testing.T) {
 		switch runtime.GOOS {
 		case "windows":
 			restrictedPath = "C:\\Windows\\System32\\config\\"
-		case "darwin", "linux":
+		case "darwin":
+			// /root/ doesn't exist on macOS; create a restricted temp dir
+			restrictedDir := filepath.Join(t.TempDir(), "restricted")
+			os.Mkdir(restrictedDir, 0000)
+			restrictedPath = restrictedDir
+		case "linux":
 			restrictedPath = "/root/"
 		default:
 			t.Skip("Skipping permission test on unsupported platform")

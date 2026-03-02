@@ -98,6 +98,23 @@ func (suite *InputValidationTestSuite) handleBucketNameValidation(w http.Respons
 		return
 	}
 
+	// Check for invalid characters (only lowercase letters, numbers, hyphens, and periods allowed)
+	for _, ch := range bucketName {
+		if !((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '.') {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, `{"error": "bucket name contains invalid character: %c"}`, ch)
+			return
+		}
+	}
+
+	// Cannot start or end with period or hyphen
+	if strings.HasPrefix(bucketName, ".") || strings.HasSuffix(bucketName, ".") ||
+		strings.HasPrefix(bucketName, "-") || strings.HasSuffix(bucketName, "-") {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{"error": "bucket name cannot start or end with period or hyphen"}`)
+		return
+	}
+
 	// Check for consecutive periods
 	if strings.Contains(bucketName, "..") {
 		w.WriteHeader(http.StatusBadRequest)
@@ -200,12 +217,15 @@ func (suite *InputValidationTestSuite) handleMetadataValidation(w http.ResponseW
 		return
 	}
 
-	// Check for dangerous content
-	metadataStr := string(body)
-	if containsInjectionPatterns(metadataStr) {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error": "metadata contains potentially dangerous content"}`)
-		return
+	// Check for dangerous content in decoded metadata values
+	for _, val := range metadata {
+		if strVal, ok := val.(string); ok {
+			if containsInjectionPatterns(strVal) {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, `{"error": "metadata contains potentially dangerous content"}`)
+				return
+			}
+		}
 	}
 
 	// Validate each metadata key
@@ -274,15 +294,8 @@ func (suite *InputValidationTestSuite) handleSearchTest(w http.ResponseWriter, r
 		return
 	}
 
-	// Check for SQL injection patterns
-	if containsSQLInjectionPatterns(query) {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error": "search query contains potentially dangerous content"}`)
-		return
-	}
-
-	// Check for XSS patterns
-	if containsXSSPatterns(query) {
+	// Check for injection patterns (SQL, XSS, path traversal, command injection)
+	if containsInjectionPatterns(query) || containsSQLInjectionPatterns(query) || containsXSSPatterns(query) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, `{"error": "search query contains potentially dangerous content"}`)
 		return
@@ -663,6 +676,9 @@ func containsInjectionPatterns(s string) bool {
 		"javascript:",
 		"onerror=",
 		"onload=",
+		"' or ",
+		"' and ",
+		"1'='1",
 		" DROP ",
 		" DELETE ",
 		" INSERT ",
@@ -680,7 +696,7 @@ func containsInjectionPatterns(s string) bool {
 
 	lower := strings.ToLower(s)
 	for _, pattern := range patterns {
-		if strings.Contains(lower, pattern) {
+		if strings.Contains(lower, strings.ToLower(pattern)) {
 			return true
 		}
 	}
@@ -691,18 +707,18 @@ func containsInjectionPatterns(s string) bool {
 // containsSQLInjectionPatterns checks for SQL injection patterns
 func containsSQLInjectionPatterns(s string) bool {
 	patterns := []string{
-		"' OR ",
-		"' AND ",
-		" OR '",
-		" AND '",
+		"' or ",
+		"' and ",
+		" or '",
+		" and '",
 		"1'='1",
 		"1=1",
-		" DROP ",
-		" DELETE ",
-		" INSERT ",
-		" UPDATE ",
-		" SELECT ",
-		" UNION ",
+		" drop ",
+		" delete ",
+		" insert ",
+		" update ",
+		" select ",
+		" union ",
 		" --",
 		" /*",
 		" */",
@@ -710,7 +726,17 @@ func containsSQLInjectionPatterns(s string) bool {
 		"sp_",
 	}
 
+	// Also detect SQL keywords at start of string
+	startPatterns := []string{
+		"select ", "insert ", "update ", "delete ", "drop ", "union ",
+	}
+
 	lower := strings.ToLower(s)
+	for _, pattern := range startPatterns {
+		if strings.HasPrefix(lower, pattern) {
+			return true
+		}
+	}
 	for _, pattern := range patterns {
 		if strings.Contains(lower, pattern) {
 			return true

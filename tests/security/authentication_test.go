@@ -231,15 +231,15 @@ func (suite *AuthenticationTestSuite) handlePermissionsCheck(w http.ResponseWrit
 
 // handleExpiredToken handles expired token scenarios
 func (suite *AuthenticationTestSuite) handleExpiredToken(w http.ResponseWriter, authHeader string) {
-	w.WriteHeader(http.StatusUnauthorized)
 	w.Header().Set("WWW-Authenticate", `Bearer realm="Cloudflare R2", error="invalid_token", error_description="The access token expired"`)
+	w.WriteHeader(http.StatusUnauthorized)
 	fmt.Fprint(w, `{"error": "token expired", "error_code": "TOKEN_EXPIRED"}`)
 }
 
 // handleMalformedToken handles malformed token scenarios
 func (suite *AuthenticationTestSuite) handleMalformedToken(w http.ResponseWriter, authHeader string) {
-	w.WriteHeader(http.StatusUnauthorized)
 	w.Header().Set("WWW-Authenticate", `Bearer realm="Cloudflare R2", error="invalid_token", error_description="The access token is invalid"`)
+	w.WriteHeader(http.StatusUnauthorized)
 	fmt.Fprint(w, `{"error": "invalid token format", "error_code": "INVALID_TOKEN"}`)
 }
 
@@ -664,6 +664,15 @@ func isValidTokenFormat(token string) bool {
 	// Check for control characters
 	for _, r := range token {
 		if r < 32 || r == 127 {
+			return false
+		}
+	}
+
+	// Reject common sentinel/placeholder strings
+	trimmed := strings.TrimSpace(token)
+	invalidTokens := []string{"null", "undefined", "none", "nil", "false", "0"}
+	for _, invalid := range invalidTokens {
+		if strings.EqualFold(trimmed, invalid) {
 			return false
 		}
 	}
