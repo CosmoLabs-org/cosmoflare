@@ -1,13 +1,12 @@
 id: TASK-001
 type: task
 created_at: 2026-02-26T01:33:14.270224+01:00
-updated_at: 2026-02-26T01:33:14.270228+01:00
+updated_at: 2026-03-03T10:49:40.875455+01:00
 source: local
-status: open
+status: closed
 category: refactor
 origin:
-  roadmap_items:
-    - ROAD-001
-
+    roadmap_items:
+        - ROAD-001
 title: Consolidate formatBytes into internal/util package
 description: formatBytes is duplicated 9 times across 7+ files. Create internal/util/format.go with single FormatBytes export and replace all instances.

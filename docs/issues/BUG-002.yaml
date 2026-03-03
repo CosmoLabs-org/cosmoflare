@@ -5,6 +5,10 @@ updated_at: 2026-02-26T01:32:26.621582+01:00
 source: local
 severity: high
 status: open
+origin:
+  roadmap_items:
+    - ROAD-014
+
 title: PersistentPreRun blocks non-API commands
 description: rootCmd PersistentPreRun requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID for ALL commands including setup, config, completion
 fix_direction: 'Check cmd.Name() or use Cobra annotations to skip credential validation for non-API commands: setup, config init, completion, demo, theme, version'

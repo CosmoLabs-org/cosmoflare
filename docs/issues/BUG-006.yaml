@@ -8,6 +8,7 @@ status: open
 origin:
   roadmap_items:
     - ROAD-000
+    - ROAD-010
 
 title: Object search regex/glob use fake string matching
 description: object search regex and glob types both use strings.Contains instead of real pattern matching
