@@ -14,9 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	"github.com/spf13/cobra"
 )
 
 // authCmd represents the auth command
@@ -177,7 +178,7 @@ func runAuthLogin(cmd *cobra.Command, args []string) error {
 	}
 
 	printSuccess("✅ Authentication successful!")
-	printInfo("Account ID: %s", maskAccountID(credentials.AccountID))
+	printInfo("Account ID: %s", utils.MaskAccountID(credentials.AccountID))
 	printInfo("Authentication method: %s", method)
 
 	return nil
@@ -253,7 +254,7 @@ func runAuthStatus(cmd *cobra.Command, args []string) error {
 
 	if envToken != "" && envAccountID != "" {
 		printInfo("Environment variables configured:")
-		printInfo("  Account ID: %s", maskAccountID(envAccountID))
+		printInfo("  Account ID: %s", utils.MaskAccountID(envAccountID))
 		printInfo("  API Token: %s", config.MaskKey(envToken))
 	}
 
@@ -265,7 +266,7 @@ func runAuthStatus(cmd *cobra.Command, args []string) error {
 			if currentProfile.Description != "" {
 				printInfo("  Description: %s", currentProfile.Description)
 			}
-			printInfo("  Account ID: %s", maskAccountID(currentProfile.AccountID))
+			printInfo("  Account ID: %s", utils.MaskAccountID(currentProfile.AccountID))
 			printInfo("  API Token: %s", config.MaskKey(currentProfile.APIToken))
 		} else {
 			printInfo("No current profile set")

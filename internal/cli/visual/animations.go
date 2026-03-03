@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -166,7 +167,7 @@ func (te *TerminalEffects) AnimatedProgress(current, total int64, message string
 	// Format the output professionally
 	icon := te.styleText("⚡", te.theme.Primary, true)
 	msgStyled := te.styleText(message, te.theme.Foreground)
-	sizeProgress := te.styleText(fmt.Sprintf("%s/%s", te.formatBytes(current), te.formatBytes(total)), te.theme.Secondary)
+	sizeProgress := te.styleText(fmt.Sprintf("%s/%s", utils.FormatBytes(current), utils.FormatBytes(total)), te.theme.Secondary)
 	pctStyled := te.styleText(fmt.Sprintf("%5.1f%%", percentage), te.theme.Success, true)
 
 	// Main progress line with better formatting
@@ -450,19 +451,6 @@ func (te *TerminalEffects) styleText(text string, color lipgloss.Color, style ..
 	}
 
 	return styleText.Render(text)
-}
-
-func (te *TerminalEffects) formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 func (te *TerminalEffects) printPulsedText(message string, brightness int) {

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -90,7 +91,7 @@ Examples:
 		}
 
 		// Format file size for display
-		sizeStr := formatBytes(result.Size)
+		sizeStr := utils.FormatBytes(result.Size)
 
 		if JSONOutput {
 			printSuccessJSON("File uploaded successfully", result)

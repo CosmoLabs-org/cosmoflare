@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +54,7 @@ Examples:
 		}
 
 		if DryRun {
-			printSuccess("DRY RUN: Would create bucket '%s' in account %s", bucketName, maskAccountID(AccountID))
+			printSuccess("DRY RUN: Would create bucket '%s' in account %s", bucketName, utils.MaskAccountID(AccountID))
 			return
 		}
 

@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/viper"
 )
 
@@ -296,7 +297,7 @@ func (cm *ConfigManager) SanitizeForOutput() *Config {
 	for name, profile := range cm.config.Profiles {
 		sanitizedProfile := &Profile{
 			Name:        profile.Name,
-			AccountID:   maskAccountID(profile.AccountID),
+			AccountID:   utils.MaskAccountID(profile.AccountID),
 			Description: profile.Description,
 			Endpoint:    profile.Endpoint,
 			AccessKey:   maskKey(profile.AccessKey),
@@ -307,14 +308,6 @@ func (cm *ConfigManager) SanitizeForOutput() *Config {
 	}
 
 	return sanitized
-}
-
-// maskAccountID masks an account ID for display
-func maskAccountID(accountID string) string {
-	if len(accountID) <= 8 {
-		return strings.Repeat("*", len(accountID))
-	}
-	return accountID[:4] + strings.Repeat("*", len(accountID)-8) + accountID[len(accountID)-4:]
 }
 
 // maskKey masks a secret key for display
@@ -328,9 +321,9 @@ func maskKey(key string) string {
 	return key[:2] + strings.Repeat("*", len(key)-4) + key[len(key)-2:]
 }
 
-// MaskAccountID exports the maskAccountID function for use in other packages
+// MaskAccountID exports the masking function for use in other packages
 func MaskAccountID(accountID string) string {
-	return maskAccountID(accountID)
+	return utils.MaskAccountID(accountID)
 }
 
 // MaskKey exports the maskKey function for use in other packages

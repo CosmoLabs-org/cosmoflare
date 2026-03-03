@@ -17,6 +17,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 )
 
 // bucketCmd represents the bucket command
@@ -364,7 +365,7 @@ func runBucketList(cmd *cobra.Command, args []string) error {
 		size := "N/A"
 		objectCount := "N/A"
 		if bucket.Size > 0 {
-			size = formatBytes(bucket.Size)
+			size = utils.FormatBytes(bucket.Size)
 		}
 		if bucket.ObjectCount > 0 {
 			objectCount = fmt.Sprintf("%d", bucket.ObjectCount)
@@ -439,7 +440,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Location: %s\n", bucket.Location)
 	}
 	if bucket.Size > 0 {
-		fmt.Printf("Size: %s\n", formatBytes(bucket.Size))
+		fmt.Printf("Size: %s\n", utils.FormatBytes(bucket.Size))
 	}
 	if bucket.ObjectCount > 0 {
 		fmt.Printf("Objects: %d\n", bucket.ObjectCount)
@@ -678,15 +679,3 @@ func parseSpecFile(filename string, spec *BucketSpec) error {
 	return fmt.Errorf("YAML parsing not implemented, use JSON format")
 }
 
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}

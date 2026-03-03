@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -219,7 +220,7 @@ func (ec *EnhancedClient) multipartUpload(ctx context.Context, bucket, key, file
 
 	if !opts.Quiet && opts.ShowProgress {
 		fmt.Printf("📦 Starting multipart upload: %s\n", key)
-		fmt.Printf("   File size: %s | Parts: %d\n", formatBytes(fileSize), int(fileSize/opts.ChunkSize)+1)
+		fmt.Printf("   File size: %s | Parts: %d\n", utils.FormatBytes(fileSize), int(fileSize/opts.ChunkSize)+1)
 	}
 
 	// Calculate number of parts
@@ -404,7 +405,7 @@ func (ec *EnhancedClient) UploadWithRealTimeProgress(ctx context.Context, bucket
 	resultDetails := map[string]interface{}{
 		"File":       key,
 		"Bucket":     bucket,
-		"Size":       formatBytes(result.Size),
+		"Size":       utils.FormatBytes(result.Size),
 		"Duration":   result.Duration.String(),
 		"Speed":      fmt.Sprintf("%.2f MB/s", result.Speed),
 		"Upload ID":  result.UploadID,
@@ -421,16 +422,3 @@ func (ec *EnhancedClient) UploadWithRealTimeProgress(ctx context.Context, bucket
 	return nil
 }
 
-// formatBytes formats bytes into human readable string
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}

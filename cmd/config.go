@@ -15,8 +15,9 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 )
 
 var (
@@ -291,7 +292,7 @@ func runConfigList(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 			name,
 			current,
-			maskAccountID(profile.AccountID),
+			utils.MaskAccountID(profile.AccountID),
 			profile.Description,
 		)
 	}
@@ -338,7 +339,7 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	if profile.Description != "" {
 		printInfo("Description: %s", profile.Description)
 	}
-	printInfo("Account ID: %s", maskAccountID(profile.AccountID))
+	printInfo("Account ID: %s", utils.MaskAccountID(profile.AccountID))
 
 	showSecrets, _ := cmd.Flags().GetBool("show-secrets")
 	if showSecrets && profile.APIToken != "" {

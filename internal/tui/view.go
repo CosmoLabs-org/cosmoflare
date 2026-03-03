@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -194,7 +195,7 @@ func (m DashboardModel) renderBucketTable() string {
 		isSelected := i == m.selectedRow && m.currentSection == SectionBucketList
 		rowData := []string{
 			"🪣 " + bucket.Name,
-			formatBytes(bucket.Size),
+			utils.FormatBytes(bucket.Size),
 			formatNumber(bucket.ObjectCount),
 			m.getStatusIcon(bucket.Status),
 		}
@@ -597,19 +598,6 @@ func (m DashboardModel) getUploadStatus(upload UploadTask) struct {
 }
 
 // Utility functions
-
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
 
 func formatNumber(n int64) string {
 	if n < 1000 {

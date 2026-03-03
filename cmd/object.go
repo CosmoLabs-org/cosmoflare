@@ -19,6 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
@@ -312,7 +313,7 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	for _, obj := range objects {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 			obj.Key,
-			formatBytes(obj.Size),
+			utils.FormatBytes(obj.Size),
 			obj.LastModified.Format("2006-01-02 15:04:05"),
 			obj.ETag[:16]+"...",
 		)
@@ -362,7 +363,7 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 
 	// Copy data with progress bar
 	if Verbose {
-		printInfo("Size: %s", formatBytes(obj.Size))
+		printInfo("Size: %s", utils.FormatBytes(obj.Size))
 	}
 
 	// Copy the data
@@ -371,7 +372,7 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to download object: %w", err)
 	}
 
-	printSuccess("✅ Downloaded: %s (%s)", output, formatBytes(size))
+	printSuccess("✅ Downloaded: %s (%s)", output, utils.FormatBytes(size))
 	return nil
 }
 
@@ -410,7 +411,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		printInfo("DRY RUN: Would upload file")
 		printInfo("  Bucket: %s", bucketName)
 		printInfo("  Key: %s", key)
-		printInfo("  Size: %s", formatBytes(fileInfo.Size()))
+		printInfo("  Size: %s", utils.FormatBytes(fileInfo.Size()))
 		if contentType != "" {
 			printInfo("  Content-Type: %s", contentType)
 		}
@@ -427,7 +428,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	if !Verbose {
 		// Show animated preparation
 		visual.ShowSpinner("Preparing upload...", 2*time.Second)
-		printInfo("File size: %s", formatBytes(fileInfo.Size()))
+		printInfo("File size: %s", utils.FormatBytes(fileInfo.Size()))
 	}
 
 	if showProgress {
@@ -557,7 +558,7 @@ func runObjectHead(cmd *cobra.Command, args []string) error {
 
 	// Table format
 	fmt.Printf("Object: %s/%s\n", bucketName, objectKey)
-	fmt.Printf("Size: %s\n", formatBytes(obj.Size))
+	fmt.Printf("Size: %s\n", utils.FormatBytes(obj.Size))
 	fmt.Printf("Last Modified: %s\n", obj.LastModified.Format(time.RFC3339))
 	fmt.Printf("ETag: %s\n", obj.ETag)
 	fmt.Printf("Storage Class: %s\n", obj.StorageClass)
@@ -634,7 +635,7 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	for _, obj := range results {
 		fmt.Fprintf(w, "%s\t%s\t%s\n",
 			obj.Key,
-			formatBytes(obj.Size),
+			utils.FormatBytes(obj.Size),
 			obj.LastModified.Format("2006-01-02 15:04:05"),
 		)
 	}

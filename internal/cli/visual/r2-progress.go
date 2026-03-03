@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	bubbleProgress "github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -241,7 +242,7 @@ func (rup *R2UploadProgress) displaySimpleProgress() {
 		bar := rup.createProgressBar(int(upload.Progress), 50)
 		fmt.Printf(" %s %s %.1f MB/s ETA: %s",
 			bar,
-			rup.formatBytes(upload.UploadedBytes),
+			utils.FormatBytes(upload.UploadedBytes),
 			upload.Speed,
 			rup.formatDuration(upload.ETA))
 	}
@@ -276,19 +277,6 @@ func (rup *R2UploadProgress) createProgressBar(percentage, width int) string {
 	bar := strings.Repeat("█", filled)
 	empty := strings.Repeat("░", width-filled)
 	return primaryStyle.Render("["+bar) + secondaryStyle.Render(empty) + primaryStyle.Render("]")
-}
-
-func (rup *R2UploadProgress) formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 func (rup *R2UploadProgress) formatDuration(d time.Duration) string {
@@ -428,8 +416,8 @@ func (m *R2ProgressModel) formatStatistics(upload *R2UploadState) string {
 
 	content.WriteString(stats.Render(fmt.Sprintf(
 		"Size: %s / %s\n",
-		m.formatBytes(upload.UploadedBytes),
-		m.formatBytes(upload.TotalSize),
+		utils.FormatBytes(upload.UploadedBytes),
+		utils.FormatBytes(upload.TotalSize),
 	)))
 
 	if upload.Speed > 0 {
@@ -480,19 +468,6 @@ func (m *R2ProgressModel) getStatusColor(status UploadStatus) lipgloss.Color {
 	default:
 		return m.progress.theme.Secondary
 	}
-}
-
-func (m *R2ProgressModel) formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 func (m *R2ProgressModel) formatDuration(d time.Duration) string {

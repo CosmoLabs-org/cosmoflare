@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/batch"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/operations"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/ux"
 	visual "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
@@ -206,7 +207,7 @@ func copyFile(source, destination string, opts *operations.CopyOptions) error {
 	// Show copy info
 	if !opts.Quiet {
 		fmt.Printf("📁 Copying: %s -> %s\n", source, destination)
-		fmt.Printf("📊 Size: %s\n", formatBytes(sourceInfo.Size()))
+		fmt.Printf("📊 Size: %s\n", utils.FormatBytes(sourceInfo.Size()))
 		if opts.Resume {
 			fmt.Printf("🔄 Resume mode enabled\n")
 		}
@@ -436,7 +437,7 @@ func printEnhancedCopyResult(result *operations.CopyResult) {
 	details := map[string]interface{}{
 		"Source":      result.Source,
 		"Destination": result.Destination,
-		"Size":        formatBytes(result.Size),
+		"Size":        utils.FormatBytes(result.Size),
 		"Duration":    result.Duration.String(),
 		"Speed":       fmt.Sprintf("%.2f MB/s", result.Speed),
 		"Verified":    fmt.Sprintf("%t", result.Verified),
@@ -470,7 +471,7 @@ func printBatchResults(stats *batch.BatchStats) {
 	fmt.Printf("  Failed:       %d\n", stats.Failed)
 	fmt.Printf("  Skipped:      %d\n", stats.Skipped)
 	fmt.Printf("  Duration:     %v\n", stats.TotalDuration)
-	fmt.Printf("  Total Size:   %s\n", formatBytes(stats.TotalSize))
+	fmt.Printf("  Total Size:   %s\n", utils.FormatBytes(stats.TotalSize))
 	fmt.Printf("  Avg Speed:    %.2f MB/s\n", stats.AverageSpeed)
 
 	if JSONOutput {

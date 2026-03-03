@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/fatih/color"
 )
 
@@ -213,7 +214,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 
 	if accountID != "" {
 		colorSuccess.Println("  ✅ Auto-detected account information!")
-		fmt.Printf("  Account ID: %s\n", colorMuted.Sprintf(maskAccountID(accountID)))
+		fmt.Printf("  Account ID: %s\n", colorMuted.Sprintf(utils.MaskAccountID(accountID)))
 		if accountName != "" {
 			fmt.Printf("  Account Name: %s\n", accountName)
 		}
@@ -237,7 +238,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 	envAccountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	if envAccountID != "" {
 		fmt.Printf("Found account ID in environment: %s. Use this? [Y/n]: ",
-			colorMuted.Sprintf(maskAccountID(envAccountID)))
+			colorMuted.Sprintf(utils.MaskAccountID(envAccountID)))
 		reader := bufio.NewReader(os.Stdin)
 		response, _ := reader.ReadString('\n')
 		response = strings.TrimSpace(strings.ToLower(response))
@@ -342,15 +343,6 @@ func maskToken(token string) string {
 	visible := 4
 	masked := strings.Repeat("*", len(token)-visible*2)
 	return token[:visible] + masked + token[len(token)-visible:]
-}
-
-// maskAccountID masks an account ID for display
-func maskAccountID(accountID string) string {
-	if len(accountID) != 32 {
-		return accountID
-	}
-
-	return accountID[:8] + "..." + accountID[len(accountID)-4:]
 }
 
 // ShowProgressBar displays a progress bar

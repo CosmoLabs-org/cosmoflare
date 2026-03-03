@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -84,7 +84,7 @@ Examples:
 		// Verbose output
 		if Verbose {
 			printInfo("R2Go2 version: %s", AppVersion)
-			printInfo("Account ID: %s", maskAccountID(AccountID))
+			printInfo("Account ID: %s", utils.MaskAccountID(AccountID))
 		}
 	},
 }
@@ -129,14 +129,6 @@ func validateEnvironment() error {
 	}
 
 	return nil
-}
-
-// maskAccountID masks sensitive information in output
-func maskAccountID(accountID string) string {
-	if len(accountID) <= 8 {
-		return strings.Repeat("*", len(accountID))
-	}
-	return accountID[:4] + strings.Repeat("*", len(accountID)-8) + accountID[len(accountID)-4:]
 }
 
 // Output helpers for consistent formatting

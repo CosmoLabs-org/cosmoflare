@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ Examples:
 		}
 
 		if Verbose {
-			printInfo("Listing buckets in account: %s", maskAccountID(AccountID))
+			printInfo("Listing buckets in account: %s", utils.MaskAccountID(AccountID))
 		}
 
 		// List buckets
@@ -74,7 +75,7 @@ func init() {
 // printBucketsTable displays buckets in a formatted table
 func printBucketsTable(buckets []*api.Bucket) {
 	if len(buckets) == 0 {
-		printInfo("No buckets found in account %s", maskAccountID(AccountID))
+		printInfo("No buckets found in account %s", utils.MaskAccountID(AccountID))
 		return
 	}
 
