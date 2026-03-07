@@ -8,12 +8,10 @@ License: MIT
 package interactive
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
-	
+
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/fatih/color"
 )
@@ -34,6 +32,7 @@ type SetupWizard struct {
 	Step       int
 	TotalSteps int
 	Quiet      bool
+	Input      InputReader
 }
 
 // NewSetupWizard creates a new setup wizard instance
@@ -42,6 +41,7 @@ func NewSetupWizard() *SetupWizard {
 		Step:       0,
 		TotalSteps: 4,
 		Quiet:      false,
+		Input:      DefaultInput(),
 	}
 }
 
@@ -116,9 +116,10 @@ func (w *SetupWizard) Step1_AuthMethod() (string, error) {
 
 	for {
 		fmt.Print("Choose method [1]: ")
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(response)
+		response, err := w.Input.ReadLine()
+		if err != nil {
+			return "", err
+		}
 
 		if response == "" || response == "1" {
 			return "api_token", nil
@@ -153,9 +154,8 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 	if envToken != "" {
 		fmt.Printf("Found token in environment variable (%s characters). Use this? [Y/n]: ",
 			colorMuted.Sprintf("%d", len(envToken)))
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(strings.ToLower(response))
+		response, _ := w.Input.ReadLine()
+		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
 			return envToken, nil
@@ -187,9 +187,8 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 		fmt.Printf("Token entered: %s\n", colorMuted.Sprintf("%s", masked))
 
 		fmt.Printf("Does this look correct? [Y/n]: ")
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(strings.ToLower(response))
+		response, _ := w.Input.ReadLine()
+		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
 			return token, nil
@@ -221,9 +220,8 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 		fmt.Println()
 
 		fmt.Printf("Use this account? [Y/n]: ")
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(strings.ToLower(response))
+		response, _ := w.Input.ReadLine()
+		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
 			return accountID, accountName, nil
@@ -239,9 +237,8 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 	if envAccountID != "" {
 		fmt.Printf("Found account ID in environment: %s. Use this? [Y/n]: ",
 			colorMuted.Sprintf("%s", utils.MaskAccountID(envAccountID)))
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(strings.ToLower(response))
+		response, _ := w.Input.ReadLine()
+		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
 			return envAccountID, "", nil
@@ -250,9 +247,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 
 	for {
 		fmt.Print("Account ID: ")
-		reader := bufio.NewReader(os.Stdin)
-		accountID, _ := reader.ReadString('\n')
-		accountID = strings.TrimSpace(accountID)
+		accountID, _ := w.Input.ReadLine()
 
 		if accountID == "" {
 			colorError.Println("  ❌ Account ID cannot be empty")
@@ -279,21 +274,17 @@ func (w *SetupWizard) Step4_ProfileSetup() (string, string, error) {
 	fmt.Println(strings.Repeat("─", 40))
 	fmt.Println()
 
-	reader := bufio.NewReader(os.Stdin)
-
 	// Profile name
 	defaultProfileName := "production"
 	fmt.Printf("Profile name [%s]: ", colorMuted.Sprintf("%s", defaultProfileName))
-	profileName, _ := reader.ReadString('\n')
-	profileName = strings.TrimSpace(profileName)
+	profileName, _ := w.Input.ReadLine()
 	if profileName == "" {
 		profileName = defaultProfileName
 	}
 
 	// Profile description
 	fmt.Print("Description (optional): ")
-	description, _ := reader.ReadString('\n')
-	description = strings.TrimSpace(description)
+	description, _ := w.Input.ReadLine()
 
 	return profileName, description, nil
 }
@@ -366,62 +357,12 @@ func ShowProgressBar(current, total int, prefix string) {
 	}
 }
 
-// PromptWithDefault prompts the user with a default value
+// PromptWithDefault prompts the user with a default value using stdin.
 func PromptWithDefault(prompt, defaultValue string) (string, error) {
-	if defaultValue != "" {
-		fmt.Printf("%s [%s]: ", prompt, colorMuted.Sprintf("%s", defaultValue))
-	} else {
-		fmt.Printf("%s: ", prompt)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(response)
-
-	if response == "" {
-		return defaultValue, nil
-	}
-
-	return response, nil
+	return PromptWithReader(prompt, defaultValue, DefaultInput())
 }
 
-// SelectFromList prompts the user to select from a list
+// SelectFromList prompts the user to select from a list using stdin.
 func SelectFromList(prompt string, options []string, defaultIndex int) (int, error) {
-	fmt.Println(prompt)
-	fmt.Println()
-
-	for i, option := range options {
-		marker := " "
-		if i == defaultIndex {
-			marker = "►"
-			colorInfo.Printf("%s [%d] %s\n", marker, i+1, option)
-		} else {
-			fmt.Printf("  [%d] %s\n", i+1, option)
-		}
-	}
-	fmt.Println()
-
-	for {
-		if defaultIndex >= 0 {
-			fmt.Printf("Select option [%d]: ", defaultIndex+1)
-		} else {
-			fmt.Print("Select option: ")
-		}
-
-		reader := bufio.NewReader(os.Stdin)
-		response, _ := reader.ReadString('\n')
-		response = strings.TrimSpace(response)
-
-		if response == "" && defaultIndex >= 0 {
-			return defaultIndex, nil
-		}
-
-		index, err := strconv.Atoi(response)
-		if err != nil || index < 1 || index > len(options) {
-			colorError.Printf("  Please enter a number between 1 and %d\n", len(options))
-			continue
-		}
-
-		return index - 1, nil
-	}
+	return SelectFromListWithReader(prompt, options, defaultIndex, DefaultInput())
 }

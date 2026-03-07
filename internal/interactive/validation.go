@@ -16,6 +16,9 @@ import (
 	"time"
 )
 
+// cfAPIBaseURL is the Cloudflare API base URL, injectable for testing.
+var cfAPIBaseURL = "https://api.cloudflare.com/client/v4"
+
 // TokenInfo represents information extracted from a Cloudflare API token
 type TokenInfo struct {
 	AccountID   string `json:"account_id,omitempty"`
@@ -40,7 +43,7 @@ func ValidateAPIToken(token string) (*TokenInfo, error) {
 		Timeout: 10 * time.Second,
 	}
 
-	req, err := http.NewRequest("GET", "https://api.cloudflare.com/client/v4/user/tokens/verify", nil)
+	req, err := http.NewRequest("GET", cfAPIBaseURL+"/user/tokens/verify", nil)
 	if err != nil {
 		info.Error = "Failed to create request"
 		return info, fmt.Errorf("failed to create validation request: %w", err)
@@ -158,7 +161,7 @@ func getAccountName(token, accountID string) string {
 		Timeout: 10 * time.Second,
 	}
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s", accountID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/accounts/%s", cfAPIBaseURL, accountID), nil)
 	if err != nil {
 		return ""
 	}
@@ -223,7 +226,7 @@ func TestConnection(accountID, token string) error {
 	}
 
 	// Try to list buckets as a connection test
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/r2/buckets", accountID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/accounts/%s/r2/buckets", cfAPIBaseURL, accountID), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create test request: %w", err)
 	}
