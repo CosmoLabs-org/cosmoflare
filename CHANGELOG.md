@@ -28,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.2.2] - 2026-03-07
+
+### Changed
+- Consolidate formatBytes (6x) and maskAccountID (3x) into shared internal/utils package
+- consolidate formatBytes (6x) and maskAccountID (3x) into internal/utils (commit:bec5f132)
+
+### Fixed
+- resolve 38 go vet issues across interactive and cli packages (commit:eb0c3b84)
+
 ## [0.2.1] - 2026-03-02
 
 ### Added
