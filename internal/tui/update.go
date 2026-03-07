@@ -97,7 +97,7 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.filterActive = true
 			m.searchQuery = ""
 			return m, nil
-		case "escape":
+		case "esc":
 			// Cancel search
 			m.searchQuery = ""
 			m.filterActive = false
