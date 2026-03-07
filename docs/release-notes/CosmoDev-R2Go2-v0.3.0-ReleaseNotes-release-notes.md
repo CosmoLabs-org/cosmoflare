@@ -1,3 +1,11 @@
+---
+project: CosmoDev-R2Go2
+version: 0.3.0
+date: 2025-01-25
+slug: release-notes
+title: "release-notes Release"
+---
+
 # R2Go2 v0.3.0 Release Notes
 
 **Release Date**: 2025-01-25  

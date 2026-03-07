@@ -91,3 +91,35 @@ account-id-*
 /session-*
 /work-session-*
 plugins/internal
+
+# ─── CCS Standard Additions (v2026.02) ─────────────────────────────────────
+
+# OS (additions)
+Icon?
+desktop.ini
+
+# IDE (additions)
+*.sublime-project
+*.sublime-workspace
+
+# Secrets (broader coverage)
+*.key
+*.pem
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account.json
+*.secret
+
+# Runtime (additions)
+*.pid
+*.seed
+BACKUPS/
+
+# Claude Code / AI Sessions
+.claude/preferences.json
+.claude/issues/
+.claude/memory/
+.claude/projects/
+.claude/sessions/
