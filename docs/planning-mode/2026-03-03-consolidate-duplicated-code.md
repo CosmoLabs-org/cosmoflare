@@ -1,3 +1,12 @@
+---
+branch: consolidate-duplicated-code
+created: "2026-03-03"
+origin: migrated by ccs prompts migrate
+priority: medium
+status: PENDING
+title: 'ROAD-001: Consolidate Duplicated Code'
+---
+
 # ROAD-001: Consolidate Duplicated Code
 
 ## Context
