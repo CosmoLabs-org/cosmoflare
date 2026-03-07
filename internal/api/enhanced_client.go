@@ -151,14 +151,16 @@ func (ec *EnhancedClient) singlePartUpload(ctx context.Context, bucket, key, fil
 	}
 	defer file.Close()
 
-	// Create progress reader
-	progressReader := visual.NewR2ProgressReader(file, nil, nil) // We'll enhance this later
+	// Prepare upload input - use raw file when quiet, progress reader otherwise
+	var body io.Reader = file
+	if !opts.Quiet {
+		body = visual.NewR2ProgressReader(file, nil, nil)
+	}
 
-	// Prepare upload input
 	input := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-		Body:   progressReader,
+		Body:   body,
 	}
 
 	// Set content type if not provided
@@ -357,6 +359,11 @@ func getFileSize(filePath string) int64 {
 
 // UploadWithRealTimeProgress uploads a file with rich visual feedback
 func (ec *EnhancedClient) UploadWithRealTimeProgress(ctx context.Context, bucket, key, filePath string, opts *UploadOptions) error {
+	if opts.Quiet {
+		visual.DisableAnimations()
+		defer visual.EnableAnimations()
+	}
+
 	// Show startup animation
 	visual.ShowStartupAnimation()
 

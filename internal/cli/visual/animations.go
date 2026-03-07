@@ -463,43 +463,80 @@ func (te *TerminalEffects) printPulsedText(message string, brightness int) {
 // Global convenience functions
 
 var defaultEffects *TerminalEffects
+var quiet bool
 
 func init() {
 	defaultEffects = NewTerminalEffects(DefaultTheme())
 }
 
+// DisableAnimations suppresses all visual output and sleeps.
+func DisableAnimations() {
+	quiet = true
+}
+
+// EnableAnimations re-enables visual output.
+func EnableAnimations() {
+	quiet = false
+}
+
+// IsQuiet returns whether animations are suppressed.
+func IsQuiet() bool {
+	return quiet
+}
+
 // ShowStartupAnimation displays the default startup animation
 func ShowStartupAnimation() {
+	if quiet {
+		return
+	}
 	defaultEffects.ShowStartupAnimation()
 }
 
 // ShowSuccess displays a success message with animation
 func ShowSuccess(message string) {
+	if quiet {
+		return
+	}
 	defaultEffects.SuccessAnimation(message)
 }
 
 // ShowError displays an error message with animation
 func ShowError(message string) {
+	if quiet {
+		return
+	}
 	defaultEffects.ErrorAnimation(message)
 }
 
 // ShowProgress displays an animated progress bar
 func ShowProgress(current, total int64, message string) {
+	if quiet {
+		return
+	}
 	defaultEffects.AnimatedProgress(current, total, message)
 }
 
 // ShowSpinner displays an animated spinner
 func ShowSpinner(message string, duration time.Duration) {
+	if quiet {
+		return
+	}
 	defaultEffects.AnimatedSpinner(message, duration)
 }
 
 // ShowResult displays formatted results
 func ShowResult(title string, details map[string]interface{}) {
+	if quiet {
+		return
+	}
 	defaultEffects.ShowResult(title, details)
 }
 
 // ShowDashboard displays a live dashboard
 func ShowDashboard(title string, metrics map[string]interface{}) {
+	if quiet {
+		return
+	}
 	defaultEffects.LiveDashboard(title, metrics)
 }
 
