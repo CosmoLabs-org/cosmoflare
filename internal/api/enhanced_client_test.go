@@ -466,3 +466,143 @@ func TestNewEnhancedClientWithS3(t *testing.T) {
 		assert.Equal(t, mock, ec.s3Client)
 	})
 }
+
+func TestUploadFile_NilOpts(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.txt")
+	os.WriteFile(tmpFile, []byte("hello"), 0644)
+
+	// nil opts triggers default creation path
+	result, err := ec.UploadFile(t.Context(), "bucket", "key.txt", tmpFile, nil)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, "key.txt", result.Key)
+	assert.Equal(t, int64(5), result.Size)
+}
+
+func TestUploadFile_WithProgressCallback(t *testing.T) {
+	callbackCalled := false
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.txt")
+	os.WriteFile(tmpFile, []byte("test data here"), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+		ProgressFunc: func(uploaded, total int64, speed float64) {
+			callbackCalled = true
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	_ = callbackCalled
+}
+
+func TestAbortMultipartUpload_ErrorPath(t *testing.T) {
+	abortCalled := false
+	mock := &mockS3Client{
+		uploadPartFunc: func(ctx context.Context, params *s3.UploadPartInput, optFns ...func(*s3.Options)) (*s3.UploadPartOutput, error) {
+			return nil, fmt.Errorf("part upload failed")
+		},
+		abortMultipartFunc: func(ctx context.Context, params *s3.AbortMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.AbortMultipartUploadOutput, error) {
+			abortCalled = true
+			return nil, fmt.Errorf("abort also failed")
+		},
+	}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "file.bin")
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 50,
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.True(t, abortCalled, "abort should have been called")
+}
+
+func TestSinglePartUpload_WithVisualProgress(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.txt")
+	os.WriteFile(tmpFile, []byte("data"), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:        false,
+		ShowProgress: true,
+		ChunkSize:    1024 * 1024,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+}
+
+func TestUploadWithRealTimeProgress(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "test.txt")
+	os.WriteFile(tmpFile, []byte("upload content"), 0644)
+
+	t.Run("Successful upload", func(t *testing.T) {
+		err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key.txt", tmpFile, &UploadOptions{
+			Quiet:     true,
+			ChunkSize: 1024 * 1024,
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("File not found", func(t *testing.T) {
+		err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key.txt", "/nonexistent", &UploadOptions{
+			Quiet:     true,
+			ChunkSize: 1024 * 1024,
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to stat file")
+	})
+
+	t.Run("Upload failure", func(t *testing.T) {
+		mock.putObjectFunc = func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
+			return nil, fmt.Errorf("access denied")
+		}
+
+		err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key.txt", tmpFile, &UploadOptions{
+			Quiet:     true,
+			ChunkSize: 1024 * 1024,
+		})
+		assert.Error(t, err)
+
+		// Reset mock
+		mock.putObjectFunc = nil
+	})
+}
+
+func TestMultipartUpload_WithVisualProgress(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "large.bin")
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:        false,
+		ShowProgress: true,
+		ChunkSize:    50,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Greater(t, len(result.Parts), 1)
+}

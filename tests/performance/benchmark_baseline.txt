@@ -1,0 +1,30 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api
+cpu: Apple M3 Ultra
+BenchmarkSinglePartUpload-28    	  107598	     10794 ns/op	    1432 B/op	      13 allocs/op
+BenchmarkMultipartUpload-28     	   16617	     70446 ns/op	    8331 B/op	     121 allocs/op
+BenchmarkNewClient-28           	27573344	        40.57 ns/op	     112 B/op	       2 allocs/op
+PASS
+ok  	github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api	6.143s
+goos: darwin
+goarch: arm64
+pkg: github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/ux
+cpu: Apple M3 Ultra
+BenchmarkClassifyError-28                 	 3226150	       369.3 ns/op	     192 B/op	       2 allocs/op
+BenchmarkClassifyError_Unknown-28         	 4940392	       248.4 ns/op	     192 B/op	       2 allocs/op
+BenchmarkCalculateDelay_Exponential-28    	84051765	        14.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkContainsAny-28                   	181904379	         6.603 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/ux	6.809s
+goos: darwin
+goarch: arm64
+pkg: github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive
+cpu: Apple M3 Ultra
+BenchmarkEncryptBackupData-28    	     127	   9304789 ns/op	    2898 B/op	      22 allocs/op
+BenchmarkDecryptBackupData-28    	     130	   9442946 ns/op	    3784 B/op	      30 allocs/op
+BenchmarkValidateAccountID-28    	41088267	        29.00 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive	6.222s
+PASS
+ok  	github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils	0.586s
