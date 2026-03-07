@@ -235,7 +235,7 @@ func (am *AccessibilityManager) PrintAccessibleSuccess(message string) {
 	if am.config.Verbose {
 		fmt.Printf("%s %s\n", "✅ Success:", message)
 	} else {
-		PrintSuccess(message)
+		PrintSuccess("%s", message)
 	}
 }
 
@@ -248,7 +248,7 @@ func (am *AccessibilityManager) PrintAccessibleError(message string) {
 	if am.config.Verbose {
 		fmt.Printf("%s %s\n", "❌ Error:", message)
 	} else {
-		PrintError(message)
+		PrintError("%s", message)
 	}
 }
 

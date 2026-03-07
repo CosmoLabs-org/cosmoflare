@@ -63,7 +63,7 @@ func HandleError(ctx ErrorContext) {
 	fmt.Println(strings.Repeat("─", 50))
 
 	// Main error message
-	fmt.Printf("❌ %s", colorBold.Sprintf(ctx.Operation))
+	fmt.Printf("❌ %s", colorBold.Sprintf("%s", ctx.Operation))
 	if ctx.Error != nil {
 		fmt.Printf(": %s", ctx.Error.Error())
 	}
@@ -244,7 +244,7 @@ func SuccessMessage(operation, details string) {
 	fmt.Println()
 	colorSuccess.Println("🎉 Operation Successful!")
 	fmt.Println(strings.Repeat("─", 30))
-	fmt.Printf("✅ %s\n", colorBold.Sprintf(operation))
+	fmt.Printf("✅ %s\n", colorBold.Sprintf("%s", operation))
 
 	if details != "" {
 		fmt.Printf("📋 %s\n", details)
@@ -258,7 +258,7 @@ func WarningMessage(operation, details string) {
 	fmt.Println()
 	colorWarning.Println("⚠️ Warning")
 	fmt.Println(strings.Repeat("─", 30))
-	fmt.Printf("⚠️ %s\n", colorBold.Sprintf(operation))
+	fmt.Printf("⚠️ %s\n", colorBold.Sprintf("%s", operation))
 
 	if details != "" {
 		fmt.Printf("💡 %s\n", details)

@@ -417,7 +417,7 @@ func PrintRetryProgress(result *RetryResult) {
 
 	if result.LastError != nil {
 		errorInfo := ClassifyError(result.LastError)
-		fmt.Printf("   Final Error: %s\n", errorInfo.Type)
+		fmt.Printf("   Final Error: %v\n", errorInfo.Type)
 	}
 }
 

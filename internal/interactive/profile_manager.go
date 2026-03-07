@@ -120,21 +120,21 @@ func (pm *ProfileManager) ShowProfileDetails(profileName string) error {
 	fmt.Printf("📊 Profile Details: %s\n", FormatProfileName(profile.Name, profile.Description))
 	fmt.Println(strings.Repeat("─", 50))
 
-	fmt.Printf("%sAccount ID:%s     %s\n", Bold, Reset, config.MaskAccountID(profile.AccountID))
-	fmt.Printf("%sRegion:%s         %s\n", Bold, Reset, formatRegion(profile.Region))
-	fmt.Printf("%sDescription:%s    %s\n", Bold, Reset, profile.Description)
+	fmt.Printf("%s     %s\n", Bold("Account ID:"), config.MaskAccountID(profile.AccountID))
+	fmt.Printf("%s         %s\n", Bold("Region:"), formatRegion(profile.Region))
+	fmt.Printf("%s    %s\n", Bold("Description:"), profile.Description)
 
 	if profile.Endpoint != "" {
-		fmt.Printf("%sEndpoint:%s       %s\n", Bold, Reset, profile.Endpoint)
+		fmt.Printf("%s       %s\n", Bold("Endpoint:"), profile.Endpoint)
 	}
 
 	if profile.AccessKey != "" {
-		fmt.Printf("%sAccess Key:%s     %s\n", Bold, Reset, config.MaskKey(profile.AccessKey))
+		fmt.Printf("%s     %s\n", Bold("Access Key:"), config.MaskKey(profile.AccessKey))
 	}
 
 	// Show quick stats
 	fmt.Println()
-	fmt.Printf("%sQuick Stats:%s\n", Bold, Reset)
+	fmt.Printf("%s\n", Bold("Quick Stats:"))
 	fmt.Printf("  📁 Configuration: %s\n", pm.configMgr.GetConfigPath())
 	fmt.Printf("  🔐 API Token: %s\n", formatTokenStatus(profile.APIToken))
 	fmt.Printf("  🌐 Account ID: %s\n", formatAccountIDStatus(profile.AccountID))
@@ -300,7 +300,7 @@ func getProfileDescription(description string) string {
 
 func FormatProfileName(name, description string) string {
 	if description != "" {
-		return fmt.Sprintf("%s %s%s%s", name, Dim, description, Reset)
+		return fmt.Sprintf("%s %s", name, Dim(description))
 	}
 	return name
 }

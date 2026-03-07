@@ -319,7 +319,7 @@ func (bm *BackupManager) CreateEnvironmentBackup() error {
 
 	PrintSuccess("✅ Backup completed successfully!")
 	fmt.Printf("Backup saved to: %s\n", Info(filepath))
-	PrintInfo("💡 Usage: source " + filepath)
+	PrintInfo("💡 Usage: source %s", filepath)
 
 	return nil
 }

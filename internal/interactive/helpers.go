@@ -25,7 +25,7 @@ var (
 	Info       = color.New(color.FgCyan, color.Bold).SprintFunc()
 	Dim        = color.New(color.Faint).SprintFunc()
 	Muted      = color.New(color.FgHiBlack).SprintFunc()
-	Reset      = color.Reset
+	Reset      = "\033[0m"
 	Red        = color.RedString
 	Green      = color.GreenString
 	Yellow     = color.YellowString

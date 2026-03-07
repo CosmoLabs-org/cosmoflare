@@ -392,7 +392,7 @@ func (bm *BatchManager) processResult(op *Operation) {
 	case StatusFailed:
 		atomic.AddInt32(&bm.stats.Failed, 1)
 		if bm.onError != nil {
-			bm.onError(op, fmt.Errorf(op.Error))
+			bm.onError(op, fmt.Errorf("%s", op.Error))
 		}
 	case StatusSkipped:
 		atomic.AddInt32(&bm.stats.Skipped, 1)

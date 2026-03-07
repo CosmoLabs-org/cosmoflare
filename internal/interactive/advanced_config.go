@@ -329,23 +329,23 @@ func (acw *AdvancedConfigWizard) ShowConfigurationSummary(config *AdvancedConfig
 	fmt.Println(strings.Repeat("─", 30))
 	fmt.Println()
 
-	fmt.Printf("%s Profile:%s      %s\n", Bold, Reset, config.Profile.Name)
-	fmt.Printf("%s Bucket Type:%s  %s\n", Bold, Reset, config.BucketSettings.Type)
-	fmt.Printf("%s Region:%s       %s\n", Bold, Reset, config.RegionSettings.Primary)
-	fmt.Printf("%s Uploads:%s      %s concurrent, %s chunks\n",
-		Bold, Reset,
-		fmt.Sprintf("%d", config.UploadSettings.Concurrency),
+	fmt.Printf("%s      %s\n", Bold("Profile:"), config.Profile.Name)
+	fmt.Printf("%s  %s\n", Bold("Bucket Type:"), config.BucketSettings.Type)
+	fmt.Printf("%s       %s\n", Bold("Region:"), config.RegionSettings.Primary)
+	fmt.Printf("%s      %d concurrent, %s chunks\n",
+		Bold("Uploads:"),
+		config.UploadSettings.Concurrency,
 		config.UploadSettings.ChunkSize)
-	fmt.Printf("%s Theme:%s        %s\n", Bold, Reset, config.Theme)
-	fmt.Printf("%s Analytics:%s    %s\n", Bold, Reset, formatBool(config.AnalyticsEnabled))
-	fmt.Printf("%s Accessibility:%s %s\n", Bold, Reset, formatBool(config.AccessibilityEnabled))
+	fmt.Printf("%s        %s\n", Bold("Theme:"), config.Theme)
+	fmt.Printf("%s    %s\n", Bold("Analytics:"), formatBool(config.AnalyticsEnabled))
+	fmt.Printf("%s %s\n", Bold("Accessibility:"), formatBool(config.AccessibilityEnabled))
 
 	if config.BucketSettings.RetentionDays > 0 {
-		fmt.Printf("%s Retention:%s    %s days\n", Bold, Reset, fmt.Sprintf("%d", config.BucketSettings.RetentionDays))
+		fmt.Printf("%s    %d days\n", Bold("Retention:"), config.BucketSettings.RetentionDays)
 	}
 
 	if config.BucketSettings.CustomEndpoint != "" {
-		fmt.Printf("%s Endpoint:%s     %s\n", Bold, Reset, config.BucketSettings.CustomEndpoint)
+		fmt.Printf("%s     %s\n", Bold("Endpoint:"), config.BucketSettings.CustomEndpoint)
 	}
 
 	fmt.Println()

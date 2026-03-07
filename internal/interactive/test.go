@@ -61,7 +61,7 @@ func InputTest() {
 	if err != nil {
 		colorError.Println("Error:", err)
 	} else {
-		fmt.Printf("User selected: %s\n", colorBold.Sprintf(options[selected]))
+		fmt.Printf("User selected: %s\n", colorBold.Sprintf("%s", options[selected]))
 	}
 
 	// Test prompt with default
@@ -69,7 +69,7 @@ func InputTest() {
 	if err != nil {
 		colorError.Println("Error:", err)
 	} else {
-		fmt.Printf("User entered: %s\n", colorBold.Sprintf(name))
+		fmt.Printf("User entered: %s\n", colorBold.Sprintf("%s", name))
 	}
 
 	fmt.Println()

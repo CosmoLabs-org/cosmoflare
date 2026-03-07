@@ -404,7 +404,7 @@ func (tm *ThemeManager) ShowThemeMenu() error {
 		if theme.Name == currentThemeName {
 			marker = "●"
 		}
-		fmt.Printf("  [%d] %s%s %-15s %s%s\n", i+1, marker, theme.Name, "", Dim(theme.Description))
+		fmt.Printf("  [%d] %s %-15s %s\n", i+1, marker, theme.Name, Dim(theme.Description))
 	}
 
 	fmt.Println()
@@ -470,8 +470,8 @@ func (tm *ThemeManager) showThemePreview(theme *Theme) {
 	fmt.Println()
 
 	fmt.Println("Typography:")
-	fmt.Printf("  %sBold Text%s\n", Bold, Reset)
-	fmt.Printf("  %sDim Text%s\n", Dim, Reset)
+	fmt.Printf("  %s\n", Bold("Bold Text"))
+	fmt.Printf("  %s\n", Dim("Dim Text"))
 	fmt.Printf("  %sRegular Text%s\n", theme.Colors.Primary, Reset)
 }
 

@@ -184,7 +184,7 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 
 		// Show masked token for confirmation
 		masked := maskToken(token)
-		fmt.Printf("Token entered: %s\n", colorMuted.Sprintf(masked))
+		fmt.Printf("Token entered: %s\n", colorMuted.Sprintf("%s", masked))
 
 		fmt.Printf("Does this look correct? [Y/n]: ")
 		reader := bufio.NewReader(os.Stdin)
@@ -214,7 +214,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 
 	if accountID != "" {
 		colorSuccess.Println("  ✅ Auto-detected account information!")
-		fmt.Printf("  Account ID: %s\n", colorMuted.Sprintf(utils.MaskAccountID(accountID)))
+		fmt.Printf("  Account ID: %s\n", colorMuted.Sprintf("%s", utils.MaskAccountID(accountID)))
 		if accountName != "" {
 			fmt.Printf("  Account Name: %s\n", accountName)
 		}
@@ -238,7 +238,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 	envAccountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	if envAccountID != "" {
 		fmt.Printf("Found account ID in environment: %s. Use this? [Y/n]: ",
-			colorMuted.Sprintf(utils.MaskAccountID(envAccountID)))
+			colorMuted.Sprintf("%s", utils.MaskAccountID(envAccountID)))
 		reader := bufio.NewReader(os.Stdin)
 		response, _ := reader.ReadString('\n')
 		response = strings.TrimSpace(strings.ToLower(response))
@@ -283,7 +283,7 @@ func (w *SetupWizard) Step4_ProfileSetup() (string, string, error) {
 
 	// Profile name
 	defaultProfileName := "production"
-	fmt.Printf("Profile name [%s]: ", colorMuted.Sprintf(defaultProfileName))
+	fmt.Printf("Profile name [%s]: ", colorMuted.Sprintf("%s", defaultProfileName))
 	profileName, _ := reader.ReadString('\n')
 	profileName = strings.TrimSpace(profileName)
 	if profileName == "" {
@@ -308,7 +308,7 @@ func (w *SetupWizard) Complete(profileName, accountName string) {
 	fmt.Println(strings.Repeat("─", 50))
 	fmt.Println()
 
-	fmt.Printf("✅ Profile: %s\n", colorBold.Sprintf(profileName))
+	fmt.Printf("✅ Profile: %s\n", colorBold.Sprintf("%s", profileName))
 	if accountName != "" {
 		fmt.Printf("✅ Account: %s\n", accountName)
 	}
@@ -369,7 +369,7 @@ func ShowProgressBar(current, total int, prefix string) {
 // PromptWithDefault prompts the user with a default value
 func PromptWithDefault(prompt, defaultValue string) (string, error) {
 	if defaultValue != "" {
-		fmt.Printf("%s [%s]: ", prompt, colorMuted.Sprintf(defaultValue))
+		fmt.Printf("%s [%s]: ", prompt, colorMuted.Sprintf("%s", defaultValue))
 	} else {
 		fmt.Printf("%s: ", prompt)
 	}

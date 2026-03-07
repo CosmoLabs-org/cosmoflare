@@ -334,7 +334,7 @@ func (a *Animator) ShowStepTransition(fromStep, toStep int, fromTitle, toTitle s
 // ShowSuccessAnimation displays a success animation
 func (a *Animator) ShowSuccessAnimation(message string) {
 	if a.Disabled {
-		PrintSuccess(message)
+		PrintSuccess("%s", message)
 		return
 	}
 
@@ -359,7 +359,7 @@ func (a *Animator) ShowSuccessAnimation(message string) {
 		time.Sleep(80 * time.Millisecond)
 	}
 
-	PrintSuccess(message)
+	PrintSuccess("%s", message)
 }
 
 // Configurable animation settings
