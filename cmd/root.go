@@ -61,6 +61,19 @@ Examples:
   r2go2 upload my-bucket file.txt --key="remote/file.txt"  # Upload file`,
 	Version: AppVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Skip API validation for commands that don't need R2 access
+		skipValidation := []string{"setup", "config", "auth", "completion", "help", "version", "theme", "demo"}
+		for _, skip := range skipValidation {
+			if cmd.Name() == skip {
+				return
+			}
+			for p := cmd; p != nil; p = p.Parent() {
+				if p.Name() == skip {
+					return
+				}
+			}
+		}
+
 		// Validate environment variables
 		if err := validateEnvironment(); err != nil {
 			printError("Configuration error: %v", err)
@@ -74,6 +87,11 @@ Examples:
 				printError("Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
 				os.Exit(1)
 			}
+		}
+
+		// Get API token from environment
+		if APIToken == "" {
+			APIToken = os.Getenv("CLOUDFLARE_API_TOKEN")
 		}
 
 		// Print dry-run warning

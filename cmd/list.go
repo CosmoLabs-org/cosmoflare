@@ -9,6 +9,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"time"
 
@@ -140,4 +141,5 @@ func printErrorAndExit(err error, context string) {
 		printInfo("4. Verify your network connection")
 		fmt.Println()
 	}
+	os.Exit(1)
 }

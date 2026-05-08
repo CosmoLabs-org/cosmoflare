@@ -167,7 +167,7 @@ func (m *MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(msg.Runes) == 1 {
 				num := msg.Runes[0]
 				if num >= '1' && num <= '9' {
-					optionIndex := int(num-'1') - 1
+					optionIndex := int(num - '1')
 					if optionIndex >= 0 && optionIndex < len(m.options) {
 						opt := m.options[optionIndex]
 						if opt.Enabled {

@@ -144,6 +144,8 @@ func (ec *EnhancedClient) UploadFile(ctx context.Context, bucket, key, filePath 
 
 // singlePartUpload handles small files with simple upload
 func (ec *EnhancedClient) singlePartUpload(ctx context.Context, bucket, key, filePath string, fileSize int64, opts *UploadOptions) (*UploadResult, error) {
+	uploadStart := time.Now()
+
 	// Open file
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -195,7 +197,10 @@ func (ec *EnhancedClient) singlePartUpload(ctx context.Context, bucket, key, fil
 	}
 
 	// Calculate speed
-	speed := float64(fileSize) / time.Since(time.Now()).Seconds() / (1024 * 1024)
+	var speed float64
+	if elapsed := time.Since(uploadStart).Seconds(); elapsed > 0 {
+		speed = float64(fileSize) / elapsed / (1024 * 1024)
+	}
 
 	return &UploadResult{
 		Key:      key,
@@ -209,6 +214,8 @@ func (ec *EnhancedClient) singlePartUpload(ctx context.Context, bucket, key, fil
 
 // multipartUpload handles large files with multipart upload
 func (ec *EnhancedClient) multipartUpload(ctx context.Context, bucket, key, filePath string, fileSize int64, opts *UploadOptions) (*UploadResult, error) {
+	uploadStart := time.Now()
+
 	// Create multipart upload
 	createResp, err := ec.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
 		Bucket: aws.String(bucket),
@@ -274,7 +281,10 @@ func (ec *EnhancedClient) multipartUpload(ctx context.Context, bucket, key, file
 	}
 
 	// Calculate average speed
-	speed := float64(fileSize) / time.Since(time.Now()).Seconds() / (1024 * 1024)
+	var speed float64
+	if elapsed := time.Since(uploadStart).Seconds(); elapsed > 0 {
+		speed = float64(fileSize) / elapsed / (1024 * 1024)
+	}
 
 	if !opts.Quiet && opts.ShowProgress {
 		visual.ShowSuccess(fmt.Sprintf("Multipart upload completed: %s", key))
