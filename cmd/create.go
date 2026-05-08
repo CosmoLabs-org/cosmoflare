@@ -1,28 +1,20 @@
-/*
-Package cmd provides the Cobra CLI commands for R2Go2
-
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
-License: MIT
-*/
-
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create <bucket-name>",
 	Short: "Create a new R2 bucket",
 	Long: `Create a new Cloudflare R2 bucket with the specified name.
 
-Bucket names must be globally unique across all Cloudflare customers
-and follow S3 bucket naming conventions:
+Bucket names must follow S3 naming conventions:
 - Must be between 3 and 63 characters long
 - Must start and end with a lowercase letter or number
 - Can contain lowercase letters, numbers, hyphens, and periods
@@ -39,12 +31,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		bucketName := args[0]
 
-		// Create API client
-		opts := &api.ClientOptions{
-			AccountID: AccountID,
-			APIToken:  APIToken,
-		}
-		client, err := api.NewClient(opts)
+		client, err := getAPIClient()
 		if err != nil {
 			printErrorAndExit(err, "Failed to create API client")
 		}
@@ -58,8 +45,7 @@ Examples:
 			return
 		}
 
-		// Create the bucket
-		bucket, err := client.CreateBucket(bucketName)
+		bucket, err := client.CreateBucket(context.Background(), bucketName)
 		if err != nil {
 			printErrorAndExit(err, "Failed to create bucket")
 		}
@@ -68,7 +54,7 @@ Examples:
 			printSuccessJSON("Bucket created successfully", bucket)
 		} else {
 			printSuccess("Bucket '%s' created successfully", bucket.Name)
-			printInfo("Creation date: %s", bucket.CreatedDate.Format("2006-01-02 15:04:05"))
+			printInfo("Creation date: %s", bucket.CreatedAt.Format(time.RFC3339))
 		}
 	},
 }

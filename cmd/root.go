@@ -223,6 +223,23 @@ func printErrorJSON(message string) error {
 	return printJSON(response)
 }
 
+// printErrorAndExit prints an error and exits with status 1
+func printErrorAndExit(err error, context string) {
+	if JSONOutput {
+		printErrorJSON(fmt.Sprintf("%s: %v", context, err))
+	} else {
+		printError("%s: %v", context, err)
+		fmt.Println()
+		printInfo("Troubleshooting tips:")
+		printInfo("1. Verify your CLOUDFLARE_API_TOKEN is correct")
+		printInfo("2. Ensure your account ID is correct")
+		printInfo("3. Check that your token has R2 permissions")
+		printInfo("4. Verify your network connection")
+		fmt.Println()
+	}
+	os.Exit(1)
+}
+
 // getRelativePath gets a relative path for display purposes
 func getRelativePath(path string) string {
 	if wd, err := os.Getwd(); err == nil {

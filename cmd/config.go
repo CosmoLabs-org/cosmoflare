@@ -15,7 +15,8 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	"context"
+	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 )
@@ -243,13 +244,16 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Test connection to Cloudflare API
-	client, err := api.NewClientFromProfile(profile.Name)
+	client, err := r2go2.NewClient(
+		r2go2.WithAccountID(profile.AccountID),
+		r2go2.WithAPIToken(profile.APIToken),
+	)
 	if err != nil {
 		printError("Failed to create client: %v", err)
 		return err
 	}
 
-	if err := client.TestConnection(); err != nil {
+	if err := client.TestConnection(context.Background()); err != nil {
 		printError("Connection test failed: %v", err)
 		return err
 	}
@@ -443,13 +447,13 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	testConnection, _ := cmd.Flags().GetBool("test-connection")
 	if testConnection {
 		printInfo("Testing connection...")
-		client, err := api.NewClientFromProfile(profileName)
+		client, err := getAPIClient()
 		if err != nil {
 			printError("Failed to create client: %v", err)
 			return err
 		}
 
-		if err := client.TestConnection(); err != nil {
+		if err := client.TestConnection(context.Background()); err != nil {
 			printError("Connection test failed: %v", err)
 			return err
 		}

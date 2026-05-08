@@ -8,6 +8,7 @@ License: MIT
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,11 +19,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 )
 
 // objectCmd represents the object command
@@ -293,10 +291,11 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	}
 
 	// List objects
-	objects, err := client.ListObjects(bucketName, prefix, delimiter, int(maxKeys))
+	result, err := client.ListObjects(context.Background(), bucketName, prefix, delimiter, int32(maxKeys))
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}
+	objects := result.Items
 
 	if JSONOutput {
 		return printJSON(objects)
@@ -315,7 +314,7 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 			obj.Key,
 			utils.FormatBytes(obj.Size),
 			obj.LastModified.Format("2006-01-02 15:04:05"),
-			obj.ETag[:16]+"...",
+			etagDisplay(obj.ETag),
 		)
 	}
 	w.Flush()
@@ -332,8 +331,6 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	objectKey := args[1]
 
 	output, _ := cmd.Flags().GetString("output")
-	rangeStart, _ := cmd.Flags().GetInt64("range-start")
-	rangeEnd, _ := cmd.Flags().GetInt64("range-end")
 
 	if output == "" {
 		output = filepath.Base(objectKey)
@@ -348,11 +345,11 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get object
-	reader, obj, err := client.GetObject(bucketName, objectKey, rangeStart, rangeEnd)
+	obj, err := client.GetObject(context.Background(), bucketName, objectKey)
 	if err != nil {
 		return fmt.Errorf("failed to get object: %w", err)
 	}
-	defer reader.Close()
+	defer obj.Content.Close()
 
 	// Create output file
 	file, err := os.Create(output)
@@ -361,13 +358,11 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	}
 	defer file.Close()
 
-	// Copy data with progress bar
 	if Verbose {
 		printInfo("Size: %s", utils.FormatBytes(obj.Size))
 	}
 
-	// Copy the data
-	size, err := io.Copy(file, reader)
+	size, err := io.Copy(file, obj.Content)
 	if err != nil {
 		return fmt.Errorf("failed to download object: %w", err)
 	}
@@ -387,7 +382,6 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	contentType, _ := cmd.Flags().GetString("content-type")
 	cacheControl, _ := cmd.Flags().GetString("cache-control")
 	metadata, _ := cmd.Flags().GetStringSlice("metadata")
-	showProgress, _ := cmd.Flags().GetBool("progress")
 
 	if key == "" {
 		key = filepath.Base(localPath)
@@ -395,13 +389,17 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 	printInfo("⬆️  Uploading: %s -> %s/%s", localPath, bucketName, key)
 
-	// Check if local file exists
-	fileInfo, err := os.Stat(localPath)
+	file, err := os.Open(localPath)
+	if err != nil {
+		return fmt.Errorf("failed to open local file: %w", err)
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("failed to access local file: %w", err)
 	}
 
-	// Parse metadata
 	metadataMap, err := parseKeyValuePairs(metadata)
 	if err != nil {
 		return fmt.Errorf("failed to parse metadata: %w", err)
@@ -424,36 +422,31 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Enhanced upload with visual feedback
-	if !Verbose {
-		// Show animated preparation
-		visual.ShowSpinner("Preparing upload...", 2*time.Second)
-		printInfo("File size: %s", utils.FormatBytes(fileInfo.Size()))
+	client, err := getAPIClient()
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	if showProgress {
-		// Create enhanced visual progress system
-		rp := progress.NewMultiProgress()
-
-		// Create progress bar for upload
-		progressBar := progress.NewLinearProgressBar(fileInfo.Size(),
-			fmt.Sprintf("Uploading %s to %s", filepath.Base(localPath), key))
-		progressBar.Start()
-		defer progressBar.Complete()
-
-		// Add to multi-progress manager
-		rp.Add("upload", progressBar)
-
-		// Simulate upload progress (in real implementation, this would be actual R2 API progress)
-		uploadProgress(fileInfo.Size(), func(current, total int64) {
-			rp.Update("upload", current, total)
-		})
-
-		// Show animated success
-		visual.ShowSuccess("File uploaded successfully!")
-	} else {
-		printSuccess("✅ Uploaded successfully!")
+	opts := []r2go2.UploadOption{}
+	if contentType != "" {
+		opts = append(opts, r2go2.WithContentType(contentType))
 	}
+	if cacheControl != "" {
+		opts = append(opts, r2go2.WithUploadCacheControl(cacheControl))
+	}
+	if len(metadataMap) > 0 {
+		opts = append(opts, r2go2.WithMetadata(metadataMap))
+	}
+
+	result, err := client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+	if err != nil {
+		return fmt.Errorf("failed to upload object: %w", err)
+	}
+
+	printSuccess("✅ Uploaded successfully!")
+	printInfo("Key: %s", result.Key)
+	printInfo("Size: %s", utils.FormatBytes(result.Size))
+	printInfo("ETag: %s", result.ETag)
 	return nil
 }
 
@@ -478,7 +471,7 @@ func runObjectDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Delete object
-	if err := client.DeleteObject(bucketName, objectKey); err != nil {
+	if err := client.DeleteObject(context.Background(), bucketName, objectKey); err != nil {
 		return fmt.Errorf("failed to delete object: %w", err)
 	}
 
@@ -494,7 +487,6 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 	src := args[0]
 	dst := args[1]
 
-	// Parse source and destination
 	srcParts := strings.SplitN(src, "/", 2)
 	if len(srcParts) != 2 {
 		return fmt.Errorf("invalid source format, expected: bucket/key")
@@ -510,14 +502,11 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 
 	printInfo("📋 Copying object: %s/%s -> %s/%s", srcBucket, srcKey, dstBucket, dstKey)
 
-	// Create client
-	_, err := getAPIClient()
+	client, err := getAPIClient()
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	// Copy object (placeholder implementation)
-	// This would use the actual S3 copy operation
 	if DryRun {
 		printInfo("DRY RUN: Would copy object")
 		printInfo("  Source: %s/%s", srcBucket, srcKey)
@@ -525,7 +514,15 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	result, err := client.CopyObject(context.Background(), srcBucket, srcKey, dstBucket, dstKey)
+	if err != nil {
+		return fmt.Errorf("failed to copy object: %w", err)
+	}
+
 	printSuccess("✅ Object copied successfully!")
+	printInfo("Source: %s/%s", srcBucket, srcKey)
+	printInfo("Destination: %s/%s", dstBucket, dstKey)
+	printInfo("ETag: %s", result.ETag)
 	return nil
 }
 
@@ -547,7 +544,7 @@ func runObjectHead(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get object metadata
-	obj, err := client.HeadObject(bucketName, objectKey)
+	obj, err := client.HeadObject(context.Background(), bucketName, objectKey)
 	if err != nil {
 		return fmt.Errorf("failed to get object metadata: %w", err)
 	}
@@ -561,7 +558,7 @@ func runObjectHead(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Size: %s\n", utils.FormatBytes(obj.Size))
 	fmt.Printf("Last Modified: %s\n", obj.LastModified.Format(time.RFC3339))
 	fmt.Printf("ETag: %s\n", obj.ETag)
-	fmt.Printf("Storage Class: %s\n", obj.StorageClass)
+	fmt.Printf("Cache-Control: %s\n", obj.CacheControl)
 
 	if len(obj.Metadata) > 0 {
 		fmt.Printf("Metadata:\n")
@@ -591,13 +588,14 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	}
 
 	// List all objects (would be more efficient with server-side filtering)
-	objects, err := client.ListObjects(bucketName, "", "", 0)
+	listResult, err := client.ListObjects(context.Background(), bucketName, "", "", 0)
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}
+	objects := listResult.Items
 
 	// Filter objects based on search type
-	var results []*api.Object
+	var results []*r2go2.Object
 	for _, obj := range objects {
 		var match bool
 		switch searchType {
@@ -649,14 +647,13 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and spec file are required")
 	}
-	_ = args[0] // bucketName - unused for now
+	bucketName := args[0]
 	specFile := args[1]
 
 	continueOnError, _ := cmd.Flags().GetBool("continue")
 
 	printInfo("📦 Processing batch operations from: %s", specFile)
 
-	// Parse specification file
 	var spec BatchSpec
 	if err := parseBatchSpec(specFile, &spec); err != nil {
 		return fmt.Errorf("failed to parse batch spec: %w", err)
@@ -667,13 +664,11 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Create client
-	_, err := getAPIClient()
+	client, err := getAPIClient()
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	// Process operations
 	successCount := 0
 	errorCount := 0
 
@@ -686,7 +681,6 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// Execute operation (placeholder implementations)
 		switch op.Action {
 		case "upload":
 			if op.LocalPath == "" || op.ObjectKey == "" {
@@ -694,8 +688,28 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 				errorCount++
 				continue
 			}
-			// Would implement actual upload
-			printInfo("Uploading: %s -> %s", op.LocalPath, op.ObjectKey)
+			file, err := os.Open(op.LocalPath)
+			if err != nil {
+				printError("Failed to open file: %v", err)
+				errorCount++
+				if !continueOnError {
+					return err
+				}
+				continue
+			}
+			defer file.Close()
+
+			info, _ := file.Stat()
+			_, err = client.Upload(context.Background(), bucketName, op.ObjectKey, file, info.Size())
+			if err != nil {
+				printError("Upload failed: %v", err)
+				errorCount++
+				if !continueOnError {
+					return err
+				}
+				continue
+			}
+			printSuccess("Uploaded: %s", op.ObjectKey)
 			successCount++
 
 		case "delete":
@@ -704,8 +718,16 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 				errorCount++
 				continue
 			}
-			// Would implement actual delete
-			printInfo("Deleting: %s", op.ObjectKey)
+			err := client.DeleteObject(context.Background(), bucketName, op.ObjectKey)
+			if err != nil {
+				printError("Delete failed: %v", err)
+				errorCount++
+				if !continueOnError {
+					return err
+				}
+				continue
+			}
+			printSuccess("Deleted: %s", op.ObjectKey)
 			successCount++
 
 		case "copy":
@@ -714,8 +736,16 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 				errorCount++
 				continue
 			}
-			// Would implement actual copy
-			printInfo("Copying: %s -> %s", op.ObjectKey, op.DestinationKey)
+			_, err := client.CopyObject(context.Background(), bucketName, op.ObjectKey, bucketName, op.DestinationKey)
+			if err != nil {
+				printError("Copy failed: %v", err)
+				errorCount++
+				if !continueOnError {
+					return err
+				}
+				continue
+			}
+			printSuccess("Copied: %s -> %s", op.ObjectKey, op.DestinationKey)
 			successCount++
 
 		default:
@@ -753,41 +783,17 @@ func parseBatchSpec(filename string, spec *BatchSpec) error {
 	return json.Unmarshal(data, spec)
 }
 
-// uploadProgress simulates upload progress (placeholder for actual R2 API integration)
-func uploadProgress(totalSize int64, updateFunc func(current, total int64)) {
-	const chunkSize = 1024 * 1024 // 1MB chunks
-	steps := int(totalSize / chunkSize)
-
-	for i := 0; i <= steps; i++ {
-		current := int64(i * chunkSize)
-		if current > totalSize {
-			current = totalSize
-		}
-
-		updateFunc(current, totalSize)
-
-		// Simulate upload time
-		time.Sleep(50 * time.Millisecond)
+func etagDisplay(etag string) string {
+	if len(etag) > 16 {
+		return etag[:16] + "..."
 	}
+	return etag
 }
 
-// getAPIClient creates an API client
-func getAPIClient() (*api.Client, error) {
-	// Try to create client from environment first
-	profile := config.LoadFromEnvironment()
-	if profile.APIToken != "" && profile.AccountID != "" {
-		opts := &api.ClientOptions{
-			AccountID: profile.AccountID,
-			APIToken:  profile.APIToken,
-		}
-		return api.NewClient(opts)
-	}
-
-	// Fallback to profile-based authentication
-	client, err := api.NewClientFromProfile("")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create API client: %w", err)
-	}
-
-	return client, nil
+// getAPIClient creates an R2 client using the pkg/r2go2 library.
+func getAPIClient() (r2go2.R2Client, error) {
+	return r2go2.NewClient(
+		r2go2.WithAccountID(AccountID),
+		r2go2.WithAPIToken(APIToken),
+	)
 }

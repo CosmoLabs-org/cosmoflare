@@ -9,12 +9,13 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
@@ -281,7 +282,7 @@ func runAuthStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := client.TestConnection(); err != nil {
+	if err := client.TestConnection(context.Background()); err != nil {
 		printError("Connection test failed: %v", err)
 		return err
 	}
@@ -435,33 +436,28 @@ func promptForEmail() string {
 }
 
 func testCredentials(credentials *AuthCredentials) error {
-	// Create client with credentials
-	opts := &api.ClientOptions{
-		AccountID: credentials.AccountID,
-		APIToken:  credentials.APIToken,
-	}
-
-	client, err := api.NewClient(opts)
+	client, err := r2go2.NewClient(
+		r2go2.WithAccountID(credentials.AccountID),
+		r2go2.WithAPIToken(credentials.APIToken),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
 	}
 
-	return client.TestConnection()
+	return client.TestConnection(context.Background())
 }
 
-// newClientFromEnv creates a client from environment variables
-func newClientFromEnv() (*api.Client, error) {
-	profile := config.LoadFromEnvironment()
-	if profile.APIToken == "" || profile.AccountID == "" {
+func newClientFromEnv() (r2go2.R2Client, error) {
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
+	if apiToken == "" || accountID == "" {
 		return nil, fmt.Errorf("missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID environment variables")
 	}
 
-	opts := &api.ClientOptions{
-		AccountID: profile.AccountID,
-		APIToken:  profile.APIToken,
-	}
-
-	return api.NewClient(opts)
+	return r2go2.NewClient(
+		r2go2.WithAccountID(accountID),
+		r2go2.WithAPIToken(apiToken),
+	)
 }
 
 func saveCredentialsToProfile(profileName string, credentials *AuthCredentials) error {

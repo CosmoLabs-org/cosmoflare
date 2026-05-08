@@ -9,11 +9,11 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
 	"github.com/spf13/cobra"
 )
 
@@ -44,11 +44,7 @@ Examples:
 		bucketName := args[0]
 
 		// Create API client
-		opts := &api.ClientOptions{
-			AccountID: AccountID,
-			APIToken:  APIToken,
-		}
-		client, err := api.NewClient(opts)
+		client, err := getAPIClient()
 		if err != nil {
 			printErrorAndExit(err, "Failed to create API client")
 		}
@@ -71,7 +67,7 @@ Examples:
 		}
 
 		// Delete the bucket
-		err = client.DeleteBucket(bucketName)
+		err = client.DeleteBucket(context.Background(), bucketName)
 		if err != nil {
 			printErrorAndExit(err, "Failed to delete bucket")
 		}
