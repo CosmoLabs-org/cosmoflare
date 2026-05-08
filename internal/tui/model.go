@@ -8,12 +8,13 @@ License: MIT
 package tui
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	r2api "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 )
 
 // Section represents different sections of the dashboard
@@ -330,14 +331,12 @@ type notificationMsg struct {
 // loadDataCmd loads initial data from the API
 func loadDataCmd() tea.Cmd {
 	return func() tea.Msg {
-		// Create a new client with default profile
-		client, err := r2api.NewClientFromProfile("")
+		client, err := r2go2.NewClient()
 		if err != nil {
 			return errorMsg{fmt.Errorf("failed to create API client: %w", err)}
 		}
 
-		// Load bucket data
-		buckets, err := client.ListBuckets()
+		buckets, err := client.ListBuckets(context.Background())
 		if err != nil {
 			return errorMsg{fmt.Errorf("failed to list buckets: %w", err)}
 		}
@@ -349,8 +348,8 @@ func loadDataCmd() tea.Cmd {
 				Name:        bucket.Name,
 				Size:        bucket.Size,
 				ObjectCount: bucket.ObjectCount,
-				Status:      bucket.Status,
-				CreatedAt:   bucket.Created,
+				Status:      "active",
+				CreatedAt:   bucket.CreatedAt,
 			})
 		}
 

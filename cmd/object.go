@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -594,6 +595,15 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	}
 	objects := listResult.Items
 
+	// Compile regex once if needed (before the loop)
+	var regex *regexp.Regexp
+	if searchType == "regex" {
+		regex, err = regexp.Compile(query)
+		if err != nil {
+			return fmt.Errorf("invalid regex pattern: %w", err)
+		}
+	}
+
 	// Filter objects based on search type
 	var results []*r2go2.Object
 	for _, obj := range objects {
@@ -604,11 +614,13 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 		case "exact":
 			match = obj.Key == query
 		case "glob":
-			// Simple glob matching (would use proper glob library)
-			match = strings.Contains(obj.Key, strings.Replace(query, "*", "", -1))
+			var matchErr error
+			match, matchErr = filepath.Match(query, obj.Key)
+			if matchErr != nil {
+				return fmt.Errorf("invalid glob pattern: %w", matchErr)
+			}
 		case "regex":
-			// Simple regex matching (would use regexp library)
-			match = strings.Contains(obj.Key, query)
+			match = regex.MatchString(obj.Key)
 		default:
 			match = strings.HasPrefix(obj.Key, query)
 		}

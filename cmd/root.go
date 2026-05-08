@@ -61,8 +61,12 @@ Examples:
   r2go2 upload my-bucket file.txt --key="remote/file.txt"  # Upload file`,
 	Version: AppVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Skip API validation for commands that don't need R2 access
-		skipValidation := []string{"setup", "config", "auth", "completion", "help", "version", "theme", "demo"}
+		// Skip API validation for commands that don't need R2 access.
+		// Parent commands in this list cause all subcommands to skip too.
+		skipValidation := []string{
+			"setup", "config", "auth", "completion", "help", "version",
+			"theme", "demo", "backup",
+		}
 		for _, skip := range skipValidation {
 			if cmd.Name() == skip {
 				return
@@ -74,7 +78,12 @@ Examples:
 			}
 		}
 
-		// Validate environment variables
+		// Get API token from flag first, then environment
+		if APIToken == "" {
+			APIToken = os.Getenv("CLOUDFLARE_API_TOKEN")
+		}
+
+		// Validate API token is available (from flag or env)
 		if err := validateEnvironment(); err != nil {
 			printError("Configuration error: %v", err)
 			os.Exit(1)
@@ -87,11 +96,6 @@ Examples:
 				printError("Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
 				os.Exit(1)
 			}
-		}
-
-		// Get API token from environment
-		if APIToken == "" {
-			APIToken = os.Getenv("CLOUDFLARE_API_TOKEN")
 		}
 
 		// Print dry-run warning
@@ -119,6 +123,7 @@ func init() {
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&AccountID, "account-id", "", "Cloudflare Account ID (overrides CLOUDFLARE_ACCOUNT_ID)")
+	rootCmd.PersistentFlags().StringVar(&APIToken, "api-token", "", "Cloudflare API token (overrides CLOUDFLARE_API_TOKEN)")
 	rootCmd.PersistentFlags().BoolVar(&DryRun, "dry-run", false, "Show what would happen without executing")
 	rootCmd.PersistentFlags().BoolVar(&JSONOutput, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Enable verbose output")
@@ -133,17 +138,18 @@ func init() {
 	rootCmd.AddCommand(completionCmd)
 }
 
-// validateEnvironment checks required environment variables and settings
+// validateEnvironment checks that an API token is available and valid.
+// The token may come from the --api-token flag (already bound to APIToken)
+// or from the CLOUDFLARE_API_TOKEN environment variable.
 func validateEnvironment() error {
-	// Check API token
-	token := os.Getenv("CLOUDFLARE_API_TOKEN")
+	token := APIToken
 	if token == "" {
-		return fmt.Errorf("CLOUDFLARE_API_TOKEN environment variable is required")
+		return fmt.Errorf("Cloudflare API token is required. Set CLOUDFLARE_API_TOKEN environment variable or use --api-token flag")
 	}
 
-	// Basic token format validation (should start with a pattern)
+	// Basic token format validation
 	if len(token) < 10 {
-		return fmt.Errorf("CLOUDFLARE_API_TOKEN appears to be invalid (too short)")
+		return fmt.Errorf("API token appears to be invalid (too short)")
 	}
 
 	return nil

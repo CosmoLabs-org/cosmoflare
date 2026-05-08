@@ -24,7 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cheggaaa/pb/v3"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
+	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 )
 
 // S3Migration handles migration from AWS S3 to Cloudflare R2
@@ -78,7 +78,7 @@ type S3Object struct {
 }
 
 // Execute performs the S3 to R2 migration
-func (m *S3Migration) Execute(r2Client *api.Client) (*MigrationResult, error) {
+func (m *S3Migration) Execute(r2Client r2go2.R2Client) (*MigrationResult, error) {
 	startTime := time.Now()
 
 	printInfo("🚀 Starting S3 to R2 migration")

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	"gopkg.in/yaml.v3"
 )
 
 var bucketCmd = &cobra.Command{
@@ -309,7 +310,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 	}
 
 	if output == "yaml" {
-		yamlData, err := json.Marshal(bucket)
+		yamlData, err := yaml.Marshal(bucket)
 		if err != nil {
 			return fmt.Errorf("failed to marshal YAML: %w", err)
 		}
@@ -515,9 +516,15 @@ func parseSpecFile(filename string, spec *BucketSpec) error {
 		return fmt.Errorf("failed to read spec file: %w", err)
 	}
 
+	// Try JSON first
 	if err := json.Unmarshal(data, spec); err == nil {
 		return nil
 	}
 
-	return fmt.Errorf("YAML parsing not implemented, use JSON format")
+	// Try YAML
+	if err := yaml.Unmarshal(data, spec); err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("failed to parse spec file as JSON or YAML")
 }
