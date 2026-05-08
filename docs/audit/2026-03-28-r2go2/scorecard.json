@@ -1,0 +1,237 @@
+{
+  "meta": {
+    "project": "r2go2",
+    "version": "0.2.2",
+    "date": "2026-03-28",
+    "agent_count": 10,
+    "mode": "fresh",
+    "project_type": "structured",
+    "previous_audit": "docs/audit/2026-03-25-r2go2/scorecard.json"
+  },
+  "overall": {
+    "score": 46.5,
+    "grade": "D+",
+    "priority": "High",
+    "delta": "-7.1 (REGRESSION)"
+  },
+  "agents": [
+    {
+      "name": "Code Quality",
+      "slug": "code-quality",
+      "overall": 52,
+      "grade": "D+",
+      "delta": "+2",
+      "priority": "High",
+      "sub_scores": {
+        "architecture": 62,
+        "patterns": 58,
+        "tech_debt": 35,
+        "test_coverage": 52,
+        "error_handling": 55
+      }
+    },
+    {
+      "name": "Core Logic",
+      "slug": "core-logic",
+      "overall": 22,
+      "grade": "F",
+      "delta": "-8 (REGRESSION)",
+      "priority": "CRITICAL",
+      "sub_scores": {
+        "functionality": 15,
+        "correctness": 22,
+        "performance": 45,
+        "edge_cases": 25
+      }
+    },
+    {
+      "name": "TUI/UX",
+      "slug": "frontend-ux",
+      "overall": 63,
+      "grade": "C-",
+      "delta": "+3",
+      "priority": "Medium",
+      "sub_scores": {
+        "design": 62,
+        "accessibility": 55,
+        "ux_flow": 65,
+        "visual_polish": 72
+      }
+    },
+    {
+      "name": "Competitive Analysis",
+      "slug": "competitive",
+      "overall": 34,
+      "grade": "D",
+      "delta": "-16 (REGRESSION)",
+      "priority": "CRITICAL",
+      "sub_scores": {
+        "feature_parity": 22,
+        "differentiators": 55,
+        "market_position": 30,
+        "moat": 28
+      }
+    },
+    {
+      "name": "Distribution",
+      "slug": "distribution",
+      "overall": 64,
+      "grade": "C",
+      "delta": "-6",
+      "priority": "Medium",
+      "sub_scores": {
+        "packaging": 72,
+        "ci_cd": 55,
+        "multi_platform": 68,
+        "install_experience": 62
+      }
+    },
+    {
+      "name": "SEO/Content",
+      "slug": "seo-content",
+      "overall": 50,
+      "grade": "D+",
+      "delta": "(=)",
+      "priority": "High",
+      "sub_scores": {
+        "readme_quality": 52,
+        "docs_completeness": 55,
+        "discoverability": 35,
+        "branding": 60
+      }
+    },
+    {
+      "name": "API Design",
+      "slug": "api-design",
+      "overall": 35,
+      "grade": "D",
+      "delta": "-15 (REGRESSION)",
+      "priority": "CRITICAL",
+      "sub_scores": {
+        "contract_quality": 30,
+        "interface_design": 35,
+        "error_contracts": 40,
+        "extensibility": 35
+      }
+    },
+    {
+      "name": "Infrastructure",
+      "slug": "infrastructure",
+      "overall": 65,
+      "grade": "C",
+      "delta": "+5",
+      "priority": "Medium",
+      "sub_scores": {
+        "docker": 78,
+        "security": 62,
+        "config_management": 72,
+        "observability": 35,
+        "iac": 75
+      }
+    },
+    {
+      "name": "Documentation",
+      "slug": "documentation",
+      "overall": 40,
+      "grade": "D",
+      "delta": "-10 (REGRESSION)",
+      "priority": "High",
+      "sub_scores": {
+        "completeness": 35,
+        "accuracy": 25,
+        "onboarding": 50,
+        "api_docs": 55,
+        "examples": 55
+      }
+    },
+    {
+      "name": "Roadmap Health",
+      "slug": "roadmap-health",
+      "overall": 40,
+      "grade": "D",
+      "delta": "-30 (REGRESSION)",
+      "priority": "High",
+      "sub_scores": {
+        "coverage": 55,
+        "issue_linkage": 35,
+        "staleness": 30,
+        "strategic_coherence": 40
+      }
+    }
+  ],
+  "critical_bugs": [
+    {
+      "id": "placeholder-api",
+      "description": "All 9 core API client methods are placeholder stubs returning empty/mock data",
+      "file": "internal/api/client.go",
+      "lines": [140, 225],
+      "severity": "critical",
+      "existing_issue": "BUG-007",
+      "agents": ["core-logic", "code-quality", "api-design", "competitive"]
+    },
+    {
+      "id": "speed-calc-bug",
+      "description": "Speed calculation uses time.Since(time.Now()) producing Inf/NaN",
+      "file": "internal/api/enhanced_client.go",
+      "lines": [198, 277],
+      "severity": "critical",
+      "existing_issue": "BUG-001",
+      "agents": ["core-logic", "code-quality", "api-design"]
+    },
+    {
+      "id": "persistent-prerun-blocks",
+      "description": "PersistentPreRun requires API token for ALL commands including setup/config/theme",
+      "file": "cmd/root.go",
+      "lines": [63, 89],
+      "severity": "critical",
+      "existing_issue": "BUG-002",
+      "agents": ["core-logic", "competitive", "documentation"]
+    },
+    {
+      "id": "print-error-no-exit",
+      "description": "printErrorAndExit() does NOT call os.Exit() -- execution continues after fatal errors",
+      "file": "cmd/list.go",
+      "line": 130,
+      "severity": "critical",
+      "agents": ["code-quality"]
+    },
+    {
+      "id": "keyboard-off-by-one",
+      "description": "Number key shortcuts off-by-one: pressing 1 does nothing, 2 selects first item",
+      "file": "internal/tui/components/navigation/menu_selection.go",
+      "line": 170,
+      "severity": "critical",
+      "existing_issue": "BUG-004",
+      "agents": ["frontend-ux"]
+    },
+    {
+      "id": "readme-feature-inflation",
+      "description": "README documents 30+ commands/features that are disabled or non-existent",
+      "file": "README.md",
+      "severity": "critical",
+      "agents": ["seo-content", "documentation", "competitive"]
+    }
+  ],
+  "roadmap_hydration": [
+    {
+      "title": "Repository hygiene: remove tracked binaries, clean disabled packages",
+      "priority": "high",
+      "linked_issues": ["BUG-008", "BUG-009", "TASK-003"]
+    },
+    {
+      "title": "First-run experience: fix PersistentPreRun + add LICENSE file",
+      "priority": "high",
+      "linked_issues": ["BUG-002"]
+    },
+    {
+      "title": "Credential security: config encryption or OS keychain",
+      "priority": "medium",
+      "linked_issues": []
+    },
+    {
+      "title": "YAML import support for bucket spec files",
+      "priority": "medium",
+      "linked_issues": ["BUG-005"]
+    }
+  ]
+}

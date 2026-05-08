@@ -1,0 +1,19 @@
+{
+  "project_name": "r2go2",
+  "version": "0.2.2",
+  "project_type": "structured",
+  "languages": ["go"],
+  "frameworks": ["cobra-cli"],
+  "build_systems": ["make", "go"],
+  "has_git": true,
+  "git_branch": "master",
+  "ci_passing": false,
+  "pr_ready": false,
+  "deploy_ready": false,
+  "blockers": ["CI pipeline failing"],
+  "file_count": 376,
+  "capabilities": ["issues", "ideas", "roadmap", "feedback", "changelog"],
+  "security_findings_count": 14,
+  "git_audit_issues": 11,
+  "commit_quality_score": 100
+}

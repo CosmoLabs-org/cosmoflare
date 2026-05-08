@@ -1,0 +1,23 @@
+{
+  "project_name": "r2go2",
+  "version": "0.2.2",
+  "project_type": "structured",
+  "languages": ["go"],
+  "frameworks": ["cobra-cli"],
+  "build_systems": ["go", "make"],
+  "has_git": true,
+  "git_branch": "master",
+  "capabilities": ["issues", "ideas", "roadmap", "feedback", "changelog"],
+  "file_stats": {
+    "code_files": 68,
+    "test_files": 37,
+    "doc_files": 135,
+    "config_files": 59,
+    "total_files": 351
+  },
+  "entry_points": ["main.go", "cmd/root.go"],
+  "has_ccs": true,
+  "has_roadmap": true,
+  "has_issues": true,
+  "has_docs": true
+}

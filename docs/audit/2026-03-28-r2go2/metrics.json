@@ -1,0 +1,20 @@
+{
+  "total_files": 376,
+  "total_lines": 134222,
+  "go_lines": 36322,
+  "code_files": 68,
+  "test_files": 37,
+  "doc_files": 151,
+  "config_files": 66,
+  "open_bugs": 10,
+  "open_features": 4,
+  "open_tasks": 3,
+  "roadmap_items": 25,
+  "roadmap_completed": 1,
+  "ideas_pending": 13,
+  "commit_quality": 100,
+  "version": "0.2.2",
+  "disabled_packages": 5,
+  "tracked_binaries_mb": 24.4,
+  "ds_store_tracked": 7
+}

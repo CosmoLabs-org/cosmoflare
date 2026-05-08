@@ -1,0 +1,27 @@
+{
+  "total_files": 351,
+  "total_lines": 132093,
+  "lines_by_language": {
+    "go": 36322
+  },
+  "files_by_type": {
+    "code": 68,
+    "other": 246,
+    "test": 37
+  },
+  "todo_count": 0,
+  "fixme_count": 0,
+  "hack_count": 0,
+  "console_log_count": 0,
+  "any_type_count": 0,
+  "packages_passing": 22,
+  "packages_failing": 6,
+  "packages_total": 28,
+  "open_bugs": 6,
+  "open_features": 4,
+  "roadmap_items": 24,
+  "direct_dependencies": 18,
+  "indirect_dependencies": 39,
+  "version_sources": 1,
+  "version_conflicts": false
+}
