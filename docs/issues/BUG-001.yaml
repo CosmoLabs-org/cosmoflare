@@ -1,16 +1,18 @@
 id: BUG-001
 type: bug
 created_at: 2026-02-26T01:32:24.221002+01:00
-updated_at: 2026-02-26T01:32:24.221009+01:00
+updated_at: 2026-05-08T05:33:28.672341-03:00
 source: local
 severity: critical
-status: open
+status: resolved
 origin:
-  roadmap_items:
-    - ROAD-000
-
+    roadmap_items:
+        - ROAD-000
 title: 'Speed calculation bug: time.Since(time.Now()) always returns 0'
 description: enhanced_client.go lines 174 and 253 use time.Since(time.Now()) which always returns ~0, producing +Inf or NaN speed
 fix_direction: Replace time.Since(time.Now()) with time.Since(startTime) on both lines. Pass startTime from parent UploadFile or capture locally.
 affected_files:
     - internal/api/enhanced_client.go
+revisions:
+    - date: "2026-05-08"
+      action: closed

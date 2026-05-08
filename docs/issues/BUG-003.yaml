@@ -1,14 +1,13 @@
 id: BUG-003
 type: bug
 created_at: 2026-02-26T01:32:28.678497+01:00
-updated_at: 2026-02-26T01:32:28.678504+01:00
+updated_at: 2026-05-08T05:33:28.82878-03:00
 source: local
 severity: critical
-status: open
+status: resolved
 origin:
-  roadmap_items:
-    - ROAD-015
-
+    roadmap_items:
+        - ROAD-015
 title: CI workflows use non-existent Go version 1.25.3
 description: All GitHub CI workflows reference GO_VERSION 1.25.3 which does not exist. Builds will fail. GOOS/GOARCH splitting also incorrect.
 fix_direction: Update GO_VERSION to real version in all workflow files. Fix GOOS/GOARCH matrix splitting. Update deprecated actions.
@@ -16,3 +15,6 @@ affected_files:
     - .github/workflows/build.yml
     - .github/workflows/release.yml
     - .github/workflows/test-suite.yml
+revisions:
+    - date: "2026-05-08"
+      action: closed

@@ -1,10 +1,10 @@
 id: BUG-008
 type: bug
 created_at: 2026-03-25T03:59:14.049225+01:00
-updated_at: 2026-03-25T03:59:14.050114+01:00
+updated_at: 2026-05-08T05:33:29.19971-03:00
 source: local
 severity: medium
-status: open
+status: resolved
 origin:
     session: 17
 title: Disabled packages fail to build and pollute test output
@@ -13,3 +13,6 @@ fix_direction: Either remove the _disabled directories entirely, add build tag c
 affected_files:
     - internal/tui_disabled/
     - internal/cli_disabled/
+revisions:
+    - date: "2026-05-08"
+      action: closed

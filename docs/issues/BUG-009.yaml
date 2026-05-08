@@ -1,10 +1,10 @@
 id: BUG-009
 type: bug
 created_at: 2026-03-25T03:59:17.164001+01:00
-updated_at: 2026-03-25T03:59:17.165403+01:00
+updated_at: 2026-05-08T05:33:29.277972-03:00
 source: local
 severity: medium
-status: open
+status: resolved
 origin:
     session: 17
 title: Compiled binaries tracked in git repository
@@ -13,3 +13,6 @@ fix_direction: Remove binaries from git tracking with git rm --cached, add them 
 affected_files:
     - simple-setup
     - test-setup
+revisions:
+    - date: "2026-05-08"
+      action: closed

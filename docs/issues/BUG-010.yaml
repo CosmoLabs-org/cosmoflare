@@ -1,10 +1,10 @@
 id: BUG-010
 type: bug
 created_at: 2026-03-25T03:59:20.140735+01:00
-updated_at: 2026-03-25T03:59:20.142111+01:00
+updated_at: 2026-05-08T05:33:29.349677-03:00
 source: local
 severity: medium
-status: open
+status: resolved
 origin:
     session: 17
 title: Missing LICENSE file despite MIT license claims
@@ -12,3 +12,6 @@ description: 'The project references MIT license in documentation and go.mod but
 fix_direction: Add a LICENSE file with MIT license text to the repository root, ensuring the copyright holder matches CosmoLabs-org
 affected_files:
     - LICENSE
+revisions:
+    - date: "2026-05-08"
+      action: closed

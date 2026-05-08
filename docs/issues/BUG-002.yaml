@@ -1,16 +1,18 @@
 id: BUG-002
 type: bug
 created_at: 2026-02-26T01:32:26.621578+01:00
-updated_at: 2026-02-26T01:32:26.621582+01:00
+updated_at: 2026-05-08T05:33:28.757027-03:00
 source: local
 severity: high
-status: open
+status: resolved
 origin:
-  roadmap_items:
-    - ROAD-014
-
+    roadmap_items:
+        - ROAD-014
 title: PersistentPreRun blocks non-API commands
 description: rootCmd PersistentPreRun requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID for ALL commands including setup, config, completion
 fix_direction: 'Check cmd.Name() or use Cobra annotations to skip credential validation for non-API commands: setup, config init, completion, demo, theme, version'
 affected_files:
     - cmd/root.go
+revisions:
+    - date: "2026-05-08"
+      action: closed

@@ -1,17 +1,19 @@
 id: BUG-006
 type: bug
 created_at: 2026-02-26T01:32:34.4926+01:00
-updated_at: 2026-02-26T01:32:34.492608+01:00
+updated_at: 2026-05-08T05:33:29.049073-03:00
 source: local
 severity: high
-status: open
+status: resolved
 origin:
-  roadmap_items:
-    - ROAD-000
-    - ROAD-010
-
+    roadmap_items:
+        - ROAD-000
+        - ROAD-010
 title: Object search regex/glob use fake string matching
 description: object search regex and glob types both use strings.Contains instead of real pattern matching
 fix_direction: Use regexp.MatchString for regex type and filepath.Match for glob type. Both are in Go stdlib.
 affected_files:
     - cmd/object.go
+revisions:
+    - date: "2026-05-08"
+      action: closed
