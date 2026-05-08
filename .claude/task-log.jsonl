@@ -1,0 +1,48 @@
+{"id":"1","subject":"Create roadmap items for new features","status":"pending","created_at":"2026-05-07T08:11:52Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"2","subject":"Create Phase 0-1 implementation plan","status":"pending","created_at":"2026-05-07T08:11:52Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"3","subject":"Finalize brainstorming doc and mark complete","status":"pending","created_at":"2026-05-07T08:11:52Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"3","subject":"","status":"","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"2","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-07T08:14:28Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"3","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-07T08:15:30Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"1","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-07T08:16:21Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"4","subject":"P0-6: Fix install.sh binary name mismatch","status":"pending","created_at":"2026-05-07T08:21:14Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"5","subject":"P0-5: Add MIT LICENSE file","status":"pending","created_at":"2026-05-07T08:21:14Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"6","subject":"P0-3: Fix printErrorAndExit not exiting","status":"pending","created_at":"2026-05-07T08:21:14Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"7","subject":"P0-1: Fix speed calc Inf/NaN in enhanced_client.go","status":"pending","created_at":"2026-05-07T08:21:14Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"8","subject":"P0-2: Fix PersistentPreRun blocking setup commands","status":"pending","created_at":"2026-05-07T08:21:15Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"9","subject":"P0-4: Fix keyboard off-by-one in menu_selection.go","status":"pending","created_at":"2026-05-07T08:21:15Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"7","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"8","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-07T08:28:55Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"6","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-07T08:31:34Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-07T08:34:01Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-07T08:34:01Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-07T08:34:01Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-07T08:34:01Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"10","subject":"Pre-flight: Check git working tree status","status":"pending","created_at":"2026-05-07T22:29:36Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"10","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-07T22:29:53Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"11","subject":"Run full subsystem audit (24 checks)","status":"pending","created_at":"2026-05-07T22:29:58Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"11","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-07T22:33:33Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"12","subject":"Phase 3: Parallel blast (post-commit)","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"13","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"14","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"15","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"16","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"17","subject":"Phase 2: Commit changes (/commit-all)","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"18","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-08T02:11:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"15","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"18","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-08T02:12:29Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-08T02:12:50Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"14","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-08T02:16:33Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"17","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"19","subject":"Phase 2a: Untrack DS_Store and binary from git","status":"pending","created_at":"2026-05-08T05:33:39Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"19","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-08T05:33:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
