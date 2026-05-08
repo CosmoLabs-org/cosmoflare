@@ -11,9 +11,9 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Binary info
-BINARY_NAME=R2Go2
+BINARY_NAME=r2go2
 BINARY_UNIX=$(BINARY_NAME)_unix
-VERSION=$(shell jq -r '.repository.version' .version-registry.json)
+VERSION=$(shell ccs version --short 2>/dev/null | sed 's/ .*//' || grep -o '"version":"[^"]*"' .version-registry.json 2>/dev/null | head -1 | cut -d'"' -f4 || echo "dev")
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=$(GIT_COMMIT)"
@@ -266,6 +266,20 @@ install-system: build
 	@sudo chmod +x /usr/local/bin/r2go2
 	@echo "✅ Installed successfully! Run: r2go2 --version"
 
+# Install case-insensitive aliases (R2Go2, r2go2, R2go2 all work on any OS)
+.PHONY: install-aliases
+install-aliases: build
+	@INSTALL_DIR="$${GOPATH:-$$HOME/.local}"/bin; \
+	mkdir -p "$$INSTALL_DIR"; \
+	cp $(BUILD_DIR)/$(BINARY_NAME) "$$INSTALL_DIR/$(BINARY_NAME)"; \
+	chmod +x "$$INSTALL_DIR/$(BINARY_NAME)"; \
+	for name in R2Go2 r2go2 R2go2; do \
+		if [ "$$name" != "$(BINARY_NAME)" ]; then \
+			ln -sf "$$INSTALL_DIR/$(BINARY_NAME)" "$$INSTALL_DIR/$$name"; \
+		fi; \
+	done; \
+	echo "✅ Installed with aliases: r2go2, R2Go2, R2go2 all work"
+
 # Clean build artifacts
 .PHONY: clean
 clean:
@@ -322,25 +336,19 @@ version:
 .PHONY: version-patch
 version-patch:
 	@echo "🔢 Incrementing patch version..."
-	$(eval NEW_VERSION=$(shell bump2version patch --dry-run --list | grep new_version= | cut -d= -f2))
-	@bump2version patch
-	@echo "Version updated to $(NEW_VERSION)"
+	@ccs version --bump patch
 
 # Increment version (minor)
 .PHONY: version-minor
 version-minor:
 	@echo "🔢 Incrementing minor version..."
-	$(eval NEW_VERSION=$(shell bump2version minor --dry-run --list | grep new_version= | cut -d= -f2))
-	@bump2version minor
-	@echo "Version updated to $(NEW_VERSION)"
+	@ccs version --bump minor
 
 # Increment version (major)
 .PHONY: version-major
 version-major:
 	@echo "🔢 Incrementing major version..."
-	$(eval NEW_VERSION=$(shell bump2version major --dry-run --list | grep new_version= | cut -d= -f2))
-	@bump2version major
-	@echo "Version updated to $(NEW_VERSION)"
+	@ccs version --bump major
 
 # Show help
 .PHONY: help
@@ -368,6 +376,7 @@ help:
 	@echo "Installation:"
 	@echo "  install       Install to GOPATH/bin"
 	@echo "  install-system Install to /usr/local/bin (requires sudo)"
+	@echo "  install-aliases Install with case-insensitive symlinks (r2go2, R2Go2, R2go2)"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-build  Build Docker image"
@@ -394,6 +403,9 @@ help:
 	@echo ""
 	@echo "Other:"
 	@echo "  help          Show this help message"
+	@echo "  tidy          Tidy go modules"
+	@echo "  check         Quick quality check (fmt + vet + test)"
+	@echo "  url           Show dev URL (via portless)"
 
 # Check dependencies
 .PHONY: check-deps
@@ -414,3 +426,23 @@ test-integration:
 	@echo "⚠️  Integration tests will create real R2 resources. Proceed with caution."
 	@read -p "Continue? (y/N) " confirm && [ "$$confirm" = "y" ] || exit 1
 	$(GOTEST) -v -tags=integration ./...
+
+# Tidy go modules
+.PHONY: tidy
+tidy:
+	@echo "📦 Tidying modules..."
+	$(GOMOD) tidy
+
+# Quick quality check (fmt + vet + test)
+.PHONY: check
+check: fmt vet test
+	@echo "✅ All checks passed"
+
+# Show dev URL (via portless)
+.PHONY: url
+url:
+	@if command -v ccs >/dev/null 2>&1; then \
+		ccs url 2>/dev/null || echo "⚠️  Portless not configured"; \
+	else \
+		echo "⚠️  ccs not found"; \
+	fi
