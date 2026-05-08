@@ -32,7 +32,7 @@ The CLI must be as usable by an AI agent as by a human:
 
 ## Project
 
-- **Language**: Go 1.25.3
+- **Language**: Go 1.26
 - **Module**: `github.com/CosmoLabs-org/CosmoDev-R2Go2`
 - **Version**: See `.version-registry.json`
 - **Binary**: `r2go2`
