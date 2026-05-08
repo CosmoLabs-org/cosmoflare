@@ -28,6 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.3.0] - 2026-05-08
+
+### Added
+- Extract public Go library into pkg/r2go2/ with real S3/Cloudflare API wiring
+- extract public library into pkg/r2go2/ (commit:d5352b38)
+- add animation suppression for faster tests (commit:6155b287)
+- add InputReader interface for testability (commit:6dbf526b)
+
+### Changed
+- Wire CLI commands to pkg/r2go2 library replacing internal/api stubs
+- wire CLI commands to pkg/r2go2 library (commit:a15ece85)
+
+### Fixed
+- correct binary name and add CCS integration (commit:386a8a4a)
+- resolve 5 critical bugs from codebase audit (commit:36c16c53)
+
 ## [0.2.2] - 2026-03-07
 
 ### Changed
