@@ -1,0 +1,12 @@
+id: ROAD-027
+created_at: 2026-05-07T05:16:14.206242-03:00
+updated_at: 2026-05-07T05:16:14.206798-03:00
+title: Edge caching strategy engine
+description: 5-tier rule-based cache engine (immutable/long-static/static/dynamic/no-cache). Auto-applies Cache-Control headers on upload based on .r2go2.yaml rules. CLI override via --cache flag.
+status: captured
+priority: 75
+refs:
+    - type: brainstorm
+      path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+origin:
+    session: 17

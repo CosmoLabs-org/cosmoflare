@@ -1,0 +1,12 @@
+id: ROAD-028
+created_at: 2026-05-07T05:16:14.286678-03:00
+updated_at: 2026-05-07T05:16:14.287671-03:00
+title: Project config (.r2go2.yaml) implementation
+description: Per-project config with bucket declarations, cache rules, upload limits, access scoping, quotas, lifecycle policies, workers config. Walk-up directory discovery. Two-layer config (machine + project).
+status: captured
+priority: 80
+refs:
+    - type: brainstorm
+      path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+origin:
+    session: 17

@@ -1,0 +1,15 @@
+id: BUG-008
+type: bug
+created_at: 2026-03-25T03:59:14.049225+01:00
+updated_at: 2026-03-25T03:59:14.050114+01:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 17
+title: Disabled packages fail to build and pollute test output
+description: '6 packages under *_disabled/ directories fail to build, producing noisy error output during go test ./... and go build ./... runs. These appear to be packages that were disabled by renaming but still get picked up by Go tooling wildcards. Directories: internal/tui_disabled/, internal/cli_disabled/, and others. Expected: Disabled code should not interfere with build or test runs. Actual: Build warnings and test failures from disabled packages clutter output and may mask real issues.'
+fix_direction: Either remove the _disabled directories entirely, add build tag constraints, or move them outside the Go module path (e.g., to a _archive/ top-level directory)
+affected_files:
+    - internal/tui_disabled/
+    - internal/cli_disabled/

@@ -1,0 +1,23 @@
+id: BUG-011
+type: bug
+created_at: 2026-05-07T20:32:38.377819-03:00
+updated_at: 2026-05-07T20:32:38.380591-03:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 17
+title: Makefile binary name case mismatch (R2Go2 vs r2go2)
+description: |
+    The Makefile used BINARY_NAME=R2Go2 (PascalCase) while CLAUDE.md and all documentation specify the binary as 'r2go2' (lowercase). On macOS this works due to case-insensitive filesystem, but on Linux (servers, CI, Docker) the binary name mismatch would cause issues. The install target renamed on copy but the build output was wrong. Also: version management used bump2version (Python dependency) instead of 'ccs version --bump', and version string parsing used jq instead of ccs.
+
+    ## Fix Direction
+
+    Changed BINARY_NAME to r2go2, replaced jq with ccs version, replaced bump2version with ccs version --bump, added install-aliases target for case-insensitive symlinks, added tidy/check/url targets
+
+    ## Affected Files
+
+    - Makefile
+fix_direction: Changed BINARY_NAME to r2go2, replaced jq with ccs version, replaced bump2version with ccs version --bump, added install-aliases target for case-insensitive symlinks, added tidy/check/url targets
+affected_files:
+    - Makefile

@@ -1,8 +1,98 @@
 version: ""
 project: ""
-last_updated: 2026-03-03T10:49:40.335469+01:00
-next_id: 17
+last_updated: 2026-05-07T19:29:33.804957-03:00
+next_id: 34
 items:
+    - id: ROAD-033
+      title: Queues message queue support
+      status: captured
+      created_at: 2026-05-07T19:29:33.804736-03:00
+    - id: ROAD-032
+      title: Pages static hosting support
+      status: captured
+      created_at: 2026-05-07T19:29:31.341162-03:00
+    - id: ROAD-031
+      title: D1 SQL database support
+      status: captured
+      created_at: 2026-05-07T19:29:28.806175-03:00
+    - id: ROAD-030
+      title: KV namespace support
+      status: captured
+      created_at: 2026-05-07T19:29:25.530573-03:00
+    - id: ROAD-029
+      title: CCS r2 subcommand integration (deferred)
+      status: captured
+      created_at: 2026-05-07T05:16:14.365721-03:00
+    - id: ROAD-028
+      title: Project config (.r2go2.yaml) implementation
+      status: captured
+      created_at: 2026-05-07T05:16:14.286678-03:00
+    - id: ROAD-027
+      title: Edge caching strategy engine
+      status: captured
+      created_at: 2026-05-07T05:16:14.206242-03:00
+    - id: ROAD-026
+      title: Cloudflare Workers support
+      status: captured
+      created_at: 2026-05-07T05:16:14.126493-03:00
+    - id: ROAD-025
+      title: Library extraction into pkg/r2go2/
+      status: captured
+      created_at: 2026-05-07T05:16:14.029605-03:00
+    - id: ROAD-024
+      title: Audit logging for enterprise readiness
+      status: captured
+      priority: 35
+      effort: medium
+      created_at: 2026-03-10T04:39:22.049812+01:00
+    - id: ROAD-023
+      title: Local HTTP dev server proxying to R2
+      status: captured
+      priority: 52
+      effort: medium
+      linked_issues:
+        - FEAT-002
+      created_at: 2026-03-10T04:39:21.630704+01:00
+    - id: ROAD-022
+      title: Pipe and stdin support for Unix workflows
+      status: captured
+      priority: 58
+      effort: medium
+      linked_issues:
+        - FEAT-003
+      created_at: 2026-03-10T04:39:20.711518+01:00
+    - id: ROAD-021
+      title: Batch operations bulk upload and delete
+      status: captured
+      priority: 65
+      effort: medium
+      created_at: 2026-03-10T04:39:19.864181+01:00
+    - id: ROAD-020
+      title: Dashboard TUI real implementation
+      status: captured
+      priority: 45
+      effort: large
+      created_at: 2026-03-10T04:39:18.089831+01:00
+    - id: ROAD-019
+      title: Re-enable S3-to-R2 migration engine
+      status: captured
+      priority: 50
+      effort: medium
+      linked_issues:
+        - FEAT-004
+      created_at: 2026-03-10T04:39:15.88984+01:00
+    - id: ROAD-018
+      title: Re-enable analytics command
+      status: captured
+      priority: 55
+      effort: small
+      created_at: 2026-03-10T04:39:14.038127+01:00
+    - id: ROAD-017
+      title: Cmd-level integration test suite
+      status: captured
+      priority: 80
+      effort: medium
+      created_at: 2026-03-10T04:39:12.200948+01:00
     - id: ROAD-016
       title: CORS and access control configuration commands
       status: captured

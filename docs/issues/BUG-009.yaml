@@ -1,0 +1,15 @@
+id: BUG-009
+type: bug
+created_at: 2026-03-25T03:59:17.164001+01:00
+updated_at: 2026-03-25T03:59:17.165403+01:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 17
+title: Compiled binaries tracked in git repository
+description: 'Two compiled binary files (simple-setup, test-setup) totaling ~9.6MB are tracked in the git repository. These inflate the repo size, slow clones, and are not portable across platforms. Expected: Binaries should be in .gitignore and built from source. Actual: Binaries are committed and tracked.'
+fix_direction: Remove binaries from git tracking with git rm --cached, add them to .gitignore, and document build instructions for reproducing them
+affected_files:
+    - simple-setup
+    - test-setup

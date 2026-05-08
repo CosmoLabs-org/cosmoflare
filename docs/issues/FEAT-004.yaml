@@ -7,6 +7,7 @@ status: open
 origin:
   roadmap_items:
     - ROAD-007
+    - ROAD-019
 
 title: Bucket comparison tool for migration validation
 description: 'r2go2 compare command shows differences between two buckets: objects only in A, only in B, different in both. Useful for migration verification.'

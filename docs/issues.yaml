@@ -1,7 +1,7 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-03-07T14:39:56.544463+01:00
-next_bug_id: 7
+last_updated: 2026-05-07T23:12:20.512619-03:00
+next_bug_id: 12
 next_feat_id: 5
 next_task_id: 5
 next_imp_id: 1
@@ -86,3 +86,33 @@ issues:
       status: open
       title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
       created_at: 2026-03-02T12:31:54.567993+01:00
+    - id: BUG-007
+      type: bug
+      status: open
+      title: API client returns mock data instead of real R2 operations
+      severity: critical
+      created_at: 2026-03-25T03:59:01.79756+01:00
+    - id: BUG-008
+      type: bug
+      status: open
+      title: Disabled packages fail to build and pollute test output
+      severity: medium
+      created_at: 2026-03-25T03:59:14.049225+01:00
+    - id: BUG-009
+      type: bug
+      status: open
+      title: Compiled binaries tracked in git repository
+      severity: medium
+      created_at: 2026-03-25T03:59:17.164001+01:00
+    - id: BUG-010
+      type: bug
+      status: open
+      title: Missing LICENSE file despite MIT license claims
+      severity: medium
+      created_at: 2026-03-25T03:59:20.140735+01:00
+    - id: BUG-011
+      type: bug
+      status: open
+      title: Makefile binary name case mismatch (R2Go2 vs r2go2)
+      severity: medium
+      created_at: 2026-05-07T20:32:38.377819-03:00

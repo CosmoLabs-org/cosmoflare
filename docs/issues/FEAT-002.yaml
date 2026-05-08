@@ -7,6 +7,7 @@ status: open
 origin:
   roadmap_items:
     - ROAD-009
+    - ROAD-023
 
 title: Local HTTP dev server proxying to R2
 description: r2go2 serve command starts a local HTTP server that proxies requests to an R2 bucket for local testing without deploying

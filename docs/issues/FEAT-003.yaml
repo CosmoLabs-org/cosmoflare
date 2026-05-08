@@ -7,6 +7,7 @@ status: open
 origin:
   roadmap_items:
     - ROAD-008
+    - ROAD-022
 
 title: Pipe and stdin support for Unix composition
 description: 'Support piping: cat file | r2go2 put bucket/key - and r2go2 get bucket/key | grep pattern. Enables Unix tool composition.'
