@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.3.1] - 2026-05-08
+
+### Fixed
+- update Go version, remove mock API client, add LICENSE (commit:d5c3cbe4)
+- resolve 6 CLI bugs across bucket, object, and root commands (commit:5f54356c)
+
 ## [0.3.0] - 2026-05-08
 
 ### Added
