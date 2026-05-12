@@ -1,12 +1,16 @@
 id: ROAD-000
 created_at: 2026-02-26T01:32:40.944335+01:00
-updated_at: 2026-03-02T12:31:46.659672+01:00
+updated_at: 2026-05-12T05:52:35.457488-03:00
 title: Wire up real S3 API client (replace placeholders)
-status: planned
+status: completed
 priority: 95
 category: core
 effort: large
+notes:
+    - Real S3 client wired via aws-sdk-go-v2 in v0.3.0 library extraction. Mock client removed (BUG-007).
 linked_issues:
     - BUG-001
     - TASK-002
     - BUG-006
+completed_in: v0.3.1
+completed_at: 2026-05-12T05:52:35.457308-03:00

@@ -1,0 +1,185 @@
+# R2Go2 Usage Guide
+
+R2Go2 is a CLI tool for managing Cloudflare R2 buckets. All commands support `--json` for machine-readable output.
+
+## Setup
+
+Set environment variables:
+```bash
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+export CLOUDFLARE_API_TOKEN="your-api-token"
+```
+
+Or pass via flags: `--account-id` and `--api-token`.
+
+## Global Flags
+
+| Flag | Description |
+|------|-------------|
+| `--account-id` | Cloudflare Account ID |
+| `--api-token` | Cloudflare API token |
+| `--dry-run` | Show what would happen without executing |
+| `--json` | Output in JSON format |
+| `-v, --verbose` | Enable verbose output |
+
+## Bucket Commands
+
+### Create a bucket
+```bash
+r2go2 bucket create my-bucket
+r2go2 bucket create my-bucket --location=eu --tags=env=prod
+```
+JSON output:
+```json
+{"success":true,"message":"Bucket created successfully","data":{"name":"my-bucket","created_at":"2026-05-12T..."}}
+```
+
+### List buckets
+```bash
+r2go2 bucket list
+r2go2 bucket list --json
+r2go2 bucket list --format=csv
+r2go2 bucket list --prefix=prod-
+```
+
+### Get bucket details
+```bash
+r2go2 bucket get my-bucket
+r2go2 bucket get my-bucket --output json
+r2go2 bucket get my-bucket --include-objects
+```
+
+### Check if bucket exists
+```bash
+r2go2 bucket exists my-bucket && echo "exists"
+```
+Exit codes: 0=exists, 1=not found, 2=error.
+JSON output:
+```json
+{"exists":true,"bucket":"my-bucket"}
+```
+
+### Update bucket metadata
+```bash
+r2go2 bucket update my-bucket --tags=env=staging
+```
+
+### Delete a bucket
+```bash
+r2go2 bucket delete my-bucket
+r2go2 bucket delete my-bucket --force
+r2go2 bucket delete my-bucket --dry-run
+```
+
+### Import buckets from spec
+```bash
+r2go2 bucket import buckets.json
+r2go2 bucket import buckets.yaml --continue
+```
+JSON output:
+```json
+{"success":true,"message":"Import complete","data":{"successful":3,"failed":0,"total":3}}
+```
+
+## Object Commands
+
+### List objects
+```bash
+r2go2 object ls my-bucket
+r2go2 object ls my-bucket --prefix=images/ --recursive
+r2go2 object ls my-bucket --max-keys=10 --json
+```
+
+### Upload an object
+```bash
+r2go2 object put my-bucket file.txt
+r2go2 object put my-bucket image.jpg --key=assets/logo.jpg
+r2go2 object put my-bucket data.csv --content-type=text/csv --metadata=source=api
+```
+JSON output:
+```json
+{"success":true,"message":"Upload successful","data":{"key":"file.txt","bucket":"my-bucket","size":1024,"etag":"abc123","uploaded":"2026-05-12T..."}}
+```
+
+Files over 100MB automatically use multipart upload for better throughput.
+
+### Download an object
+```bash
+r2go2 object get my-bucket file.txt
+r2go2 object get my-bucket file.txt --output=local.txt
+r2go2 object get my-bucket large.zip --range-start=0 --range-end=1023
+```
+JSON output:
+```json
+{"success":true,"message":"Download successful","data":{"key":"file.txt","bucket":"my-bucket","output":"file.txt","size":1024}}
+```
+
+Progress bars are shown by default for downloads.
+
+### Get object metadata
+```bash
+r2go2 object head my-bucket file.txt
+r2go2 object head my-bucket file.txt --output json
+```
+
+### Delete an object
+```bash
+r2go2 object delete my-bucket file.txt
+```
+JSON output:
+```json
+{"success":true,"message":"Object deleted successfully","data":{"bucket":"my-bucket","key":"file.txt"}}
+```
+
+### Copy an object
+```bash
+r2go2 object copy source-bucket/file.txt dest-bucket/backup.txt
+```
+JSON output:
+```json
+{"success":true,"message":"Object copied successfully","data":{"key":"backup.txt","source_key":"file.txt","bucket":"dest-bucket","etag":"def456"}}
+```
+
+### Search for objects
+```bash
+r2go2 object search my-bucket ".jpg"
+r2go2 object search my-bucket "image-*" --type=glob
+r2go2 object search my-bucket ".*\.png$" --type=regex
+```
+
+### Batch operations
+```bash
+r2go2 object batch my-bucket operations.json
+r2go2 object batch my-bucket operations.json --continue --dry-run
+```
+JSON output:
+```json
+{"success":true,"message":"Batch operations complete","data":{"successful":5,"failed":0,"total":5}}
+```
+
+## Library Usage
+
+Import as a Go library:
+```go
+import r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+
+client, err := r2go2.NewClient(
+    r2go2.WithAccountID("..."),
+    r2go2.WithAPIToken("..."),
+)
+
+// Upload with options
+result, err := client.Upload(ctx, "my-bucket", "key.txt", reader, size,
+    r2go2.WithContentType("text/plain"),
+    r2go2.WithMetadata(map[string]string{"env": "prod"}),
+)
+
+// Multipart upload (automatic for files > 100MB)
+result, err := client.MultipartUpload(ctx, "my-bucket", "large.bin", reader, size,
+    r2go2.WithPartSize(16*1024*1024),
+    r2go2.WithConcurrency(5),
+    r2go2.WithProgressCallback(func(uploaded, total int64) {
+        fmt.Printf("\rProgress: %d/%d", uploaded, total)
+    }),
+)
+```

@@ -1,12 +1,16 @@
 id: ROAD-025
 created_at: 2026-05-07T05:16:14.029605-03:00
-updated_at: 2026-05-07T05:16:14.030606-03:00
+updated_at: 2026-05-12T05:52:35.57222-03:00
 title: Library extraction into pkg/r2go2/
 description: Extract public Go API into pkg/r2go2/ with R2Client interface, functional options, three-layer API (convenience/client/S3). Migrate real S3 implementation from internal/api_disabled/.
-status: captured
+status: completed
 priority: 85
+notes:
+    - Library extracted to pkg/r2go2/ (17 files) in v0.3.0.
 refs:
     - type: brainstorm
       path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+completed_in: v0.3.1
+completed_at: 2026-05-12T05:52:35.572178-03:00
 origin:
     session: 17

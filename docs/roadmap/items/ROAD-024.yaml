@@ -1,8 +1,12 @@
 id: ROAD-024
 created_at: 2026-03-10T04:39:22.049812+01:00
-updated_at: 2026-03-10T04:39:33.180539+01:00
+updated_at: 2026-05-12T05:52:35.975334-03:00
 title: Audit logging for enterprise readiness
 description: Log all R2 operations with timestamps, user, action, target for compliance. Vision doc success metric for enterprise adoption.
-status: captured
+status: completed
 priority: 35
 effort: medium
+notes:
+    - JSONL audit logging implemented in audit.go with AuditLogger, LogUpload, LogDelete, ReadAuditLog.
+completed_in: v0.3.1
+completed_at: 2026-05-12T05:52:35.975317-03:00
