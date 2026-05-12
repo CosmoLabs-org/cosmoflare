@@ -44,6 +44,7 @@ type UploadResult struct {
 	ETag      string    `json:"etag"`
 	VersionID string    `json:"version_id,omitempty"`
 	Uploaded  time.Time `json:"uploaded"`
+	Parts     int       `json:"parts,omitempty"`
 }
 
 // DownloadResult contains the result of a download operation.
