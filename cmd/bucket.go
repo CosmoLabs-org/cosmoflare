@@ -200,7 +200,14 @@ func runBucketCreate(cmd *cobra.Command, args []string) error {
 
 	bucket, err := client.CreateBucket(context.Background(), bucketName)
 	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to create bucket: %v", err))
+		}
 		return fmt.Errorf("failed to create bucket: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Bucket created successfully", bucket)
 	}
 
 	printSuccess("Bucket '%s' created successfully!", bucketName)
@@ -353,8 +360,15 @@ func runBucketUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
+		if JSONOutput {
+			return printSuccessJSON("DRY RUN: Would update bucket", map[string]string{"bucket": bucketName})
+		}
 		printInfo("DRY RUN: Would update bucket '%s'", bucketName)
 		return nil
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Bucket updated successfully", map[string]string{"bucket": bucketName})
 	}
 
 	printSuccess("Bucket '%s' updated successfully!", bucketName)
@@ -384,16 +398,29 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to create API client: %v", err))
+		}
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
 	if DryRun {
+		if JSONOutput {
+			return printSuccessJSON("DRY RUN: Would delete bucket", map[string]string{"bucket": bucketName})
+		}
 		printInfo("DRY RUN: Would delete bucket '%s'", bucketName)
 		return nil
 	}
 
 	if err := client.DeleteBucket(context.Background(), bucketName); err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to delete bucket: %v", err))
+		}
 		return fmt.Errorf("failed to delete bucket: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Bucket deleted successfully", map[string]string{"bucket": bucketName})
 	}
 
 	printSuccess("Bucket '%s' deleted successfully!", bucketName)
@@ -408,23 +435,34 @@ func runBucketExists(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		printError("Failed to create API client: %v", err)
+		if JSONOutput {
+			printErrorJSON(fmt.Sprintf("failed to create API client: %v", err))
+		} else {
+			printError("Failed to create API client: %v", err)
+		}
 		os.Exit(2)
 	}
 
 	exists, err := client.BucketExists(context.Background(), bucketName)
 	if err != nil {
-		printError("Failed to check bucket existence: %v", err)
+		if JSONOutput {
+			printErrorJSON(fmt.Sprintf("failed to check bucket existence: %v", err))
+		} else {
+			printError("Failed to check bucket existence: %v", err)
+		}
 		os.Exit(2)
 	}
 
-	if exists {
+	if JSONOutput {
+		printJSON(map[string]interface{}{"exists": exists, "bucket": bucketName})
+	} else if exists {
 		printInfo("Bucket '%s' exists", bucketName)
-		os.Exit(0)
-	} else {
-		printInfo("Bucket '%s' does not exist", bucketName)
-		os.Exit(1)
 	}
+
+	if exists {
+		os.Exit(0)
+	}
+	os.Exit(1)
 
 	return nil
 }
@@ -483,6 +521,13 @@ func runBucketImport(cmd *cobra.Command, args []string) error {
 		successCount++
 	}
 
+	if JSONOutput {
+		return printSuccessJSON("Import complete", map[string]interface{}{
+			"successful": successCount,
+			"failed":     errorCount,
+			"total":      len(spec.Buckets),
+		})
+	}
 	printInfo("Import complete: %d successful, %d failed", successCount, errorCount)
 	return nil
 }

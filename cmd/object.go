@@ -363,9 +363,32 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 		printInfo("Size: %s", utils.FormatBytes(obj.Size))
 	}
 
-	size, err := io.Copy(file, obj.Content)
+	// Copy with optional progress bar
+	var writer io.Writer = file
+	if objectProgress && !JSONOutput && obj.Size > 0 {
+		progress := utils.NewTransferProgress(obj.Size)
+		fmt.Printf("  Downloading: %s\n", utils.FormatBytes(obj.Size))
+		writer = &utils.ProgressWriter{Writer: file, Progress: progress}
+	}
+
+	size, err := io.Copy(writer, obj.Content)
+	if objectProgress && !JSONOutput && obj.Size > 0 {
+		fmt.Println()
+	}
 	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to download object: %v", err))
+		}
 		return fmt.Errorf("failed to download object: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Download successful", map[string]interface{}{
+			"key":    objectKey,
+			"bucket": bucketName,
+			"output": output,
+			"size":   size,
+		})
 	}
 
 	printSuccess("✅ Downloaded: %s (%s)", output, utils.FormatBytes(size))
@@ -438,10 +461,23 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	if len(metadataMap) > 0 {
 		opts = append(opts, r2go2.WithMetadata(metadataMap))
 	}
+	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
+		progress := utils.NewTransferProgress(fileInfo.Size())
+		opts = append(opts, r2go2.WithProgressCallback(func(uploaded, total int64) {
+			fmt.Printf("\r  %s", progress.FormatBar())
+		}))
+	}
 
 	result, err := client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
 	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to upload object: %v", err))
+		}
 		return fmt.Errorf("failed to upload object: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Upload successful", result)
 	}
 
 	printSuccess("✅ Uploaded successfully!")
@@ -473,7 +509,17 @@ func runObjectDelete(cmd *cobra.Command, args []string) error {
 
 	// Delete object
 	if err := client.DeleteObject(context.Background(), bucketName, objectKey); err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to delete object: %v", err))
+		}
 		return fmt.Errorf("failed to delete object: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Object deleted successfully", map[string]string{
+			"bucket": bucketName,
+			"key":    objectKey,
+		})
 	}
 
 	printSuccess("✅ Object deleted successfully!")
@@ -517,7 +563,14 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 
 	result, err := client.CopyObject(context.Background(), srcBucket, srcKey, dstBucket, dstKey)
 	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to copy object: %v", err))
+		}
 		return fmt.Errorf("failed to copy object: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Object copied successfully", result)
 	}
 
 	printSuccess("✅ Object copied successfully!")
@@ -769,6 +822,13 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if JSONOutput {
+		return printSuccessJSON("Batch operations complete", map[string]interface{}{
+			"successful": successCount,
+			"failed":     errorCount,
+			"total":      len(spec.Operations),
+		})
+	}
 	printInfo("Batch operations complete: %d successful, %d failed", successCount, errorCount)
 	return nil
 }
