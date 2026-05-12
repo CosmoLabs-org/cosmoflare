@@ -1,9 +1,4 @@
-/*
-Package api provides enhanced R2 API client functionality for R2Go2
-
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
-License: MIT
-*/
+//go:build disabled
 
 package api
 

@@ -46,3 +46,122 @@
 {"id":"19","subject":"Phase 2a: Untrack DS_Store and binary from git","status":"pending","created_at":"2026-05-08T05:33:39Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
 {"id":"19","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
 {"id":"19","subject":"","status":"completed","completed_at":"2026-05-08T05:33:59Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-08T05:35:18Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"12","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-08T05:36:54Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-08T05:36:54Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"13","subject":"","status":"in_progress","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-08T05:37:52Z","session":"505988c1-ccdf-423f-b9f1-14a2664196d7"}
+{"id":"1","subject":"G-6: Create audit.go (JSONL audit logging)","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"2","subject":"G-8: Create stub files for future phases","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"3","subject":"G-5: Create guardrails.go (validation, access scoping, quota)","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"4","subject":"G-7: Wire CLI commands to pkg/r2go2/","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"5","subject":"G-2: Create config.go (ProjectConfig + MachineConfig loaders)","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"6","subject":"G-9: Full test suite for pkg/r2go2/","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"7","subject":"G-3: Migrate S3 implementation into storage.go, upload.go, download.go","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"8","subject":"G-4: Create cache.go (5-tier cache policy engine)","status":"pending","created_at":"2026-05-08T06:42:05Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"9","subject":"G-1: Create pkg/r2go2/ skeleton (client, options, types, errors)","status":"pending","created_at":"2026-05-08T06:42:06Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"3","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"6","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"5","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"4","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"7","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"8","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"1","subject":"","status":"","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"9","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-08T06:55:25Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-08T06:55:25Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"2","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"5","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-08T06:59:10Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"4","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-08T06:59:10Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-08T06:59:10Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-08T06:59:10Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-08T06:59:10Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-08T07:20:44Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-08T07:20:44Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"10","subject":"Phase 0+1: Pre-commit hygiene (ccs session-end-pre)","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"11","subject":"Phase 2: Commit changes (/commit-all)","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"12","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"13","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"14","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"15","subject":"Phase 3: Parallel blast (post-commit)","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"16","subject":"Phase 1.5: Code simplification (/simplify)","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"17","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-08T07:32:12Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"18","subject":"Phase 7: Cleanup","status":"pending","created_at":"2026-05-08T07:32:13Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"19","subject":"Phase 6: Finalize (ccs session-end-finalize)","status":"pending","created_at":"2026-05-08T07:32:13Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"10","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-08T07:35:51Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"16","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"14","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-08T07:36:50Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"13","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-08T07:37:41Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-08T07:38:52Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"11","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-08T07:53:58Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"15","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"12","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-08T07:57:41Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"17","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-08T07:58:19Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"19","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-08T07:58:57Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"18","subject":"","status":"in_progress","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-08T07:59:18Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-08T07:59:18Z","session":"3f34abbc-b4d1-446b-ab2d-f81bf98e6724"}
+{"id":"1","subject":"BUG-003: Fix CI workflows Go version","status":"pending","created_at":"2026-05-08T08:07:55Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"2","subject":"BUG-001: Fix speed calculation in enhanced_client.go","status":"pending","created_at":"2026-05-08T08:07:55Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"3","subject":"BUG-002: Fix PersistentPreRun blocking non-API commands","status":"pending","created_at":"2026-05-08T08:07:55Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"4","subject":"BUG-005: Add YAML parsing to bucket import","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"5","subject":"BUG-006: Fix object search regex/glob fake matching","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"6","subject":"BUG-011: Verify Makefile binary name fix","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"7","subject":"BUG-004: Fix TUI menu off-by-one in menu_selection.go","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"8","subject":"BUG-007: Remove old mock API client","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"9","subject":"BUG-009: Remove tracked binaries from git","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"10","subject":"BUG-008: Exclude disabled packages from build","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"11","subject":"BUG-010: Add MIT LICENSE file","status":"pending","created_at":"2026-05-08T08:08:02Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"3","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"5","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"7","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"2","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"4","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-08T08:10:16Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-08T08:10:16Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-08T08:10:16Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-08T08:11:37Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-08T08:11:37Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-08T08:33:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"12","subject":"Phase 6: Finalize","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"13","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"14","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"15","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"16","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"17","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"18","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"19","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-08T13:59:05Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"15","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-08T13:59:40Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"16","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-08T14:00:09Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"13","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-08T14:05:21Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"17","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-08T14:08:38Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"14","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"18","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-08T14:10:28Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"19","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-08T14:10:48Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-08T14:10:57Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"12","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-08T14:11:45Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"20","subject":"Phase 3: Continuation prompt + finalize","status":"pending","created_at":"2026-05-12T08:38:07Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"21","subject":"Phase 2: Commit session artifacts","status":"pending","created_at":"2026-05-12T08:38:07Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"21","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}

@@ -1,9 +1,4 @@
-/*
-Package analytics provides real Cloudflare analytics and monitoring for R2Go2
-
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
-License: MIT
-*/
+//go:build disabled
 
 package analytics
 

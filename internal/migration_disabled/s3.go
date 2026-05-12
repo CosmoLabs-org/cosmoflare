@@ -1,9 +1,4 @@
-/*
-Package migration provides real S3 to R2 migration functionality for R2Go2
-
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
-License: MIT
-*/
+//go:build disabled
 
 package migration
 
