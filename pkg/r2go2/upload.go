@@ -251,7 +251,7 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 	}
 
 	// Complete multipart upload
-	_, err = c.s3Client().CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
+	completeResp, err := c.s3Client().CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
 		Bucket:   aws.String(bucket),
 		Key:      aws.String(key),
 		UploadId: aws.String(uploadID),
@@ -264,14 +264,7 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 		return nil, newError("MultipartUpload", "failed to complete multipart upload", err)
 	}
 
-	// Build ETag from parts
-	var etag string
-	for _, p := range completedParts {
-		if p.ETag != nil {
-			etag = *p.ETag
-			break
-		}
-	}
+	etag := aws.ToString(completeResp.ETag)
 
 	return &UploadResult{
 		Key:       key,
