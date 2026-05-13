@@ -165,3 +165,82 @@
 {"id":"20","subject":"Phase 3: Continuation prompt + finalize","status":"pending","created_at":"2026-05-12T08:38:07Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
 {"id":"21","subject":"Phase 2: Commit session artifacts","status":"pending","created_at":"2026-05-12T08:38:07Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
 {"id":"21","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-05-12T08:39:36Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"20","subject":"","status":"in_progress","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-05-12T08:40:54Z","session":"259c0148-9d84-4a92-9d4b-3cb154825ed9"}
+{"id":"1","subject":"G-05: Update USAGE.md documentation","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"2","subject":"G-01: Integration tests against real R2 API","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"3","subject":"G-06: Roadmap review and expansion","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"4","subject":"G-03: Progress bars and transfer stats","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"5","subject":"G-04: --json output for all commands","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"6","subject":"G-07: Phase 3 implementation plan (Workers/KV)","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"7","subject":"G-02: Multipart upload for large files","status":"pending","created_at":"2026-05-12T08:51:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"3","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-12T08:53:19Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"5","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-12T08:57:11Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"7","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-12T09:02:44Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"2","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-12T09:04:57Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"4","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-12T09:07:10Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"6","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-12T09:08:22Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"1","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-12T09:09:11Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"8","subject":"Phase 3d: Tool reflection (/reflect)","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"9","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"10","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"11","subject":"Phase 3: Parallel blast (post-commit)","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"12","subject":"Phase 0+1: Pre-commit hygiene (ccs session-end-pre)","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"13","subject":"Phase 6: Finalize (ccs session-end-finalize)","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"14","subject":"Phase 2: Commit changes (/commit-all)","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"15","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-13T18:50:16Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"16","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-13T18:50:17Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"17","subject":"Phase 7: Cleanup (ccs cleanup)","status":"pending","created_at":"2026-05-13T18:50:17Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"18","subject":"Phase 1.5: Code simplification (/simplify)","status":"pending","created_at":"2026-05-13T18:50:17Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"12","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-13T18:51:07Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-13T18:51:17Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"9","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-13T18:51:36Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"15","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"14","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-13T18:52:31Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"11","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"16","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-13T18:55:10Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-13T18:55:10Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-13T18:55:10Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"10","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-13T18:55:39Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-13T18:55:44Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"13","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-13T18:55:57Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"17","subject":"","status":"in_progress","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-13T18:56:29Z","session":"217918b0-b5d5-4041-a8ea-bccc0e02a4cb"}
+{"id":"1","subject":"G-01: WorkerService library implementation","status":"pending","created_at":"2026-05-13T19:02:29Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"2","subject":"G-02: Worker unit tests","status":"pending","created_at":"2026-05-13T19:02:36Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"3","subject":"G-03: Worker CLI commands","status":"pending","created_at":"2026-05-13T19:02:44Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"4","subject":"G-04: KVService library implementation","status":"pending","created_at":"2026-05-13T19:02:54Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"5","subject":"G-05: KV unit tests","status":"pending","created_at":"2026-05-13T19:03:02Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"6","subject":"G-06: KV CLI commands","status":"pending","created_at":"2026-05-13T19:03:08Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"7","subject":"G-07: Update documentation","status":"pending","created_at":"2026-05-13T19:03:14Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"8","subject":"G-08: Version bump and verification","status":"pending","created_at":"2026-05-13T19:03:19Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"1","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-13T19:09:49Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"2","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-13T19:11:12Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"4","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-13T19:14:18Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"5","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-13T19:15:31Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"3","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-13T19:18:44Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"6","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-13T19:21:06Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"7","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-13T19:27:05Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"8","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-13T19:29:33Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}

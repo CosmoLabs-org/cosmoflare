@@ -1,17 +1,17 @@
 {
-  "session_date": "2026-05-08",
-  "mode": "quick",
-  "started_at": "2026-05-08T13:59:24Z",
+  "session_date": "2026-05-13",
+  "mode": "full",
+  "started_at": "2026-05-13T18:50:40Z",
   "phases": {
     "3": {
       "status": "completed",
-      "at": "2026-05-08T14:09:03Z"
+      "at": "2026-05-13T18:52:48Z"
     },
     "6": {
       "status": "completed",
-      "at": "2026-05-08T14:11:20Z"
+      "at": "2026-05-13T18:55:53Z"
     }
   },
   "verified": false,
-  "session_id": "259c0148-9d84-4a92-9d4b-3cb154825ed9"
+  "session_id": "217918b0-b5d5-4041-a8ea-bccc0e02a4cb"
 }
