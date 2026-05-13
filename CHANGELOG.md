@@ -28,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.4.0] - 2026-05-13
+
+### Added
+- add --json output to all commands and wire progress bars (commit:fc69600b)
+- implement multipart upload for large files (commit:48a6ec8b)
+
+### Fixed
+- use composite ETag from CompleteMultipartUpload output (commit:e84e13ed)
+
 ## [0.3.1] - 2026-05-08
 
 ### Fixed
