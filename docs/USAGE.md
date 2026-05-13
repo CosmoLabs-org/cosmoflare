@@ -1,6 +1,6 @@
 # R2Go2 Usage Guide
 
-R2Go2 is a CLI tool for managing Cloudflare R2 buckets. All commands support `--json` for machine-readable output.
+R2Go2 is a CLI tool for managing the full Cloudflare developer platform: R2 (storage), Workers (compute), and KV (key-value). All commands support `--json` for machine-readable output.
 
 ## Setup
 
@@ -157,7 +157,152 @@ JSON output:
 {"success":true,"message":"Batch operations complete","data":{"successful":5,"failed":0,"total":5}}
 ```
 
-## Library Usage
+## Worker Commands
+
+### Deploy a Worker
+```bash
+r2go2 worker deploy my-worker --script=worker.js
+r2go2 worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
+r2go2 worker deploy my-worker --script=worker.js --module --bindings=MY_KV:kv:ns-123 --tags=prod,v2
+```
+JSON output:
+```json
+{"success":true,"message":"Worker deployed successfully","data":{"name":"my-worker","size":1024}}
+```
+
+### List Workers
+```bash
+r2go2 worker list
+r2go2 worker list --json
+```
+
+### Get Worker script
+```bash
+r2go2 worker get my-worker
+r2go2 worker get my-worker --json
+```
+
+### Delete a Worker
+```bash
+r2go2 worker delete my-worker
+r2go2 worker delete my-worker --force
+```
+
+### View Worker logs
+```bash
+r2go2 worker logs my-worker
+r2go2 worker logs my-worker --limit=50 --json
+```
+
+### Update Worker settings
+```bash
+r2go2 worker settings my-worker --compatibility-date=2024-01-01
+r2go2 worker settings my-worker --usage-model=bundled --bindings=MY_R2:r2:my-bucket
+```
+
+## KV Commands
+
+### Create a KV namespace
+```bash
+r2go2 kv namespace create my-cache
+r2go2 kv namespace create production-data --json
+```
+JSON output:
+```json
+{"success":true,"message":"Namespace created successfully","data":{"id":"ns-abc123","title":"my-cache"}}
+```
+
+### List KV namespaces
+```bash
+r2go2 kv namespace list
+r2go2 kv namespace list --json
+```
+
+### Delete a KV namespace
+```bash
+r2go2 kv namespace delete ns-abc123
+r2go2 kv namespace delete ns-abc123 --force
+```
+
+### Write a key-value pair
+```bash
+r2go2 kv put ns-abc123 my-key --value="hello world"
+r2go2 kv put ns-abc123 config.json --file=config.json
+r2go2 kv put ns-abc123 session-123 --value="data" --ttl=3600
+```
+
+### Read a key-value pair
+```bash
+r2go2 kv get ns-abc123 my-key
+r2go2 kv get ns-abc123 my-key --json
+```
+
+### Delete a key
+```bash
+r2go2 kv delete ns-abc123 my-key
+```
+
+### List keys in a namespace
+```bash
+r2go2 kv list ns-abc123
+r2go2 kv list ns-abc123 --prefix=cache/
+r2go2 kv list ns-abc123 --limit=100 --json
+```
+
+## Library Usage (Workers and KV)
+
+### Workers
+
+```go
+import r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+
+// Create a Worker service
+ws, err := r2go2.NewWorkerServiceFromCreds("account-id", "api-token")
+
+// Deploy a Worker
+script := strings.NewReader("export default { fetch() { return new Response('hello') } }")
+worker, err := ws.Deploy(ctx, "my-worker", script,
+    r2go2.WithWorkerCompatibilityDate("2024-01-01"),
+    r2go2.WithWorkerBindings([]r2go2.WorkerBinding{
+        {Name: "MY_KV", Type: "kv", ID: "ns-123"},
+    }),
+)
+
+// List Workers
+workers, err := ws.List(ctx)
+
+// Update settings
+err = ws.UpdateSettings(ctx, "my-worker", r2go2.WorkerSettings{
+    CompatibilityDate: "2024-06-01",
+    UsageModel:        "bundled",
+})
+```
+
+### KV
+
+```go
+// Create a KV service
+ks, err := r2go2.NewKVServiceFromCreds("account-id", "api-token")
+
+// Create a namespace
+ns, err := ks.CreateNamespace(ctx, "my-cache")
+
+// Write a key
+err = ks.Put(ctx, ns.ID, "user:123", strings.NewReader(`{"name":"alice"}`),
+    r2go2.WithKVTTL(3600),
+)
+
+// Read a key
+data, err := ks.Get(ctx, ns.ID, "user:123")
+
+// List keys
+keys, err := ks.ListKeys(ctx, ns.ID,
+    r2go2.WithKVPrefix("user:"),
+    r2go2.WithKVLimit(100),
+)
+```
+
+## Library Usage (R2 Storage)
 
 Import as a Go library:
 ```go

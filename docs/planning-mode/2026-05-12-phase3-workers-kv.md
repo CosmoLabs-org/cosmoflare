@@ -1,3 +1,23 @@
+---
+deliverables:
+  - id: P-01
+    title: "WorkerService interface and implementation (pkg/r2go2/worker.go)"
+  - id: P-02
+    title: "Worker unit tests (pkg/r2go2/worker_test.go)"
+  - id: P-03
+    title: "Worker CLI commands (cmd/worker.go) registered in root"
+  - id: P-04
+    title: "KVService interface and implementation (pkg/r2go2/kv.go)"
+  - id: P-05
+    title: "KV unit tests (pkg/r2go2/kv_test.go)"
+  - id: P-06
+    title: "KV CLI commands (cmd/kv.go) registered in root"
+  - id: P-07
+    title: "Update USAGE.md and CLAUDE.md for Workers/KV"
+  - id: P-08
+    title: "Version bump to v0.4.0"
+---
+
 # Phase 3: Workers and KV Service Implementation
 
 **Date**: 2026-05-12

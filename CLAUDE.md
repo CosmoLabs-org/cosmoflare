@@ -40,8 +40,13 @@ The CLI must be as usable by an AI agent as by a human:
 
 ## Structure
 
-- `cmd/` - CLI commands (cobra)
-- `pkg/r2go2/` - Public library (importable by any Go project) — storage, workers, KV, D1, pages, queues
+- `cmd/` - CLI commands (cobra): `bucket.go`, `object.go`, `worker.go`, `kv.go`
+- `pkg/r2go2/` - Public library (importable by any Go project):
+  - **R2 Storage**: `client.go`, `storage.go`, `upload.go`, `download.go`
+  - **Workers**: `worker.go` — `WorkerService` (Deploy, List, Get, Delete, Logs, UpdateSettings)
+  - **KV**: `kv.go` — `KVService` (CreateNamespace, ListNamespaces, GetNamespace, DeleteNamespace, Put, Get, Delete, ListKeys)
+  - **Shared**: `types.go`, `errors.go`, `options.go`, `config.go`
+  - **Future stubs**: `d1.go`, `pages.go`, `queue.go`
 - `internal/` - Internal packages (api, cli, config, interactive, tui, utils)
 - `docs/` - Documentation, sessions, planning, issues, roadmap
 - `docs/audit/` - Comprehensive codebase audits
