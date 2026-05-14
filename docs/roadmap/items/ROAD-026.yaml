@@ -1,12 +1,14 @@
 id: ROAD-026
 created_at: 2026-05-07T05:16:14.126493-03:00
-updated_at: 2026-05-07T05:16:14.127116-03:00
+updated_at: 2026-05-13T19:52:16.135282-03:00
 title: Cloudflare Workers support
 description: 'Full Workers management: deploy, list, logs, delete, bind, secret. Workers serve content from R2 buckets. Config via .r2go2.yaml workers section.'
-status: captured
+status: completed
 priority: 60
 refs:
     - type: brainstorm
       path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+completed_in: v0.4.0
+completed_at: 2026-05-13T19:52:16.135276-03:00
 origin:
     session: 17

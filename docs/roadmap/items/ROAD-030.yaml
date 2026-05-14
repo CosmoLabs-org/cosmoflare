@@ -1,12 +1,14 @@
 id: ROAD-030
 created_at: 2026-05-07T19:29:25.530573-03:00
-updated_at: 2026-05-07T19:29:25.531723-03:00
+updated_at: 2026-05-13T19:52:16.174658-03:00
 title: KV namespace support
 description: 'Full Cloudflare KV support: list/get/put/delete keys, namespace management, bulk operations. Library: pkg/r2go2/kv.go. CLI: r2go2 kv list/get/put/delete/namespaces. Config via .r2go2.yaml kv section.'
-status: captured
+status: completed
 priority: 60
 refs:
     - type: brainstorm
       path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+completed_in: v0.4.0
+completed_at: 2026-05-13T19:52:16.174653-03:00
 origin:
     session: 17

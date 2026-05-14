@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-12T05:53:15.566479-03:00
+last_updated: 2026-05-14T05:04:01.539253-03:00
 next_id: 35
 items:
     - id: ROAD-034
@@ -25,7 +25,8 @@ items:
       created_at: 2026-05-07T19:29:28.806175-03:00
     - id: ROAD-030
       title: KV namespace support
-      status: captured
+      status: completed
+      completed_in: v0.4.0
       created_at: 2026-05-07T19:29:25.530573-03:00
     - id: ROAD-029
       title: CCS r2 subcommand integration (deferred)
@@ -43,7 +44,8 @@ items:
       created_at: 2026-05-07T05:16:14.206242-03:00
     - id: ROAD-026
       title: Cloudflare Workers support
-      status: captured
+      status: completed
+      completed_in: v0.4.0
       created_at: 2026-05-07T05:16:14.126493-03:00
     - id: ROAD-025
       title: Library extraction into pkg/r2go2/
@@ -124,12 +126,13 @@ items:
       created_at: 2026-03-02T23:33:07.711386+01:00
     - id: ROAD-014
       title: Retry logic with exponential backoff and error recovery
-      status: captured
+      status: completed
       priority: 76
       category: infra
       effort: small
       linked_issues:
         - BUG-002
+      completed_in: v0.4.0
       created_at: 2026-03-02T23:33:04.050263+01:00
     - id: ROAD-013
       title: Multipart uploads and resumable transfers for large files
@@ -140,10 +143,11 @@ items:
       created_at: 2026-03-02T23:33:03.291987+01:00
     - id: ROAD-012
       title: Shell completions (bash, zsh, fish) via Cobra generation
-      status: captured
+      status: completed
       priority: 72
       category: ux
       effort: small
+      completed_in: v0.4.0
       created_at: 2026-03-02T23:33:02.496126+01:00
     - id: ROAD-011
       title: Enhanced bucket management (get metadata, update tags, exists check, bulk import)
