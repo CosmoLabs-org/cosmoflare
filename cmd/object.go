@@ -19,6 +19,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"golang.org/x/term"
+
 	"github.com/spf13/cobra"
 	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
@@ -39,6 +41,7 @@ Commands:
   head       Get object metadata
   search     Search for objects
   batch      Batch operations
+  presign    Generate a pre-signed URL
 
 Examples:
   r2go2 object ls my-bucket --prefix=images/
@@ -63,6 +66,7 @@ var (
 	objectSpec       string
 	objectPattern    string
 	objectSearchType string
+	objectExpires    string
 )
 
 // objectListCmd represents the object list command
@@ -103,7 +107,9 @@ Options:
 Examples:
   r2go2 object get my-bucket file.txt
   r2go2 object get my-bucket file.txt --output=local.txt
-  r2go2 object get my-bucket large.zip --range=0-1023`,
+  r2go2 object get my-bucket large.zip --range=0-1023
+  r2go2 object get my-bucket file.txt --output=- | cat
+  r2go2 object get my-bucket file.txt | gzip > file.gz`,
 	RunE: runObjectGet,
 }
 
@@ -123,7 +129,8 @@ Options:
 Examples:
   r2go2 object put my-bucket file.txt
   r2go2 object put my-bucket file.txt --key=remote/file.txt
-  r2go2 object put my-bucket image.jpg --content-type=image/jpeg --metadata=author=admin`,
+  r2go2 object put my-bucket image.jpg --content-type=image/jpeg --metadata=author=admin
+  echo "hello" | r2go2 object put my-bucket - --key=stdin-data.txt`,
 	RunE: runObjectPut,
 }
 
@@ -227,6 +234,25 @@ Examples:
 	RunE: runObjectBatch,
 }
 
+// objectPresignCmd represents the object presign command
+var objectPresignCmd = &cobra.Command{
+	Use:   "presign [bucket-name] [object-key]",
+	Short: "Generate a pre-signed URL",
+	Long: `Generate a pre-signed URL for temporary download access.
+
+The URL expires after the specified duration (default: 1 hour).
+Anyone with the URL can download the object without credentials.
+
+Options:
+- --expires: URL expiration duration (default: 1h)
+
+Examples:
+  r2go2 object presign my-bucket file.txt
+  r2go2 object presign my-bucket file.txt --expires=24h
+  r2go2 object presign my-bucket file.txt --expires=30m --json`,
+	RunE: runObjectPresign,
+}
+
 func init() {
 	rootCmd.AddCommand(objectCmd)
 
@@ -239,6 +265,7 @@ func init() {
 	objectCmd.AddCommand(objectHeadCmd)
 	objectCmd.AddCommand(objectSearchCmd)
 	objectCmd.AddCommand(objectBatchCmd)
+		objectCmd.AddCommand(objectPresignCmd)
 
 	// Flags for object list
 	objectListCmd.Flags().StringVar(&objectPrefix, "prefix", "", "Object key prefix filter")
@@ -270,6 +297,9 @@ func init() {
 
 	// Flags for object batch
 	objectBatchCmd.Flags().Bool("continue", false, "Continue on error")
+
+	// Flags for object presign
+	objectPresignCmd.Flags().StringVar(&objectExpires, "expires", "1h", "URL expiration duration (e.g. 1h, 24h, 30m)")
 }
 
 func runObjectList(cmd *cobra.Command, args []string) error {
@@ -333,11 +363,17 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 
 	output, _ := cmd.Flags().GetString("output")
 
-	if output == "" {
+	// Determine if we should write to stdout
+	outputFlagSet := cmd.Flags().Changed("output")
+	writeToStdout := output == "-" || (!outputFlagSet && !isTerminal(os.Stdout))
+
+	if output == "" && !writeToStdout {
 		output = filepath.Base(objectKey)
 	}
 
-	printInfo("⬇️  Downloading object: %s/%s", bucketName, objectKey)
+	if !writeToStdout {
+		printInfo("⬇️  Downloading object: %s/%s", bucketName, objectKey)
+	}
 
 	// Create client
 	client, err := getAPIClient()
@@ -351,6 +387,17 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get object: %w", err)
 	}
 	defer obj.Content.Close()
+
+	defer obj.Content.Close()
+
+	if writeToStdout {
+		// Write directly to stdout (no progress bar, no file creation)
+		_, err := io.Copy(os.Stdout, obj.Content)
+		if err != nil {
+			return fmt.Errorf("failed to write to stdout: %w", err)
+		}
+		return nil
+	}
 
 	// Create output file
 	file, err := os.Create(output)
@@ -406,6 +453,52 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	contentType, _ := cmd.Flags().GetString("content-type")
 	cacheControl, _ := cmd.Flags().GetString("cache-control")
 	metadata, _ := cmd.Flags().GetStringSlice("metadata")
+
+	// Stdin support: use "-" to read from stdin
+	if localPath == "-" {
+		if key == "" {
+			return fmt.Errorf("--key is required when reading from stdin")
+		}
+		printInfo("⬆️  Uploading from stdin -> %s/%s", bucketName, key)
+
+		metadataMap, err := parseKeyValuePairs(metadata)
+		if err != nil {
+			return fmt.Errorf("failed to parse metadata: %w", err)
+		}
+
+		client, err := getAPIClient()
+		if err != nil {
+			return fmt.Errorf("failed to create API client: %w", err)
+		}
+
+		opts := []r2go2.UploadOption{}
+		if contentType != "" {
+			opts = append(opts, r2go2.WithContentType(contentType))
+		}
+		if cacheControl != "" {
+			opts = append(opts, r2go2.WithUploadCacheControl(cacheControl))
+		}
+		if len(metadataMap) > 0 {
+			opts = append(opts, r2go2.WithMetadata(metadataMap))
+		}
+
+		result, err := client.Upload(context.Background(), bucketName, key, os.Stdin, 0, opts...)
+		if err != nil {
+			if JSONOutput {
+				return printErrorJSON(fmt.Sprintf("failed to upload object: %v", err))
+			}
+			return fmt.Errorf("failed to upload object: %w", err)
+		}
+
+		if JSONOutput {
+			return printSuccessJSON("Upload successful", result)
+		}
+
+		printSuccess("✅ Uploaded successfully!")
+		printInfo("Key: %s", result.Key)
+		printInfo("ETag: %s", result.ETag)
+		return nil
+	}
 
 	if key == "" {
 		key = filepath.Base(localPath)
@@ -868,4 +961,49 @@ func getAPIClient() (r2go2.R2Client, error) {
 		r2go2.WithAccountID(AccountID),
 		r2go2.WithAPIToken(APIToken),
 	)
+}
+
+func runObjectPresign(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		return fmt.Errorf("bucket name and object key are required")
+	}
+	bucketName := args[0]
+	key := args[1]
+
+	expiresStr, _ := cmd.Flags().GetString("expires")
+	expires, err := time.ParseDuration(expiresStr)
+	if err != nil {
+		return fmt.Errorf("invalid expires duration %q: %w", expiresStr, err)
+	}
+
+	printInfo("Generating pre-signed URL: %s/%s (expires: %s)", bucketName, key, expires)
+
+	client, err := getAPIClient()
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	url, err := client.PresignGetObject(context.Background(), bucketName, key, expires)
+	if err != nil {
+		return fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("Pre-signed URL generated", map[string]interface{}{
+			"url":        url,
+			"expires_in": expires.String(),
+			"key":        key,
+			"bucket":     bucketName,
+		})
+	}
+
+	printSuccess("Pre-signed URL generated:")
+	fmt.Println(url)
+	printInfo("Expires in: %s", expires)
+	return nil
+}
+
+// isTerminal checks if a file descriptor is a terminal.
+func isTerminal(f *os.File) bool {
+	return term.IsTerminal(int(f.Fd()))
 }
