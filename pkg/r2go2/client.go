@@ -38,6 +38,9 @@ type R2Client interface {
 	// Copy
 	CopyObject(ctx context.Context, srcBucket, srcKey, dstBucket, dstKey string) (*CopyResult, error)
 
+	// Pre-signed URLs
+	PresignGetObject(ctx context.Context, bucket, key string, expiresIn time.Duration) (string, error)
+
 	// Metadata
 	AccountID() string
 	TestConnection(ctx context.Context) error
