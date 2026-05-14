@@ -179,6 +179,9 @@ func init() {
 
 	bucketImportCmd.Flags().StringVar(&bucketSpec, "spec", "", "Specification file path")
 	bucketImportCmd.Flags().Bool("continue", false, "Continue on error")
+
+	// Register dynamic bucket name completion
+	RegisterCompletionFlags()
 }
 
 func runBucketCreate(cmd *cobra.Command, args []string) error {
