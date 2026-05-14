@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.5.0] - 2026-05-14
+
+### Added
+- Workers and KV services (Phase 3)
+- Shell completions with dynamic bucket names
+- Retry logic with exponential backoff
+- improve shell completions with dynamic bucket names (commit:d4df080e)
+- add retry logic with exponential backoff (commit:466516e1)
+- add Workers and KV services (Phase 3) (commit:551a07de)
+
 ## [0.4.0] - 2026-05-13
 
 ### Added
