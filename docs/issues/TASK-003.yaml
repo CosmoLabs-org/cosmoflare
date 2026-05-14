@@ -1,9 +1,12 @@
 id: TASK-003
 type: task
 created_at: 2026-02-26T01:33:17.727817+01:00
-updated_at: 2026-02-26T01:33:17.727822+01:00
+updated_at: 2026-05-14T04:57:13.927154-03:00
 source: local
-status: open
+status: resolved
 category: chore
 title: Remove dead demo files from cmd_disabled
 description: Delete cmd_disabled/simple-setup.go and cmd_disabled/test-setup.go. Both have package conflicts (package main vs cmd) and reference non-existent functions.
+revisions:
+    - date: "2026-05-14"
+      action: closed
