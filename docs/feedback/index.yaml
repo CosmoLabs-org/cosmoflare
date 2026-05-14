@@ -1,3 +1,15 @@
-# R2Go2 Feedback Index
-# Managed by CCS - do not edit manually
-feedback: []
+version: ""
+next_id: 0
+last_updated: "2026-05-14T05:28:13.45615-03:00"
+stats:
+    total: 1
+    pending: 1
+    implemented: 0
+    rejected: 0
+    converted: 0
+entries:
+    - id: FB-001
+      title: GetNamespace does O(n) list scan
+      status: pending
+      from_project: CosmoDev-R2Go2
+      created: "2026-05-14T05:28:12.546155-03:00"
