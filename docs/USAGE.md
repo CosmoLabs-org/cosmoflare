@@ -328,3 +328,57 @@ result, err := client.MultipartUpload(ctx, "my-bucket", "large.bin", reader, siz
     }),
 )
 ```
+
+### Pre-signed URLs
+
+```go
+url, err := client.PresignGetObject(ctx, "my-bucket", "file.txt", time.Hour)
+fmt.Println("Download URL (expires in 1h):", url)
+```
+
+## Pre-signed URLs (CLI)
+
+Generate temporary download URLs without exposing credentials:
+```bash
+r2go2 object presign my-bucket file.txt
+r2go2 object presign my-bucket file.txt --expires=24h
+r2go2 object presign my-bucket file.txt --expires=30m --json
+```
+
+## Pipe and Stdin Support
+
+Upload from stdin (pipe):
+```bash
+echo "hello world" | r2go2 object put my-bucket - --key=stdin-data.txt
+cat large.json | r2go2 object put my-bucket - --key=data.json --content-type=application/json
+```
+
+Download to stdout (pipe):
+```bash
+r2go2 object get my-bucket file.txt --output=- | gzip > file.gz
+r2go2 object get my-bucket file.txt | cat
+```
+
+Automatic stdout detection: when stdout is not a terminal (piped), output goes to stdout without `--output=-`.
+
+## Bucket Comparison
+
+Compare objects between two buckets:
+```bash
+r2go2 compare src-bucket dst-bucket
+r2go2 compare src-bucket dst-bucket --prefix=images/
+r2go2 compare src-bucket dst-bucket --json
+```
+
+Output categories: `only_in_source`, `only_in_dest`, `different_size`, `same`.
+
+## Analytics
+
+Show R2 usage statistics:
+```bash
+r2go2 analytics
+r2go2 analytics --bucket=my-bucket
+r2go2 analytics --period=30d --json
+```
+
+Displays bucket sizes, object counts, and storage distribution. Note: `--period` is advisory until the Cloudflare Analytics API is integrated.
