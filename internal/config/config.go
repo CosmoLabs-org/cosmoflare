@@ -26,15 +26,15 @@ type Config struct {
 
 // Profile represents a Cloudflare profile configuration
 type Profile struct {
-	Name        string `json:"name" yaml:"name"`
-	AccountID   string `json:"account_id" yaml:"account_id"`
-	APIToken    string `json:"api_token" yaml:"api_token"`
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	Name        string `json:"name" yaml:"name" mapstructure:"name"`
+	AccountID   string `json:"account_id" yaml:"account_id" mapstructure:"account_id"`
+	APIToken    string `json:"api_token" yaml:"api_token" mapstructure:"api_token"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty" mapstructure:"description,omitempty"`
 	// S3 compatible endpoint configuration
-	Endpoint  string `json:"endpoint,omitempty" yaml:"endpoint,omitempty"`
-	AccessKey string `json:"access_key,omitempty" yaml:"access_key,omitempty"`
-	SecretKey string `json:"secret_key,omitempty" yaml:"secret_key,omitempty"`
-	Region    string `json:"region,omitempty" yaml:"region,omitempty"`
+	Endpoint  string `json:"endpoint,omitempty" yaml:"endpoint,omitempty" mapstructure:"endpoint,omitempty"`
+	AccessKey string `json:"access_key,omitempty" yaml:"access_key,omitempty" mapstructure:"access_key,omitempty"`
+	SecretKey string `json:"secret_key,omitempty" yaml:"secret_key,omitempty" mapstructure:"secret_key,omitempty"`
+	Region    string `json:"region,omitempty" yaml:"region,omitempty" mapstructure:"region,omitempty"`
 }
 
 // ConfigManager manages configuration operations
