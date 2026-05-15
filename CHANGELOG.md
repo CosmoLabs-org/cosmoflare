@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.7.0] - 2026-05-14
+
+### Added
+- Pre-signed URL generation for temporary download access
+- Pipe/stdin support: upload from stdin, download to stdout
+- Bucket comparison tool (r2go2 compare)
+- Analytics command with per-bucket breakdown
+- add presign, pipe support, compare, analytics commands (commit:9dc2417f)
+- add pre-signed URL generation (commit:f1186400)
+
 ## [0.5.0] - 2026-05-14
 
 ### Added
