@@ -107,31 +107,21 @@ func TruncateText(text string, maxLength int) string {
 
 // ConfirmYesNo prompts for yes/no confirmation
 func ConfirmYesNo(prompt string, defaultYes bool) bool {
-	defaultText := "Y/n"
-	if !defaultYes {
-		defaultText = "y/N"
-	}
-
-	fmt.Printf("%s [%s]: ", prompt, defaultText)
-
-	var response string
-	fmt.Scanln(&response)
-	response = strings.TrimSpace(strings.ToLower(response))
-
-	if response == "" {
-		return defaultYes
-	}
-
-	return response == "y" || response == "yes"
+	return ConfirmWithReader(prompt, defaultYes, DefaultInput())
 }
 
 // PauseAndWait displays a message and waits for user to press Enter
 func PauseAndWait(message string) {
+	PauseAndWaitWithReader(message, DefaultInput())
+}
+
+// PauseAndWaitWithReader displays a message and waits using the given InputReader
+func PauseAndWaitWithReader(message string, reader InputReader) {
 	if message == "" {
 		message = "Press Enter to continue..."
 	}
 	fmt.Print(message)
-	fmt.Scanln()
+	reader.ReadLine()
 }
 
 // CheckFirstRun determines if this is the first time the user is running R2Go2
@@ -147,6 +137,11 @@ func CheckFirstRun() (bool, error) {
 
 // ShowWelcomeForNewUser displays a special welcome for first-time users
 func ShowWelcomeForNewUser() {
+	ShowWelcomeForNewUserWithReader(DefaultInput())
+}
+
+// ShowWelcomeForNewUserWithReader displays welcome using the given InputReader
+func ShowWelcomeForNewUserWithReader(reader InputReader) {
 	ClearScreen()
 	fmt.Println()
 	fmt.Println(Bold("🎉 Welcome to R2Go2!"))
@@ -159,7 +154,7 @@ func ShowWelcomeForNewUser() {
 	fmt.Println("that helps you store and manage files in the cloud.")
 	fmt.Println()
 
-	if ConfirmYesNo("Would you like to run the setup wizard now?", true) {
+	if ConfirmWithReader("Would you like to run the setup wizard now?", true, reader) {
 		fmt.Println()
 		fmt.Println("🚀 Starting setup wizard...")
 	}

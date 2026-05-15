@@ -54,12 +54,14 @@ type RegionSettings struct {
 // AdvancedConfigWizard handles advanced configuration
 type AdvancedConfigWizard struct {
 	profile *config.Profile
+	Input   InputReader
 }
 
 // NewAdvancedConfigWizard creates a new advanced config wizard
 func NewAdvancedConfigWizard(profile *config.Profile) *AdvancedConfigWizard {
 	return &AdvancedConfigWizard{
 		profile: profile,
+		Input:   DefaultInput(),
 	}
 }
 
@@ -136,9 +138,7 @@ func (acw *AdvancedConfigWizard) configureBucketSettings(settings *BucketSetting
 	fmt.Println()
 
 	fmt.Printf("Select bucket type [1]: ")
-	var bucketType string
-	fmt.Scanln(&bucketType)
-	bucketType = strings.TrimSpace(bucketType)
+	bucketType, _ := acw.Input.ReadLine()
 
 	switch bucketType {
 	case "1", "":
@@ -154,9 +154,7 @@ func (acw *AdvancedConfigWizard) configureBucketSettings(settings *BucketSetting
 
 	fmt.Println()
 	fmt.Printf("Default retention period in days [30]: ")
-	var retention string
-	fmt.Scanln(&retention)
-	retention = strings.TrimSpace(retention)
+	retention, _ := acw.Input.ReadLine()
 
 	if retention != "" {
 		if days, err := strconv.Atoi(retention); err == nil && days >= 0 {
@@ -168,9 +166,8 @@ func (acw *AdvancedConfigWizard) configureBucketSettings(settings *BucketSetting
 
 	fmt.Println()
 	fmt.Printf("Custom R2 endpoint (optional) []: ")
-	var endpoint string
-	fmt.Scanln(&endpoint)
-	settings.CustomEndpoint = strings.TrimSpace(endpoint)
+	endpoint, _ := acw.Input.ReadLine()
+	settings.CustomEndpoint = endpoint
 
 	fmt.Println()
 	PrintSuccess("Bucket settings configured")
@@ -186,9 +183,7 @@ func (acw *AdvancedConfigWizard) configureUploadSettings(settings *UploadSetting
 	fmt.Println()
 
 	fmt.Printf("Concurrent uploads [4]: ")
-	var concurrency string
-	fmt.Scanln(&concurrency)
-	concurrency = strings.TrimSpace(concurrency)
+	concurrency, _ := acw.Input.ReadLine()
 
 	if concurrency != "" {
 		if count, err := strconv.Atoi(concurrency); err == nil && count > 0 && count <= 32 {
@@ -199,9 +194,7 @@ func (acw *AdvancedConfigWizard) configureUploadSettings(settings *UploadSetting
 	}
 
 	fmt.Printf("Upload chunk size (MB) [8]: ")
-	var chunkSize string
-	fmt.Scanln(&chunkSize)
-	chunkSize = strings.TrimSpace(chunkSize)
+	chunkSize, _ := acw.Input.ReadLine()
 
 	if chunkSize != "" {
 		if size, err := strconv.Atoi(chunkSize); err == nil && size >= 1 && size <= 100 {
@@ -212,9 +205,7 @@ func (acw *AdvancedConfigWizard) configureUploadSettings(settings *UploadSetting
 	}
 
 	fmt.Printf("Retry attempts [3]: ")
-	var retries string
-	fmt.Scanln(&retries)
-	retries = strings.TrimSpace(retries)
+	retries, _ := acw.Input.ReadLine()
 
 	if retries != "" {
 		if count, err := strconv.Atoi(retries); err == nil && count >= 0 && count <= 10 {
@@ -224,7 +215,7 @@ func (acw *AdvancedConfigWizard) configureUploadSettings(settings *UploadSetting
 		}
 	}
 
-	settings.ChecksumEnabled = ConfirmYesNo("Enable checksum verification for uploads?", true)
+	settings.ChecksumEnabled = ConfirmWithReader("Enable checksum verification for uploads?", true, acw.Input)
 
 	fmt.Println()
 	PrintSuccess("Upload preferences configured")
@@ -247,9 +238,7 @@ func (acw *AdvancedConfigWizard) configureRegionSettings(settings *RegionSetting
 	fmt.Println()
 
 	fmt.Printf("Select region [1]: ")
-	var region string
-	fmt.Scanln(&region)
-	region = strings.TrimSpace(region)
+	region, _ := acw.Input.ReadLine()
 
 	switch region {
 	case "1", "":
@@ -292,9 +281,7 @@ func (acw *AdvancedConfigWizard) configureAdditionalOptions(config *AdvancedConf
 	fmt.Println()
 
 	fmt.Printf("Select theme [1]: ")
-	var theme string
-	fmt.Scanln(&theme)
-	theme = strings.TrimSpace(theme)
+	theme, _ := acw.Input.ReadLine()
 
 	switch theme {
 	case "1", "":
@@ -313,8 +300,8 @@ func (acw *AdvancedConfigWizard) configureAdditionalOptions(config *AdvancedConf
 	}
 
 	fmt.Println()
-	config.AnalyticsEnabled = ConfirmYesNo("Enable anonymous usage reports? (helps improve R2Go2)", false)
-	config.AccessibilityEnabled = ConfirmYesNo("Enable accessibility features?", false)
+	config.AnalyticsEnabled = ConfirmWithReader("Enable anonymous usage reports? (helps improve R2Go2)", false, acw.Input)
+	config.AccessibilityEnabled = ConfirmWithReader("Enable accessibility features?", false, acw.Input)
 
 	fmt.Println()
 	PrintSuccess("Advanced configuration completed!")

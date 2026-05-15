@@ -9,6 +9,7 @@ parent_prompt: "/Users/gabstudio/PROJECTS/CosmoDev-R2Go2/docs/prompts/2026-05-14
 goals_total: 12
 goals_completed: 9
 tags: [worktree, continuation, testing, coverage]
+schema_version: 1
 ---
 
 # Worktree Continuation: UnitTesting

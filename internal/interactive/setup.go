@@ -165,7 +165,7 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 	// Interactive token input with masking
 	for {
 		fmt.Print("Cloudflare API Token: ")
-		token, err := readPassword()
+		token, err := readPasswordWithReader(w.Input)
 		if err != nil {
 			return "", fmt.Errorf("failed to read token: %w", err)
 		}

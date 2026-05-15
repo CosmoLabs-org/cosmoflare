@@ -18,6 +18,7 @@ import (
 // ProfileManager handles interactive profile operations
 type ProfileManager struct {
 	configMgr *config.ConfigManager
+	Input     InputReader
 }
 
 // NewProfileManager creates a new profile manager
@@ -29,6 +30,7 @@ func NewProfileManager() (*ProfileManager, error) {
 
 	return &ProfileManager{
 		configMgr: configMgr,
+		Input:     DefaultInput(),
 	}, nil
 }
 
@@ -73,10 +75,7 @@ func (pm *ProfileManager) ShowProfileSwitcher() error {
 	fmt.Println()
 	fmt.Printf("Select profile to switch to [%d-%d], or 'c' to create new: ", 1, len(profiles))
 
-	var input string
-	fmt.Scanln(&input)
-
-	input = strings.TrimSpace(input)
+	input, _ := pm.Input.ReadLine()
 
 	// Handle creation
 	if strings.ToLower(input) == "c" {
@@ -173,10 +172,9 @@ func (pm *ProfileManager) DeleteProfileInteractive() error {
 	fmt.Println()
 	fmt.Printf("Select profile to delete [%d-%d]: ", 1, len(profiles))
 
-	var input string
-	fmt.Scanln(&input)
+	input, _ := pm.Input.ReadLine()
 
-	choice, err := strconv.Atoi(strings.TrimSpace(input))
+	choice, err := strconv.Atoi(input)
 	if err != nil {
 		PrintError("Invalid selection.")
 		return err
@@ -201,8 +199,7 @@ func (pm *ProfileManager) DeleteProfileInteractive() error {
 		FormatProfileName(profile.Name, profile.Description))
 	fmt.Printf("Type 'DELETE' to confirm: ")
 
-	var confirmation string
-	fmt.Scanln(&confirmation)
+	confirmation, _ := pm.Input.ReadLine()
 
 	if strings.ToUpper(confirmation) != "DELETE" {
 		PrintInfo("Profile deletion cancelled.")
@@ -229,8 +226,7 @@ func (pm *ProfileManager) createNewProfileFromSwitcher() error {
 	// Get profile name
 	for {
 		fmt.Print("Profile name: ")
-		fmt.Scanln(&profileName)
-		profileName = strings.TrimSpace(profileName)
+		profileName, _ = pm.Input.ReadLine()
 
 		if profileName == "" {
 			PrintError("Profile name cannot be empty.")
@@ -247,8 +243,7 @@ func (pm *ProfileManager) createNewProfileFromSwitcher() error {
 
 	// Get description
 	fmt.Print("Description (optional): ")
-	fmt.Scanln(&description)
-	description = strings.TrimSpace(description)
+	description, _ = pm.Input.ReadLine()
 
 	// Create a basic profile that user can configure later
 	profile := &config.Profile{

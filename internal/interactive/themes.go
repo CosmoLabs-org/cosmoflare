@@ -72,12 +72,14 @@ type ThemeManager struct {
 	currentTheme *Theme
 	themes       map[string]*Theme
 	themePath    string
+	Input        InputReader
 }
 
 // NewThemeManager creates a new theme manager
 func NewThemeManager() *ThemeManager {
 	manager := &ThemeManager{
 		themes:    make(map[string]*Theme),
+		Input:     DefaultInput(),
 	}
 	manager.themePath = manager.getThemePath()
 
@@ -410,9 +412,7 @@ func (tm *ThemeManager) ShowThemeMenu() error {
 	fmt.Println()
 	fmt.Printf("Select theme [1]: ")
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(input)
+	input, _ := tm.Input.ReadLine()
 
 	if input == "" {
 		input = "1"
@@ -506,9 +506,7 @@ func (tm *ThemeManager) CreateCustomTheme() error {
 	fmt.Println()
 
 	fmt.Print("Theme name: ")
-	var name string
-	fmt.Scanln(&name)
-	name = strings.TrimSpace(name)
+	name, _ := tm.Input.ReadLine()
 
 	if name == "" {
 		PrintError("Theme name cannot be empty.")
@@ -521,9 +519,7 @@ func (tm *ThemeManager) CreateCustomTheme() error {
 	}
 
 	fmt.Print("Description: ")
-	var description string
-	fmt.Scanln(&description)
-	description = strings.TrimSpace(description)
+	description, _ := tm.Input.ReadLine()
 
 	// Create custom theme based on cosmic theme
 	customTheme := &Theme{
@@ -553,27 +549,25 @@ func (tm *ThemeManager) customizeTheme(theme *Theme) {
 	fmt.Println()
 
 	// Animation preference
-	animations := ConfirmYesNo("Enable animations?", theme.Animations.Enabled)
+	animations := ConfirmWithReader("Enable animations?", theme.Animations.Enabled, tm.Input)
 	theme.Animations.Enabled = animations
 
 	if animations {
 		fmt.Print("Animation speed (1-100): ")
-		var speed string
-		fmt.Scanln(&speed)
-		if speedInt, err := strconv.Atoi(strings.TrimSpace(speed)); err == nil {
+		speed, _ := tm.Input.ReadLine()
+		if speedInt, err := strconv.Atoi(speed); err == nil {
 			theme.Animations.Speed = speedInt
 		}
 	}
 
 	// Emoji preference
-	useEmojis := ConfirmYesNo("Use emoji icons?", theme.Icons.UseEmojis)
+	useEmojis := ConfirmWithReader("Use emoji icons?", theme.Icons.UseEmojis, tm.Input)
 	theme.Icons.UseEmojis = useEmojis
 
 	// Progress bar width
 	fmt.Printf("Progress bar width [%d]: ", theme.Spacing.ProgressBarWidth)
-	var width string
-	fmt.Scanln(&width)
-	if widthInt, err := strconv.Atoi(strings.TrimSpace(width)); err == nil {
+	width, _ := tm.Input.ReadLine()
+	if widthInt, err := strconv.Atoi(width); err == nil {
 		theme.Spacing.ProgressBarWidth = widthInt
 	}
 }

@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// linesFromInput converts a pipe-style input string to individual lines for mockReader.
+func linesFromInput(s string) []string {
+	return strings.Split(strings.TrimSuffix(s, "\n"), "\n")
+}
+
 // pipeStdin creates a pipe with input and returns cleanup that restores stdin.
 func pipeStdin(t *testing.T, input string) (*os.File, func()) {
 	t.Helper()
@@ -251,10 +256,8 @@ func TestShowQuickStart_Tutorials(t *testing.T) {
 func TestStartTutorial_AllLessons(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	input := "y\n1\n\n1\n\n1\n\n1\n\n1\n\n"
-	_, cleanup := pipeStdin(t, input)
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader(linesFromInput("y\n1\n\n1\n\n1\n\n1\n\n1\n\n")...)
 	err := tm.StartTutorial()
 	assert.NoError(t, err)
 	assert.Len(t, tm.state.Completed, 5)
@@ -265,10 +268,8 @@ func TestStartTutorial_AllLessons(t *testing.T) {
 func TestStartTutorial_SkipOptional(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	input := "y\n1\n\n1\n\n1\n\ns\ns\n"
-	_, cleanup := pipeStdin(t, input)
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader(linesFromInput("y\n1\n\n1\n\n1\n\ns\ns\n")...)
 	err := tm.StartTutorial()
 	assert.NoError(t, err)
 	assert.Len(t, tm.state.Completed, 3)
@@ -278,10 +279,8 @@ func TestStartTutorial_SkipOptional(t *testing.T) {
 func TestStartTutorial_SelectAction2(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	input := "y\n2\n\n2\n\n2\n\n2\n\n2\n\n"
-	_, cleanup := pipeStdin(t, input)
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader(linesFromInput("y\n2\n\n2\n\n2\n\n2\n\n2\n\n")...)
 	err := tm.StartTutorial()
 	assert.NoError(t, err)
 	assert.Len(t, tm.state.Completed, 5)
@@ -292,18 +291,16 @@ func TestStartTutorial_SelectAction2(t *testing.T) {
 func TestShowTutorialIntro_Accept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "y\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("y")
 	assert.NotPanics(t, func() { tm.showTutorialIntro() })
 }
 
 func TestShowTutorialIntro_AllowSkipFalse(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "y\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("y")
 	tm.config.AllowSkip = false
 	assert.NotPanics(t, func() { tm.showTutorialIntro() })
 }
@@ -313,9 +310,8 @@ func TestShowTutorialIntro_AllowSkipFalse(t *testing.T) {
 func TestShowTutorialLesson_InteractiveSelectAction1(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "1\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("1", "")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -333,9 +329,8 @@ func TestShowTutorialLesson_InteractiveSelectAction1(t *testing.T) {
 func TestShowTutorialLesson_InteractiveDefaultAction(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("", "")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -350,9 +345,8 @@ func TestShowTutorialLesson_InteractiveDefaultAction(t *testing.T) {
 func TestShowTutorialLesson_InteractiveSkip(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "s\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("s")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -367,9 +361,8 @@ func TestShowTutorialLesson_InteractiveSkip(t *testing.T) {
 func TestShowTutorialLesson_NonInteractive(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -383,9 +376,8 @@ func TestShowTutorialLesson_NonInteractive(t *testing.T) {
 func TestShowTutorialLesson_VerboseMode(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("", "")
 	tm.config.VerboseMode = true
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
@@ -403,9 +395,8 @@ func TestShowTutorialLesson_VerboseMode(t *testing.T) {
 func TestHandleTutorialActions_DefaultAction(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("", "")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -420,9 +411,8 @@ func TestHandleTutorialActions_DefaultAction(t *testing.T) {
 func TestHandleTutorialActions_SelectAction2(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "2\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("2", "")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{
@@ -440,9 +430,8 @@ func TestHandleTutorialActions_SelectAction2(t *testing.T) {
 func TestHandleTutorialActions_Skip(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "s\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("s")
 	tm.config.AllowSkip = true
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
@@ -458,9 +447,8 @@ func TestHandleTutorialActions_Skip(t *testing.T) {
 func TestHandleTutorialActions_InvalidThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
-	_, cleanup := pipeStdin(t, "abc\n1\n\n")
-	defer cleanup()
 	tm := NewTutorialManager()
+	tm.Input = newMockReader("abc", "1", "")
 	tm.state.CurrentLesson = 1
 	tm.state.TotalLessons = 1
 	tutorial := Tutorial{

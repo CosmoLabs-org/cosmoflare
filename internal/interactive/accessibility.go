@@ -43,11 +43,13 @@ type AccessibilityConfig struct {
 // AccessibilityManager manages accessibility features
 type AccessibilityManager struct {
 	config AccessibilityConfig
+	Input  InputReader
 }
 
 // NewAccessibilityManager creates a new accessibility manager
 func NewAccessibilityManager() *AccessibilityManager {
 	return &AccessibilityManager{
+		Input: DefaultInput(),
 		config: AccessibilityConfig{
 			Mode:             AccessibilityNone,
 			HighContrast:     false,
@@ -118,9 +120,7 @@ func (am *AccessibilityManager) ShowAccessibilityMenu() error {
 	fmt.Println()
 
 	fmt.Printf("Select option [1]: ")
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(input)
+	input, _ := am.Input.ReadLine()
 
 	switch input {
 	case "1", "":
@@ -272,12 +272,14 @@ func formatBool(value bool) string {
 // AccessibilityHelper provides accessibility-aware user interaction methods
 type AccessibilityHelper struct {
 	manager *AccessibilityManager
+	Input   InputReader
 }
 
 // NewAccessibilityHelper creates a new accessibility helper
 func NewAccessibilityHelper() *AccessibilityHelper {
 	return &AccessibilityHelper{
 		manager: NewAccessibilityManager(),
+		Input:   DefaultInput(),
 	}
 }
 
@@ -314,9 +316,7 @@ func (ah *AccessibilityHelper) showScreenReaderMenu(title string, options []stri
 	fmt.Println()
 	fmt.Printf("Enter option number 1-%d [%d]: ", len(options), defaultIndex+1)
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(input)
+	input, _ := ah.Input.ReadLine()
 
 	if input == "" {
 		return defaultIndex
@@ -349,9 +349,7 @@ func (ah *AccessibilityHelper) showLargeTextMenu(title string, options []string,
 
 	fmt.Printf("Select option (1-%d) [%d]: ", len(options), defaultIndex+1)
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(input)
+	input, _ := ah.Input.ReadLine()
 
 	if input == "" {
 		return defaultIndex
@@ -382,9 +380,7 @@ func (ah *AccessibilityHelper) showStandardMenu(title string, options []string, 
 
 	fmt.Printf("Select [%d]: ", defaultIndex+1)
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(input)
+	input, _ := ah.Input.ReadLine()
 
 	if input == "" {
 		return defaultIndex
@@ -407,16 +403,13 @@ func (ah *AccessibilityHelper) GetAccessibleInput(prompt string, sensitive bool)
 
 	if sensitive {
 		fmt.Printf("%s: ", prompt)
-		// In a real implementation, this would use secure password input
-		var input string
-		fmt.Scanln(&input)
-		return strings.TrimSpace(input)
+		input, _ := ah.Input.ReadLine()
+		return input
 	}
 
 	fmt.Printf("%s: ", prompt)
-	var input string
-	fmt.Scanln(&input)
-	return strings.TrimSpace(input)
+	input, _ := ah.Input.ReadLine()
+	return input
 }
 
 // ConfirmAccessibleYesNo gets confirmation with accessibility
@@ -452,9 +445,8 @@ func (ah *AccessibilityHelper) ConfirmAccessibleYesNo(prompt string, defaultYes 
 		}
 	}
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(strings.ToLower(input))
+	input, _ := ah.Input.ReadLine()
+	input = strings.ToLower(input)
 
 	if input == "" {
 		return defaultYes
