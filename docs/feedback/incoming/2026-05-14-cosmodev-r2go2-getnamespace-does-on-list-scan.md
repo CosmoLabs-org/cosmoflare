@@ -2,7 +2,7 @@
 id: FB-001
 title: GetNamespace does O(n) list scan
 type: idea
-status: pending
+status: implemented
 priority: medium
 complexity: ""
 from_project: CosmoDev-R2Go2
@@ -10,7 +10,7 @@ from_path: /Users/gabstudio/PROJECTS/CosmoDev-R2Go2
 to_project: CosmoDev-R2Go2
 to_target: self
 created: "2026-05-14T05:28:12.546155-03:00"
-updated: "2026-05-14T05:28:12.546155-03:00"
+updated: "2026-05-14T16:34:00.433658-03:00"
 suggested_conversion: feature
 converted_to: null
 related_issues: []
@@ -24,7 +24,7 @@ response:
   implemented: null
   rejected: null
   rejection_reason: null
-  notes: ""
+  notes: Cloudflare SDK (v0.116.0) has no GetWorkersKVNamespace method — only List/Create/Delete/Update. The list-and-scan approach is the only option. Marking as SDK limitation, not a code bug. Can revisit if Cloudflare adds a direct get endpoint.
 ---
 
 # FB-001: GetNamespace does O(n) list scan

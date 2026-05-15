@@ -1,36 +1,39 @@
 ---
 branch: master
+completed: "2026-05-14"
 created: "2026-05-14"
-goals_completed: 0
+deliverables:
+    - id: P-01
+      title: Pre-signed URL generation (pkg/r2go2/presign.go + cmd/object.go)
+    - id: P-02
+      title: Pipe/stdin support for upload/download (cmd/object.go)
+    - id: P-03
+      title: Bucket comparison tool (cmd/compare.go)
+    - id: P-04
+      title: Analytics command re-enable (cmd/analytics.go)
+    - id: P-05
+      title: Update USAGE.md with new commands
+    - id: P-06
+      title: Version bump and final verification
+goals_completed: 6
 goals_total: 6
 priority: medium
 related_prompts: []
 requires_reading:
-  - pkg/r2go2/client.go
-  - pkg/r2go2/storage.go
-  - pkg/r2go2/errors.go
-  - pkg/r2go2/options.go
-  - pkg/r2go2/types.go
-  - cmd/object.go
-  - cmd/bucket.go
-  - cmd/root.go
-  - .version-registry.json
-deliverables:
-  - id: P-01
-    title: "Pre-signed URL generation (pkg/r2go2/presign.go + cmd/object.go)"
-  - id: P-02
-    title: "Pipe/stdin support for upload/download (cmd/object.go)"
-  - id: P-03
-    title: "Bucket comparison tool (cmd/compare.go)"
-  - id: P-04
-    title: "Analytics command re-enable (cmd/analytics.go)"
-  - id: P-05
-    title: "Update USAGE.md with new commands"
-  - id: P-06
-    title: "Version bump and final verification"
+    - pkg/r2go2/client.go
+    - pkg/r2go2/storage.go
+    - pkg/r2go2/errors.go
+    - pkg/r2go2/options.go
+    - pkg/r2go2/types.go
+    - cmd/object.go
+    - cmd/bucket.go
+    - cmd/root.go
+    - .version-registry.json
 schema_version: 1
-status: PENDING
-tags: [roadmap, quick-wins]
+status: COMPLETED
+tags:
+    - roadmap
+    - quick-wins
 title: 'Batch 2-3: Pre-signed URLs, Pipe Support, Bucket Compare, Analytics'
 ---
 
@@ -87,7 +90,7 @@ ROAD-026 (Workers) and ROAD-030 (KV) marked completed in roadmap. 23 roadmap ite
 
 ## Goals
 
-### [ ] G-01: Pre-signed URL Generation
+### [x] G-01: Pre-signed URL Generation
 
 **Model:** `glm-turbo` | **Files:** `pkg/r2go2/presign.go`, `pkg/r2go2/presign_test.go`, `cmd/object.go`
 
@@ -113,7 +116,7 @@ Add pre-signed URL generation for temporary download access without exposing cre
 
 **Acceptance:** `go test ./pkg/r2go2/ -run TestPresign -v` passes, `go build .` succeeds
 
-### [ ] G-02: Pipe and Stdin Support for Unix Workflows
+### [x] G-02: Pipe and Stdin Support for Unix Workflows
 
 **Model:** `glm-turbo` | **Files:** `cmd/object.go`
 
@@ -127,7 +130,7 @@ Support reading from stdin when key is `-` and writing to stdout when output is 
 
 **Acceptance:** `echo "hello" | ./r2go2 object put bucket key -` reads stdin, `./r2go2 object get bucket key` pipes to stdout when not a terminal
 
-### [ ] G-03: Bucket Comparison Tool
+### [x] G-03: Bucket Comparison Tool
 
 **Model:** `glm-turbo` | **Files:** `cmd/compare.go`
 
@@ -144,7 +147,7 @@ Create a `r2go2 compare` command that shows differences between two buckets.
 
 **Acceptance:** `go build .` succeeds, `./r2go2 compare --help` shows usage, `--json` flag present
 
-### [ ] G-04: Analytics Command
+### [x] G-04: Analytics Command
 
 **Model:** `glm-turbo` | **Files:** `cmd/analytics.go`
 
@@ -162,7 +165,7 @@ Re-enable analytics command showing R2 usage statistics.
 
 **Acceptance:** `go build .` succeeds, `./r2go2 analytics --help` shows usage
 
-### [ ] G-05: Update Documentation
+### [x] G-05: Update Documentation
 
 **Model:** `glm-turbo` | **Files:** `docs/USAGE.md`
 
@@ -175,7 +178,7 @@ Update USAGE.md with the new commands added in G-01 through G-04.
 - Add `analytics` command section
 - Add library example for PresignGetObject
 
-### [ ] G-06: Version Bump and Verification
+### [x] G-06: Version Bump and Verification
 
 **Model:** `glm-turbo` | **Files:** `.version-registry.json`
 
@@ -186,8 +189,8 @@ Update USAGE.md with the new commands added in G-01 through G-04.
 
 ## Carry-Over Tasks
 
-- [ ] ROAD-014: Retry logic with exponential backoff — Sonnet agent dispatched in previous session, check if `pkg/r2go2/retry.go` exists and tests pass. If agent failed, implement directly. (was: in_progress)
-- [ ] ROAD-012: Shell completions — Sonnet agent dispatched in previous session, check if `cmd/completion.go` was enhanced. If agent failed, skip (existing completion works). (was: in_progress)
+- [x] ROAD-014: Retry logic with exponential backoff — Sonnet agent dispatched in previous session, check if `pkg/r2go2/retry.go` exists and tests pass. If agent failed, implement directly. (was: in_progress)
+- [x] ROAD-012: Shell completions — Sonnet agent dispatched in previous session, check if `cmd/completion.go` was enhanced. If agent failed, skip (existing completion works). (was: in_progress)
 
 ## Where We're Headed
 

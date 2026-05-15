@@ -1,14 +1,13 @@
 id: FEAT-003
 type: feature
 created_at: 2026-02-26T01:33:10.720875+01:00
-updated_at: 2026-02-26T01:33:10.720882+01:00
+updated_at: 2026-05-14T16:33:14.159772-03:00
 source: local
-status: open
+status: done
 origin:
-  roadmap_items:
-    - ROAD-008
-    - ROAD-022
-
+    roadmap_items:
+        - ROAD-008
+        - ROAD-022
 title: Pipe and stdin support for Unix composition
 description: 'Support piping: cat file | r2go2 put bucket/key - and r2go2 get bucket/key | grep pattern. Enables Unix tool composition.'
 acceptance_criteria:
@@ -18,3 +17,6 @@ acceptance_criteria:
       met: false
     - criterion: Detects TTY vs pipe
       met: false
+revisions:
+    - date: "2026-05-14"
+      action: closed
