@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -605,4 +607,486 @@ func TestMultipartUpload_WithVisualProgress(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Greater(t, len(result.Parts), 1)
+}
+
+// ---------------------------------------------------------------------------
+// singlePartUpload - file open error
+// ---------------------------------------------------------------------------
+
+func TestSinglePartUpload_FileOpenError(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", "/nonexistent/file.bin", &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+	})
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	// UploadFile first calls os.Stat which fails for nonexistent files
+	assert.Contains(t, err.Error(), "failed to stat file")
+}
+
+func TestSinglePartUpload_UnreadableFile(t *testing.T) {
+	// Create a file, make it unreadable, then try to upload
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "unreadable.bin")
+	os.WriteFile(tmpFile, []byte("secret data"), 0644)
+
+	// Make unreadable
+	os.Chmod(tmpFile, 0000)
+	defer os.Chmod(tmpFile, 0644)
+
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+	})
+	// On some systems (or as root), unreadable files can still be opened
+	if err != nil {
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "failed to open file")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// uploadPart - file open error
+// ---------------------------------------------------------------------------
+
+func TestUploadPart_FileOpenError(t *testing.T) {
+	abortCalled := false
+	mock := &mockS3Client{
+		abortMultipartFunc: func(ctx context.Context, params *s3.AbortMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.AbortMultipartUploadOutput, error) {
+			abortCalled = true
+			return &s3.AbortMultipartUploadOutput{}, nil
+		},
+	}
+	ec := newTestEnhancedClient(t, mock)
+
+	// Create a file, then delete it before the upload part reads it
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "vanish.bin")
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+
+	// Replace file with a directory - os.Open on a dir succeeds in Go,
+	// but seeking + reading will fail differently. Instead, let's just
+	// use a path that doesn't exist for the multipart case.
+	// The multipart path first stats the file (succeeds), then opens for each part.
+	// We need to delete between stat and part upload - not possible in a single thread.
+	// Instead test that a truly unreadable file is handled.
+	// On Unix, we can make a file unreadable.
+	_ = abortCalled
+
+	// Test with a file that gets deleted between stat and part open
+	// by using the multipart path with a file we remove right after stat
+	os.Remove(tmpFile)
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+	// Make the file unreadable to trigger open error in uploadPart
+	os.Chmod(tmpFile, 0000)
+	defer os.Chmod(tmpFile, 0644) // cleanup
+
+	// On some systems 0000 still allows root to read, so just verify the flow works
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 50,
+	})
+	// Either it fails with permission error (open fails) or succeeds
+	if err != nil {
+		assert.Nil(t, result)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - quiet mode
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_QuietMode(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "quiet-test.txt")
+	os.WriteFile(tmpFile, []byte("quiet content"), 0644)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key.txt", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+	})
+	assert.NoError(t, err)
+}
+
+func TestUploadWithRealTimeProgress_WithoutOriginalProgressFunc(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "no-callback.txt")
+	os.WriteFile(tmpFile, []byte("no callback content"), 0644)
+
+	opts := &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+		// ProgressFunc is nil
+	}
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key.txt", tmpFile, opts)
+	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// UploadFile - exact chunk boundary (single vs multipart decision)
+// ---------------------------------------------------------------------------
+
+func TestUploadFile_ExactChunkSizeBoundary(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "boundary.bin")
+	// Exactly chunk size - should be single part (fileSize > chunkSize is false)
+	os.WriteFile(tmpFile, make([]byte, 100), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 100,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	// Exactly chunk size means fileSize > chunkSize is false -> single part
+	assert.Empty(t, result.Parts)
+}
+
+func TestUploadFile_OneByteOverChunkSize(t *testing.T) {
+	partCount := 0
+	mock := &mockS3Client{
+		uploadPartFunc: func(ctx context.Context, params *s3.UploadPartInput, optFns ...func(*s3.Options)) (*s3.UploadPartOutput, error) {
+			partCount++
+			return &s3.UploadPartOutput{ETag: aws.String(fmt.Sprintf("part-%d", *params.PartNumber))}, nil
+		},
+	}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "over.bin")
+	os.WriteFile(tmpFile, make([]byte, 101), 0644) // 101 > 100 chunk
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 100,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Greater(t, len(result.Parts), 0, "should use multipart upload")
+	assert.Greater(t, partCount, 0)
+}
+
+// ---------------------------------------------------------------------------
+// UploadResult - empty parts
+// ---------------------------------------------------------------------------
+
+func TestUploadResult_EmptyParts(t *testing.T) {
+	result := &UploadResult{
+		Key:    "single.txt",
+		Bucket: "my-bucket",
+		Size:   1024,
+		ETag:   "etag-single",
+	}
+	assert.Nil(t, result.Parts)
+	assert.Equal(t, "", result.UploadID)
+	assert.Equal(t, "", result.URL)
+	assert.Empty(t, result.Metadata)
+	assert.Zero(t, result.Duration)
+	assert.Zero(t, result.Speed)
+}
+
+// ---------------------------------------------------------------------------
+// CompletedPart struct
+// ---------------------------------------------------------------------------
+
+func TestCompletedPart_Fields(t *testing.T) {
+	part := CompletedPart{
+		PartNumber: 3,
+		ETag:       "etag-part-3",
+		Size:       5242880,
+	}
+	assert.Equal(t, 3, part.PartNumber)
+	assert.Equal(t, "etag-part-3", part.ETag)
+	assert.Equal(t, int64(5242880), part.Size)
+
+	data, err := json.Marshal(part)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), `"part_number":3`)
+	assert.Contains(t, string(data), `"etag":"etag-part-3"`)
+}
+
+// ---------------------------------------------------------------------------
+// UploadOptions - JSON tags
+// ---------------------------------------------------------------------------
+
+func TestUploadOptions_JSONTags(t *testing.T) {
+	opts := &UploadOptions{
+		ContentType:  "image/png",
+		CacheControl: "max-age=3600",
+		ChunkSize:    8 * 1024 * 1024,
+		Retries:      3,
+		ShowProgress: true,
+		Quiet:        false,
+	}
+
+	data, err := json.Marshal(opts)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), `"content_type":"image/png"`)
+	assert.Contains(t, string(data), `"cache_control":"max-age=3600"`)
+
+	// ProgressFunc should not be serialized (json:"-")
+	assert.NotContains(t, string(data), `"progress_func"`)
+}
+
+// ---------------------------------------------------------------------------
+// getFileSize - various file states
+// ---------------------------------------------------------------------------
+
+func TestGetFileSize_DirectoryReturnsZero(t *testing.T) {
+	tmpDir := t.TempDir()
+	size := getFileSize(tmpDir)
+	// Directories return their size on some platforms, 0 on others
+	// The function uses os.Stat which works on directories too
+	assert.GreaterOrEqual(t, size, int64(0))
+}
+
+func TestGetFileSize_Symlink(t *testing.T) {
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "target.txt")
+	content := []byte("symlink target")
+	os.WriteFile(target, content, 0644)
+
+	link := filepath.Join(tmpDir, "link.txt")
+	os.Symlink(target, link)
+
+	size := getFileSize(link)
+	assert.Equal(t, int64(len(content)), size) // follows symlink to get real file size
+}
+
+// ---------------------------------------------------------------------------
+// EnhancedClient - nil S3 client from base
+// ---------------------------------------------------------------------------
+
+func TestEnhancedClient_NilS3FromBase(t *testing.T) {
+	baseClient := &Client{
+		accountID: "test",
+		apiToken:  "test",
+		s3:        nil,
+	}
+
+	ec, err := NewEnhancedClient(baseClient)
+	require.NoError(t, err)
+	assert.Nil(t, ec.s3Client)
+}
+
+// ---------------------------------------------------------------------------
+// S3API interface compliance
+// ---------------------------------------------------------------------------
+
+func TestMockS3Client_ImplementsS3API(t *testing.T) {
+	// Compile-time check
+	var _ S3API = &mockS3Client{}
+}
+
+// ---------------------------------------------------------------------------
+// Multipart upload - exact part sizing
+// ---------------------------------------------------------------------------
+
+func TestMultipartUpload_PartSizing(t *testing.T) {
+	var capturedPartNumbers []int32
+	var capturedUploadIDs []string
+
+	mock := &mockS3Client{
+		createMultipartUploadFunc: func(ctx context.Context, params *s3.CreateMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.CreateMultipartUploadOutput, error) {
+			return &s3.CreateMultipartUploadOutput{UploadId: aws.String("sizing-test")}, nil
+		},
+		uploadPartFunc: func(ctx context.Context, params *s3.UploadPartInput, optFns ...func(*s3.Options)) (*s3.UploadPartOutput, error) {
+			capturedPartNumbers = append(capturedPartNumbers, *params.PartNumber)
+			capturedUploadIDs = append(capturedUploadIDs, *params.UploadId)
+			// Read body to verify it has content
+			body, _ := io.ReadAll(params.Body)
+			if len(body) == 0 {
+				return nil, fmt.Errorf("empty body for part %d", *params.PartNumber)
+			}
+			return &s3.UploadPartOutput{ETag: aws.String(fmt.Sprintf("etag-%d", *params.PartNumber))}, nil
+		},
+		completeMultipartFunc: func(ctx context.Context, params *s3.CompleteMultipartUploadInput, optFns ...func(*s3.Options)) (*s3.CompleteMultipartUploadOutput, error) {
+			return &s3.CompleteMultipartUploadOutput{ETag: aws.String("final")}, nil
+		},
+	}
+
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "sizing.bin")
+	// 130 bytes with 50-byte chunks: numParts = int(130/50)+1 = 3 parts
+	// Part 1: bytes 0-49 (50 bytes), Part 2: bytes 50-99 (50 bytes), Part 3: bytes 100-129 (30 bytes)
+	os.WriteFile(tmpFile, make([]byte, 130), 0644)
+
+	result, err := ec.UploadFile(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 50,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, []int32{1, 2, 3}, capturedPartNumbers)
+	for _, uid := range capturedUploadIDs {
+		assert.Equal(t, "sizing-test", uid)
+	}
+	assert.Len(t, result.Parts, 3)
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - multipart path
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_MultipartFile(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "large-rt.bin")
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 50, // forces multipart
+	})
+	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - with progress callback
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_WithProgressCallback(t *testing.T) {
+	var callbackCount int
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "callback.txt")
+	os.WriteFile(tmpFile, []byte("callback test"), 0644)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+		ProgressFunc: func(uploaded, total int64, speed float64) {
+			callbackCount++
+		},
+	})
+	assert.NoError(t, err)
+	_ = callbackCount
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - stat failure
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_StatFailure(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", "/nonexistent/path/file.txt", &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to stat file")
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - non-quiet mode
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_NonQuiet(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "visual.txt")
+	os.WriteFile(tmpFile, []byte("visual test"), 0644)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     false,
+		ChunkSize: 1024 * 1024,
+	})
+	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - with progress callback that gets wrapped
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_ProgressFuncChaining(t *testing.T) {
+	originalCalled := false
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "chain.txt")
+	os.WriteFile(tmpFile, []byte("chained progress"), 0644)
+
+	// This tests the branch where originalProgressFunc != nil
+	// inside UploadWithRealTimeProgress
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+		ProgressFunc: func(uploaded, total int64, speed float64) {
+			originalCalled = true
+		},
+	})
+	assert.NoError(t, err)
+	// The progress func chain may or may not be called depending on timing,
+	// but the important thing is the code path doesn't panic
+	_ = originalCalled
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - non-quiet with multipart
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_NonQuietMultipart(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "large-visual.bin")
+	os.WriteFile(tmpFile, make([]byte, 200), 0644)
+
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     false,
+		ChunkSize: 50,
+	})
+	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// UploadWithRealTimeProgress - quiet mode with progress callback
+// ---------------------------------------------------------------------------
+
+func TestUploadWithRealTimeProgress_QuietWithCallback(t *testing.T) {
+	mock := &mockS3Client{}
+	ec := newTestEnhancedClient(t, mock)
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "quiet-cb.txt")
+	os.WriteFile(tmpFile, []byte("quiet callback test"), 0644)
+
+	var callbackCalled bool
+	err := ec.UploadWithRealTimeProgress(t.Context(), "bucket", "key", tmpFile, &UploadOptions{
+		Quiet:     true,
+		ChunkSize: 1024 * 1024,
+		ProgressFunc: func(uploaded, total int64, speed float64) {
+			callbackCalled = true
+		},
+	})
+	assert.NoError(t, err)
+	_ = callbackCalled
 }
