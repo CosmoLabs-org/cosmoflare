@@ -125,6 +125,11 @@ func (s *KVService) ListNamespaces(ctx context.Context) ([]*KVNamespace, error) 
 }
 
 // GetNamespace retrieves a single KV namespace by ID.
+//
+// Note: The Cloudflare Go SDK does not expose a direct get-by-ID endpoint
+// for KV namespaces. This method lists all namespaces and filters by ID,
+// which is O(n) in the number of namespaces. For batch lookups, call
+// ListNamespaces once and filter the result yourself.
 func (s *KVService) GetNamespace(ctx context.Context, id string) (*KVNamespace, error) {
 	if id == "" {
 		return nil, validationError("KVService.GetNamespace", "namespace ID is required")
