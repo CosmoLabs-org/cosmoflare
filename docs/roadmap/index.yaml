@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-14T16:33:14.492991-03:00
+last_updated: 2026-05-15T02:38:20.382772-03:00
 next_id: 35
 items:
     - id: ROAD-034
@@ -171,12 +171,13 @@ items:
       created_at: 2026-03-02T23:32:58.753636+01:00
     - id: ROAD-009
       title: Config profiles system (init, validate, multi-profile switch)
-      status: captured
+      status: completed
       priority: 85
       category: core
       effort: medium
       linked_issues:
         - FEAT-002
+      completed_in: v0.7.0
       created_at: 2026-03-02T23:32:57.861436+01:00
     - id: ROAD-008
       title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency

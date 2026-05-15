@@ -1,10 +1,14 @@
 id: ROAD-009
 created_at: 2026-03-02T23:32:57.861436+01:00
-updated_at: 2026-03-02T23:33:31.438917+01:00
+updated_at: 2026-05-15T02:30:48.941936-03:00
 title: Config profiles system (init, validate, multi-profile switch)
-status: captured
+status: completed
 priority: 85
 category: core
 effort: medium
+notes:
+    - Completed in v0.7.0 — config init/validate/list/show/set/delete/switch/export all implemented in cmd/config.go and internal/config/
 linked_issues:
     - FEAT-002
+completed_in: v0.7.0
+completed_at: 2026-05-15T02:30:36.517905-03:00

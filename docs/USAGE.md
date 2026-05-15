@@ -382,3 +382,53 @@ r2go2 analytics --period=30d --json
 ```
 
 Displays bucket sizes, object counts, and storage distribution. Note: `--period` is advisory until the Cloudflare Analytics API is integrated.
+
+## Config Profile Commands
+
+Manage named credential profiles for multi-account workflows. Profiles are stored in `~/.r2go2/config.yaml` with 0600 permissions.
+
+### Initialize configuration
+```bash
+r2go2 config init
+```
+
+### List profiles
+```bash
+r2go2 config list
+r2go2 config list --json
+```
+
+### Create or update a profile
+```bash
+r2go2 config set my-profile --account-id=1234567890abcdef1234567890abcdef --api-token=your_token
+r2go2 config set prod --account-id=... --api-token=... --description="Production" --region=us-east-1
+r2go2 config set staging --account-id=... --api-token=... --endpoint=https://custom.r2.cloudflarestorage.com
+```
+
+### Show profile details
+```bash
+r2go2 config show
+r2go2 config show my-profile
+r2go2 config show my-profile --show-secrets
+```
+
+### Validate a profile
+```bash
+r2go2 config validate
+r2go2 config validate my-profile
+```
+
+### Switch active profile
+```bash
+r2go2 config switch staging
+```
+
+### Export profile as environment variables
+```bash
+eval $(r2go2 config export my-profile)
+```
+
+### Delete a profile
+```bash
+r2go2 config delete old-profile
+```
