@@ -276,7 +276,7 @@ func tlsVersionString(v uint16) string {
 	}
 }
 
-// checkHSTS performs an HTTPS GET and checks for the Strict-Transport-Security header.
+// checkHSTS performs an HTTPS HEAD request and checks for the Strict-Transport-Security header.
 func (d *DoctorService) checkHSTS(ctx context.Context, domain string) bool {
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, "https://"+domain, nil)
 	if err != nil {
@@ -355,12 +355,12 @@ func (d *DoctorService) CheckHTTP(ctx context.Context, domain string) (*HTTPProb
 
 // NSProbeResult holds nameserver consistency check results.
 type NSProbeResult struct {
-	Expected []string `json:"expected"`
-	Actual   []string `json:"actual"`
-	Match    bool     `json:"match"`
-	DNSSEC   bool     `json:"dnssec"`
-	SOA      string   `json:"soa,omitempty"`
-	Error    string   `json:"error,omitempty"`
+	Expected  []string `json:"expected"`
+	Actual    []string `json:"actual"`
+	Match     bool     `json:"match"`
+	DNSSEC    bool     `json:"dnssec"`
+	PrimaryNS string   `json:"primary_ns,omitempty"`
+	Error     string   `json:"error,omitempty"`
 }
 
 // CheckNameservers looks up NS records and compares them to the expected set.
@@ -391,9 +391,8 @@ func (d *DoctorService) CheckNameservers(ctx context.Context, domain string, exp
 	// Compare: case-insensitive, trailing-dot-agnostic.
 	result.Match = compareNameservers(expected, actual)
 
-	// SOA lookup requires raw DNS queries; using primary NS as proxy.
 	if len(actual) > 0 {
-		result.SOA = actual[0]
+		result.PrimaryNS = actual[0]
 	}
 
 	// DNSSEC detection is not available via Go stdlib (no DS/RRSIG record access).
