@@ -22,24 +22,38 @@ func TestEaseInOutCubic(t *testing.T) {
 		assert.Equal(t, 1.0, result)
 	})
 
-	t.Run("t=0.5 uses second branch (implementation detail)", func(t *testing.T) {
+	t.Run("t=0.5 uses second branch", func(t *testing.T) {
 		result := easeInOutCubic(0.5)
-		// The implementation uses t < 0.5 for first branch, so 0.5 goes to second
-		// Second branch: 1 + math.Pow(-2*0.5+2, 3)/2 = 1 + 1/2 = 1.5
-		// This seems like a bug in the implementation, but we test what it does
-		assert.InDelta(t, 1.5, result, 0.01)
+		assert.InDelta(t, 0.5, result, 0.01)
 	})
 
 	t.Run("t<0.5 produces smooth acceleration", func(t *testing.T) {
 		result := easeInOutCubic(0.25)
-		// First branch: 4 * 0.25 * 0.25 * 0.25 = 4 * 0.015625 = 0.0625
 		assert.InDelta(t, 0.0625, result, 0.01)
 	})
 
-	t.Run("t>0.5 produces output > 1", func(t *testing.T) {
+	t.Run("t>0.5 produces output in [0,1]", func(t *testing.T) {
 		result := easeInOutCubic(0.75)
-		// Second branch: 1 + math.Pow(-2*0.75+2, 3)/2 = 1 + math.Pow(0.5, 3)/2 = 1 + 0.0625 = 1.0625
-		assert.InDelta(t, 1.0625, result, 0.01)
+		assert.GreaterOrEqual(t, result, 0.0)
+		assert.LessOrEqual(t, result, 1.0)
+	})
+
+	t.Run("negative input clamped to 0", func(t *testing.T) {
+		result := easeInOutCubic(-0.1)
+		assert.Equal(t, 0.0, result)
+	})
+
+	t.Run("input > 1 clamped to 1", func(t *testing.T) {
+		result := easeInOutCubic(1.1)
+		assert.Equal(t, 1.0, result)
+	})
+
+	t.Run("result never exceeds 1.0 across full range", func(t *testing.T) {
+		for v := 0.0; v <= 1.0; v += 0.01 {
+			result := easeInOutCubic(v)
+			assert.GreaterOrEqual(t, result, 0.0, "for v=%v", v)
+			assert.LessOrEqual(t, result, 1.0, "for v=%v", v)
+		}
 	})
 }
 

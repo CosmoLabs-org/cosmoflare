@@ -9,7 +9,6 @@ package interactive
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 )
@@ -26,10 +25,24 @@ type AnimationState struct {
 
 // easeInOutCubic provides smooth acceleration and deceleration
 func easeInOutCubic(t float64) float64 {
+	if t < 0 {
+		return 0
+	}
+	if t > 1 {
+		return 1
+	}
 	if t < 0.5 {
 		return 4 * t * t * t
 	}
-	return 1 + math.Pow(-2*t+2, 3)/2
+	p := -2*t + 2
+	result := 1 - p*p*p/2
+	if result > 1 {
+		result = 1
+	}
+	if result < 0 {
+		result = 0
+	}
+	return result
 }
 
 // easeOutQuad provides smooth deceleration

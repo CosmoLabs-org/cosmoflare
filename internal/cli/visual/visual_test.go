@@ -1757,11 +1757,18 @@ func TestCompleteUpload_Immediate(t *testing.T) {
 // Test with i=0 path only to cover what we can.
 // ============================================================================
 
-func TestGlowingText_SingleIteration(t *testing.T) {
-	// The method always loops 3 times and panics on i>=1 due to the bug
-	// (intensity slice has 1 element, loop goes 0..2).
-	// We cannot safely test it. Record the bug.
-	t.Skip("GlowingText has index-out-of-range bug at i=1,2 — not testable until fixed")
+func TestGlowingText_EmptyString(t *testing.T) {
+	te := NewTerminalEffects(DefaultTheme())
+	assert.NotPanics(t, func() {
+		te.GlowingText("")
+	})
+}
+
+func TestGlowingText_SingleChar(t *testing.T) {
+	te := NewTerminalEffects(DefaultTheme())
+	assert.NotPanics(t, func() {
+		te.GlowingText("A")
+	})
 }
 
 // ============================================================================
