@@ -57,7 +57,10 @@ func NewWorker(id int, queue chan *Operation, results chan *Operation, config *B
 func (w *Worker) Start(ctx context.Context) {
 	for {
 		select {
-		case op := <-w.queue:
+		case op, ok := <-w.queue:
+			if !ok {
+				return
+			}
 			w.processOperation(ctx, op)
 		case <-ctx.Done():
 			return
