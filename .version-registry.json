@@ -1,9 +1,9 @@
 {
   "repository": {
     "version": "0.8.0",
-    "build": 231,
+    "build": 237,
     "description": "R2Go2 - A production-ready CLI tool for managing Cloudflare R2 buckets",
-    "lastUpdated": "2026-05-16T10:05:41Z"
+    "lastUpdated": "2026-05-16T10:05:48Z"
   },
   "metadata": {
     "last_synced": "2026-05-16T09:59:30Z",
@@ -72,6 +72,21 @@
           "cmd/firewall.go",
           "pkg/r2go2/firewall.go",
           "pkg/r2go2/firewall_test.go"
+        ]
+      },
+      {
+        "branch": "agent-a3ee80b0846f2698b",
+        "title": "Agent a3ee80b0846f2698b",
+        "commits": 5,
+        "suggestedBump": "patch",
+        "mergedAt": "2026-05-16T07:05:48-03:00",
+        "files": [
+          ".ccsession.json",
+          ".review.json",
+          "cmd/pagerule.go",
+          "cmd/pagerules.go",
+          "pkg/r2go2/pagerules.go",
+          "pkg/r2go2/pagerules_test.go"
         ]
       }
     ]
