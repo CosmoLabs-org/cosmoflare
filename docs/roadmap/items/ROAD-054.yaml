@@ -1,11 +1,14 @@
 id: ROAD-054
 created_at: 2026-05-16T00:10:13.803125-03:00
-updated_at: 2026-05-16T00:10:13.803919-03:00
+updated_at: 2026-05-16T03:02:05.020201-03:00
 title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
 description: 'Diagnose common issues: DNS propagation, SSL status, cache hit rates, worker errors, R2 bucket policies. One command troubleshooting.'
 status: captured
 priority: 80
 category: ux
 effort: medium
+refs:
+    - type: plan
+      path: docs/planning-mode/2026-05-16-domain-operations.md
 origin:
     session: 2027

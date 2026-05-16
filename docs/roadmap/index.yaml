@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-16T02:02:44.001318-03:00
+last_updated: 2026-05-16T03:02:05.018705-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -87,6 +87,7 @@ items:
       priority: 80
       category: ux
       effort: medium
+      has_plan: true
       created_at: 2026-05-16T00:10:13.803125-03:00
     - id: ROAD-053
       title: cosmoflare import/export — full account config as YAML for disaster recovery
@@ -115,6 +116,7 @@ items:
       priority: 88
       category: ux
       effort: medium
+      has_plan: true
       created_at: 2026-05-16T00:09:56.286855-03:00
     - id: ROAD-049
       title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
