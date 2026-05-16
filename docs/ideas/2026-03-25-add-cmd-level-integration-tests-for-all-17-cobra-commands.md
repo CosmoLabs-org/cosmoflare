@@ -2,7 +2,7 @@
 id: IDEA-MN5GE5AY
 title: Add cmd-level integration tests for all 17 Cobra commands
 created: "2026-03-25T03:57:48.634487+01:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 17
@@ -11,6 +11,7 @@ tags:
     - audit
     - testing
 ---
+
 
 # Add cmd-level integration tests for all 17 Cobra commands
 

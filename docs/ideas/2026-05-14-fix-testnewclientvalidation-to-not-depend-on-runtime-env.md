@@ -2,11 +2,12 @@
 id: IDEA-020
 title: Fix TestNewClientValidation to not depend on runtime env vars
 created: "2026-05-14T23:56:59.808337-03:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 2027
 ---
+
 
 # Fix TestNewClientValidation to not depend on runtime env vars
 
