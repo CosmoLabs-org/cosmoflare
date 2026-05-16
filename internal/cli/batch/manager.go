@@ -104,6 +104,8 @@ type BatchManager struct {
 	workers     []*Worker
 	queue       chan *Operation
 	results     chan *Operation
+	wg          sync.WaitGroup
+	wgTracking  bool
 	mu          sync.RWMutex
 	onProgress  func(*BatchStats)
 	onComplete  func(*BatchStats)
@@ -289,6 +291,10 @@ func (bm *BatchManager) Execute() (*BatchStats, error) {
 		bm.workers[i] = worker
 	}
 
+	// Set up WaitGroup for tracking operation completion
+	bm.wg.Add(len(bm.operations))
+	bm.wgTracking = true
+
 	// Start workers
 	for _, worker := range bm.workers {
 		go worker.Start(bm.context)
@@ -325,11 +331,11 @@ func (bm *BatchManager) Cancel() {
 
 // GetStats returns current statistics
 func (bm *BatchManager) GetStats() *BatchStats {
-	bm.updateProgress()
-	bm.mu.RLock()
-	defer bm.mu.RUnlock()
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
 
-	// Return a copy
+	bm.updateProgress()
+
 	stats := *bm.stats
 	return &stats
 }
@@ -352,12 +358,13 @@ func (bm *BatchManager) queueOperations() {
 	bm.mu.RUnlock()
 
 	for _, op := range operations {
+		op.Status = StatusRunning
+		op.StartTime = time.Now()
+
 		select {
 		case bm.queue <- op:
 			atomic.AddInt32(&bm.stats.Pending, -1)
 			atomic.AddInt32(&bm.stats.Running, 1)
-			op.Status = StatusRunning
-			op.StartTime = time.Now()
 		case <-bm.context.Done():
 			return
 		}
@@ -403,6 +410,10 @@ func (bm *BatchManager) processResult(op *Operation) {
 	if bm.onOperation != nil {
 		bm.onOperation(op)
 	}
+
+	if bm.wgTracking {
+		bm.wg.Done()
+	}
 }
 
 // monitorProgress monitors overall progress
@@ -424,6 +435,7 @@ func (bm *BatchManager) monitorProgress() {
 }
 
 // updateProgress updates progress statistics
+// Must be called with bm.mu held (any lock mode).
 func (bm *BatchManager) updateProgress() {
 	total := atomic.LoadInt32(&bm.stats.Total)
 	completed := atomic.LoadInt32(&bm.stats.Completed)
@@ -431,30 +443,30 @@ func (bm *BatchManager) updateProgress() {
 	skipped := atomic.LoadInt32(&bm.stats.Skipped)
 	cancelled := atomic.LoadInt32(&bm.stats.Cancelled)
 
-	progress := float64(completed+failed+skipped+cancelled) / float64(total) * 100
-	bm.stats.Progress = progress
+	if total > 0 {
+		progress := float64(completed+failed+skipped+cancelled) / float64(total) * 100
+		bm.stats.Progress = progress
 
-	// Calculate ETA
-	if progress > 0 {
-		elapsed := time.Since(bm.stats.StartTime)
-		estimatedTotal := time.Duration(float64(elapsed) * 100.0 / progress)
-		bm.stats.ETA = estimatedTotal - elapsed
+		// Calculate ETA
+		if progress > 0 {
+			elapsed := time.Since(bm.stats.StartTime)
+			estimatedTotal := time.Duration(float64(elapsed) * 100.0 / progress)
+			bm.stats.ETA = estimatedTotal - elapsed
+		}
 	}
 }
 
-// waitForCompletion waits for all operations to complete
+// waitForCompletion waits for all operations to complete via WaitGroup
 func (bm *BatchManager) waitForCompletion() {
-	for {
-		stats := bm.GetStats()
-		if stats.Running == 0 {
-			break
-		}
+	done := make(chan struct{})
+	go func() {
+		bm.wg.Wait()
+		close(done)
+	}()
 
-		select {
-		case <-time.After(100 * time.Millisecond):
-		case <-bm.context.Done():
-			return
-		}
+	select {
+	case <-done:
+	case <-bm.context.Done():
 	}
 }
 

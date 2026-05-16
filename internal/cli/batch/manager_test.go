@@ -941,3 +941,38 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	assert.Equal(t, OperationTypeDelete, ops[1].Type)
 	assert.Equal(t, "/tmp/old.txt", ops[1].Source)
 }
+
+// ---------------------------------------------------------------------------
+// Regression: waitForCompletion race condition
+// ---------------------------------------------------------------------------
+
+// TestExecute_WaitGroup_NoEarlyExit verifies that Execute does not return
+// before all operations are processed, even when goroutine scheduling is
+// delayed. The original bug: waitForCompletion polled stats.Running == 0,
+// which was true before queueOperations() started. Fixed by using sync.WaitGroup.
+func TestExecute_WaitGroup_NoEarlyExit(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		bm := NewBatchManager(&BatchConfig{
+			Concurrency:     2,
+			ContinueOnError: true,
+			Interactive:     false,
+			Quiet:           true,
+		})
+
+		for j := 0; j < 20; j++ {
+			bm.AddOperation(&Operation{
+				Type:   OperationTypeDelete,
+				Source: fmt.Sprintf("/tmp/test-file-%d-%d", i, j),
+			})
+		}
+
+		stats, err := bm.Execute()
+		require.NoError(t, err)
+
+		// All operations must be accounted for — none stuck in running state
+		assert.Equal(t, int32(20), stats.Completed+stats.Failed,
+			"iteration %d: expected all 20 ops completed or failed, got completed=%d failed=%d running=%d pending=%d",
+			i, stats.Completed, stats.Failed, stats.Running, stats.Pending)
+		assert.Zero(t, stats.Running, "iteration %d: no operations should still be running", i)
+	}
+}
