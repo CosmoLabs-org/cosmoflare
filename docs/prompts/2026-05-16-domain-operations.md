@@ -20,14 +20,19 @@ covers_plan_deliverables:
     - P-07
     - P-08
 created: "2026-05-16"
+goals_completed: 6
+goals_total: 8
 id: P-2026-05-16-domain-operations
 plan_ref: docs/planning-mode/2026-05-16-domain-operations.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-05-16-domain-operations.md
     - docs/planning-mode/2026-05-16-domain-operations.md
 schema_version: 1
-status: PENDING
+started: "2026-05-16"
+status: IN_PROGRESS
+tags: []
 title: Domain Operations Center — Full Implementation
 ---
 
@@ -59,28 +64,28 @@ Implementation plan: `docs/planning-mode/2026-05-16-domain-operations.md`
 
 ## Goals
 
-### [ ] G-01 Healthcheck library (pkg/r2go2/healthcheck.go)
+### [x] G-01 Healthcheck library (pkg/r2go2/healthcheck.go)
 Covers P-01.
 
-### [ ] G-02 DNS propagation probe (pkg/r2go2/doctor.go)
+### [x] G-02 DNS propagation probe (pkg/r2go2/doctor.go)
 Covers P-02.
 
-### [ ] G-03 SSL certificate probe (pkg/r2go2/doctor.go)
+### [x] G-03 SSL certificate probe (pkg/r2go2/doctor.go)
 Covers P-03.
 
-### [ ] G-04 HTTP response probe (pkg/r2go2/doctor.go)
+### [x] G-04 HTTP response probe (pkg/r2go2/doctor.go)
 Covers P-04.
 
-### [ ] G-05 Nameserver consistency probe (pkg/r2go2/doctor.go)
+### [x] G-05 Nameserver consistency probe (pkg/r2go2/doctor.go)
 Covers P-05.
 
-### [ ] G-06 Domain overview service (pkg/r2go2/domains.go)
+### [x] G-06 Domain overview service (pkg/r2go2/domains.go)
 Covers P-06.
 
-### [ ] G-07 CLI — cosmoflare domains command (cmd/domains.go)
+### [x] G-07 CLI — cosmoflare domains command (cmd/domains.go)
 Covers P-07.
 
-### [ ] G-08 CLI — cosmoflare doctor command (cmd/doctor.go)
+### [x] G-08 CLI — cosmoflare doctor command (cmd/doctor.go)
 Covers P-08.
 
 ## Related
