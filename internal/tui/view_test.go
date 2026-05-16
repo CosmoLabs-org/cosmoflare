@@ -128,3 +128,49 @@ func TestGetStatusIcon(t *testing.T) {
 		assert.NotEmpty(t, icon, "status %s should have an icon", tt.status)
 	}
 }
+
+func TestCreateProgressBar_OverflowValues(t *testing.T) {
+	m := newTestModel()
+
+	t.Run("percentage exceeds max", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			bar := m.createProgressBar(150, 100, "")
+			assert.Contains(t, bar, "100.0%")
+		})
+	})
+
+	t.Run("negative percentage", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			bar := m.createProgressBar(-5, 100, "")
+			assert.Contains(t, bar, "0.0%")
+		})
+	})
+
+	t.Run("zero max", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			_ = m.createProgressBar(50, 0, "")
+		})
+	})
+
+	t.Run("negative max", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			_ = m.createProgressBar(50, -10, "")
+		})
+	})
+
+	t.Run("normal values", func(t *testing.T) {
+		bar := m.createProgressBar(75, 100, "test")
+		assert.NotEmpty(t, bar)
+		assert.Contains(t, bar, "75.0%")
+	})
+}
+
+func TestRenderUsageStats_ZeroDivision(t *testing.T) {
+	m := newTestModel()
+	m.usageStats = UsageStats{TotalUsed: 1024, TotalLimit: 0, BucketCount: 2}
+
+	assert.NotPanics(t, func() {
+		stats := m.renderUsageStats()
+		assert.NotEmpty(t, stats)
+	})
+}

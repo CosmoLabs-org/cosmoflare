@@ -186,7 +186,15 @@ func (h *HeaderModel) renderProgressBar() string {
 		return ""
 	}
 
-	percentage := float64(h.Progress) / float64(h.MaxProgress)
+	progress := h.Progress
+	if progress < 0 {
+		progress = 0
+	}
+	if progress > h.MaxProgress {
+		progress = h.MaxProgress
+	}
+
+	percentage := float64(progress) / float64(h.MaxProgress)
 	barWidth := 30
 	filledWidth := int(float64(barWidth) * percentage)
 
