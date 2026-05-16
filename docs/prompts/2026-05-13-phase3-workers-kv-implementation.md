@@ -1,5 +1,6 @@
 ---
 requires_reading:
+status: COMPLETED
   - CLAUDE.md
   - docs/planning-mode/2026-05-12-phase3-workers-kv.md
   - pkg/r2go2/client.go

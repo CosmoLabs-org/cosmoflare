@@ -1,3 +1,19 @@
+---
+branch: r2go2-phase0-phase1-implementation
+status: COMPLETED
+created: "2026-05-07"
+goals_completed: 0
+goals_total: 15
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: R2Go2 Phase 0 + Phase 1 Implementation Plan
+---
+
 # R2Go2 Phase 0 + Phase 1 Implementation Plan
 
 **Date**: 2026-05-07

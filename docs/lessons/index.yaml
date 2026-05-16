@@ -1,0 +1,10 @@
+lessons:
+- id: LESSON-001
+  title: 'LESSON-001: Go HTTP Headers Must Be Set Before WriteHeader()'
+  file: LESSON-001-go-http-header-before-writeheader.md
+- id: LESSON-002
+  title: 'LESSON-002: Go json.Marshal Escapes HTML Characters'
+  file: LESSON-002-go-json-marshal-html-escaping.md
+- id: LESSON-003
+  title: 'LESSON-003: Case-Sensitive Pattern Matching After ToLower'
+  file: LESSON-003-case-sensitive-pattern-matching-after-tolower.md

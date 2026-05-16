@@ -1,5 +1,6 @@
 ---
 deliverables:
+status: COMPLETED
   - id: P-01
     title: "WorkerService interface and implementation (pkg/r2go2/worker.go)"
   - id: P-02

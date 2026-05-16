@@ -1,5 +1,6 @@
 ---
 requires_reading:
+status: COMPLETED
   - CLAUDE.md
   - pkg/r2go2/client.go
   - pkg/r2go2/types.go
