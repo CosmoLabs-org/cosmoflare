@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -135,7 +136,7 @@ func init() {
 	pagerulesCreateCmd.Flags().StringVar(&pageruleAction, "action", "", "Action ID (forwarding_url, always_https, cache_level, ssl, etc.)")
 	pagerulesCreateCmd.Flags().StringVar(&pageruleActionValue, "action-value", "", "Action value (URL for forwarding, cache level, etc.)")
 	pagerulesCreateCmd.Flags().StringVar(&pageruleStatus, "status", "active", "Rule status: active or disabled")
-	pagerulesCreateCmd.Flags().IntVar(&pagerulePriority, "priority", 1, "Rule priority (higher = evaluated first)")
+	pagerulesCreateCmd.Flags().IntVar(&pagerulePriority, "priority", 1, "Rule priority (1 = highest, evaluated first)")
 	_ = pagerulesCreateCmd.MarkFlagRequired("url")
 	_ = pagerulesCreateCmd.MarkFlagRequired("action")
 
@@ -144,7 +145,7 @@ func init() {
 	pagerulesUpdateCmd.Flags().StringVar(&pageruleAction, "action", "", "Action ID (forwarding_url, always_https, cache_level, ssl, etc.)")
 	pagerulesUpdateCmd.Flags().StringVar(&pageruleActionValue, "action-value", "", "Action value (URL for forwarding, cache level, etc.)")
 	pagerulesUpdateCmd.Flags().StringVar(&pageruleStatus, "status", "active", "Rule status: active or disabled")
-	pagerulesUpdateCmd.Flags().IntVar(&pagerulePriority, "priority", 1, "Rule priority (higher = evaluated first)")
+	pagerulesUpdateCmd.Flags().IntVar(&pagerulePriority, "priority", 1, "Rule priority (1 = highest, evaluated first)")
 	_ = pagerulesUpdateCmd.MarkFlagRequired("url")
 	_ = pagerulesUpdateCmd.MarkFlagRequired("action")
 
@@ -270,7 +271,12 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 
 	var actionValue interface{}
 	if pageruleActionValue != "" {
-		actionValue = pageruleActionValue
+		var jsonVal interface{}
+		if err := json.Unmarshal([]byte(pageruleActionValue), &jsonVal); err == nil {
+			actionValue = jsonVal
+		} else {
+			actionValue = pageruleActionValue
+		}
 	}
 	actions := []r2go2.PageRuleAction{
 		{
@@ -337,7 +343,12 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 
 	var actionValue interface{}
 	if pageruleActionValue != "" {
-		actionValue = pageruleActionValue
+		var jsonVal interface{}
+		if err := json.Unmarshal([]byte(pageruleActionValue), &jsonVal); err == nil {
+			actionValue = jsonVal
+		} else {
+			actionValue = pageruleActionValue
+		}
 	}
 	actions := []r2go2.PageRuleAction{
 		{
