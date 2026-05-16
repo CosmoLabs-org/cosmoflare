@@ -191,9 +191,13 @@ func (s *HealthcheckService) Create(ctx context.Context, name, address string, o
 }
 
 // Update modifies an existing health check.
+// Fetches the current state first to avoid sending zero-value fields as updates.
 func (s *HealthcheckService) Update(ctx context.Context, id string, opts ...HealthcheckOption) (*Healthcheck, error) {
 	if id == "" {
 		return nil, validationError("HealthcheckService.Update", "healthcheck ID is required")
+	}
+	if len(opts) == 0 {
+		return nil, validationError("HealthcheckService.Update", "at least one option is required")
 	}
 
 	cfg := &healthcheckConfig{}
@@ -201,7 +205,11 @@ func (s *HealthcheckService) Update(ctx context.Context, id string, opts ...Heal
 		o(cfg)
 	}
 
-	hc := cloudflare.Healthcheck{}
+	// Fetch current state so zero-value fields are not sent as intentional updates.
+	hc, err := s.cf.Healthcheck(ctx, s.zoneID, id)
+	if err != nil {
+		return nil, notFound("HealthcheckService.Update", "", id, err)
+	}
 
 	if cfg.hcType != nil {
 		hc.Type = *cfg.hcType

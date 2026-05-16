@@ -215,13 +215,21 @@ func TestHealthcheckUpdateValidation(t *testing.T) {
 	svc, _ := NewHealthcheckService(cf, "zone123")
 	ctx := context.Background()
 
-	_, err := svc.Update(ctx, "")
+	_, err := svc.Update(ctx, "", WithHealthcheckInterval(30))
 	if err == nil {
 		t.Error("expected error when healthcheck ID is empty")
 	}
 	var valErr *R2ValidationError
 	if !errors.As(err, &valErr) {
 		t.Errorf("expected *R2ValidationError, got %T", err)
+	}
+
+	_, err = svc.Update(ctx, "hc-123")
+	if err == nil {
+		t.Error("expected error when no options are provided")
+	}
+	if !errors.As(err, &valErr) {
+		t.Errorf("expected *R2ValidationError for no options, got %T", err)
 	}
 }
 
