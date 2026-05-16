@@ -1,11 +1,14 @@
 package interactive
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // ---------------------------------------------------------------------------
@@ -512,4 +515,387 @@ func TestTransitionState(t *testing.T) {
 	if state.Theme != "cosmic" {
 		t.Errorf("Theme = %q, want %q", state.Theme, "cosmic")
 	}
+}
+
+// ---------------------------------------------------------------------------
+// ShowAccessibleMenu - screen reader mode (showScreenReaderMenu: 75%)
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+	ah.Input = newMockReader("2")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Test Menu", []string{"Option A", "Option B", "Option C"}, 0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 1, result) // 0-indexed, selected "2" = index 1
+	assert.Contains(t, buf.String(), "Test Menu")
+}
+
+func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_Default(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+	ah.Input = newMockReader("") // empty = default
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Pick", []string{"A", "B"}, 1)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 1, result) // returns defaultIndex
+}
+
+func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_InvalidThenValid(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+	ah.Input = newMockReader("99", "1")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Pick", []string{"A", "B"}, 0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 0, result)
+}
+
+// ---------------------------------------------------------------------------
+// ShowAccessibleMenu - large text mode (showLargeTextMenu: 73.7%)
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_ShowAccessibleMenu_LargeText(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityLargeText)
+	ah.Input = newMockReader("1")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Large Menu", []string{"Big A", "Big B"}, 0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 0, result)
+	assert.Contains(t, buf.String(), "Large Menu")
+}
+
+func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_Default(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityLargeText)
+	ah.Input = newMockReader("")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Menu", []string{"X", "Y"}, 1)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 1, result)
+}
+
+func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_InvalidThenValid(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityLargeText)
+	ah.Input = newMockReader("abc", "2")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Menu", []string{"A", "B"}, 0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 1, result)
+}
+
+// ---------------------------------------------------------------------------
+// ShowAccessibleMenu - standard mode (showStandardMenu: 88.2%)
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_ShowAccessibleMenu_Standard_InvalidThenValid(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityNone)
+	ah.Input = newMockReader("99", "1")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.ShowAccessibleMenu("Std Menu", []string{"A", "B"}, 0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 0, result)
+}
+
+// ---------------------------------------------------------------------------
+// GetAccessibleInput
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_GetAccessibleInput(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.Input = newMockReader("test input")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.GetAccessibleInput("Enter value", false)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, "test input", result)
+}
+
+func TestAccessibilityHelper_GetAccessibleInput_Sensitive(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.Input = newMockReader("secret123")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	result := ah.GetAccessibleInput("Password", true)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, "secret123", result)
+}
+
+// ---------------------------------------------------------------------------
+// ConfirmAccessibleYesNo
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_ConfirmAccessibleYesNo(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+
+	tests := []struct {
+		name      string
+		input     string
+		defaultYes bool
+		want      bool
+	}{
+		{"y with default no", "y", false, true},
+		{"empty with default yes", "", true, true},
+		{"n with default yes", "n", true, false},
+		{"empty with default no", "", false, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ah.Input = newMockReader(tt.input)
+
+			old := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+
+			result := ah.ConfirmAccessibleYesNo("Confirm?", tt.defaultYes)
+
+			w.Close()
+			os.Stdout = old
+
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ShowAccessibleProgress
+// ---------------------------------------------------------------------------
+
+func TestAccessibilityHelper_ShowAccessibleProgress(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	ah.ShowAccessibleProgress("Loading", 5, 10)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Loading")
+}
+
+func TestAccessibilityHelper_ShowAccessibleProgress_Complete(t *testing.T) {
+	ah := NewAccessibilityHelper()
+	ah.manager.SetMode(AccessibilityScreenReader)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	ah.ShowAccessibleProgress("Done", 10, 10)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "100")
+}
+
+// ---------------------------------------------------------------------------
+// AutoDetectAccessibility
+// ---------------------------------------------------------------------------
+
+func TestAutoDetectAccessibility_ScreenReaderEnv(t *testing.T) {
+	t.Setenv("SCREEN_READER", "1")
+	mgr := AutoDetectAccessibility()
+	assert.True(t, mgr.IsEnabled())
+	assert.True(t, mgr.config.ScreenReader)
+}
+
+func TestAutoDetectAccessibility_HighContrastEnv(t *testing.T) {
+	t.Setenv("HIGH_CONTRAST", "1")
+	mgr := AutoDetectAccessibility()
+	assert.True(t, mgr.IsEnabled())
+	assert.True(t, mgr.config.HighContrast)
+}
+
+func TestAutoDetectAccessibility_LargeTextEnv(t *testing.T) {
+	t.Setenv("LARGE_TEXT", "1")
+	mgr := AutoDetectAccessibility()
+	assert.True(t, mgr.IsEnabled())
+	assert.True(t, mgr.config.LargeText)
+}
+
+func TestAutoDetectAccessibility_ReducedMotionEnv(t *testing.T) {
+	t.Setenv("REDUCED_MOTION", "1")
+	mgr := AutoDetectAccessibility()
+	assert.True(t, mgr.IsEnabled())
+	assert.True(t, mgr.config.ReducedMotion)
+}
+
+func TestAutoDetectAccessibility_VSCodeFull(t *testing.T) {
+	t.Setenv("TERM_PROGRAM", "vscode")
+	t.Setenv("ACCESSIBILITY", "1")
+	mgr := AutoDetectAccessibility()
+	assert.Equal(t, AccessibilityFull, mgr.config.Mode)
+}
+
+func TestAutoDetectAccessibility_NoEnvs(t *testing.T) {
+	mgr := AutoDetectAccessibility()
+	assert.False(t, mgr.IsEnabled())
+}
+
+// ---------------------------------------------------------------------------
+// Global accessibility functions
+// ---------------------------------------------------------------------------
+
+func TestEnableAccessibilityMode(t *testing.T) {
+	origMode := globalAccessibilityManager.config.Mode
+	defer func() { globalAccessibilityManager.config.Mode = origMode }()
+
+	EnableAccessibilityMode(AccessibilityHighContrast)
+	assert.True(t, IsAccessibilityEnabled())
+}
+
+// ---------------------------------------------------------------------------
+// PrintAccessible methods
+// ---------------------------------------------------------------------------
+
+func TestPrintAccessible_Verbose(t *testing.T) {
+	am := NewAccessibilityManager()
+	am.config.Verbose = true
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	am.PrintAccessible("Test message")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Test message")
+}
+
+func TestPrintAccessibleSuccess(t *testing.T) {
+	am := NewAccessibilityManager()
+	am.config.ScreenReader = true
+	am.config.Verbose = true
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	am.PrintAccessibleSuccess("It worked")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "It worked")
+}
+
+func TestPrintAccessibleError(t *testing.T) {
+	am := NewAccessibilityManager()
+	am.config.ScreenReader = true
+	am.config.Verbose = true
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	am.PrintAccessibleError("Something failed")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Something failed")
 }

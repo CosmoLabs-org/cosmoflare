@@ -212,9 +212,9 @@ func (a *Animator) mixTexts(from, to string, fadeOut, fadeIn float64) string {
 			// you might use color codes or other visual effects
 			if fadeIn > 0.5 {
 				result[i] = []rune(to)[i]
-			} else {
+		} else {
 				result[i] = r
-			}
+		}
 		} else {
 			result[i] = r
 		}
@@ -334,6 +334,9 @@ func (a *Animator) ShowStepTransition(fromStep, toStep int, fromTitle, toTitle s
 
 		// Create visual transition
 		dots := int(easedProgress * 20)
+		if dots > 20 {
+			dots = 20
+		}
 		progressBar := strings.Repeat("●", dots) + strings.Repeat("○", 20-dots)
 
 		fmt.Printf("\rStep %d → %d [%s] %s", fromStep, toStep, progressBar, "")

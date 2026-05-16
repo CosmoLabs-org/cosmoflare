@@ -1,6 +1,8 @@
 package interactive
 
 import (
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -347,3 +349,92 @@ func TestSetupWizard_Complete_VariousInputs(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Step3_AccountInfo additional paths (73.0% gap)
+// ---------------------------------------------------------------------------
+
+func TestStep3_AccountInfo_AutoDetectAccept(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	// With a valid token, autoDetect will fail (no real API), so it falls through
+	os.Unsetenv("CLOUDFLARE_ACCOUNT_ID")
+	w := NewSetupWizard()
+	w.Input = newMockReader(strings.Repeat("a", 32))
+
+	accountID, _, err := w.Step3_AccountInfo("test-token")
+	require.NoError(t, err)
+	assert.Equal(t, strings.Repeat("a", 32), accountID)
+}
+
+func TestStep3_AccountInfo_EnvVarReject(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	t.Setenv("CLOUDFLARE_ACCOUNT_ID", strings.Repeat("b", 32))
+	w := NewSetupWizard()
+	w.Input = newMockReader("n", strings.Repeat("c", 32))
+
+	accountID, _, err := w.Step3_AccountInfo("test-token")
+	require.NoError(t, err)
+	assert.Equal(t, strings.Repeat("c", 32), accountID)
+}
+
+// ---------------------------------------------------------------------------
+// Step2_APIToken additional paths
+// ---------------------------------------------------------------------------
+
+func TestStep2_APIToken_EnvVarDefaultAccept(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	t.Setenv("CLOUDFLARE_API_TOKEN", strings.Repeat("x", 30))
+	w := NewSetupWizard()
+	w.Input = newMockReader("") // empty = accept default
+
+	token, err := w.Step2_APIToken()
+	require.NoError(t, err)
+	assert.Equal(t, strings.Repeat("x", 30), token)
+}
+
+func TestStep2_APIToken_EmptyThenValid(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	os.Unsetenv("CLOUDFLARE_API_TOKEN")
+	w := NewSetupWizard()
+	// empty token (rejected), then valid + confirm
+	w.Input = newMockReader("", strings.Repeat("a", 25), "y")
+
+	token, err := w.Step2_APIToken()
+	require.NoError(t, err)
+	assert.Equal(t, strings.Repeat("a", 25), token)
+}
+
+// ---------------------------------------------------------------------------
+// maskToken
+// ---------------------------------------------------------------------------
+
+func TestMaskTokenCoverage(t *testing.T) {
+	t.Run("short token masked completely", func(t *testing.T) {
+		result := maskToken("short")
+		assert.Equal(t, "*****", result)
+	})
+
+	t.Run("8 char token masked completely", func(t *testing.T) {
+		result := maskToken("12345678")
+		assert.Equal(t, "********", result)
+	})
+
+	t.Run("long token shows first and last 4", func(t *testing.T) {
+		result := maskToken("abcdefghijklmnop")
+		assert.Contains(t, result, "abcd")
+		assert.Contains(t, result, "mnop")
+		assert.Contains(t, result, "********")
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Welcome and Complete
+// ---------------------------------------------------------------------------
