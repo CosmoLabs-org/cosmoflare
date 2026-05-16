@@ -504,3 +504,21 @@
 {"id":"9","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"10","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"11","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"1","subject":"G-10: Refactor interactive package to inject InputReader consistently","status":"pending","created_at":"2026-05-16T10:34:07Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"2","subject":"G-11: Fix batch package Execute/waitForCompletion race condition","status":"pending","created_at":"2026-05-16T10:34:11Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"3","subject":"G-12: File bug reports for 5 bugs found during testing","status":"pending","created_at":"2026-05-16T10:34:16Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"4","subject":"Roadmap Advance: scan and dispatch priority work","status":"pending","created_at":"2026-05-16T10:34:20Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"1","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"2","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"3","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"4","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-16T10:39:26Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"5","subject":"ROAD-039: Page Rules service (GLM agent)","status":"pending","created_at":"2026-05-16T10:50:14Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"6","subject":"ROAD-041: Email Routing service (GLM agent)","status":"pending","created_at":"2026-05-16T10:50:17Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"7","subject":"BUG-012/013/014: TUI bug fixes (GLM agent)","status":"pending","created_at":"2026-05-16T10:50:21Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"8","subject":"BUG-015/016: Animation bug fixes (GLM agent)","status":"pending","created_at":"2026-05-16T10:50:24Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"5","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"6","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"7","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"8","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-16T10:51:21Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}

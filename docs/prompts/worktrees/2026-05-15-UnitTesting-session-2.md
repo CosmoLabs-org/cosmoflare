@@ -10,6 +10,12 @@ goals_total: 12
 goals_completed: 9
 tags: [worktree, continuation, testing, coverage]
 schema_version: 1
+requires_reading:
+  - internal/interactive/input.go
+  - internal/interactive/setup.go
+  - internal/interactive/helpers.go
+  - internal/interactive/backup_restore.go
+  - internal/cli/batch/manager.go
 ---
 
 # Worktree Continuation: UnitTesting

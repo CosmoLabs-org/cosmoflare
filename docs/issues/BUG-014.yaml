@@ -1,0 +1,14 @@
+id: BUG-014
+type: bug
+created_at: 2026-05-16T07:39:14.412973-03:00
+updated_at: 2026-05-16T07:39:16.527639-03:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 2027
+title: TUI negative width handling causes strings.Repeat panic
+description: When terminal width is reported as 0 or negative, TUI rendering functions panic on strings.Repeat with negative count. Found during unit testing session.
+fix_direction: 'Add width guard in internal/tui/render.go: clamp width to minimum 10 via max(width, 10) before use in strings.Repeat. Add TestRender_NegativeWidth with widths -1, 0, 1.'
+affected_files:
+    - internal/tui/render.go

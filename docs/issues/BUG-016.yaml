@@ -1,0 +1,14 @@
+id: BUG-016
+type: bug
+created_at: 2026-05-16T07:39:20.587463-03:00
+updated_at: 2026-05-16T07:39:22.943186-03:00
+source: local
+severity: low
+status: open
+origin:
+    session: 2027
+title: easeInOutCubic returns values >1.0 for t>0.5
+description: The easeInOutCubic easing function in transitions.go produces values exceeding 1.0 for input t values slightly above 0.5, which causes visual glitches in animations. Found during unit testing session.
+fix_direction: 'Fix formula in internal/interactive/transitions.go easeInOutCubic: use pow(2, -2) = 0.25 coefficient in second branch. Clamp output to [0.0, 1.0]. Add TestEaseInOutCubic_BoundaryValues with t = 0.0, 0.5, 0.51, 1.0.'
+affected_files:
+    - internal/interactive/transitions.go
