@@ -15,6 +15,7 @@ tags:
     - quality
     - refactoring
 title: R2Go2 Testing & Quality - Next Steps
+schema_version: 1
 ---
 
 # R2Go2 Testing & Quality - Next Steps

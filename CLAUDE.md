@@ -1,25 +1,43 @@
-# CosmoDev-R2Go2
+# CosmoDev-R2Go2 (Cosmoflare)
 
-Open-source Go library and CLI tool for managing Cloudflare R2 buckets.
+Open-source Go library and CLI tool for managing the full Cloudflare developer platform. R2Go2 is the R2 storage component within the larger **Cosmoflare** ecosystem.
 
 ## Product Vision
 
-R2Go2 is a **3-tier product**:
-1. **Go library** — clean public API, importable by any Go project (OpenCode, Codex, etc.)
-2. **Standalone CLI** — open-source tool anyone can install, **agent-friendly** (LLMs like Claude/GLM use it from terminal)
-3. **CCS subcommand** (future) — `ccs r2` integration, R2Go2 as core requirement like GoRalph
+Cosmoflare is a **3-tier product** by CosmoLabs:
 
-**Design principle**: Library-first, CLI on top, CCS integration last. No CCS dependencies in the core.
+| Tier | Product | Model | Purpose |
+|------|---------|-------|---------|
+| **CLI** | `cosmoflare` (alias: `r2go2`) | Free, open-source (MIT) | Developer tool, agent-friendly, community adoption |
+| **Desktop** | Tauri app (macOS/Windows/Linux) | Paid | GUI dashboard, real-time notifications, infrastructure graph |
+| **Mobile** | React Native (iOS/Android) | Paid (subscription) | On-the-go monitoring, push alerts, quick actions |
 
-### Full Cloudflare Platform
-R2Go2 covers the entire Cloudflare developer platform:
-- **R2** (storage) — Phase 1: buckets, objects, uploads, downloads
-- **Workers** (compute) — Phase 3: deploy, list, logs, bindings
-- **KV** (key-value) — Phase 3: namespaces, get/put/delete
-- **D1** (SQL database) — Phase 4: create, query, migrate
-- **Pages** (static hosting) — Phase 4: deploy, list, custom domains
-- **Queues** (message queues) — Phase 5: create, send, consume
-- All managed through a single `.r2go2.yaml` project config
+**Design principle**: Library-first, CLI on top, GUI apps wrap the same core. No separate API implementations per tier.
+
+### Full Cloudflare Platform Coverage
+Everything the Cloudflare API allows us to interact with:
+
+| Service | Status | Phase |
+|---------|--------|-------|
+| **R2** (storage) | Implemented | Phase 1 |
+| **Workers** (compute) | Implemented | Phase 3 |
+| **KV** (key-value) | Implemented | Phase 3 |
+| **DNS Records** | ROAD-035 | Phase 4 |
+| **Zones** | ROAD-036 | Phase 4 |
+| **SSL/TLS** | ROAD-037 | Phase 4 |
+| **Cache** | ROAD-038 | Phase 4 |
+| **Page/Redirect Rules** | ROAD-039 | Phase 4 |
+| **WAF/Firewall** | ROAD-040 | Phase 5 |
+| **Email Routing** | ROAD-041 | Phase 5 |
+| **D1** (SQL database) | Stub → ROAD-042 | Phase 5 |
+| **Pages** (static hosting) | Stub → ROAD-043 | Phase 5 |
+| **Queues** (message queues) | Stub | Phase 5 |
+| **Images** | ROAD-044 | Phase 6 |
+| **Hyperdrive** | ROAD-046 | Phase 6 |
+| **Vectorize** | ROAD-048 | Phase 6 |
+| **Workers AI / AI Gateway** | ROAD-049 | Phase 6 |
+| **Stream** (video) | ROAD-045 | Phase 7 |
+| All managed through a single `.cosmoflare.yaml` project config |
 
 ### Agent-First UX
 The CLI must be as usable by an AI agent as by a human:
@@ -49,7 +67,11 @@ The CLI must be as usable by an AI agent as by a human:
   - **Future stubs**: `d1.go`, `pages.go`, `queue.go`
 - `internal/` - Internal packages (api, cli, config, interactive, tui, utils)
 - `docs/` - Documentation, sessions, planning, issues, roadmap
+- `docs/PRODUCT-VISION.md` - Full Cosmoflare product vision, 3-tier model, roadmap references
+- `docs/USAGE.md` - Agent-reference CLI usage guide
+- `docs/roadmap/` - Roadmap items (ROAD-001 through ROAD-065+)
 - `docs/audit/` - Comprehensive codebase audits
+- `.claude/CLAUDE.md` - Claude Code project instructions (build/test, architecture, known gaps)
 
 ## Development
 
@@ -67,6 +89,7 @@ go vet ./...                # Vet
 - Every command must support `--json` output
 - Every command must have detailed `--help` with examples
 - Agent-readable error messages (include what failed, why, and how to fix)
-- Full Cloudflare platform coverage: R2, Workers, KV, D1, Pages, Queues
+- Full Cloudflare platform coverage: see roadmap for all 20+ services
 - Each service gets its own subcommand group and library package
-- All services configured via single `.r2go2.yaml` project config
+- All services configured via single `.cosmoflare.yaml` (legacy: `.r2go2.yaml`) project config
+- `r2go2` binary remains as backward-compatible alias for `cosmoflare`
