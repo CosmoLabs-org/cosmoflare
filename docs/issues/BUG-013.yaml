@@ -1,10 +1,10 @@
 id: BUG-013
 type: bug
 created_at: 2026-05-16T07:39:11.258304-03:00
-updated_at: 2026-05-16T07:39:13.369366-03:00
+updated_at: 2026-05-16T08:07:15.991604-03:00
 source: local
 severity: medium
-status: open
+status: closed
 origin:
     session: 2027
 title: TUI divide-by-zero on empty data
@@ -12,3 +12,6 @@ description: When TUI render functions receive zero-length data slices, division
 fix_direction: Guard division in internal/tui/render.go percentage calculations with if total == 0 return 0. Add TestRender_EmptyData to cover both zero-item and nil-slice paths.
 affected_files:
     - internal/tui/render.go
+revisions:
+    - date: "2026-05-16"
+      action: closed
