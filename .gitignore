@@ -130,3 +130,4 @@ BACKUPS/
 .ccs-verify-cache.json
 .ccs/
 iTerm2
+.review-cache/

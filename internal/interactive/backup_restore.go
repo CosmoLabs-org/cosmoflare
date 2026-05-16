@@ -48,6 +48,7 @@ type BackupProfile struct {
 // BackupManager handles backup and restore operations
 type BackupManager struct {
 	configMgr *config.ConfigManager
+	Input     InputReader
 }
 
 // NewBackupManager creates a new backup manager
@@ -59,6 +60,7 @@ func NewBackupManager() (*BackupManager, error) {
 
 	return &BackupManager{
 		configMgr: configMgr,
+		Input:     DefaultInput(),
 	}, nil
 }
 
@@ -77,9 +79,7 @@ func (bm *BackupManager) ShowBackupInterface() error {
 	fmt.Println()
 
 	fmt.Printf("Select format [1]: ")
-	var format string
-	fmt.Scanln(&format)
-	format = strings.TrimSpace(format)
+	format, _ := bm.Input.ReadLine()
 
 	switch format {
 	case "1", "":
@@ -119,19 +119,19 @@ func (bm *BackupManager) CreateEncryptedBackup() error {
 
 	fmt.Println()
 
-	if !ConfirmYesNo("Continue with backup?", true) {
+	if !ConfirmWithReader("Continue with backup?", true, bm.Input) {
 		return nil
 	}
 
 	// Get password
 	fmt.Print("Enter backup password: ")
-	password, err := readPassword()
+	password, err := readPasswordWithReader(bm.Input)
 	if err != nil {
 		return fmt.Errorf("failed to read password: %w", err)
 	}
 
 	fmt.Print("Confirm password: ")
-	confirmPassword, err := readPassword()
+	confirmPassword, err := readPasswordWithReader(bm.Input)
 	if err != nil {
 		return fmt.Errorf("failed to read confirmation password: %w", err)
 	}
@@ -266,7 +266,7 @@ func (bm *BackupManager) CreateEnvironmentBackup() error {
 	fmt.Println(Muted("API tokens will be included - keep this file secure!"))
 	fmt.Println()
 
-	if !ConfirmYesNo("Continue with environment backup?", false) {
+	if !ConfirmWithReader("Continue with environment backup?", false, bm.Input) {
 		return nil
 	}
 
@@ -333,9 +333,7 @@ func (bm *BackupManager) ShowRestoreInterface() error {
 	fmt.Println()
 
 	fmt.Print("Enter backup file path: ")
-	var filepath string
-	fmt.Scanln(&filepath)
-	filepath = strings.TrimSpace(filepath)
+	filepath, _ := bm.Input.ReadLine()
 
 	if filepath == "" {
 		// Try to find latest backup
@@ -343,7 +341,7 @@ func (bm *BackupManager) ShowRestoreInterface() error {
 		latestBackup := bm.findLatestBackup(homeDir)
 		if latestBackup != "" {
 			fmt.Printf("Found latest backup: %s\n", Info(latestBackup))
-			if ConfirmYesNo("Use this backup file?", true) {
+			if ConfirmWithReader("Use this backup file?", true, bm.Input) {
 				filepath = latestBackup
 			} else {
 				PrintInfo("Restore cancelled.")
@@ -382,7 +380,7 @@ func (bm *BackupManager) restoreFromEncrypted(filepath string) error {
 	fmt.Println()
 
 	fmt.Print("Enter backup password: ")
-	password, err := readPassword()
+	password, err := readPasswordWithReader(bm.Input)
 	if err != nil {
 		return fmt.Errorf("failed to read password: %w", err)
 	}
@@ -439,9 +437,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 	fmt.Println("  [2] Select individual profiles")
 	fmt.Printf("Choice [1]: ")
 
-	var choice string
-	fmt.Scanln(&choice)
-	choice = strings.TrimSpace(choice)
+	choice, _ := bm.Input.ReadLine()
 
 	var profilesToRestore []string
 
@@ -463,9 +459,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 		}
 
 		fmt.Print("Selection: ")
-		var selection string
-		fmt.Scanln(&selection)
-		selection = strings.TrimSpace(selection)
+		selection, _ := bm.Input.ReadLine()
 
 		numbers := strings.Split(selection, ",")
 		for _, num := range numbers {
@@ -489,7 +483,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 	fmt.Println()
 	fmt.Printf("Will restore %d profile(s): %s\n", len(profilesToRestore), strings.Join(profilesToRestore, ", "))
 
-	if !ConfirmYesNo("Continue with restore?", true) {
+	if !ConfirmWithReader("Continue with restore?", true, bm.Input) {
 		return nil
 	}
 
@@ -502,7 +496,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 		// Check if profile already exists
 		if bm.configMgr.ProfileExists(name) {
 			PrintWarning("Profile '%s' already exists.", name)
-			if !ConfirmYesNo(fmt.Sprintf("Overwrite profile '%s'?", name), false) {
+			if !ConfirmWithReader(fmt.Sprintf("Overwrite profile '%s'?", name), false, bm.Input) {
 				continue
 			}
 		}
@@ -525,7 +519,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 
 		if !hasTokens {
 			fmt.Printf("🔑 Enter API token for profile '%s': ", name)
-			token, err := readPassword()
+			token, err := readPasswordWithReader(bm.Input)
 			if err != nil {
 				PrintWarning("Failed to read token for profile '%s'", name)
 				continue
@@ -664,12 +658,9 @@ func (bm *BackupManager) findLatestBackup(dir string) string {
 	return latestFile
 }
 
-func readPassword() (string, error) {
-	// In a real implementation, this would use term.NewTerminal or similar
-	// to read password without echo. For now, we'll use a simple approach
-	var password string
-	fmt.Scanln(&password)
-	return strings.TrimSpace(password), nil
+func readPasswordWithReader(reader InputReader) (string, error) {
+	password, err := reader.ReadLine()
+	return strings.TrimSpace(password), err
 }
 
 func (bm *BackupManager) restoreFromShell(filepath string) error {

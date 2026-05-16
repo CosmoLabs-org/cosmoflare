@@ -50,6 +50,7 @@ type TutorialManager struct {
 	tutorials []Tutorial
 	state     *TutorialState
 	config    *TutorialConfig
+	Input     InputReader
 }
 
 // TutorialConfig holds tutorial configuration
@@ -66,6 +67,7 @@ type TutorialConfig struct {
 // NewTutorialManager creates a new tutorial manager
 func NewTutorialManager() *TutorialManager {
 	return &TutorialManager{
+		Input:     DefaultInput(),
 		tutorials: createDefaultTutorials(),
 		state: &TutorialState{
 			CurrentLesson: 0,
@@ -340,7 +342,7 @@ func (tm *TutorialManager) showTutorialIntro() {
 	}
 
 	fmt.Println("Ready to start learning?")
-	if ConfirmYesNo("Begin tutorial now?", true) {
+	if ConfirmWithReader("Begin tutorial now?", true, tm.Input) {
 		fmt.Println()
 		ShowSpinner("Starting tutorial...", 1*Second)
 	} else {
@@ -380,7 +382,7 @@ func (tm *TutorialManager) showTutorialLesson(tutorial Tutorial) error {
 
 	// Simple continue for non-interactive lessons
 	fmt.Println()
-	PauseAndWait("▶️ Press Enter to continue...")
+	PauseAndWaitWithReader("▶️ Press Enter to continue...", tm.Input)
 	return nil
 }
 
@@ -402,9 +404,8 @@ func (tm *TutorialManager) handleTutorialActions(tutorial Tutorial) error {
 	fmt.Println()
 	fmt.Printf("Choose action [1]: ")
 
-	var input string
-	fmt.Scanln(&input)
-	input = strings.TrimSpace(strings.ToLower(input))
+	input, _ := tm.Input.ReadLine()
+	input = strings.ToLower(input)
 
 	// Handle input
 	switch input {
@@ -489,7 +490,7 @@ func (tm *TutorialManager) executeAction(action TutorialAction) error {
 	}
 
 	fmt.Println()
-	PauseAndWait("Press Enter when done...")
+	PauseAndWaitWithReader("Press Enter when done...", tm.Input)
 	return nil
 }
 

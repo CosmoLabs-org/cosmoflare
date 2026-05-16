@@ -31,6 +31,7 @@ type Manager struct {
 	accountID  string
 	httpClient *http.Client
 	secrets    map[string]string // Webhook secrets for signature verification
+	webhooks   map[string]*Webhook
 }
 
 // NewManager creates a new webhook manager
@@ -41,6 +42,7 @@ func NewManager(cf *cloudflare.API, accountID string) *Manager {
 		accountID:  accountID,
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		secrets:    make(map[string]string),
+		webhooks:   make(map[string]*Webhook),
 	}
 }
 
@@ -143,7 +145,7 @@ func (m *Manager) CreateWebhook(webhook *Webhook) (*Webhook, error) {
 	}
 
 	// Store webhook (in a real implementation, this would be stored in a database)
-	// For now, we'll return the created webhook
+	m.webhooks[webhook.ID] = webhook
 
 	return webhook, nil
 }
@@ -249,15 +251,24 @@ func (m *Manager) TestWebhook(webhook *Webhook) error {
 // Helper methods
 
 func (m *Manager) getWebhooksForEvent(eventType string) ([]*Webhook, error) {
-	// In a real implementation, this would query a database
-	// For now, return empty slice
-	return []*Webhook{}, nil
+	var result []*Webhook
+	for _, wh := range m.webhooks {
+		for _, e := range wh.Events {
+			if e == eventType || e == "all" {
+				result = append(result, wh)
+				break
+			}
+		}
+	}
+	return result, nil
 }
 
 func (m *Manager) getWebhook(id string) (*Webhook, error) {
-	// In a real implementation, this would query a database
-	// For now, return error
-	return nil, fmt.Errorf("webhook not found: %s", id)
+	wh, ok := m.webhooks[id]
+	if !ok {
+		return nil, fmt.Errorf("webhook not found: %s", id)
+	}
+	return wh, nil
 }
 
 func (m *Manager) sendToWebhook(webhook *Webhook, event *Event) error {
