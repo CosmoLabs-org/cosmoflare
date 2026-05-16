@@ -39,26 +39,38 @@ func SetBuildInfo(version, buildTime, gitCommit string) {
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "r2go2",
-	Short: "A production-ready CLI tool for managing Cloudflare R2 buckets",
-	Long: `R2Go2 is a powerful command-line interface for managing Cloudflare R2 buckets.
+	Short: "Cosmoflare — CLI for the full Cloudflare developer platform",
+	Long: `Cosmoflare (r2go2) manages the full Cloudflare developer platform from the terminal.
+
+Services:
+  • R2 Storage   — buckets, objects, uploads, downloads, presigned URLs
+  • Workers      — deploy, list, logs, delete, settings, bindings
+  • KV           — namespaces, get/put/delete, list keys
+  • DNS Records  — create, list, get, update, delete (zone-scoped)
+  • Zones        — create, list, get, settings, delete (account-scoped)
+  • SSL/TLS      — encryption mode, certificates, verification, settings
+  • Cache        — purge all/URL/tag/host, cache settings
 
 Features:
-  • Create, list, and delete R2 buckets
-  • Upload files with custom object keys
-  • Set lifecycle policies for automatic deletion
-  • JSON output for scripting and automation
-  • Dry-run mode for safe operations
+  • JSON output on every command (--json)
+  • Dry-run mode for safe operations (--dry-run)
+  • Shell completion for Bash, Zsh, Fish, PowerShell
+  • Agent-friendly: rich --help, predictable exit codes
 
-Built by CosmoLabs for the CosmoDev ecosystem.
+Built by CosmoLabs (https://cosmolabs.org). Open-source, MIT licensed.
+The 'cosmoflare' binary is the primary name; 'r2go2' remains as a backward-compatible alias.
 
 Environment Variables:
   CLOUDFLARE_API_TOKEN    Your Cloudflare API token (required)
   CLOUDFLARE_ACCOUNT_ID   Your Cloudflare Account ID (or use --account-id)
 
 Examples:
-  r2go2 list                              # List all buckets
-  r2go2 create my-awesome-bucket          # Create a new bucket
-  r2go2 upload my-bucket file.txt --key="remote/file.txt"  # Upload file`,
+  r2go2 bucket list                       # List all R2 buckets
+  r2go2 dns list ZONE_ID                  # List DNS records
+  r2go2 zone list --json                  # List zones as JSON
+  r2go2 ssl status ZONE_ID               # Check SSL/TLS mode
+  r2go2 cache purge ZONE_ID --all --force # Purge entire cache
+  r2go2 worker deploy my-worker -s w.js  # Deploy a Worker`,
 	Version: AppVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Skip API validation for commands that don't need R2 access.
