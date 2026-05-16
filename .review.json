@@ -1,0 +1,82 @@
+{
+  "score": 8,
+  "passed": true,
+  "reviewed_at": "2026-05-16T06:45:56Z",
+  "reviewed_sha": "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
+  "reviewer": "opus",
+  "origin": "agent-tool",
+  "iterations": 4,
+  "fixes_applied": 1,
+  "issues_remaining": 2,
+  "summary": "Score 8/10, 2 issues",
+  "schema_version": 1,
+  "prior_issues": [
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update method sends an empty Healthcheck struct with only modified fields — the Cloudflare API may interpret zero-value fields (Interval=0, Timeout=0, Retries=0, Suspended=false) as intentional updates rather than 'unchanged'. This is a potential correctness issue depending on the API behavior, though the current implementation matches the pattern used in other services in this project.",
+      "has_fix": false,
+      "round": 1
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Get method unconditionally wraps errors as notFound — not all API errors are 404s (could be auth failure, network error, rate limit). Other services in this project have the same pattern, so it's consistent but semantically imprecise.",
+      "has_fix": false,
+      "round": 1
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Missing CheckRegions, HTTPConfig, and TCPConfig from cloudflare.Healthcheck — the Healthcheck struct omits fields that users may need for HTTP-specific checks (expected status codes, headers, method) and TCP config, and for selecting check regions. These are important for non-trivial healthcheck setups.",
+      "has_fix": false,
+      "round": 2
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Get() wraps all API errors as notFound — a 403 or 500 from Cloudflare would be misclassified as R2NotFoundError. Other services in the project have the same pattern so this is consistent, but still semantically wrong.",
+      "has_fix": false,
+      "round": 2
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Missing CheckRegions, HTTPConfig, and TCPConfig fields from cloudflare.Healthcheck — the Healthcheck struct omits these fields that exist in the upstream type, which means users cannot configure check regions or protocol-specific settings (HTTP headers, method, expected codes, follow redirects; TCP method). This limits the usefulness of the library for non-trivial healthcheck configurations.",
+      "has_fix": false,
+      "round": 3
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Get() and Update()'s fetch-error path wrap all API errors as notFound — a 403 or 500 is misclassified. Consistent with other services in the project but semantically imprecise.",
+      "has_fix": false,
+      "round": 4
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Missing CheckRegions, HTTPConfig, and TCPConfig fields from cloudflare.Healthcheck limits non-trivial healthcheck setups (HTTP-specific settings, TCP config, region selection).",
+      "has_fix": false,
+      "round": 4
+    }
+  ],
+  "prior_shas": [
+    "dd4ea556156083b34b8721b5389dafa0e839e77e",
+    "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
+    "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
+    "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d"
+  ],
+  "cumulative_fixes_applied": 2,
+  "min_score_across_rounds": 8,
+  "has_prior_min_score": true,
+  "converged_at_cap": true,
+  "convergence_reason": "iteration 4/2 reached with evidence gate passing: score=8/10, cumulative_fixes=1, non_trivial_diff=true"
+}
