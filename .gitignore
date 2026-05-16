@@ -123,3 +123,4 @@ BACKUPS/
 .claude/memory/
 .claude/projects/
 .claude/sessions/
+.review-cache/
