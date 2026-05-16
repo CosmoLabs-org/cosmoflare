@@ -1,14 +1,14 @@
 {
   "score": 8,
   "passed": true,
-  "reviewed_at": "2026-05-16T06:44:32Z",
-  "reviewed_sha": "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
+  "reviewed_at": "2026-05-16T06:45:56Z",
+  "reviewed_sha": "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
   "reviewer": "opus",
   "origin": "agent-tool",
-  "iterations": 3,
-  "fixes_applied": 0,
-  "issues_remaining": 1,
-  "summary": "Score 8/10, 1 issues",
+  "iterations": 4,
+  "fixes_applied": 1,
+  "issues_remaining": 2,
+  "summary": "Score 8/10, 2 issues",
   "schema_version": 1,
   "prior_issues": [
     {
@@ -50,16 +50,33 @@
       "description": "Missing CheckRegions, HTTPConfig, and TCPConfig fields from cloudflare.Healthcheck — the Healthcheck struct omits these fields that exist in the upstream type, which means users cannot configure check regions or protocol-specific settings (HTTP headers, method, expected codes, follow redirects; TCP method). This limits the usefulness of the library for non-trivial healthcheck configurations.",
       "has_fix": false,
       "round": 3
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Get() and Update()'s fetch-error path wrap all API errors as notFound — a 403 or 500 is misclassified. Consistent with other services in the project but semantically imprecise.",
+      "has_fix": false,
+      "round": 4
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Missing CheckRegions, HTTPConfig, and TCPConfig fields from cloudflare.Healthcheck limits non-trivial healthcheck setups (HTTP-specific settings, TCP config, region selection).",
+      "has_fix": false,
+      "round": 4
     }
   ],
   "prior_shas": [
     "dd4ea556156083b34b8721b5389dafa0e839e77e",
     "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
-    "0875f00f2e0a50e854fc21bfd35ef56add2a6245"
+    "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
+    "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d"
   ],
-  "cumulative_fixes_applied": 1,
+  "cumulative_fixes_applied": 2,
   "min_score_across_rounds": 8,
   "has_prior_min_score": true,
   "converged_at_cap": true,
-  "convergence_reason": "iteration 3/2 reached with evidence gate passing: score=8/10, cumulative_fixes=1, non_trivial_diff=true"
+  "convergence_reason": "iteration 4/2 reached with evidence gate passing: score=8/10, cumulative_fixes=1, non_trivial_diff=true"
 }
