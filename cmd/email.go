@@ -583,17 +583,36 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Only pass priority/enabled if explicitly set by the user to avoid overwriting current values.
-	priority := emailPriority
-	enabled := emailEnabled
-	if !cmd.Flags().Changed("priority") {
-		priority = -1 // sentinel: UpdateRule should preserve existing
-	}
-	if !cmd.Flags().Changed("enabled") {
-		enabled = true // default: preserve enabled state via fetch-before-update in service layer
+	// Fetch existing rule to preserve unmodified fields (full-replacement API).
+	existing, err := svc.GetRule(context.Background(), ruleID)
+	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to fetch existing rule: %v", err))
+		}
+		return fmt.Errorf("failed to fetch existing rule %s: %w", ruleID, err)
 	}
 
-	rule, err := svc.UpdateRule(context.Background(), ruleID, emailRuleName, matchers, actions, priority, enabled)
+	// Merge: use flag value if explicitly set, otherwise keep existing.
+	name := existing.Name
+	if cmd.Flags().Changed("name") {
+		name = emailRuleName
+	}
+	priority := existing.Priority
+	if cmd.Flags().Changed("priority") {
+		priority = emailPriority
+	}
+	enabled := existing.Enabled
+	if cmd.Flags().Changed("enabled") {
+		enabled = emailEnabled
+	}
+	if len(matchers) == 0 {
+		matchers = existing.Matchers
+	}
+	if len(actions) == 0 {
+		actions = existing.Actions
+	}
+
+	rule, err := svc.UpdateRule(context.Background(), ruleID, name, matchers, actions, priority, enabled)
 	if err != nil {
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to update email routing rule: %v", err))
