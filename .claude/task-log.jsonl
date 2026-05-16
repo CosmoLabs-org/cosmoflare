@@ -495,3 +495,9 @@
 {"id":"8","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"7","subject":"","status":"completed","completed_at":"2026-05-16T07:11:11Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"8","subject":"","status":"completed","completed_at":"2026-05-16T07:11:11Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"9","subject":"Page Rules service (pkg/r2go2/pagerules.go + cmd/pagerules.go)","status":"pending","created_at":"2026-05-16T09:20:32Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"10","subject":"WAF/Firewall service (pkg/r2go2/firewall.go + cmd/firewall.go)","status":"pending","created_at":"2026-05-16T09:20:33Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"11","subject":"Email Routing service (pkg/r2go2/email.go + cmd/email.go)","status":"pending","created_at":"2026-05-16T09:20:34Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"9","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"10","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"11","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
