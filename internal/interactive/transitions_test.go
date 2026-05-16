@@ -1,6 +1,9 @@
 package interactive
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -765,5 +768,281 @@ func TestTransitionManager_EdgeCases(t *testing.T) {
 		assert.NotPanics(t, func() {
 			tm.renderInstant(state)
 		})
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Execute enabled-path tests with stdout capture
+// ---------------------------------------------------------------------------
+
+func TestTransitionManager_Execute_AllTypes_DisabledCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "From", Content: []string{"Line 1"}}
+	to := TransitionState{Title: "To", Content: []string{"Line 2"}}
+
+	for _, tt := range []struct {
+		name string
+		typ  TransitionType
+	}{
+		{"fade", TransitionFade},
+		{"slide", TransitionSlide},
+		{"wipe", TransitionWipe},
+		{"zoom", TransitionZoom},
+		{"replace", TransitionReplace},
+		{"unknown_default", TransitionType("unknown")},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			old := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+
+			tm.Execute(tt.typ, from, to)
+
+			w.Close()
+			os.Stdout = old
+
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			assert.True(t, buf.Len() > 0)
+		})
+	}
+}
+
+func TestTransitionManager_Execute_FullFadeAnimation(t *testing.T) {
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "From"}
+	to := TransitionState{Title: "To"}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tm.Execute(TransitionFade, from, to)
+	}()
+	<-done
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestTransitionManager_Execute_FullSlideAnimation(t *testing.T) {
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "SlideFrom", Content: []string{"C1"}}
+	to := TransitionState{Title: "SlideTo", Content: []string{"C2"}}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tm.Execute(TransitionSlide, from, to)
+	}()
+	<-done
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestTransitionManager_Execute_FullWipeAnimation(t *testing.T) {
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "WipeFrom"}
+	to := TransitionState{Title: "WipeTo"}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tm.Execute(TransitionWipe, from, to)
+	}()
+	<-done
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestTransitionManager_Execute_FullZoomAnimation(t *testing.T) {
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "ZoomFrom", Content: []string{"X"}}
+	to := TransitionState{Title: "ZoomTo", Content: []string{"Y"}}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tm.Execute(TransitionZoom, from, to)
+	}()
+	<-done
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestTransitionManager_Execute_FullReplaceAnimation(t *testing.T) {
+	tm := NewTransitionManager()
+	from := TransitionState{Title: "ReplaceFrom"}
+	to := TransitionState{Title: "ReplaceTo"}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tm.Execute(TransitionReplace, from, to)
+	}()
+	<-done
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+// ---------------------------------------------------------------------------
+// SetupStepTransition NextStep and CompleteStep
+// ---------------------------------------------------------------------------
+
+func TestSetupStepTransition_NextStepCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	sst := NewSetupStepTransition(3)
+	assert.Equal(t, 0, sst.Current)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	sst.NextStep("Step 1", "Content 1")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Equal(t, 1, sst.Current)
+}
+
+func TestSetupStepTransition_CompleteStepCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	sst := NewSetupStepTransition(2)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	sst.CompleteStep("Done", "All finished")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+// ---------------------------------------------------------------------------
+// SetupWizardTransition
+// ---------------------------------------------------------------------------
+
+func TestSetupWizardTransition_AddAndShowCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	swt := NewSetupWizardTransition()
+	swt.AddStep("Step 1", []string{"Content 1"})
+	swt.AddStep("Step 2", []string{"Content 2"})
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	swt.Show(0)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Step 1")
+}
+
+func TestSetupWizardTransition_NextCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	swt := NewSetupWizardTransition()
+	swt.AddStep("Step 1", []string{"C1"})
+	swt.AddStep("Step 2", []string{"C2"})
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	swt.Show(0)
+	swt.Next()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestSetupWizardTransition_Show_InvalidIndexCapture(t *testing.T) {
+	swt := NewSetupWizardTransition()
+	swt.AddStep("Step 1", []string{"C1"})
+
+	assert.NotPanics(t, func() {
+		swt.Show(-1)
+		swt.Show(99)
+	})
+}
+
+func TestSetupWizardTransition_Next_NoStepsCapture(t *testing.T) {
+	swt := NewSetupWizardTransition()
+	assert.NotPanics(t, func() {
+		swt.Next()
 	})
 }

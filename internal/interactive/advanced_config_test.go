@@ -1,6 +1,9 @@
 package interactive
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -835,4 +838,318 @@ func TestNewAdvancedConfigWizard(t *testing.T) {
 		assert.Equal(t, profile, acw.profile)
 		assert.NotNil(t, acw.Input)
 	})
+}
+
+// ---------------------------------------------------------------------------
+// ShowAdvancedConfig full flow (77.8% gap)
+// ---------------------------------------------------------------------------
+
+func TestAdvancedConfigWizard_ShowAdvancedConfig_AllDefaults(t *testing.T) {
+	disableAnimations(t)
+	profile := &config.Profile{Name: "test-profile", Description: "test", Region: "auto"}
+	acw, _ := newTestWizard(
+		"",   // bucket type default (standard)
+		"",   // retention default (30)
+		"",   // endpoint default (empty)
+		"",   // concurrency default (4)
+		"",   // chunk size default (8)
+		"",   // retries default (3)
+		"y",  // checksum enabled
+		"",   // region default (auto)
+		"",   // theme default (cosmic)
+		"n",  // analytics disabled
+		"n",  // accessibility disabled
+	)
+	_ = profile
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cfg, err := acw.ShowAdvancedConfig()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+	assert.NotNil(t, cfg)
+	assert.Equal(t, "standard", cfg.BucketSettings.Type)
+	assert.Equal(t, 30, cfg.BucketSettings.RetentionDays)
+	assert.Equal(t, 4, cfg.UploadSettings.Concurrency)
+	assert.Equal(t, "8MB", cfg.UploadSettings.ChunkSize)
+	assert.Equal(t, "auto", cfg.RegionSettings.Primary)
+	assert.Equal(t, "cosmic", cfg.Theme)
+	assert.True(t, cfg.UploadSettings.ChecksumEnabled)
+	assert.False(t, cfg.AnalyticsEnabled)
+}
+
+func TestAdvancedConfigWizard_ShowAdvancedConfig_CustomBucket(t *testing.T) {
+	disableAnimations(t)
+
+	acw, _ := newTestWizard(
+		"2",   // performance bucket
+		"60",  // 60 days retention
+		"",    // no custom endpoint
+		"",    // concurrency default
+		"16",  // 16MB chunks
+		"5",   // 5 retries
+		"n",   // no checksum
+		"2",   // us-east-1
+		"3",   // ocean theme
+		"y",   // analytics enabled
+		"y",   // accessibility enabled
+	)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cfg, err := acw.ShowAdvancedConfig()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+	assert.Equal(t, "performance", cfg.BucketSettings.Type)
+	assert.Equal(t, 60, cfg.BucketSettings.RetentionDays)
+	assert.Equal(t, "16MB", cfg.UploadSettings.ChunkSize)
+	assert.Equal(t, 5, cfg.UploadSettings.RetryAttempts)
+	assert.False(t, cfg.UploadSettings.ChecksumEnabled)
+	assert.Equal(t, "us-east-1", cfg.RegionSettings.Primary)
+	assert.False(t, cfg.RegionSettings.AutoDetect)
+	assert.Equal(t, "ocean", cfg.Theme)
+	assert.True(t, cfg.AnalyticsEnabled)
+	assert.True(t, cfg.AccessibilityEnabled)
+}
+
+func TestAdvancedConfigWizard_ShowAdvancedConfig_InvalidInputs(t *testing.T) {
+	disableAnimations(t)
+
+	acw, _ := newTestWizard(
+		"9",   // invalid bucket -> warning, uses standard
+		"abc", // invalid retention -> warning, uses default
+		"",    // endpoint
+		"99",  // invalid concurrency (>32) -> warning
+		"0",   // invalid chunk size (<1) -> warning
+		"-1",  // invalid retries (<0) -> warning
+		"y",   // checksum
+		"9",   // invalid region -> warning, uses auto
+		"9",   // invalid theme -> warning, uses cosmic
+		"n",   // analytics
+		"n",   // accessibility
+	)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cfg, err := acw.ShowAdvancedConfig()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+	assert.Equal(t, "standard", cfg.BucketSettings.Type)
+	assert.Equal(t, 4, cfg.UploadSettings.Concurrency)  // default
+	assert.Equal(t, "8MB", cfg.UploadSettings.ChunkSize) // default
+	assert.Equal(t, 3, cfg.UploadSettings.RetryAttempts)  // default
+	assert.Equal(t, "auto", cfg.RegionSettings.Primary)
+	assert.Equal(t, "cosmic", cfg.Theme)
+}
+
+func TestAdvancedConfigWizard_ShowAdvancedConfig_CostOptimized(t *testing.T) {
+	disableAnimations(t)
+
+	acw, _ := newTestWizard(
+		"3",  // cost bucket
+		"",   // retention
+		"",   // endpoint
+		"2",  // concurrency 2
+		"",   // chunk default
+		"",   // retries default
+		"y",  // checksum
+		"4",  // ap-southeast-1
+		"5",  // monochrome
+		"n",  // analytics
+		"n",  // accessibility
+	)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cfg, err := acw.ShowAdvancedConfig()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+	assert.Equal(t, "cost", cfg.BucketSettings.Type)
+	assert.Equal(t, 2, cfg.UploadSettings.Concurrency)
+	assert.Equal(t, "ap-southeast-1", cfg.RegionSettings.Primary)
+	assert.Equal(t, "monochrome", cfg.Theme)
+}
+
+// ---------------------------------------------------------------------------
+// ShowConfigurationSummary
+// ---------------------------------------------------------------------------
+
+func TestAdvancedConfigWizard_ShowConfigurationSummary(t *testing.T) {
+	disableAnimations(t)
+	profile := &config.Profile{Name: "summary-test", Description: "test", Region: "auto"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		Profile: profile,
+		BucketSettings: BucketSettings{
+			Type:          "performance",
+			RetentionDays: 60,
+		},
+		UploadSettings: UploadSettings{
+			Concurrency: 8,
+			ChunkSize:   "16MB",
+		},
+		RegionSettings: RegionSettings{
+			Primary: "us-east-1",
+		},
+		Theme:                "ocean",
+		AnalyticsEnabled:     true,
+		AccessibilityEnabled: false,
+	}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	acw.ShowConfigurationSummary(cfg)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "summary-test")
+	assert.Contains(t, buf.String(), "performance")
+}
+
+func TestAdvancedConfigWizard_ShowConfigurationSummary_WithEndpoint(t *testing.T) {
+	disableAnimations(t)
+	profile := &config.Profile{Name: "ep-test", Description: "test", Region: "auto"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		Profile: profile,
+		BucketSettings: BucketSettings{
+			Type:           "standard",
+			CustomEndpoint: "https://custom.r2.cloudflarestorage.com",
+		},
+		UploadSettings: UploadSettings{
+			Concurrency: 4,
+			ChunkSize:   "8MB",
+		},
+		RegionSettings: RegionSettings{
+			Primary: "auto",
+		},
+		Theme: "cosmic",
+	}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	acw.ShowConfigurationSummary(cfg)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "custom.r2")
+}
+
+// ---------------------------------------------------------------------------
+// ValidateAdvancedConfig
+// ---------------------------------------------------------------------------
+
+func TestAdvancedConfigWizard_ValidateAdvancedConfig_Valid(t *testing.T) {
+	profile := &config.Profile{Name: "test"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		UploadSettings: UploadSettings{
+			Concurrency:   4,
+			RetryAttempts: 3,
+		},
+		RegionSettings: RegionSettings{
+			Primary: "auto",
+		},
+	}
+
+	err := acw.ValidateAdvancedConfig(cfg)
+	assert.NoError(t, err)
+}
+
+func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidConcurrency(t *testing.T) {
+	profile := &config.Profile{Name: "test"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		UploadSettings: UploadSettings{
+			Concurrency:   50,
+			RetryAttempts: 3,
+		},
+		RegionSettings: RegionSettings{
+			Primary: "auto",
+		},
+	}
+
+	err := acw.ValidateAdvancedConfig(cfg)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "concurrency")
+}
+
+func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRetries(t *testing.T) {
+	profile := &config.Profile{Name: "test"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		UploadSettings: UploadSettings{
+			Concurrency:   4,
+			RetryAttempts: 20,
+		},
+		RegionSettings: RegionSettings{
+			Primary: "auto",
+		},
+	}
+
+	err := acw.ValidateAdvancedConfig(cfg)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "retry")
+}
+
+func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRegion(t *testing.T) {
+	profile := &config.Profile{Name: "test"}
+	acw := NewAdvancedConfigWizard(profile)
+
+	cfg := &AdvancedConfig{
+		UploadSettings: UploadSettings{
+			Concurrency:   4,
+			RetryAttempts: 3,
+		},
+		RegionSettings: RegionSettings{
+			Primary: "invalid-region",
+		},
+	}
+
+	err := acw.ValidateAdvancedConfig(cfg)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "region")
 }

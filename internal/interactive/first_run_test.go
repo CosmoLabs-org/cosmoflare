@@ -1,6 +1,8 @@
 package interactive
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -307,4 +309,158 @@ func TestDetectAndSetup_Function(t *testing.T) {
 	err := DetectAndSetup()
 	// Should not error with skip set
 	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// ShowFirstRunWelcome with stdin mock (enabled path)
+// ---------------------------------------------------------------------------
+
+func TestShowFirstRunWelcome_UserSaysYes(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	// Mock stdin with "y" response
+	oldStdin := os.Stdin
+	stdinR, stdinW, _ := os.Pipe()
+	stdinW.WriteString("y\n")
+	stdinW.Close()
+	os.Stdin = stdinR
+	defer func() { os.Stdin = oldStdin }()
+
+	// Capture stdout
+	oldStdout := os.Stdout
+	stdoutR, stdoutW, _ := os.Pipe()
+	os.Stdout = stdoutW
+
+	ShowFirstRunWelcome()
+
+	stdoutW.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	io.Copy(&buf, stdoutR)
+	output := buf.String()
+	assert.Contains(t, output, "Welcome")
+}
+
+// ---------------------------------------------------------------------------
+// ShowQuickStart with stdin mock
+// ---------------------------------------------------------------------------
+
+func TestFirstRunDetector_ShowQuickStart_WithInput(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	frd, err := NewFirstRunDetector()
+	if err != nil {
+		t.Skip("Config manager not available")
+	}
+
+	// Mock stdin with Enter
+	oldStdin := os.Stdin
+	stdinR, stdinW, _ := os.Pipe()
+	stdinW.WriteString("\n")
+	stdinW.Close()
+	os.Stdin = stdinR
+	defer func() { os.Stdin = oldStdin }()
+
+	// Capture stdout
+	oldStdout := os.Stdout
+	stdoutR, stdoutW, _ := os.Pipe()
+	os.Stdout = stdoutW
+
+	frd.ShowQuickStart()
+
+	stdoutW.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	io.Copy(&buf, stdoutR)
+	output := buf.String()
+	assert.Contains(t, output, "Quick Start")
+}
+
+// ---------------------------------------------------------------------------
+// AutoTriggerSetup with first-run and user says yes
+// ---------------------------------------------------------------------------
+
+func TestFirstRunDetector_AutoTriggerSetup_FirstRunYes(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	// Use temp home dir to ensure no profiles exist (first run)
+	t.Setenv("HOME", t.TempDir())
+	os.Unsetenv("R2GO2_SKIP_FIRST_RUN")
+
+	frd, err := NewFirstRunDetector()
+	if err != nil {
+		t.Skip("Config manager not available")
+	}
+
+	// Only test if first run is true
+	if !frd.IsFirstRun() {
+		t.Skip("Not first run in this environment")
+	}
+
+	// Mock stdin with "y" response
+	oldStdin := os.Stdin
+	stdinR, stdinW, _ := os.Pipe()
+	stdinW.WriteString("y\n")
+	stdinW.Close()
+	os.Stdin = stdinR
+	defer func() { os.Stdin = oldStdin }()
+
+	// Capture stdout
+	oldStdout := os.Stdout
+	stdoutR, stdoutW, _ := os.Pipe()
+	os.Stdout = stdoutW
+
+	err = frd.AutoTriggerSetup()
+
+	stdoutW.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	io.Copy(&buf, stdoutR)
+	assert.NoError(t, err)
+	assert.Contains(t, buf.String(), "Welcome")
+}
+
+// ---------------------------------------------------------------------------
+// DetectAndSetup with first run
+// ---------------------------------------------------------------------------
+
+func TestDetectAndSetup_FirstRunPath(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	t.Setenv("HOME", t.TempDir())
+	os.Unsetenv("R2GO2_SKIP_FIRST_RUN")
+
+	// Mock stdin with "y"
+	oldStdin := os.Stdin
+	stdinR, stdinW, _ := os.Pipe()
+	stdinW.WriteString("y\n")
+	stdinW.Close()
+	os.Stdin = stdinR
+	defer func() { os.Stdin = oldStdin }()
+
+	// Capture stdout
+	oldStdout := os.Stdout
+	_, stdoutW, _ := os.Pipe()
+	os.Stdout = stdoutW
+
+	err := DetectAndSetup()
+
+	stdoutW.Close()
+	os.Stdout = oldStdout
+
+	// Either succeeds or config error is fine
+	if err != nil && !strings.Contains(err.Error(), "config") {
+		t.Logf("DetectAndSetup returned: %v", err)
+	}
 }

@@ -1,9 +1,13 @@
 package interactive
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // ---------------------------------------------------------------------------
@@ -563,3 +567,300 @@ func TestTheme_BulletCharsUniqueness(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// ShowThemeMenu (0% coverage - biggest theme gap)
+// ---------------------------------------------------------------------------
+
+func TestThemeManager_ShowThemeMenu_SelectFirst(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.Input = newMockReader("1")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := tm.ShowThemeMenu()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "Theme")
+}
+
+func TestThemeManager_ShowThemeMenu_SelectEmpty(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.Input = newMockReader("") // empty = default selection (1)
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := tm.ShowThemeMenu()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+}
+
+func TestThemeManager_ShowThemeMenu_InvalidThenValid(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.Input = newMockReader("99", "2")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := tm.ShowThemeMenu()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	// Invalid input triggers recursive call, then valid input works
+	require.NoError(t, err)
+}
+
+func TestThemeManager_ShowThemeMenu_NonNumeric(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.Input = newMockReader("abc", "3")
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := tm.ShowThemeMenu()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	require.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// GetCurrentThemeName edge cases
+// ---------------------------------------------------------------------------
+
+func TestGetCurrentThemeName_Default(t *testing.T) {
+	name := GetCurrentThemeName()
+	assert.Equal(t, "Cosmic", name)
+}
+
+func TestGetCurrentThemeName_NilTheme(t *testing.T) {
+	orig := globalThemeManager.currentTheme
+	globalThemeManager.currentTheme = nil
+	defer func() { globalThemeManager.currentTheme = orig }()
+
+	name := GetCurrentThemeName()
+	assert.Equal(t, "unknown", name)
+}
+
+// ---------------------------------------------------------------------------
+// ApplyThemeSettings edge cases
+// ---------------------------------------------------------------------------
+
+func TestApplyThemeSettings_NilTheme(t *testing.T) {
+	orig := globalThemeManager.currentTheme
+	globalThemeManager.currentTheme = nil
+	defer func() { globalThemeManager.currentTheme = orig }()
+
+	assert.NotPanics(t, func() {
+		ApplyThemeSettings()
+	})
+}
+
+func TestApplyThemeSettings_DisabledAnimations(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.SetTheme("monochrome") // has animations disabled
+
+	ApplyThemeSettings()
+	assert.True(t, globalAnimator.Disabled)
+}
+
+func TestApplyThemeSettings_EnabledAnimations(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	ApplyThemeSettings()
+}
+
+// ---------------------------------------------------------------------------
+// applyTheme edge cases
+// ---------------------------------------------------------------------------
+
+func TestThemeManager_ApplyTheme_NilTheme(t *testing.T) {
+	tm := NewThemeManager()
+	tm.currentTheme = nil
+	assert.NotPanics(t, func() {
+		tm.applyTheme()
+	})
+}
+
+func TestThemeManager_ApplyTheme_FastSpeed(t *testing.T) {
+	origSpeed := globalAnimator.Speed
+	defer func() { globalAnimator.Speed = origSpeed }()
+
+	tm := NewThemeManager()
+	// Create a theme with speed 30 -> fast
+	customTheme := &Theme{
+		ID: "test-fast",
+		Animations: ThemeAnimations{
+			Enabled: true,
+			Speed:   30,
+		},
+		Colors:  tm.themes["cosmic"].Colors,
+		Spacing: tm.themes["cosmic"].Spacing,
+		Icons:   tm.themes["cosmic"].Icons,
+	}
+	tm.themes["test-fast"] = customTheme
+	tm.SetTheme("test-fast")
+	assert.Equal(t, FastFrameRate, globalAnimator.Speed)
+}
+
+func TestThemeManager_ApplyTheme_SlowSpeed(t *testing.T) {
+	origSpeed := globalAnimator.Speed
+	defer func() { globalAnimator.Speed = origSpeed }()
+
+	tm := NewThemeManager()
+	tm.SetTheme("forest") // speed 80 -> slow
+	assert.Equal(t, SlowFrameRate, globalAnimator.Speed)
+}
+
+func TestThemeManager_ApplyTheme_NormalSpeed(t *testing.T) {
+	origSpeed := globalAnimator.Speed
+	defer func() { globalAnimator.Speed = origSpeed }()
+
+	tm := NewThemeManager()
+	// ocean has speed 50 -> normal
+	tm.SetTheme("ocean")
+	assert.Equal(t, DefaultFrameRate, globalAnimator.Speed)
+}
+
+// ---------------------------------------------------------------------------
+// CreateCustomTheme duplicate name
+// ---------------------------------------------------------------------------
+
+func TestCreateCustomTheme_DuplicateName(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	tm.Input = newMockReader("cosmic", "desc")
+
+	err := tm.CreateCustomTheme()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "exists")
+}
+
+// ---------------------------------------------------------------------------
+// SetTheme error case
+// ---------------------------------------------------------------------------
+
+func TestThemeManager_SetTheme_NotFound(t *testing.T) {
+	tm := NewThemeManager()
+	err := tm.SetTheme("nonexistent")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+// ---------------------------------------------------------------------------
+// showThemePreview (tested via ShowThemeMenu)
+// ---------------------------------------------------------------------------
+
+func TestThemeManager_ShowThemePreview(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	theme := tm.themes["cosmic"]
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	tm.showThemePreview(theme)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Preview")
+}
+
+func TestThemeManager_ShowThemePreview_NoEmojis(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	tm := NewThemeManager()
+	theme := tm.themes["monochrome"] // UseEmojis = false
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	tm.showThemePreview(theme)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Preview")
+}
+
+// ---------------------------------------------------------------------------
+// GetThemeManager / SetGlobalTheme
+// ---------------------------------------------------------------------------
+
+func TestGetThemeManager(t *testing.T) {
+	tm := GetThemeManager()
+	assert.NotNil(t, tm)
+}
+
+func TestSetGlobalTheme_Valid(t *testing.T) {
+	err := SetGlobalTheme("ocean")
+	assert.NoError(t, err)
+	// Reset
+	SetGlobalTheme("cosmic")
+}
+
+func TestSetGlobalTheme_Invalid(t *testing.T) {
+	err := SetGlobalTheme("nonexistent")
+	assert.Error(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// SaveTheme / LoadTheme stubs (already covered in themes_deep_test.go)
+// ---------------------------------------------------------------------------

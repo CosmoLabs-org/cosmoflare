@@ -1,6 +1,10 @@
 package interactive
 
 import (
+	"bytes"
+	"io"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -617,3 +621,389 @@ func TestAnimator_DrawSkeleton(t *testing.T) {
 }
 
 // renderWithOffset is tested in transitions_test.go
+
+// ---------------------------------------------------------------------------
+// Enabled-path animation tests (stdout capture)
+// ---------------------------------------------------------------------------
+
+func TestAnimator_ShowSpinner_Enabled(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 10 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowSpinner("Loading...", 15*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Loading")
+}
+
+func TestAnimator_ShowProgress_Enabled(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 1 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowProgress("Processing", []string{"Step 1"})
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	output := buf.String()
+	assert.Contains(t, output, "Processing")
+	assert.Contains(t, output, "Step 1")
+}
+
+func TestAnimator_ShowProgress_Enabled_MultipleSteps(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 1 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowProgress("Multi", []string{"A", "B", "C"})
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Multi")
+}
+
+func TestAnimator_AnimateTransition_Enabled(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.AnimateTransition("From", "To", 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "To")
+}
+
+func TestAnimator_AnimateTransition_Enabled_DifferentLengths(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.AnimateTransition("Short", "LongerText", 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "LongerText")
+}
+
+func TestAnimator_ShowLoadingSkeleton_Enabled(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 1 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowLoadingSkeleton([]string{"Loading..."}, 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Loading")
+}
+
+func TestAnimator_ShowLoadingSkeleton_Enabled_MultipleLines(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 1 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowLoadingSkeleton([]string{"Line 1", "Line 2"}, 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Line")
+}
+
+func TestAnimator_TypewriterEffect_Enabled(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.TypewriterEffect("Hi", 1*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Hi")
+}
+
+func TestAnimator_TypewriterEffect_Enabled_LongText(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.TypewriterEffect("Hello World", 1*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Hello")
+}
+
+func TestAnimator_PulseText_Enabled(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.PulseText("Test", 1)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Test")
+}
+
+func TestAnimator_ShowStepTransition_Enabled(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowStepTransition(1, 2, "Step One", "Step Two")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Step")
+}
+
+func TestAnimator_ShowSuccessAnimation_Enabled(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowSuccessAnimation("Done!")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Done")
+}
+
+func TestAnimator_ShowSuccessAnimation_Enabled_SpecialChars(t *testing.T) {
+	a := NewAnimator()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowSuccessAnimation("✅ Success!")
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.True(t, buf.Len() > 0)
+}
+
+// ---------------------------------------------------------------------------
+// Global convenience function tests
+// ---------------------------------------------------------------------------
+
+func TestShowSpinner_GlobalCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	origSpeed := globalAnimator.Speed
+	globalAnimator.Disabled = true
+	defer func() {
+		globalAnimator.Disabled = origDisabled
+		globalAnimator.Speed = origSpeed
+	}()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	ShowSpinner("Global spinner", 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Global spinner")
+}
+
+func TestShowProgress_GlobalCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	ShowProgress("Global progress", []string{"Step"})
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Global progress")
+}
+
+func TestAnimateTransition_GlobalCapture(t *testing.T) {
+	origDisabled := globalAnimator.Disabled
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = origDisabled }()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	AnimateTransition("A", "B", 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "B")
+}
+
+// ---------------------------------------------------------------------------
+// mixTexts additional edge cases
+// ---------------------------------------------------------------------------
+
+func TestAnimator_MixTexts_EdgeCases(t *testing.T) {
+	a := NewAnimator()
+
+	t.Run("to shorter than from", func(t *testing.T) {
+		result := a.mixTexts("hello world", "hi", 0.5, 0.5)
+		assert.NotEmpty(t, result)
+	})
+
+	t.Run("both single char", func(t *testing.T) {
+		result := a.mixTexts("a", "b", 0.5, 0.5)
+		assert.Equal(t, 1, len(result))
+	})
+
+	t.Run("unicode strings", func(t *testing.T) {
+		result := a.mixTexts("Hello 世界", "Bye 🌍", 0.5, 0.5)
+		assert.NotEmpty(t, result)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// drawProgressBar additional cases
+// ---------------------------------------------------------------------------
+
+func TestAnimator_DrawProgressBar_AllStyles(t *testing.T) {
+	a := NewAnimator()
+
+	for name, style := range ProgressBarCharacters {
+		t.Run(name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				a.drawProgressBar(0.5, style, "Test")
+			})
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ShowSpinner and ShowProgress with empty messages
+// ---------------------------------------------------------------------------
+
+func TestAnimator_ShowSpinner_Enabled_EmptyMessage(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 10 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowSpinner("", 10*time.Millisecond)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	// Should still produce output (the checkmark)
+	assert.True(t, buf.Len() > 0)
+}
+
+func TestAnimator_ShowProgress_Enabled_EmptySteps(t *testing.T) {
+	a := NewAnimator()
+	a.Speed = 1 * time.Millisecond
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	a.ShowProgress("Test", []string{})
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	assert.Contains(t, buf.String(), "Test")
+}
+
+// ---------------------------------------------------------------------------
+// StringsContains helper check
+// ---------------------------------------------------------------------------
+
+func TestStringsContains(t *testing.T) {
+	assert.True(t, strings.Contains("hello world", "world"))
+	assert.False(t, strings.Contains("hello", "world"))
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -176,4 +177,199 @@ func TestTestConnection_WithHTTPTest(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "HTTP 403")
 	})
+}
+
+// ---------------------------------------------------------------------------
+// autoDetectAccountInfo with httptest (42.9% coverage gap)
+// ---------------------------------------------------------------------------
+
+func TestAutoDetectAccountInfo_ValidTokenWithAccountID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "verify") {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": true,
+				"result": map[string]interface{}{
+					"id":     "token-id",
+					"status": "active",
+					"policy": map[string]interface{}{
+						"permission_groups": []map[string]interface{}{
+							{"permissions": []string{"r2:read", "r2:write"}},
+						},
+						"resources": map[string]interface{}{
+							"computation:cloudflare_account:account_id": []string{"acc-0123456789abcdef0123456789abcd"},
+						},
+					},
+				},
+			})
+		} else if strings.Contains(r.URL.Path, "accounts/") {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": true,
+				"result": map[string]interface{}{
+					"id":   "acc-0123456789abcdef0123456789abcd",
+					"name": "Test Account",
+				},
+			})
+		} else {
+			w.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	token := strings.Repeat("a", 25)
+	accountID, accountName := autoDetectAccountInfo(token)
+	assert.Equal(t, "acc-0123456789abcdef0123456789abcd", accountID)
+	assert.Equal(t, "Test Account", accountName)
+}
+
+func TestAutoDetectAccountInfo_ValidTokenNoAccountID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result": map[string]interface{}{
+				"id":     "token-id",
+				"status": "active",
+				"policy": map[string]interface{}{
+					"permission_groups": []map[string]interface{}{
+						{"permissions": []string{"r2:read"}},
+					},
+					"resources": map[string]interface{}{},
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	accountID, accountName := autoDetectAccountInfo(strings.Repeat("b", 25))
+	assert.Equal(t, "", accountID)
+	assert.Equal(t, "", accountName)
+}
+
+func TestAutoDetectAccountInfo_InvalidTokenResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(401)
+		w.Write([]byte(`{"success": false}`))
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	accountID, accountName := autoDetectAccountInfo(strings.Repeat("c", 25))
+	assert.Equal(t, "", accountID)
+	assert.Equal(t, "", accountName)
+}
+
+func TestGetAccountName_NetworkError(t *testing.T) {
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = "http://127.0.0.1:1" // unreachable
+	defer func() { cfAPIBaseURL = origURL }()
+
+	name := getAccountName("token", "account-id")
+	assert.Equal(t, "", name)
+}
+
+func TestGetAccountName_NonOKStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	name := getAccountName("token", "account-id")
+	assert.Equal(t, "", name)
+}
+
+func TestGetAccountName_InvalidJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte(`invalid json`))
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	name := getAccountName("token", "account-id")
+	assert.Equal(t, "", name)
+}
+
+func TestGetAccountName_SuccessFalse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"result":  map[string]interface{}{},
+		})
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	name := getAccountName("token", "account-id")
+	assert.Equal(t, "", name)
+}
+
+// ---------------------------------------------------------------------------
+// ValidateAccountID additional cases
+// ---------------------------------------------------------------------------
+
+func TestValidateAccountID_Valid(t *testing.T) {
+	err := ValidateAccountID("abcdef0123456789abcdef01234567ab")
+	assert.NoError(t, err)
+}
+
+func TestValidateAccountID_UpperCase(t *testing.T) {
+	err := ValidateAccountID("ABCDEF0123456789ABCDEF01234567AB")
+	assert.NoError(t, err)
+}
+
+func TestValidateAccountID_InvalidChar(t *testing.T) {
+	err := ValidateAccountID("abcdef0123456789abcdef01234567xz")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "hex")
+}
+
+// ---------------------------------------------------------------------------
+// TestConnection additional cases
+// ---------------------------------------------------------------------------
+
+func TestTestConnection_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+	}))
+	defer server.Close()
+
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = server.URL
+	defer func() { cfAPIBaseURL = origURL }()
+
+	err := TestConnection("account-id", "token")
+	assert.NoError(t, err)
+}
+
+func TestTestConnection_NetworkError(t *testing.T) {
+	origURL := cfAPIBaseURL
+	cfAPIBaseURL = "http://127.0.0.1:1"
+	defer func() { cfAPIBaseURL = origURL }()
+
+	err := TestConnection("account-id", "token")
+	assert.Error(t, err)
 }
