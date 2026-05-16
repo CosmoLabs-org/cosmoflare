@@ -1,0 +1,11 @@
+id: ROAD-058
+created_at: 2026-05-16T00:10:30.399515-03:00
+updated_at: 2026-05-16T00:10:30.403424-03:00
+title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
+description: Local dev server proxying to real Cloudflare services. Hot-reload workers. Replace wrangler dev.
+status: captured
+priority: 82
+category: workflow
+effort: large
+origin:
+    session: 2027

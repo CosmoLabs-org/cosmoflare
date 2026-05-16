@@ -1,0 +1,11 @@
+id: ROAD-048
+created_at: 2026-05-16T00:09:47.594725-03:00
+updated_at: 2026-05-16T00:09:47.595602-03:00
+title: Vectorize — vector storage and indexing for AI workloads
+description: Vector storage/indexing for AI. Hot market right now. Natural fit with Workers AI.
+status: captured
+priority: 65
+category: intelligence
+effort: medium
+origin:
+    session: 2027

@@ -1,0 +1,11 @@
+id: ROAD-042
+created_at: 2026-05-16T00:09:26.287955-03:00
+updated_at: 2026-05-16T00:09:26.289388-03:00
+title: D1 SQL database — fill stub with query, migrate, list databases
+description: SQLite at the edge. Query execution, schema migrations, database listing and management.
+status: captured
+priority: 75
+category: core
+effort: medium
+origin:
+    session: 2027

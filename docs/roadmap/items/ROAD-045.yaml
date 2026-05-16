@@ -1,0 +1,11 @@
+id: ROAD-045
+created_at: 2026-05-16T00:09:34.01034-03:00
+updated_at: 2026-05-16T00:09:34.011014-03:00
+title: Stream video — upload, live inputs, token management
+description: Video upload, create live inputs, manage tokens. Niche but valuable for media apps.
+status: captured
+priority: 65
+category: core
+effort: large
+origin:
+    session: 2027

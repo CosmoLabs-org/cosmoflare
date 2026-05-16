@@ -1,0 +1,11 @@
+id: ROAD-039
+created_at: 2026-05-16T00:09:11.555248-03:00
+updated_at: 2026-05-16T00:09:11.555986-03:00
+title: Page Rules and Redirect Rules management
+description: Forwarding URLs, cache levels, security levels. People live in these settings.
+status: captured
+priority: 80
+category: core
+effort: medium
+origin:
+    session: 2027

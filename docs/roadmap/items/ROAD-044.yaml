@@ -1,0 +1,11 @@
+id: ROAD-044
+created_at: 2026-05-16T00:09:33.913777-03:00
+updated_at: 2026-05-16T00:09:33.914487-03:00
+title: Images service — upload, transform, variants, delivery URL generation
+description: Cloudflare Images integration. Upload, transform, create variants, generate delivery URLs. Resonates with R2 users.
+status: captured
+priority: 70
+category: core
+effort: medium
+origin:
+    session: 2027

@@ -1,0 +1,11 @@
+id: ROAD-062
+created_at: 2026-05-16T00:10:46.793368-03:00
+updated_at: 2026-05-16T00:10:46.79532-03:00
+title: Alert rules — notify on error rates, storage limits, worker failures
+description: Define alert rules. Push to mobile/desktop. Error rate thresholds, storage limits, worker failures.
+status: captured
+priority: 78
+category: intelligence
+effort: large
+origin:
+    session: 2027

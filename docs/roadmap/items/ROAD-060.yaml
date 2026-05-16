@@ -1,0 +1,11 @@
+id: ROAD-060
+created_at: 2026-05-16T00:10:37.873954-03:00
+updated_at: 2026-05-16T00:10:37.875738-03:00
+title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
+description: Live-updating charts for all Cloudflare services. Desktop and mobile. The core dashboard feature.
+status: captured
+priority: 80
+category: ux
+effort: large
+origin:
+    session: 2027

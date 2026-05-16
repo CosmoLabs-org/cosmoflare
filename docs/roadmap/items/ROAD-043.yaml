@@ -1,0 +1,11 @@
+id: ROAD-043
+created_at: 2026-05-16T00:09:26.389003-03:00
+updated_at: 2026-05-16T00:09:26.39033-03:00
+title: Pages static hosting — deploy from directory, custom domains, preview deployments
+description: Static site hosting on Cloudflare's edge. Deploy from local directory, manage custom domains, preview deployments.
+status: captured
+priority: 75
+category: core
+effort: medium
+origin:
+    session: 2027

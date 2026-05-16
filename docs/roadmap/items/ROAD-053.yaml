@@ -1,0 +1,11 @@
+id: ROAD-053
+created_at: 2026-05-16T00:10:06.508648-03:00
+updated_at: 2026-05-16T00:10:06.509975-03:00
+title: cosmoflare import/export — full account config as YAML for disaster recovery
+description: Export entire account config as YAML. Import to another account. Disaster recovery, account migration, multi-env.
+status: captured
+priority: 78
+category: infra
+effort: large
+origin:
+    session: 2027

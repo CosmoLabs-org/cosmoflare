@@ -1,0 +1,11 @@
+id: ROAD-061
+created_at: 2026-05-16T00:10:37.971345-03:00
+updated_at: 2026-05-16T00:10:37.972837-03:00
+title: Cost estimator — project monthly costs from current usage patterns
+description: If you're doing X requests/day, you'll pay /month. Cloudflare pricing is confusing — make it clear.
+status: captured
+priority: 78
+category: intelligence
+effort: medium
+origin:
+    session: 2027

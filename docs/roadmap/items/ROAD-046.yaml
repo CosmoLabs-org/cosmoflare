@@ -1,0 +1,11 @@
+id: ROAD-046
+created_at: 2026-05-16T00:09:41.114769-03:00
+updated_at: 2026-05-16T00:09:41.115451-03:00
+title: Hyperdrive — database connection pooling for Workers
+description: Database connection pooling at the edge. Natural pairing with D1 and external databases.
+status: captured
+priority: 70
+category: core
+effort: medium
+origin:
+    session: 2027

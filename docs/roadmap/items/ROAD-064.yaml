@@ -1,0 +1,11 @@
+id: ROAD-064
+created_at: 2026-05-16T00:10:55.225465-03:00
+updated_at: 2026-05-16T00:10:55.2274-03:00
+title: React Native mobile app — on-the-go monitoring and quick actions
+description: Mobile companion app. Push alerts, quick actions (purge cache, scale worker), multi-account switcher, real-time metrics.
+status: captured
+priority: 80
+category: ux
+effort: large
+origin:
+    session: 2027

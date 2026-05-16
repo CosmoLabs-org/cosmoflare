@@ -1,0 +1,11 @@
+id: ROAD-059
+created_at: 2026-05-16T00:10:30.498797-03:00
+updated_at: 2026-05-16T00:10:30.500813-03:00
+title: Template library — cosmoflare create --template=api scaffolds full projects
+description: Gallery of starter templates. API, static site, full-stack, blog, etc. One command to scaffold.
+status: captured
+priority: 70
+category: workflow
+effort: medium
+origin:
+    session: 2027

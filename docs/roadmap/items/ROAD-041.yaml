@@ -1,0 +1,11 @@
+id: ROAD-041
+created_at: 2026-05-16T00:09:18.924497-03:00
+updated_at: 2026-05-16T00:09:18.926264-03:00
+title: Email Routing — create rules, list destinations, catch-all settings
+description: Email routing rules, destination management, catch-all configuration. Common need for small teams.
+status: captured
+priority: 75
+category: core
+effort: small
+origin:
+    session: 2027

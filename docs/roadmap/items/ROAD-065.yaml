@@ -1,0 +1,11 @@
+id: ROAD-065
+created_at: 2026-05-16T00:10:55.324422-03:00
+updated_at: 2026-05-16T00:10:55.326742-03:00
+title: Plugin system — community extensions with cosmoflare plugin install
+description: Let community extend with custom commands. Plugin install, discovery, and management.
+status: captured
+priority: 65
+category: infra
+effort: large
+origin:
+    session: 2027

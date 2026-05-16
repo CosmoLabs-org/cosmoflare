@@ -1,0 +1,11 @@
+id: ROAD-036
+created_at: 2026-05-16T00:09:05.324556-03:00
+updated_at: 2026-05-16T00:09:05.326382-03:00
+title: Zone management — list zones, settings, diagnostics
+description: Zone listing, settings management, diagnostics. Foundation for DNS and most other services.
+status: captured
+priority: 90
+category: core
+effort: small
+origin:
+    session: 2027

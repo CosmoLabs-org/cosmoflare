@@ -1,0 +1,11 @@
+id: ROAD-038
+created_at: 2026-05-16T00:09:11.456035-03:00
+updated_at: 2026-05-16T00:09:11.456679-03:00
+title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
+description: Purge cache operations, cache rules, TTL configuration. Every deployment needs cache clears.
+status: captured
+priority: 85
+category: core
+effort: small
+origin:
+    session: 2027

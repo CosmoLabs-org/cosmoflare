@@ -1,0 +1,11 @@
+id: ROAD-057
+created_at: 2026-05-16T00:10:21.515178-03:00
+updated_at: 2026-05-16T00:10:21.517109-03:00
+title: cosmoflare init — interactive project scaffolding with framework detection
+description: Interactive project setup. Detect framework (Next.js, Astro, etc.), create config, set up bindings.
+status: captured
+priority: 80
+category: ux
+effort: medium
+origin:
+    session: 2027

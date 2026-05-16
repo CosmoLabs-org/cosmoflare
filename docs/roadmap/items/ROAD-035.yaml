@@ -1,0 +1,11 @@
+id: ROAD-035
+created_at: 2026-05-16T00:08:47.13094-03:00
+updated_at: 2026-05-16T00:08:47.134522-03:00
+title: DNS record management — CRUD for A, AAAA, CNAME, MX, TXT, SRV records
+description: Full DNS record management. List, create, update, delete records. Zone context required. Every Cloudflare user manages DNS.
+status: captured
+priority: 90
+category: core
+effort: medium
+origin:
+    session: 2027

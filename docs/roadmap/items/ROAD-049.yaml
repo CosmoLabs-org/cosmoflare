@@ -1,0 +1,11 @@
+id: ROAD-049
+created_at: 2026-05-16T00:09:47.693133-03:00
+updated_at: 2026-05-16T00:09:47.694807-03:00
+title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
+description: Run AI models at the edge, proxy AI requests with AI Gateway, track usage and costs. Aligns with agent-friendly positioning.
+status: captured
+priority: 70
+category: intelligence
+effort: large
+origin:
+    session: 2027

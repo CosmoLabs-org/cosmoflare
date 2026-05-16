@@ -1,8 +1,222 @@
 version: ""
 project: ""
-last_updated: 2026-05-15T02:38:20.382772-03:00
-next_id: 35
+last_updated: 2026-05-16T00:10:55.327407-03:00
+next_id: 66
 items:
+    - id: ROAD-065
+      title: Plugin system — community extensions with cosmoflare plugin install
+      status: captured
+      priority: 65
+      category: infra
+      effort: large
+      created_at: 2026-05-16T00:10:55.324422-03:00
+    - id: ROAD-064
+      title: React Native mobile app — on-the-go monitoring and quick actions
+      status: captured
+      priority: 80
+      category: ux
+      effort: large
+      created_at: 2026-05-16T00:10:55.225465-03:00
+    - id: ROAD-063
+      title: Tauri desktop app — GUI wrapper with notifications and infrastructure graph
+      status: captured
+      priority: 85
+      category: ux
+      effort: large
+      created_at: 2026-05-16T00:10:46.882401-03:00
+    - id: ROAD-062
+      title: Alert rules — notify on error rates, storage limits, worker failures
+      status: captured
+      priority: 78
+      category: intelligence
+      effort: large
+      created_at: 2026-05-16T00:10:46.793368-03:00
+    - id: ROAD-061
+      title: Cost estimator — project monthly costs from current usage patterns
+      status: captured
+      priority: 78
+      category: intelligence
+      effort: medium
+      created_at: 2026-05-16T00:10:37.971345-03:00
+    - id: ROAD-060
+      title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
+      status: captured
+      priority: 80
+      category: ux
+      effort: large
+      created_at: 2026-05-16T00:10:37.873954-03:00
+    - id: ROAD-059
+      title: Template library — cosmoflare create --template=api scaffolds full projects
+      status: captured
+      priority: 70
+      category: workflow
+      effort: medium
+      created_at: 2026-05-16T00:10:30.498797-03:00
+    - id: ROAD-058
+      title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
+      status: captured
+      priority: 82
+      category: workflow
+      effort: large
+      created_at: 2026-05-16T00:10:30.399515-03:00
+    - id: ROAD-057
+      title: cosmoflare init — interactive project scaffolding with framework detection
+      status: captured
+      priority: 80
+      category: ux
+      effort: medium
+      created_at: 2026-05-16T00:10:21.515178-03:00
+    - id: ROAD-056
+      title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
+      status: captured
+      priority: 72
+      category: infra
+      effort: large
+      created_at: 2026-05-16T00:10:21.413705-03:00
+    - id: ROAD-055
+      title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
+      status: captured
+      priority: 75
+      category: ux
+      effort: small
+      created_at: 2026-05-16T00:10:13.900551-03:00
+    - id: ROAD-054
+      title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
+      status: captured
+      priority: 80
+      category: ux
+      effort: medium
+      created_at: 2026-05-16T00:10:13.803125-03:00
+    - id: ROAD-053
+      title: cosmoflare import/export — full account config as YAML for disaster recovery
+      status: captured
+      priority: 78
+      category: infra
+      effort: large
+      created_at: 2026-05-16T00:10:06.508648-03:00
+    - id: ROAD-052
+      title: cosmoflare diff — show what would change before applying
+      status: captured
+      priority: 78
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:10:06.409267-03:00
+    - id: ROAD-051
+      title: cosmoflare logs --follow — real-time log tailing with filtering
+      status: captured
+      priority: 82
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:56.384259-03:00
+    - id: ROAD-050
+      title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
+      status: captured
+      priority: 88
+      category: ux
+      effort: medium
+      created_at: 2026-05-16T00:09:56.286855-03:00
+    - id: ROAD-049
+      title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
+      status: captured
+      priority: 70
+      category: intelligence
+      effort: large
+      created_at: 2026-05-16T00:09:47.693133-03:00
+    - id: ROAD-048
+      title: Vectorize — vector storage and indexing for AI workloads
+      status: captured
+      priority: 65
+      category: intelligence
+      effort: medium
+      created_at: 2026-05-16T00:09:47.594725-03:00
+    - id: ROAD-047
+      title: Vectorize — vector storage and indexing for AI workloads
+      status: captured
+      created_at: 2026-05-16T00:09:41.216059-03:00
+    - id: ROAD-046
+      title: Hyperdrive — database connection pooling for Workers
+      status: captured
+      priority: 70
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:41.114769-03:00
+    - id: ROAD-045
+      title: Stream video — upload, live inputs, token management
+      status: captured
+      priority: 65
+      category: core
+      effort: large
+      created_at: 2026-05-16T00:09:34.01034-03:00
+    - id: ROAD-044
+      title: Images service — upload, transform, variants, delivery URL generation
+      status: captured
+      priority: 70
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:33.913777-03:00
+    - id: ROAD-043
+      title: Pages static hosting — deploy from directory, custom domains, preview deployments
+      status: captured
+      priority: 75
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:26.389003-03:00
+    - id: ROAD-042
+      title: D1 SQL database — fill stub with query, migrate, list databases
+      status: captured
+      priority: 75
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:26.287955-03:00
+    - id: ROAD-041
+      title: Email Routing — create rules, list destinations, catch-all settings
+      status: captured
+      priority: 75
+      category: core
+      effort: small
+      created_at: 2026-05-16T00:09:18.924497-03:00
+    - id: ROAD-040
+      title: WAF and Firewall — rules, managed rulesets, rate limiting, IP access rules
+      status: captured
+      priority: 80
+      category: security
+      effort: medium
+      created_at: 2026-05-16T00:09:18.835502-03:00
+    - id: ROAD-039
+      title: Page Rules and Redirect Rules management
+      status: captured
+      priority: 80
+      category: core
+      effort: medium
+      created_at: 2026-05-16T00:09:11.555248-03:00
+    - id: ROAD-038
+      title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
+      status: captured
+      priority: 85
+      category: core
+      effort: small
+      created_at: 2026-05-16T00:09:11.456035-03:00
+    - id: ROAD-037
+      title: SSL/TLS certificate management — edge certs, origin pull, minimum TLS, always-https
+      status: captured
+      priority: 85
+      category: security
+      effort: small
+      created_at: 2026-05-16T00:09:05.427409-03:00
+    - id: ROAD-036
+      title: Zone management — list zones, settings, diagnostics
+      status: captured
+      priority: 90
+      category: core
+      effort: small
+      created_at: 2026-05-16T00:09:05.324556-03:00
+    - id: ROAD-035
+      title: Email Routing — create rules, list destinations, catch-all settings
+      status: captured
+      priority: 75
+      category: core
+      effort: small
+      created_at: 2026-05-16T00:08:47.131816-03:00
     - id: ROAD-034
       title: Upload guardrails system (allowed buckets, max file size, blocked keys)
       status: completed
