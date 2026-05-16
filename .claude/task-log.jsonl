@@ -501,3 +501,6 @@
 {"id":"9","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"10","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
 {"id":"11","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-16T10:20:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
