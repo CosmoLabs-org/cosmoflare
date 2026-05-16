@@ -200,21 +200,45 @@ cmd/{service}.go:
   - func init() { rootCmd.AddCommand(xxxCmd) }
 ```
 
-## Session Start Commands
+## Session Management — NON-NEGOTIABLE
 
-```bash
-# Load this prompt
-/run-continuation 2026-05-16-cosmoflare-phase4-rebrand
+### TaskList Tracking
+Every P-01 through P-08 gets a TaskCreate BEFORE any code runs. Mark `in_progress` when starting, `completed` when done. The user sees a live spinner — keep it accurate.
 
-# Dispatch 4 parallel Opus implementation agents
-# (after loading context and creating tasks)
-/orchestra auto "Build Phase 4 Cloudflare services: DNS Records (P-01), Zones (P-02), SSL/TLS (P-03), Cache (P-04). Follow plan in docs/planning-mode/2026-05-16-phase4-cloudflare-services.md"
+### Parallel Agent Execution
+This session is designed for MAXIMUM parallelism:
+1. **Phase 1 (implementation)**: Dispatch all 4 Opus agents (P-01 through P-04) simultaneously via `/orchestra auto` or individual `ccs glm-agent exec --model opus` calls. Do NOT run them sequentially.
+2. **Phase 2 (testing)**: After ALL implementation agents merge, dispatch 4 GLM-turbo test agents (P-05) simultaneously.
+3. **Phase 3 (polish)**: P-06 (rebrand) + P-07 (shell completion) can run in parallel if independent. P-08 (commit) runs last.
 
-# After merge: dispatch 4 parallel GLM test agents
-/orchestra auto "Write unit tests for Phase 4 services: dns_test.go, zone_test.go, ssl_test.go, cache_test.go. Follow test patterns from worker_test.go and kv_test.go"
+### Roadmap Updates — As You Go
+After each goal completes and merges:
+- `ccs roadmap update ROAD-035 --status completed` (or appropriate status)
+- Update `goals_completed` in this prompt's frontmatter
+- Do NOT batch all roadmap updates at the end — update as each deliverable ships
 
-# After tests: rebrand + shell completion + commit
-# (handle in main session as P-06, P-07, P-08)
+### Commit Strategy
+- **After Phase 1 (implementation)**: Run `/commit-all` to commit the 4 new service modules. Take a breather, verify the build.
+- **After Phase 2 (tests)**: Run `/commit-all` to commit test files.
+- **After Phase 3 (rebrand + polish)**: Run `/commit-all` for the final batch.
+- **Do NOT wait until the very end** to commit everything in one blob. Commit at each natural checkpoint so work is never lost.
+- Each commit should use `ccs commit-batch` with semantic messages: `feat(dns)`, `feat(zone)`, `test(dns)`, `docs(cosmoflare)`, etc.
+
+### Session Flow
+```
+1. /run-continuation 2026-05-16-cosmoflare-phase4-rebrand
+2. TaskCreate for P-01 through P-08 (8 tasks)
+3. Read all requires_reading files
+4. Dispatch P-01, P-02, P-03, P-04 in parallel (4 Opus agents)
+5. Review + merge each agent as it completes
+6. /commit-all (implementation checkpoint)
+7. Update ROAD-035/036/037/038 status
+8. Dispatch P-05 tests in parallel (4 GLM-turbo agents)
+9. Review + merge test agents
+10. /commit-all (test checkpoint)
+11. P-06 (rebrand) + P-07 (shell completion) — parallel or sequential
+12. /commit-all (final checkpoint)
+13. P-08: verify build, update remaining roadmap items, final commit
 ```
 
 ## Important Notes
