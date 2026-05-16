@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/cloudflare/cloudflare-go"
 )
 
 // --- Constructor validation tests ---
@@ -29,11 +31,11 @@ func TestNewEmailService_EmptyZoneID(t *testing.T) {
 }
 
 func TestNewEmailService_EmptyAccountID(t *testing.T) {
-	_, err := NewEmailService(nil, "zone123", "")
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	_, err := NewEmailService(cf, "zone123", "")
 	if err == nil {
 		t.Fatal("expected error for empty account ID")
 	}
-	// Note: nil API check fires first, so we test with FromCreds
 }
 
 func TestNewEmailServiceFromCreds_EmptyZoneID(t *testing.T) {
@@ -298,7 +300,7 @@ func TestEmailDestination_JSONMarshal(t *testing.T) {
 	dest := &EmailDestination{
 		ID:       "dest-abc123",
 		Email:    "team@company.com",
-		Verified: now,
+		Verified: &now,
 		Created:  now.Add(-24 * time.Hour),
 		Modified: now,
 	}
@@ -319,7 +321,7 @@ func TestEmailDestination_JSONMarshal(t *testing.T) {
 	if decoded.Email != dest.Email {
 		t.Errorf("Email mismatch: got %q, want %q", decoded.Email, dest.Email)
 	}
-	if !decoded.Verified.Equal(dest.Verified) {
+	if decoded.Verified == nil || !decoded.Verified.Equal(*dest.Verified) {
 		t.Errorf("Verified mismatch: got %v, want %v", decoded.Verified, dest.Verified)
 	}
 	if !decoded.Created.Equal(dest.Created) {
@@ -351,8 +353,8 @@ func TestEmailDestination_JSONMarshal_Unverified(t *testing.T) {
 	if decoded.Email != "new@example.com" {
 		t.Errorf("Email mismatch: got %q, want %q", decoded.Email, "new@example.com")
 	}
-	if !decoded.Verified.IsZero() {
-		t.Errorf("expected zero Verified time for unverified destination, got %v", decoded.Verified)
+	if decoded.Verified != nil {
+		t.Errorf("expected nil Verified for unverified destination, got %v", decoded.Verified)
 	}
 }
 

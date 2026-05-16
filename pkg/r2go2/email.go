@@ -33,11 +33,11 @@ type EmailRuleAction struct {
 
 // EmailDestination represents a verified destination address for email routing.
 type EmailDestination struct {
-	ID       string    `json:"id"`
-	Email    string    `json:"email"`
-	Verified time.Time `json:"verified,omitempty"`
-	Created  time.Time `json:"created"`
-	Modified time.Time `json:"modified"`
+	ID       string     `json:"id"`
+	Email    string     `json:"email"`
+	Verified *time.Time `json:"verified,omitempty"`
+	Created  time.Time  `json:"created"`
+	Modified time.Time  `json:"modified"`
 }
 
 // EmailCatchAll represents the catch-all email routing rule.
@@ -458,7 +458,7 @@ func cfEmailDestToDestination(d cloudflare.EmailRoutingDestinationAddress) *Emai
 		Email: d.Email,
 	}
 	if d.Verified != nil {
-		dest.Verified = *d.Verified
+		dest.Verified = d.Verified
 	}
 	if d.Created != nil {
 		dest.Created = *d.Created

@@ -583,7 +583,17 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	rule, err := svc.UpdateRule(context.Background(), ruleID, emailRuleName, matchers, actions, emailPriority, emailEnabled)
+	// Only pass priority/enabled if explicitly set by the user to avoid overwriting current values.
+	priority := emailPriority
+	enabled := emailEnabled
+	if !cmd.Flags().Changed("priority") {
+		priority = -1 // sentinel: UpdateRule should preserve existing
+	}
+	if !cmd.Flags().Changed("enabled") {
+		enabled = true // default: preserve enabled state via fetch-before-update in service layer
+	}
+
+	rule, err := svc.UpdateRule(context.Background(), ruleID, emailRuleName, matchers, actions, priority, enabled)
 	if err != nil {
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to update email routing rule: %v", err))
