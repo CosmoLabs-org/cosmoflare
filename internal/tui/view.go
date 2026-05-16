@@ -148,7 +148,10 @@ func (m DashboardModel) renderOverview() string {
 
 // renderUsageStats renders storage usage statistics
 func (m DashboardModel) renderUsageStats() string {
-	percentage := float64(m.usageStats.TotalUsed) / float64(m.usageStats.TotalLimit) * 100
+	var percentage float64
+	if m.usageStats.TotalLimit > 0 {
+		percentage = float64(m.usageStats.TotalUsed) / float64(m.usageStats.TotalLimit) * 100
+	}
 
 	title := headerStyle.Render("📊 Storage Usage")
 	usageBar := m.createProgressBar(percentage, 100, "")
@@ -507,14 +510,14 @@ func (m DashboardModel) createProgressBar(percentage, max float64, prefix string
 	if max <= 0 {
 		max = 100
 	}
+	if percentage < 0 {
+		percentage = 0
+	}
+	if percentage > max {
+		percentage = max
+	}
 
 	ratio := percentage / max
-	if ratio > 1 {
-		ratio = 1
-	}
-	if ratio < 0 {
-		ratio = 0
-	}
 
 	width := 20
 	filled := int(float64(width) * ratio)

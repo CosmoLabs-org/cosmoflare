@@ -207,13 +207,23 @@ func TestRenderProgressBar(t *testing.T) {
 		assert.Contains(t, bar, "✓")
 	})
 
-	t.Run("progress exceeds max panics - known bug in renderProgressBar", func(t *testing.T) {
+	t.Run("progress exceeds max clamped", func(t *testing.T) {
 		h := NewHeaderModel(80)
 		h.Progress = 150
 		h.MaxProgress = 100
-		// filledWidth = int(30 * 1.5) = 45, barWidth-filledWidth = -15 -> strings.Repeat panics
-		assert.Panics(t, func() {
-			h.renderProgressBar()
+		assert.NotPanics(t, func() {
+			bar := h.renderProgressBar()
+			assert.Contains(t, bar, "100%")
+		})
+	})
+
+	t.Run("negative progress clamped", func(t *testing.T) {
+		h := NewHeaderModel(80)
+		h.Progress = -10
+		h.MaxProgress = 100
+		assert.NotPanics(t, func() {
+			bar := h.renderProgressBar()
+			assert.Contains(t, bar, "0%")
 		})
 	})
 
