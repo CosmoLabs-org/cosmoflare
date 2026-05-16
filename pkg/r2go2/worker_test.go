@@ -1,12 +1,29 @@
 package r2go2
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+func workerMockSetup(handler http.HandlerFunc) (*WorkerService, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewWorkerService(cf, "acct-worker-123")
+	return svc, server
+}
+
+func workerWriteJSON(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
 
 func TestNewWorkerServiceValidation(t *testing.T) {
 	_, err := NewWorkerService(nil, "account123")
@@ -254,5 +271,240 @@ func TestWorkerUpdateSettingsValidation(t *testing.T) {
 	err := svc.UpdateSettings(nil, "", WorkerSettings{})
 	if err == nil {
 		t.Error("expected error when name is empty")
+	}
+}
+
+// --- httptest-based API mock tests ---
+
+func TestWorkerDeployWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			t.Errorf("expected PUT, got %s", r.Method)
+		}
+		now := time.Now()
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id":          "my-worker",
+				"script":      "export default { fetch() {} }",
+				"size":        1024,
+				"modified_on": now.Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	worker, err := svc.Deploy(ctx, "my-worker", strings.NewReader("export default { fetch() {} }"),
+		WithWorkerCompatibilityDate("2024-01-01"),
+		WithWorkerModule(true),
+		WithWorkerTags([]string{"production"}),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if worker.Name != "my-worker" {
+		t.Errorf("expected Name=my-worker, got %s", worker.Name)
+	}
+}
+
+func TestWorkerListWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		now := time.Now()
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": []map[string]interface{}{
+				{"id": "worker-1", "modified_on": now.Format(time.RFC3339), "size": 2048},
+				{"id": "worker-2", "modified_on": now.Format(time.RFC3339), "size": 4096},
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	workers, err := svc.List(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(workers) != 2 {
+		t.Fatalf("expected 2 workers, got %d", len(workers))
+	}
+	if workers[0].Name != "worker-1" {
+		t.Errorf("expected first Name=worker-1, got %s", workers[0].Name)
+	}
+	if workers[1].Size != 4096 {
+		t.Errorf("expected second Size=4096, got %d", workers[1].Size)
+	}
+}
+
+func TestWorkerGetWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		// GetWorker reads the raw response body as the script content
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Write([]byte("export default {}"))
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	worker, err := svc.Get(ctx, "my-worker")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if worker.Name != "my-worker" {
+		t.Errorf("expected Name=my-worker, got %s", worker.Name)
+	}
+	if worker.Script != "export default {}" {
+		t.Errorf("expected Script content, got %s", worker.Script)
+	}
+}
+
+func TestWorkerGetNotFound(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		workerWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1000, "message": "worker not found"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Get(ctx, "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for not found")
+	}
+}
+
+func TestWorkerDeleteWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("expected DELETE, got %s", r.Method)
+		}
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "worker-del"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Delete(ctx, "worker-del")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestWorkerLogsWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"modified_on": now.Format(time.RFC3339),
+				"size":        1024,
+			},
+			"meta": map[string]interface{}{
+				"modified_on": now.Format(time.RFC3339),
+				"size":        1024,
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	entries, err := svc.Logs(ctx, "my-worker", WithLogLimit(10))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(entries) < 1 {
+		t.Fatal("expected at least 1 log entry")
+	}
+	if entries[0].Level != "info" {
+		t.Errorf("expected Level=info, got %s", entries[0].Level)
+	}
+}
+
+func TestWorkerUpdateSettingsWithMock(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("expected PATCH, got %s", r.Method)
+		}
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.UpdateSettings(ctx, "my-worker", WorkerSettings{
+		CompatibilityDate: "2024-01-01",
+		Bindings: []WorkerBinding{
+			{Name: "MY_KV", Type: "kv", ID: "ns-123"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestWorkerDeployAPIError(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		workerWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1001, "message": "invalid script"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Deploy(ctx, "bad-worker", strings.NewReader("bad script"))
+	if err == nil {
+		t.Fatal("expected error from API")
+	}
+	if _, ok := err.(*R2Error); !ok {
+		t.Errorf("expected *R2Error, got %T", err)
+	}
+}
+
+func TestWorkerJSONMarshal(t *testing.T) {
+	w := &Worker{
+		Name: "json-worker", Size: 2048, Runtime: "workers",
+		Bindings:    []WorkerBinding{{Name: "KV", Type: "kv", ID: "ns-1"}},
+		Tags:        []string{"prod"},
+		CompatibilityDate: "2024-01-01",
+	}
+	data, err := json.Marshal(w)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded Worker
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.Name != "json-worker" {
+		t.Errorf("Name mismatch: got %q", decoded.Name)
+	}
+	if len(decoded.Bindings) != 1 {
+		t.Errorf("Bindings count mismatch: got %d", len(decoded.Bindings))
+	}
+}
+
+func TestWorkerNewFromCredsSuccess(t *testing.T) {
+	svc, err := NewWorkerServiceFromCreds("acct123", fmt.Sprintf("test-token-%d", time.Now().UnixNano()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.accountID != "acct123" {
+		t.Errorf("expected accountID=acct123, got %s", svc.accountID)
 	}
 }

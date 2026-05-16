@@ -2,11 +2,28 @@ package r2go2
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+func cacheMockSetup(handler http.HandlerFunc) (*CacheService, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewCacheService(cf, "zone-cache-123")
+	return svc, server
+}
+
+func cacheWriteJSON(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
 
 func TestNewCacheServiceValidation(t *testing.T) {
 	_, err := NewCacheService(nil, "zone123")
@@ -237,5 +254,248 @@ func TestCacheTypes(t *testing.T) {
 	}
 	if !settings.MinifyHtml {
 		t.Error("expected MinifyHtml=true")
+	}
+}
+
+// --- httptest-based API mock tests ---
+
+func TestCachePurgeAllWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "purge-all-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	result, err := svc.PurgeAll(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.ID != "purge-all-001" {
+		t.Errorf("expected ID=purge-all-001, got %s", result.ID)
+	}
+}
+
+func TestCachePurgeAllNotSuccessful(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1000, "message": "purge failed"}},
+			"result":  map[string]interface{}{"id": ""},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.PurgeAll(ctx)
+	if err == nil {
+		t.Fatal("expected error when purge not successful")
+	}
+}
+
+func TestCachePurgeByURLsWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "purge-url-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	result, err := svc.PurgeByURLs(ctx, []string{"https://example.com/page1", "https://example.com/page2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.ID != "purge-url-001" {
+		t.Errorf("expected ID=purge-url-001, got %s", result.ID)
+	}
+}
+
+func TestCachePurgeByTagsWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "purge-tag-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	result, err := svc.PurgeByTags(ctx, []string{"tag1", "tag2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.ID != "purge-tag-001" {
+		t.Errorf("expected ID=purge-tag-001, got %s", result.ID)
+	}
+}
+
+func TestCachePurgeByHostsWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "purge-host-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	result, err := svc.PurgeByHosts(ctx, []string{"cdn.example.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.ID != "purge-host-001" {
+		t.Errorf("expected ID=purge-host-001, got %s", result.ID)
+	}
+}
+
+func TestCacheGetSettingsWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": []map[string]interface{}{
+				{"id": "browser_cache_ttl", "value": 14400, "editable": true},
+				{"id": "development_mode", "value": 0, "editable": true},
+				{"id": "cache_level", "value": "aggressive", "editable": true},
+				{"id": "minify", "value": map[string]interface{}{"css": "on", "js": "on", "html": "off"}, "editable": true},
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	settings, err := svc.GetSettings(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if settings.BrowserCacheTTL != 14400 {
+		t.Errorf("expected BrowserCacheTTL=14400, got %d", settings.BrowserCacheTTL)
+	}
+	if settings.CacheLevel != "aggressive" {
+		t.Errorf("expected CacheLevel=aggressive, got %s", settings.CacheLevel)
+	}
+	if !settings.MinifyCss {
+		t.Error("expected MinifyCss=true")
+	}
+	if !settings.MinifyJs {
+		t.Error("expected MinifyJs=true")
+	}
+	if settings.MinifyHtml {
+		t.Error("expected MinifyHtml=false")
+	}
+}
+
+func TestCacheUpdateSettingsWithMock(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("expected PATCH, got %s", r.Method)
+		}
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  []map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.UpdateSettings(ctx,
+		WithBrowserCacheTTL(7200),
+		WithDevMode(true),
+		WithCacheLevel("basic"),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCacheUpdateSettingsDevModeOff(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  []map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.UpdateSettings(ctx, WithDevMode(false))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCachePurgeAPIError(t *testing.T) {
+	svc, server := cacheMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		cacheWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1000, "message": "server error"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.PurgeAll(ctx)
+	if err == nil {
+		t.Fatal("expected error from API")
+	}
+	if _, ok := err.(*R2Error); !ok {
+		t.Errorf("expected *R2Error, got %T", err)
+	}
+}
+
+func TestCachePurgeResultJSONMarshal(t *testing.T) {
+	r := &CachePurgeResult{ID: "purge-json-001"}
+	data, err := json.Marshal(r)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded CachePurgeResult
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.ID != "purge-json-001" {
+		t.Errorf("ID mismatch: got %q", decoded.ID)
+	}
+}
+
+func TestCacheSettingsJSONMarshal(t *testing.T) {
+	s := &CacheSettings{
+		BrowserCacheTTL: 7200, DevelopmentMode: 0,
+		CacheLevel: "aggressive", MinifyCss: true, MinifyJs: false, MinifyHtml: true,
+	}
+	data, err := json.Marshal(s)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded CacheSettings
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.BrowserCacheTTL != 7200 {
+		t.Errorf("BrowserCacheTTL mismatch: got %d", decoded.BrowserCacheTTL)
+	}
+}
+
+func TestCacheNewFromCredsSuccess(t *testing.T) {
+	svc, err := NewCacheServiceFromCreds("zone123", fmt.Sprintf("test-token-%d", time.Now().UnixNano()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.zoneID != "zone123" {
+		t.Errorf("expected zoneID=zone123, got %s", svc.zoneID)
 	}
 }

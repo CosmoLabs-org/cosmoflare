@@ -2,12 +2,28 @@ package r2go2
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+func zoneMockSetup(handler http.HandlerFunc) (*ZoneService, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewZoneService(cf, "acct-test-123")
+	return svc, server
+}
+
+func zoneWriteJSON(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
 
 func TestNewZoneServiceValidation(t *testing.T) {
 	_, err := NewZoneService(nil, "acct123")
@@ -296,5 +312,245 @@ func TestZoneTypes(t *testing.T) {
 	}
 	if !s.Editable {
 		t.Error("expected Editable=true")
+	}
+}
+
+// --- httptest-based API mock tests ---
+
+func TestZoneCreateWithMock(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		now := time.Now()
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id":           "zone-new-001",
+				"name":         "newsite.com",
+				"status":       "pending",
+				"type":         "full",
+				"paused":       false,
+				"name_servers": []string{"ns1.cloudflare.com", "ns2.cloudflare.com"},
+				"plan":         map[string]interface{}{"id": "free", "name": "Free"},
+				"created_on":   now.Format(time.RFC3339),
+				"modified_on":  now.Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	zone, err := svc.Create(ctx, "newsite.com", "full")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if zone.ID != "zone-new-001" {
+		t.Errorf("expected ID=zone-new-001, got %s", zone.ID)
+	}
+	if zone.Name != "newsite.com" {
+		t.Errorf("expected Name=newsite.com, got %s", zone.Name)
+	}
+	if zone.Status != "pending" {
+		t.Errorf("expected Status=pending, got %s", zone.Status)
+	}
+}
+
+func TestZoneListWithMock(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": []map[string]interface{}{
+				{
+					"id": "zone-001", "name": "site1.com", "status": "active",
+					"type": "full", "paused": false,
+					"name_servers": []string{"ns1.cf.com"},
+					"plan":         map[string]interface{}{"id": "free", "name": "Free"},
+				},
+				{
+					"id": "zone-002", "name": "site2.com", "status": "active",
+					"type": "full", "paused": false,
+					"name_servers": []string{"ns2.cf.com"},
+					"plan":         map[string]interface{}{"id": "pro", "name": "Pro"},
+				},
+			},
+			"result_info": map[string]interface{}{"page": 1, "total_pages": 1, "count": 2},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	zones, err := svc.List(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(zones) != 2 {
+		t.Fatalf("expected 2 zones, got %d", len(zones))
+	}
+	if zones[0].Name != "site1.com" {
+		t.Errorf("expected first zone=site1.com, got %s", zones[0].Name)
+	}
+	if zones[1].Name != "site2.com" {
+		t.Errorf("expected second zone=site2.com, got %s", zones[1].Name)
+	}
+}
+
+func TestZoneGetWithMock(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id": "zone-get-001", "name": "gettest.com", "status": "active",
+				"type": "full", "paused": false,
+				"name_servers": []string{"ns1.cf.com"},
+				"plan":         map[string]interface{}{"id": "free", "name": "Free"},
+				"created_on":   time.Now().Format(time.RFC3339),
+				"modified_on":  time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	zone, err := svc.Get(ctx, "zone-get-001")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if zone.ID != "zone-get-001" {
+		t.Errorf("expected ID=zone-get-001, got %s", zone.ID)
+	}
+	if zone.Name != "gettest.com" {
+		t.Errorf("expected Name=gettest.com, got %s", zone.Name)
+	}
+}
+
+func TestZoneGetNotFound(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1000, "message": "zone not found"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Get(ctx, "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for not found")
+	}
+}
+
+func TestZoneDeleteWithMock(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("expected DELETE, got %s", r.Method)
+		}
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "zone-del-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Delete(ctx, "zone-del-001")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestZoneGetSettingsWithMock(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": []map[string]interface{}{
+				{"id": "ssl", "value": "full", "editable": true, "modified_on": "2026-01-01T00:00:00Z"},
+				{"id": "always_use_https", "value": "on", "editable": true},
+				{"id": "min_tls_version", "value": "1.2", "editable": true},
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	settings, err := svc.GetSettings(ctx, "zone-get-001")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(settings) < 2 {
+		t.Fatalf("expected at least 2 settings, got %d", len(settings))
+	}
+	found := false
+	for _, s := range settings {
+		if s.ID == "ssl" {
+			found = true
+			if s.Value != "full" {
+				t.Errorf("expected ssl value=full, got %v", s.Value)
+			}
+		}
+	}
+	if !found {
+		t.Error("expected ssl setting to be present")
+	}
+}
+
+func TestZoneCreateAPIError(t *testing.T) {
+	svc, server := zoneMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		zoneWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1001, "message": "invalid request"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Create(ctx, "fail.com", "full")
+	if err == nil {
+		t.Fatal("expected error from API")
+	}
+	if _, ok := err.(*R2Error); !ok {
+		t.Errorf("expected *R2Error, got %T", err)
+	}
+}
+
+func TestZoneJSONMarshal(t *testing.T) {
+	z := &Zone{
+		ID: "z-json", Name: "json.com", Status: "active", Type: "full",
+		NameServers: []string{"ns1.cf.com"}, Plan: ZonePlan{ID: "free", Name: "Free"},
+		CreatedOn: time.Now(), ModifiedOn: time.Now(),
+	}
+	data, err := json.Marshal(z)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded Zone
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.ID != "z-json" {
+		t.Errorf("ID mismatch: got %q", decoded.ID)
+	}
+	if decoded.Name != "json.com" {
+		t.Errorf("Name mismatch: got %q", decoded.Name)
+	}
+}
+
+func TestZoneNewFromCredsSuccess(t *testing.T) {
+	svc, err := NewZoneServiceFromCreds("acct123", fmt.Sprintf("test-token-%d", time.Now().UnixNano()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.accountID != "acct123" {
+		t.Errorf("expected accountID=acct123, got %s", svc.accountID)
 	}
 }
