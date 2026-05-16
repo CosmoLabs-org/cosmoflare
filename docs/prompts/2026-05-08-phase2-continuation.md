@@ -1,4 +1,5 @@
 ---
+completed: "2026-05-16"
 covers_plan_deliverables:
     - P-01
     - P-02
@@ -6,14 +7,18 @@ covers_plan_deliverables:
     - P-05
     - P-06
 created: "2026-05-08"
+goals_completed: 6
+goals_total: 6
 id: P-2026-05-08-phase2-continuation
 plan_ref: docs/prompts/2026-05-08-phase2-integration-and-hardening.md
 priority: high
+related_prompts: []
 requires_reading:
     - docs/prompts/2026-05-08-phase2-integration-and-hardening.md
 schema_version: 1
-status: PENDING
-title: "Phase 2: Integration Tests, Multipart Upload, and CLI Hardening (continuation)"
+status: COMPLETED
+tags: []
+title: 'Phase 2: Integration Tests, Multipart Upload, and CLI Hardening (continuation)'
 ---
 
 # Phase 2 Continuation: Integration Tests, Multipart Upload, and CLI Hardening
@@ -57,19 +62,19 @@ d5c3cbe fix(build): update Go version, remove mock API client, add LICENSE
 
 ## Goals
 
-### [ ] G-01: Integration Tests Against Real R2 API (P-01)
+### [x] G-01: Integration Tests Against Real R2 API (P-01)
 
 Create `pkg/r2go2/integration_test.go` with `//go:build integration` tag. Test full lifecycle: create bucket, upload, list, get, head, copy, delete objects, delete bucket. Test error paths, pagination (10+ objects), content types, and metadata. Add `make test-integration` target.
 
 **Files:** `pkg/r2go2/integration_test.go`, `Makefile`
 
-### [ ] G-02: Multipart Upload for Large Files (P-02)
+### [x] G-02: Multipart Upload for Large Files (P-02)
 
 Add `MultipartUpload()` to the `R2Client` interface. Implement with `aws-sdk-go-v2/feature/s3/manager` or manual multipart. Add options for part size, concurrency, and progress callback. Auto-threshold at 100MB. Unit tests with mocked S3 client.
 
 **Files:** `pkg/r2go2/client.go`, `pkg/r2go2/upload.go`, `pkg/r2go2/multipart_test.go`
 
-### [ ] G-03: Progress Bars and Transfer Stats (P-03)
+### [x] G-03: Progress Bars and Transfer Stats (P-03)
 
 Create `internal/utils/progress.go` with terminal progress bar (bytes, speed, ETA). Wire into `runObjectPut()` and `runObjectGet()`. Respect `--json` (suppress bar) and `--verbose` (per-chunk details). Add formatting tests.
 
@@ -79,13 +84,13 @@ Create `internal/utils/progress.go` with terminal progress bar (bytes, speed, ET
 
 Directory was cleared during bug-fix session. Verify empty directory is removed so `go test ./...` passes cleanly.
 
-### [ ] G-05: --json Output Verification for All Commands (P-05)
+### [x] G-05: --json Output Verification for All Commands (P-05)
 
 Add JSON output to all commands that currently only print human text: `bucket create/delete/exists/update/import`, `object put/get/delete/copy/batch`. Use existing `printJSON()` and `OutputResponse` pattern. Add tests for JSON validity.
 
 **Files:** `cmd/bucket.go`, `cmd/object.go`
 
-### [ ] G-06: Update USAGE.md (P-06)
+### [x] G-06: Update USAGE.md (P-06)
 
 Create `docs/USAGE.md` covering all current commands, flags, JSON output examples, and library-backed behavior. This is the agent reference document.
 
