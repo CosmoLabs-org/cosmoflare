@@ -251,11 +251,14 @@ func (te *TerminalEffects) RainbowText(text string) {
 
 // GlowingText creates a glowing text effect
 func (te *TerminalEffects) GlowingText(text string) {
+	if len(text) == 0 {
+		return
+	}
 	for i := 0; i < 3; i++ {
 		delay := time.Duration(i*200) * time.Millisecond
 		time.Sleep(delay)
 
-		intensity := []string{"" /*, "━━" , "══"*/}[i]
+		intensity := []string{"", "━━", "══"}[i]
 		fmt.Printf("\r%s%s%s",
 			te.styleText(intensity, te.theme.Primary),
 			te.styleText(text, te.theme.Primary, true),
