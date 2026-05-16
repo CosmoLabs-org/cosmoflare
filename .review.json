@@ -1,11 +1,11 @@
 {
   "score": 7,
   "passed": true,
-  "reviewed_at": "2026-05-16T09:56:50Z",
-  "reviewed_sha": "01ad30fd27a057639826e37d9fbf0df8d2e5f1ce",
+  "reviewed_at": "2026-05-16T10:58:08Z",
+  "reviewed_sha": "8d95367446e8ec3c546fd00251cb6f343df57917",
   "reviewer": "opus",
-  "origin": "agent-tool",
-  "iterations": 8,
+  "origin": "glm-agent",
+  "iterations": 9,
   "fixes_applied": 1,
   "issues_remaining": 2,
   "summary": "Score 7/10, 2 issues",
@@ -130,6 +130,22 @@
       "description": "Update does not pass existing filter ID to Cloudflare API (pkg/r2go2/firewall.go:148-150). The Filter in FirewallRuleUpdateParams has no ID field set — CF API may create a duplicate filter instead of updating the existing one. Should fetch existing rule first to obtain filter ID, or accept it as a parameter.",
       "has_fix": false,
       "round": 8
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Metadata files (.gorchestra/fingerprint-cache.json, GOrchestra/intel/status.json) contain worktree-specific paths and project_name '_glm-agent-0027-email-routing-email-tests' — these must not be merged to master",
+      "has_fix": false,
+      "round": 9
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "TestEmailFlagsParsing_MatchTo/MatchAll/Drop (lines ~550-608) create fresh cobra.Command instances and test cobra's own flag parsing rather than verifying the application's flag wiring — they test the framework, not the app",
+      "has_fix": false,
+      "round": 9
     }
   ],
   "prior_shas": [
@@ -140,11 +156,12 @@
     "946783c5c7d701f42e8282f7114dfca7571f11f6",
     "2f20aaf4c37692940c820bdffb85c23386f31763",
     "2beab3c4f19180b6a305dc3f36443aaab36980fe",
-    "01ad30fd27a057639826e37d9fbf0df8d2e5f1ce"
+    "01ad30fd27a057639826e37d9fbf0df8d2e5f1ce",
+    "8d95367446e8ec3c546fd00251cb6f343df57917"
   ],
-  "cumulative_fixes_applied": 6,
+  "cumulative_fixes_applied": 7,
   "min_score_across_rounds": 7,
   "has_prior_min_score": true,
   "converged_at_cap": true,
-  "convergence_reason": "iteration 8/2 reached with evidence gate passing: score=7/10, cumulative_fixes=5, non_trivial_diff=true"
+  "convergence_reason": "iteration 9/3 reached with evidence gate passing: score=7/10, cumulative_fixes=6, non_trivial_diff=true"
 }
