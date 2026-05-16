@@ -244,3 +244,243 @@
 {"id":"7","subject":"","status":"completed","completed_at":"2026-05-13T19:27:05Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
 {"id":"8","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
 {"id":"8","subject":"","status":"completed","completed_at":"2026-05-13T19:29:33Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"9","subject":"ROAD-014: Retry logic with exponential backoff","status":"pending","created_at":"2026-05-14T07:53:59Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"10","subject":"ROAD-012: Shell completions (bash, zsh, fish)","status":"pending","created_at":"2026-05-14T07:54:07Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"11","subject":"TASK-003: Remove dead demo files from cmd_disabled","status":"pending","created_at":"2026-05-14T07:54:17Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"9","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"10","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"11","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-14T07:57:25Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-14T08:04:11Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-14T08:04:19Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"12","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-14T08:14:50Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"13","subject":"Phase 1.5: Code simplification","status":"pending","created_at":"2026-05-14T08:15:03Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"14","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-14T08:15:16Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"15","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-14T08:15:40Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"16","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-14T08:15:50Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"17","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-05-14T08:15:59Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"18","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-14T08:16:05Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"19","subject":"Phase 3d: Tool reflection","status":"pending","created_at":"2026-05-14T08:16:14Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"20","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-14T08:16:28Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"21","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-05-14T08:16:41Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"12","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-14T08:17:25Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"13","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"14","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-14T08:20:17Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"15","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-14T08:20:52Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"16","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-14T08:21:43Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"17","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"20","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-14T08:27:23Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-05-14T08:27:23Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-14T08:27:46Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"18","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"19","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-14T08:28:23Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"21","subject":"","status":"in_progress","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-14T08:29:32Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-05-14T08:30:24Z","session":"e9ad75ae-89d4-4bc6-abbd-48f8d61d2018"}
+{"id":"1","subject":"G-05: Update USAGE.md documentation","status":"pending","created_at":"2026-05-14T19:00:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"2","subject":"G-04: Analytics Command","status":"pending","created_at":"2026-05-14T19:00:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"3","subject":"G-02: Pipe/stdin support for upload/download","status":"pending","created_at":"2026-05-14T19:00:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"4","subject":"G-03: Bucket Comparison Tool","status":"pending","created_at":"2026-05-14T19:00:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"5","subject":"G-01: Pre-signed URL Generation","status":"pending","created_at":"2026-05-14T19:00:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"6","subject":"G-06: Version bump and final verification","status":"pending","created_at":"2026-05-14T19:00:03Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"7","subject":"Check carry-over: ROAD-014 retry logic, ROAD-012 completions","status":"pending","created_at":"2026-05-14T19:00:03Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"7","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-14T19:00:31Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"5","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"2","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"4","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"3","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-14T19:13:01Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-14T19:13:01Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"1","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-14T19:13:01Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-14T19:13:01Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"6","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-14T19:14:43Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-14T19:16:01Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"8","subject":"Close shipped issues and roadmap items","status":"pending","created_at":"2026-05-14T19:33:03Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"9","subject":"Fix FB-001: GetNamespace O(n) list scan","status":"pending","created_at":"2026-05-14T19:33:03Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"8","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-14T19:33:19Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"9","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-14T19:34:06Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"10","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"11","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"12","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"13","subject":"Phase 7: Cleanup","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"14","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"15","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"16","subject":"Phase 3d: Tool reflection","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"17","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"18","subject":"Phase 6: Finalize","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"19","subject":"Phase 1.5: Code simplification","status":"pending","created_at":"2026-05-15T02:51:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"20","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-15T02:51:26Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"20","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-05-15T02:51:46Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-15T02:51:59Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-15T02:52:17Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-15T02:52:25Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"17","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-15T02:52:51Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"14","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"10","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-15T02:55:34Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"12","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-15T02:57:14Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-15T02:57:20Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-15T02:57:40Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"18","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-15T02:58:02Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"13","subject":"","status":"in_progress","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-15T02:58:32Z","session":"4e2e559d-2f0d-4455-a45a-36f19d2aa076"}
+{"id":"1","subject":"G-04: Fix TestNewClientValidation env-var issue","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"2","subject":"G-02: Fix BUG-003 CI workflow env GOOS/GOARCH parsing","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"3","subject":"G-05: Implement ROAD-009 Config Profiles system","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"4","subject":"G-03: Fix BUG-005 YAML spec file parsing","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"5","subject":"G-01: Fix BUG-001 speed calculation in enhanced_client.go","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"6","subject":"G-06: Implement ROAD-017 Integration Test Suite","status":"pending","created_at":"2026-05-15T05:27:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"5","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-15T05:28:36Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-15T05:28:36Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-15T05:28:36Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"1","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-15T05:29:39Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"3","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"6","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-15T05:30:55Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-15T05:38:29Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"7","subject":"Commit session work via /commit-all","status":"pending","created_at":"2026-05-15T15:52:36Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"7","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-15T15:56:51Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"8","subject":"G-04: Push TUI coverage toward 60%","status":"pending","created_at":"2026-05-15T16:49:02Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"9","subject":"G-05: Add integration test for complete upload flow","status":"pending","created_at":"2026-05-15T16:49:02Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"8","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-15T16:53:57Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"9","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-15T18:11:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"10","subject":"TASK-004: Create .claude/CLAUDE.md","status":"pending","created_at":"2026-05-16T02:45:55Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"10","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-16T02:47:01Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"11","subject":"Run project upgrade audit for CosmoDev-R2Go2","status":"pending","created_at":"2026-05-16T04:26:50Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"11","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-16T04:34:40Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"12","subject":"Phase 1.5: Code simplification","status":"pending","created_at":"2026-05-16T04:44:05Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"13","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-16T04:44:05Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"14","subject":"Phase 7: Cleanup","status":"pending","created_at":"2026-05-16T04:44:05Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"15","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-16T04:44:05Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"16","subject":"Phase 3c: Idea capture","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"17","subject":"Phase 1.8: Code review gate","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"18","subject":"Phase 6: Finalize","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"19","subject":"Phase 3: Parallel blast (post-commit)","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"20","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"21","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-16T04:44:06Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"21","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-05-16T04:44:41Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-16T04:44:52Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"13","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-16T04:45:09Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-16T04:45:09Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"19","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-05-16T04:45:17Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"15","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-16T04:46:49Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-16T04:46:57Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"16","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-16T04:47:13Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"18","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"14","subject":"","status":"in_progress","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-16T04:47:37Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-16T04:48:05Z","session":"855615a4-2690-4d84-aca1-53e9e0d628ab"}
+{"id":"1","subject":"P-01: DNS Records Library + CLI (ROAD-035)","status":"pending","created_at":"2026-05-16T04:50:30Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"2","subject":"P-02: Zone Management Library + CLI (ROAD-036)","status":"pending","created_at":"2026-05-16T04:50:32Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"3","subject":"P-03: SSL/TLS Management Library + CLI (ROAD-037)","status":"pending","created_at":"2026-05-16T04:50:33Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"4","subject":"P-04: Cache Management Library + CLI (ROAD-038)","status":"pending","created_at":"2026-05-16T04:50:34Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"5","subject":"P-05: Unit Tests for All 4 Services","status":"pending","created_at":"2026-05-16T04:50:37Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"6","subject":"P-06: Cosmoflare Rebrand","status":"pending","created_at":"2026-05-16T04:50:39Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"7","subject":"P-07: Shell Completion Scaffold (ROAD-055)","status":"pending","created_at":"2026-05-16T04:50:40Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"8","subject":"P-08: Commit + Roadmap Update","status":"pending","created_at":"2026-05-16T04:50:42Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"5","subject":"","status":"","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"8","subject":"","status":"","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-16T04:52:39Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"1","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"2","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"3","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"4","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-16T04:59:01Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-16T04:59:02Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-16T04:59:02Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-16T04:59:02Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"5","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-16T05:00:59Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"6","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-16T05:01:57Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"8","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"9","subject":"Update roadmap items ROAD-035/036/037/038/055","status":"pending","created_at":"2026-05-16T05:02:34Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"10","subject":"Update docs/USAGE.md with Phase 4 commands","status":"pending","created_at":"2026-05-16T05:02:35Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"11","subject":"Update CLAUDE.md with new services","status":"pending","created_at":"2026-05-16T05:02:36Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"9","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-16T05:02:47Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"10","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-05-16T05:04:02Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-16T05:13:24Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-16T05:13:37Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"12","subject":"GLM: cache_tier_test.go — tests for renamed cache classifier","status":"pending","created_at":"2026-05-16T05:18:42Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"13","subject":"GLM: Zone ID shell completion for DNS/SSL/Cache commands","status":"pending","created_at":"2026-05-16T05:18:44Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"14","subject":"GLM: Module rename planning doc","status":"pending","created_at":"2026-05-16T05:18:45Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"15","subject":"GLM: Update CLAUDE.md main project structure","status":"pending","created_at":"2026-05-16T05:18:47Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"12","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-16T05:21:30Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"13","subject":"","status":"deleted","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-16T05:21:30Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-05-16T05:21:31Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"16","subject":"Phase 5a: Page Rules library + CLI (ROAD-039)","status":"pending","created_at":"2026-05-16T05:21:46Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"17","subject":"Phase 5b: WAF/Firewall library + CLI (ROAD-040)","status":"pending","created_at":"2026-05-16T05:21:46Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"18","subject":"Phase 5c: Email Routing library + CLI (ROAD-041)","status":"pending","created_at":"2026-05-16T05:21:46Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"19","subject":"Phase 5d: D1 Database library + CLI (ROAD-042)","status":"pending","created_at":"2026-05-16T05:21:47Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"16","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"18","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"17","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"19","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-16T05:27:41Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-16T05:27:41Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-16T05:27:42Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-05-16T05:27:42Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"20","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-16T06:21:21Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"21","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-16T06:21:22Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"22","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-16T06:21:23Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"23","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-05-16T06:21:24Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"24","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-16T06:21:25Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"25","subject":"Phase 6: Finalize","status":"pending","created_at":"2026-05-16T06:21:25Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"20","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-05-16T06:21:37Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-05-16T06:21:43Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"22","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-05-16T06:22:05Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"23","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-05-16T06:22:18Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"24","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-05-16T06:22:58Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"25","subject":"","status":"in_progress","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-05-16T06:23:11Z","session":"666a5e17-ff79-4e3f-aabf-88ff006f7fe2"}
+{"id":"1","subject":"G-01 Healthcheck library (pkg/r2go2/healthcheck.go)","status":"pending","created_at":"2026-05-16T06:28:55Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"2","subject":"G-02 DNS propagation probe (pkg/r2go2/doctor.go)","status":"pending","created_at":"2026-05-16T06:28:57Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"3","subject":"G-03 SSL certificate probe (pkg/r2go2/doctor.go)","status":"pending","created_at":"2026-05-16T06:28:58Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"4","subject":"G-04 HTTP response probe (pkg/r2go2/doctor.go)","status":"pending","created_at":"2026-05-16T06:29:03Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"5","subject":"G-05 Nameserver consistency probe (pkg/r2go2/doctor.go)","status":"pending","created_at":"2026-05-16T06:29:03Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"6","subject":"G-06 Domain overview service (pkg/r2go2/domains.go)","status":"pending","created_at":"2026-05-16T06:29:03Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"7","subject":"G-07 CLI — cosmoflare domains command (cmd/domains.go)","status":"pending","created_at":"2026-05-16T06:29:05Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"8","subject":"G-08 CLI — cosmoflare doctor command (cmd/doctor.go)","status":"pending","created_at":"2026-05-16T06:29:07Z","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"6","subject":"","status":"","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"7","subject":"","status":"","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"8","subject":"","status":"","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"1","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"3","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"2","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"4","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
+{"id":"5","subject":"","status":"in_progress","session":"caed4f81-8053-4dd0-867e-26ed8bde036c"}
