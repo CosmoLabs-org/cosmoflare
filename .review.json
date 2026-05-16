@@ -1,14 +1,14 @@
 {
   "score": 8,
   "passed": true,
-  "reviewed_at": "2026-05-16T06:45:56Z",
-  "reviewed_sha": "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
+  "reviewed_at": "2026-05-16T06:57:19Z",
+  "reviewed_sha": "946783c5c7d701f42e8282f7114dfca7571f11f6",
   "reviewer": "opus",
   "origin": "agent-tool",
-  "iterations": 4,
+  "iterations": 5,
   "fixes_applied": 1,
-  "issues_remaining": 2,
-  "summary": "Score 8/10, 2 issues",
+  "issues_remaining": 3,
+  "summary": "Score 8/10, 3 issues",
   "schema_version": 1,
   "prior_issues": [
     {
@@ -66,17 +66,42 @@
       "description": "Missing CheckRegions, HTTPConfig, and TCPConfig fields from cloudflare.Healthcheck limits non-trivial healthcheck setups (HTTP-specific settings, TCP config, region selection).",
       "has_fix": false,
       "round": 4
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "CheckHTTP creates a new http.Client per call instead of reusing d.httpClient — the redirect-tracking closure is the reason, but it means timeout and transport settings from the constructor are partially wasted (timeout is re-applied, but any custom transport would not be)",
+      "has_fix": false,
+      "round": 5
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "CheckSSL uses tls.DialWithDialer which does not respect the ctx cancellation — context is accepted but only the timeout from d.timeout is honored; a long-running TLS handshake won't cancel on ctx.Done()",
+      "has_fix": false,
+      "round": 5
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "queryResolver silently swallows individual DNS lookup errors (LookupHost, LookupMX, LookupNS) — if LookupHost fails but MX succeeds, the error from LookupHost is lost entirely rather than being surfaced in a warnings field",
+      "has_fix": false,
+      "round": 5
     }
   ],
   "prior_shas": [
     "dd4ea556156083b34b8721b5389dafa0e839e77e",
     "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
     "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
-    "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d"
+    "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
+    "946783c5c7d701f42e8282f7114dfca7571f11f6"
   ],
-  "cumulative_fixes_applied": 2,
+  "cumulative_fixes_applied": 3,
   "min_score_across_rounds": 8,
   "has_prior_min_score": true,
   "converged_at_cap": true,
-  "convergence_reason": "iteration 4/2 reached with evidence gate passing: score=8/10, cumulative_fixes=1, non_trivial_diff=true"
+  "convergence_reason": "iteration 5/2 reached with evidence gate passing: score=8/10, cumulative_fixes=2, non_trivial_diff=true"
 }
