@@ -2,12 +2,29 @@ package r2go2
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+// dnsMockSetup creates a mock Cloudflare API server and DNS service for testing.
+func dnsMockSetup(handler http.HandlerFunc) (*DNSService, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewDNSService(cf, "zone-test-123")
+	return svc, server
+}
+
+func dnsWriteJSON(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
 
 // --- Constructor validation ---
 
@@ -399,5 +416,306 @@ func TestDNSRecordType(t *testing.T) {
 	}
 	if rec.Comment != "IPv6 record" {
 		t.Errorf("unexpected Comment: %s", rec.Comment)
+	}
+}
+
+// --- httptest-based API mock tests ---
+
+func TestDNSCreateWithMock(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		proxied := true
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id":         "rec-new-001",
+				"type":       "A",
+				"name":       "test.example.com",
+				"content":    "1.2.3.4",
+				"ttl":        300,
+				"proxied":    proxied,
+				"proxiable":  true,
+				"created_on": time.Now().Format(time.RFC3339),
+				"modified_on": time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	rec, err := svc.Create(ctx, "A", "test.example.com", "1.2.3.4",
+		WithDNSTTL(300), WithDNSProxied(true), WithDNSComment("test"),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.ID != "rec-new-001" {
+		t.Errorf("expected ID=rec-new-001, got %s", rec.ID)
+	}
+	if rec.Type != "A" {
+		t.Errorf("expected Type=A, got %s", rec.Type)
+	}
+	if rec.Name != "test.example.com" {
+		t.Errorf("expected Name=test.example.com, got %s", rec.Name)
+	}
+	if rec.Content != "1.2.3.4" {
+		t.Errorf("expected Content=1.2.3.4, got %s", rec.Content)
+	}
+}
+
+func TestDNSListWithMock(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": []map[string]interface{}{
+				{
+					"id":      "rec-001",
+					"type":    "A",
+					"name":    "a.example.com",
+					"content": "1.1.1.1",
+					"ttl":     1,
+					"proxied": true,
+				},
+				{
+					"id":      "rec-002",
+					"type":    "AAAA",
+					"name":    "aaaa.example.com",
+					"content": "::1",
+					"ttl":     300,
+					"proxied": false,
+				},
+			},
+			"result_info": map[string]interface{}{"page": 1, "total_pages": 1, "count": 2},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	records, err := svc.List(ctx, WithDNSType("A"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 2 {
+		t.Fatalf("expected 2 records, got %d", len(records))
+	}
+	if records[0].ID != "rec-001" {
+		t.Errorf("expected first ID=rec-001, got %s", records[0].ID)
+	}
+	if records[1].Type != "AAAA" {
+		t.Errorf("expected second Type=AAAA, got %s", records[1].Type)
+	}
+}
+
+func TestDNSGetWithMock(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id":      "rec-get-001",
+				"type":    "CNAME",
+				"name":    "www.example.com",
+				"content": "example.com",
+				"ttl":     1,
+				"proxied": true,
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	rec, err := svc.Get(ctx, "rec-get-001")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.ID != "rec-get-001" {
+		t.Errorf("expected ID=rec-get-001, got %s", rec.ID)
+	}
+	if rec.Type != "CNAME" {
+		t.Errorf("expected Type=CNAME, got %s", rec.Type)
+	}
+}
+
+func TestDNSGetNotFound(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1000, "message": "DNS record not found"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Get(ctx, "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for not found")
+	}
+}
+
+func TestDNSUpdateWithMock(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("expected PATCH, got %s", r.Method)
+		}
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id":      "rec-upd-001",
+				"type":    "A",
+				"name":    "test.example.com",
+				"content": "5.6.7.8",
+				"ttl":     600,
+				"proxied": false,
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	rec, err := svc.Update(ctx, "rec-upd-001", WithDNSTTL(600), WithDNSProxied(false))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.ID != "rec-upd-001" {
+		t.Errorf("expected ID=rec-upd-001, got %s", rec.ID)
+	}
+}
+
+func TestDNSDeleteWithMock(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Errorf("expected DELETE, got %s", r.Method)
+		}
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "rec-del-001"},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Delete(ctx, "rec-del-001")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestDNSCreateAPIError(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 1001, "message": "invalid zone"}},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	_, err := svc.Create(ctx, "A", "test.example.com", "1.2.3.4")
+	if err == nil {
+		t.Fatal("expected error from API")
+	}
+	if _, ok := err.(*R2Error); !ok {
+		t.Errorf("expected *R2Error, got %T", err)
+	}
+}
+
+func TestDNSCreateWithPriority(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]interface{}
+		json.NewDecoder(r.Body).Decode(&body)
+		if body["type"] != "MX" {
+			t.Errorf("expected type=MX, got %v", body["type"])
+		}
+		priority := float64(10)
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id": "rec-mx-001", "type": "MX", "name": "mail.example.com",
+				"content": "mx1.example.com", "ttl": 3600, "priority": priority,
+				"proxied": false,
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	rec, err := svc.Create(ctx, "MX", "mail.example.com", "mx1.example.com",
+		WithDNSTTL(3600), WithDNSPriority(10),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.ID != "rec-mx-001" {
+		t.Errorf("expected ID=rec-mx-001, got %s", rec.ID)
+	}
+}
+
+func TestDNSListEmpty(t *testing.T) {
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  []interface{}{},
+			"result_info": map[string]interface{}{"page": 1, "total_pages": 1, "count": 0},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	records, err := svc.List(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 0 {
+		t.Errorf("expected 0 records, got %d", len(records))
+	}
+}
+
+func TestDNSRecordJSONMarshal(t *testing.T) {
+	p := uint16(20)
+	rec := &DNSRecord{
+		ID: "rec-json-001", Type: "MX", Name: "mail.example.com",
+		Content: "mx.example.com", TTL: 3600, Proxied: false, Priority: &p,
+		Comment: "json test", ZoneID: "zone-json", Proxiable: true,
+		CreatedOn: time.Now(), ModifiedOn: time.Now(),
+	}
+	data, err := json.Marshal(rec)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded DNSRecord
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.ID != "rec-json-001" {
+		t.Errorf("ID mismatch: got %q", decoded.ID)
+	}
+	if decoded.Type != "MX" {
+		t.Errorf("Type mismatch: got %q", decoded.Type)
+	}
+	if decoded.Priority == nil || *decoded.Priority != 20 {
+		t.Errorf("Priority mismatch: got %v", decoded.Priority)
+	}
+}
+
+func TestDNSNewFromCredsSuccess(t *testing.T) {
+	svc, err := NewDNSServiceFromCreds("zone123", fmt.Sprintf("test-token-%d", time.Now().UnixNano()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if svc.zoneID != "zone123" {
+		t.Errorf("expected zoneID=zone123, got %s", svc.zoneID)
 	}
 }
