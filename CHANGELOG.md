@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.7.1] - 2026-05-16
+
+### Fixed
+- resolve duplicate status field in phase4 prompt frontmatter (commit:4ad3fea4)
+- add mapstructure tags to Profile struct (commit:9619ec09)
+- guard TestNewClientValidation against env vars (commit:b2962328)
+
 ## [0.7.0] - 2026-05-14
 
 ### Added
