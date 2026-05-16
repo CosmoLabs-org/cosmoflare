@@ -74,11 +74,11 @@ var DotsSpinnerCharacters = []string{
 
 // ProgressBarCharacters contains progress bar characters
 var ProgressBarCharacters = map[string]struct {
-	Empty  string
-	Fill   string
-	Start  string
-	End    string
-	Head   string
+	Empty string
+	Fill  string
+	Start string
+	End   string
+	Head  string
 }{
 	"standard": {" ", "█", " ", " ", "█"},
 	"blocks":   {"░", "▓", " ", " ", "▓"},
@@ -88,11 +88,11 @@ var ProgressBarCharacters = map[string]struct {
 
 // Animator handles various animations
 type Animator struct {
-	Style       string
-	Speed       time.Duration
-	Disabled    bool
-	frameCount  int
-	lastUpdate  time.Time
+	Style      string
+	Speed      time.Duration
+	Disabled   bool
+	frameCount int
+	lastUpdate time.Time
 }
 
 // NewAnimator creates a new animator
@@ -212,9 +212,9 @@ func (a *Animator) mixTexts(from, to string, fadeOut, fadeIn float64) string {
 			// you might use color codes or other visual effects
 			if fadeIn > 0.5 {
 				result[i] = []rune(to)[i]
-		} else {
+			} else {
 				result[i] = r
-		}
+			}
 		} else {
 			result[i] = r
 		}
