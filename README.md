@@ -1,18 +1,18 @@
-# R2Go2
+# Cosmoflare (R2Go2)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go" alt="Go Version">
   <img src="https://img.shields.io/badge/Cli-Cobra-25D366?style=for-the-badge&logo=command-line" alt="Cobra CLI">
-  <img src="https://img.shields.io/badge/Cloudflare-R2-F38020?style=for-the-badge&logo=cloudflare" alt="Cloudflare R2">
+  <img src="https://img.shields.io/badge/Cloudflare-Platform-F38020?style=for-the-badge&logo=cloudflare" alt="Cloudflare">
   <img src="https://img.shields.io/badge/License-MIT-9cf?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
-  <strong>A production-ready CLI tool for managing Cloudflare R2 buckets</strong>
+  <strong>Open-source CLI for the full Cloudflare developer platform</strong>
 </p>
 
 <p align="center">
-  Built by <a href="https://cosmolabs.org">CosmoLabs</a> for the <a href="https://cosmolabs.org/cosmodev">CosmoDev</a> ecosystem
+  Built by <a href="https://cosmolabs.org">CosmoLabs</a> &mdash; R2 Storage, Workers, KV, DNS, Zones, SSL/TLS, Cache, and more
 </p>
 
 ---

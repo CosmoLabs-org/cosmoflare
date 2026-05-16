@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-16T00:10:55.327407-03:00
+last_updated: 2026-05-16T02:02:44.001318-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -75,10 +75,11 @@ items:
       created_at: 2026-05-16T00:10:21.413705-03:00
     - id: ROAD-055
       title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
-      status: captured
+      status: completed
       priority: 75
       category: ux
       effort: small
+      completed_in: v0.7.1
       created_at: 2026-05-16T00:10:13.900551-03:00
     - id: ROAD-054
       title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
@@ -191,31 +192,35 @@ items:
       created_at: 2026-05-16T00:09:11.555248-03:00
     - id: ROAD-038
       title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
-      status: captured
+      status: completed
       priority: 85
       category: core
       effort: small
+      completed_in: v0.7.1
       created_at: 2026-05-16T00:09:11.456035-03:00
     - id: ROAD-037
       title: SSL/TLS certificate management — edge certs, origin pull, minimum TLS, always-https
-      status: captured
+      status: completed
       priority: 85
       category: security
       effort: small
+      completed_in: v0.7.1
       created_at: 2026-05-16T00:09:05.427409-03:00
     - id: ROAD-036
       title: Zone management — list zones, settings, diagnostics
-      status: captured
+      status: completed
       priority: 90
       category: core
       effort: small
+      completed_in: v0.7.1
       created_at: 2026-05-16T00:09:05.324556-03:00
     - id: ROAD-035
       title: Email Routing — create rules, list destinations, catch-all settings
-      status: captured
+      status: completed
       priority: 75
       category: core
       effort: small
+      completed_in: v0.7.1
       created_at: 2026-05-16T00:08:47.131816-03:00
     - id: ROAD-034
       title: Upload guardrails system (allowed buckets, max file size, blocked keys)

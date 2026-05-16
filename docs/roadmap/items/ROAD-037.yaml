@@ -1,11 +1,13 @@
 id: ROAD-037
 created_at: 2026-05-16T00:09:05.427409-03:00
-updated_at: 2026-05-16T00:09:05.428247-03:00
+updated_at: 2026-05-16T02:02:43.926938-03:00
 title: SSL/TLS certificate management — edge certs, origin pull, minimum TLS, always-https
 description: Certificate status, edge certificates, origin pull certs, minimum TLS version, always-https toggle.
-status: captured
+status: completed
 priority: 85
 category: security
 effort: small
+completed_in: v0.7.1
+completed_at: 2026-05-16T02:02:43.926935-03:00
 origin:
     session: 2027

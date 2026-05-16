@@ -1,14 +1,30 @@
-# Cosmoflare — Product Vision
+# Cosmoflare — Product Vision & Constitution
 
 **Company**: CosmoLabs (https://cosmolabs.org)
 **License**: MIT (open-source)
 **Repo**: github.com/CosmoLabs-org/CosmoDev-R2Go2
 
+## Mission
+
+**Control Cloudflare 100% from the terminal — securely, efficiently, and agent-first.**
+
+Cosmoflare is the MCP-powered Cloudflare control plane. It exists so that Claude Code, agentic workflows, and human developers can manage every Cloudflare service from a single tool with zero browser dependency.
+
+## Constitution (Non-Negotiable Principles)
+
+1. **Agent-first UX** — Every command must be usable by an AI agent without human guidance. `--json` on every command, predictable exit codes, rich `--help` for agent discovery, actionable error messages.
+2. **Full platform coverage** — If the Cloudflare API exposes it, Cosmoflare manages it. No service left behind.
+3. **Security is paramount** — API keys handled securely (never logged, never in output unless explicit). The CLI is the trust boundary between agents and Cloudflare infrastructure.
+4. **Library-first** — The Go library (`pkg/r2go2/`) is the stable API surface. The CLI wraps it. The future mobile app wraps it. No separate implementations.
+5. **MCP-native** — Cosmoflare will serve as an MCP server, letting Claude Code and other AI tools control Cloudflare natively through tool-use protocol.
+6. **Open-source core, paid mobile** — The CLI is free (MIT). The React Native mobile app with push notifications and one-tap actions is the paid product.
+7. **Backward compatible** — `r2go2` binary always works. `cosmoflare` is the primary name. Module path changes are planned, not forced.
+
 ## What is Cosmoflare?
 
 Cosmoflare is the ultimate open-source CLI for managing the entire Cloudflare developer platform. It builds on top of wrangler and makes it better — more services, better UX, and a public Go library that wrangler doesn't provide.
 
-**The chain**: Go library → CLI (wrangler+) → Mobile app (same API logic, native interface)
+**The chain**: Go library → CLI → MCP server → Mobile app (same API logic, native interface)
 
 ## 3-Tier Product
 

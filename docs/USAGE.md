@@ -1,6 +1,8 @@
-# R2Go2 Usage Guide
+# Cosmoflare Usage Guide
 
-R2Go2 is a CLI tool for managing the full Cloudflare developer platform: R2 (storage), Workers (compute), and KV (key-value). All commands support `--json` for machine-readable output.
+Cosmoflare is a CLI tool for managing the full Cloudflare developer platform: R2 (storage), Workers (compute), KV (key-value), DNS, Zones, SSL/TLS, Cache, and more. All commands support `--json` for machine-readable output.
+
+> **Binary names:** `cosmoflare` is the primary binary name. `r2go2` remains available as a backward-compatible alias and all examples below work with either name.
 
 ## Setup
 
@@ -248,6 +250,189 @@ r2go2 kv list ns-abc123
 r2go2 kv list ns-abc123 --prefix=cache/
 r2go2 kv list ns-abc123 --limit=100 --json
 ```
+
+## DNS Commands
+
+DNS record management is zone-scoped. All DNS commands require a `<zone-id>` as the first argument.
+
+### Create a DNS record
+```bash
+r2go2 dns create <zone-id> --type=A --name=www --content=1.2.3.4
+r2go2 dns create <zone-id> --type=A --name=www --content=1.2.3.4 --proxied --ttl=300
+r2go2 dns create <zone-id> --type=CNAME --name=blog --content=blog.example.com --comment="Blog subdomain"
+r2go2 dns create <zone-id> --type=MX --name=@ --content=mail.example.com --priority=10
+```
+JSON output:
+```json
+{"success":true,"message":"DNS record created successfully","data":{"id":"rec-abc123","type":"A","name":"www.example.com","content":"1.2.3.4","proxied":true,"ttl":300}}
+```
+
+### List DNS records
+```bash
+r2go2 dns list <zone-id>
+r2go2 dns list <zone-id> --json
+r2go2 dns list <zone-id> --type=CNAME
+r2go2 dns list <zone-id> --name=www --content=1.2.3.4
+```
+
+### Get a DNS record
+```bash
+r2go2 dns get <zone-id> <record-id>
+r2go2 dns get <zone-id> <record-id> --json
+```
+
+### Update a DNS record
+```bash
+r2go2 dns update <zone-id> <record-id> --content=5.6.7.8
+r2go2 dns update <zone-id> <record-id> --ttl=300 --proxied --comment="Updated IP" --json
+```
+JSON output:
+```json
+{"success":true,"message":"DNS record updated successfully","data":{"id":"rec-abc123","type":"A","name":"www.example.com","content":"5.6.7.8","proxied":true,"ttl":300}}
+```
+
+### Delete a DNS record
+```bash
+r2go2 dns delete <zone-id> <record-id>
+r2go2 dns delete <zone-id> <record-id> --force
+```
+JSON output:
+```json
+{"success":true,"message":"DNS record deleted successfully","data":{"zone_id":"zone-abc","record_id":"rec-abc123"}}
+```
+
+## Zone Commands
+
+Zone management is account-scoped and uses the configured account ID.
+
+### Create a zone
+```bash
+r2go2 zone create example.com
+r2go2 zone create example.com --type=full --json
+```
+JSON output:
+```json
+{"success":true,"message":"Zone created successfully","data":{"id":"zone-abc123","name":"example.com","status":"pending","type":"full"}}
+```
+
+### List zones
+```bash
+r2go2 zone list
+r2go2 zone list --json
+```
+
+### Get zone details
+```bash
+r2go2 zone get <zone-id>
+r2go2 zone get <zone-id> --json
+```
+
+### Get zone settings
+```bash
+r2go2 zone settings <zone-id>
+r2go2 zone settings <zone-id> --json
+```
+
+### Delete a zone
+```bash
+r2go2 zone delete <zone-id>
+r2go2 zone delete <zone-id> --force
+```
+JSON output:
+```json
+{"success":true,"message":"Zone deleted successfully","data":{"id":"zone-abc123"}}
+```
+
+## SSL/TLS Commands
+
+SSL/TLS management is zone-scoped. Inspect and configure encryption settings for a zone.
+
+### Check SSL status
+```bash
+r2go2 ssl status <zone-id>
+r2go2 ssl status <zone-id> --json
+```
+JSON output:
+```json
+{"success":true,"data":{"zone_id":"zone-abc123","mode":"full","status":"active","certificate_status":"active"}}
+```
+
+### Get SSL settings
+```bash
+r2go2 ssl settings <zone-id>
+r2go2 ssl settings <zone-id> --json
+```
+
+### Update SSL settings
+```bash
+r2go2 ssl update <zone-id> --mode=full
+r2go2 ssl update <zone-id> --mode=full --min-tls=1.2 --always-https --auto-rewrites --json
+```
+JSON output:
+```json
+{"success":true,"message":"SSL settings updated successfully","data":{"zone_id":"zone-abc123","mode":"full","min_tls_version":"1.2","always_use_https":true,"automatic_https_rewrites":true}}
+```
+
+Supported `--mode` values: `off`, `flexible`, `full`, `strict` (full strict).
+
+### Verify SSL certificate
+```bash
+r2go2 ssl verify <zone-id>
+r2go2 ssl verify <zone-id> --json
+```
+JSON output:
+```json
+{"success":true,"data":{"zone_id":"zone-abc123","certificate_status":"active","issuer":"DigiCert","expires_on":"2027-01-15T00:00:00Z"}}
+```
+
+## Cache Commands
+
+Cache management is zone-scoped. Purge cached content and configure caching behavior.
+
+### Purge all cached content
+```bash
+r2go2 cache purge <zone-id> --all
+r2go2 cache purge <zone-id> --all --force
+```
+JSON output:
+```json
+{"success":true,"message":"Cache purged successfully","data":{"zone_id":"zone-abc123","purge_type":"all"}}
+```
+
+### Purge by URL
+```bash
+r2go2 cache purge <zone-id> --url=https://example.com/style.css
+r2go2 cache purge <zone-id> --url=https://example.com/a.js --url=https://example.com/b.js
+```
+
+### Purge by cache tag
+```bash
+r2go2 cache purge <zone-id> --tag=static
+r2go2 cache purge <zone-id> --tag=static --tag=images
+```
+
+### Purge by hostname
+```bash
+r2go2 cache purge <zone-id> --host=example.com
+r2go2 cache purge <zone-id> --host=example.com --host=cdn.example.com
+```
+
+### Get cache settings
+```bash
+r2go2 cache settings <zone-id>
+r2go2 cache settings <zone-id> --json
+```
+
+### Update cache settings
+```bash
+r2go2 cache settings <zone-id> --browser-ttl=3600 --dev-mode --cache-level=aggressive
+```
+JSON output:
+```json
+{"success":true,"message":"Cache settings updated successfully","data":{"zone_id":"zone-abc123","browser_ttl":3600,"development_mode":true,"cache_level":"aggressive"}}
+```
+
+Supported `--cache-level` values: `basic`, `simplified`, `aggressive`.
 
 ## Library Usage (Workers and KV)
 

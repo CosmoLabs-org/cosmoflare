@@ -21,7 +21,14 @@ go test ./tests/integration/api/real/ -tags=integration
 ## Architecture
 
 - **`pkg/r2go2/`** — Public library. Import as `r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"`. This is the stable API surface.
-- **`cmd/`** — Cobra CLI commands. `root.go` has the root command; each service gets its own file (`bucket.go`, `object.go`, `worker.go`, `kv.go`).
+  - **R2 Storage**: `client.go`, `storage.go`, `upload.go`, `download.go`
+  - **Workers**: `worker.go` — WorkerService (Deploy, List, Get, Delete, Logs, UpdateSettings)
+  - **KV**: `kv.go` — KVService (namespaces + key-value CRUD)
+  - **DNS**: `dns.go` — DNSService (Create, List, Get, Update, Delete) — zone-scoped
+  - **Zones**: `zone.go` — ZoneService (Create, List, Get, Delete, GetSettings) — account-scoped
+  - **SSL/TLS**: `ssl.go` — SSLService (GetSSL, UpdateSSL, GetVerification, GetSettings, UpdateSettings) — zone-scoped
+  - **Cache**: `cloudflare_cache.go` — CacheService (PurgeAll, PurgeByURLs/Tags/Hosts, GetSettings, UpdateSettings) — zone-scoped
+- **`cmd/`** — Cobra CLI commands. `root.go` has the root command; each service gets its own file (`bucket.go`, `object.go`, `worker.go`, `kv.go`, `dns.go`, `zone.go`, `ssl.go`, `cache.go`).
 - **`internal/`** — Private packages. `config/` (viper-based profiles), `tui/` (Bubble Tea dashboard), `interactive/` (setup wizard), `utils/`.
 - **`internal/migration/`** and `cmd_disabled/` — Disabled code. Don't modify unless re-enabling.
 
@@ -58,6 +65,10 @@ go test ./tests/integration/api/real/ -tags=integration
 | `r2go2 worker deploy/list/get/delete/logs` | Worker management |
 | `r2go2 kv namespace create/list/delete` | KV namespaces |
 | `r2go2 kv put/get/delete/list` | KV key-value ops |
+| `r2go2 dns create/list/get/update/delete` | DNS record management (zone-scoped) |
+| `r2go2 zone create/list/get/settings/delete` | Zone management (account-scoped) |
+| `r2go2 ssl status/settings/update/verify` | SSL/TLS management (zone-scoped) |
+| `r2go2 cache purge/settings` | Cache purge and settings (zone-scoped) |
 | `r2go2 config init/set/list/show/switch/export` | Profile management |
 | `r2go2 analytics` | Usage statistics |
 | `r2go2 compare` | Bucket comparison |

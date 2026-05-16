@@ -40,13 +40,14 @@ deps:
 	$(GOMOD) download
 	$(GOMOD) tidy
 
-# Build for current platform
+# Build for current platform (produces both cosmoflare and r2go2 binaries)
 .PHONY: build
 build:
 	@echo "🏗️  Building $(BINARY_NAME) for $(shell go env GOOS)/$(shell go env GOARCH)..."
 	@mkdir -p $(BUILD_DIR)
 	CGO_ENABLED=0 GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) $(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
-	@echo "✅ Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
+	@ln -sf $(BINARY_NAME) $(BUILD_DIR)/cosmoflare
+	@echo "✅ Build complete: $(BUILD_DIR)/$(BINARY_NAME) (+ $(BUILD_DIR)/cosmoflare symlink)"
 
 # Build for all platforms
 .PHONY: build-all

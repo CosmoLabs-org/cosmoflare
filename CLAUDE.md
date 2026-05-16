@@ -22,10 +22,10 @@ Everything the Cloudflare API allows us to interact with:
 | **R2** (storage) | Implemented | Phase 1 |
 | **Workers** (compute) | Implemented | Phase 3 |
 | **KV** (key-value) | Implemented | Phase 3 |
-| **DNS Records** | ROAD-035 | Phase 4 |
-| **Zones** | ROAD-036 | Phase 4 |
-| **SSL/TLS** | ROAD-037 | Phase 4 |
-| **Cache** | ROAD-038 | Phase 4 |
+| **DNS Records** | Implemented | Phase 4 |
+| **Zones** | Implemented | Phase 4 |
+| **SSL/TLS** | Implemented | Phase 4 |
+| **Cache** | Implemented | Phase 4 |
 | **Page/Redirect Rules** | ROAD-039 | Phase 4 |
 | **WAF/Firewall** | ROAD-040 | Phase 5 |
 | **Email Routing** | ROAD-041 | Phase 5 |

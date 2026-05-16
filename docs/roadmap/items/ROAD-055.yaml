@@ -1,11 +1,13 @@
 id: ROAD-055
 created_at: 2026-05-16T00:10:13.900551-03:00
-updated_at: 2026-05-16T00:10:13.902271-03:00
+updated_at: 2026-05-16T02:02:44.001149-03:00
 title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
 description: Auto-complete for all commands, flags, and argument values. Required for CLI adoption.
-status: captured
+status: completed
 priority: 75
 category: ux
 effort: small
+completed_in: v0.7.1
+completed_at: 2026-05-16T02:02:44.001144-03:00
 origin:
     session: 2027
