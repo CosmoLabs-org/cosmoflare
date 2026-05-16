@@ -1,9 +1,4 @@
-/*
-Package cmd provides webhook and alerting commands for R2Go2
-
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
-License: MIT
-*/
+//go:build disabled
 
 package cmd
 
