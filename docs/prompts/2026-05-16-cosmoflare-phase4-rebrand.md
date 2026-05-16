@@ -1,6 +1,6 @@
 ---
 branch: master
-status: COMPLETED
+status: PENDING
 created: "2026-05-16"
 goals_completed: 0
 goals_total: 8
