@@ -1,14 +1,14 @@
 {
-  "score": 7,
+  "score": 8,
   "passed": true,
-  "reviewed_at": "2026-05-16T09:31:44Z",
-  "reviewed_sha": "eec97a4700bb75e0d0daf800ed4886f5f538d143",
+  "reviewed_at": "2026-05-16T10:19:32Z",
+  "reviewed_sha": "732af9de8295db12a81c96d14903faff7be39a1f",
   "reviewer": "opus",
   "origin": "agent-tool",
-  "iterations": 7,
+  "iterations": 15,
   "fixes_applied": 1,
-  "issues_remaining": 4,
-  "summary": "Score 7/10, 4 issues",
+  "issues_remaining": 2,
+  "summary": "Score 8/10, 2 issues",
   "schema_version": 1,
   "prior_issues": [
     {
@@ -130,6 +130,246 @@
       "description": "`EmailDestination.Verified` uses `time.Time` with `json:\"verified,omitempty\"` but `omitempty` is a no-op on `time.Time` structs in Go — zero time still serializes as `0001-01-01T00:00:00Z`. Use `*time.Time` to match the pattern in `EmailSettings` for consistent omission of unset dates.",
       "has_fix": false,
       "round": 7
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command `--enabled` flag defaults to `true` (line 322). Running `cosmoflare email rules update ZONE RULE --name=X` silently re-enables a disabled rule. `--priority` defaults to 0, silently resetting priority. The fix is to use `cmd.Flags().Changed(\"enabled\")` / `cmd.Flags().Changed(\"priority\")` to detect explicit user intent, and make `UpdateRule` accept pointer types (`*int`, `*bool`) for optional fields.",
+      "has_fix": false,
+      "round": 8
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "UpdateRule API signature uses concrete `priority int, enabled bool` — it always sends these values to Cloudflare even when the user only intended a partial update. The Cloudflare API treats UpdateEmailRoutingRule as a full replacement, so unset fields overwrite current values. The library layer needs optional-field semantics (pointer types or an options struct).",
+      "has_fix": false,
+      "round": 8
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`TestNewEmailService_EmptyAccountID` (line 32 of email_test.go) passes nil API client AND empty accountID — the nil check fires first, so the accountID validation path is never exercised via `NewEmailService`. The comment acknowledges this but the test name is misleading. Should pass a non-nil API to test the accountID check, or rename the test.",
+      "has_fix": false,
+      "round": 8
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`EmailDestination.Verified` uses `time.Time` with `json:\"verified,omitempty\"` but `omitempty` is a no-op on `time.Time` structs in Go stdlib encoding/json (zero time still serializes as `\"0001-01-01T00:00:00Z\"`). Use `*time.Time` to match the pattern in `EmailSettings` for consistent zero-value omission.",
+      "has_fix": false,
+      "round": 8
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command `--enabled` defaults to `true` (line 322 of cmd/email.go). Running `cosmoflare email rules update ZONE RULE --name=X` silently re-enables a disabled rule. `--priority` defaults to 0, silently resetting priority. Use `cmd.Flags().Changed(\"enabled\")` and `cmd.Flags().Changed(\"priority\")` to distinguish explicit from default values.",
+      "has_fix": false,
+      "round": 9
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "UpdateRule service method signature takes concrete `priority int, enabled bool` — there is no way for the CLI to signal 'user did not set this field'. The Cloudflare API treats the update as a full replacement, so unset fields overwrite current values with defaults. The service layer needs `*int`/`*bool` or an opts struct to support partial updates.",
+      "has_fix": false,
+      "round": 9
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`TestNewEmailService_EmptyAccountID` (line 31-36 of email_test.go) passes nil API + empty accountID — the nil-API check fires first, so the empty-accountID validation path is never exercised through `NewEmailService`. The comment acknowledges this but the test name is misleading and the code path is effectively untested via this constructor.",
+      "has_fix": false,
+      "round": 9
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`EmailDestination.Verified` uses `time.Time` with `json:\"verified,omitempty\"` (line 38 of email.go) — `omitempty` is a no-op on `time.Time` structs in Go. Zero time serializes as `0001-01-01T00:00:00Z` rather than being omitted. Use `*time.Time` to match the pattern in `EmailSettings` for consistent behavior.",
+      "has_fix": false,
+      "round": 9
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command `--enabled` flag defaults to `true` (line ~322 of cmd/email.go). Running `cosmoflare email rules update ZONE RULE --name=X` silently re-enables a disabled rule. `--priority` defaults to 0, silently resetting priority. Must use `cmd.Flags().Changed(\"enabled\")` and `cmd.Flags().Changed(\"priority\")` to detect explicit user intent before passing to UpdateRule.",
+      "has_fix": false,
+      "round": 10
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "UpdateRule function signature takes `priority int, enabled bool` as concrete types — impossible to distinguish 'user set false/0' from 'user didn't set'. The Cloudflare API treats this as full replacement, so unset fields overwrite current values. Needs pointer types or an options struct to support partial updates.",
+      "has_fix": false,
+      "round": 10
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`EmailDestination.Verified` uses `time.Time` with `json:\"verified,omitempty\"` but `omitempty` is a no-op on `time.Time` in Go — zero time serializes as `0001-01-01T00:00:00Z`. Should use `*time.Time` to match the pattern in `EmailSettings` for consistent JSON output.",
+      "has_fix": false,
+      "round": 10
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "`TestNewEmailService_EmptyAccountID` passes nil API client, so nil-API check fires first. The accountID validation path in `NewEmailService` is effectively untested — the test name is misleading.",
+      "has_fix": false,
+      "round": 10
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command leaks sentinel value: `priority = -1` is passed directly to `svc.UpdateRule` which sends it to the Cloudflare API as the actual priority. The comment says 'sentinel: UpdateRule should preserve existing' but the service layer has no sentinel-detection or fetch-before-update logic — it passes -1 verbatim to `cloudflare.UpdateEmailRoutingRuleParameters.Priority`.",
+      "has_fix": false,
+      "round": 11
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command's `enabled` handling is broken: when `--enabled` is not explicitly set, `enabled = true` is sent to the API. The comment claims 'preserve enabled state via fetch-before-update in service layer' but no such fetch exists in `EmailService.UpdateRule`. Running `update ZONE RULE --name=X` on a disabled rule silently re-enables it.",
+      "has_fix": false,
+      "round": 11
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command sends empty matchers/actions to the API when user doesn't specify `--match-to`/`--match-all`/`--forward-to`/`--drop`. The service layer builds empty `cfMatchers`/`cfActions` slices and passes them to the API, which likely treats this as a full replacement — wiping existing rule configuration.",
+      "has_fix": false,
+      "round": 11
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "TestNewEmailService_EmptyZoneID passes nil as the API client (`NewEmailService(nil, \"\", \"acct123\")`), so the nil-API check fires before the empty-zoneID check. The test passes for the wrong reason. The test for EmptyAccountID is correctly structured (passes a real client).",
+      "has_fix": false,
+      "round": 11
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command partial-update is broken: the service layer `UpdateRule` unconditionally passes `priority` and `enabled` to Cloudflare's API (which is a PUT/full-replace). When user runs `cosmoflare email rules update ZONE RULE --name=X`, the cmd layer sends priority=-1 (sentinel) and enabled=true directly to the API — there is no fetch-before-update in the service layer despite the comment claiming one exists (line 593). This will corrupt rule state.",
+      "has_fix": false,
+      "round": 12
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Empty matchers/actions on update silently clear the rule: when user only changes `--name` without specifying `--match-to` or `--forward-to`, nil matchers/actions are passed to the service layer which builds empty `cfMatchers`/`cfActions` slices and sends them to Cloudflare's UpdateEmailRoutingRule — a full replacement that wipes the rule's routing configuration.",
+      "has_fix": false,
+      "round": 12
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "TestNewEmailService_EmptyZoneID passes nil API, so the nil-API check fires first — the test passes but doesn't actually validate the empty-zoneID path. Test name is misleading.",
+      "has_fix": false,
+      "round": 12
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "The `--enabled` flag on the update command defaults to `true` via `BoolVar` (line 322 in init). Even with the `cmd.Flags().Changed` guard, the comment says 'preserve enabled state via fetch-before-update in service layer' but no such logic exists — this is a false comment that masks the bug.",
+      "has_fix": false,
+      "round": 12
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command sends priority=-1 sentinel directly to Cloudflare API when user omits --priority. The sentinel is assigned in cmd/email.go (~line 580) but UpdateRule in pkg/r2go2/email.go passes it through to cloudflare.UpdateEmailRoutingRuleParameters.Priority unchanged — no service-layer handling exists despite the comment claiming otherwise.",
+      "has_fix": false,
+      "round": 13
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command sends empty matchers/actions slices when user only wants a partial update (e.g. --name only). In runEmailRulesUpdate, if neither --match-to nor --match-all is set, matchers stays nil → make([]..., 0, 0) → empty array sent to API. Cloudflare treats this as a full replacement, wiping the rule's existing matchers and actions.",
+      "has_fix": false,
+      "round": 13
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "The cmd.Flags().Changed('enabled') guard in runEmailRulesUpdate sets enabled=true when the flag is unchanged — the comment says 'preserve enabled state via fetch-before-update in service layer' but no fetch-before-update exists in EmailService.UpdateRule. Running 'cosmoflare email rules update ZONE RULE --name=X' silently re-enables a disabled rule.",
+      "has_fix": false,
+      "round": 13
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "EmailService.UpdateRule signature takes (priority int, enabled bool) — value types with no sentinel/nil representation. The service layer cannot distinguish 'user set priority=0' from 'user didn't set priority'. Needs *int/*bool or a separate options struct to support true partial updates.",
+      "has_fix": false,
+      "round": 13
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Update command partial-update logic is broken: `priority = -1` sentinel is never interpreted by service layer's `UpdateRule` — Cloudflare receives literal -1 as priority value",
+      "has_fix": false,
+      "round": 14
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "When `--enabled` flag is not explicitly set, `enabled = true` is still sent to Cloudflare API (comment claims 'fetch-before-update in service layer' but no such logic exists in `UpdateRule`), silently re-enabling disabled rules",
+      "has_fix": false,
+      "round": 14
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "When neither `--match-to` nor `--match-all` is set on update, empty `matchers` slice is sent to Cloudflare which may clear existing matchers (full replacement semantics)",
+      "has_fix": false,
+      "round": 14
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Same issue for `actions` — partial update with only `--name` sends empty matchers+actions, potentially destroying the rule configuration",
+      "has_fix": false,
+      "round": 14
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "The .review.json lists 4 blocking issues from round 7, but commits 4f1053b and 732af9d address all of them: EmailDestination.Verified is *time.Time, update handler uses cmd.Flags().Changed() for partial updates, and the EmptyAccountID test now passes a valid cf client to reach the accountID check. The .review.json metadata is stale relative to the final code state.",
+      "has_fix": false,
+      "round": 15
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Tests pass nil as context (e.g. svc.GetRule(nil, \"\")) which works because validation short-circuits, but is not idiomatic — context.Background() would be safer if validation order ever changes.",
+      "has_fix": false,
+      "round": 15
     }
   ],
   "prior_shas": [
@@ -139,11 +379,19 @@
     "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
     "946783c5c7d701f42e8282f7114dfca7571f11f6",
     "2f20aaf4c37692940c820bdffb85c23386f31763",
-    "eec97a4700bb75e0d0daf800ed4886f5f538d143"
+    "eec97a4700bb75e0d0daf800ed4886f5f538d143",
+    "ed5eaa767ec2f4786016c168d001506fc4c91bab",
+    "ed5eaa767ec2f4786016c168d001506fc4c91bab",
+    "ed5eaa767ec2f4786016c168d001506fc4c91bab",
+    "4f1053b81e66b53afaa79cd3b3048e6d80a67666",
+    "4f1053b81e66b53afaa79cd3b3048e6d80a67666",
+    "4f1053b81e66b53afaa79cd3b3048e6d80a67666",
+    "4f1053b81e66b53afaa79cd3b3048e6d80a67666",
+    "732af9de8295db12a81c96d14903faff7be39a1f"
   ],
-  "cumulative_fixes_applied": 5,
-  "min_score_across_rounds": 7,
+  "cumulative_fixes_applied": 8,
+  "min_score_across_rounds": 6,
   "has_prior_min_score": true,
   "converged_at_cap": true,
-  "convergence_reason": "iteration 7/2 reached with evidence gate passing: score=7/10, cumulative_fixes=4, non_trivial_diff=true"
+  "convergence_reason": "iteration 15/2 reached with evidence gate passing: score=8/10, cumulative_fixes=7, non_trivial_diff=true"
 }
