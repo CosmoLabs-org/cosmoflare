@@ -58,7 +58,7 @@ The CLI must be as usable by an AI agent as by a human:
 
 ## Structure
 
-- `cmd/` - CLI commands (cobra): `bucket.go`, `object.go`, `worker.go`, `kv.go`, `dns.go`, `zone.go`, `ssl.go`, `cache.go`
+- `cmd/` - CLI commands (cobra): `bucket.go`, `object.go`, `worker.go`, `kv.go`, `dns.go`, `zone.go`, `ssl.go`, `cache.go`, `domains.go`, `doctor.go`
 - `pkg/r2go2/` - Public library (importable by any Go project):
   - **R2 Storage**: `client.go`, `storage.go`, `upload.go`, `download.go`
   - **Workers**: `worker.go` — `WorkerService` (Deploy, List, Get, Delete, Logs, UpdateSettings)
@@ -68,6 +68,9 @@ The CLI must be as usable by an AI agent as by a human:
   - **Zones**: `zone.go` — `ZoneService` (Create, List, Get, Delete, GetSettings) — account-scoped
   - **SSL/TLS**: `ssl.go` — `SSLService` (GetSSL, UpdateSSL, GetVerification, GetSettings, UpdateSettings) — zone-scoped
   - **Cache**: `cloudflare_cache.go` — `CacheService` (PurgeAll, PurgeByURLs/Tags/Hosts, GetSettings, UpdateSettings) — zone-scoped
+  - **Healthchecks**: `healthcheck.go` — `HealthcheckService` (List, Get, Create, Update, Delete) — zone-scoped
+  - **Diagnostics**: `doctor.go` — `DoctorService` (CheckDNSPropagation, CheckSSL, CheckHTTP, CheckNameservers, RunDiagnostics) — stdlib-only probes
+  - **Domain Overview**: `domains.go` — `DomainService` (List with pagination/filtering, GetDetail, EnrichWithHealth)
   - **Future stubs**: `d1.go`, `pages.go`, `queue.go`
 - `internal/` - Internal packages (api, cli, config, interactive, tui, utils)
 - `docs/` - Documentation, sessions, planning, issues, roadmap
