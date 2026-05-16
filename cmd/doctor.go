@@ -31,7 +31,7 @@ This command is designed for both human operators and AI agents:
   - Human-readable output with colored status indicators by default
   - --json provides structured diagnostic data for automated pipelines
   - --fix suggestions are valid cosmoflare commands that can be executed directly
-  - Exit code reflects health: 0=healthy, 1=warning, 2=critical
+  - Exit code reflects health: 0=healthy/warning, 1=critical
 
 Examples:
   cosmoflare doctor example.com              # Full diagnostics for a domain
