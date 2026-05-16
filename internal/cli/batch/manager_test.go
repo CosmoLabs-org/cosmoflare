@@ -490,6 +490,40 @@ func TestQueueOperations_ContextCancelled(t *testing.T) {
 	}
 }
 
+func TestQueueOperations_QueueFullThenCancel(t *testing.T) {
+	bm := NewBatchManager(&BatchConfig{
+		Concurrency: 1,
+		Interactive: false,
+		Quiet:       true,
+	})
+
+	// Fill the queue buffer (100 capacity)
+	for i := 0; i < 100; i++ {
+		bm.queue <- &Operation{Type: OperationTypeCopy, Source: "filler"}
+	}
+
+	// Add operations that will block trying to queue
+	for i := 0; i < 5; i++ {
+		bm.AddOperation(&Operation{Type: OperationTypeCopy, Source: fmt.Sprintf("blocked-%d", i)})
+	}
+
+	done := make(chan struct{})
+	go func() {
+		bm.queueOperations()
+		close(done)
+	}()
+
+	// Give time for queueOperations to block on the full queue
+	time.Sleep(50 * time.Millisecond)
+	bm.Cancel()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("queueOperations should exit on context cancellation")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // collectResults
 // ---------------------------------------------------------------------------
@@ -975,4 +1009,122 @@ func TestExecute_WaitGroup_NoEarlyExit(t *testing.T) {
 			i, stats.Completed, stats.Failed, stats.Running, stats.Pending)
 		assert.Zero(t, stats.Running, "iteration %d: no operations should still be running", i)
 	}
+}
+
+// TestExecute_CancelDuringExecution verifies that cancelling mid-execution
+// does not hang, panic, or leak goroutines.
+func TestExecute_CancelDuringExecution(t *testing.T) {
+	cfg := &BatchConfig{
+		Concurrency: 2,
+		Interactive: false,
+		Quiet:       true,
+	}
+	bm := NewBatchManager(cfg)
+
+	for i := 0; i < 10; i++ {
+		bm.AddOperation(&Operation{
+			Type:   OperationTypeDelete,
+			Source: fmt.Sprintf("test-key-%d", i),
+		})
+	}
+
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		bm.Cancel()
+	}()
+
+	done := make(chan struct{})
+	go func() {
+		stats, _ := bm.Execute()
+		assert.NotNil(t, stats)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Execute should not hang on cancel")
+	}
+}
+
+// TestExecute_RaceDetection runs with -race flag to detect data races.
+// All operations must be accounted for.
+func TestExecute_RaceDetection(t *testing.T) {
+	cfg := &BatchConfig{
+		Concurrency: 4,
+		Interactive: false,
+		Quiet:       true,
+	}
+	bm := NewBatchManager(cfg)
+
+	for i := 0; i < 20; i++ {
+		bm.AddOperation(&Operation{
+			Type:        OperationTypeCopy,
+			Source:      fmt.Sprintf("src-%d", i),
+			Destination: fmt.Sprintf("dst-%d", i),
+		})
+	}
+
+	stats, _ := bm.Execute()
+	total := stats.Completed + stats.Failed + stats.Skipped + stats.Cancelled
+	assert.Equal(t, int32(20), total,
+		"expected all 20 ops accounted for, got completed=%d failed=%d skipped=%d cancelled=%d",
+		stats.Completed, stats.Failed, stats.Skipped, stats.Cancelled)
+}
+
+// TestExecute_AllOpsAccountedFor runs many iterations to stress-test the fix.
+func TestExecute_AllOpsAccountedFor(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		bm := NewBatchManager(&BatchConfig{
+			Concurrency:     4,
+			ContinueOnError: true,
+			Interactive:     false,
+			Quiet:           true,
+		})
+
+		for j := 0; j < 50; j++ {
+			bm.AddOperation(&Operation{
+				Type:   OperationTypeDelete,
+				Source: fmt.Sprintf("/tmp/stress-%d-%d", i, j),
+			})
+		}
+
+		stats, err := bm.Execute()
+		require.NoError(t, err)
+
+		total := stats.Completed + stats.Failed + stats.Skipped + stats.Cancelled
+		assert.Equal(t, int32(50), total,
+			"iteration %d: expected 50 ops accounted for, got completed=%d failed=%d running=%d pending=%d",
+			i, stats.Completed, stats.Failed, stats.Running, stats.Pending)
+		assert.Zero(t, stats.Running)
+		assert.Zero(t, stats.Pending)
+	}
+}
+
+// TestExecute_WithRealFiles exercises the full Execute path including
+// AverageSpeed calculation and EndTime/TotalDuration.
+func TestExecute_WithRealFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	bm := NewBatchManager(&BatchConfig{
+		Concurrency: 2,
+		Interactive: false,
+		Quiet:       true,
+	})
+
+	for i := 0; i < 5; i++ {
+		f := filepath.Join(tmpDir, fmt.Sprintf("del-%d.txt", i))
+		require.NoError(t, os.WriteFile(f, []byte("some content here"), 0644))
+		bm.AddOperation(&Operation{
+			Type:   OperationTypeDelete,
+			Source: f,
+		})
+	}
+
+	stats, err := bm.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, int32(5), stats.Completed)
+	assert.Greater(t, stats.ProcessedSize, int64(0))
+	assert.Greater(t, stats.AverageSpeed, 0.0, "AverageSpeed should be set when Completed > 0")
+	assert.False(t, stats.EndTime.IsZero())
+	assert.Greater(t, stats.TotalDuration, time.Duration(0))
 }

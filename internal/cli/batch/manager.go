@@ -106,6 +106,7 @@ type BatchManager struct {
 	results     chan *Operation
 	wg          sync.WaitGroup
 	wgTracking  bool
+	workerWg    sync.WaitGroup
 	mu          sync.RWMutex
 	onProgress  func(*BatchStats)
 	onComplete  func(*BatchStats)
@@ -295,22 +296,44 @@ func (bm *BatchManager) Execute() (*BatchStats, error) {
 	bm.wg.Add(len(bm.operations))
 	bm.wgTracking = true
 
-	// Start workers
+	// Start workers tracked by workerWg
+	bm.workerWg.Add(bm.config.Concurrency)
 	for _, worker := range bm.workers {
-		go worker.Start(bm.context)
+		w := worker
+		go func() {
+			defer bm.workerWg.Done()
+			w.Start(bm.context)
+		}()
 	}
 
 	// Start progress monitor
 	go bm.monitorProgress()
 
-	// Queue operations
-	go bm.queueOperations()
+	// Queue operations and close queue when done
+	go func() {
+		bm.queueOperations()
+		close(bm.queue)
+	}()
 
-	// Collect results
-	go bm.collectResults()
+	// Close results channel after all workers finish
+	go func() {
+		bm.workerWg.Wait()
+		close(bm.results)
+	}()
+
+	// Collect results by ranging over channel (stops when channel closed)
+	var collectDone sync.WaitGroup
+	collectDone.Add(1)
+	go func() {
+		defer collectDone.Done()
+		for op := range bm.results {
+			bm.processResult(op)
+		}
+	}()
 
 	// Wait for completion
 	bm.waitForCompletion()
+	collectDone.Wait()
 
 	bm.stats.EndTime = time.Now()
 	bm.stats.TotalDuration = bm.stats.EndTime.Sub(bm.stats.StartTime)
