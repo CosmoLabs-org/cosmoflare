@@ -127,3 +127,6 @@ BACKUPS/
 .claude/memory/
 .claude/projects/
 .claude/sessions/
+.ccs-verify-cache.json
+.ccs/
+iTerm2
