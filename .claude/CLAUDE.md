@@ -69,6 +69,8 @@ go test ./tests/integration/api/real/ -tags=integration
 | `r2go2 zone create/list/get/settings/delete` | Zone management (account-scoped) |
 | `r2go2 ssl status/settings/update/verify` | SSL/TLS management (zone-scoped) |
 | `r2go2 cache purge/settings` | Cache purge and settings (zone-scoped) |
+| `r2go2 domains [--detail] [--enrich] [--json]` | Domain overview with health indicators |
+| `r2go2 doctor <domain> [--fix] [--all] [--json]` | Deep diagnostic probes (DNS/SSL/HTTP/NS) |
 | `r2go2 config init/set/list/show/switch/export` | Profile management |
 | `r2go2 analytics` | Usage statistics |
 | `r2go2 compare` | Bucket comparison |
