@@ -28,6 +28,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.8.0] - 2026-05-16
+
+### Added
+- Add DNS Records service (ROAD-035)
+- Add Zone Management service (ROAD-036)
+- Add SSL/TLS Management service (ROAD-037)
+- Add Cache Management service (ROAD-038)
+- Add Page Rules service (ROAD-039)
+- Add WAF/Firewall service (ROAD-040)
+- Add Email Routing service (ROAD-041)
+- Add D1 Database service (ROAD-042)
+- Shell completion already implemented (ROAD-055)
+- add Page Rules, WAF, Email Routing, D1 services (commit:85e86b00)
+- add DNS, Zone, SSL/TLS, and Cache services (commit:ff3e694b)
+
+### Changed
+- Cosmoflare rebrand — README, PRODUCT-VISION constitution, binary alias
+- Test coverage improvements across 7 internal packages (UnitTesting merge)
+- replace all fmt.Scanln with InputReader injection (commit:6ff75d7d)
+
+### Fixed
+- resolve race conditions in Execute/waitForCompletion (commit:b3e5a7f7)
+
 ## [0.7.1] - 2026-05-16
 
 ### Fixed
