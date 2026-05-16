@@ -10,68 +10,85 @@ import (
 
 // EmailRule represents a Cloudflare Email Routing rule.
 type EmailRule struct {
-	ID       string              `json:"id"`
-	Name     string              `json:"name"`
-	Priority int                 `json:"priority"`
-	Enabled  bool                `json:"enabled"`
-	Matchers []EmailRuleMatcher  `json:"matchers"`
-	Actions  []EmailRuleAction   `json:"actions"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Priority int                `json:"priority"`
+	Enabled  bool               `json:"enabled"`
+	Matchers []EmailRuleMatcher `json:"matchers"`
+	Actions  []EmailRuleAction  `json:"actions"`
 }
 
-// EmailRuleMatcher defines matching criteria for an email routing rule.
+// EmailRuleMatcher defines criteria for matching incoming emails.
 type EmailRuleMatcher struct {
-	Type  string `json:"type"`
-	Field string `json:"field"`
-	Value string `json:"value"`
+	Type  string `json:"type"`  // "literal" or "all"
+	Field string `json:"field"` // "to"
+	Value string `json:"value"` // email address pattern
 }
 
-// EmailRuleAction defines the action taken when a rule matches.
+// EmailRuleAction defines what to do with matched emails.
 type EmailRuleAction struct {
-	Type  string   `json:"type"`
-	Value []string `json:"value"`
+	Type  string   `json:"type"`  // "forward" or "drop"
+	Value []string `json:"value"` // destination addresses
+}
+
+// EmailDestination represents a verified destination address for email routing.
+type EmailDestination struct {
+	ID       string    `json:"id"`
+	Email    string    `json:"email"`
+	Verified time.Time `json:"verified,omitempty"`
+	Created  time.Time `json:"created"`
+	Modified time.Time `json:"modified"`
 }
 
 // EmailCatchAll represents the catch-all email routing rule.
 type EmailCatchAll struct {
-	ID       string              `json:"id"`
-	Name     string              `json:"name"`
-	Enabled  bool                `json:"enabled"`
-	Matchers []EmailRuleMatcher  `json:"matchers"`
-	Actions  []EmailRuleAction   `json:"actions"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Enabled  bool               `json:"enabled"`
+	Matchers []EmailRuleMatcher `json:"matchers"`
+	Actions  []EmailRuleAction  `json:"actions"`
 }
 
 // EmailSettings represents email routing settings for a zone.
 type EmailSettings struct {
-	ID         string     `json:"id"`
-	Name       string     `json:"name"`
-	Enabled    bool       `json:"enabled"`
-	Status     string     `json:"status"`
-	Created    *time.Time `json:"created,omitempty"`
-	Modified   *time.Time `json:"modified,omitempty"`
+	ID       string     `json:"id"`
+	Name     string     `json:"name"`
+	Enabled  bool       `json:"enabled"`
+	Status   string     `json:"status"`
+	Created  *time.Time `json:"created,omitempty"`
+	Modified *time.Time `json:"modified,omitempty"`
 }
 
-// EmailService implements Email Routing operations.
+// EmailService implements Cloudflare Email Routing operations.
+// Rules are zone-scoped; destinations are account-scoped.
 type EmailService struct {
-	cf     *cloudflare.API
-	zoneID string
+	cf        *cloudflare.API
+	zoneID    string
+	accountID string
 }
 
 // NewEmailService creates a new Email Routing service client.
-func NewEmailService(api *cloudflare.API, zoneID string) (*EmailService, error) {
+func NewEmailService(api *cloudflare.API, zoneID string, accountID string) (*EmailService, error) {
 	if api == nil {
 		return nil, validationError("NewEmailService", "cloudflare API client is required")
 	}
 	if zoneID == "" {
 		return nil, validationError("NewEmailService", "zone ID is required")
 	}
-	return &EmailService{cf: api, zoneID: zoneID}, nil
+	if accountID == "" {
+		return nil, validationError("NewEmailService", "account ID is required")
+	}
+	return &EmailService{cf: api, zoneID: zoneID, accountID: accountID}, nil
 }
 
-// NewEmailServiceFromCreds creates an EmailService from zone ID and API token.
+// NewEmailServiceFromCreds creates an EmailService from zone ID, account ID, and API token.
 // Convenience helper for CLI usage.
-func NewEmailServiceFromCreds(zoneID, apiToken string) (*EmailService, error) {
+func NewEmailServiceFromCreds(zoneID, accountID, apiToken string) (*EmailService, error) {
 	if zoneID == "" {
 		return nil, validationError("NewEmailService", "zone ID is required")
+	}
+	if accountID == "" {
+		return nil, validationError("NewEmailService", "account ID is required")
 	}
 	if apiToken == "" {
 		return nil, validationError("NewEmailService", "API token is required")
@@ -80,8 +97,10 @@ func NewEmailServiceFromCreds(zoneID, apiToken string) (*EmailService, error) {
 	if err != nil {
 		return nil, authError("NewEmailService", "failed to create Cloudflare API client", err)
 	}
-	return &EmailService{cf: cf, zoneID: zoneID}, nil
+	return &EmailService{cf: cf, zoneID: zoneID, accountID: accountID}, nil
 }
+
+// --- Rules (zone-scoped) ---
 
 // ListRules returns all email routing rules for the zone.
 func (s *EmailService) ListRules(ctx context.Context) ([]*EmailRule, error) {
@@ -96,43 +115,6 @@ func (s *EmailService) ListRules(ctx context.Context) ([]*EmailRule, error) {
 		rules = append(rules, cfEmailRuleToRule(r))
 	}
 	return rules, nil
-}
-
-// CreateRule creates a new email routing rule.
-func (s *EmailService) CreateRule(ctx context.Context, matchAddress, forwardTo, name string, enabled bool) (*EmailRule, error) {
-	if matchAddress == "" {
-		return nil, validationError("EmailService.CreateRule", "match address is required")
-	}
-	if forwardTo == "" {
-		return nil, validationError("EmailService.CreateRule", "forward-to address is required")
-	}
-
-	enabledPtr := &enabled
-	params := cloudflare.CreateEmailRoutingRuleParameters{
-		Matchers: []cloudflare.EmailRoutingRuleMatcher{
-			{
-				Type:  "literal",
-				Field: "to",
-				Value: matchAddress,
-			},
-		},
-		Actions: []cloudflare.EmailRoutingRuleAction{
-			{
-				Type:  "forward",
-				Value: []string{forwardTo},
-			},
-		},
-		Name:    name,
-		Enabled: enabledPtr,
-	}
-
-	rc := cloudflare.ZoneIdentifier(s.zoneID)
-	result, err := s.cf.CreateEmailRoutingRule(ctx, rc, params)
-	if err != nil {
-		return nil, newError("EmailService.CreateRule", fmt.Sprintf("failed to create email routing rule for %s", matchAddress), err)
-	}
-
-	return cfEmailRuleToRule(result), nil
 }
 
 // GetRule retrieves a single email routing rule by ID.
@@ -150,42 +132,82 @@ func (s *EmailService) GetRule(ctx context.Context, ruleID string) (*EmailRule, 
 	return cfEmailRuleToRule(result), nil
 }
 
+// CreateRule creates a new email routing rule.
+func (s *EmailService) CreateRule(ctx context.Context, name string, matchers []EmailRuleMatcher, actions []EmailRuleAction, priority int, enabled bool) (*EmailRule, error) {
+	if name == "" {
+		return nil, validationError("EmailService.CreateRule", "rule name is required")
+	}
+	if len(matchers) == 0 {
+		return nil, validationError("EmailService.CreateRule", "at least one matcher is required")
+	}
+	if len(actions) == 0 {
+		return nil, validationError("EmailService.CreateRule", "at least one action is required")
+	}
+
+	cfMatchers := make([]cloudflare.EmailRoutingRuleMatcher, 0, len(matchers))
+	for _, m := range matchers {
+		cfMatchers = append(cfMatchers, cloudflare.EmailRoutingRuleMatcher{
+			Type:  m.Type,
+			Field: m.Field,
+			Value: m.Value,
+		})
+	}
+
+	cfActions := make([]cloudflare.EmailRoutingRuleAction, 0, len(actions))
+	for _, a := range actions {
+		cfActions = append(cfActions, cloudflare.EmailRoutingRuleAction{
+			Type:  a.Type,
+			Value: a.Value,
+		})
+	}
+
+	params := cloudflare.CreateEmailRoutingRuleParameters{
+		Name:     name,
+		Matchers: cfMatchers,
+		Actions:  cfActions,
+		Priority: priority,
+		Enabled:  boolPtr(enabled),
+	}
+
+	rc := cloudflare.ZoneIdentifier(s.zoneID)
+	result, err := s.cf.CreateEmailRoutingRule(ctx, rc, params)
+	if err != nil {
+		return nil, newError("EmailService.CreateRule", fmt.Sprintf("failed to create email routing rule %q", name), err)
+	}
+
+	return cfEmailRuleToRule(result), nil
+}
+
 // UpdateRule updates an existing email routing rule.
-func (s *EmailService) UpdateRule(ctx context.Context, ruleID string, matchers []EmailRuleMatcher, actions []EmailRuleAction, name string, enabled *bool) (*EmailRule, error) {
+func (s *EmailService) UpdateRule(ctx context.Context, ruleID string, name string, matchers []EmailRuleMatcher, actions []EmailRuleAction, priority int, enabled bool) (*EmailRule, error) {
 	if ruleID == "" {
 		return nil, validationError("EmailService.UpdateRule", "rule ID is required")
 	}
 
+	cfMatchers := make([]cloudflare.EmailRoutingRuleMatcher, 0, len(matchers))
+	for _, m := range matchers {
+		cfMatchers = append(cfMatchers, cloudflare.EmailRoutingRuleMatcher{
+			Type:  m.Type,
+			Field: m.Field,
+			Value: m.Value,
+		})
+	}
+
+	cfActions := make([]cloudflare.EmailRoutingRuleAction, 0, len(actions))
+	for _, a := range actions {
+		cfActions = append(cfActions, cloudflare.EmailRoutingRuleAction{
+			Type:  a.Type,
+			Value: a.Value,
+		})
+	}
+
 	params := cloudflare.UpdateEmailRoutingRuleParameters{
-		RuleID: ruleID,
-		Name:   name,
-	}
-
-	if enabled != nil {
-		params.Enabled = enabled
-	}
-
-	if len(matchers) > 0 {
-		cfMatchers := make([]cloudflare.EmailRoutingRuleMatcher, len(matchers))
-		for i, m := range matchers {
-			cfMatchers[i] = cloudflare.EmailRoutingRuleMatcher{
-				Type:  m.Type,
-				Field: m.Field,
-				Value: m.Value,
-			}
-		}
-		params.Matchers = cfMatchers
-	}
-
-	if len(actions) > 0 {
-		cfActions := make([]cloudflare.EmailRoutingRuleAction, len(actions))
-		for i, a := range actions {
-			cfActions[i] = cloudflare.EmailRoutingRuleAction{
-				Type:  a.Type,
-				Value: a.Value,
-			}
-		}
-		params.Actions = cfActions
+		RuleID:   ruleID,
+		Name:     name,
+		Matchers: cfMatchers,
+		Actions:  cfActions,
+		Priority: priority,
+		Enabled:  boolPtr(enabled),
 	}
 
 	rc := cloudflare.ZoneIdentifier(s.zoneID)
@@ -197,20 +219,88 @@ func (s *EmailService) UpdateRule(ctx context.Context, ruleID string, matchers [
 	return cfEmailRuleToRule(result), nil
 }
 
-// DeleteRule deletes an email routing rule.
-func (s *EmailService) DeleteRule(ctx context.Context, ruleID string) (*EmailRule, error) {
+// DeleteRule removes an email routing rule.
+func (s *EmailService) DeleteRule(ctx context.Context, ruleID string) error {
 	if ruleID == "" {
-		return nil, validationError("EmailService.DeleteRule", "rule ID is required")
+		return validationError("EmailService.DeleteRule", "rule ID is required")
 	}
 
 	rc := cloudflare.ZoneIdentifier(s.zoneID)
-	result, err := s.cf.DeleteEmailRoutingRule(ctx, rc, ruleID)
+	_, err := s.cf.DeleteEmailRoutingRule(ctx, rc, ruleID)
 	if err != nil {
-		return nil, newError("EmailService.DeleteRule", fmt.Sprintf("failed to delete email routing rule %q", ruleID), err)
+		return newError("EmailService.DeleteRule", fmt.Sprintf("failed to delete email routing rule %q", ruleID), err)
+	}
+	return nil
+}
+
+// --- Destinations (account-scoped) ---
+
+// ListDestinations returns all destination addresses for the account.
+func (s *EmailService) ListDestinations(ctx context.Context) ([]*EmailDestination, error) {
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	params := cloudflare.ListEmailRoutingAddressParameters{}
+
+	results, _, err := s.cf.ListEmailRoutingDestinationAddresses(ctx, rc, params)
+	if err != nil {
+		return nil, newError("EmailService.ListDestinations", "failed to list email routing destinations", err)
 	}
 
-	return cfEmailRuleToRule(result), nil
+	destinations := make([]*EmailDestination, 0, len(results))
+	for _, d := range results {
+		destinations = append(destinations, cfEmailDestToDestination(d))
+	}
+	return destinations, nil
 }
+
+// CreateDestination adds a new destination address (requires email verification).
+func (s *EmailService) CreateDestination(ctx context.Context, email string) (*EmailDestination, error) {
+	if email == "" {
+		return nil, validationError("EmailService.CreateDestination", "email address is required")
+	}
+
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	params := cloudflare.CreateEmailRoutingAddressParameters{
+		Email: email,
+	}
+
+	result, err := s.cf.CreateEmailRoutingDestinationAddress(ctx, rc, params)
+	if err != nil {
+		return nil, newError("EmailService.CreateDestination", fmt.Sprintf("failed to create email destination %q", email), err)
+	}
+
+	return cfEmailDestToDestination(result), nil
+}
+
+// GetDestination retrieves a specific destination address by ID.
+func (s *EmailService) GetDestination(ctx context.Context, addressID string) (*EmailDestination, error) {
+	if addressID == "" {
+		return nil, validationError("EmailService.GetDestination", "address ID is required")
+	}
+
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	result, err := s.cf.GetEmailRoutingDestinationAddress(ctx, rc, addressID)
+	if err != nil {
+		return nil, notFound("EmailService.GetDestination", "", addressID, err)
+	}
+
+	return cfEmailDestToDestination(result), nil
+}
+
+// DeleteDestination removes a destination address.
+func (s *EmailService) DeleteDestination(ctx context.Context, addressID string) error {
+	if addressID == "" {
+		return validationError("EmailService.DeleteDestination", "address ID is required")
+	}
+
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	_, err := s.cf.DeleteEmailRoutingDestinationAddress(ctx, rc, addressID)
+	if err != nil {
+		return newError("EmailService.DeleteDestination", fmt.Sprintf("failed to delete email destination %q", addressID), err)
+	}
+	return nil
+}
+
+// --- Catch-All (zone-scoped) ---
 
 // GetCatchAll retrieves the catch-all email routing rule.
 func (s *EmailService) GetCatchAll(ctx context.Context) (*EmailCatchAll, error) {
@@ -229,20 +319,14 @@ func (s *EmailService) UpdateCatchAll(ctx context.Context, forwardTo string, ena
 		return nil, validationError("EmailService.UpdateCatchAll", "forward-to address is required")
 	}
 
-	enabledPtr := &enabled
 	params := cloudflare.EmailRoutingCatchAllRule{
 		Name:    "catch-all",
-		Enabled: enabledPtr,
+		Enabled: boolPtr(enabled),
 		Matchers: []cloudflare.EmailRoutingRuleMatcher{
-			{
-				Type: "all",
-			},
+			{Type: "all"},
 		},
 		Actions: []cloudflare.EmailRoutingRuleAction{
-			{
-				Type:  "forward",
-				Value: []string{forwardTo},
-			},
+			{Type: "forward", Value: []string{forwardTo}},
 		},
 	}
 
@@ -254,6 +338,8 @@ func (s *EmailService) UpdateCatchAll(ctx context.Context, forwardTo string, ena
 
 	return cfCatchAllToRule(result), nil
 }
+
+// --- Settings (zone-scoped) ---
 
 // GetSettings retrieves email routing settings for the zone.
 func (s *EmailService) GetSettings(ctx context.Context) (*EmailSettings, error) {
@@ -309,7 +395,8 @@ func (s *EmailService) Disable(ctx context.Context) (*EmailSettings, error) {
 	}, nil
 }
 
-// cfEmailRuleToRule maps a cloudflare.EmailRoutingRule to our EmailRule type.
+// --- Mapping helpers ---
+
 func cfEmailRuleToRule(r cloudflare.EmailRoutingRule) *EmailRule {
 	matchers := make([]EmailRuleMatcher, len(r.Matchers))
 	for i, m := range r.Matchers {
@@ -338,7 +425,6 @@ func cfEmailRuleToRule(r cloudflare.EmailRoutingRule) *EmailRule {
 	}
 }
 
-// cfCatchAllToRule maps a cloudflare.EmailRoutingCatchAllRule to our EmailCatchAll type.
 func cfCatchAllToRule(r cloudflare.EmailRoutingCatchAllRule) *EmailCatchAll {
 	matchers := make([]EmailRuleMatcher, len(r.Matchers))
 	for i, m := range r.Matchers {
@@ -364,4 +450,21 @@ func cfCatchAllToRule(r cloudflare.EmailRoutingCatchAllRule) *EmailCatchAll {
 		Matchers: matchers,
 		Actions:  actions,
 	}
+}
+
+func cfEmailDestToDestination(d cloudflare.EmailRoutingDestinationAddress) *EmailDestination {
+	dest := &EmailDestination{
+		ID:    d.Tag,
+		Email: d.Email,
+	}
+	if d.Verified != nil {
+		dest.Verified = *d.Verified
+	}
+	if d.Created != nil {
+		dest.Created = *d.Created
+	}
+	if d.Modified != nil {
+		dest.Modified = *d.Modified
+	}
+	return dest
 }
