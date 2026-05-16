@@ -53,7 +53,7 @@ type DNSProbeResult struct {
 	Resolver     string              `json:"resolver"`
 	ResolverName string              `json:"resolver_name"`
 	Records      map[string][]string `json:"records"`
-	Latency      time.Duration       `json:"latency_ms"`
+	LatencyMs    int64               `json:"latency_ms"`
 	Error        string              `json:"error,omitempty"`
 }
 
@@ -89,11 +89,13 @@ func (d *DoctorService) CheckDNSPropagation(ctx context.Context, domain string) 
 	consistent := true
 	var firstA []string
 	firstSet := false
+	resolversReached := 0
 
 	for _, r := range results {
 		if r.Error != "" {
 			continue
 		}
+		resolversReached++
 		aRecords := r.Records["A"]
 		if !firstSet {
 			firstA = aRecords
@@ -106,8 +108,14 @@ func (d *DoctorService) CheckDNSPropagation(ctx context.Context, domain string) 
 		}
 	}
 
-	summary := fmt.Sprintf("DNS propagation check for %s: queried %d resolvers", domain, len(defaultResolvers))
-	if consistent {
+	if resolversReached == 0 {
+		consistent = false
+	}
+
+	summary := fmt.Sprintf("DNS propagation check for %s: queried %d resolvers, %d responded", domain, len(defaultResolvers), resolversReached)
+	if resolversReached == 0 {
+		summary += " — all resolvers failed"
+	} else if consistent {
 		summary += " — all A records consistent"
 	} else {
 		summary += " — A record inconsistency detected across resolvers"
@@ -180,7 +188,7 @@ func (d *DoctorService) queryResolver(ctx context.Context, domain, addr, name st
 		result.Records["NS"] = ns
 	}
 
-	result.Latency = time.Since(start)
+	result.LatencyMs = time.Since(start).Milliseconds()
 
 	// If we got zero records at all, record the last error.
 	if len(result.Records) == 0 {
@@ -288,12 +296,12 @@ func (d *DoctorService) checkHSTS(ctx context.Context, domain string) bool {
 
 // HTTPProbeResult holds HTTP response diagnostic information.
 type HTTPProbeResult struct {
-	StatusCode    int           `json:"status_code"`
-	ResponseTime  time.Duration `json:"response_time_ms"`
-	RedirectChain []string      `json:"redirect_chain,omitempty"`
-	CloudflareRay string        `json:"cloudflare_ray,omitempty"`
-	Server        string        `json:"server,omitempty"`
-	Error         string        `json:"error,omitempty"`
+	StatusCode     int      `json:"status_code"`
+	ResponseTimeMs int64    `json:"response_time_ms"`
+	RedirectChain  []string `json:"redirect_chain,omitempty"`
+	CloudflareRay  string   `json:"cloudflare_ray,omitempty"`
+	Server         string   `json:"server,omitempty"`
+	Error          string   `json:"error,omitempty"`
 }
 
 // CheckHTTP performs an HTTPS GET against the domain and captures response metadata.
@@ -325,19 +333,19 @@ func (d *DoctorService) CheckHTTP(ctx context.Context, domain string) (*HTTPProb
 
 	if err != nil {
 		return &HTTPProbeResult{
-			ResponseTime:  elapsed,
-			RedirectChain: redirects,
-			Error:         fmt.Sprintf("HTTP request failed: %v", err),
+			ResponseTimeMs: elapsed.Milliseconds(),
+			RedirectChain:  redirects,
+			Error:          fmt.Sprintf("HTTP request failed: %v", err),
 		}, nil
 	}
 	defer resp.Body.Close()
 
 	return &HTTPProbeResult{
-		StatusCode:    resp.StatusCode,
-		ResponseTime:  elapsed,
-		RedirectChain: redirects,
-		CloudflareRay: resp.Header.Get("cf-ray"),
-		Server:        resp.Header.Get("Server"),
+		StatusCode:     resp.StatusCode,
+		ResponseTimeMs: elapsed.Milliseconds(),
+		RedirectChain:  redirects,
+		CloudflareRay:  resp.Header.Get("cf-ray"),
+		Server:         resp.Header.Get("Server"),
 	}, nil
 }
 
@@ -448,13 +456,18 @@ func (d *DoctorService) RunDiagnostics(ctx context.Context, domain string, expec
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
+	var probeErrors []string
+
 	// DNS probe.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		dns, _ := d.CheckDNSPropagation(ctx, domain)
+		dns, err := d.CheckDNSPropagation(ctx, domain)
 		mu.Lock()
 		report.DNS = dns
+		if err != nil {
+			probeErrors = append(probeErrors, fmt.Sprintf("dns: %v", err))
+		}
 		mu.Unlock()
 	}()
 
@@ -462,9 +475,12 @@ func (d *DoctorService) RunDiagnostics(ctx context.Context, domain string, expec
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ssl, _ := d.CheckSSL(ctx, domain)
+		ssl, err := d.CheckSSL(ctx, domain)
 		mu.Lock()
 		report.SSL = ssl
+		if err != nil {
+			probeErrors = append(probeErrors, fmt.Sprintf("ssl: %v", err))
+		}
 		mu.Unlock()
 	}()
 
@@ -472,9 +488,12 @@ func (d *DoctorService) RunDiagnostics(ctx context.Context, domain string, expec
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		httpResult, _ := d.CheckHTTP(ctx, domain)
+		httpResult, err := d.CheckHTTP(ctx, domain)
 		mu.Lock()
 		report.HTTP = httpResult
+		if err != nil {
+			probeErrors = append(probeErrors, fmt.Sprintf("http: %v", err))
+		}
 		mu.Unlock()
 	}()
 
@@ -483,17 +502,29 @@ func (d *DoctorService) RunDiagnostics(ctx context.Context, domain string, expec
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ns, _ := d.CheckNameservers(ctx, domain, expectedNS)
+			ns, err := d.CheckNameservers(ctx, domain, expectedNS)
 			mu.Lock()
 			report.Nameservers = ns
+			if err != nil {
+				probeErrors = append(probeErrors, fmt.Sprintf("ns: %v", err))
+			}
 			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
 
+	// Surface hard probe errors as critical issues.
+	for _, pe := range probeErrors {
+		report.Issues = append(report.Issues, DiagnosticIssue{
+			Probe:    "system",
+			Severity: "critical",
+			Message:  fmt.Sprintf("Probe error: %s", pe),
+		})
+	}
+
 	// Analyze results and populate issues.
-	report.Issues = d.analyzeIssues(report)
+	report.Issues = append(report.Issues, d.analyzeIssues(report)...)
 	report.Score = computeScore(report.Issues)
 
 	return report, nil
