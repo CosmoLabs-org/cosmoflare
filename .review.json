@@ -1,14 +1,14 @@
 {
   "score": 8,
   "passed": true,
-  "reviewed_at": "2026-05-16T07:05:36Z",
+  "reviewed_at": "2026-05-16T07:07:31Z",
   "reviewed_sha": "914aadf0ca385ed0b2ba5de6cec5b96e790d34c7",
   "reviewer": "opus",
   "origin": "agent-tool",
-  "iterations": 6,
-  "fixes_applied": 1,
-  "issues_remaining": 1,
-  "summary": "Score 8/10, 1 issues",
+  "iterations": 7,
+  "fixes_applied": 0,
+  "issues_remaining": 2,
+  "summary": "Score 8/10, 2 issues",
   "schema_version": 1,
   "prior_issues": [
     {
@@ -98,6 +98,22 @@
       "description": "Exit code documentation mismatch: Long description claims '0=healthy, 1=warning, 2=critical' but Cobra RunE can only produce 0 (nil) or 1 (error). Warnings return nil (exit 0) and critical returns error (exit 1) — there is no path to exit code 2.",
       "has_fix": false,
       "round": 6
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "Exit code documentation mismatch: help text promises '0=healthy, 1=warning, 2=critical' but warning returns nil (exit 0) and critical returns error (exit 1 via cobra). There is no mechanism to produce exit code 2. Either fix the help text to '0=healthy/warning, 1=critical' or implement os.Exit(2) for critical (requires care — cobra wraps RunE errors as exit 1).",
+      "has_fix": false,
+      "round": 7
+    },
+    {
+      "severity": "blocking",
+      "file": "",
+      "line": 0,
+      "description": "In runDoctorAll --all mode, the best-effort NS lookup per zone succeeds (zone.NameServers comes from the API list), but in single-domain mode the entire zone list is fetched just to find the NS for one domain. For accounts with many zones this is an unnecessary API call — consider a dedicated zone-by-name lookup or accept the tradeoff explicitly.",
+      "has_fix": false,
+      "round": 7
     }
   ],
   "prior_shas": [
@@ -106,11 +122,12 @@
     "0875f00f2e0a50e854fc21bfd35ef56add2a6245",
     "f66f05ada569eaa67a63c23a8e2c2b5b5519b90d",
     "946783c5c7d701f42e8282f7114dfca7571f11f6",
+    "914aadf0ca385ed0b2ba5de6cec5b96e790d34c7",
     "914aadf0ca385ed0b2ba5de6cec5b96e790d34c7"
   ],
   "cumulative_fixes_applied": 4,
   "min_score_across_rounds": 8,
   "has_prior_min_score": true,
   "converged_at_cap": true,
-  "convergence_reason": "iteration 6/2 reached with evidence gate passing: score=8/10, cumulative_fixes=3, non_trivial_diff=true"
+  "convergence_reason": "iteration 7/2 reached with evidence gate passing: score=8/10, cumulative_fixes=4, non_trivial_diff=true"
 }
