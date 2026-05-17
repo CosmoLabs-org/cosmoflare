@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -321,5 +323,458 @@ func TestObjectPresign_OneArg(t *testing.T) {
 	err := runObjectPresign(objectPresignCmd, []string{"my-bucket"})
 	if err == nil {
 		t.Fatal("expected error when only bucket name provided (missing object key)")
+	}
+}
+
+// --- Stdin validation ---
+
+func TestObjectPut_StdinNoKey(t *testing.T) {
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", "-"})
+	if err == nil {
+		t.Fatal("expected error when stdin used without --key")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("key")) {
+		t.Errorf("error = %q, want it to mention 'key'", err.Error())
+	}
+}
+
+// --- DryRun mode ---
+
+func TestObjectPut_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello world"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun) returned error: %v", err)
+	}
+}
+
+func TestObjectPut_DryRunWithContentType(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	objectContentType = "text/plain"
+	objectCacheControl = "max-age=3600"
+	objectMetadata = []string{"author=test"}
+	defer func() {
+		objectContentType = ""
+		objectCacheControl = ""
+		objectMetadata = nil
+	}()
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun+options) returned error: %v", err)
+	}
+}
+
+func TestObjectDelete_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runObjectDelete(objectDeleteCmd, []string{"my-bucket", "file.txt"})
+	if err != nil {
+		t.Errorf("runObjectDelete(DryRun) returned error: %v", err)
+	}
+}
+
+func TestObjectCopy_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runObjectCopy(objectCopyCmd, []string{"src-bucket/file.txt", "dst-bucket/backup.txt"})
+	if err != nil {
+		t.Errorf("runObjectCopy(DryRun) returned error: %v", err)
+	}
+}
+
+func TestObjectPut_NonexistentFile(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectKey = ""
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", "/nonexistent/file.txt"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent local file")
+	}
+}
+
+// --- Helper function tests ---
+
+func TestEtagDisplay_Short(t *testing.T) {
+	result := etagDisplay("abc123")
+	if result != "abc123" {
+		t.Errorf("etagDisplay(%q) = %q, want %q", "abc123", result, "abc123")
+	}
+}
+
+func TestEtagDisplay_Long(t *testing.T) {
+	longEtag := "abcdef0123456789abcdef0123456789"
+	result := etagDisplay(longEtag)
+	if result != "abcdef0123456789..." {
+		t.Errorf("etagDisplay(long) = %q, want truncated with ...", result)
+	}
+}
+
+func TestEtagDisplay_Empty(t *testing.T) {
+	result := etagDisplay("")
+	if result != "" {
+		t.Errorf("etagDisplay('') = %q, want empty", result)
+	}
+}
+
+func TestParseBatchSpec_Valid(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/batch.json"
+	content := `{"operations":[{"action":"delete","object_key":"old.txt"}]}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BatchSpec
+	err := parseBatchSpec(path, &spec)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.Operations) != 1 {
+		t.Fatalf("expected 1 operation, got %d", len(spec.Operations))
+	}
+	if spec.Operations[0].Action != "delete" || spec.Operations[0].ObjectKey != "old.txt" {
+		t.Errorf("operation = %+v, unexpected", spec.Operations[0])
+	}
+}
+
+func TestParseBatchSpec_InvalidJSON(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/bad.json"
+	if err := os.WriteFile(path, []byte(`not-json`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BatchSpec
+	err := parseBatchSpec(path, &spec)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+}
+
+func TestParseBatchSpec_NonexistentFile(t *testing.T) {
+	var spec BatchSpec
+	err := parseBatchSpec("/nonexistent/batch.json", &spec)
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
+func TestObjectBatch_EmptySpec(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/empty.json"
+	if err := os.WriteFile(specPath, []byte(`{"operations":[]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectBatch(objectBatchCmd, []string{"my-bucket", specPath})
+	if err != nil {
+		t.Errorf("runObjectBatch(empty spec) returned error: %v", err)
+	}
+}
+
+// --- Presign invalid duration ---
+
+func TestObjectPresign_InvalidExpires(t *testing.T) {
+	objectExpires = "not-a-duration"
+	defer func() { objectExpires = "1h" }()
+
+	err := runObjectPresign(objectPresignCmd, []string{"my-bucket", "file.txt"})
+	if err == nil {
+		t.Fatal("expected error for invalid expires duration")
+	}
+}
+
+// --- Object batch DryRun ---
+
+func TestObjectBatch_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/batch.json"
+	content := `{"operations":[{"action":"delete","object_key":"old.txt"}]}`
+	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectBatch(objectBatchCmd, []string{"my-bucket", specPath})
+	if err != nil {
+		t.Errorf("runObjectBatch(DryRun) returned error: %v", err)
+	}
+}
+
+func TestObjectBatch_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/batch.json"
+	content := `{"operations":[{"action":"delete","object_key":"old.txt"}]}`
+	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runObjectBatch(objectBatchCmd, []string{"my-bucket", specPath})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runObjectBatch(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("successful")) {
+		t.Errorf("JSON batch output should contain 'successful', got: %q", output)
+	}
+}
+
+func TestObjectBatch_NonexistentSpecFile(t *testing.T) {
+	err := runObjectBatch(objectBatchCmd, []string{"my-bucket", "/nonexistent/spec.json"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent spec file")
+	}
+}
+
+// --- Object put with invalid metadata ---
+
+func TestObjectPut_InvalidMetadata(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectMetadata = []string{"no-equals"}
+	defer func() { objectMetadata = nil }()
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err == nil {
+		t.Fatal("expected error for invalid metadata format")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("metadata")) {
+		t.Errorf("error = %q, want it to mention 'metadata'", err.Error())
+	}
+}
+
+// --- Object put with explicit key ---
+
+func TestObjectPut_DryRunWithExplicitKey(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectKey = "remote/path/file.txt"
+	defer func() { objectKey = "" }()
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun+key) returned error: %v", err)
+	}
+}
+
+// --- Object delete and copy DryRun already covered by non-JSON tests ---
+// (JSON variants don't produce different JSON output for DryRun - they use printInfo)
+
+// --- Error message assertions ---
+
+func TestObjectList_ErrorMentionsBucket(t *testing.T) {
+	err := runObjectList(objectListCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("bucket")) {
+		t.Errorf("error = %q, want it to mention 'bucket'", err.Error())
+	}
+}
+
+func TestObjectGet_ErrorMentionsBucket(t *testing.T) {
+	err := runObjectGet(objectGetCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestObjectCopy_ErrorMentionsSource(t *testing.T) {
+	err := runObjectCopy(objectCopyCmd, []string{"no-slash", "dest/key"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("source")) {
+		t.Errorf("error = %q, want it to mention 'source'", err.Error())
+	}
+}
+
+func TestObjectCopy_ErrorMentionsDest(t *testing.T) {
+	err := runObjectCopy(objectCopyCmd, []string{"src/key", "no-slash"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("destination")) {
+		t.Errorf("error = %q, want it to mention 'destination'", err.Error())
 	}
 }

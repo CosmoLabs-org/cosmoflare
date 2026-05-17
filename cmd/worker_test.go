@@ -342,3 +342,231 @@ func TestParseWorkerBindings_Multiple(t *testing.T) {
 		t.Fatalf("expected 2 bindings, got %d", len(bindings))
 	}
 }
+
+// --- parseWorkerBindings edge cases ---
+
+func TestParseWorkerBindings_TwoParts(t *testing.T) {
+	_, err := parseWorkerBindings([]string{"NAME:type"})
+	if err == nil {
+		t.Fatal("expected error for binding with only 2 parts")
+	}
+}
+
+func TestParseWorkerBindings_Empty(t *testing.T) {
+	bindings, err := parseWorkerBindings([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(bindings) != 0 {
+		t.Errorf("expected 0 bindings, got %d", len(bindings))
+	}
+}
+
+// --- Deploy error paths ---
+
+func TestWorkerDeploy_NonexistentScript(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	workerScript = "/nonexistent/script.js"
+	err := runWorkerDeploy(workerDeployCmd, []string{"my-worker"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent script file")
+	}
+}
+
+// --- Deploy with options DryRun ---
+
+func TestWorkerDeploy_DryRunWithOptions(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	scriptPath := tmpDir + "/test.js"
+	if err := os.WriteFile(scriptPath, []byte("export default {}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	workerScript = scriptPath
+	workerCompatDate = "2024-01-01"
+	workerBindings = []string{"MY_KV:kv:ns-123"}
+	workerTags = []string{"production"}
+	workerModule = true
+	defer func() {
+		workerCompatDate = ""
+		workerBindings = nil
+		workerTags = nil
+		workerModule = false
+	}()
+
+	err := runWorkerDeploy(workerDeployCmd, []string{"my-worker"})
+	if err != nil {
+		t.Errorf("runWorkerDeploy(DryRun+options) returned error: %v", err)
+	}
+}
+
+func TestWorkerDeploy_DryRunInvalidBindings(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	scriptPath := tmpDir + "/test.js"
+	if err := os.WriteFile(scriptPath, []byte("export default {}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	workerScript = scriptPath
+	workerBindings = []string{"invalid-format"}
+	defer func() { workerBindings = nil }()
+
+	err := runWorkerDeploy(workerDeployCmd, []string{"my-worker"})
+	if err == nil {
+		t.Fatal("expected error for invalid binding format")
+	}
+}
+
+// --- Worker settings DryRun JSON ---
+
+func TestWorkerSettings_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+	workerCompatDate = "2024-01-01"
+	defer func() { workerCompatDate = "" }()
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runWorkerSettings(workerSettingsCmd, []string{"my-worker"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runWorkerSettings(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestWorkerSettings_DryRunWithBindings(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	workerCompatDate = ""
+	workerUsageModel = ""
+	workerBindings = []string{"MY_KV:kv:ns-123"}
+	defer func() { workerBindings = nil }()
+
+	err := runWorkerSettings(workerSettingsCmd, []string{"my-worker"})
+	if err != nil {
+		t.Errorf("runWorkerSettings(DryRun+bindings) returned error: %v", err)
+	}
+}
+
+// --- Worker delete DryRun JSON ---
+
+func TestWorkerDelete_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runWorkerDelete(workerDeleteCmd, []string{"my-worker"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runWorkerDelete(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}

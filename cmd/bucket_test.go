@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -214,5 +218,477 @@ func TestBucketExists_NoArgs(t *testing.T) {
 	err := runBucketExists(bucketExistsCmd, []string{})
 	if err == nil {
 		t.Fatal("expected error when no bucket name provided")
+	}
+}
+
+func TestBucketImport_NoArgsNoSpec(t *testing.T) {
+	bucketSpec = ""
+	err := runBucketImport(bucketImportCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no spec file provided")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("specification file")) {
+		t.Errorf("error = %q, want it to mention 'specification file'", err.Error())
+	}
+}
+
+// --- DryRun mode ---
+
+func TestBucketCreate_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runBucketCreate(bucketCreateCmd, []string{"my-bucket"})
+	if err != nil {
+		t.Errorf("runBucketCreate(DryRun) returned error: %v", err)
+	}
+}
+
+func TestBucketUpdate_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runBucketUpdate(bucketUpdateCmd, []string{"my-bucket"})
+	if err != nil {
+		t.Errorf("runBucketUpdate(DryRun) returned error: %v", err)
+	}
+}
+
+func TestBucketUpdate_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runBucketUpdate(bucketUpdateCmd, []string{"my-bucket"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runBucketUpdate(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestBucketDelete_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runBucketDelete(bucketDeleteCmd, []string{"my-bucket"})
+	if err != nil {
+		t.Errorf("runBucketDelete(DryRun) returned error: %v", err)
+	}
+}
+
+func TestBucketDelete_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runBucketDelete(bucketDeleteCmd, []string{"my-bucket"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runBucketDelete(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestBucketImport_DryRun(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/buckets.json"
+	specContent := `{"buckets":[{"name":"test-bucket-1"}]}`
+	if err := os.WriteFile(specPath, []byte(specContent), 0644); err != nil {
+		t.Fatalf("failed to write spec file: %v", err)
+	}
+	bucketSpec = ""
+
+	err := runBucketImport(bucketImportCmd, []string{specPath})
+	if err != nil {
+		t.Errorf("runBucketImport(DryRun) returned error: %v", err)
+	}
+}
+
+func TestBucketImport_YAMLSpec(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/buckets.yaml"
+	specContent := "buckets:\n  - name: test-yaml-bucket\n"
+	if err := os.WriteFile(specPath, []byte(specContent), 0644); err != nil {
+		t.Fatalf("failed to write spec file: %v", err)
+	}
+	bucketSpec = ""
+
+	err := runBucketImport(bucketImportCmd, []string{specPath})
+	if err != nil {
+		t.Errorf("runBucketImport(YAML) returned error: %v", err)
+	}
+}
+
+func TestBucketImport_EmptySpec(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/empty.json"
+	if err := os.WriteFile(specPath, []byte(`{"buckets":[]}`), 0644); err != nil {
+		t.Fatalf("failed to write spec file: %v", err)
+	}
+	bucketSpec = ""
+
+	err := runBucketImport(bucketImportCmd, []string{specPath})
+	if err != nil {
+		t.Errorf("runBucketImport(empty spec) returned error: %v", err)
+	}
+}
+
+func TestBucketImport_InvalidSpecFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/bad.json"
+	if err := os.WriteFile(specPath, []byte(`not-json-not-yaml`), 0644); err != nil {
+		t.Fatalf("failed to write spec file: %v", err)
+	}
+	bucketSpec = ""
+
+	err := runBucketImport(bucketImportCmd, []string{specPath})
+	if err == nil {
+		t.Fatal("expected error for invalid spec file")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("parse spec file")) {
+		t.Errorf("error = %q, want 'parse spec file'", err.Error())
+	}
+}
+
+func TestBucketImport_NonexistentFile(t *testing.T) {
+	bucketSpec = ""
+	err := runBucketImport(bucketImportCmd, []string{"/nonexistent/file.json"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
+// --- parseKeyValuePairs ---
+
+func TestParseKeyValuePairs_Valid(t *testing.T) {
+	result, err := parseKeyValuePairs([]string{"key1=value1", "key2=value2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result["key1"] != "value1" {
+		t.Errorf("key1 = %q, want %q", result["key1"], "value1")
+	}
+	if result["key2"] != "value2" {
+		t.Errorf("key2 = %q, want %q", result["key2"], "value2")
+	}
+}
+
+func TestParseKeyValuePairs_Invalid(t *testing.T) {
+	_, err := parseKeyValuePairs([]string{"no-equals-sign"})
+	if err == nil {
+		t.Fatal("expected error for invalid key=value pair")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("invalid key=value pair")) {
+		t.Errorf("error = %q, want 'invalid key=value pair'", err.Error())
+	}
+}
+
+func TestParseKeyValuePairs_Empty(t *testing.T) {
+	result, err := parseKeyValuePairs([]string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected empty map, got %d items", len(result))
+	}
+}
+
+func TestParseKeyValuePairs_ValueWithEquals(t *testing.T) {
+	result, err := parseKeyValuePairs([]string{"key=val=ue"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result["key"] != "val=ue" {
+		t.Errorf("key = %q, want %q", result["key"], "val=ue")
+	}
+}
+
+// --- parseSpecFile ---
+
+func TestParseSpecFile_ValidJSON(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/test.json"
+	content := `{"buckets":[{"name":"my-bucket"}]}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BucketSpec
+	err := parseSpecFile(path, &spec)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.Buckets) != 1 || spec.Buckets[0].Name != "my-bucket" {
+		t.Errorf("spec = %+v, want 1 bucket named 'my-bucket'", spec)
+	}
+}
+
+func TestParseSpecFile_ValidYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/test.yaml"
+	content := "buckets:\n  - name: yaml-bucket\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BucketSpec
+	err := parseSpecFile(path, &spec)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.Buckets) != 1 || spec.Buckets[0].Name != "yaml-bucket" {
+		t.Errorf("spec = %+v, want 1 bucket named 'yaml-bucket'", spec)
+	}
+}
+
+func TestParseSpecFile_InvalidContent(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/bad.txt"
+	if err := os.WriteFile(path, []byte(`!!!invalid!!!`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BucketSpec
+	err := parseSpecFile(path, &spec)
+	if err == nil {
+		t.Fatal("expected error for invalid content")
+	}
+}
+
+func TestParseSpecFile_Nonexistent(t *testing.T) {
+	var spec BucketSpec
+	err := parseSpecFile("/nonexistent/file.json", &spec)
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
+// --- Error message content ---
+
+func TestBucketCreate_ErrorMentionsBucketName(t *testing.T) {
+	err := runBucketCreate(bucketCreateCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "bucket name") {
+		t.Errorf("error = %q, want it to mention 'bucket name'", err.Error())
+	}
+}
+
+// --- import with --spec flag ---
+
+func TestBucketImport_SpecFlag(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/spec.json"
+	if err := os.WriteFile(specPath, []byte(`{"buckets":[{"name":"flag-bucket"}]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	bucketSpec = specPath
+
+	err := runBucketImport(bucketImportCmd, []string{})
+	if err != nil {
+		t.Errorf("runBucketImport(--spec) returned error: %v", err)
+	}
+}
+
+// --- JSON import output ---
+
+func TestBucketImport_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	specPath := tmpDir + "/buckets.json"
+	if err := os.WriteFile(specPath, []byte(`{"buckets":[{"name":"json-bucket"}]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	bucketSpec = ""
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runBucketImport(bucketImportCmd, []string{specPath})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runBucketImport(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	// JSON import with DryRun should output JSON with results
+	if !json.Valid([]byte(output)) && output != "" {
+		t.Errorf("expected valid JSON output, got: %q", output)
 	}
 }

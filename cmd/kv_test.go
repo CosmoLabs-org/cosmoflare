@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -312,5 +313,287 @@ func TestKVDelete_DryRun(t *testing.T) {
 	err := runKVDelete(kvDeleteCmd, []string{"ns-abc", "my-key"})
 	if err != nil {
 		t.Errorf("runKVDelete(DryRun) returned error: %v", err)
+	}
+}
+
+// --- DryRun JSON variants ---
+
+func TestKVNamespaceCreate_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runKVNamespaceCreate(kvNamespaceCreateCmd, []string{"my-cache"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runKVNamespaceCreate(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestKVNamespaceDelete_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runKVNamespaceDelete(kvNamespaceDeleteCmd, []string{"ns-abc123"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runKVNamespaceDelete(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestKVPut_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+	kvValue = "test-value"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "my-key"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runKVPut(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+func TestKVPut_DryRunWithFile(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	kvValue = ""
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/value.txt"
+	if err := os.WriteFile(filePath, []byte("file-content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	kvFile = filePath
+	defer func() { kvFile = "" }()
+
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "my-key"})
+	if err != nil {
+		t.Errorf("runKVPut(DryRun+file) returned error: %v", err)
+	}
+}
+
+func TestKVPut_DryRunWithTTL(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	kvValue = "test-value"
+	kvTTL = 3600
+	defer func() { kvTTL = 0 }()
+
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "my-key"})
+	if err != nil {
+		t.Errorf("runKVPut(DryRun+TTL) returned error: %v", err)
+	}
+}
+
+func TestKVDelete_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runKVDelete(kvDeleteCmd, []string{"ns-abc", "my-key"})
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Errorf("runKVDelete(DryRun+JSON) returned error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
+		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	}
+}
+
+// --- KVPut with nonexistent file ---
+
+func TestKVPut_NonexistentFile(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	kvValue = ""
+	kvFile = "/nonexistent/file.txt"
+	defer func() { kvFile = "" }()
+
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "my-key"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
+// --- Error message assertions ---
+
+func TestKVNamespaceCreate_ErrorMentionsTitle(t *testing.T) {
+	err := runKVNamespaceCreate(kvNamespaceCreateCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("title")) {
+		t.Errorf("error = %q, want it to mention 'title'", err.Error())
+	}
+}
+
+func TestKVNamespaceDelete_ErrorMentionsNamespaceID(t *testing.T) {
+	err := runKVNamespaceDelete(kvNamespaceDeleteCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("namespace ID")) {
+		t.Errorf("error = %q, want it to mention 'namespace ID'", err.Error())
+	}
+}
+
+// --- KVPut ---
+
+func TestKVPut_BothValueAndFile(t *testing.T) {
+	kvValue = "val"
+	kvFile = "somefile"
+	defer func() {
+		kvValue = ""
+		kvFile = ""
+	}()
+
+	// When both value and file are provided, value takes precedence in the code
+	// This exercises the kvValue != "" path before kvFile
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "my-key"})
+	// Will fail because of API client, but passes value validation
+	if err == nil {
+		t.Fatal("expected error (no API client available)")
 	}
 }
