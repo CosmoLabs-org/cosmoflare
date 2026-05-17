@@ -525,59 +525,26 @@ func TestQueueOperations_QueueFullThenCancel(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// collectResults
+// Execute — result collection (replaces direct collectResults tests)
 // ---------------------------------------------------------------------------
 
-func TestCollectResults_ContextCancelled(t *testing.T) {
-	bm := NewBatchManager(&BatchConfig{Interactive: false, Quiet: true})
+func TestExecute_ResultsCollected(t *testing.T) {
+	bm := NewBatchManager(&BatchConfig{
+		Concurrency: 2,
+		Interactive: false,
+		Quiet:       true,
+	})
 
-	done := make(chan struct{})
-	go func() {
-		bm.collectResults()
-		close(done)
-	}()
-
-	time.Sleep(50 * time.Millisecond)
-	bm.Cancel()
-
-	select {
-	case <-done:
-	case <-time.After(2 * time.Second):
-		t.Fatal("collectResults should have returned on cancelled context")
-	}
-}
-
-func TestCollectResults_ProcessesCompletedResult(t *testing.T) {
-	bm := NewBatchManager(&BatchConfig{Interactive: false, Quiet: true})
-
-	done := make(chan struct{})
-	go func() {
-		bm.collectResults()
-		close(done)
-	}()
-
-	// Send a completed result
-	atomic.AddInt32(&bm.stats.Running, 1)
-	bm.results <- &Operation{
-		Type:   OperationTypeCopy,
-		Status: StatusCompleted,
-		Size:   2048,
-		StartTime: time.Now().Add(-50 * time.Millisecond),
+	for i := 0; i < 5; i++ {
+		bm.AddOperation(&Operation{
+			Type:   OperationTypeDelete,
+			Source: fmt.Sprintf("/tmp/collect-test-%d", i),
+		})
 	}
 
-	// Give it time to process, then cancel
-	time.Sleep(100 * time.Millisecond)
-	bm.Cancel()
-
-	select {
-	case <-done:
-	case <-time.After(2 * time.Second):
-		t.Fatal("collectResults should have exited after cancel")
-	}
-
-	stats := bm.GetStats()
-	assert.Equal(t, int32(1), stats.Completed)
-	assert.Equal(t, int64(2048), stats.ProcessedSize)
+	stats, _ := bm.Execute()
+	total := stats.Completed + stats.Failed + stats.Skipped + stats.Cancelled
+	assert.Equal(t, int32(5), total, "all operations should be accounted for")
 }
 
 // ---------------------------------------------------------------------------

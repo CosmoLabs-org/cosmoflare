@@ -394,17 +394,6 @@ func (bm *BatchManager) queueOperations() {
 	}
 }
 
-// collectResults collects operation results
-func (bm *BatchManager) collectResults() {
-	for {
-		select {
-		case op := <-bm.results:
-			bm.processResult(op)
-		case <-bm.context.Done():
-			return
-		}
-	}
-}
 
 // processResult processes the result of an operation
 func (bm *BatchManager) processResult(op *Operation) {
