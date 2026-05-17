@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-05-16"
-goals_completed: 0
+goals_completed: 2
 goals_total: 5
 priority: medium
 related_prompts: []
@@ -56,11 +56,11 @@ The project is at v0.8.0 with full Cloudflare platform coverage (R2, Workers, KV
 
 ## Goals
 
-### [ ] 1. Brainplan ROAD-016: CORS via Transform Rules
+### [x] 1. Brainplan ROAD-016: CORS via Transform Rules
 **Model:** `sonnet` | **Files:** `docs/brainstorming/2026-05-16-cors-transform-rules.md`
 Research Cloudflare Transform Rules API for CORS header injection. The cloudflare-go SDK has `CreateRuleset`, `UpdateRuleset`, `ListRulesets` for response header modification. Produce a brainstorm doc with: (a) correct API mapping, (b) CORSService design using Transform Rules, (c) CLI UX for `r2go2 cors` commands. Then plan and dispatch GLM agent with exact implementation.
 
-### [ ] 2. Push cmd/ coverage from 21.4% to 50%+
+### [x] 2. Push cmd/ coverage from 21.4% to 50%+
 **Model:** `glm-turbo` | **Files:** `cmd/bucket.go`, `cmd/object.go`, `cmd/worker.go`, `cmd/kv.go`
 Current tests only cover registration/flags. Add execution-path tests that mock the service layer. Pattern: set `runXxx` functions to use injected services, test with mock service returning canned responses. Focus on the 4 most-used commands first (bucket, object, worker, kv).
 
