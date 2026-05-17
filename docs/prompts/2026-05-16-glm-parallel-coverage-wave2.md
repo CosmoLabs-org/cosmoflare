@@ -5,16 +5,27 @@ goals_completed: 2
 goals_total: 5
 priority: medium
 related_prompts: []
-requires_reading: []
+requires_reading:
+    - docs/brainstorming/2026-05-16-cors-transform-rules.md
 schema_version: 1
 status: PENDING
 tags: []
 title: GLM Parallel Coverage Wave 2 + CORS Brainplan
+brainstorm_ref: docs/brainstorming/2026-05-16-cors-transform-rules.md
 ---
 
 # GLM Parallel Coverage Wave 2 + CORS Brainplan
 
 ## File Scope
+
+## BEFORE Starting — Required Reading
+
+**You MUST read these files in full before writing any code. `ccs prompts load-context` enforces this.**
+
+Read in order:
+
+1. **`docs/brainstorming/2026-05-16-cors-transform-rules.md`** — the design spec.
+
 ```yaml
 files_modified:
   - cmd/bucket.go

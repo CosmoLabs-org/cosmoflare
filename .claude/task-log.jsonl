@@ -553,3 +553,11 @@
 {"id":"17","subject":"","status":"in_progress","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
 {"id":"17","subject":"","status":"completed","completed_at":"2026-05-17T00:11:19Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
 {"id":"14","subject":"","status":"completed","completed_at":"2026-05-17T00:11:47Z","session":"0584c971-5a3e-4b69-a38a-50a0c2068e2b"}
+{"id":"1","subject":"G-00: Fix broken storage_test.go (pre-existing)","status":"pending","created_at":"2026-05-17T05:35:29Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"2","subject":"G-03: Push pkg/r2go2 coverage from 59.9% to 70%+","status":"pending","created_at":"2026-05-17T05:35:36Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"3","subject":"G-04: ROAD-050 cosmoflare status dashboard command","status":"pending","created_at":"2026-05-17T05:35:43Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-17T05:35:47Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"2","subject":"","status":"in_progress","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-17T05:47:10Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"3","subject":"","status":"in_progress","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-17T05:50:09Z","session":"11701c1b-07e6-4387-a95e-a34067600fee"}
