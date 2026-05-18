@@ -412,15 +412,35 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 
 	// Copy with optional progress bar
 	var writer io.Writer = file
+	var progress *utils.TransferProgress
 	if objectProgress && !JSONOutput && obj.Size > 0 {
-		progress := utils.NewTransferProgress(obj.Size)
+		progress = utils.NewTransferProgress(obj.Size)
 		fmt.Printf("  Downloading: %s\n", utils.FormatBytes(obj.Size))
 		writer = &utils.ProgressWriter{Writer: file, Progress: progress}
 	}
 
+	// Start progress bar ticker
+	var done chan struct{}
+	if progress != nil {
+		done = make(chan struct{})
+		go func() {
+			ticker := time.NewTicker(100 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					fmt.Fprintf(os.Stderr, "\r  %s", progress.FormatBar())
+				case <-done:
+					fmt.Fprintf(os.Stderr, "\r  %s\n", progress.FormatBar())
+					return
+				}
+			}
+		}()
+	}
+
 	size, err := io.Copy(writer, obj.Content)
-	if objectProgress && !JSONOutput && obj.Size > 0 {
-		fmt.Println()
+	if done != nil {
+		close(done)
 	}
 	if err != nil {
 		if JSONOutput {
