@@ -46,11 +46,12 @@ Commands:
 }
 
 var (
-	kvValue     string
-	kvFile      string
-	kvTTL       int64
-	kvPrefix    string
-	kvLimit     int
+	kvValue  string
+	kvFile   string
+	kvTTL    int64
+	kvPrefix string
+	kvLimit  int
+	kvForce  bool
 )
 
 var kvNamespaceCreateCmd = &cobra.Command{
@@ -150,7 +151,7 @@ func init() {
 	kvNamespaceCmd.AddCommand(kvNamespaceListCmd)
 	kvNamespaceCmd.AddCommand(kvNamespaceDeleteCmd)
 
-	kvNamespaceDeleteCmd.Flags().BoolVar(&workerForce, "force", false, "Skip confirmation prompt")
+	kvNamespaceDeleteCmd.Flags().BoolVar(&kvForce, "force", false, "Skip confirmation prompt")
 
 	kvPutCmd.Flags().StringVar(&kvValue, "value", "", "Value to write")
 	kvPutCmd.Flags().StringVar(&kvFile, "file", "", "Read value from file")
