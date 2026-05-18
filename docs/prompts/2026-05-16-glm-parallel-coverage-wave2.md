@@ -1,17 +1,18 @@
 ---
+brainstorm_ref: docs/brainstorming/2026-05-16-cors-transform-rules.md
 branch: master
+completed: "2026-05-18"
 created: "2026-05-16"
-goals_completed: 2
+goals_completed: 5
 goals_total: 5
 priority: medium
 related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-05-16-cors-transform-rules.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
 tags: []
 title: GLM Parallel Coverage Wave 2 + CORS Brainplan
-brainstorm_ref: docs/brainstorming/2026-05-16-cors-transform-rules.md
 ---
 
 # GLM Parallel Coverage Wave 2 + CORS Brainplan
@@ -75,23 +76,23 @@ Research Cloudflare Transform Rules API for CORS header injection. The cloudflar
 **Model:** `glm-turbo` | **Files:** `cmd/bucket.go`, `cmd/object.go`, `cmd/worker.go`, `cmd/kv.go`
 Current tests only cover registration/flags. Add execution-path tests that mock the service layer. Pattern: set `runXxx` functions to use injected services, test with mock service returning canned responses. Focus on the 4 most-used commands first (bucket, object, worker, kv).
 
-### [ ] 3. Push pkg/r2go2 coverage from 44.8% to 70%+
+### [x] 3. Push pkg/r2go2 coverage from 44.8% to 70%+
 **Model:** `glm-turbo` | **Files:** `pkg/r2go2/client.go`, `pkg/r2go2/storage.go`, `pkg/r2go2/upload.go`, `pkg/r2go2/download.go`
 Add httptest-based tests for the R2 storage layer (client, storage, upload, download). These are the core functions with lowest coverage. Mock S3 responses via httptest.NewServer.
 
-### [ ] 4. ROAD-050: `cosmoflare status` dashboard command
+### [x] 4. ROAD-050: `cosmoflare status` dashboard command
 **Model:** `sonnet` | **Files:** `cmd/status.go`, `pkg/r2go2/status.go`
 Design and implement the at-a-glance status command (priority 88 on roadmap). Shows: zone count, worker count, KV namespace count, R2 bucket count, recent errors, SSL status summary. Needs brainplan for output format, then GLM dispatch for implementation.
 
-### [ ] 5. Remove dead `collectResults()` method
+### [x] 5. Remove dead `collectResults()` method
 **Model:** `glm-turbo` | **Files:** `internal/cli/batch/manager.go`, `internal/cli/batch/manager_test.go`
 Code review flagged `collectResults()` as dead code after the race fix inlined its logic. Remove the method and update `TestCollectResults_*` tests to test via `Execute()` instead. Verify: `go test ./internal/cli/batch/... -race -cover`
 
 ## Carry-Over Tasks
 
-- [ ] ROAD-016 CORS (was: rejected by quality gate — wrong API mapping)
-- [ ] ROAD-050 cosmoflare status (was: brainplan needed, priority 88)
-- [ ] ROAD-040 WAF/Firewall (was: identified as Wave 2 candidate, needs brainplan)
+- [x] ROAD-016 CORS (was: rejected by quality gate — wrong API mapping)
+- [x] ROAD-050 cosmoflare status (was: brainplan needed, priority 88)
+- [x] ROAD-040 WAF/Firewall (was: identified as Wave 2 candidate, needs brainplan)
 
 ## Where We're Headed
 
