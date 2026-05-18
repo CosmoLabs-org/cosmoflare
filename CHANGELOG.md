@@ -28,6 +28,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.9.0] - 2026-05-18
+
+### Added
+- implement CORS management via Transform Rules (ROAD-016) (commit:c6bce930)
+- add cosmoflare status dashboard command (ROAD-050) (commit:b6483fb5)
+- add FirewallService and CLI command (commit:239bbe62)
+- add EmailService and CLI command (commit:eec97a47)
+- add PageRuleService and CLI command (commit:6345c93c)
+- add cosmoflare domains CLI command (commit:f62228a6)
+- add cosmoflare doctor CLI command (commit:5b5d8d10)
+- add DomainService with overview, detail, health enrichment, and formatting (commit:b64f7a87)
+- add DoctorService with 4 diagnostic probes (commit:643c3bcd)
+- add DomainService with overview, detail, and health enrichment (commit:6ea48be3)
+- add HealthcheckService wrapping Cloudflare Healthcheck API (commit:79104da9)
+
+### Changed
+- remove dead collectResults() method and update tests (commit:a4996784)
+
+### Fixed
+- GlowingText empty-string panic and easeInOutCubic output overflow (commit:c9a9d60b)
+- prevent panics from overflow and divide-by-zero in progress bars (commit:8fe8b641)
+- race condition in Execute() — goroutine lifecycle restructure (commit:08e6a5eb)
+- fetch-before-update in CLI to preserve unmodified rule fields (commit:732af9de)
+- address review issues — pointer Verified, flag-changed guards, test fix (commit:4f1053b8)
+- restore JSON parsing for action values, fix priority docs (commit:602bc6d9)
+- correct exit code documentation in --help (commit:1064b818)
+- address review nits — comment accuracy, SOA→PrimaryNS rename (commit:caa824ab)
+- address review issues — JSON duration types, DNS consistency, probe errors (commit:b57927a9)
+- fetch-then-merge Update to avoid zero-value overwrites (commit:785fe4a4)
+
 ## [0.8.0] - 2026-05-16
 
 ### Added
