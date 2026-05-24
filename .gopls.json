@@ -1,0 +1,5 @@
+{
+  "build.directoryFilters": [
+    "-CosmoDev-R2Go2-worktrees"
+  ]
+}

@@ -14,6 +14,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/palette"
 	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 )
 
@@ -137,6 +138,9 @@ type DashboardModel struct {
 	// Settings
 	currentProfile string
 	theme          Theme
+
+	// Command palette
+	palette *palette.PaletteModel
 }
 
 // SortField represents sortable fields
@@ -271,6 +275,10 @@ func initialModel() DashboardModel {
 	theme := darkTheme // Use dark theme by default
 	InitializeStyles(theme)
 
+	// Build command palette with default dashboard actions
+	paletteCommands := palette.DefaultDashboardActions()
+	p := palette.New(paletteCommands, 80, 24)
+
 	return DashboardModel{
 		buckets:         []Bucket{},
 		currentSection:  SectionOverview,
@@ -282,6 +290,7 @@ func initialModel() DashboardModel {
 		uploadQueue:     []UploadTask{},
 		currentProfile:  "default",
 		theme:           theme,
+		palette:         p,
 		realTimeStats: RealTimeStats{
 			LastUpdate: time.Now(),
 		},

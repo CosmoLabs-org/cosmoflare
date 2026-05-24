@@ -11,6 +11,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/palette"
 )
 
 // Update handles incoming messages and updates the model
@@ -19,10 +20,26 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		if m.palette != nil {
+			m.palette.SetSize(msg.Width, msg.Height)
+		}
 		return m, nil
 
 	case tea.KeyMsg:
+		// When palette is visible, delegate all keys to it
+		if m.palette != nil && m.palette.IsVisible() {
+			updated, cmd := m.palette.Update(msg)
+			*m.palette = updated
+			return m, cmd
+		}
 		return m.handleKeyMsg(msg)
+
+	case palette.PaletteSelectMsg:
+		return m.handlePaletteSelect(msg)
+
+	case palette.PaletteDismissMsg:
+		// Palette already hidden itself; no-op
+		return m, nil
 
 	case dataLoadedMsg:
 		if msg.err != nil {
@@ -118,6 +135,13 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// Normal key handling
 	switch msg.String() {
+	// Command palette
+	case "ctrl+p":
+		if m.palette != nil {
+			m.palette.Show()
+		}
+		return m, nil
+
 	// Navigation
 	case "up", "k":
 		m.moveUp()
@@ -241,4 +265,40 @@ func startMonitoringCmd() tea.Cmd {
 
 func refreshDataCmd() tea.Cmd {
 	return loadDataCmd()
+}
+
+// handlePaletteSelect processes a command selected from the palette.
+func (m DashboardModel) handlePaletteSelect(msg palette.PaletteSelectMsg) (tea.Model, tea.Cmd) {
+	cmd := msg.Command
+
+	// If the command has a custom Action, execute it
+	if cmd.Action != nil {
+		return m, cmd.Action()
+	}
+
+	// Handle built-in dashboard actions by name
+	switch cmd.Name {
+	case "Go to Overview":
+		m.currentSection = SectionOverview
+	case "Go to Buckets":
+		m.currentSection = SectionBucketList
+	case "Go to Objects":
+		m.currentSection = SectionObjectList
+	case "Go to Upload":
+		m.currentSection = SectionUpload
+	case "Go to Monitoring":
+		m.currentSection = SectionMonitoring
+	case "Go to Settings":
+		m.currentSection = SectionSettings
+	case "Toggle Help":
+		m.showHelp = !m.showHelp
+	case "Refresh Data":
+		return m, refreshDataCmd()
+	case "Quit":
+		return m, tea.Quit
+	default:
+		m.addNotification("Command: "+cmd.Name, "info")
+	}
+
+	return m, nil
 }
