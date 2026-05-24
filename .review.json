@@ -1,10 +1,10 @@
 {
   "score": 9,
   "passed": true,
-  "reviewed_at": "2026-05-24T00:55:24-03:00",
-  "reviewed_sha": "ab8060c9d382303ae2d6251a82693c03925a4a00",
+  "reviewed_at": "2026-05-24T07:35:26-03:00",
+  "reviewed_sha": "284a65d62aedb3d23f99238911284486e0ed093e",
   "reviewer": "session",
-  "origin": "glm-agent",
+  "origin": "agent-tool",
   "iterations": 1,
   "fixes_applied": 0,
   "issues_remaining": 0,
