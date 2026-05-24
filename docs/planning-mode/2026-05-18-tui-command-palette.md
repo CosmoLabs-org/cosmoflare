@@ -1,19 +1,27 @@
 ---
-title: TUI Command Palette Implementation
-issue: FEAT-001
 brainstorm: docs/brainstorming/2026-05-18-tui-command-palette.md
-created: 2026-05-18T15:00:00-03:00
+completed: "2026-05-24"
+created: "2026-05-18T15:00:00-03:00"
 deliverables:
-  - id: P-01
-    title: "internal/tui/components/palette/command.go — Command type + registry builder"
-  - id: P-02
-    title: "internal/tui/components/palette/palette.go — PaletteModel tea.Model"
-  - id: P-03
-    title: "internal/tui/components/palette/palette_test.go — Component tests"
-  - id: P-04
-    title: "Wire Ctrl+P into DashboardModel (update.go + model.go)"
-  - id: P-05
-    title: "All tests pass, palette renders correctly"
+    - id: P-01
+      title: internal/tui/components/palette/command.go — Command type + registry builder
+    - id: P-02
+      title: internal/tui/components/palette/palette.go — PaletteModel tea.Model
+    - id: P-03
+      title: internal/tui/components/palette/palette_test.go — Component tests
+    - id: P-04
+      title: Wire Ctrl+P into DashboardModel (update.go + model.go)
+    - id: P-05
+      title: All tests pass, palette renders correctly
+goals_completed: 7
+goals_total: 7
+issue: FEAT-001
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: TUI Command Palette Implementation
 ---
 
 # Plan: TUI Command Palette (FEAT-001)
@@ -170,10 +178,10 @@ Changes to `view.go`:
 
 ## Acceptance Criteria
 
-- [ ] Ctrl+P opens palette overlay
-- [ ] Typing filters commands with fuzzy matching
-- [ ] Enter executes selected command (navigation actions work)
-- [ ] Esc closes palette
-- [ ] All existing TUI tests still pass
-- [ ] Palette component has its own test suite
-- [ ] CLI commands appear in palette (from Cobra tree walk)
+- [x] Ctrl+P opens palette overlay
+- [x] Typing filters commands with fuzzy matching
+- [x] Enter executes selected command (navigation actions work)
+- [x] Esc closes palette
+- [x] All existing TUI tests still pass
+- [x] Palette component has its own test suite
+- [x] CLI commands appear in palette (from Cobra tree walk)

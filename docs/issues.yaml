@@ -1,6 +1,6 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-05-24T00:39:13.231757-03:00
+last_updated: 2026-05-24T00:57:32.100818-03:00
 next_bug_id: 20
 next_feat_id: 5
 next_task_id: 5
@@ -92,7 +92,7 @@ issues:
       created_at: 2026-02-26T01:32:34.4926+01:00
     - id: FEAT-001
       type: feature
-      status: open
+      status: done
       title: TUI command palette with fuzzy search
       created_at: 2026-02-26T01:33:06.914932+01:00
     - id: FEAT-002
@@ -117,7 +117,7 @@ issues:
       created_at: 2026-02-26T01:33:14.270224+01:00
     - id: TASK-002
       type: task
-      status: open
+      status: done
       title: Add interface-based API client for testability
       created_at: 2026-02-26T01:33:15.836584+01:00
     - id: TASK-003

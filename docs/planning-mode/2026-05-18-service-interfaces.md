@@ -1,15 +1,23 @@
 ---
-title: Service Interfaces for Testability
-issue: TASK-002
 brainstorm: docs/brainstorming/2026-05-18-service-interfaces.md
-created: 2026-05-18T14:30:00-03:00
+completed: "2026-05-24"
+created: "2026-05-18T14:30:00-03:00"
 deliverables:
-  - id: P-01
-    title: "pkg/r2go2/interfaces.go — 12 service interfaces with compile-time checks"
-  - id: P-02
-    title: "pkg/r2go2/interfaces_test.go — verification tests"
-  - id: P-03
-    title: "All existing tests pass (zero regressions)"
+    - id: P-01
+      title: pkg/r2go2/interfaces.go — 12 service interfaces with compile-time checks
+    - id: P-02
+      title: pkg/r2go2/interfaces_test.go — verification tests
+    - id: P-03
+      title: All existing tests pass (zero regressions)
+goals_completed: 4
+goals_total: 4
+issue: TASK-002
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: Service Interfaces for Testability
 ---
 
 # Plan: Service Interfaces for Testability (TASK-002)
@@ -64,7 +72,7 @@ Read each service file and extract public method signatures:
 
 ## Acceptance Criteria
 
-- [ ] Every public method on each service struct appears in the corresponding interface
-- [ ] Compile-time checks prevent accidental method signature drift
-- [ ] Zero changes to existing code (no renames, no import changes)
-- [ ] `go test ./pkg/...` passes
+- [x] Every public method on each service struct appears in the corresponding interface
+- [x] Compile-time checks prevent accidental method signature drift
+- [x] Zero changes to existing code (no renames, no import changes)
+- [x] `go test ./pkg/...` passes
