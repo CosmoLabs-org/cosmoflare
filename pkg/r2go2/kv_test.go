@@ -492,3 +492,98 @@ func TestKVNewFromCredsSuccess(t *testing.T) {
 		t.Errorf("expected accountID=acct123, got %s", svc.accountID)
 	}
 }
+
+func TestKVPutWithMetadata(t *testing.T) {
+	var receivedBody []byte
+	svc, server := kvMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			t.Errorf("expected PUT, got %s", r.Method)
+		}
+		if r.URL.Path != "/accounts/acct-kv-123/storage/kv/namespaces/ns-001/bulk" {
+			t.Errorf("expected bulk endpoint, got %s", r.URL.Path)
+		}
+		receivedBody, _ = io.ReadAll(r.Body)
+		kvWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Put(ctx, "ns-001", "my-key", strings.NewReader("test-value"),
+		WithKVMetadata(map[string]string{"env": "prod"}),
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var pairs []map[string]interface{}
+	if err := json.Unmarshal(receivedBody, &pairs); err != nil {
+		t.Fatalf("failed to parse body: %v", err)
+	}
+	if len(pairs) != 1 {
+		t.Fatalf("expected 1 pair, got %d", len(pairs))
+	}
+	if pairs[0]["key"] != "my-key" {
+		t.Errorf("expected key=my-key, got %v", pairs[0]["key"])
+	}
+	meta, ok := pairs[0]["metadata"].(map[string]interface{})
+	if !ok {
+		t.Fatal("metadata not found in request body")
+	}
+	if meta["env"] != "prod" {
+		t.Errorf("expected metadata env=prod, got %v", meta["env"])
+	}
+}
+
+func TestKVPutWithTTL(t *testing.T) {
+	var receivedBody []byte
+	svc, server := kvMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/accounts/acct-kv-123/storage/kv/namespaces/ns-001/bulk" {
+			t.Errorf("expected bulk endpoint for TTL, got %s", r.URL.Path)
+		}
+		receivedBody, _ = io.ReadAll(r.Body)
+		kvWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Put(ctx, "ns-001", "ttl-key", strings.NewReader("data"), WithKVTTL(3600))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var pairs []map[string]interface{}
+	if err := json.Unmarshal(receivedBody, &pairs); err != nil {
+		t.Fatalf("failed to parse body: %v", err)
+	}
+	if pairs[0]["expiration_ttl"] != float64(3600) {
+		t.Errorf("expected expiration_ttl=3600, got %v", pairs[0]["expiration_ttl"])
+	}
+}
+
+func TestKVPutWithoutOptsUsesSingleEndpoint(t *testing.T) {
+	svc, server := kvMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/accounts/acct-kv-123/storage/kv/namespaces/ns-001/bulk" {
+			t.Error("should use single-entry endpoint when no metadata/TTL, got bulk")
+		}
+		kvWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	err := svc.Put(ctx, "ns-001", "plain-key", strings.NewReader("data"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}

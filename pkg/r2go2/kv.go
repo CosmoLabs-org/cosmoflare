@@ -185,13 +185,30 @@ func (s *KVService) Put(ctx context.Context, namespaceID, key string, value io.R
 	}
 
 	rc := cloudflare.AccountIdentifier(s.accountID)
-	params := cloudflare.WriteWorkersKVEntryParams{
-		NamespaceID: namespaceID,
-		Key:         key,
-		Value:       data,
+
+	if len(cfg.metadata) > 0 || cfg.ttl > 0 {
+		pair := &cloudflare.WorkersKVPair{
+			Key:   key,
+			Value: string(data),
+		}
+		if len(cfg.metadata) > 0 {
+			pair.Metadata = cfg.metadata
+		}
+		if cfg.ttl > 0 {
+			pair.ExpirationTTL = int(cfg.ttl)
+		}
+		_, err = s.cf.WriteWorkersKVEntries(ctx, rc, cloudflare.WriteWorkersKVEntriesParams{
+			NamespaceID: namespaceID,
+			KVs:         []*cloudflare.WorkersKVPair{pair},
+		})
+	} else {
+		_, err = s.cf.WriteWorkersKVEntry(ctx, rc, cloudflare.WriteWorkersKVEntryParams{
+			NamespaceID: namespaceID,
+			Key:         key,
+			Value:       data,
+		})
 	}
 
-	_, err = s.cf.WriteWorkersKVEntry(ctx, rc, params)
 	if err != nil {
 		return newError("KVService.Put", fmt.Sprintf("failed to write key %q", key), err)
 	}
