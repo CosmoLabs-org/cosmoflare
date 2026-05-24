@@ -1,10 +1,10 @@
 id: BUG-018
 type: bug
 created_at: 2026-05-18T16:39:48.938192-03:00
-updated_at: 2026-05-18T16:39:51.140335-03:00
+updated_at: 2026-05-24T00:39:13.120713-03:00
 source: local
 severity: medium
-status: open
+status: done
 origin:
     session: 2027
 title: Shared flag variables leak between CLI commands
@@ -13,3 +13,6 @@ fix_direction: In cmd/kv.go, replace shared var workerForce with local kvForce b
 affected_files:
     - cmd/kv.go
     - cmd/worker.go
+revisions:
+    - date: "2026-05-24"
+      action: closed

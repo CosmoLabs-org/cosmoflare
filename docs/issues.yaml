@@ -1,6 +1,6 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-05-18T16:39:52.106913-03:00
+last_updated: 2026-05-24T00:39:13.231757-03:00
 next_bug_id: 20
 next_feat_id: 5
 next_task_id: 5
@@ -8,19 +8,19 @@ next_imp_id: 1
 issues:
     - id: BUG-019
       type: bug
-      status: open
+      status: done
       title: KV metadata option accepted but never wired to API
       severity: medium
       created_at: 2026-05-18T16:39:52.105811-03:00
     - id: BUG-018
       type: bug
-      status: open
+      status: done
       title: Shared flag variables leak between CLI commands
       severity: medium
       created_at: 2026-05-18T16:39:48.938192-03:00
     - id: BUG-017
       type: bug
-      status: open
+      status: done
       title: Download progress bar never renders during transfer
       severity: medium
       created_at: 2026-05-18T16:39:45.802557-03:00

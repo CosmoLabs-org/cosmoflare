@@ -606,3 +606,8 @@
 {"id":"14","subject":"","status":"completed","completed_at":"2026-05-18T19:41:55Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"15","subject":"","status":"completed","completed_at":"2026-05-18T19:41:56Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"16","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-05-24T03:31:38Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"17","subject":"Dispatch FEAT-001: TUI command palette (Opus agent)","status":"pending","created_at":"2026-05-24T03:44:31Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"18","subject":"Dispatch TASK-002: Service interfaces (Sonnet agent)","status":"pending","created_at":"2026-05-24T03:44:33Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"19","subject":"Quality-gate review and merge both agents","status":"pending","created_at":"2026-05-24T03:44:35Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"17","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
