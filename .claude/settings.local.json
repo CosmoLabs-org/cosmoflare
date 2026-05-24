@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "SlashCommand(/claude-refresh)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
