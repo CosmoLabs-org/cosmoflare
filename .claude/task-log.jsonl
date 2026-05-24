@@ -647,3 +647,30 @@
 {"id":"30","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"30","subject":"","status":"completed","completed_at":"2026-05-24T06:09:29Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"31","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"31","subject":"","status":"completed","completed_at":"2026-05-24T06:09:37Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"32","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"32","subject":"","status":"completed","completed_at":"2026-05-24T06:10:16Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"33","subject":"","status":"completed","completed_at":"2026-05-24T06:10:17Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"34","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"34","subject":"","status":"completed","completed_at":"2026-05-24T06:10:46Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"1","subject":"Triage all work sources","status":"pending","created_at":"2026-05-24T08:19:47Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"1","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-24T08:20:20Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"2","subject":"Phase 1: Clean up stale ideas and branches","status":"pending","created_at":"2026-05-24T09:32:57Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"3","subject":"Phase 2: Dispatch bounded parallel tasks","status":"pending","created_at":"2026-05-24T09:32:58Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"4","subject":"Phase 3: Brainstorm FEAT-002 dev server","status":"pending","created_at":"2026-05-24T09:32:59Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"5","subject":"Phase 4: Roadmap sprint — pick and dispatch top items","status":"pending","created_at":"2026-05-24T09:33:00Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"2","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-24T09:34:06Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"3","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"5","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"4","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-24T10:17:23Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"6","subject":"Review Pages worktree (agent-abfc42b29e1db9e66)","status":"pending","created_at":"2026-05-24T10:17:29Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"7","subject":"Review Queues worktree (agent-ab5ba7eb47f67671c)","status":"pending","created_at":"2026-05-24T10:17:30Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"6","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-24T10:18:27Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"7","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-24T10:19:04Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"8","subject":"Merge Pages and Queues worktrees","status":"pending","created_at":"2026-05-24T10:19:09Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"8","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
