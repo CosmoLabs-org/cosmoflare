@@ -71,55 +71,76 @@
       }
     }
   ],
-  "critical_bugs_count": 7,
+  "critical_bugs_count": 10,
   "critical_bugs": [
     {
       "id": "BUG-AUD-001",
-      "location": "upload.go:253",
+      "location": "upload.go:253-261",
       "severity": "critical",
-      "description": "Multipart upload sorts parts incorrectly, can corrupt large files",
+      "description": "Multipart upload parts not sorted by PartNumber; causes InvalidPartOrder or silent data corruption",
       "source": "agent-2-core-logic.md"
     },
     {
       "id": "BUG-AUD-002",
-      "location": "download.go:53",
-      "severity": "high",
-      "description": "rangeStart >= 0 always true (default 0), Range header always applied",
-      "source": "agent-1-code-quality.md"
+      "location": "storage.go:158, download.go:59",
+      "severity": "critical",
+      "description": "All S3 errors misclassified as R2NotFoundError (auth, network, server errors all become not-found)",
+      "source": "agent-2-core-logic.md"
     },
     {
       "id": "BUG-AUD-003",
-      "location": "internal/config/config.go",
-      "severity": "high",
-      "description": "Config file created with default permissions before chmod, credential exposure race window",
+      "location": "internal/config/config.go:114-120",
+      "severity": "critical",
+      "description": "Config file with API tokens briefly world-readable between WriteConfigAs and Chmod (TOCTOU)",
       "source": "agent-2-core-logic.md"
     },
     {
       "id": "BUG-AUD-004",
-      "location": "cmd/bucket.go",
-      "severity": "high",
-      "description": "bucket update command is a no-op -- accepts flags but applies nothing",
+      "location": "cmd/bucket.go:353-380",
+      "severity": "critical",
+      "description": "bucket update is a no-op claiming success -- no API call made",
       "source": "agent-3-api-design.md"
     },
     {
       "id": "BUG-AUD-005",
-      "location": "cmd/root.go",
-      "severity": "medium",
-      "description": "printError suppresses errors in JSON mode, causing silent failures",
+      "location": "cmd/root.go:196-200",
+      "severity": "critical",
+      "description": "printError() silently swallows errors in JSON mode -- errors invisible to agents/scripts",
       "source": "agent-3-api-design.md"
     },
     {
       "id": "BUG-AUD-006",
+      "location": "cmd/object.go:389,391",
+      "severity": "critical",
+      "description": "Double defer obj.Content.Close() -- potential panic on non-idempotent ReadCloser",
+      "source": "agent-3-api-design.md"
+    },
+    {
+      "id": "BUG-AUD-007",
+      "location": "pkg/r2go2/download.go:53",
+      "severity": "high",
+      "description": "rangeStart >= 0 always true (default 0), Range header always applied to every download",
+      "source": "agent-1-code-quality.md"
+    },
+    {
+      "id": "BUG-AUD-008",
       "location": "install.sh",
       "severity": "high",
       "description": "Script references uppercase binary name that does not exist in build output",
       "source": "agent-4-infrastructure.md"
     },
     {
-      "id": "BUG-AUD-007",
+      "id": "BUG-AUD-009",
       "location": ".goreleaser.yml",
       "severity": "medium",
       "description": "Release asset path does not match actual build output location",
+      "source": "agent-4-infrastructure.md"
+    },
+    {
+      "id": "BUG-AUD-010",
+      "location": ".github/workflows/",
+      "severity": "critical",
+      "description": "CI pipeline never exercised with current codebase; go vet errors would fail it immediately",
       "source": "agent-4-infrastructure.md"
     }
   ],

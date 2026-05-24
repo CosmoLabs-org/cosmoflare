@@ -1,0 +1,76 @@
+{
+  "project": {
+    "name": "CosmoDev-R2Go2",
+    "display_name": "Cosmoflare",
+    "binary": "r2go2",
+    "version": "0.9.0",
+    "language": "Go",
+    "go_version": "1.26",
+    "module": "github.com/CosmoLabs-org/CosmoDev-R2Go2",
+    "license": "MIT",
+    "organization": "CosmoLabs-org"
+  },
+  "architecture": {
+    "layers": [
+      {
+        "name": "pkg/r2go2",
+        "type": "public_library",
+        "files": 30,
+        "description": "Importable Go library, 12 service structs, stable API surface"
+      },
+      {
+        "name": "cmd",
+        "type": "cli",
+        "files": 33,
+        "framework": "cobra",
+        "description": "Cobra CLI commands, thin shell over library"
+      },
+      {
+        "name": "internal",
+        "type": "private_packages",
+        "files": 38,
+        "description": "Config (Viper), TUI (Bubble Tea), interactive wizard, utils"
+      }
+    ],
+    "protocols": [
+      {
+        "name": "S3-compatible",
+        "sdk": "AWS SDK v2",
+        "services": ["R2 Storage"]
+      },
+      {
+        "name": "Cloudflare REST",
+        "client": "net/http",
+        "services": ["Workers", "KV", "DNS", "Zones", "SSL", "Cache", "Healthchecks", "Domains"]
+      }
+    ]
+  },
+  "services": {
+    "implemented": [
+      "R2 Storage", "Workers", "KV", "DNS", "Zones", "SSL/TLS",
+      "Cache", "Healthchecks", "Doctor", "Domains", "CORS", "Page Rules"
+    ],
+    "stub": ["D1", "Pages", "Queues"],
+    "planned": ["WAF/Firewall", "Email Routing", "Images", "Hyperdrive", "Vectorize", "Workers AI", "Stream"]
+  },
+  "dependencies": {
+    "cli_framework": "cobra",
+    "config": "viper",
+    "tui": "charmbracelet/bubbletea",
+    "s3_client": "aws-sdk-go-v2",
+    "testing": "testify"
+  },
+  "config_files": {
+    "primary": ".cosmoflare.yaml",
+    "legacy": ".r2go2.yaml",
+    "version_registry": ".version-registry.json"
+  },
+  "audit": {
+    "date": "2026-05-19",
+    "score": 70.8,
+    "maturity": "Mature",
+    "model": "claude-opus-4-6",
+    "agents": 5,
+    "critical_bugs": 7
+  }
+}

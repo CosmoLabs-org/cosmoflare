@@ -1,0 +1,76 @@
+{
+  "snapshot_date": "2026-05-19",
+  "version": "0.9.0",
+  "codebase": {
+    "source_files": 114,
+    "test_files": 107,
+    "source_loc": 36338,
+    "test_loc": 55009,
+    "test_to_source_ratio": 1.51,
+    "total_loc": 91347,
+    "dead_code_loc": 3929,
+    "dead_code_locations": ["internal/migration/", "cmd_disabled/"]
+  },
+  "breakdown": {
+    "pkg_r2go2": {
+      "source_files": 30,
+      "description": "Public library"
+    },
+    "cmd": {
+      "source_files": 33,
+      "description": "CLI commands"
+    },
+    "internal": {
+      "source_files": 38,
+      "description": "Private packages"
+    },
+    "tests_dir": {
+      "files": 28,
+      "description": "Integration tests"
+    }
+  },
+  "services": {
+    "implemented": 12,
+    "stub": 3,
+    "planned": 7,
+    "total_target": 22
+  },
+  "cli": {
+    "commands": 33,
+    "subcommands_estimated": 65,
+    "json_support": "all commands",
+    "legacy_aliases": 3
+  },
+  "binary": {
+    "size_mb": 33.6,
+    "stripped": false,
+    "estimated_stripped_mb": 17,
+    "startup_ms": 12,
+    "competitor_startup_ms": 800,
+    "startup_advantage": "66x"
+  },
+  "dependencies": {
+    "go_sum_lines": 171,
+    "direct_deps_estimated": 15,
+    "indirect_deps_estimated": 70
+  },
+  "quality": {
+    "overall_score": 70.8,
+    "code_quality_score": 74,
+    "core_logic_score": 78,
+    "api_design_score": 78,
+    "infrastructure_score": 62,
+    "docs_roadmap_score": 62,
+    "critical_bugs": 7,
+    "high_bugs": 4,
+    "medium_bugs": 7,
+    "low_bugs": 4,
+    "config_test_coverage": 0,
+    "ci_status": "never_exercised"
+  },
+  "git": {
+    "tags": ["v0.6.0", "v0.7.0", "v0.7.1", "v0.8.0", "v0.9.0"],
+    "latest_tag": "v0.9.0",
+    "branch": "master"
+  }
+}

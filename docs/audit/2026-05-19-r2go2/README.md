@@ -4,6 +4,7 @@
 **Audit Model**: Opus 4.6 (1M context) by Anthropic
 **Mode**: Fresh (no prior audit baseline)
 **Agents**: 5 specialized audit agents
+**Critical/High Bugs Found**: 10
 
 ## Executive Summary
 
@@ -56,17 +57,20 @@ The core finding across all agents: **strong foundations with weak delivery infr
 
 5. **TUI dashboard uses simulated data** (see agent-1-code-quality.md) -- The Bubble Tea dashboard renders hardcoded numbers rather than live Cloudflare account data.
 
-## Critical Bugs (7 Total)
+## Critical Bugs (10 Total)
 
 | # | Location | Severity | Description | Source |
 |---|----------|----------|-------------|--------|
-| 1 | `upload.go:253` | CRITICAL | Multipart upload sorts parts incorrectly, can corrupt large files | agent-2-core-logic.md |
-| 2 | `download.go:53` | HIGH | `rangeStart >= 0` always true (default 0), Range header always applied | agent-1-code-quality.md |
-| 3 | `config.go` | HIGH | Config file created with default permissions before chmod, race window | agent-2-core-logic.md |
-| 4 | `bucket.go` (cmd) | HIGH | `bucket update` is a no-op -- accepts flags but applies nothing | agent-3-api-design.md |
-| 5 | `root.go` | MEDIUM | `printError` suppresses errors in JSON mode, silent failures | agent-3-api-design.md |
-| 6 | `install.sh` | HIGH | Script references uppercase binary name that does not exist | agent-4-infrastructure.md |
-| 7 | `.goreleaser.yml` | MEDIUM | Release asset path does not match actual build output location | agent-4-infrastructure.md |
+| 1 | `upload.go:253` | CRITICAL | Multipart upload parts not sorted by PartNumber; causes InvalidPartOrder or silent corruption | agent-2-core-logic.md |
+| 2 | `storage.go:158`, `download.go:59` | CRITICAL | All S3 errors misclassified as R2NotFoundError (auth, network, server errors) | agent-2-core-logic.md |
+| 3 | `config.go:114-120` | CRITICAL | Config file with API tokens briefly world-readable (TOCTOU race) | agent-2-core-logic.md |
+| 4 | `bucket.go:353-380` | CRITICAL | `bucket update` is a no-op claiming success -- no API call made | agent-3-api-design.md |
+| 5 | `root.go:196-200` | CRITICAL | `printError` silently swallows errors in JSON mode | agent-3-api-design.md |
+| 6 | `object.go:389,391` | CRITICAL | Double `defer obj.Content.Close()` -- potential panic | agent-3-api-design.md |
+| 7 | `download.go:53` | HIGH | `rangeStart >= 0` always true (default 0), Range header always applied | agent-1-code-quality.md |
+| 8 | `install.sh` | HIGH | Script references uppercase binary name that does not exist | agent-4-infrastructure.md |
+| 9 | `.goreleaser.yml` | MEDIUM | Release asset path does not match actual build output location | agent-4-infrastructure.md |
+| 10 | CI pipeline | CRITICAL | GitHub Actions workflow never exercised; go vet errors would fail it | agent-4-infrastructure.md |
 
 ## Cross-Agent Patterns
 
