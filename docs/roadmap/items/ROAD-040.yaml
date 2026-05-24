@@ -1,11 +1,13 @@
 id: ROAD-040
 created_at: 2026-05-16T00:09:18.835502-03:00
-updated_at: 2026-05-16T00:09:18.836294-03:00
+updated_at: 2026-05-24T06:36:59.940716-03:00
 title: WAF and Firewall — rules, managed rulesets, rate limiting, IP access rules
 description: Firewall rules, managed rulesets, rate limiting rules, IP access rules. Security-minded users expect this.
-status: captured
+status: completed
 priority: 80
 category: security
 effort: medium
+completed_in: v0.10.0
+completed_at: 2026-05-24T06:36:59.940714-03:00
 origin:
     session: 2027

@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-16T03:02:05.018705-03:00
+last_updated: 2026-05-24T07:17:21.769636-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -83,11 +83,12 @@ items:
       created_at: 2026-05-16T00:10:13.900551-03:00
     - id: ROAD-054
       title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
-      status: captured
+      status: completed
       priority: 80
       category: ux
       effort: medium
       has_plan: true
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:10:13.803125-03:00
     - id: ROAD-053
       title: cosmoflare import/export — full account config as YAML for disaster recovery
@@ -112,11 +113,12 @@ items:
       created_at: 2026-05-16T00:09:56.384259-03:00
     - id: ROAD-050
       title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
-      status: captured
+      status: completed
       priority: 88
       category: ux
       effort: medium
       has_plan: true
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:56.286855-03:00
     - id: ROAD-049
       title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
@@ -166,31 +168,35 @@ items:
       created_at: 2026-05-16T00:09:26.389003-03:00
     - id: ROAD-042
       title: D1 SQL database — fill stub with query, migrate, list databases
-      status: captured
+      status: completed
       priority: 75
       category: core
       effort: medium
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:26.287955-03:00
     - id: ROAD-041
       title: Email Routing — create rules, list destinations, catch-all settings
-      status: captured
+      status: completed
       priority: 75
       category: core
       effort: small
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:18.924497-03:00
     - id: ROAD-040
       title: WAF and Firewall — rules, managed rulesets, rate limiting, IP access rules
-      status: captured
+      status: completed
       priority: 80
       category: security
       effort: medium
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:18.835502-03:00
     - id: ROAD-039
       title: Page Rules and Redirect Rules management
-      status: captured
+      status: completed
       priority: 80
       category: core
       effort: medium
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:11.555248-03:00
     - id: ROAD-038
       title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
@@ -282,7 +288,7 @@ items:
       created_at: 2026-03-10T04:39:22.049812+01:00
     - id: ROAD-023
       title: Local HTTP dev server proxying to R2
-      status: captured
+      status: archived
       priority: 52
       effort: medium
       linked_issues:
@@ -333,10 +339,11 @@ items:
       created_at: 2026-03-10T04:39:12.200948+01:00
     - id: ROAD-016
       title: CORS and access control configuration commands
-      status: captured
+      status: completed
       priority: 52
       category: security
       effort: medium
+      completed_in: v0.10.0
       created_at: 2026-03-02T23:33:08.526846+01:00
     - id: ROAD-015
       title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions

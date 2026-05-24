@@ -2,7 +2,7 @@
 id: IDEA-MN5GDX5C
 title: Remove tracked binaries from git history
 created: "2026-03-25T03:57:38.064826+01:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 17
@@ -11,6 +11,7 @@ tags:
     - audit
     - hygiene
 ---
+
 
 # Remove tracked binaries from git history
 

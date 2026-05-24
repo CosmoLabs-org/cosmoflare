@@ -2,7 +2,7 @@
 id: IDEA-MN5GDV37
 title: Add MIT LICENSE file to repository root
 created: "2026-03-25T03:57:35.395226+01:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 17
@@ -11,6 +11,7 @@ tags:
     - audit
     - legal
 ---
+
 
 # Add MIT LICENSE file to repository root
 

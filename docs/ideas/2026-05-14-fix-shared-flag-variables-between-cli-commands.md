@@ -2,11 +2,12 @@
 id: IDEA-017
 title: Fix shared flag variables between CLI commands
 created: "2026-05-14T05:28:07.444745-03:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 2027
 ---
+
 
 # Fix shared flag variables between CLI commands
 

@@ -1,14 +1,13 @@
 id: FEAT-002
 type: feature
 created_at: 2026-02-26T01:33:08.490925+01:00
-updated_at: 2026-02-26T01:33:08.490929+01:00
+updated_at: 2026-05-24T07:17:20.933813-03:00
 source: local
-status: open
+status: closed
 origin:
-  roadmap_items:
-    - ROAD-009
-    - ROAD-023
-
+    roadmap_items:
+        - ROAD-009
+        - ROAD-023
 title: Local HTTP dev server proxying to R2
 description: r2go2 serve command starts a local HTTP server that proxies requests to an R2 bucket for local testing without deploying
 acceptance_criteria:
@@ -18,3 +17,10 @@ acceptance_criteria:
       met: false
     - criterion: Handles CORS
       met: false
+resolution:
+    notes: Superseded by ROAD-058 (cosmoflare dev — full local dev proxy for all Cloudflare services)
+    resolved_at: 2026-05-24T07:17:20.933805-03:00
+revisions:
+    - date: "2026-05-24"
+      action: closed
+      context: Superseded by ROAD-058 (cosmoflare dev — full local dev proxy for all Cloudflare services)

@@ -2,7 +2,7 @@
 id: IDEA-MN5GDTBT
 title: Remove or build-tag disabled packages that break go test
 created: "2026-03-25T03:57:33.113067+01:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 17
@@ -11,6 +11,7 @@ tags:
     - audit
     - cleanup
 ---
+
 
 # Remove or build-tag disabled packages that break go test
 

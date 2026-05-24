@@ -2,11 +2,12 @@
 id: IDEA-016
 title: Fix download progress bar -- ProgressWriter never renders to terminal
 created: "2026-05-13T15:55:33.638196-03:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 2027
 ---
+
 
 # Fix download progress bar -- ProgressWriter never renders to terminal
 

@@ -1,14 +1,16 @@
 id: ROAD-050
 created_at: 2026-05-16T00:09:56.286855-03:00
-updated_at: 2026-05-16T03:02:04.979285-03:00
+updated_at: 2026-05-24T06:37:00.1604-03:00
 title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
 description: 'One command to see everything: zones health, workers errors, KV usage, R2 storage, recent alerts. Replace checking 5 dashboards.'
-status: captured
+status: completed
 priority: 88
 category: ux
 effort: medium
 refs:
     - type: plan
       path: docs/planning-mode/2026-05-16-domain-operations.md
+completed_in: v0.10.0
+completed_at: 2026-05-24T06:37:00.160397-03:00
 origin:
     session: 2027
