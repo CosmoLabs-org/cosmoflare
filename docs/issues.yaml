@@ -1,59 +1,11 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-05-24T00:57:32.100818-03:00
+last_updated: 2026-05-24T03:09:24.335291-03:00
 next_bug_id: 20
 next_feat_id: 5
 next_task_id: 5
 next_imp_id: 1
 issues:
-    - id: BUG-019
-      type: bug
-      status: done
-      title: KV metadata option accepted but never wired to API
-      severity: medium
-      created_at: 2026-05-18T16:39:52.105811-03:00
-    - id: BUG-018
-      type: bug
-      status: done
-      title: Shared flag variables leak between CLI commands
-      severity: medium
-      created_at: 2026-05-18T16:39:48.938192-03:00
-    - id: BUG-017
-      type: bug
-      status: done
-      title: Download progress bar never renders during transfer
-      severity: medium
-      created_at: 2026-05-18T16:39:45.802557-03:00
-    - id: BUG-016
-      type: bug
-      status: closed
-      title: easeInOutCubic returns values >1.0 for t>0.5
-      severity: low
-      created_at: 2026-05-16T07:39:20.587463-03:00
-    - id: BUG-015
-      type: bug
-      status: closed
-      title: GlowingText index-out-of-range on empty string
-      severity: low
-      created_at: 2026-05-16T07:39:17.453383-03:00
-    - id: BUG-014
-      type: bug
-      status: closed
-      title: TUI negative width handling causes strings.Repeat panic
-      severity: medium
-      created_at: 2026-05-16T07:39:14.412973-03:00
-    - id: BUG-013
-      type: bug
-      status: closed
-      title: TUI divide-by-zero on empty data
-      severity: medium
-      created_at: 2026-05-16T07:39:11.258304-03:00
-    - id: BUG-012
-      type: bug
-      status: closed
-      title: TUI progress bar overflow panic on values exceeding total
-      severity: medium
-      created_at: 2026-05-16T07:39:07.989033-03:00
     - id: BUG-001
       type: bug
       status: resolved
@@ -92,7 +44,7 @@ issues:
       created_at: 2026-02-26T01:32:34.4926+01:00
     - id: FEAT-001
       type: feature
-      status: done
+      status: closed
       title: TUI command palette with fuzzy search
       created_at: 2026-02-26T01:33:06.914932+01:00
     - id: FEAT-002
@@ -160,3 +112,51 @@ issues:
       title: Makefile binary name case mismatch (R2Go2 vs r2go2)
       severity: medium
       created_at: 2026-05-07T20:32:38.377819-03:00
+    - id: BUG-012
+      type: bug
+      status: closed
+      title: TUI progress bar overflow panic on values exceeding total
+      severity: medium
+      created_at: 2026-05-16T07:39:07.989033-03:00
+    - id: BUG-013
+      type: bug
+      status: closed
+      title: TUI divide-by-zero on empty data
+      severity: medium
+      created_at: 2026-05-16T07:39:11.258304-03:00
+    - id: BUG-014
+      type: bug
+      status: closed
+      title: TUI negative width handling causes strings.Repeat panic
+      severity: medium
+      created_at: 2026-05-16T07:39:14.412973-03:00
+    - id: BUG-015
+      type: bug
+      status: closed
+      title: GlowingText index-out-of-range on empty string
+      severity: low
+      created_at: 2026-05-16T07:39:17.453383-03:00
+    - id: BUG-016
+      type: bug
+      status: closed
+      title: easeInOutCubic returns values >1.0 for t>0.5
+      severity: low
+      created_at: 2026-05-16T07:39:20.587463-03:00
+    - id: BUG-017
+      type: bug
+      status: done
+      title: Download progress bar never renders during transfer
+      severity: medium
+      created_at: 2026-05-18T16:39:45.802557-03:00
+    - id: BUG-018
+      type: bug
+      status: done
+      title: Shared flag variables leak between CLI commands
+      severity: medium
+      created_at: 2026-05-18T16:39:48.938192-03:00
+    - id: BUG-019
+      type: bug
+      status: done
+      title: KV metadata option accepted but never wired to API
+      severity: medium
+      created_at: 2026-05-18T16:39:52.105811-03:00

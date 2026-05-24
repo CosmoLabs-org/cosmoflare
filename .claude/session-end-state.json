@@ -1,17 +1,8 @@
 {
-  "session_date": "2026-05-16",
-  "mode": "quick",
-  "started_at": "2026-05-16T14:43:50Z",
-  "phases": {
-    "3": {
-      "status": "completed",
-      "at": "2026-05-16T14:45:12Z"
-    },
-    "6": {
-      "status": "completed",
-      "at": "2026-05-16T14:45:20Z"
-    }
-  },
+  "session_date": "2026-05-24",
+  "mode": "full",
+  "started_at": "2026-05-24T06:09:23Z",
+  "phases": {},
   "verified": false,
-  "session_id": "dcd9b770-2a25-4a72-85f3-425a595f7a6b"
+  "session_id": "3b287eb2-891f-43ef-a2b0-9ed39ada5bfe"
 }

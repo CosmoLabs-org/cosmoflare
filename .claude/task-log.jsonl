@@ -639,3 +639,11 @@
 {"id":"23","subject":"","status":"completed","completed_at":"2026-05-24T03:57:28Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"24","subject":"","status":"completed","completed_at":"2026-05-24T03:57:29Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"20","subject":"","status":"completed","completed_at":"2026-05-24T03:57:29Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"30","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-24T06:09:05Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"31","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-24T06:09:06Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"32","subject":"Phase 3: Parallel blast (post-commit)","status":"pending","created_at":"2026-05-24T06:09:07Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"33","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-24T06:09:08Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"34","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-05-24T06:09:09Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"30","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"30","subject":"","status":"completed","completed_at":"2026-05-24T06:09:29Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"31","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
