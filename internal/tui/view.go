@@ -17,6 +17,11 @@ import (
 
 // View renders the dashboard
 func (m DashboardModel) View() string {
+	// Command palette overlay takes priority
+	if m.palette != nil && m.palette.IsVisible() {
+		return m.palette.View()
+	}
+
 	if m.showHelp {
 		return m.renderHelp()
 	}
