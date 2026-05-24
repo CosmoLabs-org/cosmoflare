@@ -611,3 +611,27 @@
 {"id":"18","subject":"Dispatch TASK-002: Service interfaces (Sonnet agent)","status":"pending","created_at":"2026-05-24T03:44:33Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"19","subject":"Quality-gate review and merge both agents","status":"pending","created_at":"2026-05-24T03:44:35Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
 {"id":"17","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-05-24T03:46:02Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-05-24T03:46:02Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"20","subject":"Run 360° project audit","status":"pending","created_at":"2026-05-24T03:46:14Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"21","subject":"Gather project context","status":"pending","created_at":"2026-05-24T03:46:15Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"22","subject":"Select and dispatch audit agents","status":"pending","created_at":"2026-05-24T03:46:17Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"23","subject":"Synthesize agent results","status":"pending","created_at":"2026-05-24T03:46:18Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"24","subject":"File findings and write output","status":"pending","created_at":"2026-05-24T03:46:18Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"20","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"21","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-05-24T03:47:14Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"22","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"25","subject":"Audit Agent 1: Code Quality","status":"pending","created_at":"2026-05-24T03:47:55Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"26","subject":"Audit Agent 2: Core Logic","status":"pending","created_at":"2026-05-24T03:47:56Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"27","subject":"Audit Agent 3: API Design","status":"pending","created_at":"2026-05-24T03:47:57Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"28","subject":"Audit Agent 4: Infrastructure \u0026 Distribution","status":"pending","created_at":"2026-05-24T03:47:58Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"29","subject":"Audit Agent 5: Documentation \u0026 Roadmap","status":"pending","created_at":"2026-05-24T03:47:59Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-05-24T03:49:03Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"26","subject":"","status":"completed","completed_at":"2026-05-24T03:51:12Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-05-24T03:51:12Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"27","subject":"","status":"completed","completed_at":"2026-05-24T03:51:12Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"29","subject":"","status":"completed","completed_at":"2026-05-24T03:52:06Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"28","subject":"","status":"completed","completed_at":"2026-05-24T03:52:35Z","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"23","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
+{"id":"19","subject":"","status":"in_progress","session":"d0fc64f9-976c-4699-aa43-105120a381fb"}
