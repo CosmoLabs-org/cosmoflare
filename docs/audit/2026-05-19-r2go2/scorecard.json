@@ -1,0 +1,134 @@
+{
+  "project": "CosmoDev-R2Go2",
+  "version": "0.9.0",
+  "audit_date": "2026-05-19",
+  "overall_score": 70.8,
+  "maturity": "Mature",
+  "audit_model": {
+    "provider": "anthropic",
+    "model_id": "claude-opus-4-6",
+    "model_display": "Opus 4.6 (1M context)"
+  },
+  "agents": [
+    {
+      "name": "code-quality",
+      "score": 74,
+      "grade": "C+",
+      "sub_scores": {
+        "architecture": 78,
+        "patterns": 80,
+        "tech_debt": 60,
+        "test_coverage": 75,
+        "code_organization": 77
+      }
+    },
+    {
+      "name": "core-logic",
+      "score": 78,
+      "grade": "B-",
+      "sub_scores": {
+        "correctness": 80,
+        "error_handling": 82,
+        "edge_cases": 68,
+        "data_flow": 80,
+        "concurrency_safety": 75
+      }
+    },
+    {
+      "name": "api-design",
+      "score": 78,
+      "grade": "B-",
+      "sub_scores": {
+        "api_surface": 82,
+        "cli_consistency": 72,
+        "agent_friendliness": 80,
+        "error_messages": 75,
+        "documentation": 82
+      }
+    },
+    {
+      "name": "infrastructure",
+      "score": 62,
+      "grade": "D+",
+      "sub_scores": {
+        "build_system": 78,
+        "cicd": 55,
+        "packaging": 65,
+        "release_process": 52,
+        "competitive_position": 60
+      }
+    },
+    {
+      "name": "docs-roadmap",
+      "score": 62,
+      "grade": "D+",
+      "sub_scores": {
+        "user_docs": 78,
+        "developer_docs": 55,
+        "roadmap_health": 45,
+        "content_quality": 72,
+        "discoverability": 60
+      }
+    }
+  ],
+  "critical_bugs_count": 7,
+  "critical_bugs": [
+    {
+      "id": "BUG-AUD-001",
+      "location": "upload.go:253",
+      "severity": "critical",
+      "description": "Multipart upload sorts parts incorrectly, can corrupt large files",
+      "source": "agent-2-core-logic.md"
+    },
+    {
+      "id": "BUG-AUD-002",
+      "location": "download.go:53",
+      "severity": "high",
+      "description": "rangeStart >= 0 always true (default 0), Range header always applied",
+      "source": "agent-1-code-quality.md"
+    },
+    {
+      "id": "BUG-AUD-003",
+      "location": "internal/config/config.go",
+      "severity": "high",
+      "description": "Config file created with default permissions before chmod, credential exposure race window",
+      "source": "agent-2-core-logic.md"
+    },
+    {
+      "id": "BUG-AUD-004",
+      "location": "cmd/bucket.go",
+      "severity": "high",
+      "description": "bucket update command is a no-op -- accepts flags but applies nothing",
+      "source": "agent-3-api-design.md"
+    },
+    {
+      "id": "BUG-AUD-005",
+      "location": "cmd/root.go",
+      "severity": "medium",
+      "description": "printError suppresses errors in JSON mode, causing silent failures",
+      "source": "agent-3-api-design.md"
+    },
+    {
+      "id": "BUG-AUD-006",
+      "location": "install.sh",
+      "severity": "high",
+      "description": "Script references uppercase binary name that does not exist in build output",
+      "source": "agent-4-infrastructure.md"
+    },
+    {
+      "id": "BUG-AUD-007",
+      "location": ".goreleaser.yml",
+      "severity": "medium",
+      "description": "Release asset path does not match actual build output location",
+      "source": "agent-4-infrastructure.md"
+    }
+  ],
+  "meta": {
+    "agent_count": 5,
+    "mode": "fresh",
+    "total_source_files": 114,
+    "total_test_files": 107,
+    "source_loc": 36338,
+    "test_loc": 55009
+  }
+}
