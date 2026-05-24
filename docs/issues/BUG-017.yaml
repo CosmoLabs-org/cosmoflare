@@ -1,0 +1,14 @@
+id: BUG-017
+type: bug
+created_at: 2026-05-18T16:39:45.802557-03:00
+updated_at: 2026-05-18T16:39:48.002608-03:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 2027
+title: Download progress bar never renders during transfer
+description: ProgressWriter.Write calls Add() which only updates counters. FormatBar() is called once after io.Copy completes. Users see blank line during download.
+fix_direction: In pkg/r2go2/download.go:Download(), add a time.Ticker goroutine that calls progressWriter.FormatBar() and writes to os.Stderr every 100ms during io.Copy. Stop ticker on copy completion.
+affected_files:
+    - pkg/r2go2/download.go

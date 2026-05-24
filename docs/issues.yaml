@@ -1,11 +1,29 @@
 version: "1.0"
 project: CosmoDev-R2Go2
-last_updated: 2026-05-16T08:07:16.265335-03:00
-next_bug_id: 17
+last_updated: 2026-05-18T16:39:52.106913-03:00
+next_bug_id: 20
 next_feat_id: 5
 next_task_id: 5
 next_imp_id: 1
 issues:
+    - id: BUG-019
+      type: bug
+      status: open
+      title: KV metadata option accepted but never wired to API
+      severity: medium
+      created_at: 2026-05-18T16:39:52.105811-03:00
+    - id: BUG-018
+      type: bug
+      status: open
+      title: Shared flag variables leak between CLI commands
+      severity: medium
+      created_at: 2026-05-18T16:39:48.938192-03:00
+    - id: BUG-017
+      type: bug
+      status: open
+      title: Download progress bar never renders during transfer
+      severity: medium
+      created_at: 2026-05-18T16:39:45.802557-03:00
     - id: BUG-016
       type: bug
       status: closed
@@ -109,7 +127,7 @@ issues:
       created_at: 2026-02-26T01:33:17.727817+01:00
     - id: TASK-004
       type: task
-      status: open
+      status: done
       title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
       created_at: 2026-03-02T12:31:54.567993+01:00
     - id: BUG-007

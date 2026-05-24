@@ -1,108 +1,19 @@
 {
   "repository": {
     "version": "0.9.0",
-    "build": 325,
+    "build": 327,
     "description": "R2Go2 - A production-ready CLI tool for managing Cloudflare R2 buckets",
-    "lastUpdated": "2026-05-18T07:01:14Z"
+    "lastUpdated": "2026-05-24T03:28:30Z"
   },
   "metadata": {
-    "last_synced": "2026-05-17T05:28:38Z",
+    "last_synced": "2026-05-18T07:02:12Z",
     "sync_method": "git_history_analysis"
   },
   "releaseContext": {
-    "pendingFeatures": [
-      {
-        "branch": "agent-aa4c32cff9798cdb8",
-        "title": "Agent aa4c32cff9798cdb8",
-        "commits": 5,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T03:46:37-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "pkg/r2go2/healthcheck.go",
-          "pkg/r2go2/healthcheck_test.go"
-        ]
-      },
-      {
-        "branch": "agent-a1c666dda96c59b09",
-        "title": "Agent a1c666dda96c59b09",
-        "commits": 4,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T03:58:43-03:00",
-        "files": [
-          ".review.json",
-          "pkg/r2go2/doctor.go",
-          "pkg/r2go2/doctor_test.go"
-        ]
-      },
-      {
-        "branch": "agent-ac765651d26791b5e",
-        "title": "Agent ac765651d26791b5e",
-        "commits": 3,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T04:05:19-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "cmd/domains.go"
-        ]
-      },
-      {
-        "branch": "agent-a325189c6cc98f57a",
-        "title": "Agent a325189c6cc98f57a",
-        "commits": 6,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T04:11:04-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "cmd/doctor.go"
-        ]
-      },
-      {
-        "branch": "agent-ad00846b30dc37b68",
-        "title": "Agent ad00846b30dc37b68",
-        "commits": 4,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T06:59:20-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "cmd/firewall.go",
-          "pkg/r2go2/firewall.go",
-          "pkg/r2go2/firewall_test.go"
-        ]
-      },
-      {
-        "branch": "agent-a3ee80b0846f2698b",
-        "title": "Agent a3ee80b0846f2698b",
-        "commits": 5,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T07:05:48-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "cmd/pagerule.go",
-          "cmd/pagerules.go",
-          "pkg/r2go2/pagerules.go",
-          "pkg/r2go2/pagerules_test.go"
-        ]
-      },
-      {
-        "branch": "agent-a2d6b0debf0c3b045",
-        "title": "Agent a2d6b0debf0c3b045",
-        "commits": 6,
-        "suggestedBump": "patch",
-        "mergedAt": "2026-05-16T07:19:49-03:00",
-        "files": [
-          ".ccsession.json",
-          ".review.json",
-          "cmd/email.go",
-          "pkg/r2go2/email.go",
-          "pkg/r2go2/email_test.go"
-        ]
-      }
-    ]
+    "lastRelease": {
+      "version": "0.9.0",
+      "date": "2026-05-18T04:01:28.018058-03:00",
+      "branch": "master"
+    }
   }
 }

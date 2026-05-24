@@ -128,10 +128,10 @@ func TestMenuModel_Update_Esc(t *testing.T) {
 
 func TestMenuModel_Update_NumberShortcuts(t *testing.T) {
 	opts := newTestOptions()
-	m := NewMenuModel(opts, 60, 20)
 
-	t.Run("number 2 selects second option (index 1)", func(t *testing.T) {
-		result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	t.Run("number 1 selects first option (index 0)", func(t *testing.T) {
+		m := NewMenuModel(opts, 60, 20)
+		result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
 		require.NotNil(t, cmd)
 		updated := result.(*MenuModel)
 		assert.NotNil(t, updated)
@@ -141,29 +141,29 @@ func TestMenuModel_Update_NumberShortcuts(t *testing.T) {
 		assert.Equal(t, 1, sel.ID)
 	})
 
-	t.Run("number 1 selects first option (index 0)", func(t *testing.T) {
+	t.Run("number 2 selects second option (index 1)", func(t *testing.T) {
 		m := NewMenuModel(opts, 60, 20)
-		result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
-		// '1' maps to index 0 (1-1-1 = -1, which is < 0, so no selection)
-		_ = result
-		assert.Nil(t, cmd)
-	})
-
-	t.Run("number 5 selects fourth option (index 3)", func(t *testing.T) {
-		m := NewMenuModel(opts, 60, 20)
-		_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'5'}})
+		result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
 		require.NotNil(t, cmd)
+		updated := result.(*MenuModel)
+		assert.NotNil(t, updated)
 		msg := cmd()
 		sel, ok := msg.(MenuSelectionMsg)
 		require.True(t, ok)
-		assert.Equal(t, 4, sel.ID)
+		assert.Equal(t, 2, sel.ID)
+	})
+
+	t.Run("number 5 is disabled (no selection)", func(t *testing.T) {
+		m := NewMenuModel(opts, 60, 20)
+		_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'5'}})
+		assert.Nil(t, cmd)
 	})
 
 	t.Run("number 6 out of range", func(t *testing.T) {
 		m := NewMenuModel(opts, 60, 20)
 		result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'6'}})
 		_ = result
-		assert.Nil(t, cmd) // 6-1-1 = 4, which is the disabled item at index 4
+		assert.Nil(t, cmd)
 	})
 
 	t.Run("number 0 out of range", func(t *testing.T) {

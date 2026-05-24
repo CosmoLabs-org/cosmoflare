@@ -1,0 +1,15 @@
+id: BUG-018
+type: bug
+created_at: 2026-05-18T16:39:48.938192-03:00
+updated_at: 2026-05-18T16:39:51.140335-03:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 2027
+title: Shared flag variables leak between CLI commands
+description: cmd/kv.go reuses workerForce variable from cmd/worker.go. Flag values can leak between subcommands in the same process.
+fix_direction: In cmd/kv.go, replace shared var workerForce with local kvForce bool. Bind via kvDeleteCmd.Flags().BoolVarP(&kvForce, ...). Same pattern for any other shared vars in cmd/worker.go.
+affected_files:
+    - cmd/kv.go
+    - cmd/worker.go

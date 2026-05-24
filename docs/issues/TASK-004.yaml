@@ -1,9 +1,9 @@
 id: TASK-004
 type: task
 created_at: 2026-03-02T12:31:54.567993+01:00
-updated_at: 2026-03-02T12:31:54.568873+01:00
+updated_at: 2026-05-18T04:06:12.013831-03:00
 source: local
-status: open
+status: done
 origin:
     idea_slug: 2026-02-26-create-project-level-claude-claude-md-with-r2go2-specific
 title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
@@ -11,3 +11,6 @@ description: |-
     # Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
 
     Origin: session-end reflection: audit flagged missing project CLAUDE.md
+revisions:
+    - date: "2026-05-18"
+      action: closed
