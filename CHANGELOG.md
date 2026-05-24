@@ -28,6 +28,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.10.0] - 2026-05-24
+
+### Added
+- # FEAT-001: TUI command palette with fuzzy search
+
+**Type**: feature
+**Status**: closed
+**Plan**: docs/planning-mode/2026-05-18-tui-command-palette.md
+**Created**: 2026-02-26
+
+## Description
+
+Ctrl+P fuzzy search across all available commands, context-aware, like VS Code/lazygit
+- comprehensive 360° project audit — 70.8/100 (Mature) (commit:390657f9)
+- add command palette with fuzzy search (FEAT-001) (commit:14a1e739)
+- add service interfaces for testability (TASK-002) (commit:decbba0f)
+
+### Fixed
+- correct number shortcut tests + file 3 bugs + brainplan FEAT-001/TASK-002 (commit:8b527f9a)
+- wire metadata and TTL options into Put() (commit:43201691)
+- use local kvForce flag instead of shared workerForce variable (commit:2e00505e)
+- render progress bar during download transfer (commit:22411727)
+
 ## [0.9.0] - 2026-05-18
 
 ### Added
