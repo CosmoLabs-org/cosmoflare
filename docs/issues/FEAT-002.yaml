@@ -1,7 +1,7 @@
 id: FEAT-002
 type: feature
 created_at: 2026-02-26T01:33:08.490925+01:00
-updated_at: 2026-05-24T07:17:20.933813-03:00
+updated_at: 2026-05-24T07:34:12.643829-03:00
 source: local
 status: closed
 origin:
@@ -24,3 +24,5 @@ revisions:
     - date: "2026-05-24"
       action: closed
       context: Superseded by ROAD-058 (cosmoflare dev — full local dev proxy for all Cloudflare services)
+    - date: "2026-05-24"
+      action: closed
