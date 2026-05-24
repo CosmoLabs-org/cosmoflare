@@ -1,0 +1,9 @@
+id: BASE-015
+created_at: 2026-05-24T08:28:39.667621-03:00
+updated_at: 2026-05-24T08:28:39.669938-03:00
+title: Environment separation
+description: Distinct dev/staging/prod configurations with environment-specific values
+status: captured
+category: infra
+tags:
+    - foundation

@@ -1,21 +1,23 @@
 ---
 branch: master
-created: "2026-03-07"
+completed: "2026-05-24"
+created: "2026-03-07T12:00:00-03:00"
 goals_completed: 0
 goals_total: 5
 origin: /continuation-prompt
 priority: medium
 related_prompts:
     - docs/prompts/2026-03-02-testing-strategy-progress.md
+requires_reading: []
+schema_version: 1
 started: "2026-03-07"
-status: STARTED
+status: ABANDONED
 tags:
     - continuation
     - testing
     - quality
     - refactoring
 title: R2Go2 Testing & Quality - Next Steps
-schema_version: 1
 ---
 
 # R2Go2 Testing & Quality - Next Steps
@@ -51,13 +53,13 @@ schema_version: 1
 ## Goals
 
 ### [ ] 1. Refactor interactive package for testability
-Extract stdin-dependent code behind interfaces to enable mocking. Key files: `setup.go` (4 steps with fmt.Scanln), `profile_manager.go` (ShowProfileSwitcher), `advanced_config.go` (wizard flow). See IDEA-MMGDH6L6.
+Extract stdin-dependent code behind interfaces to enable mocking. Key files: `setup.go` (4 steps with fmt.Scanln), `profile_manager.go` (ShowProfileSwitcher), `advanced_config.go` (wizard flow). See IDEA-026.
 
 ### [ ] 2. Add httptest-based validation tests
-Create mock HTTP servers for `ValidateAPIToken`, `TestConnection`, `getAccountName`, and `autoDetectAccountInfo` in `internal/interactive/validation.go`. Currently only basic format validation is tested. See IDEA-MMGDH7M8.
+Create mock HTTP servers for `ValidateAPIToken`, `TestConnection`, `getAccountName`, and `autoDetectAccountInfo` in `internal/interactive/validation.go`. Currently only basic format validation is tested. See IDEA-027.
 
 ### [ ] 3. Add visual output suppression for faster tests
-`UploadWithRealTimeProgress` tests take 47s due to animation delays. Add a `--quiet` or `DisableAnimations` flag to visual package functions to skip sleeps in test mode. See IDEA-MMGDH93M.
+`UploadWithRealTimeProgress` tests take 47s due to animation delays. Add a `--quiet` or `DisableAnimations` flag to visual package functions to skip sleeps in test mode. See IDEA-028.
 
 ### [ ] 4. Push TUI coverage toward 60%
 Currently 35.9%. Key gaps: `handleKeyMsg` (keyboard navigation), view rendering sections (`renderOverview`, `renderBuckets`, etc.), and `dashboard.go` (DashboardCmd, Run). Test more Update message types and View output content.

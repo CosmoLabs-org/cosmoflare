@@ -1,0 +1,9 @@
+id: BASE-001
+created_at: 2026-05-24T08:28:39.667621-03:00
+updated_at: 2026-05-24T08:28:39.685793-03:00
+title: Git remote configured
+description: Project has a remote repository (GitHub/GitLab) with push access configured
+status: completed
+category: infra
+tags:
+    - foundation

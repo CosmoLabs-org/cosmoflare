@@ -1,22 +1,16 @@
 ---
-deliverables:
-status: COMPLETED
-  - id: P-01
-    title: "WorkerService interface and implementation (pkg/r2go2/worker.go)"
-  - id: P-02
-    title: "Worker unit tests (pkg/r2go2/worker_test.go)"
-  - id: P-03
-    title: "Worker CLI commands (cmd/worker.go) registered in root"
-  - id: P-04
-    title: "KVService interface and implementation (pkg/r2go2/kv.go)"
-  - id: P-05
-    title: "KV unit tests (pkg/r2go2/kv_test.go)"
-  - id: P-06
-    title: "KV CLI commands (cmd/kv.go) registered in root"
-  - id: P-07
-    title: "Update USAGE.md and CLAUDE.md for Workers/KV"
-  - id: P-08
-    title: "Version bump to v0.4.0"
+branch: phase3-workers-kv
+created: "2026-05-12T12:00:00-03:00"
+goals_completed: 0
+goals_total: 7
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'Phase 3: Workers and KV Service Implementation'
 ---
 
 # Phase 3: Workers and KV Service Implementation

@@ -1,3 +1,17 @@
+---
+created: ""
+goals_completed: 6
+goals_total: 6
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: 'Session: 2026-05-19 — Superwork Sprint (v0.10.0)'
+---
+
 # Session: 2026-05-19 — Superwork Sprint (v0.10.0)
 
 **Date**: 2026-05-19

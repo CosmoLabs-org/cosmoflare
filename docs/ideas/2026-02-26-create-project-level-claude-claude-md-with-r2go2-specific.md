@@ -1,5 +1,6 @@
 ---
-id: IDEA-MM2QGSIW
+id: IDEA-023
+legacy_id: IDEA-MM2QGSIW
 title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
 created: "2026-02-26T00:00:00-03:00"
 status: withered

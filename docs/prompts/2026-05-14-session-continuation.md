@@ -1,24 +1,16 @@
 ---
-branch: master
-status: COMPLETED
-created: "2026-05-14"
-deliverables: []
+branch: session-continuation
+created: "2026-05-14T12:00:00-03:00"
+goals_completed: 0
 goals_total: 0
-priority: high
-requires_reading:
-    - CLAUDE.md
-    - .version-registry.json
-    - docs/roadmap/index.yaml
-    - docs/USAGE.md
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
 schema_version: 1
 status: PENDING
-tags:
-    - continuation
-    - roadmap
-    - quick-wins
-    - bug-fixes
-title: 'R2Go2 Session Continuation: Roadmap Progress + Bug Fixes'
-version: "0.6.0"
+tags: []
+title: R2Go2 Session Continuation
 ---
 
 # R2Go2 Session Continuation

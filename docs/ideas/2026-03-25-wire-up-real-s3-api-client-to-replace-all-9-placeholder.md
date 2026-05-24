@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GDQXL
+id: IDEA-029
+legacy_id: IDEA-MN5GDQXL
 title: Wire up real S3 API client to replace all 9 placeholder methods
 created: "2026-03-25T03:57:30.009174+01:00"
 status: harvested

@@ -1,0 +1,9 @@
+id: BASE-007
+created_at: 2026-05-24T08:28:39.667621-03:00
+updated_at: 2026-05-24T08:28:39.668831-03:00
+title: Backup strategy defined
+description: Database backup schedule, file backup plan, or recovery procedure documented
+status: captured
+category: infra
+tags:
+    - foundation

@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GDV37
+id: IDEA-031
+legacy_id: IDEA-MN5GDV37
 title: Add MIT LICENSE file to repository root
 created: "2026-03-25T03:57:35.395226+01:00"
 status: harvested

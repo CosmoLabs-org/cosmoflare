@@ -1,5 +1,6 @@
 ---
-id: IDEA-MM2QGVDD
+id: IDEA-021
+legacy_id: IDEA-MM2QGVDD
 title: Add Go build and test to session verification for this project
 created: "2026-02-26"
 status: seed

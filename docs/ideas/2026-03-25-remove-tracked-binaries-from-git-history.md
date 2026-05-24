@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GDX5C
+id: IDEA-032
+legacy_id: IDEA-MN5GDX5C
 title: Remove tracked binaries from git history
 created: "2026-03-25T03:57:38.064826+01:00"
 status: harvested

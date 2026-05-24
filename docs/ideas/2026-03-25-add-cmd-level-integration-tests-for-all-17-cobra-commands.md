@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GE5AY
+id: IDEA-034
+legacy_id: IDEA-MN5GE5AY
 title: Add cmd-level integration tests for all 17 Cobra commands
 created: "2026-03-25T03:57:48.634487+01:00"
 status: harvested

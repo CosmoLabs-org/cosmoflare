@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GDZ4D
+id: IDEA-033
+legacy_id: IDEA-MN5GDZ4D
 title: Add config encryption or keychain integration for stored credentials
 created: "2026-03-25T03:57:40.621742+01:00"
 status: seed

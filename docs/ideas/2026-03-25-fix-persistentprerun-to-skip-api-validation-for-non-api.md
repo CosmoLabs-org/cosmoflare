@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GE7TC
+id: IDEA-035
+legacy_id: IDEA-MN5GE7TC
 title: Fix PersistentPreRun to skip API validation for non-API commands
 created: "2026-03-25T03:57:51.888221+01:00"
 status: harvested

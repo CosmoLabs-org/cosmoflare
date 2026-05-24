@@ -1,7 +1,6 @@
 ---
 branch: r2go2-phase0-phase1-implementation
-status: COMPLETED
-created: "2026-05-07"
+created: "2026-05-07T12:00:00-03:00"
 goals_completed: 0
 goals_total: 15
 origin: migrated by ccs prompts migrate

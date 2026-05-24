@@ -1,41 +1,16 @@
 ---
-branch: master
-status: COMPLETED
-completed: "2026-05-14"
-created: "2026-05-14"
-deliverables:
-    - id: P-01
-      title: Pre-signed URL generation (pkg/r2go2/presign.go + cmd/object.go)
-    - id: P-02
-      title: Pipe/stdin support for upload/download (cmd/object.go)
-    - id: P-03
-      title: Bucket comparison tool (cmd/compare.go)
-    - id: P-04
-      title: Analytics command re-enable (cmd/analytics.go)
-    - id: P-05
-      title: Update USAGE.md with new commands
-    - id: P-06
-      title: Version bump and final verification
-goals_completed: 6
-goals_total: 6
+branch: batch2-batch3-quick-wins
+created: "2026-05-14T12:00:00-03:00"
+goals_completed: 8
+goals_total: 8
+origin: migrated by ccs prompts migrate
 priority: medium
 related_prompts: []
-requires_reading:
-    - pkg/r2go2/client.go
-    - pkg/r2go2/storage.go
-    - pkg/r2go2/errors.go
-    - pkg/r2go2/options.go
-    - pkg/r2go2/types.go
-    - cmd/object.go
-    - cmd/bucket.go
-    - cmd/root.go
-    - .version-registry.json
+requires_reading: []
 schema_version: 1
-status: COMPLETED
-tags:
-    - roadmap
-    - quick-wins
-title: 'Batch 2-3: Pre-signed URLs, Pipe Support, Bucket Compare, Analytics'
+status: PENDING
+tags: []
+title: 'Batch 2-3: Quick Wins from Roadmap'
 ---
 
 # Batch 2-3: Quick Wins from Roadmap

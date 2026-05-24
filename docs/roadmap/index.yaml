@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-24T07:17:21.769636-03:00
+last_updated: 2026-05-24T08:28:39.699037-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -161,10 +161,11 @@ items:
       created_at: 2026-05-16T00:09:33.913777-03:00
     - id: ROAD-043
       title: Pages static hosting — deploy from directory, custom domains, preview deployments
-      status: captured
+      status: completed
       priority: 75
       category: core
       effort: medium
+      completed_in: v0.10.0
       created_at: 2026-05-16T00:09:26.389003-03:00
     - id: ROAD-042
       title: D1 SQL database — fill stub with query, migrate, list databases
@@ -240,7 +241,8 @@ items:
       created_at: 2026-05-12T05:53:09.000185-03:00
     - id: ROAD-033
       title: Queues message queue support
-      status: captured
+      status: completed
+      completed_in: v0.10.0
       created_at: 2026-05-07T19:29:33.804736-03:00
     - id: ROAD-032
       title: Pages static hosting support
@@ -486,3 +488,78 @@ items:
         - BUG-006
       completed_in: v0.3.1
       created_at: 2026-02-26T01:32:40.944335+01:00
+    - id: BASE-001
+      title: Git remote configured
+      status: completed
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-002
+      title: Tech stack defined
+      status: captured
+      category: core
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-003
+      title: Credentials set up
+      status: captured
+      category: security
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-004
+      title: Security baseline
+      status: completed
+      category: security
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-005
+      title: Documentation structure
+      status: completed
+      category: docs
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-006
+      title: Domain & hosting configured
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-007
+      title: Backup strategy defined
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-008
+      title: Monitoring & uptime
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-009
+      title: Testing framework configured
+      status: completed
+      category: testing
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-010
+      title: Linting & formatting enforced
+      status: captured
+      category: core
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-011
+      title: Error tracking configured
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-012
+      title: Database initialized
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-013
+      title: License defined
+      status: completed
+      category: docs
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-014
+      title: Dependency audit clean
+      status: completed
+      category: security
+      created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: BASE-015
+      title: Environment separation
+      status: captured
+      category: infra
+      created_at: 2026-05-24T08:28:39.667621-03:00

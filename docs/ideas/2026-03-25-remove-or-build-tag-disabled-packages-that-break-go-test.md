@@ -1,5 +1,6 @@
 ---
-id: IDEA-MN5GDTBT
+id: IDEA-030
+legacy_id: IDEA-MN5GDTBT
 title: Remove or build-tag disabled packages that break go test
 created: "2026-03-25T03:57:33.113067+01:00"
 status: harvested
