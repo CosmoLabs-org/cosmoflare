@@ -2,7 +2,16 @@
   "session_date": "2026-05-27",
   "mode": "full",
   "started_at": "2026-05-27T08:02:36Z",
-  "phases": {},
+  "phases": {
+    "3": {
+      "status": "completed",
+      "at": "2026-05-27T08:03:04Z"
+    },
+    "6": {
+      "status": "completed",
+      "at": "2026-05-27T08:04:28Z"
+    }
+  },
   "verified": false,
   "session_id": "4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"
 }
