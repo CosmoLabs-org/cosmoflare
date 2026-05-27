@@ -354,29 +354,12 @@ func runBucketUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := args[0]
-	printInfo("Updating bucket: %s", bucketName)
 
-	_, err := getAPIClient()
-	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
-	}
-
-	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update bucket", map[string]string{"bucket": bucketName})
-		}
-		printInfo("DRY RUN: Would update bucket '%s'", bucketName)
-		return nil
-	}
-
+	msg := "bucket metadata updates are not supported by the Cloudflare R2 API. Use 'r2go2 cors' for CORS settings or manage bucket configuration through the Cloudflare dashboard"
 	if JSONOutput {
-		return printSuccessJSON("Bucket updated successfully", map[string]string{"bucket": bucketName})
+		return printErrorJSON(msg)
 	}
-
-	printSuccess("Bucket '%s' updated successfully!", bucketName)
-	printWarning("Note: Bucket metadata updates may not be fully supported by R2 API")
-	return nil
+	return fmt.Errorf("%s", msg)
 }
 
 func runBucketDelete(cmd *cobra.Command, args []string) error {

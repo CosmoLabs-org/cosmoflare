@@ -111,13 +111,19 @@ func (cm *ConfigManager) Save() error {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	if err := v.WriteConfigAs(cm.configPath); err != nil {
+	tmpPath := cm.configPath + ".tmp"
+	if err := v.WriteConfigAs(tmpPath); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
-	// Set file permissions
-	if err := os.Chmod(cm.configPath, 0600); err != nil {
+	if err := os.Chmod(tmpPath, 0600); err != nil {
+		os.Remove(tmpPath)
 		return fmt.Errorf("failed to set config file permissions: %w", err)
+	}
+
+	if err := os.Rename(tmpPath, cm.configPath); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to finalize config file: %w", err)
 	}
 
 	return nil

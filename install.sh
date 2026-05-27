@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 REPO="CosmoLabs-org/CosmoDev-R2Go2"
-BINARY_NAME="R2Go2"
+BINARY_NAME="r2go2"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/r2go2"
 

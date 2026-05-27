@@ -172,14 +172,20 @@ jobs:
             shasum -a 256 "$ARCHIVE_NAME" >> "${ARCHIVE_NAME}.sha256"
           fi
 
+      - name: Set platform slug
+        run: |
+          OS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
+          ARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
+          echo "PLATFORM_SLUG=${OS}-${ARCH}" >> $GITHUB_ENV
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz
-          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.tar.gz
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ env.PLATFORM_SLUG }}.tar.gz
+          asset_name: r2go2-${{ env.VERSION }}-${{ env.PLATFORM_SLUG }}.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload Release Asset (Windows ZIP)
@@ -189,8 +195,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip
-          asset_name: r2go2-${{ env.VERSION }}-${{ matrix.platform }}.zip
+          asset_path: dist/r2go2-${{ env.VERSION }}-${{ env.PLATFORM_SLUG }}.zip
+          asset_name: r2go2-${{ env.VERSION }}-${{ env.PLATFORM_SLUG }}.zip
           asset_content_type: application/zip
 
       - name: Upload Checksum
