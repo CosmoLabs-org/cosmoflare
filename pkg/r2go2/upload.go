@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -249,6 +250,11 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 		}
 		completedParts = append(completedParts, r.part)
 	}
+
+	// Sort parts by part number (goroutine results arrive in non-deterministic order)
+	sort.Slice(completedParts, func(i, j int) bool {
+		return *completedParts[i].PartNumber < *completedParts[j].PartNumber
+	})
 
 	// Complete multipart upload
 	completeResp, err := c.s3Client().CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
