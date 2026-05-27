@@ -7,7 +7,8 @@ session_source: Session-2026-05-19-superwork-sprint
 audit_score: 70.8
 requires_reading:
   - docs/sessions/Session-2026-05-19-superwork-sprint.md
-  - docs/audit/
+  - docs/audit/2026-03-28-r2go2/scorecard.json
+schema_version: 1
 ---
 
 # Continuation: Post-Audit Phase 0 Fixes

@@ -677,3 +677,19 @@
 {"id":"8","subject":"","status":"completed","completed_at":"2026-05-24T10:38:40Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
 {"id":"3","subject":"","status":"completed","completed_at":"2026-05-24T10:38:40Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
 {"id":"5","subject":"","status":"completed","completed_at":"2026-05-24T10:38:40Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"9","subject":"Fix 1: Sort multipart upload parts","status":"pending","created_at":"2026-05-27T07:57:05Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"10","subject":"Fix 2+3: S3 NoSuchKey error misclassification","status":"pending","created_at":"2026-05-27T07:57:06Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"11","subject":"Fix 4: Atomic config file write","status":"pending","created_at":"2026-05-27T07:57:07Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"12","subject":"Fix 5: install.sh BINARY_NAME case","status":"pending","created_at":"2026-05-27T07:57:08Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"13","subject":"Fix 6: release.yml asset path slash","status":"pending","created_at":"2026-05-27T07:57:10Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"14","subject":"Fix 7: bucket update no-op","status":"pending","created_at":"2026-05-27T07:57:11Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"12","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"13","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-27T07:57:32Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-27T07:58:01Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"9","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"10","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"11","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-27T07:59:03Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"14","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-05-27T07:59:45Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
