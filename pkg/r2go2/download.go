@@ -2,12 +2,14 @@ package r2go2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // DownloadOption configures a download operation.
@@ -56,7 +58,11 @@ func (c *client) Download(ctx context.Context, bucket, key string, opts ...Downl
 
 	result, err := c.s3Client().GetObject(ctx, input)
 	if err != nil {
-		return nil, notFound("Download", bucket, key, err)
+		var nsk *types.NoSuchKey
+		if errors.As(err, &nsk) {
+			return nil, notFound("Download", bucket, key, err)
+		}
+		return nil, newError("Download", "failed to download object", err)
 	}
 
 	// If output path specified, write to file and close body

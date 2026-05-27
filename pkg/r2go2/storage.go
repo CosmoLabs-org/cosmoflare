@@ -2,12 +2,14 @@ package r2go2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/cloudflare/cloudflare-go"
 )
 
@@ -155,7 +157,11 @@ func (c *client) GetObject(ctx context.Context, bucket, key string) (*DownloadRe
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, notFound("GetObject", bucket, key, err)
+		var nsk *types.NoSuchKey
+		if errors.As(err, &nsk) {
+			return nil, notFound("GetObject", bucket, key, err)
+		}
+		return nil, newError("GetObject", "failed to get object", err)
 	}
 
 	return &DownloadResult{
@@ -182,7 +188,11 @@ func (c *client) HeadObject(ctx context.Context, bucket, key string) (*HeadResul
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, notFound("HeadObject", bucket, key, err)
+		var nsk *types.NoSuchKey
+		if errors.As(err, &nsk) {
+			return nil, notFound("HeadObject", bucket, key, err)
+		}
+		return nil, newError("HeadObject", "failed to head object", err)
 	}
 
 	return &HeadResult{
