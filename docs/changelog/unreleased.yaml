@@ -4,19 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: |-
-            # FEAT-002: Local HTTP dev server proxying to R2
-
-            **Type**: feature
-            **Status**: closed
-            **Created**: 2026-02-26
-
-            ## Description
-
-            r2go2 serve command starts a local HTTP server that proxies requests to an R2 bucket for local testing without deploying
-          source: manual
-          date: 2026-05-24T07:34:12.889822-03:00
+    added: []
     fixed: []
     changed: []
     deprecated: []

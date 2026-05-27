@@ -28,6 +28,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.11.0] - 2026-05-27
+
+### Added
+- # FEAT-002: Local HTTP dev server proxying to R2
+
+**Type**: feature
+**Status**: closed
+**Created**: 2026-02-26
+
+## Description
+
+r2go2 serve command starts a local HTTP server that proxies requests to an R2 bucket for local testing without deploying
+- Cloudflare Pages service — project and deployment management (ROAD-043)
+- Cloudflare Queues service — queue and consumer management (ROAD-033)
+- implement Cloudflare Queues service and CLI commands (commit:b6b62fbe)
+- implement Cloudflare Pages service and CLI commands (commit:a4e9309f)
+
+### Fixed
+- Sort multipart upload parts before assembly (data corruption prevention)
+- Classify S3 NoSuchKey as ErrNotFound sentinel error
+- Atomic config file write prevents TOCTOU race
+- Fix install.sh binary name case for Linux
+- Fix release.yml asset path containing slashes
+- Remove bucket update no-op — return clear unsupported error
+- sort multipart parts and classify NoSuchKey as ErrNotFound (commit:43198d07)
+- audit phase 0 — install.sh case, release paths, atomic config write, bucket update no-op (commit:258e9d5a)
+
 ## [0.10.0] - 2026-05-24
 
 ### Added
