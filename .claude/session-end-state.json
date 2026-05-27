@@ -1,17 +1,8 @@
 {
-  "session_date": "2026-05-24",
+  "session_date": "2026-05-27",
   "mode": "full",
-  "started_at": "2026-05-24T06:09:23Z",
-  "phases": {
-    "3": {
-      "status": "completed",
-      "at": "2026-05-24T06:09:42Z"
-    },
-    "6": {
-      "status": "completed",
-      "at": "2026-05-24T06:10:22Z"
-    }
-  },
+  "started_at": "2026-05-27T08:02:36Z",
+  "phases": {},
   "verified": false,
-  "session_id": "3b287eb2-891f-43ef-a2b0-9ed39ada5bfe"
+  "session_id": "4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"
 }
