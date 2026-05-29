@@ -713,6 +713,65 @@ cosmoflare hyperdrive delete CONFIG_ID --force   # Skip confirmation
 
 ---
 
+## Diff Commands
+
+Compare your local `.cosmoflare.yaml` configuration against live Cloudflare state. This is a read-only command that never modifies anything.
+
+### Compare all configured services
+```bash
+r2go2 diff                           # Full diff across all services
+r2go2 diff --output=summary          # Show counts only
+r2go2 diff --json                    # Structured JSON output
+```
+
+### Compare only Workers
+```bash
+r2go2 diff workers
+r2go2 diff workers --json
+r2go2 diff workers --output=summary
+```
+
+### Compare only DNS records
+```bash
+r2go2 diff dns
+r2go2 diff dns --json
+```
+Requires `dns.zone_id` to be set in `.cosmoflare.yaml`.
+
+### Compare only KV namespaces
+```bash
+r2go2 diff kv
+r2go2 diff kv --json
+```
+
+### Compare only R2 buckets
+```bash
+r2go2 diff r2
+r2go2 diff r2 --json
+```
+
+### Output format
+
+In human mode, output uses `+`/`-`/`~` prefixes like git diff:
+```
+=== workers ===
+  + my-new-worker    worker "my-new-worker" exists in config but not deployed
+  - old-worker       worker "old-worker" is deployed but not in config
+
+=== dns ===
+  ~ A www 1.2.3.4    changes: ttl: 300 -> 600, proxied: false -> true
+```
+
+JSON output:
+```json
+{"success":true,"data":{"results":[{"service":"workers","additions":[{"action":"add","service":"workers","resource":"my-new-worker"}],"deletions":[],"changes":[]}],"total_additions":1,"total_deletions":0,"total_modifications":0,"has_changes":true}}
+```
+
+Flags:
+- `--output=full` (default) — show detailed per-resource diff lines
+- `--output=summary` — show change counts per service only
+- `--json` — structured JSON output (works with all subcommands)
+
 ## Library Usage (Workers and KV)
 
 ### Workers
