@@ -24,12 +24,57 @@ Or pass via flags: `--account-id` and `--api-token`.
 | `--json` | Output in JSON format |
 | `-v, --verbose` | Enable verbose output |
 
+## Dev Server
+
+Start a local development proxy that routes requests to Cloudflare services through your configured credentials.
+
+### Start dev server
+```bash
+cosmoflare dev                          # All services on port 8787
+cosmoflare dev --port 3000              # Custom port
+cosmoflare dev --services r2,kv         # Only proxy R2 and KV
+cosmoflare dev --profile staging        # Use 'staging' credentials
+cosmoflare dev --watch=false            # Disable config hot-reload
+cosmoflare dev --json                   # Machine-readable startup events
+```
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--port` | `8787` | Local port to listen on (matches Wrangler convention) |
+| `--watch` | `true` | Watch `.cosmoflare.yaml` for changes and hot-reload |
+| `--services` | all | Comma-separated: `r2,kv,workers,dns,zones,ssl,cache,d1,pages,queues` |
+| `--profile` | active | Credential profile to use |
+
+### Health check
+```bash
+curl http://localhost:8787/health
+```
+JSON output:
+```json
+{"status":"ok"}
+```
+
+### Startup event (--json)
+```json
+{
+  "port": 8787,
+  "address": "127.0.0.1:8787",
+  "services": ["r2", "kv", "workers", "dns", "zones", "ssl", "cache", "d1", "pages", "queues"],
+  "watch": true
+}
+```
+
+The server shuts down cleanly on SIGINT/SIGTERM.
+
 ## Bucket Commands
 
 ### Create a bucket
 ```bash
 r2go2 bucket create my-bucket
 r2go2 bucket create my-bucket --location=eu --tags=env=prod
+r2go2 bucket create my-bucket --metadata=team=platform
 ```
 JSON output:
 ```json
@@ -42,6 +87,7 @@ r2go2 bucket list
 r2go2 bucket list --json
 r2go2 bucket list --format=csv
 r2go2 bucket list --prefix=prod-
+r2go2 bucket list --tag=env=prod
 ```
 
 ### Get bucket details
@@ -64,6 +110,9 @@ JSON output:
 ### Update bucket metadata
 ```bash
 r2go2 bucket update my-bucket --tags=env=staging
+r2go2 bucket update my-bucket --metadata=team=platform
+r2go2 bucket update my-bucket --add-tags=v2
+r2go2 bucket update my-bucket --remove-tags=deprecated
 ```
 
 ### Delete a bucket
@@ -195,6 +244,23 @@ r2go2 worker delete my-worker --force
 r2go2 worker logs my-worker
 r2go2 worker logs my-worker --limit=50 --json
 ```
+
+### Follow Worker logs (real-time tailing)
+```bash
+r2go2 worker logs my-worker --follow
+r2go2 worker logs my-worker -f --level=error
+r2go2 worker logs my-worker -f --since=15m --interval=5
+r2go2 worker logs my-worker -f --json
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--follow, -f` | `false` | Continuously poll for new log entries |
+| `--interval` | `2` | Polling interval in seconds |
+| `--level` | all | Filter by level: `error`, `warn`, `info`, `debug` |
+| `--since` | none | Show logs since duration (e.g. `15m`, `1h`) |
+
+`--json` mode streams newline-delimited JSON events. Clean exit on SIGINT.
 
 ### Update Worker settings
 ```bash
@@ -433,6 +499,95 @@ JSON output:
 ```
 
 Supported `--cache-level` values: `basic`, `simplified`, `aggressive`.
+
+## Pages Commands
+
+Manage Cloudflare Pages projects and deployments.
+
+### Create a Pages project
+```bash
+r2go2 pages create my-site --branch main
+r2go2 pages create my-blog --branch master --json
+```
+
+### List Pages projects
+```bash
+r2go2 pages list
+r2go2 pages list --json
+```
+
+### Get Pages project details
+```bash
+r2go2 pages get my-site
+r2go2 pages get my-site --json
+```
+
+### Delete a Pages project
+```bash
+r2go2 pages delete my-site
+r2go2 pages delete my-site --force
+```
+
+### List deployments
+```bash
+r2go2 pages deployments my-site
+r2go2 pages deployments my-site --json
+```
+
+## Queue Commands
+
+Manage Cloudflare Queues for message-based communication between Workers.
+
+### Create a queue
+```bash
+r2go2 queue create my-queue
+r2go2 queue create production-events --json
+```
+
+### List queues
+```bash
+r2go2 queue list
+r2go2 queue list --json
+```
+
+### Get queue details
+```bash
+r2go2 queue get my-queue
+r2go2 queue get my-queue --json
+```
+
+### Update (rename) a queue
+```bash
+r2go2 queue update my-queue --name new-name
+```
+
+### Delete a queue
+```bash
+r2go2 queue delete my-queue
+r2go2 queue delete my-queue --force
+```
+
+### List consumers
+```bash
+r2go2 queue consumers my-queue
+r2go2 queue consumers my-queue --json
+```
+
+## Init Command
+
+Initialize a new Cosmoflare project with a `.cosmoflare.yaml` configuration file.
+
+```bash
+cosmoflare init                     # Interactive setup (auto-detects framework)
+cosmoflare init --yes               # Non-interactive with defaults
+cosmoflare init --template worker   # Worker project template
+cosmoflare init --template pages    # Pages static site template
+cosmoflare init --template r2       # R2 storage-focused template
+cosmoflare init --template full     # All services enabled
+cosmoflare init --json              # Machine-readable output
+```
+
+Templates: `worker` (default), `pages`, `r2`, `full`. Auto-detection checks for `wrangler.toml` (worker), `go.mod` (full), `package.json` (pages).
 
 ## Library Usage (Workers and KV)
 
