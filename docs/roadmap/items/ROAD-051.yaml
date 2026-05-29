@@ -1,11 +1,13 @@
 id: ROAD-051
 created_at: 2026-05-16T00:09:56.384259-03:00
-updated_at: 2026-05-16T00:09:56.38516-03:00
+updated_at: 2026-05-29T05:34:33.330987-03:00
 title: cosmoflare logs --follow — real-time log tailing with filtering
 description: Real-time log tailing. Filter by zone, worker, status code, time range. Replace wrangler tail.
-status: captured
+status: completed
 priority: 82
 category: core
 effort: medium
+completed_in: v0.11.0
+completed_at: 2026-05-29T05:34:33.330983-03:00
 origin:
     session: 2027

@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-24T08:28:39.699037-03:00
+last_updated: 2026-05-29T05:34:33.742152-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -54,17 +54,19 @@ items:
       created_at: 2026-05-16T00:10:30.498797-03:00
     - id: ROAD-058
       title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
-      status: captured
+      status: completed
       priority: 82
       category: workflow
       effort: large
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:30.399515-03:00
     - id: ROAD-057
       title: cosmoflare init — interactive project scaffolding with framework detection
-      status: captured
+      status: completed
       priority: 80
       category: ux
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:21.515178-03:00
     - id: ROAD-056
       title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
@@ -106,10 +108,11 @@ items:
       created_at: 2026-05-16T00:10:06.409267-03:00
     - id: ROAD-051
       title: cosmoflare logs --follow — real-time log tailing with filtering
-      status: captured
+      status: completed
       priority: 82
       category: core
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:09:56.384259-03:00
     - id: ROAD-050
       title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
