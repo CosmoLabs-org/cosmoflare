@@ -1,14 +1,15 @@
 ---
 branch: r2go2-phase0-phase1-implementation
+completed: "2026-05-29"
 created: "2026-05-07T12:00:00-03:00"
-goals_completed: 0
+goals_completed: 15
 goals_total: 15
 origin: migrated by ccs prompts migrate
 priority: medium
 related_prompts: []
 requires_reading: []
 schema_version: 1
-status: PENDING
+status: COMPLETED
 tags: []
 title: R2Go2 Phase 0 + Phase 1 Implementation Plan
 ---
@@ -311,13 +312,13 @@ Phase 0 and Phase 1 deliver R2 storage. Future phases expand R2Go2 to cover the 
 
 ## Success Criteria
 
-- [ ] `go build -o r2go2 .` compiles clean
-- [ ] `go vet ./...` passes
-- [ ] `go test ./pkg/r2go2/...` passes (unit tests with mocks)
-- [ ] `r2go2 bucket list --json` returns real R2 buckets
-- [ ] `r2go2 upload logo.png` auto-applies cache headers from `.r2go2.yaml`
-- [ ] Upload validation rejects files that violate project rules
-- [ ] Access scoping prevents operations on non-declared buckets
-- [ ] Audit log entries written for every upload/delete
-- [ ] External project can `import "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"`
-- [ ] Library architecture supports adding Workers, KV, D1, Pages, Queues without breaking changes
+- [x] `go build -o r2go2 .` compiles clean
+- [x] `go vet ./...` passes
+- [x] `go test ./pkg/r2go2/...` passes (unit tests with mocks)
+- [x] `r2go2 bucket list --json` returns real R2 buckets
+- [x] `r2go2 upload logo.png` auto-applies cache headers from `.r2go2.yaml`
+- [x] Upload validation rejects files that violate project rules
+- [x] Access scoping prevents operations on non-declared buckets
+- [x] Audit log entries written for every upload/delete
+- [x] External project can `import "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"`
+- [x] Library architecture supports adding Workers, KV, D1, Pages, Queues without breaking changes

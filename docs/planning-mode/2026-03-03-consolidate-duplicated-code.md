@@ -1,9 +1,16 @@
 ---
 branch: consolidate-duplicated-code
-created: "2026-03-03"
+completed: "2026-05-29"
+created: "2026-03-03T12:00:00-03:00"
+goals_completed: 0
+goals_total: 0
 origin: migrated by ccs prompts migrate
 priority: medium
-status: PENDING
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
 title: 'ROAD-001: Consolidate Duplicated Code'
 ---
 
