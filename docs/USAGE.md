@@ -650,6 +650,68 @@ Metadata modes: `none` (default), `keep`, `copyright`.
 r2go2 images variants delete old-variant
 r2go2 images variants delete old-variant --force
 ```
+## Hyperdrive Management
+
+Hyperdrive accelerates database connections from Cloudflare Workers. Manage Hyperdrive configs to connect Workers to your existing databases with connection pooling and query caching.
+
+### Create a Hyperdrive Config
+
+```bash
+cosmoflare hyperdrive create my-db \
+  --origin-host=db.example.com \
+  --origin-port=5432 \
+  --origin-scheme=postgres \
+  --database=mydb \
+  --user=admin \
+  --password=secret
+
+cosmoflare hyperdrive create staging-db \
+  --origin-host=staging.example.com \
+  --origin-port=5432 \
+  --origin-scheme=postgres \
+  --database=staging \
+  --user=reader \
+  --password=pass123 \
+  --json
+```
+
+### List Hyperdrive Configs
+
+```bash
+cosmoflare hyperdrive list
+cosmoflare hyperdrive list --json
+```
+
+### Get Hyperdrive Config Details
+
+```bash
+cosmoflare hyperdrive get CONFIG_ID
+cosmoflare hyperdrive get CONFIG_ID --json
+```
+
+### Update a Hyperdrive Config
+
+All origin fields are required for update (the API replaces the entire config).
+
+```bash
+cosmoflare hyperdrive update CONFIG_ID \
+  --name=new-name \
+  --origin-host=db2.example.com \
+  --origin-port=5432 \
+  --origin-scheme=postgres \
+  --database=mydb \
+  --user=admin \
+  --password=newsecret
+```
+
+### Delete a Hyperdrive Config
+
+```bash
+cosmoflare hyperdrive delete CONFIG_ID
+cosmoflare hyperdrive delete CONFIG_ID --force   # Skip confirmation
+```
+
+---
 
 ## Library Usage (Workers and KV)
 
