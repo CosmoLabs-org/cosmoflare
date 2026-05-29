@@ -1,8 +1,8 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-05-16-cors-transform-rules.md
 branch: master
-completed: "2026-05-18"
-created: "2026-05-16"
+completed: "2026-05-18T01:36:56-03:00"
+created: "2026-05-16T11:44:54-03:00"
 goals_completed: 5
 goals_total: 5
 priority: medium

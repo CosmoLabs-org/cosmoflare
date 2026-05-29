@@ -1,7 +1,7 @@
 ---
 branch: master
-created: "2026-05-16"
-status: APPROVED
+created: "2026-05-16T00:00:00-03:00"
+status: implemented
 origin: "/brainstorming"
 tags:
   - cors
@@ -12,19 +12,26 @@ tags:
 title: "CORS Management via Cloudflare Transform Rules (Response Header Modification)"
 schema_version: 1
 deliverables:
-  - BR-01: CORSService struct with constructor and zone-scoped methods
-  - BR-02: GetCORSRules — list CORS rules from http_response_headers_transform entrypoint ruleset
-  - BR-03: SetCORSHeaders — upsert a named CORS rule (create or replace) in the entrypoint ruleset
-  - BR-04: RemoveCORSRule — delete a CORS rule by description/tag from the entrypoint ruleset
-  - BR-05: pkg/r2go2/cors.go — library implementation
-  - BR-06: cmd/cors.go — Cobra CLI (cors settings, cors set, cors remove)
-  - BR-07: cmd/cors_test.go + pkg/r2go2/cors_test.go — unit tests (table-driven)
+  - id: BR-01
+    title: "CORSService struct with constructor and zone-scoped methods"
+  - id: BR-02
+    title: "GetCORSRules — list CORS rules from http_response_headers_transform entrypoint ruleset"
+  - id: BR-03
+    title: "SetCORSHeaders — upsert a named CORS rule (create or replace) in the entrypoint ruleset"
+  - id: BR-04
+    title: "RemoveCORSRule — delete a CORS rule by description/tag from the entrypoint ruleset"
+  - id: BR-05
+    title: "pkg/r2go2/cors.go — library implementation"
+  - id: BR-06
+    title: "cmd/cors.go — Cobra CLI (cors settings, cors set, cors remove)"
+  - id: BR-07
+    title: "cmd/cors_test.go + pkg/r2go2/cors_test.go — unit tests (table-driven)"
 ---
 
 # CORS Management via Cloudflare Transform Rules
 
 **Date**: 2026-05-16
-**Status**: APPROVED
+**Status**: Implemented
 **Related roadmap**: ROAD-039 (Page/Redirect Rules), Phase 4 — Zone-scoped services
 
 ---
@@ -308,9 +315,10 @@ Implementation sketch:
 ```go
 var (
     ErrCORSRuleNotFound = errors.New("CORS rule not found")
-    ErrNoCORSRuleset    = errors.New("no response header transform ruleset exists for this zone")
 )
 ```
+
+> **Note:** An `ErrNoCORSRuleset` was considered during design but was not implemented. A missing ruleset (404 from `GetEntrypointRuleset`) is treated as "empty, not an error" rather than a distinct sentinel.
 
 ### Internal Helper: parseCORSRule
 

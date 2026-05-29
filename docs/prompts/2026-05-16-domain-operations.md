@@ -1,7 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-05-16-domain-operations.md
 branch: master
-completed: "2026-05-16"
+completed: "2026-05-16T04:12:15-03:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -20,7 +20,7 @@ covers_plan_deliverables:
     - P-06
     - P-07
     - P-08
-created: "2026-05-16"
+created: "2026-05-16T03:02:00-03:00"
 goals_completed: 8
 goals_total: 8
 id: P-2026-05-16-domain-operations
@@ -31,7 +31,7 @@ requires_reading:
     - docs/brainstorming/2026-05-16-domain-operations.md
     - docs/planning-mode/2026-05-16-domain-operations.md
 schema_version: 1
-started: "2026-05-16"
+started: "2026-05-16T04:12:15-03:00"
 status: COMPLETED
 tags: []
 title: Domain Operations Center — Full Implementation

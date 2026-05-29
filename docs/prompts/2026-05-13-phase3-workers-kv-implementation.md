@@ -1,6 +1,6 @@
 ---
-completed: "2026-05-16"
-created: "2026-05-13"
+completed: "2026-05-16T11:39:09-03:00"
+created: "2026-05-13T15:55:53-03:00"
 deliverables:
     - id: P-01
       title: WorkerService interface and implementation (pkg/r2go2/worker.go)

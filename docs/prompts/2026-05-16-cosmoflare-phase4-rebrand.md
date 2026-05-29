@@ -1,25 +1,7 @@
 ---
 branch: master
-status: PENDING
-created: "2026-05-16"
-goals_completed: 8
-goals_total: 8
-origin: manual
-priority: high
-related_prompts:
-    - docs/planning-mode/2026-05-16-phase4-cloudflare-services.md
-started: "2026-05-16"
-tags:
-    - cloudflare
-    - dns
-    - zones
-    - ssl
-    - cache
-    - rebrand
-    - cosmoflare
-    - parallel-agents
-title: Cosmoflare Phase 4 — Core Services + Rebrand
-schema_version: 1
+completed: "2026-05-29T12:00:00-03:00" # backfilled
+created: "2026-05-16T12:00:00-03:00"
 deliverables:
     - P-01: DNS Records library + CLI (ROAD-035)
     - P-02: Zone management library + CLI (ROAD-036)
@@ -29,6 +11,12 @@ deliverables:
     - P-06: Cosmoflare rebrand — binary alias, README, docs, module path plan
     - P-07: Shell completion scaffold (ROAD-055)
     - P-08: Commit all work + update roadmap status
+goals_completed: 8
+goals_total: 8
+origin: manual
+priority: high
+related_prompts:
+    - docs/planning-mode/2026-05-16-phase4-cloudflare-services.md
 requires_reading:
     - docs/planning-mode/2026-05-16-phase4-cloudflare-services.md
     - docs/PRODUCT-VISION.md
@@ -40,6 +28,19 @@ requires_reading:
     - pkg/r2go2/types.go
     - cmd/root.go
     - CLAUDE.md
+schema_version: 1
+started: "2026-05-16T02:16:03-03:00"
+status: COMPLETED
+tags:
+    - cloudflare
+    - dns
+    - zones
+    - ssl
+    - cache
+    - rebrand
+    - cosmoflare
+    - parallel-agents
+title: Cosmoflare Phase 4 — Core Services + Rebrand
 ---
 
 # Cosmoflare Phase 4 — Core Services + Rebrand
@@ -56,7 +57,7 @@ requires_reading:
 
 ## Goals
 
-### [ ] P-01: DNS Records Library + CLI (ROAD-035)
+### [x] P-01: DNS Records Library + CLI (ROAD-035)
 **Model**: opus (dispatch via isolated worktree)
 **Files**: `pkg/r2go2/dns.go`, `cmd/dns.go`
 
@@ -84,7 +85,7 @@ CLI (`cmd/dns.go`):
 - All have detailed `--help` with examples
 - Self-register via `func init() { rootCmd.AddCommand(dnsCmd) }`
 
-### [ ] P-02: Zone Management Library + CLI (ROAD-036)
+### [x] P-02: Zone Management Library + CLI (ROAD-036)
 **Model**: opus (dispatch via isolated worktree)
 **Files**: `pkg/r2go2/zone.go`, `cmd/zone.go`
 
@@ -101,7 +102,7 @@ CLI (`cmd/zone.go`):
 - Subcommands: `create`, `list`, `get`, `settings`, `delete`
 - `r2go2 zone list --json`, `r2go2 zone get <zone-id>`, etc.
 
-### [ ] P-03: SSL/TLS Management Library + CLI (ROAD-037)
+### [x] P-03: SSL/TLS Management Library + CLI (ROAD-037)
 **Model**: opus (dispatch via isolated worktree)
 **Files**: `pkg/r2go2/ssl.go`, `cmd/ssl.go`
 
@@ -116,7 +117,7 @@ CLI (`cmd/ssl.go`):
 - Subcommands: `status`, `settings`, `update`, `verify`
 - `r2go2 ssl status <zone-id>`, `r2go2 ssl update <zone-id> --min-tls=1.2 --always-https`
 
-### [ ] P-04: Cache Management Library + CLI (ROAD-038)
+### [x] P-04: Cache Management Library + CLI (ROAD-038)
 **Model**: opus (dispatch via isolated worktree)
 **Files**: `pkg/r2go2/cache.go`, `cmd/cache.go`
 
@@ -134,7 +135,7 @@ CLI (`cmd/cache.go`):
 - `r2go2 cache purge <zone-id> --url=https://...` or `--tag=static` or `--host=example.com`
 - `r2go2 cache settings <zone-id>`, `r2go2 cache settings <zone-id> --ttl=3600`
 
-### [ ] P-05: Unit Tests for All 4 Services
+### [x] P-05: Unit Tests for All 4 Services
 **Model**: glm-turbo (parallel dispatch after P-01 through P-04 merge)
 **Files**: `pkg/r2go2/dns_test.go`, `pkg/r2go2/zone_test.go`, `pkg/r2go2/ssl_test.go`, `pkg/r2go2/cache_test.go`
 
@@ -146,7 +147,7 @@ Each test file covers:
 
 Follow pattern from `pkg/r2go2/worker_test.go` and `pkg/r2go2/kv_test.go`.
 
-### [ ] P-06: Cosmoflare Rebrand
+### [x] P-06: Cosmoflare Rebrand
 **Model**: opus (single agent after tests pass)
 
 Rebrand the project while maintaining backward compatibility:
@@ -157,7 +158,7 @@ Rebrand the project while maintaining backward compatibility:
 5. **go.mod** — Do NOT rename module path yet (breaking for downstream). Document plan in `docs/planning-mode/` for future rename to `github.com/CosmoLabs-org/cosmoflare`.
 6. **New commands** — All new Phase 4 commands should document both `cosmoflare dns list` and `r2go2 dns list` in help text.
 
-### [ ] P-07: Shell Completion Scaffold (ROAD-055)
+### [x] P-07: Shell Completion Scaffold (ROAD-055)
 **Model**: opus (small task, can combine with P-06 or standalone)
 
 Add shell completion generation:
@@ -168,7 +169,7 @@ Add shell completion generation:
 - Add `completion` subcommand to rootCmd.
 - Document in USAGE.md.
 
-### [ ] P-08: Commit + Roadmap Update
+### [x] P-08: Commit + Roadmap Update
 **Model**: opus (session orchestrator)
 
 After all work is merged and tested:

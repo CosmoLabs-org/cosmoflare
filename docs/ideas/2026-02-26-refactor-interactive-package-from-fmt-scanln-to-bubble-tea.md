@@ -2,7 +2,7 @@
 id: IDEA-022
 legacy_id: IDEA-MM2QGTZ6
 title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
-created: "2026-02-26"
+created: "2026-02-26T01:38:48+01:00"
 status: harvested
 source: agent
 origin:

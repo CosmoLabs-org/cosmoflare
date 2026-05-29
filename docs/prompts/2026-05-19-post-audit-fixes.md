@@ -1,14 +1,20 @@
 ---
-status: PENDING
-type: audit-followup
-priority: high
-created: 2026-05-19T00:00:00-05:00
-session_source: Session-2026-05-19-superwork-sprint
 audit_score: 70.8
+completed: "2026-05-29T12:00:00-03:00" # backfilled
+created: "2026-05-19T00:00:00-05:00"
+goals_completed: 7
+goals_total: 7
+priority: high
+related_prompts: []
 requires_reading:
-  - docs/sessions/Session-2026-05-19-superwork-sprint.md
-  - docs/audit/2026-03-28-r2go2/scorecard.json
+    - docs/sessions/Session-2026-05-19-superwork-sprint.md
+    - docs/audit/2026-03-28-r2go2/scorecard.json
 schema_version: 1
+session_source: Session-2026-05-19-superwork-sprint
+status: COMPLETED
+tags: []
+title: 'Continuation: Post-Audit Phase 0 Fixes'
+type: audit-followup
 ---
 
 # Continuation: Post-Audit Phase 0 Fixes
@@ -106,8 +112,8 @@ succeeding.
 
 ## Acceptance Criteria
 
-- [ ] `go build -o build/r2go2 .` passes
-- [ ] `go test ./pkg/... ./internal/...` passes (997+ tests)
-- [ ] `go vet ./...` clean
-- [ ] All 7 items above addressed (fixed or explicitly deferred with documented reason)
-- [ ] Commits use conventional format: `fix(upload): sort multipart parts before completion`
+- [x] `go build -o build/r2go2 .` passes
+- [x] `go test ./pkg/... ./internal/...` passes (997+ tests)
+- [x] `go vet ./...` clean
+- [x] All 7 items above addressed (fixed or explicitly deferred with documented reason)
+- [x] Commits use conventional format: `fix(upload): sort multipart parts before completion`

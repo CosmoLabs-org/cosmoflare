@@ -1,7 +1,7 @@
 ---
 branch: tui-installer-wizard-implementation
-completed: "2026-03-07"
-created: "2025-01-25"
+completed: "2026-03-07T21:17:58+01:00"
+created: "2025-01-25T12:00:00+04:00" # backfilled
 origin: migrated by ccs prompts migrate
 priority: medium
 status: COMPLETED

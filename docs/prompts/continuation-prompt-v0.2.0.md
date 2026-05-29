@@ -1,5 +1,5 @@
 ---
-completed: "2026-03-07"
+completed: "2026-03-07T21:17:58+01:00"
 created: ""
 origin: migrated by ccs prompts migrate
 priority: medium

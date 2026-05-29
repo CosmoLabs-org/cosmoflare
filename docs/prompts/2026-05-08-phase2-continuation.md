@@ -1,12 +1,12 @@
 ---
-completed: "2026-05-16"
+completed: "2026-05-16T11:39:09-03:00"
 covers_plan_deliverables:
     - P-01
     - P-02
     - P-03
     - P-05
     - P-06
-created: "2026-05-08"
+created: "2026-05-08T12:00:00-03:00" # backfilled
 goals_completed: 6
 goals_total: 6
 id: P-2026-05-08-phase2-continuation

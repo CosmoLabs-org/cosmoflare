@@ -1,8 +1,18 @@
 ---
-status: PENDING
-type: audit-followup
+completed: "2026-05-29T12:00:00-03:00" # backfilled
+created: "2026-03-28T12:00:00-03:00"
+goals_completed: 0
+goals_total: 0
 priority: high
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: 'Audit Followup: R2Go2 2026-03-28'
+type: audit-followup
 ---
+
 # Audit Followup: R2Go2 2026-03-28
 
 ## Critical Bugs to Fix First

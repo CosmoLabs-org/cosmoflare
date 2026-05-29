@@ -1,3 +1,15 @@
+---
+title: "R2Go2 Product Vision and Integration Design"
+created: "2026-03-28T10:00:00-03:00"
+status: COMPLETE
+tags:
+  - product-vision
+  - architecture
+  - library-design
+  - cloudflare-platform
+schema_version: 1
+---
+
 # R2Go2 Product Vision and Integration Design
 
 **Date**: 2026-03-28
@@ -17,11 +29,11 @@ When this brainstorming session is complete, the following artifacts will be pro
 - [ ] Rewritten `USAGE.md` as agent reference doc (Phase 2)
 
 ### Code Artifacts (Phase 1+)
-- [ ] `pkg/r2go2/` — public Go library (client, bucket, object, upload, download, config, types, options, errors)
-- [ ] `.r2go2.yaml` schema + parser
-- [ ] Real S3 API integration (re-enable from `internal/api_disabled/`)
-- [ ] Cache policy engine (rule-based Cache-Control header management)
-- [ ] Workers management module (Phase 3)
+- [x] `pkg/r2go2/` — public Go library (client, storage, upload, download, config, types, options, errors)
+- [x] `.r2go2.yaml` schema + parser
+- [x] Real S3 API integration (re-enable from `internal/api_disabled/`)
+- [x] Cache policy engine (rule-based Cache-Control header management)
+- [x] Workers management module (Phase 3)
 
 ### Roadmap Items to File
 - [ ] ROAD: Library extraction into `pkg/r2go2/`
@@ -516,31 +528,16 @@ cache:
 
 ---
 
-## Architecture Notes (to be expanded)
+## Architecture Notes
 
-### Library Layer (pkg/ or exported internal/)
-```
-r2go2/
-  client.go      — R2Client interface + factory
-  bucket.go      — Bucket operations
-  object.go      — Object operations
-  upload.go      — Upload with progress
-  config.go      — Profile management
-  types.go       — Shared types (Bucket, Object, etc.)
-```
+> **Note**: The canonical file listing is in Decision 6 / Decision 11 above. The library now includes 30+ files covering R2, Workers, KV, D1, DNS, Zones, SSL, Cache, Domains, Doctor, and more. See `pkg/r2go2/` for the current state.
 
 ### CLI Layer (cmd/)
-```
-r2go2 bucket list|create|delete|get
-r2go2 object ls|get|put|delete|copy|head
-r2go2 config init|list|switch|export
-r2go2 auth login|status|logout
-r2go2 setup
-r2go2 dashboard
-```
+
+The CLI now covers all implemented services. Run `cosmoflare --help` for the current command tree.
 
 ### Future CCS Layer
 ```
-ccs r2 list          → shells to r2go2 bucket list --json
-ccs r2 upload file   → shells to r2go2 object put --json
+ccs r2 list          → shells to cosmoflare bucket list --json
+ccs r2 upload file   → shells to cosmoflare object put --json
 ```

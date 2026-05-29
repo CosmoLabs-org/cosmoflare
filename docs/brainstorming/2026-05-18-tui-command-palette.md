@@ -1,6 +1,7 @@
 ---
 title: TUI Command Palette with Fuzzy Search
 issue: FEAT-001
+status: implemented
 created: 2026-05-18T15:00:00-03:00
 deliverables:
   - id: BR-01

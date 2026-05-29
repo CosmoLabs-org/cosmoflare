@@ -7,14 +7,13 @@ priority: high
 requires_reading:
   - docs/USAGE.md
   - CLAUDE.md
-  - .claude/CLAUDE.md
 ---
 
 # Next Session: ROAD-058 cosmoflare dev + Docs Gaps + CCS Upgrades
 
 ## Context
 
-Current state: **v0.10.0** (build 417), master branch. The post-audit Phase 0 fixes are done
+Current state: **v0.11.0** (build 423), master branch. The post-audit Phase 0 fixes are done
 (multipart sort, NoSuchKey classification, config race, etc. — all merged). The CLI now covers
 R2, Workers, KV, DNS, Zones, SSL, Cache, Pages (stub), D1 (stub), Queue (stub), Email Routing,
 Firewall, WAF, CORS, Pagerules, Domains, Doctor — a full Cloudflare platform footprint.
@@ -157,5 +156,5 @@ ccs roadmap list --brief | head -10
 
 ## Version Note
 
-Next release after this session should be **v0.11.0** (new `dev` command = minor bump).
+Current version is **v0.11.0**. Next release after this session should be **v0.12.0** (new `dev` command = minor bump).
 Use `/release` at session-end after all tests pass.

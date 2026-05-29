@@ -1,14 +1,14 @@
 ---
 branch: master
-completed: "2026-03-07"
-created: "2026-03-02"
+completed: "2026-03-07T14:44:29+01:00"
+created: "2026-03-02T12:45:14+01:00"
 goals_completed: 7
 goals_total: 7
 origin: /continuation-prompt
 priority: high
 related_prompts:
     - docs/prompts/testing-strategy-bulletproof-cli.md
-started: "2026-03-02"
+started: "2026-03-02T12:00:00+01:00" # backfilled
 status: COMPLETED
 tags:
     - continuation

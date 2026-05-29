@@ -1,9 +1,20 @@
-# R2Go2 Feature Ideas & Brainstorming
+---
+title: "R2Go2 / Cosmoflare Feature Ideas & Brainstorming"
+created: "2025-11-24T10:00:00-03:00"
+status: LIVING
+tags:
+  - feature-ideas
+  - brainstorming
+  - wishlist
+schema_version: 1
+---
+
+# R2Go2 / Cosmoflare Feature Ideas & Brainstorming
 
 ## Current Status
-- **Project**: R2Go2 - Cloudflare R2 CLI Tool
-- **Version**: 0.1.0 (Development)
-- **Last Updated**: 2025-11-24
+- **Project**: Cosmoflare (R2Go2) - Cloudflare Developer Platform CLI
+- **Version**: 0.11.0
+- **Last Updated**: 2026-05-27
 
 ---
 
@@ -102,16 +113,15 @@ r2go2 benchmark my-bucket --test-file-size=10MB
 ### 🛡️ Advanced Security Features
 
 #### Access Management
+
+> **REVIEW NOTE**: R2 does not support per-user ACL-style permissions (`--add="user@example.com:read"`). Access is controlled via API tokens at the account level. Pre-signed URLs are feasible.
+
 ```bash
 # Generate temporary URLs
 r2go2 generate-url my-bucket file.txt --expire=1h
 
 # Create signed URLs for uploads
 r2go2 sign-upload my-bucket --key="uploads/user-file.jpg" --expire=15m
-
-# Manage bucket permissions
-r2go2 permissions my-bucket --list
-r2go2 permissions my-bucket --add="user@example.com:read"
 ```
 
 #### Encryption Options
@@ -143,19 +153,22 @@ r2go2 profile edit production --default-bucket="prod-storage"
 ```
 
 #### Configuration Files
+
+> **WARNING**: Secrets (api_token, account_id) belong in `~/.r2go2/config.yaml` (machine-level, gitignored), NOT in project `.r2go2.yaml`. See product vision Decision 5 & 10.
+
 ```yaml
-# .r2go2.yaml
+# ~/.r2go2/config.yaml (machine-level, NEVER committed to git)
 profiles:
   production:
     account_id: "1234567890"
     api_token: "prod-token"
-    default_bucket: "prod-storage"
-    region: "auto"
-
   development:
     account_id: "0987654321"
     api_token: "dev-token"
-    default_bucket: "dev-storage"
+
+# .r2go2.yaml (project-level, committed to git — NO secrets)
+profile: production
+bucket: prod-storage
 
 settings:
   upload_concurrency: 4
@@ -219,6 +232,8 @@ r2go2 validate-deployment --manifest=deployment.json
 ```
 
 ### 🌐 Multi-Cloud Support
+
+> **REVIEW NOTE**: This section contradicts the Cosmoflare product vision (2026-03-28), which positions the tool as Cloudflare-specific. Multi-cloud support would dilute the product identity. Consider removing or re-scoping as "export/migrate" rather than ongoing multi-cloud management.
 
 #### Provider Support
 ```bash
@@ -367,12 +382,12 @@ r2go2 compliance-check --framework=GDPR,SOX
 ### 🔒 Advanced Security
 
 #### Zero Trust Architecture
-```bash
-# Temporary access tokens
-r2go2 token generate --duration=1h --permissions="read:my-bucket"
 
-# IP whitelisting
-r2go2 bucket set-ip-whitelist my-bucket --ips="192.168.1.0/24"
+> **REVIEW NOTE**: R2 does not expose per-bucket IP whitelisting. IP restrictions are managed via Cloudflare Access or WAF rules at the zone level, not the R2 API. `token generate` with scoped permissions may be feasible via API token creation.
+
+```bash
+# Temporary access tokens (via Cloudflare API token creation)
+r2go2 token generate --duration=1h --permissions="read:my-bucket"
 
 # Anomaly detection
 r2go2 security monitor --enable-anomaly-detection

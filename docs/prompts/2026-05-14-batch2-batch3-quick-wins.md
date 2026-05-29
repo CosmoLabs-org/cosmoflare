@@ -1,5 +1,6 @@
 ---
 branch: batch2-batch3-quick-wins
+completed: "2026-05-29"
 created: "2026-05-14T12:00:00-03:00"
 goals_completed: 8
 goals_total: 8
@@ -8,7 +9,7 @@ priority: medium
 related_prompts: []
 requires_reading: []
 schema_version: 1
-status: PENDING
+status: COMPLETED
 tags: []
 title: 'Batch 2-3: Quick Wins from Roadmap'
 ---

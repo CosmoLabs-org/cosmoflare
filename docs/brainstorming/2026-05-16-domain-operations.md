@@ -1,6 +1,6 @@
 ---
 branch: master
-created: "2026-05-16"
+created: "2026-05-16T10:00:00-03:00"
 status: APPROVED
 origin: "/brainplan"
 tags:
@@ -166,7 +166,7 @@ For `--json` output, pagination metadata is included:
 
 ### Library Layer (`pkg/r2go2/`)
 
-New files:
+Files (implemented):
 - `domains.go` — `DomainService` wrapping ZoneService + health enrichment
 - `doctor.go` — `DoctorService` with the 4 diagnostic probes
 - `healthcheck.go` — `HealthcheckService` wrapping Cloudflare Healthcheck API
@@ -178,7 +178,7 @@ The diagnostic probes use Go's standard library:
 
 ### CLI Layer (`cmd/`)
 
-New files:
+Files (implemented):
 - `domains.go` — `cosmoflare domains` with table/detail/json output
 - `doctor.go` — `cosmoflare doctor` with diagnostic runner + fix suggestions
 

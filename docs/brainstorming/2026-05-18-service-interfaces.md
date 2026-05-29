@@ -1,6 +1,7 @@
 ---
 title: Service Interfaces for Testability
 issue: TASK-002
+status: implemented
 created: 2026-05-18T14:30:00-03:00
 deliverables:
   - id: BR-01
@@ -59,15 +60,15 @@ Actually, Go convention is to name the interface after the behavior. But for con
 - DNSService (5 methods)
 - ZoneService (5 methods)
 - SSLService (5 methods)
-- CacheService (4 methods)
-- CORSService (4 methods)
+- CacheService (6 methods)
+- CORSService (3 methods)
 - FirewallService (5 methods)
-- WAFService (5 methods)
+- WAFService (8 methods)
 - HealthcheckService (5 methods)
 - DomainService (3 methods)
 - DoctorService (5 methods)
 
-Skip stubs: PagesService, QueueService, D1Service (minimal methods), EmailService (if stub), PageRuleService (if new).
+Not yet covered by interfaces (have full implementations, not stubs): D1Service (5 methods), EmailService (14 methods), PageRuleService (5 methods), PagesService (7 methods), QueueService (8 methods). These should be added in a follow-up.
 
 ### Q4: What about the Cloudflare API dependency?
 
