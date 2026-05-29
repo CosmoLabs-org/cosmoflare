@@ -508,3 +508,135 @@ func TestWorkerNewFromCredsSuccess(t *testing.T) {
 		t.Errorf("expected accountID=acct123, got %s", svc.accountID)
 	}
 }
+
+// --- TailLogs tests ---
+
+func TestTailLogsValidation(t *testing.T) {
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	svc, _ := NewWorkerService(cf, "account123")
+
+	_, err := svc.TailLogs(context.Background(), "", nil)
+	if err == nil {
+		t.Error("expected error when name is empty")
+	}
+}
+
+func TestTailLogsReturnsChannel(t *testing.T) {
+	callCount := 0
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"result": map[string]interface{}{
+				"modified_on": time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	ch, err := svc.TailLogs(ctx, "my-worker", &TailOptions{
+		Interval: 100 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ch == nil {
+		t.Fatal("expected non-nil channel")
+	}
+
+	// Should receive at least one entry before context cancels
+	select {
+	case entry, ok := <-ch:
+		if !ok {
+			t.Fatal("channel closed without sending entries")
+		}
+		if entry.Message == "" {
+			t.Error("expected non-empty message")
+		}
+	case <-ctx.Done():
+		t.Fatal("timed out waiting for log entry")
+	}
+}
+
+func TestTailLogsStopsOnContextCancel(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"result": map[string]interface{}{
+				"modified_on": time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	ch, err := svc.TailLogs(ctx, "my-worker", &TailOptions{
+		Interval: 50 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Read one entry
+	<-ch
+
+	// Cancel context
+	cancel()
+
+	// Channel should close soon
+	timeout := time.After(500 * time.Millisecond)
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return // channel closed, test passes
+			}
+		case <-timeout:
+			t.Fatal("channel did not close after context cancel")
+		}
+	}
+}
+
+func TestTailLogsLevelFilter(t *testing.T) {
+	svc, server := workerMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		workerWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"result": map[string]interface{}{
+				"modified_on": time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	ch, err := svc.TailLogs(ctx, "my-worker", &TailOptions{
+		Interval: 100 * time.Millisecond,
+		Level:    "error",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// The metadata entries are "info" level, so with "error" filter we should
+	// get no entries. Channel closes when context expires.
+	select {
+	case entry, ok := <-ch:
+		if ok {
+			t.Errorf("expected no entries with level=error filter, got: %+v", entry)
+		}
+	case <-ctx.Done():
+		// Expected — no entries matched the filter
+	}
+}
+
+func TestTailOptionsDefaults(t *testing.T) {
+	opts := &TailOptions{}
+	if opts.Interval != 0 {
+		t.Errorf("expected zero interval before defaults applied, got %v", opts.Interval)
+	}
+}

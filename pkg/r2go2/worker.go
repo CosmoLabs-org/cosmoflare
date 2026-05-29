@@ -256,6 +256,79 @@ func (s *WorkerService) Logs(ctx context.Context, name string, opts ...LogOption
 	return entries, nil
 }
 
+// TailOptions configures the TailLogs polling loop.
+type TailOptions struct {
+	Interval time.Duration
+	Level    string
+	Since    time.Duration
+}
+
+// TailLogs polls for Worker log entries and sends them on the returned channel.
+// The channel closes when ctx is cancelled. Interval defaults to 2s if zero.
+func (s *WorkerService) TailLogs(ctx context.Context, name string, opts *TailOptions) (<-chan *LogEntry, error) {
+	if name == "" {
+		return nil, validationError("WorkerService.TailLogs", "worker name is required")
+	}
+
+	if opts == nil {
+		opts = &TailOptions{}
+	}
+	if opts.Interval <= 0 {
+		opts.Interval = 2 * time.Second
+	}
+
+	ch := make(chan *LogEntry, 64)
+	var sinceTime time.Time
+	if opts.Since > 0 {
+		sinceTime = time.Now().Add(-opts.Since)
+	}
+
+	go func() {
+		defer close(ch)
+		ticker := time.NewTicker(opts.Interval)
+		defer ticker.Stop()
+
+		poll := func() {
+			var logOpts []LogOption
+			if !sinceTime.IsZero() {
+				logOpts = append(logOpts, WithLogSince(sinceTime))
+			}
+			entries, err := s.Logs(ctx, name, logOpts...)
+			if err != nil {
+				return
+			}
+			for _, e := range entries {
+				if opts.Level != "" && e.Level != opts.Level {
+					continue
+				}
+				if !sinceTime.IsZero() && !e.Timestamp.After(sinceTime) {
+					continue
+				}
+				select {
+				case ch <- e:
+				case <-ctx.Done():
+					return
+				}
+			}
+			if len(entries) > 0 {
+				sinceTime = entries[len(entries)-1].Timestamp
+			}
+		}
+
+		poll()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				poll()
+			}
+		}
+	}()
+
+	return ch, nil
+}
+
 // UpdateSettings updates a Worker's configuration (compatibility date, bindings, usage model).
 func (s *WorkerService) UpdateSettings(ctx context.Context, name string, settings WorkerSettings) error {
 	if name == "" {

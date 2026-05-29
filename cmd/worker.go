@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
@@ -39,6 +43,10 @@ var (
 	workerModule       bool
 	workerForce        bool
 	workerLogLimit     int
+	workerLogFollow    bool
+	workerLogInterval  int
+	workerLogLevel     string
+	workerLogSince     string
 	workerUsageModel   string
 )
 
@@ -96,12 +104,15 @@ var workerLogsCmd = &cobra.Command{
 	Short: "View Worker logs",
 	Long: `View recent log events for a Worker.
 
-Note: This uses metadata API as a proxy. Real-time log streaming
-via WebSocket tail is not yet supported.
+Use --follow (-f) to continuously poll for new log entries. Combine with
+--level to filter by severity and --since to set a time window.
 
 Examples:
   r2go2 worker logs my-worker
-  r2go2 worker logs my-worker --limit=50 --json`,
+  r2go2 worker logs my-worker --limit=50 --json
+  r2go2 worker logs my-worker --follow
+  r2go2 worker logs my-worker -f --level=error --since=15m
+  r2go2 worker logs my-worker -f --interval=5 --json`,
 	RunE: runWorkerLogs,
 }
 
@@ -135,6 +146,10 @@ func init() {
 	workerDeleteCmd.Flags().BoolVar(&workerForce, "force", false, "Skip confirmation prompt")
 
 	workerLogsCmd.Flags().IntVar(&workerLogLimit, "limit", 100, "Maximum number of log entries")
+	workerLogsCmd.Flags().BoolVarP(&workerLogFollow, "follow", "f", false, "Continuously poll for new log entries")
+	workerLogsCmd.Flags().IntVar(&workerLogInterval, "interval", 2, "Polling interval in seconds (with --follow)")
+	workerLogsCmd.Flags().StringVar(&workerLogLevel, "level", "", "Filter by log level (error|warn|info|debug)")
+	workerLogsCmd.Flags().StringVar(&workerLogSince, "since", "", "Show logs since duration (e.g. 15m, 1h)")
 
 	workerSettingsCmd.Flags().StringVar(&workerCompatDate, "compatibility-date", "", "Workers runtime compatibility date")
 	workerSettingsCmd.Flags().StringVar(&workerUsageModel, "usage-model", "", "Usage model (bundled or unbound)")
@@ -343,6 +358,10 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create worker service: %w", err)
 	}
 
+	if workerLogFollow {
+		return runWorkerLogsFollow(cmd, svc, name)
+	}
+
 	var opts []r2go2.LogOption
 	if workerLogLimit > 0 {
 		opts = append(opts, r2go2.WithLogLimit(workerLogLimit))
@@ -376,6 +395,51 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 		)
 	}
 	w.Flush()
+	return nil
+}
+
+func runWorkerLogsFollow(cmd *cobra.Command, svc *r2go2.WorkerService, name string) error {
+	tailOpts := &r2go2.TailOptions{
+		Interval: time.Duration(workerLogInterval) * time.Second,
+		Level:    workerLogLevel,
+	}
+
+	if workerLogSince != "" {
+		d, err := time.ParseDuration(workerLogSince)
+		if err != nil {
+			return fmt.Errorf("invalid --since value %q: %w", workerLogSince, err)
+		}
+		tailOpts.Since = d
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		cancel()
+	}()
+
+	ch, err := svc.TailLogs(ctx, name, tailOpts)
+	if err != nil {
+		return fmt.Errorf("failed to start log tailing: %w", err)
+	}
+
+	enc := json.NewEncoder(cmd.OutOrStdout())
+	for entry := range ch {
+		if JSONOutput {
+			enc.Encode(entry)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s  [%s]  %s  %s\n",
+				entry.Timestamp.Format("2006-01-02 15:04:05"),
+				entry.Level,
+				entry.Event,
+				entry.Message,
+			)
+		}
+	}
 	return nil
 }
 

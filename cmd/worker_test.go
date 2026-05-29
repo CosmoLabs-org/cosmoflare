@@ -570,3 +570,39 @@ func TestWorkerDelete_DryRunJSON(t *testing.T) {
 		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
 	}
 }
+
+// --- logs --follow flags ---
+
+func TestWorkerLogs_FollowFlags(t *testing.T) {
+	flags := []struct {
+		name     string
+		defValue string
+	}{
+		{"follow", "false"},
+		{"interval", "2"},
+		{"level", ""},
+		{"since", ""},
+	}
+
+	for _, f := range flags {
+		t.Run(f.name, func(t *testing.T) {
+			flag := workerLogsCmd.Flags().Lookup(f.name)
+			if flag == nil {
+				t.Fatalf("flag --%s not found on workerLogsCmd", f.name)
+			}
+			if flag.DefValue != f.defValue {
+				t.Errorf("flag --%s default = %q, want %q", f.name, flag.DefValue, f.defValue)
+			}
+		})
+	}
+}
+
+func TestWorkerLogs_FollowShorthand(t *testing.T) {
+	f := workerLogsCmd.Flags().Lookup("follow")
+	if f == nil {
+		t.Fatal("--follow flag not found")
+	}
+	if f.Shorthand != "f" {
+		t.Errorf("--follow shorthand = %q, want %q", f.Shorthand, "f")
+	}
+}
