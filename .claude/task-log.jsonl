@@ -740,3 +740,32 @@
 {"id":"29","subject":"","status":"in_progress","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
 {"id":"27","subject":"","status":"completed","completed_at":"2026-05-29T07:40:08Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
 {"id":"29","subject":"","status":"completed","completed_at":"2026-05-29T07:40:08Z","session":"4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8"}
+{"id":"1","subject":"Session entry checklist — verify clean state","status":"pending","created_at":"2026-05-29T08:05:07Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"2","subject":"ROAD-058: cosmoflare dev local dev server","status":"pending","created_at":"2026-05-29T08:05:12Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"3","subject":"ROAD-051: cosmoflare logs --follow real-time tailing","status":"pending","created_at":"2026-05-29T08:05:16Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"4","subject":"ROAD-057: cosmoflare init interactive scaffolding","status":"pending","created_at":"2026-05-29T08:05:22Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"5","subject":"Documentation gaps: Pages, Queue, Bucket in USAGE.md","status":"pending","created_at":"2026-05-29T08:05:26Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"6","subject":"CCS upgrade remaining 6 subsystems","status":"pending","created_at":"2026-05-29T08:05:30Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"1","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-05-29T08:07:11Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"2","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-05-29T08:10:28Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"3","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-05-29T08:13:42Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"4","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-05-29T08:14:44Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"5","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-05-29T08:15:48Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"6","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-05-29T08:16:47Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"7","subject":"Commit group 1: feat(dev) — ROAD-058 dev server","status":"pending","created_at":"2026-05-29T08:30:31Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"8","subject":"Commit group 2: feat(worker) — ROAD-051 logs --follow","status":"pending","created_at":"2026-05-29T08:30:35Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"9","subject":"Commit group 3: feat(init) — ROAD-057 init scaffolding","status":"pending","created_at":"2026-05-29T08:30:38Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"10","subject":"Commit group 4: docs + chore","status":"pending","created_at":"2026-05-29T08:30:43Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"7","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-05-29T08:31:12Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"8","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-05-29T08:31:27Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"9","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-05-29T08:31:40Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"10","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
