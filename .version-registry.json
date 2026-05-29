@@ -1,9 +1,9 @@
 {
   "repository": {
     "version": "0.11.0",
-    "build": 426,
+    "build": 427,
     "description": "R2Go2 - A production-ready CLI tool for managing Cloudflare R2 buckets",
-    "lastUpdated": "2026-05-29T07:38:45Z"
+    "lastUpdated": "2026-05-29T07:39:38Z"
   },
   "metadata": {
     "last_synced": "2026-05-29T06:55:37Z",
