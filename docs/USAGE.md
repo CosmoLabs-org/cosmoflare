@@ -573,6 +573,539 @@ r2go2 queue consumers my-queue
 r2go2 queue consumers my-queue --json
 ```
 
+## D1 Commands
+
+D1 database management for Cloudflare's serverless SQL databases.
+
+### Create a D1 database
+```bash
+cosmoflare d1 create my-database
+cosmoflare d1 create production-db --json
+```
+JSON output:
+```json
+{"success":true,"message":"D1 database created","data":{"id":"480f4f69-...","name":"my-database"}}
+```
+
+### List D1 databases
+```bash
+cosmoflare d1 list
+cosmoflare d1 list --json
+```
+
+### Get D1 database details
+```bash
+cosmoflare d1 get <database-id>
+cosmoflare d1 get <database-id> --json
+```
+
+### Delete a D1 database
+```bash
+cosmoflare d1 delete <database-id>
+cosmoflare d1 delete <database-id> --force
+```
+
+### Execute SQL query
+```bash
+cosmoflare d1 query <database-id> --sql="SELECT * FROM users"
+cosmoflare d1 query <database-id> --sql="SELECT * FROM users WHERE id = ?1" --param="42"
+cosmoflare d1 query <database-id> --sql="CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)" --json
+cosmoflare d1 query <database-id> --sql="INSERT INTO users (name) VALUES (?1)" --param="Alice" --json
+```
+JSON output:
+```json
+{"success":true,"data":{"columns":["id","name"],"rows":[[1,"Alice"]],"meta":{"changes":0,"duration":0.5}}}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--sql` | SQL query to execute (required) |
+| `--param` | Positional query parameter (repeatable for ?1, ?2, ...) |
+| `--force` | Skip confirmation prompt (delete only) |
+
+## Email Routing Commands
+
+Email routing configuration for domains. Route incoming emails to destinations based on rules. All email commands are zone-scoped.
+
+### List routing rules
+```bash
+cosmoflare email rules list <zone-id>
+cosmoflare email rules list <zone-id> --json
+```
+
+### Get a routing rule
+```bash
+cosmoflare email rules get <zone-id> <rule-id>
+cosmoflare email rules get <zone-id> <rule-id> --json
+```
+
+### Create a routing rule
+```bash
+cosmoflare email rules create <zone-id> --match-to="support@example.com" --forward-to="team@company.com" --name="Support routing"
+cosmoflare email rules create <zone-id> --match-all --forward-to="admin@company.com" --name="Forward all"
+cosmoflare email rules create <zone-id> --match-to="spam@example.com" --drop --name="Drop spam"
+cosmoflare email rules create <zone-id> --match-to="info@example.com" --forward-to="info@company.com" --name="Info" --priority=10 --enabled=false
+```
+JSON output:
+```json
+{"success":true,"message":"Email routing rule created","data":{"tag":"rule-abc123","name":"Support routing","enabled":true,"priority":0}}
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--name` | (required) | Rule name |
+| `--match-to` | | Email address to match |
+| `--match-all` | `false` | Match all incoming email |
+| `--forward-to` | | Destination email to forward to |
+| `--drop` | `false` | Drop matching email instead of forwarding |
+| `--priority` | `0` | Rule priority (lower = higher) |
+| `--enabled` | `true` | Whether the rule is enabled |
+
+### Update a routing rule
+```bash
+cosmoflare email rules update <zone-id> <rule-id> --match-to="new@example.com" --forward-to="dest@example.com" --name="Updated"
+cosmoflare email rules update <zone-id> <rule-id> --enabled=false
+cosmoflare email rules update <zone-id> <rule-id> --priority=5 --json
+```
+
+### Delete a routing rule
+```bash
+cosmoflare email rules delete <zone-id> <rule-id>
+cosmoflare email rules delete <zone-id> <rule-id> --force
+```
+
+### List destination addresses
+```bash
+cosmoflare email destinations list <zone-id>
+cosmoflare email destinations list <zone-id> --json
+```
+
+### Add a destination address
+```bash
+cosmoflare email destinations add <zone-id> --email="team@company.com"
+cosmoflare email destinations add <zone-id> --email="admin@company.com" --json
+```
+The address receives a verification email that must be confirmed before use.
+
+### Get destination details
+```bash
+cosmoflare email destinations get <zone-id> <address-id>
+cosmoflare email destinations get <zone-id> <address-id> --json
+```
+
+### Delete a destination address
+```bash
+cosmoflare email destinations delete <zone-id> <address-id>
+cosmoflare email destinations delete <zone-id> <address-id> --force
+```
+
+### Catch-all rule
+```bash
+cosmoflare email catchall <zone-id>
+cosmoflare email catchall <zone-id> --json
+cosmoflare email catchall update <zone-id> --forward-to="catchall@example.com"
+cosmoflare email catchall update <zone-id> --forward-to="admin@example.com" --json
+```
+
+### Email routing settings
+```bash
+cosmoflare email settings <zone-id>
+cosmoflare email settings <zone-id> --json
+```
+
+### Enable/disable email routing
+```bash
+cosmoflare email enable <zone-id>
+cosmoflare email disable <zone-id>
+```
+
+## Firewall Commands
+
+Firewall rule management for Cloudflare zones. Create and manage rules using Cloudflare filter expressions.
+
+### List firewall rules
+```bash
+cosmoflare firewall list <zone-id>
+cosmoflare firewall list <zone-id> --json
+cosmoflare firewall list <zone-id> --json | jq '.[] | select(.action=="block")'
+```
+
+### Get firewall rule details
+```bash
+cosmoflare firewall get <zone-id> <rule-id>
+cosmoflare firewall get <zone-id> <rule-id> --json
+```
+
+### Create a firewall rule
+```bash
+cosmoflare firewall create <zone-id> --expression='(ip.src eq 1.2.3.4)' --action=block --description="Block bad IP"
+cosmoflare firewall create <zone-id> --expression='(http.request.uri.path contains "/wp-admin")' --action=challenge
+cosmoflare firewall create <zone-id> --expression='(cf.threat_score gt 50)' --action=js_challenge --description="Challenge high threat"
+cosmoflare firewall create <zone-id> --expression='(ip.geoip.country eq "CN")' --action=block --json
+```
+JSON output:
+```json
+{"success":true,"message":"Firewall rule created","data":{"id":"rule-abc123","action":"block","description":"Block bad IP","paused":false}}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--expression` | Cloudflare filter expression (required) |
+| `--action` | Rule action: `block`, `challenge`, `js_challenge`, `allow`, `log`, `bypass` (required) |
+| `--description` | Human-readable rule description |
+| `--priority` | Rule priority (lower = higher priority) |
+| `--paused` | Create the rule in a paused state |
+
+### Update a firewall rule
+```bash
+cosmoflare firewall update <zone-id> <rule-id> --expression='(ip.src eq 5.6.7.8)' --action=block --description="Updated IP"
+cosmoflare firewall update <zone-id> <rule-id> --expression='(cf.threat_score gt 30)' --action=challenge --json
+```
+Both `--expression` and `--action` are required on update (full replacement).
+
+### Delete a firewall rule
+```bash
+cosmoflare firewall delete <zone-id> <rule-id>
+cosmoflare firewall delete <zone-id> <rule-id> --force
+```
+
+## WAF Commands
+
+WAF (Web Application Firewall) managed ruleset and IP access rule management. Zone-scoped.
+
+### List WAF packages
+```bash
+cosmoflare waf packages <zone-id>
+cosmoflare waf packages <zone-id> --json
+```
+
+### List WAF rules in a package
+```bash
+cosmoflare waf rules <zone-id> <package-id>
+cosmoflare waf rules <zone-id> <package-id> --json
+```
+
+### Get or update a WAF rule
+```bash
+cosmoflare waf rule <zone-id> <package-id> <rule-id>
+cosmoflare waf rule <zone-id> <package-id> <rule-id> --mode=block
+cosmoflare waf rule <zone-id> <package-id> <rule-id> --mode=simulate --json
+```
+
+Valid `--mode` values: `block`, `simulate`, `disable`, `default`, `challenge`.
+
+### List IP access rules
+```bash
+cosmoflare waf access list <zone-id>
+cosmoflare waf access list <zone-id> --json
+```
+
+### Create an IP access rule
+```bash
+cosmoflare waf access create <zone-id> --ip=1.2.3.4 --mode=block
+cosmoflare waf access create <zone-id> --ip=192.168.0.0/24 --mode=whitelist --note="Office network"
+```
+
+| Flag | Description |
+|------|-------------|
+| `--ip` | IP address or CIDR range |
+| `--mode` | Access rule mode: `block`, `challenge`, `whitelist`, `js_challenge` |
+| `--note` | Note for the access rule |
+
+### Delete an IP access rule
+```bash
+cosmoflare waf access delete <zone-id> <rule-id>
+cosmoflare waf access delete <zone-id> <rule-id> --force
+```
+
+## CORS Commands
+
+CORS response header management via Cloudflare Transform Rules. No Worker required. Zone-scoped. Requires a Cloudflare Pro plan or higher.
+
+### Show active CORS rules
+```bash
+cosmoflare cors settings <zone-id>
+cosmoflare cors settings <zone-id> --json
+```
+JSON output:
+```json
+[{"name":"cosmoflare-cors","allow_origins":["*"],"allow_methods":["GET","POST","OPTIONS"],"allow_credentials":false,"expression":"true"}]
+```
+
+### Create or replace a CORS rule
+```bash
+cosmoflare cors set <zone-id> --origins "*" --methods "GET,POST,OPTIONS"
+cosmoflare cors set <zone-id> --origins "https://app.example.com" --credentials --max-age 86400
+cosmoflare cors set <zone-id> --origins "*" --expression 'http.request.uri.path matches "^/api/"'
+cosmoflare cors set <zone-id> --origins "https://app.example.com" --credentials --json
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--origins` | (required) | Comma-separated allowed origins (e.g., `"*"` or `"https://app.example.com"`) |
+| `--methods` | `GET, POST, OPTIONS` | Comma-separated HTTP methods |
+| `--headers` | `Content-Type, Authorization` | Comma-separated request header names |
+| `--max-age` | `86400` | Preflight cache max-age in seconds |
+| `--credentials` | `false` | Allow credentials (cannot combine with `--origins "*"`) |
+| `--rule-name` | `cosmoflare-cors` | Name/identifier for the rule |
+| `--expression` | `true` | Wirefilter expression to scope the rule |
+
+### Remove a CORS rule
+```bash
+cosmoflare cors remove <zone-id>
+cosmoflare cors remove <zone-id> --rule-name my-cors-rule
+cosmoflare cors remove <zone-id> --json
+```
+
+## Page Rules Commands
+
+Page Rule management for URL-based settings and redirects. Zone-scoped.
+
+### List page rules
+```bash
+cosmoflare pagerules list <zone-id>
+cosmoflare pagerules list <zone-id> --json
+cosmoflare pagerules list <zone-id> --json | jq '.[].targets[0].constraint.value'
+```
+
+### Get page rule details
+```bash
+cosmoflare pagerules get <zone-id> <rule-id>
+cosmoflare pagerules get <zone-id> <rule-id> --json
+```
+
+### Create a page rule
+```bash
+cosmoflare pagerules create <zone-id> --url="*.example.com/old/*" --action=forwarding_url --action-value="https://example.com/new/$1"
+cosmoflare pagerules create <zone-id> --url="example.com/secure/*" --action=always_https --status=active
+cosmoflare pagerules create <zone-id> --url="example.com/static/*" --action=cache_level --action-value=cache_everything --priority=2
+```
+JSON output:
+```json
+{"success":true,"message":"Page rule created","data":{"id":"rule-abc123","status":"active","priority":1}}
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--url` | (required) | URL match pattern (e.g., `*.example.com/path/*`) |
+| `--action` | (required) | Action: `forwarding_url`, `always_https`, `cache_level`, `ssl`, `browser_cache_ttl` |
+| `--action-value` | | Value for the action (URL for forwarding, cache level, etc.) |
+| `--status` | `active` | Rule status: `active` or `disabled` |
+| `--priority` | `1` | Rule priority (1 = highest, evaluated first) |
+
+### Update a page rule
+```bash
+cosmoflare pagerules update <zone-id> <rule-id> --url="*.example.com/new/*" --action=forwarding_url --action-value="https://example.com/latest/$1"
+cosmoflare pagerules update <zone-id> <rule-id> --url="example.com/*" --action=always_https --status=disabled
+```
+All fields are required on update (full replacement).
+
+### Delete a page rule
+```bash
+cosmoflare pagerules delete <zone-id> <rule-id>
+cosmoflare pagerules delete <zone-id> <rule-id> --force
+```
+
+## Domains Command
+
+Domain overview with health indicators for all zones in your account.
+
+```bash
+cosmoflare domains                        # Overview table of all zones
+cosmoflare domains --detail               # Per-domain cards with full info
+cosmoflare domains --filter=active        # Only active zones
+cosmoflare domains --name="*.com"         # Filter by domain pattern
+cosmoflare domains --page=2 --per-page=25 # Pagination
+cosmoflare domains --sort=status          # Sort by zone status
+cosmoflare domains --enrich               # Add live health probes (slower)
+cosmoflare domains --json                 # Machine-readable output
+cosmoflare domains --json | jq '.domains[].zone.name'
+```
+JSON output:
+```json
+{"domains":[{"zone":{"id":"zone-abc123","name":"example.com","status":"active"},"dns_records":5,"ssl_status":"active"}],"pagination":{"page":1,"per_page":50,"total_count":3}}
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--filter` | | Filter by status: `active`, `paused` |
+| `--name` | | Filter by domain name pattern (e.g., `*.com`) |
+| `--page` | `1` | Page number |
+| `--per-page` | `50` | Results per page |
+| `--sort` | `name` | Sort by: `name`, `status`, `records` |
+| `--detail` | `false` | Show detailed per-domain cards |
+| `--enrich` | `false` | Run live health probes (HTTP, SSL) |
+
+## Doctor Command
+
+Deep diagnostic health checks for domains. Runs 4 probes: DNS propagation, SSL certificate, HTTP response, and nameserver consistency.
+
+```bash
+cosmoflare doctor example.com              # Full diagnostics
+cosmoflare doctor example.com --fix        # Include fix suggestions
+cosmoflare doctor example.com --json       # Machine-readable output
+cosmoflare doctor --all                    # Run on all domains (slow)
+cosmoflare doctor --all --json             # All domains, JSON output
+```
+
+Fix suggestions are valid cosmoflare commands that can be executed directly:
+```bash
+cosmoflare doctor example.com --fix --json | jq '.issues[].fix'
+```
+
+JSON output:
+```json
+{"domain":"example.com","score":95,"probes":{"dns":{"status":"pass"},"ssl":{"status":"pass","expires":"2027-01-15T00:00:00Z"},"http":{"status":"pass","response_time_ms":150},"nameservers":{"status":"pass"}},"issues":[]}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--fix` | Show actionable fix commands for each issue |
+| `--all` | Run diagnostics on all domains |
+
+Exit codes: 0=healthy/warning, 1=critical.
+
+## Status Command
+
+At-a-glance infrastructure dashboard showing resource counts and health across all Cloudflare services.
+
+```bash
+cosmoflare status                  # Quick dashboard
+cosmoflare status --json           # Machine-readable output
+cosmoflare status --verbose        # Include per-zone breakdown
+```
+JSON output:
+```json
+{"timestamp":"2026-05-29T12:00:00Z","account_id":"abc123","zones":{"count":5},"workers":{"count":3},"kv_namespaces":{"count":2},"r2_buckets":{"count":4},"dns_records":{"count":25},"ssl":{"active":5,"pending":0,"inactive":0},"query_time_ms":450}
+```
+
+## Auth Commands
+
+Manage authentication with Cloudflare.
+
+### Login
+```bash
+cosmoflare auth login                                                  # Interactive login
+cosmoflare auth login --token=your_api_token --account-id=your_id     # Non-interactive
+cosmoflare auth login --profile=production --interactive              # Create named profile
+```
+
+| Flag | Description |
+|------|-------------|
+| `--token` | API token |
+| `--account-id` | Cloudflare account ID |
+| `--profile` | Profile name to authenticate |
+| `--email` | Account email |
+| `--method` | Auth method: `token`, `service-key` |
+| `--interactive` | Force interactive mode |
+| `--scope` | Token permission scope |
+
+### Rotate tokens
+```bash
+cosmoflare auth rotate --profile=production
+```
+
+### Check auth status
+```bash
+cosmoflare auth status
+cosmoflare auth status --json
+```
+
+### Logout
+```bash
+cosmoflare auth logout
+```
+Clears in-memory credentials. Profile configurations in `~/.r2go2/config.yaml` are preserved.
+
+## Setup Command
+
+Interactive setup wizard for first-time configuration.
+
+```bash
+cosmoflare setup                         # Interactive setup
+cosmoflare setup --profile=prod          # Create specific profile
+cosmoflare setup --quiet                 # Non-interactive (uses env vars)
+cosmoflare setup --switch                # Switch profiles interactively
+cosmoflare setup --welcome               # Show welcome message
+cosmoflare setup --backup                # Backup profiles
+cosmoflare setup --restore               # Restore profiles
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--profile` | | Profile name to create |
+| `--quiet` | `false` | Non-interactive mode (use environment variables) |
+| `--skip-test` | `false` | Skip connection testing |
+| `--auto-detect` | `true` | Auto-detect account information |
+| `--switch` | `false` | Switch profiles interactively |
+| `--welcome` | `false` | Show welcome message for new users |
+| `--backup` | `false` | Backup profiles |
+| `--restore` | `false` | Restore profiles |
+
+## Backup Command
+
+Secure profile backup with encryption and format options.
+
+```bash
+cosmoflare backup                        # Interactive backup with format selection
+cosmoflare backup --format=enc           # Create encrypted backup
+cosmoflare backup --format=json          # Create plain JSON backup
+cosmoflare backup --format=env           # Create environment variable script
+```
+
+Supported `--format` values: `enc` (encrypted), `json` (plain JSON), `env` (environment variable script). Backups exclude sensitive API tokens for security.
+
+## Copy Command
+
+Enhanced file copy with progress monitoring, resume capability, and batch support.
+
+```bash
+cosmoflare copy source.txt dest.txt                          # Single file copy
+cosmoflare copy --recursive source/ dest/                    # Copy directory
+cosmoflare copy --progress --verify --resume source.txt dest.txt  # With resume and verification
+cosmoflare copy --batch files.txt destination/               # Batch copy from file list
+cosmoflare copy --parallel 8 --chunk-size 16MB source/ dest/ # High-performance copy
+cosmoflare copy --dry-run --verbose source/ dest/            # Dry run
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-r, --recursive` | `false` | Copy directories recursively |
+| `--resume` | `false` | Resume interrupted transfers |
+| `-V, --verify` | `true` | Verify file integrity after copy |
+| `-o, --overwrite` | `false` | Overwrite existing files |
+| `-p, --preserve` | `true` | Preserve file attributes |
+| `-P, --progress` | `true` | Show progress bars |
+| `-q, --quiet` | `false` | Suppress output except errors |
+| `-s, --stats` | `false` | Show detailed statistics |
+| `-j, --parallel` | `4` | Number of parallel operations |
+| `--chunk-size` | `8MB` | Chunk size for large files |
+| `-b, --batch` | `false` | Batch operation mode |
+| `--format` | `table` | Output format: `table`, `json`, `csv` |
+
+## Completion Command
+
+Generate shell completion scripts for all commands.
+
+```bash
+# Bash
+source <(cosmoflare completion bash)
+cosmoflare completion bash > /etc/bash_completion.d/cosmoflare     # Linux
+cosmoflare completion bash > /usr/local/etc/bash_completion.d/cosmoflare  # macOS
+
+# Zsh
+cosmoflare completion zsh > "${fpath[1]}/_cosmoflare"
+
+# Fish
+cosmoflare completion fish | source
+cosmoflare completion fish > ~/.config/fish/completions/cosmoflare.fish
+
+# PowerShell
+cosmoflare completion powershell | Out-String | Invoke-Expression
+```
+
+Supports dynamic bucket name completion when `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` are set.
+
 ## Init Command
 
 Initialize a new Cosmoflare project with a `.cosmoflare.yaml` configuration file.
