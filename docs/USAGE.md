@@ -772,6 +772,54 @@ Flags:
 - `--output=summary` — show change counts per service only
 - `--json` — structured JSON output (works with all subcommands)
 
+## Cost Estimation
+
+Estimate monthly Cloudflare costs based on current usage patterns. Provides per-service breakdowns for R2, Workers, and KV.
+
+### Show all estimated costs
+```bash
+cosmoflare cost                         # Estimated monthly costs for all services
+cosmoflare cost --period 7d             # Estimate based on last 7 days
+cosmoflare cost --period 90d            # Estimate based on last 90 days
+cosmoflare cost --json                  # JSON output
+cosmoflare cost --format csv            # CSV output (for spreadsheets)
+```
+
+### R2 storage costs
+```bash
+cosmoflare cost r2                      # R2 storage cost estimate
+cosmoflare cost r2 --json               # JSON output
+```
+
+Pricing: Storage $0.015/GB/month, Class A ops $4.50/M (PUT, POST, LIST), Class B ops $0.36/M (GET, HEAD).
+
+### Workers costs
+```bash
+cosmoflare cost workers                 # Workers cost estimate
+cosmoflare cost workers --json          # JSON output
+```
+
+Pricing: $0.50/M requests after 100K free tier.
+
+### KV costs
+```bash
+cosmoflare cost kv                      # KV cost estimate
+cosmoflare cost kv --json               # JSON output
+```
+
+Pricing: Reads $0.50/M, Writes $5.00/M, Storage $0.50/GB/month.
+
+### Itemized breakdown
+```bash
+cosmoflare cost detail                  # Full itemized breakdown by service
+cosmoflare cost detail --json           # JSON output
+cosmoflare cost detail --format csv     # CSV for spreadsheet import
+```
+
+Flags: `--period` (7d, 30d, 90d; default 30d), `--format` (table, json, csv; default table).
+
+NOTE: Estimates are approximate and based on Cloudflare published pricing. Actual costs may vary based on your plan, contract, and usage patterns.
+
 ## Library Usage (Workers and KV)
 
 ### Workers
