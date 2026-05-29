@@ -222,3 +222,61 @@ All 7/7 Phase 0 findings resolved. Review: score 9/10, 0 issues.
 - `master` — clean, all work merged, all tests green
 - No open worktrees
 - No pending stash or uncommitted work
+
+---
+
+## Continued Work — Independent Review
+
+**Commits:** `5338495`, `4ffa059`, `63ecda7`
+
+A follow-up session ran a systematic independent review of all documentation produced during and before this sprint, using 5 parallel Opus agents across 15 files in `docs/brainstorming/` and `docs/prompts/`.
+
+### Scope
+
+| Category | Files Reviewed |
+|----------|---------------|
+| Brainstorming docs | 9 |
+| Prompt docs | 6 |
+| **Total** | **15** |
+
+### Findings Summary
+
+| Severity | Count |
+|----------|-------|
+| Critical | 10 |
+| Major | 25 |
+| Minor | 39 |
+| **Total** | **74** |
+
+**25 inline fixes applied** directly by the review agents. 4 review reports saved to `docs/independent-reviews/`.
+
+### Key Fixes Applied
+
+| Fix | Detail |
+|-----|--------|
+| Broken `requires_reading` reference | A prompt referenced a plan file that had been renamed; path corrected |
+| Embedded API tokens removed | Literal tokens found in a brainstorming doc example; replaced with placeholder strings |
+| 5 prompts PENDING → COMPLETED | Status fields updated to reflect work that shipped during the sprint |
+| 37 timestamp violations fixed | Date-only `created`/`updated` fields upgraded to full ISO8601 with timezone (constitutional rule IMP-032) |
+| Missing frontmatter added | 2 docs had no YAML frontmatter block; added `schema_version`, `date`, `title`, `status` |
+| Stale prompt marked ABANDONED | `2026-05-14-session-continuation.md` had no corresponding active work; marked `ABANDONED` |
+
+### Dominant Pattern: Design-Reality Drift
+
+The most pervasive finding across all 15 docs was **design-reality drift**: brainstorming documents written as forward-looking proposals for features that had since been fully implemented. Symptoms included:
+
+- Stale method counts (e.g., "proposed 5 methods" when the implementation shipped 8)
+- Outdated service classifications ("stub" or "planned" for live services)
+- Proposal language ("we could", "this would allow") describing features already in production
+- Missing references to implementation commits
+
+This pattern is expected for a fast-moving project but represents a documentation debt that will compound if not addressed incrementally. Recommended: update brainstorming docs at the time of shipping, or add a `implemented_by:` frontmatter field pointing to the relevant commit.
+
+### Output
+
+| Artifact | Location |
+|----------|----------|
+| Review report (batch 1) | `docs/independent-reviews/2026-05-29-batch1.md` |
+| Review report (batch 2) | `docs/independent-reviews/2026-05-29-batch2.md` |
+| Review report (batch 3) | `docs/independent-reviews/2026-05-29-batch3.md` |
+| Review report (batch 4) | `docs/independent-reviews/2026-05-29-batch4.md` |
