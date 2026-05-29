@@ -820,6 +820,49 @@ Flags: `--period` (7d, 30d, 90d; default 30d), `--format` (table, json, csv; def
 
 NOTE: Estimates are approximate and based on Cloudflare published pricing. Actual costs may vary based on your plan, contract, and usage patterns.
 
+## Watch Command
+
+Auto-sync a local directory to an R2 bucket when files change. Uses polling-based change detection to upload new/modified files and optionally delete removed files.
+
+### Start watching
+```bash
+r2go2 watch my-bucket                              # Watch cwd, sync to bucket root
+r2go2 watch my-bucket ./dist                        # Watch ./dist directory
+r2go2 watch my-bucket ./build --prefix=assets/      # Upload under assets/ prefix
+r2go2 watch my-bucket . --exclude="*.log,*.tmp"     # Skip log and tmp files
+r2go2 watch my-bucket . --interval=5s               # Poll every 5 seconds
+r2go2 watch my-bucket . --delete                    # Sync deletions too
+r2go2 watch my-bucket . --dry-run                   # Preview without uploading
+r2go2 watch my-bucket . --json                      # NDJSON event stream
+```
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--prefix` | `""` | R2 key prefix (prepended to relative file paths) |
+| `--exclude` | none | Glob patterns to exclude (comma-separated) |
+| `--interval` | `1s` | Poll interval for change detection |
+| `--delete` | `false` | Sync file deletions (remove from R2 when local file is deleted) |
+
+### Output
+
+Human-readable (default):
+```
+[+] uploaded  src/index.html (1234 bytes)
+[~] updated   src/style.css (5678 bytes)
+[-] deleted   old/removed.txt
+```
+
+NDJSON (--json):
+```json
+{"time":"2026-01-15T10:30:00Z","type":"uploaded","path":"src/index.html","r2_key":"assets/src/index.html","size":1234}
+{"time":"2026-01-15T10:30:01Z","type":"updated","path":"src/style.css","r2_key":"assets/src/style.css","size":5678}
+{"time":"2026-01-15T10:30:02Z","type":"deleted","path":"old/removed.txt","r2_key":"assets/old/removed.txt"}
+```
+
+The command runs until interrupted with Ctrl+C (SIGINT) or SIGTERM. Hidden directories (`.git`, `.DS_Store`, etc.) are automatically excluded.
+
 ## Library Usage (Workers and KV)
 
 ### Workers
