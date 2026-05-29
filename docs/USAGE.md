@@ -589,6 +589,68 @@ cosmoflare init --json              # Machine-readable output
 
 Templates: `worker` (default), `pages`, `r2`, `full`. Auto-detection checks for `wrangler.toml` (worker), `go.mod` (full), `package.json` (pages).
 
+## Images Commands
+
+Manage Cloudflare Images — upload, store, resize, and deliver optimized images.
+
+### Upload an image (file)
+```bash
+r2go2 images upload photo.jpg
+r2go2 images upload banner.png --metadata '{"project":"website"}'
+r2go2 images upload photo.jpg --require-signed-urls
+r2go2 images upload photo.jpg --json
+```
+
+### Upload an image (URL)
+```bash
+r2go2 images upload --url https://example.com/photo.jpg
+r2go2 images upload --url https://example.com/img.png --require-signed-urls
+r2go2 images upload --url https://example.com/img.png --metadata '{"source":"external"}' --json
+```
+
+### List images
+```bash
+r2go2 images list
+r2go2 images list --json
+```
+
+### Get image details
+```bash
+r2go2 images get IMG_ID
+r2go2 images get IMG_ID --json
+```
+
+### Delete an image
+```bash
+r2go2 images delete IMG_ID
+r2go2 images delete IMG_ID --force
+r2go2 images delete IMG_ID --json
+```
+
+### List delivery variants
+```bash
+r2go2 images variants list
+r2go2 images variants list --json
+```
+
+### Create a delivery variant
+```bash
+r2go2 images variants create hero --fit=cover --width=1200 --height=630
+r2go2 images variants create thumb --fit=cover --width=150 --height=150
+r2go2 images variants create avatar --fit=crop --width=100 --height=100 --metadata-mode=none
+r2go2 images variants create public --fit=scale-down --width=1920 --height=1080 --never-require-signed-urls
+r2go2 images variants create hero --json
+```
+
+Fit modes: `scale-down` (default), `contain`, `cover`, `crop`, `pad`.
+Metadata modes: `none` (default), `keep`, `copyright`.
+
+### Delete a delivery variant
+```bash
+r2go2 images variants delete old-variant
+r2go2 images variants delete old-variant --force
+```
+
 ## Library Usage (Workers and KV)
 
 ### Workers
