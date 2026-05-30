@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-29T22:18:32.971423-03:00
+last_updated: 2026-05-30T06:07:59.656995-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -33,10 +33,11 @@ items:
       created_at: 2026-05-16T00:10:46.793368-03:00
     - id: ROAD-061
       title: Cost estimator — project monthly costs from current usage patterns
-      status: captured
+      status: completed
       priority: 78
       category: intelligence
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:37.971345-03:00
     - id: ROAD-060
       title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
@@ -101,10 +102,11 @@ items:
       created_at: 2026-05-16T00:10:06.508648-03:00
     - id: ROAD-052
       title: cosmoflare diff — show what would change before applying
-      status: captured
+      status: completed
       priority: 78
       category: core
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:06.409267-03:00
     - id: ROAD-051
       title: cosmoflare logs --follow — real-time log tailing with filtering
@@ -144,10 +146,11 @@ items:
       created_at: 2026-05-16T00:09:41.216059-03:00
     - id: ROAD-046
       title: Hyperdrive — database connection pooling for Workers
-      status: captured
+      status: completed
       priority: 70
       category: core
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:09:41.114769-03:00
     - id: ROAD-045
       title: Stream video — upload, live inputs, token management
@@ -158,10 +161,11 @@ items:
       created_at: 2026-05-16T00:09:34.01034-03:00
     - id: ROAD-044
       title: Images service — upload, transform, variants, delivery URL generation
-      status: captured
+      status: completed
       priority: 70
       category: core
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:09:33.913777-03:00
     - id: ROAD-043
       title: Pages static hosting — deploy from directory, custom domains, preview deployments
@@ -440,10 +444,11 @@ items:
       created_at: 2026-02-26T01:32:47.355325+01:00
     - id: ROAD-005
       title: 'Watch mode: auto-sync local directory to R2 on file changes'
-      status: captured
+      status: completed
       priority: 55
       category: workflow
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-02-26T01:32:46.485405+01:00
     - id: ROAD-004
       title: Pre-signed URL generation command

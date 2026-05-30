@@ -1,11 +1,13 @@
 id: ROAD-052
 created_at: 2026-05-16T00:10:06.409267-03:00
-updated_at: 2026-05-16T00:10:06.409956-03:00
+updated_at: 2026-05-30T06:07:59.313246-03:00
 title: cosmoflare diff — show what would change before applying
 description: DNS record diffs, worker script diffs, config drift detection. Dry-run for infrastructure changes.
-status: captured
+status: completed
 priority: 78
 category: core
 effort: medium
+completed_in: v0.11.0
+completed_at: 2026-05-30T06:07:59.313093-03:00
 origin:
     session: 2027
