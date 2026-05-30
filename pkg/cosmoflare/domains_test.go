@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -548,3 +549,221 @@ func TestNewDomainService(t *testing.T) {
 		}
 	})
 }
+
+// ---------------------------------------------------------------------------
+// DomainStatus field tests
+// ---------------------------------------------------------------------------
+
+func TestDomainStatusFields(t *testing.T) {
+	t.Run("all fields populate correctly", func(t *testing.T) {
+		zone := &Zone{Name: "example.com", Status: "active"}
+		ds := &DomainStatus{
+			Zone:         zone,
+			DNSStatus:    "ok",
+			SSLStatus:    "valid",
+			HealthStatus: "up",
+			RecordCount:  15,
+			NSStatus:     "cloudflare",
+		}
+		if ds.Zone.Name != "example.com" {
+			t.Errorf("expected zone name example.com, got %s", ds.Zone.Name)
+		}
+		if ds.DNSStatus != "ok" {
+			t.Errorf("expected dns_status ok, got %s", ds.DNSStatus)
+		}
+		if ds.SSLStatus != "valid" {
+			t.Errorf("expected ssl_status valid, got %s", ds.SSLStatus)
+		}
+		if ds.HealthStatus != "up" {
+			t.Errorf("expected health_status up, got %s", ds.HealthStatus)
+		}
+		if ds.RecordCount != 15 {
+			t.Errorf("expected record_count 15, got %d", ds.RecordCount)
+		}
+		if ds.NSStatus != "cloudflare" {
+			t.Errorf("expected ns_status cloudflare, got %s", ds.NSStatus)
+		}
+	})
+
+	t.Run("zero values for optional fields", func(t *testing.T) {
+		ds := &DomainStatus{
+			Zone: &Zone{Name: "minimal.com", Status: "inactive"},
+		}
+		if ds.DNSStatus != "" {
+			t.Errorf("expected empty dns_status, got %q", ds.DNSStatus)
+		}
+		if ds.RecordCount != 0 {
+			t.Errorf("expected 0 record_count, got %d", ds.RecordCount)
+		}
+	})
+}
+
+// ---------------------------------------------------------------------------
+// DomainStatus JSON serialization
+// ---------------------------------------------------------------------------
+
+func TestDomainStatusJSONSerialization(t *testing.T) {
+	t.Run("round-trip preserves all fields", func(t *testing.T) {
+		original := &DomainStatus{
+			Zone:         &Zone{Name: "serial.dev", Status: "active"},
+			DNSStatus:    "warn",
+			SSLStatus:    "expiring",
+			HealthStatus: "down",
+			RecordCount:  7,
+			NSStatus:     "external",
+		}
+		data, err := json.Marshal(original)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+
+		var decoded DomainStatus
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			t.Fatalf("unmarshal failed: %v", err)
+		}
+		if decoded.Zone.Name != "serial.dev" {
+			t.Errorf("decoded zone name = %q, want serial.dev", decoded.Zone.Name)
+		}
+		if decoded.DNSStatus != "warn" {
+			t.Errorf("decoded dns_status = %q, want warn", decoded.DNSStatus)
+		}
+		if decoded.SSLStatus != "expiring" {
+			t.Errorf("decoded ssl_status = %q, want expiring", decoded.SSLStatus)
+		}
+		if decoded.HealthStatus != "down" {
+			t.Errorf("decoded health_status = %q, want down", decoded.HealthStatus)
+		}
+		if decoded.RecordCount != 7 {
+			t.Errorf("decoded record_count = %d, want 7", decoded.RecordCount)
+		}
+		if decoded.NSStatus != "external" {
+			t.Errorf("decoded ns_status = %q, want external", decoded.NSStatus)
+		}
+	})
+
+	t.Run("JSON field names use snake_case", func(t *testing.T) {
+		ds := &DomainStatus{
+			Zone:         &Zone{Name: "test.com", Status: "active"},
+			DNSStatus:    "ok",
+			SSLStatus:    "valid",
+			HealthStatus: "up",
+			RecordCount:  3,
+			NSStatus:     "cloudflare",
+		}
+		data, err := json.Marshal(ds)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+		jsonStr := string(data)
+		for _, field := range []string{`"dns_status"`, `"ssl_status"`, `"health_status"`, `"record_count"`, `"ns_status"`} {
+			if !strings.Contains(jsonStr, field) {
+				t.Errorf("expected JSON field %s in output: %s", field, jsonStr)
+			}
+		}
+	})
+}
+
+func TestDomainDetailJSONSerialization(t *testing.T) {
+	t.Run("round-trip preserves extended fields", func(t *testing.T) {
+		original := &DomainDetail{
+			DomainStatus: DomainStatus{
+				Zone:         &Zone{Name: "detail.io", Status: "active"},
+				RecordCount:  10,
+				HealthStatus: "up",
+			},
+			NameServers:  []string{"ns1.cf.com", "ns2.cf.com"},
+			RecordTypes:  map[string]int{"A": 5, "MX": 3, "TXT": 2},
+			SSLMode:      "full_strict",
+			SSLExpiry:    "2099-06-15",
+			ResponseTime: "89ms",
+		}
+		data, err := json.Marshal(original)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+
+		var decoded DomainDetail
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			t.Fatalf("unmarshal failed: %v", err)
+		}
+		if len(decoded.NameServers) != 2 {
+			t.Fatalf("expected 2 nameservers, got %d", len(decoded.NameServers))
+		}
+		if decoded.NameServers[0] != "ns1.cf.com" {
+			t.Errorf("expected first ns ns1.cf.com, got %s", decoded.NameServers[0])
+		}
+		if decoded.RecordTypes["A"] != 5 {
+			t.Errorf("expected A=5, got %d", decoded.RecordTypes["A"])
+		}
+		if decoded.SSLMode != "full_strict" {
+			t.Errorf("expected ssl_mode full_strict, got %s", decoded.SSLMode)
+		}
+		if decoded.ResponseTime != "89ms" {
+			t.Errorf("expected response_time 89ms, got %s", decoded.ResponseTime)
+		}
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Empty domain results
+// ---------------------------------------------------------------------------
+
+func TestDomainListOptionsDefaults(t *testing.T) {
+	t.Run("zero-value options", func(t *testing.T) {
+		opts := DomainListOptions{}
+		if opts.Page != 0 {
+			t.Errorf("expected default page 0, got %d", opts.Page)
+		}
+		if opts.PerPage != 0 {
+			t.Errorf("expected default per_page 0, got %d", opts.PerPage)
+		}
+		if opts.Filter != "" {
+			t.Errorf("expected empty filter, got %q", opts.Filter)
+		}
+		if opts.Name != "" {
+			t.Errorf("expected empty name, got %q", opts.Name)
+		}
+		if opts.Sort != "" {
+			t.Errorf("expected empty sort, got %q", opts.Sort)
+		}
+	})
+
+	t.Run("JSON round-trip", func(t *testing.T) {
+		opts := DomainListOptions{
+			Page:    2,
+			PerPage: 25,
+			Filter:  "active",
+			Name:    "*.dev",
+			Sort:    "name",
+		}
+		data, err := json.Marshal(opts)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+		var decoded DomainListOptions
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			t.Fatalf("unmarshal failed: %v", err)
+		}
+		if decoded.Page != 2 || decoded.PerPage != 25 || decoded.Filter != "active" || decoded.Name != "*.dev" || decoded.Sort != "name" {
+			t.Errorf("round-trip mismatch: %+v", decoded)
+		}
+	})
+}
+
+func TestPaginationFields(t *testing.T) {
+	p := Pagination{Page: 3, PerPage: 20, Total: 100, TotalPages: 5}
+	data, err := json.Marshal(p)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var decoded Pagination
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if decoded.Page != 3 || decoded.PerPage != 20 || decoded.Total != 100 || decoded.TotalPages != 5 {
+		t.Errorf("pagination round-trip mismatch: %+v", decoded)
+	}
+}
+
+// Suppress unused import warning
+var _ = time.Now
