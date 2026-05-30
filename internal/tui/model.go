@@ -15,7 +15,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/palette"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 // Section represents different sections of the dashboard
@@ -340,7 +340,7 @@ type notificationMsg struct {
 // loadDataCmd loads initial data from the API
 func loadDataCmd() tea.Cmd {
 	return func() tea.Msg {
-		client, err := r2go2.NewClient()
+		client, err := cosmoflare.NewClient()
 		if err != nil {
 			return errorMsg{fmt.Errorf("failed to create API client: %w", err)}
 		}

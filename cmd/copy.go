@@ -54,22 +54,22 @@ Batch Operations:
 
 Examples:
   # Single file copy with progress
-  r2go2 copy source.txt dest.txt
+  cosmoflare copy source.txt dest.txt
 
   # Copy directory recursively
-  r2go2 copy --recursive source/ dest/
+  cosmoflare copy --recursive source/ dest/
 
   # Copy with custom options
-  r2go2 copy --progress --verify --resume source.txt dest.txt
+  cosmoflare copy --progress --verify --resume source.txt dest.txt
 
   # Batch copy from file list
-  r2go2 copy --batch files.txt destination/
+  cosmoflare copy --batch files.txt destination/
 
   # High-performance copy with optimal settings
-  r2go2 copy --parallel 8 --chunk-size 16MB source/ dest/
+  cosmoflare copy --parallel 8 --chunk-size 16MB source/ dest/
 
   # Dry run to see what would be copied
-  r2go2 copy --dry-run --verbose source/ dest/`,
+  cosmoflare copy --dry-run --verbose source/ dest/`,
 
 	RunE: runCopy,
 }

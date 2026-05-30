@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var pagerulesCmd = &cobra.Command{
@@ -153,8 +153,8 @@ func init() {
 	pagerulesDeleteCmd.Flags().BoolVar(&pageruleForce, "force", false, "Skip confirmation prompt")
 }
 
-func getPageRuleService(zoneID string) (*r2go2.PageRuleService, error) {
-	return r2go2.NewPageRuleServiceFromCreds(zoneID, APIToken)
+func getPageRuleService(zoneID string) (*cosmoflare.PageRuleService, error) {
+	return cosmoflare.NewPageRuleServiceFromCreds(zoneID, APIToken)
 }
 
 func runPageRulesList(cmd *cobra.Command, args []string) error {
@@ -259,10 +259,10 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 	}
 	zoneID := args[0]
 
-	targets := []r2go2.PageRuleTarget{
+	targets := []cosmoflare.PageRuleTarget{
 		{
 			Target: "url",
-			Constraint: r2go2.PageRuleConstraint{
+			Constraint: cosmoflare.PageRuleConstraint{
 				Operator: "matches",
 				Value:    pageruleURL,
 			},
@@ -278,7 +278,7 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 			actionValue = pageruleActionValue
 		}
 	}
-	actions := []r2go2.PageRuleAction{
+	actions := []cosmoflare.PageRuleAction{
 		{
 			ID:    pageruleAction,
 			Value: actionValue,
@@ -331,10 +331,10 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 	}
 	zoneID, ruleID := args[0], args[1]
 
-	targets := []r2go2.PageRuleTarget{
+	targets := []cosmoflare.PageRuleTarget{
 		{
 			Target: "url",
-			Constraint: r2go2.PageRuleConstraint{
+			Constraint: cosmoflare.PageRuleConstraint{
 				Operator: "matches",
 				Value:    pageruleURL,
 			},
@@ -350,7 +350,7 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 			actionValue = pageruleActionValue
 		}
 	}
-	actions := []r2go2.PageRuleAction{
+	actions := []cosmoflare.PageRuleAction{
 		{
 			ID:    pageruleAction,
 			Value: actionValue,

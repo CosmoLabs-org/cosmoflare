@@ -32,10 +32,10 @@ Features:
 • Cross-platform compatibility
 
 Examples:
-  r2go2 backup                    # Interactive backup with format selection
-  r2go2 backup --format=enc       # Create encrypted backup
-  r2go2 backup --format=json      # Create plain JSON backup
-  r2go2 backup --format=env       # Create environment variable script`,
+  cosmoflare backup                    # Interactive backup with format selection
+  cosmoflare backup --format=enc       # Create encrypted backup
+  cosmoflare backup --format=json      # Create plain JSON backup
+  cosmoflare backup --format=env       # Create environment variable script`,
 	RunE: runBackup,
 }
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -29,9 +29,9 @@ integration is planned for a future release. Currently stats are
 computed from live bucket/object listings.
 
 Examples:
-  r2go2 analytics
-  r2go2 analytics --bucket=my-bucket
-  r2go2 analytics --period=30d --json`,
+  cosmoflare analytics
+  cosmoflare analytics --bucket=my-bucket
+  cosmoflare analytics --period=30d --json`,
 	RunE: runAnalytics,
 }
 
@@ -68,7 +68,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 	return runAllBucketsAnalytics(client)
 }
 
-func runSingleBucketAnalytics(client r2go2.R2Client) error {
+func runSingleBucketAnalytics(client cosmoflare.R2Client) error {
 	result, err := client.ListObjects(context.Background(), analyticsBucket, "", "", 0)
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
@@ -109,7 +109,7 @@ func runSingleBucketAnalytics(client r2go2.R2Client) error {
 	return nil
 }
 
-func runAllBucketsAnalytics(client r2go2.R2Client) error {
+func runAllBucketsAnalytics(client cosmoflare.R2Client) error {
 	buckets, err := client.ListBuckets(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to list buckets: %w", err)

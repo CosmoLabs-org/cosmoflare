@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var domainsCmd = &cobra.Command{
@@ -60,8 +60,8 @@ func init() {
 
 // domainsResponse is the JSON envelope for the domains command output.
 type domainsResponse struct {
-	Domains    []*r2go2.DomainStatus `json:"domains"`
-	Pagination *r2go2.Pagination     `json:"pagination"`
+	Domains    []*cosmoflare.DomainStatus `json:"domains"`
+	Pagination *cosmoflare.Pagination     `json:"pagination"`
 }
 
 func runDomains(cmd *cobra.Command, args []string) error {
@@ -73,12 +73,12 @@ func runDomains(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create zone service: %w", err)
 	}
 
-	var doctor *r2go2.DoctorService
+	var doctor *cosmoflare.DoctorService
 	if domainsEnrich {
-		doctor = r2go2.NewDoctorService(10 * time.Second)
+		doctor = cosmoflare.NewDoctorService(10 * time.Second)
 	}
 
-	domainSvc, err := r2go2.NewDomainService(zoneSvc, nil, nil, doctor)
+	domainSvc, err := cosmoflare.NewDomainService(zoneSvc, nil, nil, doctor)
 	if err != nil {
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to create domain service: %v", err))
@@ -86,7 +86,7 @@ func runDomains(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create domain service: %w", err)
 	}
 
-	opts := r2go2.DomainListOptions{
+	opts := cosmoflare.DomainListOptions{
 		Page:    domainsPage,
 		PerPage: domainsPerPage,
 		Filter:  domainsFilter,
@@ -136,13 +136,13 @@ func runDomains(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Print(r2go2.FormatDomainTable(domains))
+	fmt.Print(cosmoflare.FormatDomainTable(domains))
 	printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
 
 	return nil
 }
 
-func runDomainsDetail(ctx context.Context, svc *r2go2.DomainService, domains []*r2go2.DomainStatus, pagination *r2go2.Pagination) error {
+func runDomainsDetail(ctx context.Context, svc *cosmoflare.DomainService, domains []*cosmoflare.DomainStatus, pagination *cosmoflare.Pagination) error {
 	if len(domains) == 0 {
 		if JSONOutput {
 			return printJSON(domainsResponse{
@@ -154,12 +154,12 @@ func runDomainsDetail(ctx context.Context, svc *r2go2.DomainService, domains []*
 		return nil
 	}
 
-	details := make([]*r2go2.DomainDetail, 0, len(domains))
+	details := make([]*cosmoflare.DomainDetail, 0, len(domains))
 	for _, d := range domains {
 		detail, err := svc.GetDetail(ctx, d.Zone.ID)
 		if err != nil {
 			// On detail failure, construct a minimal detail from the list data
-			detail = &r2go2.DomainDetail{
+			detail = &cosmoflare.DomainDetail{
 				DomainStatus: *d,
 				NameServers:  d.Zone.NameServers,
 				RecordTypes:  make(map[string]int),
@@ -170,8 +170,8 @@ func runDomainsDetail(ctx context.Context, svc *r2go2.DomainService, domains []*
 
 	if JSONOutput {
 		type detailResponse struct {
-			Domains    []*r2go2.DomainDetail `json:"domains"`
-			Pagination *r2go2.Pagination     `json:"pagination"`
+			Domains    []*cosmoflare.DomainDetail `json:"domains"`
+			Pagination *cosmoflare.Pagination     `json:"pagination"`
 		}
 		return printJSON(detailResponse{
 			Domains:    details,
@@ -183,7 +183,7 @@ func runDomainsDetail(ctx context.Context, svc *r2go2.DomainService, domains []*
 		if i > 0 {
 			fmt.Println()
 		}
-		fmt.Print(r2go2.FormatDomainDetail(detail))
+		fmt.Print(cosmoflare.FormatDomainDetail(detail))
 	}
 	printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
 

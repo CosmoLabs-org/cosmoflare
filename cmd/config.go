@@ -16,7 +16,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"context"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 )
@@ -48,7 +48,7 @@ Commands:
   switch    Switch current profile
   export    Export profile as environment variables
 
-Profiles are stored in ~/.r2go2/config.yaml with secure permissions.`,
+Profiles are stored in ~/.cosmoflare/config.yaml with secure permissions.`,
 }
 
 // configInitCmd represents the config init command
@@ -56,7 +56,7 @@ var configInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize R2Go2 configuration",
 	Long: `Initialize the R2Go2 configuration file with default settings.
-This will create ~/.r2go2/config.yaml if it doesn't exist.`,
+This will create ~/.cosmoflare/config.yaml if it doesn't exist.`,
 	RunE: runConfigInit,
 }
 
@@ -105,9 +105,9 @@ var configSetCmd = &cobra.Command{
 You can provide values via flags or interactively if --interactive is used.
 
 Example:
-  r2go2 config set my-profile --account-id=1234567890abcdef1234567890abcdef --interactive
+  cosmoflare config set my-profile --account-id=1234567890abcdef1234567890abcdef --interactive
 
-  r2go2 config set my-profile \
+  cosmoflare config set my-profile \
     --account-id=1234567890abcdef1234567890abcdef \
     --api-token=your_api_token_here \
     --description="Production account"`,
@@ -143,7 +143,7 @@ This is useful for:
 - Using with other tools
 
 Example:
-  eval $(r2go2 config export my-profile)`,
+  eval $(cosmoflare config export my-profile)`,
 	RunE: runConfigExport,
 }
 
@@ -189,7 +189,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	// Check if config already exists
 	if _, err := os.Stat(configMgr.GetConfigPath()); err == nil {
 		printWarning("Configuration file already exists at %s", configMgr.GetConfigPath())
-		printInfo("Use 'r2go2 config list' to see existing profiles")
+		printInfo("Use 'cosmoflare config list' to see existing profiles")
 		return nil
 	}
 
@@ -206,7 +206,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	printSuccess("Configuration initialized successfully!")
 	printInfo("Config file: %s", configMgr.GetConfigPath())
 	printInfo("Default profile: %s", profile.Name)
-	printInfo("Use 'r2go2 config list' to see all profiles")
+	printInfo("Use 'cosmoflare config list' to see all profiles")
 
 	return nil
 }
@@ -244,9 +244,9 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Test connection to Cloudflare API
-	client, err := r2go2.NewClient(
-		r2go2.WithAccountID(profile.AccountID),
-		r2go2.WithAPIToken(profile.APIToken),
+	client, err := cosmoflare.NewClient(
+		cosmoflare.WithAccountID(profile.AccountID),
+		cosmoflare.WithAPIToken(profile.APIToken),
 	)
 	if err != nil {
 		printError("Failed to create client: %v", err)
@@ -272,7 +272,7 @@ func runConfigList(cmd *cobra.Command, args []string) error {
 	currentProfile, _ := configMgr.GetCurrent()
 
 	if len(profiles) == 0 {
-		printInfo("No profiles configured. Use 'r2go2 config init' to get started.")
+		printInfo("No profiles configured. Use 'cosmoflare config init' to get started.")
 		return nil
 	}
 

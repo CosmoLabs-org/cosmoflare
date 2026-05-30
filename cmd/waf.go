@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var wafCmd = &cobra.Command{
@@ -27,11 +27,11 @@ Commands:
 WAF is zone-scoped, so a zone ID is required for all operations.
 
 Examples:
-  r2go2 waf packages ZONE_ID --json
-  r2go2 waf rules ZONE_ID PACKAGE_ID
-  r2go2 waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=block
-  r2go2 waf access list ZONE_ID
-  r2go2 waf access create ZONE_ID --ip=1.2.3.4 --mode=block`,
+  cosmoflare waf packages ZONE_ID --json
+  cosmoflare waf rules ZONE_ID PACKAGE_ID
+  cosmoflare waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=block
+  cosmoflare waf access list ZONE_ID
+  cosmoflare waf access create ZONE_ID --ip=1.2.3.4 --mode=block`,
 }
 
 var wafAccessCmd = &cobra.Command{
@@ -53,8 +53,8 @@ var wafPackagesCmd = &cobra.Command{
 	Long: `List all WAF managed ruleset packages for a zone.
 
 Examples:
-  r2go2 waf packages ZONE_ID
-  r2go2 waf packages ZONE_ID --json`,
+  cosmoflare waf packages ZONE_ID
+  cosmoflare waf packages ZONE_ID --json`,
 	RunE: runWAFPackages,
 }
 
@@ -64,8 +64,8 @@ var wafRulesCmd = &cobra.Command{
 	Long: `List all WAF rules within a specific package.
 
 Examples:
-  r2go2 waf rules ZONE_ID PACKAGE_ID
-  r2go2 waf rules ZONE_ID PACKAGE_ID --json`,
+  cosmoflare waf rules ZONE_ID PACKAGE_ID
+  cosmoflare waf rules ZONE_ID PACKAGE_ID --json`,
 	RunE: runWAFRules,
 }
 
@@ -77,9 +77,9 @@ var wafRuleCmd = &cobra.Command{
 Valid modes: block, simulate, disable, default, challenge
 
 Examples:
-  r2go2 waf rule ZONE_ID PACKAGE_ID RULE_ID
-  r2go2 waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=block
-  r2go2 waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=simulate --json`,
+  cosmoflare waf rule ZONE_ID PACKAGE_ID RULE_ID
+  cosmoflare waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=block
+  cosmoflare waf rule ZONE_ID PACKAGE_ID RULE_ID --mode=simulate --json`,
 	RunE: runWAFRule,
 }
 
@@ -89,8 +89,8 @@ var wafAccessListCmd = &cobra.Command{
 	Long: `List all zone-level IP access rules.
 
 Examples:
-  r2go2 waf access list ZONE_ID
-  r2go2 waf access list ZONE_ID --json`,
+  cosmoflare waf access list ZONE_ID
+  cosmoflare waf access list ZONE_ID --json`,
 	RunE: runWAFAccessList,
 }
 
@@ -102,8 +102,8 @@ var wafAccessCreateCmd = &cobra.Command{
 Modes: block, challenge, whitelist, js_challenge
 
 Examples:
-  r2go2 waf access create ZONE_ID --ip=1.2.3.4 --mode=block
-  r2go2 waf access create ZONE_ID --ip=192.168.0.0/24 --mode=whitelist --note="Office network"`,
+  cosmoflare waf access create ZONE_ID --ip=1.2.3.4 --mode=block
+  cosmoflare waf access create ZONE_ID --ip=192.168.0.0/24 --mode=whitelist --note="Office network"`,
 	RunE: runWAFAccessCreate,
 }
 
@@ -113,8 +113,8 @@ var wafAccessDeleteCmd = &cobra.Command{
 	Long: `Delete a zone-level IP access rule.
 
 Examples:
-  r2go2 waf access delete ZONE_ID RULE_ID
-  r2go2 waf access delete ZONE_ID RULE_ID --force`,
+  cosmoflare waf access delete ZONE_ID RULE_ID
+  cosmoflare waf access delete ZONE_ID RULE_ID --force`,
 	RunE: runWAFAccessDelete,
 }
 
@@ -139,8 +139,8 @@ func init() {
 	wafAccessDeleteCmd.Flags().BoolVar(&wafForce, "force", false, "Skip confirmation prompt")
 }
 
-func getWAFService(zoneID string) (*r2go2.WAFService, error) {
-	return r2go2.NewWAFServiceFromCreds(zoneID, APIToken)
+func getWAFService(zoneID string) (*cosmoflare.WAFService, error) {
+	return cosmoflare.NewWAFServiceFromCreds(zoneID, APIToken)
 }
 
 func runWAFPackages(cmd *cobra.Command, args []string) error {

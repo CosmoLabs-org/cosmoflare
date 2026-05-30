@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -25,12 +25,12 @@ Commands:
   consumers  List consumers for a queue
 
 Examples:
-  r2go2 queue create my-queue
-  r2go2 queue list --json
-  r2go2 queue get my-queue
-  r2go2 queue update my-queue --name new-name
-  r2go2 queue delete my-queue --force
-  r2go2 queue consumers my-queue`,
+  cosmoflare queue create my-queue
+  cosmoflare queue list --json
+  cosmoflare queue get my-queue
+  cosmoflare queue update my-queue --name new-name
+  cosmoflare queue delete my-queue --force
+  cosmoflare queue consumers my-queue`,
 }
 
 var (
@@ -46,8 +46,8 @@ var queueCreateCmd = &cobra.Command{
 The name must be unique within your account.
 
 Examples:
-  r2go2 queue create my-queue
-  r2go2 queue create production-events --json`,
+  cosmoflare queue create my-queue
+  cosmoflare queue create production-events --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runQueueCreate,
 }
@@ -58,8 +58,8 @@ var queueListCmd = &cobra.Command{
 	Long: `List all queues in the current account.
 
 Examples:
-  r2go2 queue list
-  r2go2 queue list --json`,
+  cosmoflare queue list
+  cosmoflare queue list --json`,
 	RunE: runQueueList,
 }
 
@@ -69,8 +69,8 @@ var queueGetCmd = &cobra.Command{
 	Long: `Get details of a queue by name.
 
 Examples:
-  r2go2 queue get my-queue
-  r2go2 queue get my-queue --json`,
+  cosmoflare queue get my-queue
+  cosmoflare queue get my-queue --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runQueueGet,
 }
@@ -81,8 +81,8 @@ var queueUpdateCmd = &cobra.Command{
 	Long: `Rename an existing queue.
 
 Examples:
-  r2go2 queue update old-name --name new-name
-  r2go2 queue update old-name --name new-name --json`,
+  cosmoflare queue update old-name --name new-name
+  cosmoflare queue update old-name --name new-name --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runQueueUpdate,
 }
@@ -95,8 +95,8 @@ var queueDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible. All messages will be lost.
 
 Examples:
-  r2go2 queue delete my-queue
-  r2go2 queue delete my-queue --force`,
+  cosmoflare queue delete my-queue
+  cosmoflare queue delete my-queue --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runQueueDelete,
 }
@@ -107,8 +107,8 @@ var queueConsumersCmd = &cobra.Command{
 	Long: `List all consumers (Workers) subscribed to a queue.
 
 Examples:
-  r2go2 queue consumers my-queue
-  r2go2 queue consumers my-queue --json`,
+  cosmoflare queue consumers my-queue
+  cosmoflare queue consumers my-queue --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runQueueConsumers,
 }
@@ -128,8 +128,8 @@ func init() {
 	_ = queueUpdateCmd.MarkFlagRequired("name")
 }
 
-func getQueueService() (*r2go2.QueueService, error) {
-	return r2go2.NewQueueServiceFromCreds(AccountID, APIToken)
+func getQueueService() (*cosmoflare.QueueService, error) {
+	return cosmoflare.NewQueueServiceFromCreds(AccountID, APIToken)
 }
 
 func runQueueCreate(cmd *cobra.Command, args []string) error {

@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var zoneCmd = &cobra.Command{
@@ -24,11 +24,11 @@ Commands:
   delete    Delete a zone
 
 Examples:
-  r2go2 zone create example.com
-  r2go2 zone list --json
-  r2go2 zone get abc123
-  r2go2 zone settings abc123
-  r2go2 zone delete abc123 --force`,
+  cosmoflare zone create example.com
+  cosmoflare zone list --json
+  cosmoflare zone get abc123
+  cosmoflare zone settings abc123
+  cosmoflare zone delete abc123 --force`,
 }
 
 var (
@@ -45,9 +45,9 @@ The zone type can be "full" (default) for Cloudflare-managed DNS,
 or "partial" (CNAME setup) for zones where DNS is managed elsewhere.
 
 Examples:
-  r2go2 zone create example.com
-  r2go2 zone create example.com --type=partial
-  r2go2 zone create example.com --json`,
+  cosmoflare zone create example.com
+  cosmoflare zone create example.com --type=partial
+  cosmoflare zone create example.com --json`,
 	RunE: runZoneCreate,
 }
 
@@ -57,8 +57,8 @@ var zoneListCmd = &cobra.Command{
 	Long: `List all zones in the current account.
 
 Examples:
-  r2go2 zone list
-  r2go2 zone list --json`,
+  cosmoflare zone list
+  cosmoflare zone list --json`,
 	RunE: runZoneList,
 }
 
@@ -68,8 +68,8 @@ var zoneGetCmd = &cobra.Command{
 	Long: `Get detailed information about a specific zone.
 
 Examples:
-  r2go2 zone get abc123
-  r2go2 zone get abc123 --json`,
+  cosmoflare zone get abc123
+  cosmoflare zone get abc123 --json`,
 	RunE: runZoneGet,
 }
 
@@ -82,8 +82,8 @@ Displays settings like SSL mode, minification, caching level,
 security level, and more.
 
 Examples:
-  r2go2 zone settings abc123
-  r2go2 zone settings abc123 --json`,
+  cosmoflare zone settings abc123
+  cosmoflare zone settings abc123 --json`,
 	RunE: runZoneSettings,
 }
 
@@ -96,8 +96,8 @@ WARNING: This action is irreversible. All DNS records, settings,
 and associated configuration will be permanently removed.
 
 Examples:
-  r2go2 zone delete abc123
-  r2go2 zone delete abc123 --force`,
+  cosmoflare zone delete abc123
+  cosmoflare zone delete abc123 --force`,
 	RunE: runZoneDelete,
 }
 
@@ -115,8 +115,8 @@ func init() {
 	zoneDeleteCmd.Flags().BoolVar(&zoneForce, "force", false, "Skip confirmation prompt")
 }
 
-func getZoneService() (*r2go2.ZoneService, error) {
-	return r2go2.NewZoneServiceFromCreds(AccountID, APIToken)
+func getZoneService() (*cosmoflare.ZoneService, error) {
+	return cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
 }
 
 func runZoneCreate(cmd *cobra.Command, args []string) error {

@@ -20,8 +20,8 @@ Bucket names must follow S3 naming conventions:
 - Can contain lowercase letters, numbers, hyphens, and periods
 
 Examples:
-  r2go2 create my-awesome-bucket
-  r2go2 create my-backup-bucket --dry-run`,
+  cosmoflare create my-awesome-bucket
+  cosmoflare create my-backup-bucket --dry-run`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return fmt.Errorf("exactly one argument (bucket name) is required")

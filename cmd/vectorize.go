@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var vectorizeCmd = &cobra.Command{
@@ -153,8 +153,8 @@ func init() {
 	vectorizeQueryCmd.Flags().IntVar(&vectorizeTopK, "top-k", 10, "Number of nearest neighbors to return")
 }
 
-func getVectorizeService() (*r2go2.VectorizeService, error) {
-	return r2go2.NewVectorizeServiceFromCreds(AccountID, APIToken)
+func getVectorizeService() (*cosmoflare.VectorizeService, error) {
+	return cosmoflare.NewVectorizeServiceFromCreds(AccountID, APIToken)
 }
 
 func runVectorizeCreate(cmd *cobra.Command, args []string) error {
@@ -279,7 +279,7 @@ func runVectorizeInsert(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create vectorize service: %w", err)
 	}
 
-	var vectors []r2go2.VectorizeVector
+	var vectors []cosmoflare.VectorizeVector
 
 	if vectorizeFile != "" {
 		data, err := os.ReadFile(vectorizeFile)
@@ -290,7 +290,7 @@ func runVectorizeInsert(cmd *cobra.Command, args []string) error {
 			if line == "" {
 				continue
 			}
-			var v r2go2.VectorizeVector
+			var v cosmoflare.VectorizeVector
 			if err := json.Unmarshal([]byte(line), &v); err != nil {
 				return fmt.Errorf("failed to parse vector line: %w", err)
 			}
@@ -301,7 +301,7 @@ func runVectorizeInsert(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("invalid --values: %w", err)
 		}
-		vectors = append(vectors, r2go2.VectorizeVector{ID: vectorizeID, Values: vals})
+		vectors = append(vectors, cosmoflare.VectorizeVector{ID: vectorizeID, Values: vals})
 	} else {
 		return fmt.Errorf("provide --file or both --id and --values")
 	}

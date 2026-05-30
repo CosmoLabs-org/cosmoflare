@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var cacheCmd = &cobra.Command{
@@ -22,12 +22,12 @@ Commands:
   settings    View or update cache settings
 
 Examples:
-  r2go2 cache purge abc123 --all --force
-  r2go2 cache purge abc123 --url=https://example.com/style.css
-  r2go2 cache purge abc123 --tag=static --tag=images
-  r2go2 cache purge abc123 --host=assets.example.com
-  r2go2 cache settings abc123
-  r2go2 cache settings abc123 --browser-ttl=3600 --cache-level=aggressive`,
+  cosmoflare cache purge abc123 --all --force
+  cosmoflare cache purge abc123 --url=https://example.com/style.css
+  cosmoflare cache purge abc123 --tag=static --tag=images
+  cosmoflare cache purge abc123 --host=assets.example.com
+  cosmoflare cache settings abc123
+  cosmoflare cache settings abc123 --browser-ttl=3600 --cache-level=aggressive`,
 }
 
 var (
@@ -56,19 +56,19 @@ At least one purge method must be specified.
 
 Examples:
   # Purge everything (destructive — requires --force)
-  r2go2 cache purge abc123 --all --force
+  cosmoflare cache purge abc123 --all --force
 
   # Purge specific URLs
-  r2go2 cache purge abc123 --url=https://example.com/style.css --url=https://example.com/app.js
+  cosmoflare cache purge abc123 --url=https://example.com/style.css --url=https://example.com/app.js
 
   # Purge by cache tag (Enterprise)
-  r2go2 cache purge abc123 --tag=static --tag=images
+  cosmoflare cache purge abc123 --tag=static --tag=images
 
   # Purge by hostname
-  r2go2 cache purge abc123 --host=assets.example.com --host=cdn.example.com
+  cosmoflare cache purge abc123 --host=assets.example.com --host=cdn.example.com
 
   # JSON output
-  r2go2 cache purge abc123 --all --force --json`,
+  cosmoflare cache purge abc123 --all --force --json`,
 	RunE: runCachePurge,
 }
 
@@ -87,20 +87,20 @@ Update flags:
 
 Examples:
   # View current settings
-  r2go2 cache settings abc123
-  r2go2 cache settings abc123 --json
+  cosmoflare cache settings abc123
+  cosmoflare cache settings abc123 --json
 
   # Update browser cache TTL
-  r2go2 cache settings abc123 --browser-ttl=3600
+  cosmoflare cache settings abc123 --browser-ttl=3600
 
   # Enable development mode
-  r2go2 cache settings abc123 --dev-mode
+  cosmoflare cache settings abc123 --dev-mode
 
   # Set aggressive caching
-  r2go2 cache settings abc123 --cache-level=aggressive
+  cosmoflare cache settings abc123 --cache-level=aggressive
 
   # Multiple updates at once
-  r2go2 cache settings abc123 --browser-ttl=7200 --cache-level=aggressive`,
+  cosmoflare cache settings abc123 --browser-ttl=7200 --cache-level=aggressive`,
 	RunE: runCacheSettings,
 }
 
@@ -121,8 +121,8 @@ func init() {
 	cacheSettingsCmd.Flags().StringVar(&cacheCacheLevel, "cache-level", "", "Cache level (aggressive, basic, simplified)")
 }
 
-func getCacheService(zoneID string) (*r2go2.CacheService, error) {
-	return r2go2.NewCacheServiceFromCreds(zoneID, APIToken)
+func getCacheService(zoneID string) (*cosmoflare.CacheService, error) {
+	return cosmoflare.NewCacheServiceFromCreds(zoneID, APIToken)
 }
 
 func runCachePurge(cmd *cobra.Command, args []string) error {
@@ -138,7 +138,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 	// --all requires --force
 	if cachePurgeAll && !cachePurgeForce && !DryRun {
-		return fmt.Errorf("--all purge is destructive and requires --force flag\n\nUsage: r2go2 cache purge %s --all --force", zoneID)
+		return fmt.Errorf("--all purge is destructive and requires --force flag\n\nUsage: cosmoflare cache purge %s --all --force", zoneID)
 	}
 
 	svc, err := getCacheService(zoneID)
@@ -268,15 +268,15 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 	hasUpdates := cmd.Flags().Changed("browser-ttl") || cmd.Flags().Changed("dev-mode") || cmd.Flags().Changed("cache-level")
 
 	if hasUpdates {
-		var opts []r2go2.CacheOption
+		var opts []cosmoflare.CacheOption
 		if cmd.Flags().Changed("browser-ttl") {
-			opts = append(opts, r2go2.WithBrowserCacheTTL(cacheBrowserTTL))
+			opts = append(opts, cosmoflare.WithBrowserCacheTTL(cacheBrowserTTL))
 		}
 		if cmd.Flags().Changed("dev-mode") {
-			opts = append(opts, r2go2.WithDevMode(cacheDevMode))
+			opts = append(opts, cosmoflare.WithDevMode(cacheDevMode))
 		}
 		if cmd.Flags().Changed("cache-level") {
-			opts = append(opts, r2go2.WithCacheLevel(cacheCacheLevel))
+			opts = append(opts, cosmoflare.WithCacheLevel(cacheCacheLevel))
 		}
 
 		if DryRun {

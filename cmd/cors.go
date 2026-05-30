@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var corsCmd = &cobra.Command{
@@ -30,11 +30,11 @@ Commands:
   remove     Remove a CORS rule by name
 
 Examples:
-  r2go2 cors settings ZONE_ID
-  r2go2 cors set ZONE_ID --origins "*" --methods "GET,POST,OPTIONS"
-  r2go2 cors set ZONE_ID --origins "https://app.example.com" --credentials --max-age 86400
-  r2go2 cors remove ZONE_ID
-  r2go2 cors remove ZONE_ID --rule-name my-cors-rule`,
+  cosmoflare cors settings ZONE_ID
+  cosmoflare cors set ZONE_ID --origins "*" --methods "GET,POST,OPTIONS"
+  cosmoflare cors set ZONE_ID --origins "https://app.example.com" --credentials --max-age 86400
+  cosmoflare cors remove ZONE_ID
+  cosmoflare cors remove ZONE_ID --rule-name my-cors-rule`,
 }
 
 var (
@@ -55,8 +55,8 @@ var corsSettingsCmd = &cobra.Command{
 Displays rule name, allowed origins, methods, credentials flag, and filter expression.
 
 Examples:
-  r2go2 cors settings ZONE_ID
-  r2go2 cors settings ZONE_ID --json`,
+  cosmoflare cors settings ZONE_ID
+  cosmoflare cors settings ZONE_ID --json`,
 	RunE: runCORSSettings,
 }
 
@@ -71,10 +71,10 @@ in the ruleset are left untouched.
 The --credentials flag cannot be combined with --origins "*" (CORS spec forbids it).
 
 Examples:
-  r2go2 cors set ZONE_ID --origins "*" --methods "GET,POST,OPTIONS"
-  r2go2 cors set ZONE_ID --origins "https://app.example.com" --credentials
-  r2go2 cors set ZONE_ID --origins "https://app.example.com" --max-age 3600 --json
-  r2go2 cors set ZONE_ID --origins "*" --expression 'http.request.uri.path matches "^/api/"'`,
+  cosmoflare cors set ZONE_ID --origins "*" --methods "GET,POST,OPTIONS"
+  cosmoflare cors set ZONE_ID --origins "https://app.example.com" --credentials
+  cosmoflare cors set ZONE_ID --origins "https://app.example.com" --max-age 3600 --json
+  cosmoflare cors set ZONE_ID --origins "*" --expression 'http.request.uri.path matches "^/api/"'`,
 	RunE: runCORSSet,
 }
 
@@ -87,9 +87,9 @@ Other rules in the ruleset are preserved. Returns an error if no rule with the
 given name exists.
 
 Examples:
-  r2go2 cors remove ZONE_ID
-  r2go2 cors remove ZONE_ID --rule-name my-cors-rule
-  r2go2 cors remove ZONE_ID --json`,
+  cosmoflare cors remove ZONE_ID
+  cosmoflare cors remove ZONE_ID --rule-name my-cors-rule
+  cosmoflare cors remove ZONE_ID --json`,
 	RunE: runCORSRemove,
 }
 
@@ -106,16 +106,16 @@ func init() {
 	corsSetCmd.Flags().StringVar(&corsHeaders, "headers", "Content-Type, Authorization", "Comma-separated request header names")
 	corsSetCmd.Flags().IntVar(&corsMaxAge, "max-age", 86400, "Preflight cache max-age in seconds (Access-Control-Max-Age)")
 	corsSetCmd.Flags().BoolVar(&corsCredentials, "credentials", false, "Allow credentials (Access-Control-Allow-Credentials: true)")
-	corsSetCmd.Flags().StringVar(&corsRuleName, "rule-name", r2go2.CORSDefaultRuleName, "Name/identifier for the rule (used to update or remove it later)")
+	corsSetCmd.Flags().StringVar(&corsRuleName, "rule-name", cosmoflare.CORSDefaultRuleName, "Name/identifier for the rule (used to update or remove it later)")
 	corsSetCmd.Flags().StringVar(&corsExpression, "expression", "true", "Wirefilter filter expression (default: all requests)")
 	corsSetCmd.MarkFlagRequired("origins") //nolint:errcheck
 
 	// cors remove flags
-	corsRemoveCmd.Flags().StringVar(&corsRuleName, "rule-name", r2go2.CORSDefaultRuleName, "Name of the rule to remove")
+	corsRemoveCmd.Flags().StringVar(&corsRuleName, "rule-name", cosmoflare.CORSDefaultRuleName, "Name of the rule to remove")
 }
 
-func getCORSService(zoneID string) (*r2go2.CORSService, error) {
-	return r2go2.NewCORSServiceFromCreds(zoneID, APIToken)
+func getCORSService(zoneID string) (*cosmoflare.CORSService, error) {
+	return cosmoflare.NewCORSServiceFromCreds(zoneID, APIToken)
 }
 
 func runCORSSettings(cmd *cobra.Command, args []string) error {
@@ -214,14 +214,14 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create CORS service: %w", err)
 	}
 
-	opts := []r2go2.CORSOption{
-		r2go2.WithCORSName(corsRuleName),
-		r2go2.WithCORSOrigins(origins...),
-		r2go2.WithCORSMethods(methods...),
-		r2go2.WithCORSHeaders(headers...),
-		r2go2.WithCORSMaxAge(corsMaxAge),
-		r2go2.WithCORSCredentials(corsCredentials),
-		r2go2.WithCORSExpression(corsExpression),
+	opts := []cosmoflare.CORSOption{
+		cosmoflare.WithCORSName(corsRuleName),
+		cosmoflare.WithCORSOrigins(origins...),
+		cosmoflare.WithCORSMethods(methods...),
+		cosmoflare.WithCORSHeaders(headers...),
+		cosmoflare.WithCORSMaxAge(corsMaxAge),
+		cosmoflare.WithCORSCredentials(corsCredentials),
+		cosmoflare.WithCORSExpression(corsExpression),
 	}
 
 	rule, err := svc.SetCORSHeaders(context.Background(), opts...)
@@ -270,11 +270,11 @@ func runCORSRemove(cmd *cobra.Command, args []string) error {
 
 	err = svc.RemoveCORSRule(context.Background(), corsRuleName)
 	if err != nil {
-		if errors.Is(err, r2go2.ErrCORSRuleNotFound) {
+		if errors.Is(err, cosmoflare.ErrCORSRuleNotFound) {
 			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("CORS rule %q not found on zone %s. Use \"r2go2 cors settings %s\" to list active CORS rules.", corsRuleName, zoneID, zoneID))
+				return printErrorJSON(fmt.Sprintf("CORS rule %q not found on zone %s. Use \"cosmoflare cors settings %s\" to list active CORS rules.", corsRuleName, zoneID, zoneID))
 			}
-			return fmt.Errorf("CORS rule %q not found on zone %s.\n       Use \"r2go2 cors settings %s\" to list active CORS rules", corsRuleName, zoneID, zoneID)
+			return fmt.Errorf("CORS rule %q not found on zone %s.\n       Use \"cosmoflare cors settings %s\" to list active CORS rules", corsRuleName, zoneID, zoneID)
 		}
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to remove CORS rule: %v", err))

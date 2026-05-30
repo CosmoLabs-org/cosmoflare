@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -27,11 +27,11 @@ Hyperdrive accelerates access to existing databases from Cloudflare Workers,
 making it faster to read and write data.
 
 Examples:
-  r2go2 hyperdrive create my-db --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
-  r2go2 hyperdrive list --json
-  r2go2 hyperdrive get CONFIG_ID
-  r2go2 hyperdrive update CONFIG_ID --name=new-name --origin-host=db2.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
-  r2go2 hyperdrive delete CONFIG_ID --force`,
+  cosmoflare hyperdrive create my-db --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
+  cosmoflare hyperdrive list --json
+  cosmoflare hyperdrive get CONFIG_ID
+  cosmoflare hyperdrive update CONFIG_ID --name=new-name --origin-host=db2.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
+  cosmoflare hyperdrive delete CONFIG_ID --force`,
 }
 
 var (
@@ -56,8 +56,8 @@ user, and password.
 Supported schemes: postgres, postgresql.
 
 Examples:
-  r2go2 hyperdrive create my-db --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
-  r2go2 hyperdrive create staging-db --origin-host=staging.example.com --origin-port=5432 --origin-scheme=postgres --database=staging --user=reader --password=pass123 --json`,
+  cosmoflare hyperdrive create my-db --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
+  cosmoflare hyperdrive create staging-db --origin-host=staging.example.com --origin-port=5432 --origin-scheme=postgres --database=staging --user=reader --password=pass123 --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHyperdriveCreate,
 }
@@ -68,8 +68,8 @@ var hyperdriveListCmd = &cobra.Command{
 	Long: `List all Hyperdrive configurations in the current account.
 
 Examples:
-  r2go2 hyperdrive list
-  r2go2 hyperdrive list --json`,
+  cosmoflare hyperdrive list
+  cosmoflare hyperdrive list --json`,
 	RunE: runHyperdriveList,
 }
 
@@ -79,8 +79,8 @@ var hyperdriveGetCmd = &cobra.Command{
 	Long: `Get details of a single Hyperdrive configuration by its ID.
 
 Examples:
-  r2go2 hyperdrive get CONFIG_ID
-  r2go2 hyperdrive get CONFIG_ID --json`,
+  cosmoflare hyperdrive get CONFIG_ID
+  cosmoflare hyperdrive get CONFIG_ID --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHyperdriveGet,
 }
@@ -93,8 +93,8 @@ var hyperdriveUpdateCmd = &cobra.Command{
 All origin fields are required for update (the API replaces the entire config).
 
 Examples:
-  r2go2 hyperdrive update CONFIG_ID --name=new-name --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
-  r2go2 hyperdrive update CONFIG_ID --name=renamed --origin-host=db2.example.com --origin-port=5432 --origin-scheme=postgres --database=newdb --user=admin --password=newsecret --json`,
+  cosmoflare hyperdrive update CONFIG_ID --name=new-name --origin-host=db.example.com --origin-port=5432 --origin-scheme=postgres --database=mydb --user=admin --password=secret
+  cosmoflare hyperdrive update CONFIG_ID --name=renamed --origin-host=db2.example.com --origin-port=5432 --origin-scheme=postgres --database=newdb --user=admin --password=newsecret --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHyperdriveUpdate,
 }
@@ -108,8 +108,8 @@ WARNING: This action is irreversible. Workers using this config will lose
 accelerated database access.
 
 Examples:
-  r2go2 hyperdrive delete CONFIG_ID
-  r2go2 hyperdrive delete CONFIG_ID --force`,
+  cosmoflare hyperdrive delete CONFIG_ID
+  cosmoflare hyperdrive delete CONFIG_ID --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHyperdriveDelete,
 }
@@ -152,14 +152,14 @@ func init() {
 	hyperdriveDeleteCmd.Flags().BoolVar(&hdForce, "force", false, "Skip confirmation prompt")
 }
 
-func getHyperdriveService() (*r2go2.HyperdriveService, error) {
-	return r2go2.NewHyperdriveServiceFromCreds(AccountID, APIToken)
+func getHyperdriveService() (*cosmoflare.HyperdriveService, error) {
+	return cosmoflare.NewHyperdriveServiceFromCreds(AccountID, APIToken)
 }
 
 func runHyperdriveCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	origin := r2go2.HyperdriveOriginConfig{
+	origin := cosmoflare.HyperdriveOriginConfig{
 		Host:     hdOriginHost,
 		Port:     hdOriginPort,
 		Scheme:   hdOriginScheme,
@@ -283,9 +283,9 @@ func runHyperdriveGet(cmd *cobra.Command, args []string) error {
 func runHyperdriveUpdate(cmd *cobra.Command, args []string) error {
 	configID := args[0]
 
-	params := r2go2.HyperdriveUpdateParams{
+	params := cosmoflare.HyperdriveUpdateParams{
 		Name: hdName,
-		Origin: r2go2.HyperdriveOriginConfig{
+		Origin: cosmoflare.HyperdriveOriginConfig{
 			Host:     hdOriginHost,
 			Port:     hdOriginPort,
 			Scheme:   hdOriginScheme,

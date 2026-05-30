@@ -33,9 +33,9 @@ Features:
 • Detailed profile information display
 
 Examples:
-  r2go2 switch                    # Interactive profile switcher
-  r2go2 config list              # List all profiles
-  r2go2 setup --profile=new      # Create new profile`,
+  cosmoflare switch                    # Interactive profile switcher
+  cosmoflare config list              # List all profiles
+  cosmoflare setup --profile=new      # Create new profile`,
 	RunE: runSwitch,
 }
 
@@ -71,7 +71,7 @@ func runSwitch(cmd *cobra.Command, args []string) error {
 		currentProfile, err := configMgr.GetCurrent()
 		if err != nil {
 			printError("No current profile set: %v", err)
-			printInfo("Use 'r2go2 switch' to select a profile")
+			printInfo("Use 'cosmoflare switch' to select a profile")
 			return nil
 		}
 
@@ -81,7 +81,7 @@ func runSwitch(cmd *cobra.Command, args []string) error {
 	// Default: show interactive switcher
 	if err := profileManager.ShowProfileSwitcher(); err != nil {
 		if os.IsNotExist(err) {
-			printInfo("No profiles found. Run 'r2go2 setup' to create your first profile.")
+			printInfo("No profiles found. Run 'cosmoflare setup' to create your first profile.")
 			return nil
 		}
 		return err

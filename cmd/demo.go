@@ -35,10 +35,10 @@ Available demos:
   - random       - Show random animation
 
 Examples:
-  r2go2 demo startup
-  r2go2 demo spinner
-  r2go2 demo dashboard
-  r2go2 demo random`,
+  cosmoflare demo startup
+  cosmoflare demo spinner
+  cosmoflare demo dashboard
+  cosmoflare demo random`,
 	Run: runDemo,
 }
 
@@ -86,7 +86,7 @@ func runDemo(cmd *cobra.Command, args []string) {
 		fmt.Println("  pulse        - Show pulsing text effect")
 		fmt.Println("  random       - Show random animation")
 		fmt.Println()
-		fmt.Printf("Use: r2go2 demo --type <demo_type>\n")
+		fmt.Printf("Use: cosmoflare demo --type <demo_type>\n")
 	}
 }
 
@@ -183,5 +183,5 @@ func demoRandom() {
 		time.Sleep(1 * time.Second)
 	}
 
-	fmt.Println("\n✨ Demo completed! Try 'r2go2 demo --type <type>' for specific animations")
+	fmt.Println("\n✨ Demo completed! Try 'cosmoflare demo --type <type>' for specific animations")
 }

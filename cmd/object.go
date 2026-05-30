@@ -22,7 +22,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 )
 
@@ -44,10 +44,10 @@ Commands:
   presign    Generate a pre-signed URL
 
 Examples:
-  r2go2 object ls my-bucket --prefix=images/
-  r2go2 object get my-bucket file.txt --output=local.txt
-  r2go2 object put my-bucket file.txt --key=remote/file.txt
-  r2go2 object delete my-bucket file.txt`,
+  cosmoflare object ls my-bucket --prefix=images/
+  cosmoflare object get my-bucket file.txt --output=local.txt
+  cosmoflare object put my-bucket file.txt --key=remote/file.txt
+  cosmoflare object delete my-bucket file.txt`,
 }
 
 var (
@@ -87,9 +87,9 @@ Output formats:
 - csv: Comma-separated values
 
 Examples:
-  r2go2 object ls my-bucket
-  r2go2 object ls my-bucket --prefix=images/ --recursive
-  r2go2 object ls my-bucket --delimiter=/ --json`,
+  cosmoflare object ls my-bucket
+  cosmoflare object ls my-bucket --prefix=images/ --recursive
+  cosmoflare object ls my-bucket --delimiter=/ --json`,
 	RunE: runObjectList,
 }
 
@@ -105,11 +105,11 @@ Options:
 - --progress: Show progress bar
 
 Examples:
-  r2go2 object get my-bucket file.txt
-  r2go2 object get my-bucket file.txt --output=local.txt
-  r2go2 object get my-bucket large.zip --range=0-1023
-  r2go2 object get my-bucket file.txt --output=- | cat
-  r2go2 object get my-bucket file.txt | gzip > file.gz`,
+  cosmoflare object get my-bucket file.txt
+  cosmoflare object get my-bucket file.txt --output=local.txt
+  cosmoflare object get my-bucket large.zip --range=0-1023
+  cosmoflare object get my-bucket file.txt --output=- | cat
+  cosmoflare object get my-bucket file.txt | gzip > file.gz`,
 	RunE: runObjectGet,
 }
 
@@ -127,10 +127,10 @@ Options:
 - --progress: Show progress bar
 
 Examples:
-  r2go2 object put my-bucket file.txt
-  r2go2 object put my-bucket file.txt --key=remote/file.txt
-  r2go2 object put my-bucket image.jpg --content-type=image/jpeg --metadata=author=admin
-  echo "hello" | r2go2 object put my-bucket - --key=stdin-data.txt`,
+  cosmoflare object put my-bucket file.txt
+  cosmoflare object put my-bucket file.txt --key=remote/file.txt
+  cosmoflare object put my-bucket image.jpg --content-type=image/jpeg --metadata=author=admin
+  echo "hello" | cosmoflare object put my-bucket - --key=stdin-data.txt`,
 	RunE: runObjectPut,
 }
 
@@ -141,8 +141,8 @@ var objectDeleteCmd = &cobra.Command{
 	Long: `Delete an object from R2.
 
 Examples:
-  r2go2 object delete my-bucket file.txt
-  r2go2 object delete my-bucket folder/file.txt`,
+  cosmoflare object delete my-bucket file.txt
+  cosmoflare object delete my-bucket folder/file.txt`,
 	RunE: runObjectDelete,
 }
 
@@ -159,8 +159,8 @@ Options:
 - --content-type: Update content type
 
 Examples:
-  r2go2 object copy my-bucket/file.txt my-bucket/backup.txt
-  r2go2 object copy source-bucket/img.jpg dest-bucket/images/img.jpg`,
+  cosmoflare object copy my-bucket/file.txt my-bucket/backup.txt
+  cosmoflare object copy source-bucket/img.jpg dest-bucket/images/img.jpg`,
 	RunE: runObjectCopy,
 }
 
@@ -183,8 +183,8 @@ Output formats:
 - json: Machine-readable JSON
 
 Examples:
-  r2go2 object head my-bucket file.txt
-  r2go2 object head my-bucket file.txt --json`,
+  cosmoflare object head my-bucket file.txt
+  cosmoflare object head my-bucket file.txt --json`,
 	RunE: runObjectHead,
 }
 
@@ -201,9 +201,9 @@ Search types:
 - exact: Exact key match
 
 Examples:
-  r2go2 object search my-bucket ".jpg"
-  r2go2 object search my-bucket "image-*" --type=glob
-  r2go2 object search my-bucket ".*\\.png$" --type=regex`,
+  cosmoflare object search my-bucket ".jpg"
+  cosmoflare object search my-bucket "image-*" --type=glob
+  cosmoflare object search my-bucket ".*\\.png$" --type=regex`,
 	RunE: runObjectSearch,
 }
 
@@ -229,8 +229,8 @@ Specification file format (JSON):
 }
 
 Examples:
-  r2go2 object batch my-bucket operations.json
-  r2go2 object batch my-bucket operations.json --dry-run`,
+  cosmoflare object batch my-bucket operations.json
+  cosmoflare object batch my-bucket operations.json --dry-run`,
 	RunE: runObjectBatch,
 }
 
@@ -247,9 +247,9 @@ Options:
 - --expires: URL expiration duration (default: 1h)
 
 Examples:
-  r2go2 object presign my-bucket file.txt
-  r2go2 object presign my-bucket file.txt --expires=24h
-  r2go2 object presign my-bucket file.txt --expires=30m --json`,
+  cosmoflare object presign my-bucket file.txt
+  cosmoflare object presign my-bucket file.txt --expires=24h
+  cosmoflare object presign my-bucket file.txt --expires=30m --json`,
 	RunE: runObjectPresign,
 }
 
@@ -491,15 +491,15 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to create API client: %w", err)
 		}
 
-		opts := []r2go2.UploadOption{}
+		opts := []cosmoflare.UploadOption{}
 		if contentType != "" {
-			opts = append(opts, r2go2.WithContentType(contentType))
+			opts = append(opts, cosmoflare.WithContentType(contentType))
 		}
 		if cacheControl != "" {
-			opts = append(opts, r2go2.WithUploadCacheControl(cacheControl))
+			opts = append(opts, cosmoflare.WithUploadCacheControl(cacheControl))
 		}
 		if len(metadataMap) > 0 {
-			opts = append(opts, r2go2.WithMetadata(metadataMap))
+			opts = append(opts, cosmoflare.WithMetadata(metadataMap))
 		}
 
 		result, err := client.Upload(context.Background(), bucketName, key, os.Stdin, 0, opts...)
@@ -564,19 +564,19 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	opts := []r2go2.UploadOption{}
+	opts := []cosmoflare.UploadOption{}
 	if contentType != "" {
-		opts = append(opts, r2go2.WithContentType(contentType))
+		opts = append(opts, cosmoflare.WithContentType(contentType))
 	}
 	if cacheControl != "" {
-		opts = append(opts, r2go2.WithUploadCacheControl(cacheControl))
+		opts = append(opts, cosmoflare.WithUploadCacheControl(cacheControl))
 	}
 	if len(metadataMap) > 0 {
-		opts = append(opts, r2go2.WithMetadata(metadataMap))
+		opts = append(opts, cosmoflare.WithMetadata(metadataMap))
 	}
 	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
 		progress := utils.NewTransferProgress(fileInfo.Size())
-		opts = append(opts, r2go2.WithProgressCallback(func(uploaded, total int64) {
+		opts = append(opts, cosmoflare.WithProgressCallback(func(uploaded, total int64) {
 			fmt.Printf("\r  %s", progress.FormatBar())
 		}))
 	}
@@ -771,7 +771,7 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Filter objects based on search type
-	var results []*r2go2.Object
+	var results []*cosmoflare.Object
 	for _, obj := range objects {
 		var match bool
 		switch searchType {
@@ -975,11 +975,11 @@ func etagDisplay(etag string) string {
 	return etag
 }
 
-// getAPIClient creates an R2 client using the pkg/r2go2 library.
-func getAPIClient() (r2go2.R2Client, error) {
-	return r2go2.NewClient(
-		r2go2.WithAccountID(AccountID),
-		r2go2.WithAPIToken(APIToken),
+// getAPIClient creates an R2 client using the pkg/cosmoflare library.
+func getAPIClient() (cosmoflare.R2Client, error) {
+	return cosmoflare.NewClient(
+		cosmoflare.WithAccountID(AccountID),
+		cosmoflare.WithAPIToken(APIToken),
 	)
 }
 

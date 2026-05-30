@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -24,10 +24,10 @@ Commands:
   deployments   List deployments for a project
 
 Examples:
-  r2go2 pages create my-site --branch main
-  r2go2 pages list --json
-  r2go2 pages get my-site
-  r2go2 pages deployments my-site --json`,
+  cosmoflare pages create my-site --branch main
+  cosmoflare pages list --json
+  cosmoflare pages get my-site
+  cosmoflare pages deployments my-site --json`,
 }
 
 var (
@@ -43,8 +43,8 @@ var pagesCreateCmd = &cobra.Command{
 The name must be unique within your account. A production branch is required.
 
 Examples:
-  r2go2 pages create my-site --branch main
-  r2go2 pages create my-blog --branch master --json`,
+  cosmoflare pages create my-site --branch main
+  cosmoflare pages create my-blog --branch master --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPagesCreate,
 }
@@ -55,8 +55,8 @@ var pagesListCmd = &cobra.Command{
 	Long: `List all Cloudflare Pages projects in the current account.
 
 Examples:
-  r2go2 pages list
-  r2go2 pages list --json`,
+  cosmoflare pages list
+  cosmoflare pages list --json`,
 	RunE: runPagesList,
 }
 
@@ -66,8 +66,8 @@ var pagesGetCmd = &cobra.Command{
 	Long: `Get details of a Pages project by name.
 
 Examples:
-  r2go2 pages get my-site
-  r2go2 pages get my-site --json`,
+  cosmoflare pages get my-site
+  cosmoflare pages get my-site --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPagesGet,
 }
@@ -80,8 +80,8 @@ var pagesDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible. All deployments and data will be lost.
 
 Examples:
-  r2go2 pages delete my-site
-  r2go2 pages delete my-site --force`,
+  cosmoflare pages delete my-site
+  cosmoflare pages delete my-site --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPagesDelete,
 }
@@ -92,8 +92,8 @@ var pagesDeploymentsCmd = &cobra.Command{
 	Long: `List all deployments for a Cloudflare Pages project.
 
 Examples:
-  r2go2 pages deployments my-site
-  r2go2 pages deployments my-site --json`,
+  cosmoflare pages deployments my-site
+  cosmoflare pages deployments my-site --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPagesDeployments,
 }
@@ -113,8 +113,8 @@ func init() {
 	pagesDeleteCmd.Flags().BoolVar(&pagesForce, "force", false, "Skip confirmation prompt")
 }
 
-func getPagesService() (*r2go2.PagesService, error) {
-	return r2go2.NewPagesServiceFromCreds(AccountID, APIToken)
+func getPagesService() (*cosmoflare.PagesService, error) {
+	return cosmoflare.NewPagesServiceFromCreds(AccountID, APIToken)
 }
 
 func runPagesCreate(cmd *cobra.Command, args []string) error {

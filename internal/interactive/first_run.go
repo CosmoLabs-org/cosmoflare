@@ -83,10 +83,10 @@ func (frd *FirstRunDetector) AutoTriggerSetup() error {
 	} else {
 		fmt.Println()
 		PrintInfo("No problem! You can run setup anytime with:")
-		fmt.Printf("  %s\n", Info("r2go2 setup"))
+		fmt.Printf("  %s\n", Info("cosmoflare setup"))
 		fmt.Println()
 		PrintInfo("For help getting started, see:")
-		fmt.Printf("  %s\n", Info("r2go2 --help"))
+		fmt.Printf("  %s\n", Info("cosmoflare --help"))
 		os.Exit(0)
 	}
 
@@ -103,32 +103,32 @@ func (frd *FirstRunDetector) ShowQuickStart() {
 
 	fmt.Println(Info("1. Setup Your First Profile"))
 	fmt.Println(Muted("   Configure your Cloudflare credentials"))
-	fmt.Printf("   %s\n", Info("r2go2 setup"))
+	fmt.Printf("   %s\n", Info("cosmoflare setup"))
 	fmt.Println()
 
 	fmt.Println(Info("2. Create a Bucket"))
 	fmt.Println(Muted("   Buckets store your files in the cloud"))
-	fmt.Printf("   %s\n", Info("r2go2 bucket create my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare bucket create my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println(Info("3. Upload Files"))
 	fmt.Println(Muted("   Upload local files to your bucket"))
-	fmt.Printf("   %s\n", Info("r2go2 upload ./local-file.txt my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare upload ./local-file.txt my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println(Info("4. List Your Content"))
 	fmt.Println(Muted("   See what's in your buckets"))
-	fmt.Printf("   %s\n", Info("r2go2 object list my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare object list my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println(Info("5. Manage Profiles"))
 	fmt.Println(Muted("   Switch between different accounts"))
-	fmt.Printf("   %s\n", Info("r2go2 setup --switch"))
+	fmt.Printf("   %s\n", Info("cosmoflare setup --switch"))
 	fmt.Println()
 
 	PrintInfo("📚 Ready to learn more?")
 	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/CosmoDev-R2Go2"))
-	fmt.Printf("  • Advanced help: %s\n", Info("r2go2 --help"))
+	fmt.Printf("  • Advanced help: %s\n", Info("cosmoflare --help"))
 	fmt.Println()
 
 	PauseAndWait("Press Enter to continue...")
@@ -178,11 +178,11 @@ func ShowFirstRunWelcome() {
 	fmt.Println()
 
 	fmt.Println(Bold("Quick Commands to Know:"))
-	fmt.Printf("  %s - Run setup wizard\n", Info("r2go2 setup"))
-	fmt.Printf("  %s - Switch between profiles\n", Info("r2go2 setup --switch"))
-	fmt.Printf("  %s - List all buckets\n", Info("r2go2 bucket list"))
-	fmt.Printf("  %s - Create a new bucket\n", Info("r2go2 bucket create <name>"))
-	fmt.Printf("  %s - Upload files\n", Info("r2go2 upload <file> <bucket>"))
+	fmt.Printf("  %s - Run setup wizard\n", Info("cosmoflare setup"))
+	fmt.Printf("  %s - Switch between profiles\n", Info("cosmoflare setup --switch"))
+	fmt.Printf("  %s - List all buckets\n", Info("cosmoflare bucket list"))
+	fmt.Printf("  %s - Create a new bucket\n", Info("cosmoflare bucket create <name>"))
+	fmt.Printf("  %s - Upload files\n", Info("cosmoflare upload <file> <bucket>"))
 	fmt.Println()
 
 	PrintInfo("🚀 Let's get you set up!")
@@ -190,7 +190,7 @@ func ShowFirstRunWelcome() {
 		ShowSpinner("Starting setup...", 1*Second)
 	} else {
 		fmt.Println()
-		PrintInfo("You can start setup anytime with 'r2go2 setup'")
+		PrintInfo("You can start setup anytime with 'cosmoflare setup'")
 		os.Exit(0)
 	}
 }

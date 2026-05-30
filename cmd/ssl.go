@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var sslCmd = &cobra.Command{
@@ -24,10 +24,10 @@ Commands:
 SSL/TLS settings are zone-scoped, so a zone ID is required for all operations.
 
 Examples:
-  r2go2 ssl status ZONE_ID
-  r2go2 ssl settings ZONE_ID --json
-  r2go2 ssl update ZONE_ID --mode=full --min-tls=1.2 --always-https
-  r2go2 ssl verify ZONE_ID`,
+  cosmoflare ssl status ZONE_ID
+  cosmoflare ssl settings ZONE_ID --json
+  cosmoflare ssl update ZONE_ID --mode=full --min-tls=1.2 --always-https
+  cosmoflare ssl verify ZONE_ID`,
 }
 
 var (
@@ -45,8 +45,8 @@ var sslStatusCmd = &cobra.Command{
 Possible values: off, flexible, full, strict (Full Strict).
 
 Examples:
-  r2go2 ssl status ZONE_ID
-  r2go2 ssl status ZONE_ID --json`,
+  cosmoflare ssl status ZONE_ID
+  cosmoflare ssl status ZONE_ID --json`,
 	RunE: runSSLStatus,
 }
 
@@ -57,8 +57,8 @@ var sslSettingsCmd = &cobra.Command{
 Always Use HTTPS, Automatic HTTPS Rewrites, and Universal SSL.
 
 Examples:
-  r2go2 ssl settings ZONE_ID
-  r2go2 ssl settings ZONE_ID --json`,
+  cosmoflare ssl settings ZONE_ID
+  cosmoflare ssl settings ZONE_ID --json`,
 	RunE: runSSLSettings,
 }
 
@@ -71,11 +71,11 @@ SSL modes: off, flexible, full, strict (Full Strict)
 Min TLS versions: 1.0, 1.1, 1.2, 1.3
 
 Examples:
-  r2go2 ssl update ZONE_ID --mode=full
-  r2go2 ssl update ZONE_ID --min-tls=1.2
-  r2go2 ssl update ZONE_ID --always-https
-  r2go2 ssl update ZONE_ID --mode=strict --min-tls=1.2 --always-https --auto-rewrites
-  r2go2 ssl update ZONE_ID --mode=full --json`,
+  cosmoflare ssl update ZONE_ID --mode=full
+  cosmoflare ssl update ZONE_ID --min-tls=1.2
+  cosmoflare ssl update ZONE_ID --always-https
+  cosmoflare ssl update ZONE_ID --mode=strict --min-tls=1.2 --always-https --auto-rewrites
+  cosmoflare ssl update ZONE_ID --mode=full --json`,
 	RunE: runSSLUpdate,
 }
 
@@ -88,8 +88,8 @@ Shows certificate status, verification type, and validation method for
 each certificate pack.
 
 Examples:
-  r2go2 ssl verify ZONE_ID
-  r2go2 ssl verify ZONE_ID --json`,
+  cosmoflare ssl verify ZONE_ID
+  cosmoflare ssl verify ZONE_ID --json`,
 	RunE: runSSLVerify,
 }
 
@@ -107,8 +107,8 @@ func init() {
 	sslUpdateCmd.Flags().BoolVar(&sslAutoRewrites, "auto-rewrites", false, "Enable Automatic HTTPS Rewrites")
 }
 
-func getSSLService(zoneID string) (*r2go2.SSLService, error) {
-	return r2go2.NewSSLServiceFromCreds(zoneID, APIToken)
+func getSSLService(zoneID string) (*cosmoflare.SSLService, error) {
+	return cosmoflare.NewSSLServiceFromCreds(zoneID, APIToken)
 }
 
 func runSSLStatus(cmd *cobra.Command, args []string) error {
@@ -218,15 +218,15 @@ func runSSLUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if hasSettings {
-		var opts []r2go2.SSLOption
+		var opts []cosmoflare.SSLOption
 		if cmd.Flags().Changed("min-tls") {
-			opts = append(opts, r2go2.WithMinTLSVersion(sslMinTLS))
+			opts = append(opts, cosmoflare.WithMinTLSVersion(sslMinTLS))
 		}
 		if cmd.Flags().Changed("always-https") {
-			opts = append(opts, r2go2.WithAlwaysHTTPS(sslAlwaysHTTPS))
+			opts = append(opts, cosmoflare.WithAlwaysHTTPS(sslAlwaysHTTPS))
 		}
 		if cmd.Flags().Changed("auto-rewrites") {
-			opts = append(opts, r2go2.WithAutoHTTPSRewrites(sslAutoRewrites))
+			opts = append(opts, cosmoflare.WithAutoHTTPSRewrites(sslAutoRewrites))
 		}
 
 		if err := svc.UpdateSettings(context.Background(), opts...); err != nil {

@@ -40,7 +40,7 @@ func (pm *ProfileManager) ShowProfileSwitcher() error {
 	currentProfile, _ := pm.configMgr.GetCurrent()
 
 	if len(profiles) == 0 {
-		PrintWarning("No profiles found. Run 'r2go2 setup' to create one first.")
+		PrintWarning("No profiles found. Run 'cosmoflare setup' to create one first.")
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func (pm *ProfileManager) createNewProfileFromSwitcher() error {
 	}
 
 	PrintSuccess("✅ Profile '%s' created successfully!", profileName)
-	PrintInfo("Run 'r2go2 setup --profile=%s' to configure this profile.", profileName)
+	PrintInfo("Run 'cosmoflare setup --profile=%s' to configure this profile.", profileName)
 
 	return nil
 }

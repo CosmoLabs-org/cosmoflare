@@ -31,9 +31,9 @@ WARNING: Deleting a bucket will permanently delete all objects within it.
 Please ensure you have backups of any important data before proceeding.
 
 Examples:
-  r2go2 delete my-bucket                    # Interactive confirmation
-  r2go2 delete my-bucket --confirm          # Skip confirmation
-  r2go2 delete my-bucket --dry-run          # Preview without deleting`,
+  cosmoflare delete my-bucket                    # Interactive confirmation
+  cosmoflare delete my-bucket --confirm          # Skip confirmation
+  cosmoflare delete my-bucket --dry-run          # Preview without deleting`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return fmt.Errorf("exactly one argument (bucket name) is required")

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var (
@@ -124,8 +124,8 @@ func init() {
 }
 
 // getCostService creates a CostService from global credentials.
-func getCostService() (*r2go2.CostService, error) {
-	return r2go2.NewCostService(AccountID, APIToken)
+func getCostService() (*cosmoflare.CostService, error) {
+	return cosmoflare.NewCostService(AccountID, APIToken)
 }
 
 // validatePeriod checks that the period flag value is valid.
@@ -162,9 +162,9 @@ func runCost(cmd *cobra.Command, args []string) error {
 	}
 
 	// Estimate with placeholder usage (real API-based fetching is a future enhancement)
-	r2Usage := r2go2.R2Usage{}
-	workersUsage := r2go2.WorkersUsage{}
-	kvUsage := r2go2.KVUsage{}
+	r2Usage := cosmoflare.R2Usage{}
+	workersUsage := cosmoflare.WorkersUsage{}
+	kvUsage := cosmoflare.KVUsage{}
 
 	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
 	total.Period = costPeriod
@@ -194,7 +194,7 @@ func runCostR2(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := r2go2.R2Usage{}
+	usage := cosmoflare.R2Usage{}
 	est := svc.EstimateR2Cost(usage)
 
 	if JSONOutput || costFormat == "json" {
@@ -222,7 +222,7 @@ func runCostWorkers(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := r2go2.WorkersUsage{}
+	usage := cosmoflare.WorkersUsage{}
 	est := svc.EstimateWorkersCost(usage)
 
 	if JSONOutput || costFormat == "json" {
@@ -250,7 +250,7 @@ func runCostKV(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := r2go2.KVUsage{}
+	usage := cosmoflare.KVUsage{}
 	est := svc.EstimateKVCost(usage)
 
 	if JSONOutput || costFormat == "json" {
@@ -278,9 +278,9 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	r2Usage := r2go2.R2Usage{}
-	workersUsage := r2go2.WorkersUsage{}
-	kvUsage := r2go2.KVUsage{}
+	r2Usage := cosmoflare.R2Usage{}
+	workersUsage := cosmoflare.WorkersUsage{}
+	kvUsage := cosmoflare.KVUsage{}
 
 	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
 	total.Period = costPeriod
@@ -301,7 +301,7 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 // Table output
 // ---------------------------------------------------------------------------
 
-func printCostSummary(total *r2go2.TotalCostEstimate) {
+func printCostSummary(total *cosmoflare.TotalCostEstimate) {
 	fmt.Printf("\nCloudflare Cost Estimate (period: %s)\n", total.Period)
 	fmt.Println("============================================")
 
@@ -317,49 +317,49 @@ func printCostSummary(total *r2go2.TotalCostEstimate) {
 	fmt.Printf("\n%s\n", total.Disclaimer)
 }
 
-func printR2CostTable(est *r2go2.R2CostEstimate) {
+func printR2CostTable(est *cosmoflare.R2CostEstimate) {
 	fmt.Println("\nR2 Storage Cost Estimate")
 	fmt.Println("========================")
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ITEM\tUSAGE\tRATE\tCOST")
-	fmt.Fprintf(w, "Storage\t%.2f GB\t$%.3f/GB\t$%.2f\n", est.Usage.StorageGB, r2go2.R2StoragePerGB, est.StorageCost)
-	fmt.Fprintf(w, "Class A Ops\t%d\t$%.2f/M\t$%.2f\n", est.Usage.ClassAOps, r2go2.R2ClassAPerMillion, est.ClassACost)
-	fmt.Fprintf(w, "Class B Ops\t%d\t$%.2f/M\t$%.2f\n", est.Usage.ClassBOps, r2go2.R2ClassBPerMillion, est.ClassBCost)
+	fmt.Fprintf(w, "Storage\t%.2f GB\t$%.3f/GB\t$%.2f\n", est.Usage.StorageGB, cosmoflare.R2StoragePerGB, est.StorageCost)
+	fmt.Fprintf(w, "Class A Ops\t%d\t$%.2f/M\t$%.2f\n", est.Usage.ClassAOps, cosmoflare.R2ClassAPerMillion, est.ClassACost)
+	fmt.Fprintf(w, "Class B Ops\t%d\t$%.2f/M\t$%.2f\n", est.Usage.ClassBOps, cosmoflare.R2ClassBPerMillion, est.ClassBCost)
 	fmt.Fprintln(w, "\t\t\t")
 	fmt.Fprintf(w, "TOTAL\t\t\t$%.2f\n", est.TotalCost)
 	w.Flush()
 }
 
-func printWorkersCostTable(est *r2go2.WorkersCostEstimate) {
+func printWorkersCostTable(est *cosmoflare.WorkersCostEstimate) {
 	fmt.Println("\nWorkers Cost Estimate")
 	fmt.Println("=====================")
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ITEM\tUSAGE\tRATE\tCOST")
-	fmt.Fprintf(w, "Requests\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Requests, r2go2.WorkersRequestsPerMillion, est.RequestsCost)
-	fmt.Fprintf(w, "Free Tier\t%d\t\t-$0.00\n", r2go2.WorkersFreeRequests)
+	fmt.Fprintf(w, "Requests\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Requests, cosmoflare.WorkersRequestsPerMillion, est.RequestsCost)
+	fmt.Fprintf(w, "Free Tier\t%d\t\t-$0.00\n", cosmoflare.WorkersFreeRequests)
 	fmt.Fprintf(w, "Billable\t%d\t\t\n", est.BillableRequests)
 	fmt.Fprintln(w, "\t\t\t")
 	fmt.Fprintf(w, "TOTAL\t\t\t$%.2f\n", est.TotalCost)
 	w.Flush()
 }
 
-func printKVCostTable(est *r2go2.KVCostEstimate) {
+func printKVCostTable(est *cosmoflare.KVCostEstimate) {
 	fmt.Println("\nKV Cost Estimate")
 	fmt.Println("=================")
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ITEM\tUSAGE\tRATE\tCOST")
-	fmt.Fprintf(w, "Reads\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Reads, r2go2.KVReadsPerMillion, est.ReadsCost)
-	fmt.Fprintf(w, "Writes\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Writes, r2go2.KVWritesPerMillion, est.WritesCost)
-	fmt.Fprintf(w, "Storage\t%.2f GB\t$%.2f/GB\t$%.2f\n", est.Usage.StorageGB, r2go2.KVStoragePerGB, est.StorageCost)
+	fmt.Fprintf(w, "Reads\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Reads, cosmoflare.KVReadsPerMillion, est.ReadsCost)
+	fmt.Fprintf(w, "Writes\t%d\t$%.2f/M\t$%.2f\n", est.Usage.Writes, cosmoflare.KVWritesPerMillion, est.WritesCost)
+	fmt.Fprintf(w, "Storage\t%.2f GB\t$%.2f/GB\t$%.2f\n", est.Usage.StorageGB, cosmoflare.KVStoragePerGB, est.StorageCost)
 	fmt.Fprintln(w, "\t\t\t")
 	fmt.Fprintf(w, "TOTAL\t\t\t$%.2f\n", est.TotalCost)
 	w.Flush()
 }
 
-func printDetailTable(total *r2go2.TotalCostEstimate) {
+func printDetailTable(total *cosmoflare.TotalCostEstimate) {
 	fmt.Printf("\nItemized Cost Breakdown (period: %s)\n", total.Period)
 	fmt.Println("============================================")
 
@@ -367,17 +367,17 @@ func printDetailTable(total *r2go2.TotalCostEstimate) {
 	fmt.Fprintln(w, "SERVICE\tITEM\tUSAGE\tRATE\tCOST")
 
 	// R2
-	fmt.Fprintf(w, "R2\tStorage\t%.2f GB\t$%.3f/GB\t$%.2f\n", total.R2.Usage.StorageGB, r2go2.R2StoragePerGB, total.R2.StorageCost)
-	fmt.Fprintf(w, "R2\tClass A Ops\t%d\t$%.2f/M\t$%.2f\n", total.R2.Usage.ClassAOps, r2go2.R2ClassAPerMillion, total.R2.ClassACost)
-	fmt.Fprintf(w, "R2\tClass B Ops\t%d\t$%.2f/M\t$%.2f\n", total.R2.Usage.ClassBOps, r2go2.R2ClassBPerMillion, total.R2.ClassBCost)
+	fmt.Fprintf(w, "R2\tStorage\t%.2f GB\t$%.3f/GB\t$%.2f\n", total.R2.Usage.StorageGB, cosmoflare.R2StoragePerGB, total.R2.StorageCost)
+	fmt.Fprintf(w, "R2\tClass A Ops\t%d\t$%.2f/M\t$%.2f\n", total.R2.Usage.ClassAOps, cosmoflare.R2ClassAPerMillion, total.R2.ClassACost)
+	fmt.Fprintf(w, "R2\tClass B Ops\t%d\t$%.2f/M\t$%.2f\n", total.R2.Usage.ClassBOps, cosmoflare.R2ClassBPerMillion, total.R2.ClassBCost)
 
 	// Workers
-	fmt.Fprintf(w, "Workers\tRequests\t%d\t$%.2f/M\t$%.2f\n", total.Workers.Usage.Requests, r2go2.WorkersRequestsPerMillion, total.Workers.RequestsCost)
+	fmt.Fprintf(w, "Workers\tRequests\t%d\t$%.2f/M\t$%.2f\n", total.Workers.Usage.Requests, cosmoflare.WorkersRequestsPerMillion, total.Workers.RequestsCost)
 
 	// KV
-	fmt.Fprintf(w, "KV\tReads\t%d\t$%.2f/M\t$%.2f\n", total.KV.Usage.Reads, r2go2.KVReadsPerMillion, total.KV.ReadsCost)
-	fmt.Fprintf(w, "KV\tWrites\t%d\t$%.2f/M\t$%.2f\n", total.KV.Usage.Writes, r2go2.KVWritesPerMillion, total.KV.WritesCost)
-	fmt.Fprintf(w, "KV\tStorage\t%.2f GB\t$%.2f/GB\t$%.2f\n", total.KV.Usage.StorageGB, r2go2.KVStoragePerGB, total.KV.StorageCost)
+	fmt.Fprintf(w, "KV\tReads\t%d\t$%.2f/M\t$%.2f\n", total.KV.Usage.Reads, cosmoflare.KVReadsPerMillion, total.KV.ReadsCost)
+	fmt.Fprintf(w, "KV\tWrites\t%d\t$%.2f/M\t$%.2f\n", total.KV.Usage.Writes, cosmoflare.KVWritesPerMillion, total.KV.WritesCost)
+	fmt.Fprintf(w, "KV\tStorage\t%.2f GB\t$%.2f/GB\t$%.2f\n", total.KV.Usage.StorageGB, cosmoflare.KVStoragePerGB, total.KV.StorageCost)
 
 	fmt.Fprintln(w, "\t\t\t\t")
 	fmt.Fprintf(w, "TOTAL\t\t\t\t$%.2f/mo\n", total.TotalMonthlyCost)
@@ -390,7 +390,7 @@ func printDetailTable(total *r2go2.TotalCostEstimate) {
 // CSV output
 // ---------------------------------------------------------------------------
 
-func printCostCSV(total *r2go2.TotalCostEstimate) error {
+func printCostCSV(total *cosmoflare.TotalCostEstimate) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
@@ -403,57 +403,57 @@ func printCostCSV(total *r2go2.TotalCostEstimate) error {
 	return w.Error()
 }
 
-func printR2CostCSV(est *r2go2.R2CostEstimate) error {
+func printR2CostCSV(est *cosmoflare.R2CostEstimate) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
 	w.Write([]string{"item", "usage", "rate", "cost"})
-	w.Write([]string{"Storage", fmt.Sprintf("%.2f GB", est.Usage.StorageGB), fmt.Sprintf("$%.3f/GB", r2go2.R2StoragePerGB), fmt.Sprintf("%.2f", est.StorageCost)})
-	w.Write([]string{"Class A Ops", fmt.Sprintf("%d", est.Usage.ClassAOps), fmt.Sprintf("$%.2f/M", r2go2.R2ClassAPerMillion), fmt.Sprintf("%.2f", est.ClassACost)})
-	w.Write([]string{"Class B Ops", fmt.Sprintf("%d", est.Usage.ClassBOps), fmt.Sprintf("$%.2f/M", r2go2.R2ClassBPerMillion), fmt.Sprintf("%.2f", est.ClassBCost)})
+	w.Write([]string{"Storage", fmt.Sprintf("%.2f GB", est.Usage.StorageGB), fmt.Sprintf("$%.3f/GB", cosmoflare.R2StoragePerGB), fmt.Sprintf("%.2f", est.StorageCost)})
+	w.Write([]string{"Class A Ops", fmt.Sprintf("%d", est.Usage.ClassAOps), fmt.Sprintf("$%.2f/M", cosmoflare.R2ClassAPerMillion), fmt.Sprintf("%.2f", est.ClassACost)})
+	w.Write([]string{"Class B Ops", fmt.Sprintf("%d", est.Usage.ClassBOps), fmt.Sprintf("$%.2f/M", cosmoflare.R2ClassBPerMillion), fmt.Sprintf("%.2f", est.ClassBCost)})
 	w.Write([]string{"TOTAL", "", "", fmt.Sprintf("%.2f", est.TotalCost)})
 
 	return w.Error()
 }
 
-func printWorkersCostCSV(est *r2go2.WorkersCostEstimate) error {
+func printWorkersCostCSV(est *cosmoflare.WorkersCostEstimate) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
 	w.Write([]string{"item", "usage", "rate", "cost"})
-	w.Write([]string{"Requests", fmt.Sprintf("%d", est.Usage.Requests), fmt.Sprintf("$%.2f/M", r2go2.WorkersRequestsPerMillion), fmt.Sprintf("%.2f", est.RequestsCost)})
-	w.Write([]string{"Free Tier", fmt.Sprintf("%d", r2go2.WorkersFreeRequests), "", "0.00"})
+	w.Write([]string{"Requests", fmt.Sprintf("%d", est.Usage.Requests), fmt.Sprintf("$%.2f/M", cosmoflare.WorkersRequestsPerMillion), fmt.Sprintf("%.2f", est.RequestsCost)})
+	w.Write([]string{"Free Tier", fmt.Sprintf("%d", cosmoflare.WorkersFreeRequests), "", "0.00"})
 	w.Write([]string{"Billable", fmt.Sprintf("%d", est.BillableRequests), "", ""})
 	w.Write([]string{"TOTAL", "", "", fmt.Sprintf("%.2f", est.TotalCost)})
 
 	return w.Error()
 }
 
-func printKVCostCSV(est *r2go2.KVCostEstimate) error {
+func printKVCostCSV(est *cosmoflare.KVCostEstimate) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
 	w.Write([]string{"item", "usage", "rate", "cost"})
-	w.Write([]string{"Reads", fmt.Sprintf("%d", est.Usage.Reads), fmt.Sprintf("$%.2f/M", r2go2.KVReadsPerMillion), fmt.Sprintf("%.2f", est.ReadsCost)})
-	w.Write([]string{"Writes", fmt.Sprintf("%d", est.Usage.Writes), fmt.Sprintf("$%.2f/M", r2go2.KVWritesPerMillion), fmt.Sprintf("%.2f", est.WritesCost)})
-	w.Write([]string{"Storage", fmt.Sprintf("%.2f GB", est.Usage.StorageGB), fmt.Sprintf("$%.2f/GB", r2go2.KVStoragePerGB), fmt.Sprintf("%.2f", est.StorageCost)})
+	w.Write([]string{"Reads", fmt.Sprintf("%d", est.Usage.Reads), fmt.Sprintf("$%.2f/M", cosmoflare.KVReadsPerMillion), fmt.Sprintf("%.2f", est.ReadsCost)})
+	w.Write([]string{"Writes", fmt.Sprintf("%d", est.Usage.Writes), fmt.Sprintf("$%.2f/M", cosmoflare.KVWritesPerMillion), fmt.Sprintf("%.2f", est.WritesCost)})
+	w.Write([]string{"Storage", fmt.Sprintf("%.2f GB", est.Usage.StorageGB), fmt.Sprintf("$%.2f/GB", cosmoflare.KVStoragePerGB), fmt.Sprintf("%.2f", est.StorageCost)})
 	w.Write([]string{"TOTAL", "", "", fmt.Sprintf("%.2f", est.TotalCost)})
 
 	return w.Error()
 }
 
-func printDetailCSV(total *r2go2.TotalCostEstimate) error {
+func printDetailCSV(total *cosmoflare.TotalCostEstimate) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
 	w.Write([]string{"service", "item", "usage", "rate", "cost"})
-	w.Write([]string{"R2", "Storage", fmt.Sprintf("%.2f GB", total.R2.Usage.StorageGB), fmt.Sprintf("$%.3f/GB", r2go2.R2StoragePerGB), fmt.Sprintf("%.2f", total.R2.StorageCost)})
-	w.Write([]string{"R2", "Class A Ops", fmt.Sprintf("%d", total.R2.Usage.ClassAOps), fmt.Sprintf("$%.2f/M", r2go2.R2ClassAPerMillion), fmt.Sprintf("%.2f", total.R2.ClassACost)})
-	w.Write([]string{"R2", "Class B Ops", fmt.Sprintf("%d", total.R2.Usage.ClassBOps), fmt.Sprintf("$%.2f/M", r2go2.R2ClassBPerMillion), fmt.Sprintf("%.2f", total.R2.ClassBCost)})
-	w.Write([]string{"Workers", "Requests", fmt.Sprintf("%d", total.Workers.Usage.Requests), fmt.Sprintf("$%.2f/M", r2go2.WorkersRequestsPerMillion), fmt.Sprintf("%.2f", total.Workers.RequestsCost)})
-	w.Write([]string{"KV", "Reads", fmt.Sprintf("%d", total.KV.Usage.Reads), fmt.Sprintf("$%.2f/M", r2go2.KVReadsPerMillion), fmt.Sprintf("%.2f", total.KV.ReadsCost)})
-	w.Write([]string{"KV", "Writes", fmt.Sprintf("%d", total.KV.Usage.Writes), fmt.Sprintf("$%.2f/M", r2go2.KVWritesPerMillion), fmt.Sprintf("%.2f", total.KV.WritesCost)})
-	w.Write([]string{"KV", "Storage", fmt.Sprintf("%.2f GB", total.KV.Usage.StorageGB), fmt.Sprintf("$%.2f/GB", r2go2.KVStoragePerGB), fmt.Sprintf("%.2f", total.KV.StorageCost)})
+	w.Write([]string{"R2", "Storage", fmt.Sprintf("%.2f GB", total.R2.Usage.StorageGB), fmt.Sprintf("$%.3f/GB", cosmoflare.R2StoragePerGB), fmt.Sprintf("%.2f", total.R2.StorageCost)})
+	w.Write([]string{"R2", "Class A Ops", fmt.Sprintf("%d", total.R2.Usage.ClassAOps), fmt.Sprintf("$%.2f/M", cosmoflare.R2ClassAPerMillion), fmt.Sprintf("%.2f", total.R2.ClassACost)})
+	w.Write([]string{"R2", "Class B Ops", fmt.Sprintf("%d", total.R2.Usage.ClassBOps), fmt.Sprintf("$%.2f/M", cosmoflare.R2ClassBPerMillion), fmt.Sprintf("%.2f", total.R2.ClassBCost)})
+	w.Write([]string{"Workers", "Requests", fmt.Sprintf("%d", total.Workers.Usage.Requests), fmt.Sprintf("$%.2f/M", cosmoflare.WorkersRequestsPerMillion), fmt.Sprintf("%.2f", total.Workers.RequestsCost)})
+	w.Write([]string{"KV", "Reads", fmt.Sprintf("%d", total.KV.Usage.Reads), fmt.Sprintf("$%.2f/M", cosmoflare.KVReadsPerMillion), fmt.Sprintf("%.2f", total.KV.ReadsCost)})
+	w.Write([]string{"KV", "Writes", fmt.Sprintf("%d", total.KV.Usage.Writes), fmt.Sprintf("$%.2f/M", cosmoflare.KVWritesPerMillion), fmt.Sprintf("%.2f", total.KV.WritesCost)})
+	w.Write([]string{"KV", "Storage", fmt.Sprintf("%.2f GB", total.KV.Usage.StorageGB), fmt.Sprintf("$%.2f/GB", cosmoflare.KVStoragePerGB), fmt.Sprintf("%.2f", total.KV.StorageCost)})
 	w.Write([]string{"TOTAL", "", "", "", fmt.Sprintf("%.2f", total.TotalMonthlyCost)})
 
 	return w.Error()

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -138,11 +138,11 @@ func TestDoctorRunNoArgs(t *testing.T) {
 // TestDoctorPrintReportNoPanic verifies printDoctorReport does not panic with
 // a minimal DiagnosticReport (nil sub-structs, empty issues).
 func TestDoctorPrintReportNoPanic(t *testing.T) {
-	report := &r2go2.DiagnosticReport{
+	report := &cosmoflare.DiagnosticReport{
 		Domain:    "example.com",
 		Timestamp: time.Now(),
 		Score:     "healthy",
-		Issues:    []r2go2.DiagnosticIssue{},
+		Issues:    []cosmoflare.DiagnosticIssue{},
 	}
 
 	// Redirect stdout.
@@ -182,11 +182,11 @@ func TestDoctorPrintReportNoPanic(t *testing.T) {
 func TestDoctorPrintReportScores(t *testing.T) {
 	for _, score := range []string{"healthy", "warning", "critical"} {
 		t.Run(score, func(t *testing.T) {
-			report := &r2go2.DiagnosticReport{
+			report := &cosmoflare.DiagnosticReport{
 				Domain:    "test.com",
 				Timestamp: time.Now(),
 				Score:     score,
-				Issues:    []r2go2.DiagnosticIssue{},
+				Issues:    []cosmoflare.DiagnosticIssue{},
 			}
 
 			old := os.Stdout
@@ -214,10 +214,10 @@ func TestDoctorPrintReportScores(t *testing.T) {
 // TestDoctorIssuesSectionEmpty verifies printIssuesSection prints nothing for an
 // empty issues slice.
 func TestDoctorIssuesSectionEmpty(t *testing.T) {
-	report := &r2go2.DiagnosticReport{
+	report := &cosmoflare.DiagnosticReport{
 		Domain:  "example.com",
 		Score:   "healthy",
-		Issues:  []r2go2.DiagnosticIssue{},
+		Issues:  []cosmoflare.DiagnosticIssue{},
 	}
 
 	old := os.Stdout
@@ -244,10 +244,10 @@ func TestDoctorIssuesSectionEmpty(t *testing.T) {
 // TestDoctorIssuesSectionWithIssues verifies printIssuesSection renders issues
 // and respects doctorFix for fix suggestions.
 func TestDoctorIssuesSectionWithIssues(t *testing.T) {
-	report := &r2go2.DiagnosticReport{
+	report := &cosmoflare.DiagnosticReport{
 		Domain: "example.com",
 		Score:  "warning",
-		Issues: []r2go2.DiagnosticIssue{
+		Issues: []cosmoflare.DiagnosticIssue{
 			{
 				Probe:    "ssl",
 				Severity: "warning",
@@ -337,10 +337,10 @@ func TestDoctorIssuesSectionSeverityIndicators(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.severity, func(t *testing.T) {
-			report := &r2go2.DiagnosticReport{
+			report := &cosmoflare.DiagnosticReport{
 				Domain: "example.com",
 				Score:  "warning",
-				Issues: []r2go2.DiagnosticIssue{
+				Issues: []cosmoflare.DiagnosticIssue{
 					{Probe: "test", Severity: tc.severity, Message: "test issue"},
 				},
 			}

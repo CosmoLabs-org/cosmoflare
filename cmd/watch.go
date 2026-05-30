@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -41,14 +41,14 @@ Output:
 In --json mode, each event is emitted as a single NDJSON line.
 
 Examples:
-  r2go2 watch my-bucket                              # Watch cwd, sync to bucket root
-  r2go2 watch my-bucket ./dist                        # Watch ./dist directory
-  r2go2 watch my-bucket ./build --prefix=assets/      # Upload under assets/ prefix
-  r2go2 watch my-bucket . --exclude="*.log,*.tmp"     # Skip log and tmp files
-  r2go2 watch my-bucket . --interval=5s               # Poll every 5 seconds
-  r2go2 watch my-bucket . --delete                    # Sync deletions too
-  r2go2 watch my-bucket . --dry-run                   # Preview without uploading
-  r2go2 watch my-bucket . --json                      # NDJSON event stream`,
+  cosmoflare watch my-bucket                              # Watch cwd, sync to bucket root
+  cosmoflare watch my-bucket ./dist                        # Watch ./dist directory
+  cosmoflare watch my-bucket ./build --prefix=assets/      # Upload under assets/ prefix
+  cosmoflare watch my-bucket . --exclude="*.log,*.tmp"     # Skip log and tmp files
+  cosmoflare watch my-bucket . --interval=5s               # Poll every 5 seconds
+  cosmoflare watch my-bucket . --delete                    # Sync deletions too
+  cosmoflare watch my-bucket . --dry-run                   # Preview without uploading
+  cosmoflare watch my-bucket . --json                      # NDJSON event stream`,
 	RunE: runWatch,
 }
 
@@ -74,7 +74,7 @@ type watchEvent struct {
 
 func runWatch(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("bucket name is required\n\nUsage: r2go2 watch <bucket> [directory]")
+		return fmt.Errorf("bucket name is required\n\nUsage: cosmoflare watch <bucket> [directory]")
 	}
 
 	bucket := args[0]
@@ -90,7 +90,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create the file watcher
-	fw, err := r2go2.NewFileWatcher(absDir, &r2go2.WatcherOptions{
+	fw, err := cosmoflare.NewFileWatcher(absDir, &cosmoflare.WatcherOptions{
 		Prefix:   watchPrefix,
 		Exclude:  watchExclude,
 		Interval: watchInterval,
@@ -104,11 +104,11 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create R2 client (unless dry-run)
-	var r2client r2go2.R2Client
+	var r2client cosmoflare.R2Client
 	if !DryRun {
-		r2client, err = r2go2.NewClient(
-			r2go2.WithAccountID(AccountID),
-			r2go2.WithAPIToken(APIToken),
+		r2client, err = cosmoflare.NewClient(
+			cosmoflare.WithAccountID(AccountID),
+			cosmoflare.WithAPIToken(APIToken),
 		)
 		if err != nil {
 			if JSONOutput {
@@ -173,9 +173,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 
 			for _, change := range changes {
 				switch change.Type {
-				case r2go2.ChangeAdded, r2go2.ChangeModified:
+				case cosmoflare.ChangeAdded, cosmoflare.ChangeModified:
 					syncUpload(ctx, r2client, bucket, change)
-				case r2go2.ChangeDeleted:
+				case cosmoflare.ChangeDeleted:
 					if watchDelete {
 						syncDelete(ctx, r2client, bucket, change)
 					} else if Verbose && !JSONOutput {
@@ -189,10 +189,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func syncUpload(ctx context.Context, client r2go2.R2Client, bucket string, change r2go2.FileChange) {
+func syncUpload(ctx context.Context, client cosmoflare.R2Client, bucket string, change cosmoflare.FileChange) {
 	action := "uploaded"
 	symbol := "[+]"
-	if change.Type == r2go2.ChangeModified {
+	if change.Type == cosmoflare.ChangeModified {
 		action = "updated"
 		symbol = "[~]"
 	}
@@ -228,7 +228,7 @@ func syncUpload(ctx context.Context, client r2go2.R2Client, bucket string, chang
 	}
 }
 
-func syncDelete(ctx context.Context, client r2go2.R2Client, bucket string, change r2go2.FileChange) {
+func syncDelete(ctx context.Context, client cosmoflare.R2Client, bucket string, change cosmoflare.FileChange) {
 	if DryRun {
 		emitWatchEvent("deleted", change, true)
 		return
@@ -247,7 +247,7 @@ func syncDelete(ctx context.Context, client r2go2.R2Client, bucket string, chang
 	}
 }
 
-func emitWatchEvent(action string, change r2go2.FileChange, dryRun bool) {
+func emitWatchEvent(action string, change cosmoflare.FileChange, dryRun bool) {
 	if JSONOutput {
 		evt := watchEvent{
 			Time:   time.Now().UTC().Format(time.RFC3339),

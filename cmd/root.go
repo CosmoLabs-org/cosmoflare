@@ -1,5 +1,5 @@
 /*
-Package cmd provides the Cobra CLI commands for R2Go2
+Package cmd provides the Cobra CLI commands for Cosmoflare
 
 Copyright © 2025 CosmoLabs (https://cosmolabs.org)
 License: MIT
@@ -38,9 +38,9 @@ func SetBuildInfo(version, buildTime, gitCommit string) {
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "r2go2",
+	Use:   "cosmoflare",
 	Short: "Cosmoflare — CLI for the full Cloudflare developer platform",
-	Long: `Cosmoflare (r2go2) manages the full Cloudflare developer platform from the terminal.
+	Long: `Cosmoflare manages the full Cloudflare developer platform from the terminal.
 
 Services:
   • R2 Storage   — buckets, objects, uploads, downloads, presigned URLs
@@ -58,19 +58,19 @@ Features:
   • Agent-friendly: rich --help, predictable exit codes
 
 Built by CosmoLabs (https://cosmolabs.org). Open-source, MIT licensed.
-The 'cosmoflare' binary is the primary name; 'r2go2' remains as a backward-compatible alias.
+The 'r2go2' binary remains available as a backward-compatible alias.
 
 Environment Variables:
   CLOUDFLARE_API_TOKEN    Your Cloudflare API token (required)
   CLOUDFLARE_ACCOUNT_ID   Your Cloudflare Account ID (or use --account-id)
 
 Examples:
-  r2go2 bucket list                       # List all R2 buckets
-  r2go2 dns list ZONE_ID                  # List DNS records
-  r2go2 zone list --json                  # List zones as JSON
-  r2go2 ssl status ZONE_ID               # Check SSL/TLS mode
-  r2go2 cache purge ZONE_ID --all --force # Purge entire cache
-  r2go2 worker deploy my-worker -s w.js  # Deploy a Worker`,
+  cosmoflare bucket list                       # List all R2 buckets
+  cosmoflare dns list ZONE_ID                  # List DNS records
+  cosmoflare zone list --json                  # List zones as JSON
+  cosmoflare ssl status ZONE_ID               # Check SSL/TLS mode
+  cosmoflare cache purge ZONE_ID --all --force # Purge entire cache
+  cosmoflare worker deploy my-worker -s w.js  # Deploy a Worker`,
 	Version: AppVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Skip API validation for commands that don't need R2 access.
@@ -117,7 +117,7 @@ Examples:
 
 		// Verbose output
 		if Verbose {
-			printInfo("R2Go2 version: %s", AppVersion)
+			printInfo("Cosmoflare version: %s", AppVersion)
 			printInfo("Account ID: %s", utils.MaskAccountID(AccountID))
 		}
 	},
@@ -131,7 +131,7 @@ func Execute() error {
 
 func init() {
 	// Set custom version template with proper branding
-	rootCmd.SetVersionTemplate("R2Go2 version {{.Version}}\n")
+	rootCmd.SetVersionTemplate("Cosmoflare version {{.Version}}\n")
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&AccountID, "account-id", "", "Cloudflare Account ID (overrides CLOUDFLARE_ACCOUNT_ID)")

@@ -182,7 +182,7 @@ func (m *Manager) TriggerAlert(alert *Alert, value float64, message string, data
 		Event:     "alert_triggered",
 		Alert:     alert,
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Value:     value,
 		Threshold: alert.Threshold,
 		Message:   message,
@@ -239,7 +239,7 @@ func (m *Manager) TestWebhook(webhook *Webhook) error {
 	testEvent := &Event{
 		Type:      "webhook_test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Data: map[string]interface{}{
 			"message": "This is a test webhook from R2Go2",
 		},
@@ -386,7 +386,7 @@ func CreateBucketEvent(eventType, bucket string, data map[string]interface{}) *E
 		Type:      eventType,
 		Timestamp: time.Now().UTC(),
 		Bucket:    bucket,
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Data:      data,
 	}
 }
@@ -405,7 +405,7 @@ func CreateObjectEvent(eventType, bucket, object string, size int64, data map[st
 		Timestamp: time.Now().UTC(),
 		Bucket:    bucket,
 		Object:    object,
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Data:      data,
 	}
 }
@@ -415,7 +415,7 @@ func CreateAlertEvent(alert *Alert, value float64, message string) *Event {
 	return &Event{
 		Type:      EventTypeAlertTriggered,
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Data: map[string]interface{}{
 			"alert_id":   alert.ID,
 			"alert_name": alert.Name,

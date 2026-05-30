@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -17,9 +17,9 @@ var listCmd = &cobra.Command{
 	Long: `List all Cloudflare R2 buckets in your account with their names and creation dates.
 
 Examples:
-  r2go2 list
-  r2go2 list --json
-  r2go2 list --account-id="your-account-id"`,
+  cosmoflare list
+  cosmoflare list --json
+  cosmoflare list --account-id="your-account-id"`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := getAPIClient()
@@ -57,7 +57,7 @@ Examples:
 func init() {
 }
 
-func printBucketsTable(buckets []*r2go2.Bucket) {
+func printBucketsTable(buckets []*cosmoflare.Bucket) {
 	if len(buckets) == 0 {
 		printInfo("No buckets found in account %s", utils.MaskAccountID(AccountID))
 		return

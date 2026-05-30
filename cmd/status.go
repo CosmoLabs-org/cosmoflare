@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var statusCmd = &cobra.Command{
@@ -212,6 +212,6 @@ func printStatusLine(label string, count int, errMsg string) {
 	}
 }
 
-func getR2ClientForStatus() (r2go2.R2Client, error) {
+func getR2ClientForStatus() (cosmoflare.R2Client, error) {
 	return getAPIClient()
 }

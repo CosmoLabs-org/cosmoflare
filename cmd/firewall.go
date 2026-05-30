@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var firewallCmd = &cobra.Command{
@@ -156,8 +156,8 @@ func init() {
 	firewallDeleteCmd.Flags().BoolVar(&fwForce, "force", false, "Skip confirmation prompt")
 }
 
-func getFirewallService(zoneID string) (*r2go2.FirewallService, error) {
-	return r2go2.NewFirewallServiceFromCreds(zoneID, APIToken)
+func getFirewallService(zoneID string) (*cosmoflare.FirewallService, error) {
+	return cosmoflare.NewFirewallServiceFromCreds(zoneID, APIToken)
 }
 
 func runFirewallList(cmd *cobra.Command, args []string) error {

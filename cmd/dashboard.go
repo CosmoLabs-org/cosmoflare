@@ -32,8 +32,8 @@ The dashboard provides a GUI-like experience entirely within your terminal,
 perfect for SSH connections and command-line workflows.
 
 Examples:
-  r2go2 dashboard                    # Launch dashboard
-  r2go2 dashboard --help            # Show dashboard help`,
+  cosmoflare dashboard                    # Launch dashboard
+  cosmoflare dashboard --help            # Show dashboard help`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Launch TUI dashboard
 		if err := runDashboard(); err != nil {

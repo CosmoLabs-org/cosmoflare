@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var kvCmd = &cobra.Command{
@@ -26,11 +26,11 @@ Commands:
   list               List keys in a namespace
 
 Examples:
-  r2go2 kv namespace create my-cache
-  r2go2 kv namespace list --json
-  r2go2 kv put ns-abc123 my-key --value="hello world"
-  r2go2 kv get ns-abc123 my-key
-  r2go2 kv list ns-abc123 --prefix=cache/`,
+  cosmoflare kv namespace create my-cache
+  cosmoflare kv namespace list --json
+  cosmoflare kv put ns-abc123 my-key --value="hello world"
+  cosmoflare kv get ns-abc123 my-key
+  cosmoflare kv list ns-abc123 --prefix=cache/`,
 }
 
 // namespace subcommands
@@ -62,8 +62,8 @@ var kvNamespaceCreateCmd = &cobra.Command{
 A 400 error is returned if a namespace with this title already exists.
 
 Examples:
-  r2go2 kv namespace create my-cache
-  r2go2 kv namespace create production-data --json`,
+  cosmoflare kv namespace create my-cache
+  cosmoflare kv namespace create production-data --json`,
 	RunE: runKVNamespaceCreate,
 }
 
@@ -73,8 +73,8 @@ var kvNamespaceListCmd = &cobra.Command{
 	Long: `List all KV namespaces in the current account.
 
 Examples:
-  r2go2 kv namespace list
-  r2go2 kv namespace list --json`,
+  cosmoflare kv namespace list
+  cosmoflare kv namespace list --json`,
 	RunE: runKVNamespaceList,
 }
 
@@ -86,8 +86,8 @@ var kvNamespaceDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible.
 
 Examples:
-  r2go2 kv namespace delete ns-abc123
-  r2go2 kv namespace delete ns-abc123 --force`,
+  cosmoflare kv namespace delete ns-abc123
+  cosmoflare kv namespace delete ns-abc123 --force`,
 	RunE: runKVNamespaceDelete,
 }
 
@@ -99,9 +99,9 @@ var kvPutCmd = &cobra.Command{
 Provide the value via --value flag or --file flag (file contents).
 
 Examples:
-  r2go2 kv put ns-abc123 my-key --value="hello world"
-  r2go2 kv put ns-abc123 config.json --file=config.json
-  r2go2 kv put ns-abc123 session-123 --value="data" --ttl=3600`,
+  cosmoflare kv put ns-abc123 my-key --value="hello world"
+  cosmoflare kv put ns-abc123 config.json --file=config.json
+  cosmoflare kv put ns-abc123 session-123 --value="data" --ttl=3600`,
 	RunE: runKVPut,
 }
 
@@ -111,8 +111,8 @@ var kvGetCmd = &cobra.Command{
 	Long: `Read a value from a KV namespace.
 
 Examples:
-  r2go2 kv get ns-abc123 my-key
-  r2go2 kv get ns-abc123 my-key --json`,
+  cosmoflare kv get ns-abc123 my-key
+  cosmoflare kv get ns-abc123 my-key --json`,
 	RunE: runKVGet,
 }
 
@@ -122,7 +122,7 @@ var kvDeleteCmd = &cobra.Command{
 	Long: `Delete a key from a KV namespace.
 
 Examples:
-  r2go2 kv delete ns-abc123 my-key`,
+  cosmoflare kv delete ns-abc123 my-key`,
 	RunE: runKVDelete,
 }
 
@@ -132,9 +132,9 @@ var kvListCmd = &cobra.Command{
 	Long: `List keys in a KV namespace with optional prefix filtering.
 
 Examples:
-  r2go2 kv list ns-abc123
-  r2go2 kv list ns-abc123 --prefix=cache/
-  r2go2 kv list ns-abc123 --limit=100 --json`,
+  cosmoflare kv list ns-abc123
+  cosmoflare kv list ns-abc123 --prefix=cache/
+  cosmoflare kv list ns-abc123 --limit=100 --json`,
 	RunE: runKVList,
 }
 
@@ -161,8 +161,8 @@ func init() {
 	kvListCmd.Flags().IntVar(&kvLimit, "limit", 1000, "Maximum number of keys to return")
 }
 
-func getKVService() (*r2go2.KVService, error) {
-	return r2go2.NewKVServiceFromCreds(AccountID, APIToken)
+func getKVService() (*cosmoflare.KVService, error) {
+	return cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
 }
 
 func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
@@ -303,9 +303,9 @@ func runKVPut(cmd *cobra.Command, args []string) error {
 		valueReader = strings.NewReader(kvValue)
 	}
 
-	var opts []r2go2.KVOption
+	var opts []cosmoflare.KVOption
 	if kvTTL > 0 {
-		opts = append(opts, r2go2.WithKVTTL(kvTTL))
+		opts = append(opts, cosmoflare.WithKVTTL(kvTTL))
 	}
 
 	if DryRun {
@@ -409,12 +409,12 @@ func runKVList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create KV service: %w", err)
 	}
 
-	var opts []r2go2.KVListOption
+	var opts []cosmoflare.KVListOption
 	if kvPrefix != "" {
-		opts = append(opts, r2go2.WithKVPrefix(kvPrefix))
+		opts = append(opts, cosmoflare.WithKVPrefix(kvPrefix))
 	}
 	if kvLimit > 0 {
-		opts = append(opts, r2go2.WithKVLimit(kvLimit))
+		opts = append(opts, cosmoflare.WithKVLimit(kvLimit))
 	}
 
 	result, err := svc.ListKeys(context.Background(), namespaceID, opts...)

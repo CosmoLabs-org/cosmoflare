@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-29T05:34:33.742152-03:00
+last_updated: 2026-05-29T22:18:32.971423-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -132,10 +132,11 @@ items:
       created_at: 2026-05-16T00:09:47.693133-03:00
     - id: ROAD-048
       title: Vectorize — vector storage and indexing for AI workloads
-      status: captured
+      status: completed
       priority: 65
       category: intelligence
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:09:47.594725-03:00
     - id: ROAD-047
       title: Vectorize — vector storage and indexing for AI workloads

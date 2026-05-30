@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var diffOutput string
@@ -33,14 +33,14 @@ Subcommands:
   r2        Compare only R2 buckets
 
 Examples:
-  r2go2 diff                           # Compare all configured services
-  r2go2 diff --output=summary          # Show counts only
-  r2go2 diff workers                   # Compare only Workers
-  r2go2 diff dns                       # Compare only DNS records
-  r2go2 diff kv                        # Compare only KV namespaces
-  r2go2 diff r2                        # Compare only R2 buckets
-  r2go2 diff --json                    # Structured JSON output
-  r2go2 diff workers --json            # JSON output for Workers only`,
+  cosmoflare diff                           # Compare all configured services
+  cosmoflare diff --output=summary          # Show counts only
+  cosmoflare diff workers                   # Compare only Workers
+  cosmoflare diff dns                       # Compare only DNS records
+  cosmoflare diff kv                        # Compare only KV namespaces
+  cosmoflare diff r2                        # Compare only R2 buckets
+  cosmoflare diff --json                    # Structured JSON output
+  cosmoflare diff workers --json            # JSON output for Workers only`,
 	RunE: runDiffAll,
 }
 
@@ -53,9 +53,9 @@ Shows which Workers exist in config but are not deployed (additions),
 which are deployed but not in config (deletions).
 
 Examples:
-  r2go2 diff workers
-  r2go2 diff workers --json
-  r2go2 diff workers --output=summary`,
+  cosmoflare diff workers
+  cosmoflare diff workers --json
+  cosmoflare diff workers --output=summary`,
 	RunE: runDiffWorkers,
 }
 
@@ -69,9 +69,9 @@ Requires dns.zone_id to be set in .cosmoflare.yaml.
 Shows additions, deletions, and modifications (TTL/proxied changes).
 
 Examples:
-  r2go2 diff dns
-  r2go2 diff dns --json
-  r2go2 diff dns --output=summary`,
+  cosmoflare diff dns
+  cosmoflare diff dns --json
+  cosmoflare diff dns --output=summary`,
 	RunE: runDiffDNS,
 }
 
@@ -84,9 +84,9 @@ Shows which namespaces exist in config but not in Cloudflare (additions),
 and which exist in Cloudflare but not in config (deletions).
 
 Examples:
-  r2go2 diff kv
-  r2go2 diff kv --json
-  r2go2 diff kv --output=summary`,
+  cosmoflare diff kv
+  cosmoflare diff kv --json
+  cosmoflare diff kv --output=summary`,
 	RunE: runDiffKV,
 }
 
@@ -99,9 +99,9 @@ Shows which buckets exist in config but not in Cloudflare (additions),
 and which exist in Cloudflare but not in config (deletions).
 
 Examples:
-  r2go2 diff r2
-  r2go2 diff r2 --json
-  r2go2 diff r2 --output=summary`,
+  cosmoflare diff r2
+  cosmoflare diff r2 --json
+  cosmoflare diff r2 --output=summary`,
 	RunE: runDiffR2,
 }
 
@@ -116,16 +116,16 @@ func init() {
 	diffCmd.PersistentFlags().StringVar(&diffOutput, "output", "full", "Output detail level: full or summary")
 }
 
-func getDiffService() (*r2go2.DiffService, error) {
-	return r2go2.NewDiffService(AccountID, APIToken)
+func getDiffService() (*cosmoflare.DiffService, error) {
+	return cosmoflare.NewDiffService(AccountID, APIToken)
 }
 
-func loadConfig() (*r2go2.CosmoflareConfig, error) {
+func loadConfig() (*cosmoflare.CosmoflareConfig, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working directory: %w", err)
 	}
-	cfg, err := r2go2.LoadCosmoflareConfig(dir)
+	cfg, err := cosmoflare.LoadCosmoflareConfig(dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w\n\nRun 'cosmoflare init' to create a .cosmoflare.yaml", err)
 	}
@@ -306,7 +306,7 @@ func runDiffR2(cmd *cobra.Command, args []string) error {
 }
 
 // printDiffResult renders a single service diff in human-readable format.
-func printDiffResult(result *r2go2.DiffResult) {
+func printDiffResult(result *cosmoflare.DiffResult) {
 	if !result.HasChanges() {
 		return
 	}
@@ -335,7 +335,7 @@ func printDiffResult(result *r2go2.DiffResult) {
 }
 
 // printDiffSummaryLine prints the aggregate summary at the bottom.
-func printDiffSummaryLine(summary *r2go2.DiffSummary) {
+func printDiffSummaryLine(summary *cosmoflare.DiffSummary) {
 	total := summary.TotalAdd + summary.TotalDel + summary.TotalMod
 	fmt.Printf("\n%d change(s): +%d additions, -%d deletions, ~%d modifications\n",
 		total, summary.TotalAdd, summary.TotalDel, summary.TotalMod)

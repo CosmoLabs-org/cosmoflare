@@ -41,13 +41,13 @@ Dynamic completions:
 To load completions:
 
 Bash:
-  $ source <(r2go2 completion bash)
+  $ source <(cosmoflare completion bash)
 
   # To load completions for each session, execute once:
   # Linux:
-  $ r2go2 completion bash > /etc/bash_completion.d/r2go2
+  $ cosmoflare completion bash > /etc/bash_completion.d/cosmoflare
   # macOS:
-  $ r2go2 completion bash > /usr/local/etc/bash_completion.d/r2go2
+  $ cosmoflare completion bash > /usr/local/etc/bash_completion.d/cosmoflare
 
 Zsh:
   # If shell completion is not already enabled in your environment,
@@ -55,21 +55,21 @@ Zsh:
   $ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
   # To load completions for each session, execute once:
-  $ r2go2 completion zsh > "${fpath[1]}/_r2go2"
+  $ cosmoflare completion zsh > "${fpath[1]}/_r2go2"
 
   # You will need to start a new shell for this setup to take effect.
 
 fish:
-  $ r2go2 completion fish | source
+  $ cosmoflare completion fish | source
 
   # To load completions for each session, execute once:
-  $ r2go2 completion fish > ~/.config/fish/completions/r2go2.fish
+  $ cosmoflare completion fish > ~/.config/fish/completions/cosmoflare.fish
 
 PowerShell:
-  PS> r2go2 completion powershell | Out-String | Invoke-Expression
+  PS> cosmoflare completion powershell | Out-String | Invoke-Expression
 
   # To load completions for every new session, run:
-  PS> r2go2 completion powershell > r2go2.ps1
+  PS> cosmoflare completion powershell > cosmoflare.ps1
   # and source this file from your PowerShell profile.
 `,
 	DisableFlagsInUseLine: true,

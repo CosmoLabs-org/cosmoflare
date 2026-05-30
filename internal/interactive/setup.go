@@ -309,9 +309,9 @@ func (w *SetupWizard) Complete(profileName, accountName string) {
 	fmt.Println()
 
 	colorInfo.Println("Next steps:")
-	fmt.Printf("  • Run: %s\n", colorBold.Sprintf("r2go2 config list"))
-	fmt.Printf("  • Test: %s\n", colorBold.Sprintf("r2go2 bucket list"))
-	fmt.Printf("  • Create: %s\n", colorBold.Sprintf("r2go2 bucket create my-bucket"))
+	fmt.Printf("  • Run: %s\n", colorBold.Sprintf("cosmoflare config list"))
+	fmt.Printf("  • Test: %s\n", colorBold.Sprintf("cosmoflare bucket list"))
+	fmt.Printf("  • Create: %s\n", colorBold.Sprintf("cosmoflare bucket create my-bucket"))
 	fmt.Println()
 
 	w.showProgress()

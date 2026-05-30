@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var emailCmd = &cobra.Command{
@@ -336,8 +336,8 @@ func init() {
 	_ = emailCatchallUpdateCmd.MarkFlagRequired("forward-to")
 }
 
-func getEmailService(zoneID string) (*r2go2.EmailService, error) {
-	return r2go2.NewEmailServiceFromCreds(zoneID, AccountID, APIToken)
+func getEmailService(zoneID string) (*cosmoflare.EmailService, error) {
+	return cosmoflare.NewEmailServiceFromCreds(zoneID, AccountID, APIToken)
 }
 
 // --- Rules handlers ---
@@ -481,19 +481,19 @@ func runEmailRulesCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Build matchers
-	var matchers []r2go2.EmailRuleMatcher
+	var matchers []cosmoflare.EmailRuleMatcher
 	if emailMatchAll {
-		matchers = []r2go2.EmailRuleMatcher{{Type: "all"}}
+		matchers = []cosmoflare.EmailRuleMatcher{{Type: "all"}}
 	} else {
-		matchers = []r2go2.EmailRuleMatcher{{Type: "literal", Field: "to", Value: emailMatchTo}}
+		matchers = []cosmoflare.EmailRuleMatcher{{Type: "literal", Field: "to", Value: emailMatchTo}}
 	}
 
 	// Build actions
-	var actions []r2go2.EmailRuleAction
+	var actions []cosmoflare.EmailRuleAction
 	if emailDrop {
-		actions = []r2go2.EmailRuleAction{{Type: "drop", Value: []string{}}}
+		actions = []cosmoflare.EmailRuleAction{{Type: "drop", Value: []string{}}}
 	} else {
-		actions = []r2go2.EmailRuleAction{{Type: "forward", Value: []string{emailForwardTo}}}
+		actions = []cosmoflare.EmailRuleAction{{Type: "forward", Value: []string{emailForwardTo}}}
 	}
 
 	svc, err := getEmailService(zoneID)
@@ -551,19 +551,19 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Build matchers
-	var matchers []r2go2.EmailRuleMatcher
+	var matchers []cosmoflare.EmailRuleMatcher
 	if emailMatchAll {
-		matchers = []r2go2.EmailRuleMatcher{{Type: "all"}}
+		matchers = []cosmoflare.EmailRuleMatcher{{Type: "all"}}
 	} else if emailMatchTo != "" {
-		matchers = []r2go2.EmailRuleMatcher{{Type: "literal", Field: "to", Value: emailMatchTo}}
+		matchers = []cosmoflare.EmailRuleMatcher{{Type: "literal", Field: "to", Value: emailMatchTo}}
 	}
 
 	// Build actions
-	var actions []r2go2.EmailRuleAction
+	var actions []cosmoflare.EmailRuleAction
 	if emailDrop {
-		actions = []r2go2.EmailRuleAction{{Type: "drop", Value: []string{}}}
+		actions = []cosmoflare.EmailRuleAction{{Type: "drop", Value: []string{}}}
 	} else if emailForwardTo != "" {
-		actions = []r2go2.EmailRuleAction{{Type: "forward", Value: []string{emailForwardTo}}}
+		actions = []cosmoflare.EmailRuleAction{{Type: "forward", Value: []string{emailForwardTo}}}
 	}
 
 	svc, err := getEmailService(zoneID)

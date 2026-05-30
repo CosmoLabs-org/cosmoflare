@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var dnsCmd = &cobra.Command{
@@ -26,11 +26,11 @@ Commands:
 DNS records are zone-scoped, so a zone ID is required for all operations.
 
 Examples:
-  r2go2 dns create ZONE_ID --type=A --name=www --content=1.2.3.4
-  r2go2 dns list ZONE_ID --json
-  r2go2 dns get ZONE_ID RECORD_ID
-  r2go2 dns update ZONE_ID RECORD_ID --content=5.6.7.8
-  r2go2 dns delete ZONE_ID RECORD_ID --force`,
+  cosmoflare dns create ZONE_ID --type=A --name=www --content=1.2.3.4
+  cosmoflare dns list ZONE_ID --json
+  cosmoflare dns get ZONE_ID RECORD_ID
+  cosmoflare dns update ZONE_ID RECORD_ID --content=5.6.7.8
+  cosmoflare dns delete ZONE_ID RECORD_ID --force`,
 }
 
 var (
@@ -55,12 +55,12 @@ var dnsCreateCmd = &cobra.Command{
 Supported record types: A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, LOC, SPF, CERT, DNSKEY, DS, NAPTR, SMIMEA, SSHFP, TLSA, URI.
 
 Examples:
-  r2go2 dns create ZONE_ID --type=A --name=www --content=1.2.3.4
-  r2go2 dns create ZONE_ID --type=AAAA --name=www --content=2001:db8::1
-  r2go2 dns create ZONE_ID --type=CNAME --name=blog --content=example.com
-  r2go2 dns create ZONE_ID --type=MX --name=@ --content=mail.example.com --priority=10
-  r2go2 dns create ZONE_ID --type=TXT --name=@ --content="v=spf1 include:example.com ~all"
-  r2go2 dns create ZONE_ID --type=A --name=api --content=1.2.3.4 --proxied --ttl=1 --comment="API endpoint"`,
+  cosmoflare dns create ZONE_ID --type=A --name=www --content=1.2.3.4
+  cosmoflare dns create ZONE_ID --type=AAAA --name=www --content=2001:db8::1
+  cosmoflare dns create ZONE_ID --type=CNAME --name=blog --content=example.com
+  cosmoflare dns create ZONE_ID --type=MX --name=@ --content=mail.example.com --priority=10
+  cosmoflare dns create ZONE_ID --type=TXT --name=@ --content="v=spf1 include:example.com ~all"
+  cosmoflare dns create ZONE_ID --type=A --name=api --content=1.2.3.4 --proxied --ttl=1 --comment="API endpoint"`,
 	RunE: runDNSCreate,
 }
 
@@ -70,11 +70,11 @@ var dnsListCmd = &cobra.Command{
 	Long: `List all DNS records in a zone with optional filtering.
 
 Examples:
-  r2go2 dns list ZONE_ID
-  r2go2 dns list ZONE_ID --type=A
-  r2go2 dns list ZONE_ID --name=www.example.com
-  r2go2 dns list ZONE_ID --content=1.2.3.4
-  r2go2 dns list ZONE_ID --json`,
+  cosmoflare dns list ZONE_ID
+  cosmoflare dns list ZONE_ID --type=A
+  cosmoflare dns list ZONE_ID --name=www.example.com
+  cosmoflare dns list ZONE_ID --content=1.2.3.4
+  cosmoflare dns list ZONE_ID --json`,
 	RunE: runDNSList,
 }
 
@@ -84,8 +84,8 @@ var dnsGetCmd = &cobra.Command{
 	Long: `Get details of a single DNS record by its ID.
 
 Examples:
-  r2go2 dns get ZONE_ID RECORD_ID
-  r2go2 dns get ZONE_ID RECORD_ID --json`,
+  cosmoflare dns get ZONE_ID RECORD_ID
+  cosmoflare dns get ZONE_ID RECORD_ID --json`,
 	RunE: runDNSGet,
 }
 
@@ -97,10 +97,10 @@ var dnsUpdateCmd = &cobra.Command{
 Provide only the fields you want to change. Unspecified fields are left unchanged.
 
 Examples:
-  r2go2 dns update ZONE_ID RECORD_ID --content=5.6.7.8
-  r2go2 dns update ZONE_ID RECORD_ID --ttl=300
-  r2go2 dns update ZONE_ID RECORD_ID --proxied --comment="Updated endpoint"
-  r2go2 dns update ZONE_ID RECORD_ID --content=5.6.7.8 --ttl=300 --json`,
+  cosmoflare dns update ZONE_ID RECORD_ID --content=5.6.7.8
+  cosmoflare dns update ZONE_ID RECORD_ID --ttl=300
+  cosmoflare dns update ZONE_ID RECORD_ID --proxied --comment="Updated endpoint"
+  cosmoflare dns update ZONE_ID RECORD_ID --content=5.6.7.8 --ttl=300 --json`,
 	RunE: runDNSUpdate,
 }
 
@@ -112,8 +112,8 @@ var dnsDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible.
 
 Examples:
-  r2go2 dns delete ZONE_ID RECORD_ID
-  r2go2 dns delete ZONE_ID RECORD_ID --force`,
+  cosmoflare dns delete ZONE_ID RECORD_ID
+  cosmoflare dns delete ZONE_ID RECORD_ID --force`,
 	RunE: runDNSDelete,
 }
 
@@ -153,8 +153,8 @@ func init() {
 	dnsDeleteCmd.Flags().BoolVar(&dnsForce, "force", false, "Skip confirmation prompt")
 }
 
-func getDNSService(zoneID string) (*r2go2.DNSService, error) {
-	return r2go2.NewDNSServiceFromCreds(zoneID, APIToken)
+func getDNSService(zoneID string) (*cosmoflare.DNSService, error) {
+	return cosmoflare.NewDNSServiceFromCreds(zoneID, APIToken)
 }
 
 func runDNSCreate(cmd *cobra.Command, args []string) error {
@@ -168,18 +168,18 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create DNS service: %w", err)
 	}
 
-	var opts []r2go2.DNSOption
+	var opts []cosmoflare.DNSOption
 	if dnsTTL > 0 {
-		opts = append(opts, r2go2.WithDNSTTL(dnsTTL))
+		opts = append(opts, cosmoflare.WithDNSTTL(dnsTTL))
 	}
 	if cmd.Flags().Changed("proxied") {
-		opts = append(opts, r2go2.WithDNSProxied(dnsProxied))
+		opts = append(opts, cosmoflare.WithDNSProxied(dnsProxied))
 	}
 	if dnsPriority > 0 {
-		opts = append(opts, r2go2.WithDNSPriority(dnsPriority))
+		opts = append(opts, cosmoflare.WithDNSPriority(dnsPriority))
 	}
 	if dnsComment != "" {
-		opts = append(opts, r2go2.WithDNSComment(dnsComment))
+		opts = append(opts, cosmoflare.WithDNSComment(dnsComment))
 	}
 
 	if DryRun {
@@ -228,15 +228,15 @@ func runDNSList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create DNS service: %w", err)
 	}
 
-	var opts []r2go2.DNSListOption
+	var opts []cosmoflare.DNSListOption
 	if dnsFilterType != "" {
-		opts = append(opts, r2go2.WithDNSType(dnsFilterType))
+		opts = append(opts, cosmoflare.WithDNSType(dnsFilterType))
 	}
 	if dnsFilterName != "" {
-		opts = append(opts, r2go2.WithDNSName(dnsFilterName))
+		opts = append(opts, cosmoflare.WithDNSName(dnsFilterName))
 	}
 	if dnsFilterContent != "" {
-		opts = append(opts, r2go2.WithDNSContent(dnsFilterContent))
+		opts = append(opts, cosmoflare.WithDNSContent(dnsFilterContent))
 	}
 
 	records, err := svc.List(context.Background(), opts...)
@@ -334,18 +334,18 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 	}
 	zoneID, recordID := args[0], args[1]
 
-	var opts []r2go2.DNSOption
+	var opts []cosmoflare.DNSOption
 	if cmd.Flags().Changed("ttl") {
-		opts = append(opts, r2go2.WithDNSTTL(dnsTTL))
+		opts = append(opts, cosmoflare.WithDNSTTL(dnsTTL))
 	}
 	if cmd.Flags().Changed("proxied") {
-		opts = append(opts, r2go2.WithDNSProxied(dnsProxied))
+		opts = append(opts, cosmoflare.WithDNSProxied(dnsProxied))
 	}
 	if cmd.Flags().Changed("priority") {
-		opts = append(opts, r2go2.WithDNSPriority(dnsPriority))
+		opts = append(opts, cosmoflare.WithDNSPriority(dnsPriority))
 	}
 	if cmd.Flags().Changed("comment") {
-		opts = append(opts, r2go2.WithDNSComment(dnsComment))
+		opts = append(opts, cosmoflare.WithDNSComment(dnsComment))
 	}
 
 	if len(opts) == 0 {

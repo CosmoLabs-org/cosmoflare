@@ -1,5 +1,5 @@
 /*
-R2Go2 - A production-ready CLI tool for managing Cloudflare R2 buckets
+Cosmoflare - CLI for the full Cloudflare developer platform
 
 Copyright © 2025 CosmoLabs (https://cosmolabs.org)
 License: MIT (https://opensource.org/licenses/MIT)

@@ -50,7 +50,7 @@ func NewConfigManager() (*ConfigManager, error) {
 		return nil, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	configDir := filepath.Join(homeDir, ".r2go2")
+	configDir := filepath.Join(homeDir, ".cosmoflare")
 	configPath := filepath.Join(configDir, "config.yaml")
 
 	// Ensure config directory exists

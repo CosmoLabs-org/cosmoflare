@@ -98,7 +98,7 @@ func NewThemeManager() *ThemeManager {
 // getThemePath returns the path to user themes
 func (tm *ThemeManager) getThemePath() string {
 	homeDir, _ := os.UserHomeDir()
-	return filepath.Join(homeDir, ".r2go2", "themes")
+	return filepath.Join(homeDir, ".cosmoflare", "themes")
 }
 
 // loadBuiltinThemes loads the built-in themes

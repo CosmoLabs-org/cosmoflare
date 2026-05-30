@@ -172,7 +172,7 @@ func (bm *BackupManager) CreateEncryptedBackup() error {
 
 	// Generate filename
 	timestamp := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf(".r2go2-backup-%s.enc", timestamp)
+	filename := fmt.Sprintf(".cosmoflare-backup-%s.enc", timestamp)
 	homeDir, _ := os.UserHomeDir()
 	filepath := filepath.Join(homeDir, filename)
 
@@ -232,7 +232,7 @@ func (bm *BackupManager) CreatePlainBackup() error {
 
 	// Generate filename
 	timestamp := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf(".r2go2-backup-%s.json", timestamp)
+	filename := fmt.Sprintf(".cosmoflare-backup-%s.json", timestamp)
 	homeDir, _ := os.UserHomeDir()
 	filepath := filepath.Join(homeDir, filename)
 
@@ -272,7 +272,7 @@ func (bm *BackupManager) CreateEnvironmentBackup() error {
 
 	// Generate filename
 	timestamp := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf(".r2go2-backup-%s.sh", timestamp)
+	filename := fmt.Sprintf(".cosmoflare-backup-%s.sh", timestamp)
 	homeDir, _ := os.UserHomeDir()
 	filepath := filepath.Join(homeDir, filename)
 
@@ -538,7 +538,7 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 	PrintSuccess("🎉 Restore completed successfully!")
 
 	if !hasTokens {
-		PrintInfo("💡 Remember to test your restored profiles with 'r2go2 bucket list'")
+		PrintInfo("💡 Remember to test your restored profiles with 'cosmoflare bucket list'")
 	}
 
 	return nil
@@ -640,7 +640,7 @@ func (bm *BackupManager) findLatestBackup(dir string) string {
 
 	for _, file := range files {
 		name := file.Name()
-		if (strings.HasPrefix(name, ".r2go2-backup-") &&
+		if (strings.HasPrefix(name, ".cosmoflare-backup-") &&
 			(strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".enc"))) {
 
 			info, err := file.Info()

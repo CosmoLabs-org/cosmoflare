@@ -35,9 +35,9 @@ The wizard creates a secure configuration profile that you can use
 immediately with all R2Go2 commands.
 
 Example:
-  r2go2 setup                    # Interactive setup
-  r2go2 setup --profile=prod     # Create specific profile
-  r2go2 setup --quiet            # Non-interactive setup with env vars`,
+  cosmoflare setup                    # Interactive setup
+  cosmoflare setup --profile=prod     # Create specific profile
+  cosmoflare setup --quiet            # Non-interactive setup with env vars`,
 	RunE: runSetup,
 }
 
@@ -231,12 +231,12 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 
 	// Additional helpful information
 	printInfo("📚 Next steps:")
-	printInfo("  r2go2 config list                    # View all profiles")
-	printInfo("  r2go2 bucket list                    # List existing buckets")
-	printInfo("  r2go2 bucket create my-bucket        # Create a new bucket")
-	printInfo("  r2go2 upload ./file.txt my-bucket    # Upload files")
+	printInfo("  cosmoflare config list                    # View all profiles")
+	printInfo("  cosmoflare bucket list                    # List existing buckets")
+	printInfo("  cosmoflare bucket create my-bucket        # Create a new bucket")
+	printInfo("  cosmoflare upload ./file.txt my-bucket    # Upload files")
 	printInfo("")
-	printInfo("📖 For more help: r2go2 --help")
+	printInfo("📖 For more help: cosmoflare --help")
 	printInfo("🌐 Documentation: https://github.com/CosmoLabs-org/CosmoDev-R2Go2")
 
 	return nil

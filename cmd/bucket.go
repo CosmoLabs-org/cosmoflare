@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -30,10 +30,10 @@ Commands:
   import     Create buckets from spec file
 
 Examples:
-  r2go2 bucket create my-awesome-bucket
-  r2go2 bucket list --json
-  r2go2 bucket get my-bucket --output table
-  r2go2 bucket delete my-bucket --force`,
+  cosmoflare bucket create my-awesome-bucket
+  cosmoflare bucket list --json
+  cosmoflare bucket get my-bucket --output table
+  cosmoflare bucket delete my-bucket --force`,
 }
 
 var (
@@ -57,8 +57,8 @@ Bucket names must:
 - Not be formatted as IP addresses
 
 Examples:
-  r2go2 bucket create my-bucket
-  r2go2 bucket create my-bucket --location=eu --tags=env=prod,tier=standard`,
+  cosmoflare bucket create my-bucket
+  cosmoflare bucket create my-bucket --location=eu --tags=env=prod,tier=standard`,
 	RunE: runBucketCreate,
 }
 
@@ -73,9 +73,9 @@ Output formats:
 - csv: Comma-separated values
 
 Examples:
-  r2go2 bucket list
-  r2go2 bucket list --json
-  r2go2 bucket list --prefix=prod-`,
+  cosmoflare bucket list
+  cosmoflare bucket list --json
+  cosmoflare bucket list --prefix=prod-`,
 	RunE: runBucketList,
 }
 
@@ -85,9 +85,9 @@ var bucketGetCmd = &cobra.Command{
 	Long: `Get detailed information about a specific bucket.
 
 Examples:
-  r2go2 bucket get my-bucket
-  r2go2 bucket get my-bucket --output json
-  r2go2 bucket get my-bucket --include-objects`,
+  cosmoflare bucket get my-bucket
+  cosmoflare bucket get my-bucket --output json
+  cosmoflare bucket get my-bucket --include-objects`,
 	RunE: runBucketGet,
 }
 
@@ -99,8 +99,8 @@ var bucketUpdateCmd = &cobra.Command{
 Note: Bucket names cannot be changed after creation.
 
 Examples:
-  r2go2 bucket update my-bucket --tags=env=staging
-  r2go2 bucket update my-bucket --add-tags=project=website`,
+  cosmoflare bucket update my-bucket --tags=env=staging
+  cosmoflare bucket update my-bucket --add-tags=project=website`,
 	RunE: runBucketUpdate,
 }
 
@@ -113,9 +113,9 @@ WARNING: This action is irreversible and will delete all objects
 in the bucket. Use with caution.
 
 Examples:
-  r2go2 bucket delete my-bucket
-  r2go2 bucket delete my-bucket --force
-  r2go2 bucket delete my-bucket --dry-run`,
+  cosmoflare bucket delete my-bucket
+  cosmoflare bucket delete my-bucket --force
+  cosmoflare bucket delete my-bucket --dry-run`,
 	RunE: runBucketDelete,
 }
 
@@ -130,7 +130,7 @@ Exit codes:
 - 2: Error occurred
 
 Examples:
-  r2go2 bucket exists my-bucket && echo "Bucket exists"`,
+  cosmoflare bucket exists my-bucket && echo "Bucket exists"`,
 	RunE: runBucketExists,
 }
 
@@ -143,8 +143,8 @@ Specification file format (JSON):
 {"buckets": [{"name": "production-assets", "location": "eu"}]}
 
 Examples:
-  r2go2 bucket import buckets.json
-  r2go2 bucket import buckets.json --dry-run`,
+  cosmoflare bucket import buckets.json
+  cosmoflare bucket import buckets.json --dry-run`,
 	RunE: runBucketImport,
 }
 
@@ -234,7 +234,7 @@ func runBucketList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to list buckets: %w", err)
 	}
 
-	var filtered []*r2go2.Bucket
+	var filtered []*cosmoflare.Bucket
 	for _, bucket := range buckets {
 		if prefix != "" && !strings.HasPrefix(bucket.Name, prefix) {
 			continue
@@ -355,7 +355,7 @@ func runBucketUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("bucket name is required")
 	}
 
-	msg := "bucket metadata updates are not supported by the Cloudflare R2 API. Use 'r2go2 cors' for CORS settings or manage bucket configuration through the Cloudflare dashboard"
+	msg := "bucket metadata updates are not supported by the Cloudflare R2 API. Use 'cosmoflare cors' for CORS settings or manage bucket configuration through the Cloudflare dashboard"
 	if JSONOutput {
 		return printErrorJSON(msg)
 	}

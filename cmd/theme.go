@@ -40,10 +40,10 @@ Features:
 • Animation controls
 
 Examples:
-  r2go2 theme                      # Interactive theme menu
-  r2go2 theme --list              # List available themes
-  r2go2 theme --set=ocean         # Set ocean theme
-  r2go2 theme --create            # Create custom theme`,
+  cosmoflare theme                      # Interactive theme menu
+  cosmoflare theme --list              # List available themes
+  cosmoflare theme --set=ocean         # Set ocean theme
+  cosmoflare theme --create            # Create custom theme`,
 	RunE: runTheme,
 }
 
@@ -157,7 +157,7 @@ func showThemeInfo(themeManager *interactive.ThemeManager) error {
 	}
 
 	fmt.Println()
-	printInfo("Run 'r2go2 theme' to change themes")
+	printInfo("Run 'cosmoflare theme' to change themes")
 
 	return nil
 }

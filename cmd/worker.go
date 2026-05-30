@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var workerCmd = &cobra.Command{
@@ -29,10 +29,10 @@ Commands:
   settings  Update Worker settings
 
 Examples:
-  r2go2 worker deploy my-worker --script=worker.js
-  r2go2 worker list --json
-  r2go2 worker get my-worker
-  r2go2 worker delete my-worker --force`,
+  cosmoflare worker deploy my-worker --script=worker.js
+  cosmoflare worker list --json
+  cosmoflare worker get my-worker
+  cosmoflare worker delete my-worker --force`,
 }
 
 var (
@@ -58,9 +58,9 @@ var workerDeployCmd = &cobra.Command{
 The script can be provided via --script flag (file path) or stdin.
 
 Examples:
-  r2go2 worker deploy my-worker --script=worker.js
-  r2go2 worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
-  r2go2 worker deploy my-worker --script=worker.js --bindings=kv:MY_KV:ns-123`,
+  cosmoflare worker deploy my-worker --script=worker.js
+  cosmoflare worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
+  cosmoflare worker deploy my-worker --script=worker.js --bindings=kv:MY_KV:ns-123`,
 	RunE: runWorkerDeploy,
 }
 
@@ -70,8 +70,8 @@ var workerListCmd = &cobra.Command{
 	Long: `List all Workers in the current account.
 
 Examples:
-  r2go2 worker list
-  r2go2 worker list --json`,
+  cosmoflare worker list
+  cosmoflare worker list --json`,
 	RunE: runWorkerList,
 }
 
@@ -81,8 +81,8 @@ var workerGetCmd = &cobra.Command{
 	Long: `Get a Worker's script content and metadata.
 
 Examples:
-  r2go2 worker get my-worker
-  r2go2 worker get my-worker --json`,
+  cosmoflare worker get my-worker
+  cosmoflare worker get my-worker --json`,
 	RunE: runWorkerGet,
 }
 
@@ -94,8 +94,8 @@ var workerDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible.
 
 Examples:
-  r2go2 worker delete my-worker
-  r2go2 worker delete my-worker --force`,
+  cosmoflare worker delete my-worker
+  cosmoflare worker delete my-worker --force`,
 	RunE: runWorkerDelete,
 }
 
@@ -108,11 +108,11 @@ Use --follow (-f) to continuously poll for new log entries. Combine with
 --level to filter by severity and --since to set a time window.
 
 Examples:
-  r2go2 worker logs my-worker
-  r2go2 worker logs my-worker --limit=50 --json
-  r2go2 worker logs my-worker --follow
-  r2go2 worker logs my-worker -f --level=error --since=15m
-  r2go2 worker logs my-worker -f --interval=5 --json`,
+  cosmoflare worker logs my-worker
+  cosmoflare worker logs my-worker --limit=50 --json
+  cosmoflare worker logs my-worker --follow
+  cosmoflare worker logs my-worker -f --level=error --since=15m
+  cosmoflare worker logs my-worker -f --interval=5 --json`,
 	RunE: runWorkerLogs,
 }
 
@@ -122,8 +122,8 @@ var workerSettingsCmd = &cobra.Command{
 	Long: `Update a Worker's configuration settings.
 
 Examples:
-  r2go2 worker settings my-worker --compatibility-date=2024-01-01
-  r2go2 worker settings my-worker --usage-model=bundled`,
+  cosmoflare worker settings my-worker --compatibility-date=2024-01-01
+  cosmoflare worker settings my-worker --usage-model=bundled`,
 	RunE: runWorkerSettings,
 }
 
@@ -156,8 +156,8 @@ func init() {
 	workerSettingsCmd.Flags().StringSliceVar(&workerBindings, "bindings", []string{}, "Bindings in name:type:id format")
 }
 
-func getWorkerService() (*r2go2.WorkerService, error) {
-	return r2go2.NewWorkerServiceFromCreds(AccountID, APIToken)
+func getWorkerService() (*cosmoflare.WorkerService, error) {
+	return cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
 }
 
 func runWorkerDeploy(cmd *cobra.Command, args []string) error {
@@ -181,22 +181,22 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 	}
 	defer f.Close()
 
-	var opts []r2go2.WorkerOption
+	var opts []cosmoflare.WorkerOption
 	if workerCompatDate != "" {
-		opts = append(opts, r2go2.WithWorkerCompatibilityDate(workerCompatDate))
+		opts = append(opts, cosmoflare.WithWorkerCompatibilityDate(workerCompatDate))
 	}
 	if len(workerBindings) > 0 {
 		bindings, err := parseWorkerBindings(workerBindings)
 		if err != nil {
 			return err
 		}
-		opts = append(opts, r2go2.WithWorkerBindings(bindings))
+		opts = append(opts, cosmoflare.WithWorkerBindings(bindings))
 	}
 	if len(workerTags) > 0 {
-		opts = append(opts, r2go2.WithWorkerTags(workerTags))
+		opts = append(opts, cosmoflare.WithWorkerTags(workerTags))
 	}
 	if workerModule {
-		opts = append(opts, r2go2.WithWorkerModule(true))
+		opts = append(opts, cosmoflare.WithWorkerModule(true))
 	}
 
 	if DryRun {
@@ -362,9 +362,9 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 		return runWorkerLogsFollow(cmd, svc, name)
 	}
 
-	var opts []r2go2.LogOption
+	var opts []cosmoflare.LogOption
 	if workerLogLimit > 0 {
-		opts = append(opts, r2go2.WithLogLimit(workerLogLimit))
+		opts = append(opts, cosmoflare.WithLogLimit(workerLogLimit))
 	}
 
 	entries, err := svc.Logs(context.Background(), name, opts...)
@@ -398,8 +398,8 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runWorkerLogsFollow(cmd *cobra.Command, svc *r2go2.WorkerService, name string) error {
-	tailOpts := &r2go2.TailOptions{
+func runWorkerLogsFollow(cmd *cobra.Command, svc *cosmoflare.WorkerService, name string) error {
+	tailOpts := &cosmoflare.TailOptions{
 		Interval: time.Duration(workerLogInterval) * time.Second,
 		Level:    workerLogLevel,
 	}
@@ -458,7 +458,7 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create worker service: %w", err)
 	}
 
-	settings := r2go2.WorkerSettings{
+	settings := cosmoflare.WorkerSettings{
 		CompatibilityDate: workerCompatDate,
 		UsageModel:        workerUsageModel,
 	}
@@ -493,14 +493,14 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseWorkerBindings(raw []string) ([]r2go2.WorkerBinding, error) {
-	bindings := make([]r2go2.WorkerBinding, 0, len(raw))
+func parseWorkerBindings(raw []string) ([]cosmoflare.WorkerBinding, error) {
+	bindings := make([]cosmoflare.WorkerBinding, 0, len(raw))
 	for _, b := range raw {
 		parts := strings.SplitN(b, ":", 3)
 		if len(parts) != 3 {
 			return nil, fmt.Errorf("invalid binding format %q: expected name:type:id", b)
 		}
-		bindings = append(bindings, r2go2.WorkerBinding{
+		bindings = append(bindings, cosmoflare.WorkerBinding{
 			Name: parts[0],
 			Type: parts[1],
 			ID:   parts[2],

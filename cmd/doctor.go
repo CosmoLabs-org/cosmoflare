@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var doctorCmd = &cobra.Command{
@@ -67,7 +67,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	doctor := r2go2.NewDoctorService(10 * time.Second)
+	doctor := cosmoflare.NewDoctorService(10 * time.Second)
 
 	if doctorAll {
 		return runDoctorAll(ctx, doctor)
@@ -76,7 +76,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	return runDoctorSingle(ctx, doctor, args[0])
 }
 
-func runDoctorAll(ctx context.Context, doctor *r2go2.DoctorService) error {
+func runDoctorAll(ctx context.Context, doctor *cosmoflare.DoctorService) error {
 	zoneSvc, err := getZoneService()
 	if err != nil {
 		return fmt.Errorf("failed to create zone service: %w", err)
@@ -100,10 +100,10 @@ func runDoctorAll(ctx context.Context, doctor *r2go2.DoctorService) error {
 
 	// For JSON output, collect all reports into a slice.
 	type allDomainsReport struct {
-		Reports []*r2go2.DiagnosticReport `json:"reports"`
+		Reports []*cosmoflare.DiagnosticReport `json:"reports"`
 		Summary string                    `json:"summary"`
 	}
-	var reports []*r2go2.DiagnosticReport
+	var reports []*cosmoflare.DiagnosticReport
 	var hasWarning, hasCritical bool
 
 	for i, zone := range zones {
@@ -115,11 +115,11 @@ func runDoctorAll(ctx context.Context, doctor *r2go2.DoctorService) error {
 		if err != nil {
 			if JSONOutput {
 				// Continue collecting; include error in reports.
-				reports = append(reports, &r2go2.DiagnosticReport{
+				reports = append(reports, &cosmoflare.DiagnosticReport{
 					Domain:    zone.Name,
 					Timestamp: time.Now(),
 					Score:     "critical",
-					Issues: []r2go2.DiagnosticIssue{{
+					Issues: []cosmoflare.DiagnosticIssue{{
 						Probe:    "system",
 						Severity: "critical",
 						Message:  fmt.Sprintf("Failed to run diagnostics: %v", err),
@@ -162,7 +162,7 @@ func runDoctorAll(ctx context.Context, doctor *r2go2.DoctorService) error {
 	return nil
 }
 
-func runDoctorSingle(ctx context.Context, doctor *r2go2.DoctorService, target string) error {
+func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, target string) error {
 	domain := target
 	var expectedNS []string
 
@@ -219,7 +219,7 @@ func runDoctorSingle(ctx context.Context, doctor *r2go2.DoctorService, target st
 }
 
 // printDoctorReport renders a human-readable diagnostic report.
-func printDoctorReport(report *r2go2.DiagnosticReport) {
+func printDoctorReport(report *cosmoflare.DiagnosticReport) {
 	fmt.Fprintf(os.Stdout, "Diagnostics for %s\n", report.Domain)
 	fmt.Fprintln(os.Stdout, strings.Repeat("=", 30+len(report.Domain)))
 	fmt.Fprintln(os.Stdout)
@@ -251,7 +251,7 @@ func printDoctorReport(report *r2go2.DiagnosticReport) {
 	}
 }
 
-func printDNSSection(report *r2go2.DiagnosticReport) {
+func printDNSSection(report *cosmoflare.DiagnosticReport) {
 	if report.DNS == nil {
 		fmt.Fprintln(os.Stdout, "DNS Propagation  (skipped)")
 		fmt.Fprintln(os.Stdout)
@@ -291,7 +291,7 @@ func printDNSSection(report *r2go2.DiagnosticReport) {
 	fmt.Fprintln(os.Stdout)
 }
 
-func printSSLSection(report *r2go2.DiagnosticReport) {
+func printSSLSection(report *cosmoflare.DiagnosticReport) {
 	if report.SSL == nil {
 		fmt.Fprintln(os.Stdout, "SSL Certificate  (skipped)")
 		fmt.Fprintln(os.Stdout)
@@ -325,7 +325,7 @@ func printSSLSection(report *r2go2.DiagnosticReport) {
 	fmt.Fprintln(os.Stdout)
 }
 
-func printHTTPSection(report *r2go2.DiagnosticReport) {
+func printHTTPSection(report *cosmoflare.DiagnosticReport) {
 	if report.HTTP == nil {
 		fmt.Fprintln(os.Stdout, "HTTP Response  (skipped)")
 		fmt.Fprintln(os.Stdout)
@@ -361,7 +361,7 @@ func printHTTPSection(report *r2go2.DiagnosticReport) {
 	fmt.Fprintln(os.Stdout)
 }
 
-func printNSSection(report *r2go2.DiagnosticReport) {
+func printNSSection(report *cosmoflare.DiagnosticReport) {
 	if report.Nameservers == nil {
 		fmt.Fprintln(os.Stdout, "Nameservers  (skipped — no expected NS available)")
 		fmt.Fprintln(os.Stdout)
@@ -390,7 +390,7 @@ func printNSSection(report *r2go2.DiagnosticReport) {
 	fmt.Fprintln(os.Stdout)
 }
 
-func printIssuesSection(report *r2go2.DiagnosticReport) {
+func printIssuesSection(report *cosmoflare.DiagnosticReport) {
 	if len(report.Issues) == 0 {
 		return
 	}

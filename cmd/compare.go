@@ -20,9 +20,9 @@ var compareCmd = &cobra.Command{
 Shows objects only in source, only in dest, with different sizes, and identical.
 
 Examples:
-  r2go2 compare src-bucket dst-bucket
-  r2go2 compare src-bucket dst-bucket --prefix=images/
-  r2go2 compare src-bucket dst-bucket --json`,
+  cosmoflare compare src-bucket dst-bucket
+  cosmoflare compare src-bucket dst-bucket --prefix=images/
+  cosmoflare compare src-bucket dst-bucket --json`,
 	RunE: runCompare,
 }
 

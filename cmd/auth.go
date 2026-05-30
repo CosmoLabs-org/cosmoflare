@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
 	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
 	"github.com/spf13/cobra"
@@ -54,9 +54,9 @@ Interactive mode will guide you through:
 You can also provide credentials directly via flags for automation.
 
 Example:
-  r2go2 auth login --token=your_api_token --account-id=your_account_id
+  cosmoflare auth login --token=your_api_token --account-id=your_account_id
 
-  r2go2 auth login --profile=production --interactive`,
+  cosmoflare auth login --profile=production --interactive`,
 	RunE: runAuthLogin,
 }
 
@@ -73,7 +73,7 @@ This command helps you:
 4. Test new credentials
 
 Example:
-  r2go2 auth rotate --profile=production`,
+  cosmoflare auth rotate --profile=production`,
 	RunE: runAuthRotate,
 }
 
@@ -100,7 +100,7 @@ var authLogoutCmd = &cobra.Command{
 This removes stored tokens from the current session.
 
 Note: This only clears in-memory credentials.
-Profile configurations remain stored in ~/.r2go2/config.yaml`,
+Profile configurations remain stored in ~/.cosmoflare/config.yaml`,
 	RunE: runAuthLogout,
 }
 
@@ -313,8 +313,8 @@ func runAuthLogout(cmd *cobra.Command, args []string) error {
 	printSuccess("Cleared environment variables")
 
 	// Note: We don't delete profile configurations as they may be needed later
-	printInfo("Note: Profile configurations remain saved in ~/.r2go2/config.yaml")
-	printInfo("Use 'r2go2 auth login' to re-authenticate")
+	printInfo("Note: Profile configurations remain saved in ~/.cosmoflare/config.yaml")
+	printInfo("Use 'cosmoflare auth login' to re-authenticate")
 
 	return nil
 }
@@ -436,9 +436,9 @@ func promptForEmail() string {
 }
 
 func testCredentials(credentials *AuthCredentials) error {
-	client, err := r2go2.NewClient(
-		r2go2.WithAccountID(credentials.AccountID),
-		r2go2.WithAPIToken(credentials.APIToken),
+	client, err := cosmoflare.NewClient(
+		cosmoflare.WithAccountID(credentials.AccountID),
+		cosmoflare.WithAPIToken(credentials.APIToken),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
@@ -447,16 +447,16 @@ func testCredentials(credentials *AuthCredentials) error {
 	return client.TestConnection(context.Background())
 }
 
-func newClientFromEnv() (r2go2.R2Client, error) {
+func newClientFromEnv() (cosmoflare.R2Client, error) {
 	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
 	if apiToken == "" || accountID == "" {
 		return nil, fmt.Errorf("missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID environment variables")
 	}
 
-	return r2go2.NewClient(
-		r2go2.WithAccountID(accountID),
-		r2go2.WithAPIToken(apiToken),
+	return cosmoflare.NewClient(
+		cosmoflare.WithAccountID(accountID),
+		cosmoflare.WithAPIToken(apiToken),
 	)
 }
 

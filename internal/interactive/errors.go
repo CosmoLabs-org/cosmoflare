@@ -130,9 +130,9 @@ func AuthError(operation string, err error) ErrorContext {
 			"Try creating a new API token at https://dash.cloudflare.com/profile/api-tokens",
 		},
 		NextSteps: []string{
-			"Run 'r2go2 setup' to reconfigure your credentials",
-			"Update your profile with 'r2go2 config set <profile>'",
-			"Test with 'r2go2 config validate'",
+			"Run 'cosmoflare setup' to reconfigure your credentials",
+			"Update your profile with 'cosmoflare config set <profile>'",
+			"Test with 'cosmoflare config validate'",
 		},
 	}
 }
@@ -145,14 +145,14 @@ func ConfigError(operation string, err error) ErrorContext {
 		Operation: operation,
 		UserAction: "Your configuration needs to be updated.",
 		Troubleshoot: []string{
-			"Run 'r2go2 config list' to see your profiles",
+			"Run 'cosmoflare config list' to see your profiles",
 			"Check if a profile is set as current",
 			"Verify the configuration file exists and is readable",
 			"Ensure file permissions are correct (should be 600)",
 		},
 		NextSteps: []string{
-			"Run 'r2go2 setup' to create a new configuration",
-			"Use 'r2go2 config switch' to change profiles",
+			"Run 'cosmoflare setup' to create a new configuration",
+			"Use 'cosmoflare config switch' to change profiles",
 			"Delete and recreate the problematic profile",
 		},
 	}
@@ -172,9 +172,9 @@ func InputError(operation string, err error) ErrorContext {
 			"Check for typos in your input",
 		},
 		NextSteps: []string{
-			"Run 'r2go2 --help' for command usage",
+			"Run 'cosmoflare --help' for command usage",
 			"Check the documentation for correct input formats",
-			"Use 'r2go2 bucket list' to see existing bucket names",
+			"Use 'cosmoflare bucket list' to see existing bucket names",
 		},
 	}
 }
@@ -194,7 +194,7 @@ func PermissionError(operation string, err error) ErrorContext {
 		},
 		NextSteps: []string{
 			"Create a new API token with proper permissions",
-			"Run 'r2go2 setup' to reconfigure with correct permissions",
+			"Run 'cosmoflare setup' to reconfigure with correct permissions",
 		},
 	}
 }
@@ -209,11 +209,11 @@ func NotFoundError(operation string, err error) ErrorContext {
 		Troubleshoot: []string{
 			"Check if the bucket name is spelled correctly",
 			"Verify you're using the correct account",
-			"Run 'r2go2 bucket list' to see available buckets",
+			"Run 'cosmoflare bucket list' to see available buckets",
 			"Ensure the resource hasn't been deleted",
 		},
 		NextSteps: []string{
-			"Create the bucket with 'r2go2 bucket create'",
+			"Create the bucket with 'cosmoflare bucket create'",
 			"Switch to the correct account profile",
 		},
 	}
@@ -233,8 +233,8 @@ func ValidationError(operation string, err error) ErrorContext {
 			"Look for any hidden characters or formatting issues",
 		},
 		NextSteps: []string{
-			"Run 'r2go2 config validate' to check your profile",
-			"Use 'r2go2 setup' for guided configuration",
+			"Run 'cosmoflare config validate' to check your profile",
+			"Use 'cosmoflare setup' for guided configuration",
 		},
 	}
 }

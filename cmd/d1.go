@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -24,10 +24,10 @@ Commands:
   query    Execute SQL against a D1 database
 
 Examples:
-  r2go2 d1 create my-database
-  r2go2 d1 list --json
-  r2go2 d1 get <database-id>
-  r2go2 d1 query <database-id> --sql="SELECT * FROM users"`,
+  cosmoflare d1 create my-database
+  cosmoflare d1 list --json
+  cosmoflare d1 get <database-id>
+  cosmoflare d1 query <database-id> --sql="SELECT * FROM users"`,
 }
 
 var (
@@ -44,8 +44,8 @@ var d1CreateCmd = &cobra.Command{
 The name must be unique within your account.
 
 Examples:
-  r2go2 d1 create my-database
-  r2go2 d1 create production-db --json`,
+  cosmoflare d1 create my-database
+  cosmoflare d1 create production-db --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runD1Create,
 }
@@ -56,8 +56,8 @@ var d1ListCmd = &cobra.Command{
 	Long: `List all D1 databases in the current account.
 
 Examples:
-  r2go2 d1 list
-  r2go2 d1 list --json`,
+  cosmoflare d1 list
+  cosmoflare d1 list --json`,
 	RunE: runD1List,
 }
 
@@ -67,8 +67,8 @@ var d1GetCmd = &cobra.Command{
 	Long: `Get details of a D1 database by its UUID.
 
 Examples:
-  r2go2 d1 get 480f4f69-1a28-4fdd-9240-1ed29f0ac1df
-  r2go2 d1 get 480f4f69-1a28-4fdd-9240-1ed29f0ac1df --json`,
+  cosmoflare d1 get 480f4f69-1a28-4fdd-9240-1ed29f0ac1df
+  cosmoflare d1 get 480f4f69-1a28-4fdd-9240-1ed29f0ac1df --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runD1Get,
 }
@@ -81,8 +81,8 @@ var d1DeleteCmd = &cobra.Command{
 WARNING: This action is irreversible. All tables and data will be lost.
 
 Examples:
-  r2go2 d1 delete 480f4f69-1a28-4fdd-9240-1ed29f0ac1df
-  r2go2 d1 delete 480f4f69-1a28-4fdd-9240-1ed29f0ac1df --force`,
+  cosmoflare d1 delete 480f4f69-1a28-4fdd-9240-1ed29f0ac1df
+  cosmoflare d1 delete 480f4f69-1a28-4fdd-9240-1ed29f0ac1df --force`,
 	Args: cobra.ExactArgs(1),
 	RunE: runD1Delete,
 }
@@ -96,10 +96,10 @@ Supports SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, and other SQL statements.
 Use --params to bind positional parameters (?1, ?2, ...) for safe query execution.
 
 Examples:
-  r2go2 d1 query <db-id> --sql="SELECT * FROM users"
-  r2go2 d1 query <db-id> --sql="SELECT * FROM users WHERE id = ?1" --param="42"
-  r2go2 d1 query <db-id> --sql="CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)" --json
-  r2go2 d1 query <db-id> --sql="INSERT INTO users (name) VALUES (?1)" --param="Alice" --json`,
+  cosmoflare d1 query <db-id> --sql="SELECT * FROM users"
+  cosmoflare d1 query <db-id> --sql="SELECT * FROM users WHERE id = ?1" --param="42"
+  cosmoflare d1 query <db-id> --sql="CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)" --json
+  cosmoflare d1 query <db-id> --sql="INSERT INTO users (name) VALUES (?1)" --param="Alice" --json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runD1Query,
 }
@@ -120,8 +120,8 @@ func init() {
 	_ = d1QueryCmd.MarkFlagRequired("sql")
 }
 
-func getD1Service() (*r2go2.D1Service, error) {
-	return r2go2.NewD1ServiceFromCreds(AccountID, APIToken)
+func getD1Service() (*cosmoflare.D1Service, error) {
+	return cosmoflare.NewD1ServiceFromCreds(AccountID, APIToken)
 }
 
 func runD1Create(cmd *cobra.Command, args []string) error {
@@ -329,7 +329,7 @@ func runD1Query(cmd *cobra.Command, args []string) error {
 }
 
 // printQueryMeta prints metadata about a query result.
-func printQueryMeta(result *r2go2.D1QueryResult) {
+func printQueryMeta(result *cosmoflare.D1QueryResult) {
 	printInfo("Rows read: %d | Rows written: %d | Changes: %d | Duration: %.2fms",
 		result.Meta.RowsRead, result.Meta.RowsWritten, result.Meta.Changes, result.Meta.Duration)
 }

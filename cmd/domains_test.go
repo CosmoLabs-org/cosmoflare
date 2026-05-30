@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 // TestDomainsCmd_NotNil verifies domainsCmd is initialised.
@@ -149,8 +149,8 @@ func TestDomainsCmd_DryRun(t *testing.T) {
 // TestDomainsResponse_JSONMarshal verifies the envelope marshals correctly.
 func TestDomainsResponse_JSONMarshal(t *testing.T) {
 	resp := domainsResponse{
-		Domains: []*r2go2.DomainStatus{},
-		Pagination: &r2go2.Pagination{
+		Domains: []*cosmoflare.DomainStatus{},
+		Pagination: &cosmoflare.Pagination{
 			Page:       1,
 			PerPage:    50,
 			Total:      0,
@@ -178,8 +178,8 @@ func TestDomainsResponse_JSONMarshal(t *testing.T) {
 // TestDomainsResponse_DomainsKey verifies the "domains" key is an array.
 func TestDomainsResponse_DomainsKey(t *testing.T) {
 	resp := domainsResponse{
-		Domains:    []*r2go2.DomainStatus{},
-		Pagination: &r2go2.Pagination{},
+		Domains:    []*cosmoflare.DomainStatus{},
+		Pagination: &cosmoflare.Pagination{},
 	}
 
 	data, _ := json.Marshal(resp)

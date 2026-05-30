@@ -347,7 +347,7 @@ func (tm *TutorialManager) showTutorialIntro() {
 		ShowSpinner("Starting tutorial...", 1*Second)
 	} else {
 		PrintInfo("You can start the tutorial anytime with:")
-		fmt.Printf("  %s\n", Info("r2go2 tutorial"))
+		fmt.Printf("  %s\n", Info("cosmoflare tutorial"))
 		os.Exit(0)
 	}
 }
@@ -444,45 +444,45 @@ func (tm *TutorialManager) executeAction(action TutorialAction) error {
 	switch action.ID {
 	case "view_profiles":
 		PrintInfo("To view your profiles, run:")
-		fmt.Printf("  %s\n", Info("r2go2 config list"))
+		fmt.Printf("  %s\n", Info("cosmoflare config list"))
 		fmt.Println()
 		PrintInfo("Try it in another terminal window!")
 
 	case "create_profile":
 		PrintInfo("To create a new profile, run:")
-		fmt.Printf("  %s\n", Info("r2go2 setup --profile=tutorial-test"))
+		fmt.Printf("  %s\n", Info("cosmoflare setup --profile=tutorial-test"))
 		fmt.Println()
 		PrintInfo("Use your test credentials or create a mock profile for practice.")
 
 	case "list_buckets":
 		PrintInfo("To list your buckets, run:")
-		fmt.Printf("  %s\n", Info("r2go2 bucket list"))
+		fmt.Printf("  %s\n", Info("cosmoflare bucket list"))
 		fmt.Println()
 
 	case "create_bucket":
 		PrintInfo("To create a bucket, run:")
-		fmt.Printf("  %s\n", Info("r2go2 bucket create tutorial-test"))
+		fmt.Printf("  %s\n", Info("cosmoflare bucket create tutorial-test"))
 		fmt.Println()
 
 	case "upload_file":
 		PrintInfo("To upload a file, run:")
-		fmt.Printf("  %s\n", Info("r2go2 upload ./test.txt your-bucket"))
+		fmt.Printf("  %s\n", Info("cosmoflare upload ./test.txt your-bucket"))
 		fmt.Println()
 		PrintInfo("Create a test file first: echo 'test' > test.txt")
 
 	case "list_objects":
 		PrintInfo("To list objects in a bucket, run:")
-		fmt.Printf("  %s\n", Info("r2go2 object list your-bucket"))
+		fmt.Printf("  %s\n", Info("cosmoflare object list your-bucket"))
 		fmt.Println()
 
 	case "try_switching":
 		PrintInfo("To switch profiles, run:")
-		fmt.Printf("  %s\n", Info("r2go2 setup --switch"))
+		fmt.Printf("  %s\n", Info("cosmoflare setup --switch"))
 		fmt.Println()
 
 	case "view_help":
 		PrintInfo("To see all help topics, run:")
-		fmt.Printf("  %s\n", Info("r2go2 --help"))
+		fmt.Printf("  %s\n", Info("cosmoflare --help"))
 		fmt.Println()
 
 	default:
@@ -535,16 +535,16 @@ func (tm *TutorialManager) showTutorialCompletion() {
 	fmt.Println()
 
 	fmt.Println("Quick reference:")
-	fmt.Printf("  • %s - List buckets\n", Info("r2go2 bucket list"))
-	fmt.Printf("  • %s - Upload files\n", Info("r2go2 upload"))
-	fmt.Printf("  • %s - Switch profiles\n", Info("r2go2 setup --switch"))
-	fmt.Printf("  • %s - View all commands\n", Info("r2go2 --help"))
+	fmt.Printf("  • %s - List buckets\n", Info("cosmoflare bucket list"))
+	fmt.Printf("  • %s - Upload files\n", Info("cosmoflare upload"))
+	fmt.Printf("  • %s - Switch profiles\n", Info("cosmoflare setup --switch"))
+	fmt.Printf("  • %s - View all commands\n", Info("cosmoflare --help"))
 	fmt.Println()
 
 	fmt.Println("Need more help?")
 	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/CosmoDev-R2Go2"))
-	fmt.Printf("  • Tutorial replay: %s\n", Info("r2go2 tutorial"))
-	fmt.Printf("  • Advanced help: %s\n", Info("r2go2 help advanced"))
+	fmt.Printf("  • Tutorial replay: %s\n", Info("cosmoflare tutorial"))
+	fmt.Printf("  • Advanced help: %s\n", Info("cosmoflare help advanced"))
 
 	globalAnimator.ShowSuccessAnimation("Tutorial completed successfully!")
 }
@@ -561,26 +561,26 @@ func (tm *TutorialManager) ShowQuickStart() {
 	fmt.Println()
 
 	fmt.Println("1. Setup your first profile")
-	fmt.Printf("   %s\n", Info("r2go2 setup"))
+	fmt.Printf("   %s\n", Info("cosmoflare setup"))
 	fmt.Println()
 
 	fmt.Println("2. Create a bucket for your files")
-	fmt.Printf("   %s\n", Info("r2go2 bucket create my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare bucket create my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println("3. Upload files to your bucket")
-	fmt.Printf("   %s\n", Info("r2go2 upload ./file.txt my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare upload ./file.txt my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println("4. List your files")
-	fmt.Printf("   %s\n", Info("r2go2 object list my-first-bucket"))
+	fmt.Printf("   %s\n", Info("cosmoflare object list my-first-bucket"))
 	fmt.Println()
 
 	fmt.Println("5. Switch between profiles")
-	fmt.Printf("   %s\n", Info("r2go2 setup --switch"))
+	fmt.Printf("   %s\n", Info("cosmoflare setup --switch"))
 	fmt.Println()
 
-	PrintInfo("💡 Want to learn more? Run 'r2go2 tutorial' for the full guide!")
+	PrintInfo("💡 Want to learn more? Run 'cosmoflare tutorial' for the full guide!")
 }
 
 // Custom error for skipped tutorials

@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var (
@@ -64,24 +64,24 @@ func init() {
 }
 
 func runDev(cmd *cobra.Command, args []string) error {
-	var opts []r2go2.DevOption
+	var opts []cosmoflare.DevOption
 
-	opts = append(opts, r2go2.WithDevPort(devPort))
-	opts = append(opts, r2go2.WithDevWatch(devWatch))
+	opts = append(opts, cosmoflare.WithDevPort(devPort))
+	opts = append(opts, cosmoflare.WithDevWatch(devWatch))
 
 	if devServices != "" {
 		services := strings.Split(devServices, ",")
 		for i := range services {
 			services[i] = strings.TrimSpace(services[i])
 		}
-		opts = append(opts, r2go2.WithDevServices(services))
+		opts = append(opts, cosmoflare.WithDevServices(services))
 	}
 
 	if devProfile != "" {
-		opts = append(opts, r2go2.WithDevProfile(devProfile))
+		opts = append(opts, cosmoflare.WithDevProfile(devProfile))
 	}
 
-	ds := r2go2.NewDevServer(opts...)
+	ds := cosmoflare.NewDevServer(opts...)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

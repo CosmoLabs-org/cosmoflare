@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 )
 
 var imagesCmd = &cobra.Command{
@@ -30,13 +30,13 @@ and serving optimized images. Images are delivered through variants
 that define resize and transformation parameters.
 
 Examples:
-  r2go2 images upload photo.jpg
-  r2go2 images upload --url https://example.com/photo.jpg
-  r2go2 images list --json
-  r2go2 images get IMG_ID
-  r2go2 images delete IMG_ID --force
-  r2go2 images variants list
-  r2go2 images variants create thumbnail --fit=cover --width=150 --height=150`,
+  cosmoflare images upload photo.jpg
+  cosmoflare images upload --url https://example.com/photo.jpg
+  cosmoflare images list --json
+  cosmoflare images get IMG_ID
+  cosmoflare images delete IMG_ID --force
+  cosmoflare images variants list
+  cosmoflare images variants create thumbnail --fit=cover --width=150 --height=150`,
 }
 
 var imagesVariantsCmd = &cobra.Command{
@@ -60,10 +60,10 @@ Commands:
   delete    Delete a variant
 
 Examples:
-  r2go2 images variants list --json
-  r2go2 images variants create hero --fit=cover --width=1200 --height=630
-  r2go2 images variants create thumb --fit=cover --width=150 --height=150
-  r2go2 images variants delete old-variant --force`,
+  cosmoflare images variants list --json
+  cosmoflare images variants create hero --fit=cover --width=1200 --height=630
+  cosmoflare images variants create thumb --fit=cover --width=150 --height=150
+  cosmoflare images variants delete old-variant --force`,
 }
 
 var (
@@ -88,11 +88,11 @@ Provide a local file path as an argument, or use --url for remote uploads.
 Custom metadata can be attached as a JSON string.
 
 Examples:
-  r2go2 images upload photo.jpg
-  r2go2 images upload banner.png --metadata '{"project":"website"}'
-  r2go2 images upload --url https://example.com/photo.jpg
-  r2go2 images upload --url https://example.com/img.png --require-signed-urls
-  r2go2 images upload photo.jpg --json`,
+  cosmoflare images upload photo.jpg
+  cosmoflare images upload banner.png --metadata '{"project":"website"}'
+  cosmoflare images upload --url https://example.com/photo.jpg
+  cosmoflare images upload --url https://example.com/img.png --require-signed-urls
+  cosmoflare images upload photo.jpg --json`,
 	RunE: runImagesUpload,
 }
 
@@ -102,8 +102,8 @@ var imagesListCmd = &cobra.Command{
 	Long: `List all images in your Cloudflare Images account.
 
 Examples:
-  r2go2 images list
-  r2go2 images list --json`,
+  cosmoflare images list
+  cosmoflare images list --json`,
 	RunE: runImagesList,
 }
 
@@ -113,8 +113,8 @@ var imagesGetCmd = &cobra.Command{
 	Long: `Get details of a single image by its ID.
 
 Examples:
-  r2go2 images get IMG_ID
-  r2go2 images get IMG_ID --json`,
+  cosmoflare images get IMG_ID
+  cosmoflare images get IMG_ID --json`,
 	RunE: runImagesGet,
 }
 
@@ -126,9 +126,9 @@ var imagesDeleteCmd = &cobra.Command{
 WARNING: This action is irreversible.
 
 Examples:
-  r2go2 images delete IMG_ID
-  r2go2 images delete IMG_ID --force
-  r2go2 images delete IMG_ID --json`,
+  cosmoflare images delete IMG_ID
+  cosmoflare images delete IMG_ID --force
+  cosmoflare images delete IMG_ID --json`,
 	RunE: runImagesDelete,
 }
 
@@ -138,8 +138,8 @@ var imagesVariantsListCmd = &cobra.Command{
 	Long: `List all image delivery variants configured for your account.
 
 Examples:
-  r2go2 images variants list
-  r2go2 images variants list --json`,
+  cosmoflare images variants list
+  cosmoflare images variants list --json`,
 	RunE: runImagesVariantsList,
 }
 
@@ -161,11 +161,11 @@ Metadata modes:
   copyright   Keep only copyright-related metadata
 
 Examples:
-  r2go2 images variants create hero --fit=cover --width=1200 --height=630
-  r2go2 images variants create thumb --fit=cover --width=150 --height=150
-  r2go2 images variants create avatar --fit=crop --width=100 --height=100 --metadata-mode=none
-  r2go2 images variants create public --fit=scale-down --width=1920 --height=1080 --never-require-signed-urls
-  r2go2 images variants create hero --json`,
+  cosmoflare images variants create hero --fit=cover --width=1200 --height=630
+  cosmoflare images variants create thumb --fit=cover --width=150 --height=150
+  cosmoflare images variants create avatar --fit=crop --width=100 --height=100 --metadata-mode=none
+  cosmoflare images variants create public --fit=scale-down --width=1920 --height=1080 --never-require-signed-urls
+  cosmoflare images variants create hero --json`,
 	RunE: runImagesVariantsCreate,
 }
 
@@ -177,8 +177,8 @@ var imagesVariantsDeleteCmd = &cobra.Command{
 WARNING: Deleting a variant purges the cache for all images associated with it.
 
 Examples:
-  r2go2 images variants delete old-variant
-  r2go2 images variants delete old-variant --force`,
+  cosmoflare images variants delete old-variant
+  cosmoflare images variants delete old-variant --force`,
 	RunE: runImagesVariantsDelete,
 }
 
@@ -214,8 +214,8 @@ func init() {
 	imagesVariantsDeleteCmd.Flags().BoolVar(&variantForce, "force", false, "Skip confirmation prompt")
 }
 
-func getImagesService() (*r2go2.ImagesService, error) {
-	return r2go2.NewImagesServiceFromCreds(AccountID, APIToken)
+func getImagesService() (*cosmoflare.ImagesService, error) {
+	return cosmoflare.NewImagesServiceFromCreds(AccountID, APIToken)
 }
 
 func runImagesUpload(cmd *cobra.Command, args []string) error {
@@ -294,16 +294,16 @@ func runImagesUploadByURL(cmd *cobra.Command) error {
 		return fmt.Errorf("failed to create Images service: %w", err)
 	}
 
-	var opts []r2go2.ImageUploadOption
+	var opts []cosmoflare.ImageUploadOption
 	if imagesRequireSignedURL {
-		opts = append(opts, r2go2.WithRequireSignedURLs(true))
+		opts = append(opts, cosmoflare.WithRequireSignedURLs(true))
 	}
 	if imagesMetadata != "" {
 		var metadata map[string]interface{}
 		if err := json.Unmarshal([]byte(imagesMetadata), &metadata); err != nil {
 			return fmt.Errorf("invalid metadata JSON: %w", err)
 		}
-		opts = append(opts, r2go2.WithImageMetadata(metadata))
+		opts = append(opts, cosmoflare.WithImageMetadata(metadata))
 	}
 
 	img, err := svc.UploadByURL(context.Background(), imagesURL, opts...)
