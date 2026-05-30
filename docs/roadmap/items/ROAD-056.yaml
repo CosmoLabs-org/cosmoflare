@@ -1,11 +1,13 @@
 id: ROAD-056
 created_at: 2026-05-16T00:10:21.413705-03:00
-updated_at: 2026-05-16T00:10:21.415053-03:00
+updated_at: 2026-05-30T06:20:35.819417-03:00
 title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
 description: Define desired state in YAML. Apply reconciles. Terraform-like but simpler, purpose-built for Cloudflare.
-status: captured
+status: completed
 priority: 72
 category: infra
 effort: large
+completed_in: v0.11.0
+completed_at: 2026-05-30T06:20:35.819407-03:00
 origin:
     session: 2027

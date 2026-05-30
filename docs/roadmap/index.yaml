@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-05-30T06:07:59.656995-03:00
+last_updated: 2026-05-30T06:20:35.819814-03:00
 next_id: 66
 items:
     - id: ROAD-065
@@ -48,10 +48,11 @@ items:
       created_at: 2026-05-16T00:10:37.873954-03:00
     - id: ROAD-059
       title: Template library — cosmoflare create --template=api scaffolds full projects
-      status: captured
+      status: completed
       priority: 70
       category: workflow
       effort: medium
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:30.498797-03:00
     - id: ROAD-058
       title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
@@ -71,10 +72,11 @@ items:
       created_at: 2026-05-16T00:10:21.515178-03:00
     - id: ROAD-056
       title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
-      status: captured
+      status: completed
       priority: 72
       category: infra
       effort: large
+      completed_in: v0.11.0
       created_at: 2026-05-16T00:10:21.413705-03:00
     - id: ROAD-055
       title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
@@ -357,12 +359,13 @@ items:
       created_at: 2026-03-02T23:33:08.526846+01:00
     - id: ROAD-015
       title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions
-      status: captured
+      status: completed
       priority: 68
       category: infra
       effort: medium
       linked_issues:
         - BUG-003
+      completed_in: v0.11.0
       created_at: 2026-03-02T23:33:07.711386+01:00
     - id: ROAD-014
       title: Retry logic with exponential backoff and error recovery
@@ -460,10 +463,11 @@ items:
       created_at: 2026-02-26T01:32:45.415402+01:00
     - id: ROAD-003
       title: rsync-like sync command for directory synchronization
-      status: captured
+      status: completed
       priority: 75
       category: core
       effort: large
+      completed_in: v0.11.0
       created_at: 2026-02-26T01:32:44.3795+01:00
     - id: ROAD-002
       title: TUI Object Browser with split-pane layout
