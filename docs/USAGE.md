@@ -818,6 +818,50 @@ cosmoflare waf access delete <zone-id> <rule-id>
 cosmoflare waf access delete <zone-id> <rule-id> --force
 ```
 
+## Vectorize Commands
+
+Vector database for AI workloads — store, index, and query vector embeddings.
+
+### Create an index
+```bash
+cosmoflare vectorize create embeddings --dimensions=768 --metric=cosine
+cosmoflare vectorize create search-idx --dimensions=1536 --metric=dot-product --json
+```
+
+### List indexes
+```bash
+cosmoflare vectorize list
+cosmoflare vectorize list --json
+```
+
+### Get index details
+```bash
+cosmoflare vectorize get my-index
+cosmoflare vectorize get my-index --json
+```
+
+### Delete an index
+```bash
+cosmoflare vectorize delete my-index
+cosmoflare vectorize delete my-index --force
+```
+
+### Insert vectors
+```bash
+cosmoflare vectorize insert my-index --file vectors.ndjson
+cosmoflare vectorize insert my-index --id=vec-1 --values=0.1,0.2,0.3
+```
+
+NDJSON format: `{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"label":"example"}}`
+
+### Query nearest neighbors
+```bash
+cosmoflare vectorize query my-index --values=0.1,0.2,0.3 --top-k=5
+cosmoflare vectorize query my-index --values=0.1,0.2,0.3 --top-k=10 --json
+```
+
+Supported metrics: `cosine` (default), `euclidean`, `dot-product`.
+
 ## CORS Commands
 
 CORS response header management via Cloudflare Transform Rules. No Worker required. Zone-scoped. Requires a Cloudflare Pro plan or higher.
