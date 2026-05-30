@@ -20,12 +20,12 @@ related_prompts:
 requires_reading:
     - docs/planning-mode/2026-05-16-phase4-cloudflare-services.md
     - docs/PRODUCT-VISION.md
-    - pkg/r2go2/worker.go
-    - pkg/r2go2/kv.go
+    - pkg/cosmoflare/worker.go
+    - pkg/cosmoflare/kv.go
     - cmd/worker.go
     - cmd/kv.go
-    - pkg/r2go2/errors.go
-    - pkg/r2go2/types.go
+    - pkg/cosmoflare/errors.go
+    - pkg/cosmoflare/types.go
     - cmd/root.go
     - CLAUDE.md
 schema_version: 1
@@ -59,11 +59,11 @@ title: Cosmoflare Phase 4 — Core Services + Rebrand
 
 ### [x] P-01: DNS Records Library + CLI (ROAD-035)
 **Model**: opus (dispatch via isolated worktree)
-**Files**: `pkg/r2go2/dns.go`, `cmd/dns.go`
+**Files**: `pkg/cosmoflare/dns.go`, `cmd/dns.go`
 
 DNS record management. Zone-scoped (needs zone ID, not account ID).
 
-Library (`pkg/r2go2/dns.go`):
+Library (`pkg/cosmoflare/dns.go`):
 - Types: `DNSRecord` (ID, Type, Name, Content, TTL, Proxied, Priority, Comment, ZoneID)
 - `DNSService` struct — holds `*cloudflare.API` + `zoneID`
 - `NewDNSServiceFromCreds(zoneID, apiToken)` constructor
@@ -87,11 +87,11 @@ CLI (`cmd/dns.go`):
 
 ### [x] P-02: Zone Management Library + CLI (ROAD-036)
 **Model**: opus (dispatch via isolated worktree)
-**Files**: `pkg/r2go2/zone.go`, `cmd/zone.go`
+**Files**: `pkg/cosmoflare/zone.go`, `cmd/zone.go`
 
 Zone listing and management. Account-scoped.
 
-Library (`pkg/r2go2/zone.go`):
+Library (`pkg/cosmoflare/zone.go`):
 - Types: `Zone` (ID, Name, Status, Type, Nameservers, Plan, CreatedOn, Paused, VanityNameservers)
 - `ZoneService` struct — holds `*cloudflare.API` + `accountID`
 - `NewZoneServiceFromCreds(accountID, apiToken)` constructor
@@ -104,11 +104,11 @@ CLI (`cmd/zone.go`):
 
 ### [x] P-03: SSL/TLS Management Library + CLI (ROAD-037)
 **Model**: opus (dispatch via isolated worktree)
-**Files**: `pkg/r2go2/ssl.go`, `cmd/ssl.go`
+**Files**: `pkg/cosmoflare/ssl.go`, `cmd/ssl.go`
 
 SSL/TLS certificate and settings management. Zone-scoped.
 
-Library (`pkg/r2go2/ssl.go`):
+Library (`pkg/cosmoflare/ssl.go`):
 - Types: `SSLCertificate`, `SSLSettings` (MinTLSVersion, AlwaysUseHTTPS, AutomaticHTTPSRewrites, OCSPStapling)
 - `SSLService` struct — holds `*cloudflare.API` + `zoneID`
 - Methods: `GetSSL`, `EditSSL`, `GetVerification`, `GetSettings`, `UpdateSettings`
@@ -119,11 +119,11 @@ CLI (`cmd/ssl.go`):
 
 ### [x] P-04: Cache Management Library + CLI (ROAD-038)
 **Model**: opus (dispatch via isolated worktree)
-**Files**: `pkg/r2go2/cache.go`, `cmd/cache.go`
+**Files**: `pkg/cosmoflare/cache.go`, `cmd/cache.go`
 
 Cache management with purge operations. Zone-scoped. Destructive operations need `--force`.
 
-Library (`pkg/r2go2/cache.go`):
+Library (`pkg/cosmoflare/cache.go`):
 - Types: `CacheSettings` (TTL, DevelopmentMode), `CachePurgeResult`
 - `CacheService` struct — holds `*cloudflare.API` + `zoneID`
 - Methods: `PurgeAll`, `PurgeByURLs`, `PurgeByTags`, `PurgeByHosts`, `GetSettings`, `UpdateSettings`
@@ -137,7 +137,7 @@ CLI (`cmd/cache.go`):
 
 ### [x] P-05: Unit Tests for All 4 Services
 **Model**: glm-turbo (parallel dispatch after P-01 through P-04 merge)
-**Files**: `pkg/r2go2/dns_test.go`, `pkg/r2go2/zone_test.go`, `pkg/r2go2/ssl_test.go`, `pkg/r2go2/cache_test.go`
+**Files**: `pkg/cosmoflare/dns_test.go`, `pkg/cosmoflare/zone_test.go`, `pkg/cosmoflare/ssl_test.go`, `pkg/cosmoflare/cache_test.go`
 
 Each test file covers:
 1. Constructor validation (missing zoneID, missing apiToken, nil API client)
@@ -145,7 +145,7 @@ Each test file covers:
 3. Error wrapping assertions (correct error types, messages contain context)
 4. Edge cases (special characters in DNS names, large record sets, concurrent operations)
 
-Follow pattern from `pkg/r2go2/worker_test.go` and `pkg/r2go2/kv_test.go`.
+Follow pattern from `pkg/cosmoflare/worker_test.go` and `pkg/cosmoflare/kv_test.go`.
 
 ### [x] P-06: Cosmoflare Rebrand
 **Model**: opus (single agent after tests pass)
@@ -173,7 +173,7 @@ Add shell completion generation:
 **Model**: opus (session orchestrator)
 
 After all work is merged and tested:
-1. Run `go build ./...` and `go test ./pkg/r2go2/ -v` to verify
+1. Run `go build ./...` and `go test ./pkg/cosmoflare/ -v` to verify
 2. Run `go vet ./...` to check for issues
 3. Commit with semantic messages (feat, test, docs, chore)
 4. Update ROAD-035, ROAD-036, ROAD-037, ROAD-038 status to completed
@@ -185,7 +185,7 @@ After all work is merged and tested:
 All services follow the Worker/KV pattern (see `requires_reading` files):
 
 ```
-pkg/r2go2/{service}.go:
+pkg/cosmoflare/{service}.go:
   - Types ({Service}, {Service}Settings, {Service}Option)
   - Service struct { cf *cloudflare.API, accountID/zoneID string }
   - New{Service}FromCreds(creds) → *Service, error

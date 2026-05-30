@@ -1,0 +1,6 @@
+{
+  "name": "cosmoflare",
+  "port": 8787,
+  "command": "go run . dev",
+  "domain": "cosmoflare.cosmo"
+}

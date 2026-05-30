@@ -1,3 +1,8 @@
+---
+type: template
+description: Collaborative brainstorming template
+---
+
 # Collaborative Design: {Topic}
 
 **Date**: YYYY-MM-DD
