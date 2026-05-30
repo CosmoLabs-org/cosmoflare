@@ -770,3 +770,17 @@
 {"id":"9","subject":"","status":"completed","completed_at":"2026-05-29T08:31:40Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
 {"id":"10","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
 {"id":"10","subject":"","status":"completed","completed_at":"2026-05-29T08:32:07Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"11","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-05-30T12:48:09Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"12","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-05-30T12:48:10Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"13","subject":"Phase 1.95: Smoke tests","status":"pending","created_at":"2026-05-30T12:48:11Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"14","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-05-30T12:48:13Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"15","subject":"Phase 2.75: Auto-stage changelog","status":"pending","created_at":"2026-05-30T12:48:14Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"16","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-05-30T12:48:15Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"17","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-05-30T12:48:16Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"18","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-05-30T12:48:17Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"11","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-05-30T12:48:31Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-05-30T12:48:35Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"13","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-05-30T12:48:49Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"14","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
