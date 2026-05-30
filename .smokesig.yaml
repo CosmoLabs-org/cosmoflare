@@ -1,0 +1,46 @@
+version: 1
+project: CosmoDev-R2Go2
+settings:
+    timeout: 30s
+    fail_fast: true
+prerequisites:
+    - name: Go installed
+      check: go version
+      hint: Install Go from https://go.dev/dl/
+    - name: Make installed
+      check: make --version
+      hint: Install make via your system package manager
+tests:
+    - name: Compiles
+      run: go build ./...
+      expect:
+        exit_code: 0
+    - name: Tests pass
+      run: go test ./...
+      expect:
+        exit_code: 0
+    - name: Docker build
+      run: docker build -t test .
+      expect:
+        exit_code: 0
+    - name: Builds
+      run: make
+      expect:
+        exit_code: 0
+    - name: Docs in sync
+      run: ""
+      expect:
+        doc_integrity:
+            binary: ./CosmoDev-R2Go2
+            docs:
+                - README.md
+                - CLAUDE.md
+                - docs/USAGE.md
+            check_examples: false
+            ignore_commands:
+                - help
+                - completion
+            timeout: 0s
+      tags:
+        - docs
+        - ci

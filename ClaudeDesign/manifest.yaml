@@ -1,0 +1,18 @@
+version: "1.0"
+project: CosmoDev-R2Go2
+project_type: mobile            # mobile | web-landing | web-app | desktop | fullstack
+created: 2026-05-30
+purpose: Track Claude Design handoff bundles dropped into outputs/
+schema:
+  bundle_id: string         # DESIGN-XXX-slug
+  thread: string            # foundation | feature-N | reconciliation | <project-specific>
+  source_brief: string      # path to docs/claudedesign/briefs/<platform>/NN-*.md
+  platform: string          # mobile | web-landing | web-app | desktop
+  dropped_at: ISO-8601
+  status: string            # dropped | read | implemented | merged | superseded
+  codebase_targets:         # where the implementation landed
+    - path: string
+      kind: string          # component | screen | token | route | other
+  notes: string
+
+bundles: []                 # populated as bundles are dropped
