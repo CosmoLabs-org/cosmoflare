@@ -75,3 +75,85 @@ func TestSetupCmd_FlagDefaults(t *testing.T) {
 		t.Error("--restore default should be false")
 	}
 }
+
+// --- Long description content ---
+
+func TestSetupCmd_LongDescription(t *testing.T) {
+	if setupCmd.Long == "" {
+		t.Fatal("setupCmd.Long is empty")
+	}
+	// Must mention key topics
+	keywords := []string{"setup", "wizard", "profile", "token"}
+	for _, kw := range keywords {
+		found := false
+		lower := setupCmd.Long
+		for i := 0; i <= len(lower)-len(kw); i++ {
+			match := true
+			for j := 0; j < len(kw); j++ {
+				c := lower[i+j]
+				k := kw[j]
+				if c != k && c != k-32 && c != k+32 {
+					match = false
+					break
+				}
+			}
+			if match {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("setupCmd.Long should mention %q", kw)
+		}
+	}
+}
+
+// --- No subcommands ---
+
+func TestSetupCmd_NoSubcommands(t *testing.T) {
+	if len(setupCmd.Commands()) != 0 {
+		t.Errorf("setupCmd has %d subcommands, expected 0", len(setupCmd.Commands()))
+	}
+}
+
+// --- Flag types ---
+
+func TestSetupCmd_FlagTypes(t *testing.T) {
+	cases := []struct {
+		name     string
+		wantType string
+	}{
+		{"profile", "string"},
+		{"quiet", "bool"},
+		{"skip-test", "bool"},
+		{"auto-detect", "bool"},
+		{"switch", "bool"},
+		{"welcome", "bool"},
+		{"backup", "bool"},
+		{"restore", "bool"},
+	}
+	for _, tc := range cases {
+		f := setupCmd.Flags().Lookup(tc.name)
+		if f == nil {
+			t.Fatalf("flag --%s not found", tc.name)
+		}
+		if f.Value.Type() != tc.wantType {
+			t.Errorf("flag --%s type = %q, want %q", tc.name, f.Value.Type(), tc.wantType)
+		}
+	}
+}
+
+// --- Flag usage strings ---
+
+func TestSetupCmd_FlagUsageStrings(t *testing.T) {
+	flags := []string{"profile", "quiet", "skip-test", "auto-detect", "switch", "welcome", "backup", "restore"}
+	for _, name := range flags {
+		f := setupCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found", name)
+		}
+		if f.Usage == "" {
+			t.Errorf("flag --%s has empty usage string", name)
+		}
+	}
+}

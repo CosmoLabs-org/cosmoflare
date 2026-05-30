@@ -101,3 +101,103 @@ func TestPluralize(t *testing.T) {
 		t.Errorf("pluralize(5) = %q, want %q", pluralize(5), "s")
 	}
 }
+
+// --- Long description content ---
+
+func TestListCmd_LongDescription(t *testing.T) {
+	if listCmd.Long == "" {
+		t.Fatal("listCmd.Long is empty")
+	}
+	// Must mention key topics
+	keywords := []string{"bucket", "list"}
+	for _, kw := range keywords {
+		found := false
+		lower := listCmd.Long
+		for i := 0; i <= len(lower)-len(kw); i++ {
+			match := true
+			for j := 0; j < len(kw); j++ {
+				c := lower[i+j]
+				k := kw[j]
+				if c != k && c != k-32 && c != k+32 {
+					match = false
+					break
+				}
+			}
+			if match {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("listCmd.Long should mention %q", kw)
+		}
+	}
+}
+
+// --- No subcommands ---
+
+func TestListCmd_NoSubcommands(t *testing.T) {
+	if len(listCmd.Commands()) != 0 {
+		t.Errorf("listCmd has %d subcommands, expected 0", len(listCmd.Commands()))
+	}
+}
+
+// --- formatTimeAgo edge cases ---
+
+func TestFormatTimeAgo_JustNow(t *testing.T) {
+	result := formatTimeAgo(time.Now())
+	if result == "" {
+		t.Error("formatTimeAgo(now) returned empty string")
+	}
+	// Should be "0 minutes ago" or similar
+}
+
+func TestFormatTimeAgo_ExactlyOneHour(t *testing.T) {
+	result := formatTimeAgo(time.Now().Add(-1 * time.Hour))
+	if result == "" {
+		t.Error("formatTimeAgo returned empty string for 1 hour ago")
+	}
+	// Should contain "hour"
+	found := false
+	needle := "hour"
+	for i := 0; i <= len(result)-len(needle); i++ {
+		if result[i:i+len(needle)] == needle {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("formatTimeAgo(1 hour ago) = %q, expected to contain 'hour'", result)
+	}
+}
+
+// --- Pluralize additional edge cases ---
+
+func TestPluralize_LargeNumbers(t *testing.T) {
+	cases := []struct {
+		n    int
+		want string
+	}{
+		{100, "s"},
+		{1000, "s"},
+		{-1, "s"},
+		{2, "s"},
+	}
+	for _, tc := range cases {
+		got := pluralize(tc.n)
+		if got != tc.want {
+			t.Errorf("pluralize(%d) = %q, want %q", tc.n, got, tc.want)
+		}
+	}
+}
+
+// --- Args rejects multiple extra args ---
+
+func TestListCmd_ArgsRejectsMultiple(t *testing.T) {
+	if listCmd.Args == nil {
+		t.Fatal("listCmd.Args validator is nil")
+	}
+	if err := listCmd.Args(listCmd, []string{"a", "b", "c"}); err == nil {
+		t.Error("expected error with multiple extra args, got nil")
+	}
+}
