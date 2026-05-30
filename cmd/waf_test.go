@@ -106,19 +106,25 @@ func TestWafAccessDelete_Flags(t *testing.T) {
 }
 
 func TestWafCmd_FlagDefaults(t *testing.T) {
-	if v, _ := wafRuleCmd.Flags().GetString("mode"); v != "" {
-		t.Errorf("waf rule --mode default = %q, want empty", v)
+	checks := []struct {
+		cmd  *cobra.Command
+		flag string
+		def  string
+	}{
+		{wafRuleCmd, "mode", ""},
+		{wafAccessCreateCmd, "ip", ""},
+		{wafAccessCreateCmd, "mode", ""},
+		{wafAccessCreateCmd, "note", ""},
+		{wafAccessDeleteCmd, "force", "false"},
 	}
-	if v, _ := wafAccessCreateCmd.Flags().GetString("ip"); v != "" {
-		t.Errorf("waf access create --ip default = %q, want empty", v)
-	}
-	if v, _ := wafAccessCreateCmd.Flags().GetString("mode"); v != "" {
-		t.Errorf("waf access create --mode default = %q, want empty", v)
-	}
-	if v, _ := wafAccessCreateCmd.Flags().GetString("note"); v != "" {
-		t.Errorf("waf access create --note default = %q, want empty", v)
-	}
-	if v, _ := wafAccessDeleteCmd.Flags().GetBool("force"); v != false {
-		t.Error("waf access delete --force default should be false")
+	for _, c := range checks {
+		f := c.cmd.Flags().Lookup(c.flag)
+		if f == nil {
+			t.Errorf("flag --%s not found on %s", c.flag, c.cmd.Name())
+			continue
+		}
+		if f.DefValue != c.def {
+			t.Errorf("%s --%s DefValue = %q, want %q", c.cmd.Name(), c.flag, f.DefValue, c.def)
+		}
 	}
 }
