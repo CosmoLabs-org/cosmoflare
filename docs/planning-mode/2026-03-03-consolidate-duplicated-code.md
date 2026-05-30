@@ -12,6 +12,8 @@ schema_version: 1
 status: COMPLETED
 tags: []
 title: 'ROAD-001: Consolidate Duplicated Code'
+deliverables:
+  - P-01: Consolidate duplicated formatBytes and maskAccountID functions into internal/utils with security fix
 ---
 
 # ROAD-001: Consolidate Duplicated Code

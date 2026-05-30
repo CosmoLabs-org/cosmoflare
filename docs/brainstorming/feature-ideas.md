@@ -2,6 +2,8 @@
 title: "R2Go2 / Cosmoflare Feature Ideas & Brainstorming"
 created: "2025-11-24T10:00:00-03:00"
 status: LIVING
+deliverables:
+  - BR-01: Living catalog of feature ideas and brainstorming for Cosmoflare platform expansion
 tags:
   - feature-ideas
   - brainstorming

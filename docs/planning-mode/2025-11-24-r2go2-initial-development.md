@@ -7,6 +7,8 @@ goals_total: 16
 origin: migrated by ccs prompts migrate
 priority: medium
 status: COMPLETED
+deliverables:
+  - P-01: Initial R2Go2 CLI and library implementation
 title: R2Go2 Initial Development Planning
 ---
 

@@ -12,6 +12,8 @@ schema_version: 1
 status: COMPLETED
 tags: []
 title: 'Phase 3: Workers and KV Service Implementation'
+deliverables:
+  - P-01: Workers and KV service implementation in pkg/r2go2 with CLI commands and tests
 ---
 
 # Phase 3: Workers and KV Service Implementation

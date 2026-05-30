@@ -1,6 +1,8 @@
 ---
 type: template
 description: Collaborative brainstorming template
+deliverables:
+  - BR-01: Template deliverable placeholder
 ---
 
 # Collaborative Design: {Topic}
