@@ -125,3 +125,143 @@ func TestVectorizeQuery_Flags(t *testing.T) {
 		}
 	}
 }
+
+func TestVectorizeCmd_LongDescription(t *testing.T) {
+	if vectorizeCmd.Long == "" {
+		t.Error("vectorizeCmd.Long description is empty")
+	}
+}
+
+func TestVectorizeCmd_SubcommandCount(t *testing.T) {
+	subs := vectorizeCmd.Commands()
+	if len(subs) != 6 {
+		t.Errorf("vectorizeCmd has %d subcommands, want 6 (create, list, get, delete, insert, query)", len(subs))
+	}
+}
+
+func TestVectorizeInsert_Flags(t *testing.T) {
+	var insertCmd *cobra.Command
+	for _, sub := range vectorizeCmd.Commands() {
+		if sub.Name() == "insert" {
+			insertCmd = sub
+			break
+		}
+	}
+	if insertCmd == nil {
+		t.Fatal("insert subcommand not found")
+	}
+	flags := []struct {
+		name     string
+		defValue string
+	}{
+		{"file", ""},
+		{"id", ""},
+		{"values", ""},
+	}
+	for _, f := range flags {
+		t.Run(f.name, func(t *testing.T) {
+			flag := insertCmd.Flags().Lookup(f.name)
+			if flag == nil {
+				t.Fatalf("flag --%s not found on insert", f.name)
+			}
+			if flag.DefValue != f.defValue {
+				t.Errorf("flag --%s default = %q, want %q", f.name, flag.DefValue, f.defValue)
+			}
+		})
+	}
+}
+
+func TestVectorizeCreate_ArgsValidation(t *testing.T) {
+	var createCmd *cobra.Command
+	for _, sub := range vectorizeCmd.Commands() {
+		if sub.Name() == "create" {
+			createCmd = sub
+			break
+		}
+	}
+	if createCmd == nil {
+		t.Fatal("create subcommand not found")
+	}
+	if createCmd.Args == nil {
+		t.Fatal("create subcommand has nil Args validator")
+	}
+	// No args should fail (ExactArgs(1))
+	if err := createCmd.Args(createCmd, []string{}); err == nil {
+		t.Error("expected error with no args for vectorize create")
+	}
+	// One arg should succeed
+	if err := createCmd.Args(createCmd, []string{"my-index"}); err != nil {
+		t.Errorf("expected no error with one arg, got: %v", err)
+	}
+	// Two args should fail
+	if err := createCmd.Args(createCmd, []string{"a", "b"}); err == nil {
+		t.Error("expected error with two args for vectorize create")
+	}
+}
+
+func TestVectorizeQuery_TopKDefault(t *testing.T) {
+	var queryCmd *cobra.Command
+	for _, sub := range vectorizeCmd.Commands() {
+		if sub.Name() == "query" {
+			queryCmd = sub
+			break
+		}
+	}
+	if queryCmd == nil {
+		t.Fatal("query subcommand not found")
+	}
+	f := queryCmd.Flags().Lookup("top-k")
+	if f == nil {
+		t.Fatal("--top-k flag not found")
+	}
+	if f.DefValue != "10" {
+		t.Errorf("--top-k default = %q, want %q", f.DefValue, "10")
+	}
+}
+
+func TestVectorizeGet_ArgsValidation(t *testing.T) {
+	var getCmd *cobra.Command
+	for _, sub := range vectorizeCmd.Commands() {
+		if sub.Name() == "get" {
+			getCmd = sub
+			break
+		}
+	}
+	if getCmd == nil {
+		t.Fatal("get subcommand not found")
+	}
+	if getCmd.Args == nil {
+		t.Fatal("get subcommand has nil Args validator")
+	}
+	if err := getCmd.Args(getCmd, []string{}); err == nil {
+		t.Error("expected error with no args for vectorize get")
+	}
+	if err := getCmd.Args(getCmd, []string{"idx"}); err != nil {
+		t.Errorf("expected no error with one arg, got: %v", err)
+	}
+}
+
+func TestVectorizeDelete_ArgsValidation(t *testing.T) {
+	var delCmd *cobra.Command
+	for _, sub := range vectorizeCmd.Commands() {
+		if sub.Name() == "delete" {
+			delCmd = sub
+			break
+		}
+	}
+	if delCmd == nil {
+		t.Fatal("delete subcommand not found")
+	}
+	if delCmd.Args == nil {
+		t.Fatal("delete subcommand has nil Args validator")
+	}
+	if err := delCmd.Args(delCmd, []string{}); err == nil {
+		t.Error("expected error with no args for vectorize delete")
+	}
+	if err := delCmd.Args(delCmd, []string{"idx"}); err != nil {
+		t.Errorf("expected no error with one arg, got: %v", err)
+	}
+	if err := delCmd.Args(delCmd, []string{"a", "b"}); err == nil {
+		t.Error("expected error with two args for vectorize delete")
+	}
+}

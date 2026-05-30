@@ -70,3 +70,58 @@ func TestDeleteCmd_ArgsValidation(t *testing.T) {
 		t.Error("expected error with two args, got nil")
 	}
 }
+
+func TestDeleteCmd_LongDescription(t *testing.T) {
+	if deleteCmd.Long == "" {
+		t.Error("deleteCmd.Long description is empty")
+	}
+}
+
+func TestDeleteCmd_ConfirmFlagType(t *testing.T) {
+	f := deleteCmd.Flags().Lookup("confirm")
+	if f == nil {
+		t.Fatal("--confirm flag not found")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--confirm type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+func TestDeleteCmd_UsesRunNotRunE(t *testing.T) {
+	if deleteCmd.Run == nil {
+		t.Error("deleteCmd.Run should not be nil")
+	}
+	if deleteCmd.RunE != nil {
+		t.Error("deleteCmd uses RunE instead of Run")
+	}
+}
+
+func TestDeleteCmd_ArgsErrorMessage(t *testing.T) {
+	if deleteCmd.Args == nil {
+		t.Fatal("deleteCmd.Args validator is nil")
+	}
+	err := deleteCmd.Args(deleteCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error with no args")
+	}
+	msg := err.Error()
+	if msg == "" {
+		t.Error("error message should not be empty")
+	}
+}
+
+func TestDeleteCmd_NoSubcommands(t *testing.T) {
+	if len(deleteCmd.Commands()) != 0 {
+		t.Errorf("deleteCmd has %d subcommands, expected 0", len(deleteCmd.Commands()))
+	}
+}
+
+func TestDeleteCmd_ThreeArgsFail(t *testing.T) {
+	if deleteCmd.Args == nil {
+		t.Fatal("deleteCmd.Args validator is nil")
+	}
+	err := deleteCmd.Args(deleteCmd, []string{"a", "b", "c"})
+	if err == nil {
+		t.Error("expected error with three args, got nil")
+	}
+}

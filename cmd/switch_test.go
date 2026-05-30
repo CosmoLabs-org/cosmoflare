@@ -57,3 +57,44 @@ func TestSwitchCmd_FlagDefaults(t *testing.T) {
 		t.Error("--delete default should be false")
 	}
 }
+
+func TestSwitchCmd_LongDescription(t *testing.T) {
+	if switchCmd.Long == "" {
+		t.Error("switchCmd.Long description is empty")
+	}
+}
+
+func TestSwitchCmd_DetailsFlagType(t *testing.T) {
+	f := switchCmd.Flags().Lookup("details")
+	if f == nil {
+		t.Fatal("--details flag not found")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--details type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+func TestSwitchCmd_DeleteFlagType(t *testing.T) {
+	f := switchCmd.Flags().Lookup("delete")
+	if f == nil {
+		t.Fatal("--delete flag not found")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--delete type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+func TestSwitchCmd_NoSubcommands(t *testing.T) {
+	if len(switchCmd.Commands()) != 0 {
+		t.Errorf("switchCmd has %d subcommands, expected 0", len(switchCmd.Commands()))
+	}
+}
+
+func TestSwitchCmd_AcceptsAnyArgs(t *testing.T) {
+	// switch has no Args validator set
+	if switchCmd.Args != nil {
+		if err := switchCmd.Args(switchCmd, []string{}); err != nil {
+			t.Errorf("expected switch to accept zero args, got: %v", err)
+		}
+	}
+}

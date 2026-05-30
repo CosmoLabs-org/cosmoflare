@@ -60,3 +60,75 @@ func TestDevCmd_RequiresNoArgs(t *testing.T) {
 		}
 	}
 }
+
+func TestDevCmd_RejectsMultipleArgs(t *testing.T) {
+	if devCmd.Args == nil {
+		t.Skip("devCmd.Args is nil, cannot validate")
+	}
+	err := devCmd.Args(devCmd, []string{"a", "b", "c"})
+	if err == nil {
+		t.Error("expected error when passing multiple args to dev command")
+	}
+}
+
+func TestDevCmd_AcceptsZeroArgs(t *testing.T) {
+	if devCmd.Args == nil {
+		t.Skip("devCmd.Args is nil, cannot validate")
+	}
+	err := devCmd.Args(devCmd, []string{})
+	if err != nil {
+		t.Errorf("expected no error with zero args, got: %v", err)
+	}
+}
+
+func TestDevCmd_HasRunE(t *testing.T) {
+	if devCmd.RunE == nil {
+		t.Error("devCmd.RunE is nil — no handler wired")
+	}
+}
+
+func TestDevCmd_LongDescription(t *testing.T) {
+	if devCmd.Long == "" {
+		t.Error("devCmd.Long description is empty")
+	}
+}
+
+func TestDevCmd_PortFlagType(t *testing.T) {
+	flag := devCmd.Flags().Lookup("port")
+	if flag == nil {
+		t.Fatal("--port flag not found")
+	}
+	if flag.Value.Type() != "int" {
+		t.Errorf("--port type = %q, want %q", flag.Value.Type(), "int")
+	}
+}
+
+func TestDevCmd_WatchFlagType(t *testing.T) {
+	flag := devCmd.Flags().Lookup("watch")
+	if flag == nil {
+		t.Fatal("--watch flag not found")
+	}
+	if flag.Value.Type() != "bool" {
+		t.Errorf("--watch type = %q, want %q", flag.Value.Type(), "bool")
+	}
+}
+
+func TestDevCmd_ServicesFlagType(t *testing.T) {
+	flag := devCmd.Flags().Lookup("services")
+	if flag == nil {
+		t.Fatal("--services flag not found")
+	}
+	if flag.Value.Type() != "string" {
+		t.Errorf("--services type = %q, want %q", flag.Value.Type(), "string")
+	}
+}
+
+func TestDevCmd_ProfileFlagType(t *testing.T) {
+	flag := devCmd.Flags().Lookup("profile")
+	if flag == nil {
+		t.Fatal("--profile flag not found")
+	}
+	if flag.Value.Type() != "string" {
+		t.Errorf("--profile type = %q, want %q", flag.Value.Type(), "string")
+	}
+}

@@ -43,3 +43,34 @@ func TestDashboardCmd_Run(t *testing.T) {
 		t.Error("dashboardCmd has nil Run")
 	}
 }
+
+func TestDashboardCmd_LongDescription(t *testing.T) {
+	if dashboardCmd.Long == "" {
+		t.Error("dashboardCmd.Long description is empty")
+	}
+}
+
+func TestDashboardCmd_NoRunE(t *testing.T) {
+	// dashboard uses Run (not RunE), verify RunE is nil
+	if dashboardCmd.RunE != nil {
+		t.Error("dashboardCmd.RunE should be nil — dashboard uses Run, not RunE")
+	}
+}
+
+func TestDashboardCmd_NoLocalFlags(t *testing.T) {
+	// dashboard command has no local flags (only inherits persistent from root)
+	// No local flags are defined in dashboard init()
+	if dashboardCmd.HasLocalFlags() {
+		t.Error("dashboardCmd should not have local flags")
+	}
+}
+
+func TestDashboardCmd_AcceptsAnyArgs(t *testing.T) {
+	// dashboard has no Args validator set, so it accepts any args by default
+	if dashboardCmd.Args != nil {
+		// If Args is set, make sure it still allows zero args
+		if err := dashboardCmd.Args(dashboardCmd, []string{}); err != nil {
+			t.Errorf("expected dashboard to accept zero args, got: %v", err)
+		}
+	}
+}
