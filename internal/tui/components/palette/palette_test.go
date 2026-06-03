@@ -229,7 +229,7 @@ func TestContextFiltering(t *testing.T) {
 }
 
 func TestBuildRegistryFromCobra(t *testing.T) {
-	root := &cobra.Command{Use: "r2go2", Short: "R2Go2 CLI"}
+	root := &cobra.Command{Use: "cosmoflare", Short: "Cosmoflare CLI"}
 
 	bucket := &cobra.Command{Use: "bucket", Short: "Bucket operations"}
 	bucket.AddCommand(&cobra.Command{Use: "create", Short: "Create a bucket"})
@@ -251,14 +251,14 @@ func TestBuildRegistryFromCobra(t *testing.T) {
 	for i, c := range commands {
 		names[i] = c.Name
 	}
-	assert.Contains(t, names, "r2go2 bucket create")
-	assert.Contains(t, names, "r2go2 bucket list")
-	assert.Contains(t, names, "r2go2 dns list")
-	assert.NotContains(t, names, "r2go2 bucket delete") // hidden
+	assert.Contains(t, names, "cosmoflare bucket create")
+	assert.Contains(t, names, "cosmoflare bucket list")
+	assert.Contains(t, names, "cosmoflare dns list")
+	assert.NotContains(t, names, "cosmoflare bucket delete") // hidden
 }
 
 func TestBuildRegistryCategories(t *testing.T) {
-	root := &cobra.Command{Use: "r2go2"}
+	root := &cobra.Command{Use: "cosmoflare"}
 	bucket := &cobra.Command{Use: "bucket", Short: "Bucket ops"}
 	bucket.AddCommand(&cobra.Command{Use: "create", Short: "Create"})
 	root.AddCommand(bucket)

@@ -133,7 +133,7 @@ func TestCreateWebhook_PreservesProvided(t *testing.T) {
 
 func TestSendWebhook_NoWebhooks(t *testing.T) {
 	m := NewManager(nil, "acct-123")
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	// getWebhooksForEvent returns empty slice, so SendWebhook should return nil
 	err := m.SendWebhook("object.created", event)
 	if err != nil {
@@ -233,7 +233,7 @@ func TestCreateBucketEvent_NilData(t *testing.T) {
 	if event.Bucket != "my-bucket" {
 		t.Errorf("expected bucket 'my-bucket', got: %s", event.Bucket)
 	}
-	if event.Source != "r2go2" {
+	if event.Source != "cosmoflare" {
 		t.Errorf("expected source 'r2go2', got: %s", event.Source)
 	}
 	if event.Timestamp.IsZero() {
@@ -276,7 +276,7 @@ func TestCreateObjectEvent_NilData(t *testing.T) {
 	if event.Object != "file.txt" {
 		t.Errorf("expected object 'file.txt', got: %s", event.Object)
 	}
-	if event.Source != "r2go2" {
+	if event.Source != "cosmoflare" {
 		t.Errorf("expected source 'r2go2', got: %s", event.Source)
 	}
 	if event.Data["size"] != int64(1024) {
@@ -322,7 +322,7 @@ func TestCreateAlertEvent(t *testing.T) {
 	if event.Type != EventTypeAlertTriggered {
 		t.Errorf("expected type %s, got: %s", EventTypeAlertTriggered, event.Type)
 	}
-	if event.Source != "r2go2" {
+	if event.Source != "cosmoflare" {
 		t.Errorf("expected source 'r2go2', got: %s", event.Source)
 	}
 	if event.Data["alert_id"] != "alert-001" {
@@ -462,7 +462,7 @@ func TestWebhook_SendsPostWithCorrectHeadersAndBody(t *testing.T) {
 	if payload.Event != "webhook_test" {
 		t.Errorf("expected payload event 'webhook_test', got: %s", payload.Event)
 	}
-	if payload.Source != "r2go2" {
+	if payload.Source != "cosmoflare" {
 		t.Errorf("expected payload source 'r2go2', got: %s", payload.Source)
 	}
 	if payload.Message == "" {
@@ -692,7 +692,7 @@ func TestSendToWebhook_EnabledWebhook(t *testing.T) {
 		Timeout:    5,
 	}
 
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err := m.sendToWebhook(wh, event)
 	if err != nil {
 		t.Fatalf("expected nil error, got: %v", err)
@@ -718,7 +718,7 @@ func TestSendToWebhook_DisabledWebhookStillSends(t *testing.T) {
 		Timeout:    5,
 	}
 
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err := m.sendToWebhook(wh, event)
 	if err != nil {
 		t.Fatalf("expected nil error, got: %v", err)
@@ -743,7 +743,7 @@ func TestSendToWebhook_ServerError(t *testing.T) {
 		Timeout:    5,
 	}
 
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err := m.sendToWebhook(wh, event)
 	if err == nil {
 		t.Fatal("expected error for 500 response")
@@ -760,7 +760,7 @@ func TestSendToWebhook_MalformedURL(t *testing.T) {
 		Timeout:    1,
 	}
 
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err := m.sendToWebhook(wh, event)
 	if err == nil {
 		t.Fatal("expected error for malformed URL")
@@ -782,7 +782,7 @@ func TestSendToWebhook_HTTPURLAccepted(t *testing.T) {
 		Timeout:    5,
 	}
 
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err := m.sendToWebhook(wh, event)
 	if err != nil {
 		t.Fatalf("expected nil, got: %v", err)
@@ -822,7 +822,7 @@ func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
 		Event:     "alert_triggered",
 		Alert:     alert,
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Value:     95.0,
 		Threshold: 90.0,
 		Message:   "CPU is high",
@@ -923,7 +923,7 @@ func TestTriggerAlert_ServerFailure(t *testing.T) {
 		Event:     "alert_triggered",
 		Alert:     alert,
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "high latency",
 	}
 
@@ -1015,7 +1015,7 @@ func TestSendWebhook_WithStoreEnabledWebhook(t *testing.T) {
 		t.Fatalf("create webhook: %v", err)
 	}
 
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err = m.SendWebhook("object.created", event)
 	if err != nil {
 		t.Fatalf("expected nil, got: %v", err)
@@ -1045,7 +1045,7 @@ func TestSendWebhook_WithStoreDisabledWebhook(t *testing.T) {
 		t.Fatalf("create webhook: %v", err)
 	}
 
-	event := &Event{Type: "object.deleted", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "object.deleted", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err = m.SendWebhook("object.deleted", event)
 	if err != nil {
 		t.Fatalf("expected nil, got: %v", err)
@@ -1076,7 +1076,7 @@ func TestSendWebhook_WithStoreAllEvents(t *testing.T) {
 		t.Fatalf("create webhook: %v", err)
 	}
 
-	event := &Event{Type: "migration.started", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "migration.started", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err = m.SendWebhook("migration.started", event)
 	if err != nil {
 		t.Fatalf("expected nil, got: %v", err)
@@ -1108,7 +1108,7 @@ func TestSendWebhook_WithStoreNoMatchingEvent(t *testing.T) {
 	}
 
 	// Send a different event type
-	event := &Event{Type: "bucket.created", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "bucket.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	err = m.SendWebhook("bucket.created", event)
 	if err != nil {
 		t.Fatalf("expected nil, got: %v", err)
@@ -1137,7 +1137,7 @@ func TestSendWebhook_WithStoreServerErrorStillReturnsNil(t *testing.T) {
 		t.Fatalf("create webhook: %v", err)
 	}
 
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "r2go2"}
+	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
 	// SendWebhook prints errors but returns nil
 	err = m.SendWebhook("test", event)
 	if err != nil {
@@ -1386,7 +1386,7 @@ func TestSendNotification_RetryOnFailure(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "test.event",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "retry test",
 	}
 
@@ -1416,7 +1416,7 @@ func TestSendNotification_ExhaustsRetries(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "test.fail",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "exhaust test",
 	}
 
@@ -1461,7 +1461,7 @@ func TestSendNotification_CustomHeaders(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "headers.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "header test",
 	}
 
@@ -1498,7 +1498,7 @@ func TestSendNotification_HeaderInjectionSanitization(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "inject.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "injection test",
 	}
 
@@ -1533,7 +1533,7 @@ func TestSendNotification_RateLimited(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "rate.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "rate limit test",
 	}
 
@@ -1562,7 +1562,7 @@ func TestSendNotification_ConnectionRefused(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "conn.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "connection refused test",
 	}
 
@@ -1771,7 +1771,7 @@ func TestNotificationPayload_JSONRoundTrip(t *testing.T) {
 		Event:     "object.uploaded",
 		Alert:     &Alert{ID: "a1", Name: "Test Alert", Type: AlertTypeThreshold},
 		Timestamp: now,
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Bucket:    "my-bucket",
 		Object:    "file.txt",
 		Value:     1024.5,
@@ -1830,7 +1830,7 @@ func TestSendToWebhook_IncludesBucketAndObject(t *testing.T) {
 	event := &Event{
 		Type:      EventTypeObjectCreated,
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Bucket:    "photos-bucket",
 		Object:    "vacation.jpg",
 		Data:      map[string]interface{}{"size": int64(2048)},
@@ -1886,7 +1886,7 @@ func TestSendNotification_ErrorDoesNotLeakCredentials(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "security.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "credential leak test",
 	}
 
@@ -1922,7 +1922,7 @@ func TestSendNotification_MarshalError(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "marshal.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "marshal test",
 		Data:      map[string]interface{}{"bad": make(chan int)},
 	}
@@ -1962,7 +1962,7 @@ func TestSendNotification_Timeout(t *testing.T) {
 	payload := &NotificationPayload{
 		Event:     "timeout.test",
 		Timestamp: time.Now().UTC(),
-		Source:    "r2go2",
+		Source:    "cosmoflare",
 		Message:   "timeout test",
 	}
 
