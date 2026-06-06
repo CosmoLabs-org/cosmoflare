@@ -1820,6 +1820,65 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | cosmoflare mcp serve
 
 - `CLOUDFLARE_API_TOKEN` — Your Cloudflare API token (required)
 - `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare Account ID (required)
+## Wrangler Compatibility
+
+Import, diff, and validate `wrangler.toml` files. Translate Wrangler configurations to `.cosmoflare.yaml` format for seamless migration.
+
+### Import wrangler.toml
+```bash
+cosmoflare wrangler import                            # Import ./wrangler.toml
+cosmoflare wrangler import ./path/to/wrangler.toml    # Import from path
+cosmoflare wrangler import --output custom.yaml       # Custom output path
+cosmoflare wrangler import --force                    # Overwrite existing
+cosmoflare wrangler import --json                     # JSON output
+cosmoflare wrangler import --dry-run                  # Preview without writing
+```
+
+### Diff wrangler.toml vs .cosmoflare.yaml
+```bash
+cosmoflare wrangler diff                              # Compare in current dir
+cosmoflare wrangler diff ./project/wrangler.toml      # Compare from path
+cosmoflare wrangler diff --json                       # JSON diff output
+```
+
+### Validate wrangler.toml
+```bash
+cosmoflare wrangler validate                          # Validate in current dir
+cosmoflare wrangler validate ./project/wrangler.toml  # Validate from path
+cosmoflare wrangler validate --json                   # JSON validation output
+```
+
+### Field mapping
+
+| wrangler.toml | .cosmoflare.yaml |
+|---------------|------------------|
+| `name` | `workers.main.name` |
+| `main` | `workers.main.script` |
+| `compatibility_date` | `workers.main.compatibility_date` |
+| `compatibility_flags` | `workers.main.compatibility_flags` |
+| `route` / `routes` | `workers.main.route` / `routes` |
+| `vars` | `workers.main.vars` |
+| `kv_namespaces` | `kv.namespaces` + `workers.main.bindings.kv` |
+| `r2_buckets` | `r2.buckets` + `workers.main.bindings.r2` |
+| `d1_databases` | `d1.databases` + `workers.main.bindings.d1` |
+| `[env.staging]` | `profiles.staging.worker` |
+
+### Import flags
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output path for .cosmoflare.yaml |
+| `-f, --force` | Overwrite existing file without prompting |
+
+### Validation checks
+
+- Missing required fields (`name`)
+- Missing KV namespace IDs
+- Missing R2 bucket names
+- Missing D1 database IDs
+- Duplicate binding names across KV/R2/D1
+- Missing `compatibility_date` (warning)
+- Missing entry point `main` (warning)
 
 ## Library Usage (Workers and KV)
 
