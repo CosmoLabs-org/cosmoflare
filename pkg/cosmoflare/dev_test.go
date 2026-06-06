@@ -2,8 +2,11 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 )
@@ -384,6 +387,66 @@ func TestDevServerReadyBeforeStart(t *testing.T) {
 	if ds.Ready() {
 		t.Error("expected Ready()=false before start")
 	}
+}
+
+func TestDevServerNotifyWebhook(t *testing.T) {
+	t.Run("sends start and stop notifications", func(t *testing.T) {
+		var events []string
+		var mu sync.Mutex
+
+		webhook := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var n DevNotification
+			if err := json.NewDecoder(r.Body).Decode(&n); err != nil {
+				t.Errorf("failed to decode notification: %v", err)
+				return
+			}
+			mu.Lock()
+			events = append(events, n.Event)
+			mu.Unlock()
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer webhook.Close()
+
+		ds := NewDevServer(WithDevPort(0), WithDevNotifyURL(webhook.URL))
+		ctx, cancel := context.WithCancel(context.Background())
+
+		go func() { _ = ds.Start(ctx) }()
+		if !waitForReady(ds, 2*time.Second) {
+			t.Fatal("server did not become ready")
+		}
+
+		cancel()
+		time.Sleep(300 * time.Millisecond)
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		if len(events) < 1 {
+			t.Fatal("expected at least 1 notification event")
+		}
+		if events[0] != "start" {
+			t.Errorf("expected first event 'start', got %q", events[0])
+		}
+	})
+
+	t.Run("no notifications without URL", func(t *testing.T) {
+		ds := NewDevServer(WithDevPort(0))
+		ctx, cancel := context.WithCancel(context.Background())
+
+		go func() { _ = ds.Start(ctx) }()
+		if !waitForReady(ds, 2*time.Second) {
+			t.Fatal("server did not become ready")
+		}
+		cancel()
+		time.Sleep(100 * time.Millisecond)
+	})
+
+	t.Run("notify URL option", func(t *testing.T) {
+		ds := NewDevServer(WithDevNotifyURL("https://example.com/hook"))
+		if ds.NotifyURL() != "https://example.com/hook" {
+			t.Errorf("expected notify URL, got %q", ds.NotifyURL())
+		}
+	})
 }
 
 // waitForReady polls the dev server's Ready() method until true or timeout.

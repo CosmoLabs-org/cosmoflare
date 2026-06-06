@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	devPort     int
-	devWatch    bool
-	devServices string
-	devProfile  string
+	devPort      int
+	devWatch     bool
+	devServices  string
+	devProfile   string
+	devNotifyURL string
 )
 
 var devCmd = &cobra.Command{
@@ -46,6 +47,8 @@ Examples:
   cosmoflare dev --profile staging        # Use 'staging' credentials
   cosmoflare dev --json                   # Machine-readable startup events
   cosmoflare dev --watch=false            # Disable config hot-reload
+  cosmoflare dev --notify                # POST lifecycle events to dev.notify_url
+  cosmoflare dev --notify=https://hook.example.com/dev  # Explicit webhook URL
 
   # Use with other tools:
   curl http://localhost:8787/health       # Health check
@@ -61,6 +64,7 @@ func init() {
 	devCmd.Flags().BoolVar(&devWatch, "watch", true, "Watch config for changes and hot-reload")
 	devCmd.Flags().StringVar(&devServices, "services", "", "Comma-separated services to enable (default: all)")
 	devCmd.Flags().StringVar(&devProfile, "profile", "", "Credential profile to use")
+	devCmd.Flags().StringVar(&devNotifyURL, "notify", "", "Webhook URL for lifecycle events (or set dev.notify_url in .cosmoflare.yaml)")
 }
 
 func runDev(cmd *cobra.Command, args []string) error {
@@ -79,6 +83,10 @@ func runDev(cmd *cobra.Command, args []string) error {
 
 	if devProfile != "" {
 		opts = append(opts, cosmoflare.WithDevProfile(devProfile))
+	}
+
+	if devNotifyURL != "" {
+		opts = append(opts, cosmoflare.WithDevNotifyURL(devNotifyURL))
 	}
 
 	ds := cosmoflare.NewDevServer(opts...)

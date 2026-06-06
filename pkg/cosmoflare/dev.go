@@ -1,19 +1,23 @@
 package cosmoflare
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // DevServer is a local development proxy for Cloudflare services.
 type DevServer struct {
-	port     int
-	watch    bool
-	services []string
-	profile  string
+	port      int
+	watch     bool
+	services  []string
+	profile   string
+	notifyURL string
 
 	mu       sync.Mutex
 	listener net.Listener
@@ -21,6 +25,21 @@ type DevServer struct {
 	ready    bool
 	stopped  bool
 }
+
+// DevNotification is the JSON payload sent to the webhook URL.
+type DevNotification struct {
+	Event     string `json:"event"`
+	Timestamp string `json:"timestamp"`
+	Message   string `json:"message"`
+}
+
+// WithDevNotifyURL sets the webhook URL for dev server lifecycle events.
+func WithDevNotifyURL(url string) DevOption {
+	return func(ds *DevServer) { ds.notifyURL = url }
+}
+
+// NotifyURL returns the configured webhook URL.
+func (ds *DevServer) NotifyURL() string { return ds.notifyURL }
 
 // DevOption configures a DevServer.
 type DevOption func(*DevServer)
@@ -174,6 +193,7 @@ func (ds *DevServer) Start(ctx context.Context) error {
 
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", ds.port))
 	if err != nil {
+		ds.sendNotification("error", fmt.Sprintf("failed to listen on port %d: %v", ds.port, err))
 		return fmt.Errorf("failed to listen on port %d: %w", ds.port, err)
 	}
 
@@ -183,6 +203,8 @@ func (ds *DevServer) Start(ctx context.Context) error {
 	ds.server = &http.Server{Handler: mux}
 	ds.ready = true
 	ds.mu.Unlock()
+
+	ds.sendNotification("start", fmt.Sprintf("dev server started on port %d", ds.port))
 
 	go func() {
 		<-ctx.Done()
@@ -206,4 +228,26 @@ func (ds *DevServer) Stop() {
 	ds.stopped = true
 	ds.ready = false
 	_ = ds.server.Close()
+	go ds.sendNotification("stop", fmt.Sprintf("dev server stopped (port %d)", ds.port))
+}
+
+func (ds *DevServer) sendNotification(event, message string) {
+	if ds.notifyURL == "" {
+		return
+	}
+	payload := DevNotification{
+		Event:     event,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Message:   message,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Post(ds.notifyURL, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
 }
