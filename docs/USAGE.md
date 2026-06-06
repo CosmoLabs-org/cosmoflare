@@ -1531,6 +1531,74 @@ services:
 | `--merge` | import | false | Merge with existing config (skip existing resources) |
 | `--dry-run` | both | false | Preview changes without applying (global flag) |
 | `--json` | both | false | Output in JSON format (global flag) |
+## Workers AI & AI Gateway
+
+Manage Workers AI models and AI Gateway configurations for running AI inference at the edge.
+
+### List available AI models
+
+```bash
+cosmoflare ai models list
+cosmoflare ai models list --filter text-generation
+cosmoflare ai models list --filter image-classification --json
+```
+
+### Get model details
+
+```bash
+cosmoflare ai models get @cf/meta/llama-3-8b-instruct
+cosmoflare ai models get @cf/meta/llama-3-8b-instruct --json
+```
+
+### Run inference
+
+```bash
+# Simple prompt
+cosmoflare ai run @cf/meta/llama-3-8b-instruct --prompt "What is Cloudflare Workers?"
+
+# Chat mode with system message
+cosmoflare ai run @cf/meta/llama-3-8b-instruct \
+  --system "You are a helpful coding assistant" \
+  --prompt "Write a hello world in Go"
+
+# JSON output
+cosmoflare ai run @cf/meta/llama-3-8b-instruct --prompt "Hello" --json
+
+# Dry run (no API call)
+cosmoflare ai run @cf/meta/llama-3-8b-instruct --prompt "Test" --dry-run
+```
+
+### List AI Gateways
+
+```bash
+cosmoflare ai gateway list
+cosmoflare ai gateway list --json
+```
+
+### Create an AI Gateway
+
+```bash
+cosmoflare ai gateway create my-gateway
+cosmoflare ai gateway create prod-gw --cache-ttl 300 --rate-limit 100 --rate-window 60
+cosmoflare ai gateway create logged-gw --collect-logs --json
+```
+
+### Delete an AI Gateway
+
+```bash
+cosmoflare ai gateway delete my-gateway
+cosmoflare ai gateway delete my-gateway --force
+```
+
+### View AI Gateway logs
+
+```bash
+cosmoflare ai gateway logs my-gateway
+cosmoflare ai gateway logs my-gateway --limit 100
+cosmoflare ai gateway logs my-gateway --json
+```
+
+Output columns: ID, MODEL, STATUS, CACHED, TOKENS, COST.
 
 ## Library Usage (Workers and KV)
 
