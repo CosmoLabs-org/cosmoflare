@@ -362,7 +362,4 @@ func PromptWithDefault(prompt, defaultValue string) (string, error) {
 	return PromptWithReader(prompt, defaultValue, DefaultInput())
 }
 
-// SelectFromList prompts the user to select from a list using stdin.
-func SelectFromList(prompt string, options []string, defaultIndex int) (int, error) {
-	return SelectFromListWithReader(prompt, options, defaultIndex, DefaultInput())
-}
+// SelectFromList moved to tea_select.go (Bubble Tea implementation).
