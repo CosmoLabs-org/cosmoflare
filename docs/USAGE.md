@@ -1928,6 +1928,100 @@ cosmoflare account verify staging --json
 cosmoflare account remove old-staging
 cosmoflare account remove production --force   # Remove even if active
 ```
+## Alerts
+
+Configure alert rules that notify on error rates, storage limits, worker failures, and other conditions across Cloudflare services. Alert rules are stored locally in `.cosmoflare-alerts.yaml`. Alert history is logged to `~/.cosmoflare/alert-history.log` (NDJSON).
+
+### List alert rules
+
+```bash
+cosmoflare alerts list
+cosmoflare alerts list --json
+```
+
+### Create an alert rule
+
+```bash
+# Alert on high R2 error rate
+cosmoflare alerts create high-errors \
+  --service r2 \
+  --condition error-rate \
+  --threshold 5 \
+  --action webhook \
+  --target https://hooks.example.com/alert
+
+# Alert when KV storage approaches limit
+cosmoflare alerts create kv-storage-warn \
+  --service kv \
+  --condition storage-limit \
+  --threshold 80 \
+  --action email \
+  --target admin@example.com
+
+# Log worker failures
+cosmoflare alerts create worker-failures \
+  --service workers \
+  --condition failure-count \
+  --threshold 10 \
+  --action log \
+  --target /var/log/cosmoflare.log
+```
+
+**Flags (all required):**
+
+| Flag | Values | Description |
+|------|--------|-------------|
+| `--service` | `r2`, `workers`, `kv`, `dns` | Cloudflare service to monitor |
+| `--condition` | `error-rate`, `storage-limit`, `latency`, `failure-count` | Condition that triggers the alert |
+| `--threshold` | numeric | Value at which the alert fires |
+| `--action` | `webhook`, `email`, `log` | Notification method |
+| `--target` | URL or email | Where the notification goes |
+
+### Get alert rule details
+
+```bash
+cosmoflare alerts get high-errors
+cosmoflare alerts get high-errors --json
+```
+
+### Update an alert rule
+
+```bash
+cosmoflare alerts update high-errors --threshold 10
+cosmoflare alerts update high-errors --action email --target admin@example.com
+```
+
+Only provided flags are modified; other fields remain unchanged.
+
+### Delete an alert rule
+
+```bash
+cosmoflare alerts delete high-errors --force
+```
+
+Requires `--force` to confirm deletion.
+
+### Trigger a test alert
+
+```bash
+cosmoflare alerts test high-errors
+```
+
+Fires a test alert that is recorded in history with `is_test=true` but does not send real notifications.
+
+### View alert history
+
+```bash
+cosmoflare alerts history
+cosmoflare alerts history --limit 20
+cosmoflare alerts history --since 2026-01-01T00:00:00Z
+cosmoflare alerts history --json
+```
+
+| Flag | Description |
+|------|-------------|
+| `--limit` | Maximum number of entries (most recent first) |
+| `--since` | Show entries after this time (RFC3339 format) |
 
 ## Library Usage (Workers and KV)
 
