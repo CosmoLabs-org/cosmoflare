@@ -9,15 +9,11 @@ package migration
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -165,7 +161,7 @@ func (m *S3Migration) createS3Client() (*s3.Client, error) {
 	// Load AWS config
 	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(m.AWSRegion),
-		config.WithSharedCredentialsFiles(),
+		config.WithSharedConfigProfile(m.AWSProfile),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
@@ -201,7 +197,7 @@ func (m *S3Migration) listS3Objects(s3Client *s3.Client) ([]*S3Object, error) {
 
 			objects = append(objects, &S3Object{
 				Key:          key,
-				Size:         obj.Size,
+				Size:         aws.ToInt64(obj.Size),
 				ETag:         *obj.ETag,
 				LastModified: *obj.LastModified,
 				StorageClass: string(obj.StorageClass),
@@ -308,6 +304,18 @@ func printMigrationSummary(result *MigrationResult) {
 		fmt.Printf("Manifest:          %s\n", result.ManifestPath)
 	}
 	fmt.Println(strings.Repeat("─", 60))
+}
+
+func printInfo(format string, args ...interface{}) {
+	fmt.Printf("  ℹ "+format+"\n", args...)
+}
+
+func printSuccess(format string, args ...interface{}) {
+	fmt.Printf("  ✓ "+format+"\n", args...)
+}
+
+func printWarning(format string, args ...interface{}) {
+	fmt.Printf("  ⚠ "+format+"\n", args...)
 }
 
 // FormatBytes formats bytes in human-readable format
