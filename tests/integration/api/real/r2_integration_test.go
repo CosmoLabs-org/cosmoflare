@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	r2api "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/tests/helpers"
+	r2api "github.com/CosmoLabs-org/cosmoflare/internal/api"
+	"github.com/CosmoLabs-org/cosmoflare/tests/helpers"
 )
 
 // R2IntegrationTestSuite provides comprehensive R2 API integration testing

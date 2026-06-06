@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tea "github.com/charmbracelet/bubbletea"
 
-	r2tui "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui"
+	r2tui "github.com/CosmoLabs-org/cosmoflare/internal/tui"
 )
 
 // TestDashboardBasics tests basic dashboard functionality

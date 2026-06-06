@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive"
+	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
 )
 
 // backupCmd represents the backup command

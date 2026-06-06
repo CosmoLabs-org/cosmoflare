@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 )
 
 const (
@@ -127,7 +127,7 @@ func (frd *FirstRunDetector) ShowQuickStart() {
 	fmt.Println()
 
 	PrintInfo("📚 Ready to learn more?")
-	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/CosmoDev-R2Go2"))
+	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/cosmoflare"))
 	fmt.Printf("  • Advanced help: %s\n", Info("cosmoflare --help"))
 	fmt.Println()
 

@@ -16,9 +16,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"context"
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 )
 
 var (

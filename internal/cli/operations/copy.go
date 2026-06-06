@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/progress"
 )
 
 // CopyOptions contains options for enhanced copy operations

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/palette"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 )
 
 // Update handles incoming messages and updates the model

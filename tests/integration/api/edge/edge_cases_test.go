@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/tests/integration/api/mock"
+	"github.com/CosmoLabs-org/cosmoflare/tests/integration/api/mock"
 )
 
 // TestEdgeCases tests various edge case scenarios

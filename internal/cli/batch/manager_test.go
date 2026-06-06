@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/operations"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

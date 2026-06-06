@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 )
 
 // BackupData represents the backup structure

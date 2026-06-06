@@ -14,8 +14,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/palette"
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // Section represents different sections of the dashboard

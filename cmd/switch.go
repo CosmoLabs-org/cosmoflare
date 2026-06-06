@@ -12,8 +12,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
 )
 
 // switchCmd represents the profile switch command

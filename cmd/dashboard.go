@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui"
 )
 
 // dashboardCmd represents the dashboard command

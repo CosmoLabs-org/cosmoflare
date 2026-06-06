@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/tests/helpers"
+	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
+	"github.com/CosmoLabs-org/cosmoflare/tests/helpers"
 )
 
 func TestValidateAccountID(t *testing.T) {

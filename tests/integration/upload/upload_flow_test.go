@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+	r2go2 "github.com/CosmoLabs-org/cosmoflare/pkg/r2go2"
 )
 
 func TestUploadValidation_BucketName(t *testing.T) {

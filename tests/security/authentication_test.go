@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/tests/helpers"
+	"github.com/CosmoLabs-org/cosmoflare/tests/helpers"
 )
 
 // AuthenticationTestSuite provides comprehensive authentication testing

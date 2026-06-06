@@ -24,7 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cheggaaa/pb/v3"
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // S3Migration handles migration from AWS S3 to Cloudflare R2

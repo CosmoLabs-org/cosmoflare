@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/pbkdf2"

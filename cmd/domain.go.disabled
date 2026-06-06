@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/domain"
+	"github.com/CosmoLabs-org/cosmoflare/internal/api"
+	"github.com/CosmoLabs-org/cosmoflare/internal/domain"
 )
 
 // domainCmd represents the domain command

@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/operations"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
 )
 
 // Worker represents a worker that processes operations

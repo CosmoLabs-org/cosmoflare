@@ -22,8 +22,8 @@ import (
 	"golang.org/x/term"
 
 	"github.com/spf13/cobra"
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 )
 
 // objectCmd represents the object command

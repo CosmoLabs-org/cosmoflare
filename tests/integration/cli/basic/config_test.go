@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 )
 
 // TestConfigInit creates a fresh config in a temp home directory

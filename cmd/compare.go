@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 )
 
 var comparePrefix string

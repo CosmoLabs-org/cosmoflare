@@ -4,7 +4,7 @@ Cosmoflare - CLI for the full Cloudflare developer platform
 Copyright © 2025 CosmoLabs (https://cosmolabs.org)
 License: MIT (https://opensource.org/licenses/MIT)
 
-For usage instructions, see: https://github.com/CosmoLabs-org/CosmoDev-R2Go2
+For usage instructions, see: https://github.com/CosmoLabs-org/cosmoflare
 */
 
 package main
@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd"
+	"github.com/CosmoLabs-org/cosmoflare/cmd"
 )
 
 func main() {

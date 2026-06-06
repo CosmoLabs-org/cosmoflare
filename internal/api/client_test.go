@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	r2config "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	r2config "github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

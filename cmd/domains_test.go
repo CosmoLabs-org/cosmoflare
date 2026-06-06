@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // TestDomainsCmd_NotNil verifies domainsCmd is initialised.

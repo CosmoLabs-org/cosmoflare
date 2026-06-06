@@ -1,4 +1,4 @@
-module github.com/CosmoLabs-org/CosmoDev-R2Go2
+module github.com/CosmoLabs-org/cosmoflare
 
 go 1.26
 

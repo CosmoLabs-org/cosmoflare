@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 

@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
 )
 
 // setupCmd represents the setup command
@@ -237,7 +237,7 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 	printInfo("  cosmoflare upload ./file.txt my-bucket    # Upload files")
 	printInfo("")
 	printInfo("📖 For more help: cosmoflare --help")
-	printInfo("🌐 Documentation: https://github.com/CosmoLabs-org/CosmoDev-R2Go2")
+	printInfo("🌐 Documentation: https://github.com/CosmoLabs-org/cosmoflare")
 
 	return nil
 }

@@ -17,9 +17,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/operations"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/ux"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/progress"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 )
 
 // OperationType defines different types of batch operations

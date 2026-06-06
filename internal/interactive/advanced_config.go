@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 )
 
 // AdvancedConfig provides advanced configuration options

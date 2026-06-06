@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	r2config "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	r2config "github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"

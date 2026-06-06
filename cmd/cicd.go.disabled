@@ -347,7 +347,7 @@ jobs:
 
     - name: Install R2Go2
       run: |
-        curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+        curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
         chmod +x r2go2
 
     - name: Deploy to R2
@@ -400,7 +400,7 @@ deploy:
     - build
   before_script:
     - apk add --no-cache curl
-    - curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    - curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
     - chmod +x r2go2
   script:
     - ./r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
@@ -440,7 +440,7 @@ func generateJenkinsTemplate(bucket, env string) string {
         stage('Deploy') {
             steps {
                 sh '''
-                    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+                    curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
                     chmod +x r2go2
                     ./r2go2 object put $R2_BUCKET ./dist/ --recursive --progress
                 '''
@@ -485,7 +485,7 @@ FROM alpine:latest
 
 # Install R2Go2
 RUN apk add --no-cache curl && \
-    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o /usr/local/bin/r2go2 && \
+    curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o /usr/local/bin/r2go2 && \
     chmod +x /usr/local/bin/r2go2
 
 WORKDIR /app
@@ -659,7 +659,7 @@ steps:
   displayName: 'Build project'
 
 - script: |
-    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
     chmod +x r2go2
   displayName: 'Install R2Go2'
 
@@ -686,7 +686,7 @@ echo "🚀 Starting deployment to R2..."
 # Check if R2Go2 is installed
 if ! command -v r2go2 &> /dev/null; then
     echo "❌ R2Go2 not found. Installing..."
-    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
     chmod +x r2go2
     sudo mv r2go2 /usr/local/bin/
 fi
@@ -785,7 +785,7 @@ echo "🔄 Syncing directory to R2..."
 # Check if R2Go2 is installed
 if ! command -v r2go2 &> /dev/null; then
     echo "❌ R2Go2 not found. Installing..."
-    curl -fsSL https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest/download/r2go2-linux-amd64 -o r2go2
+    curl -fsSL https://github.com/CosmoLabs-org/cosmoflare/releases/latest/download/r2go2-linux-amd64 -o r2go2
     chmod +x r2go2
     sudo mv r2go2 /usr/local/bin/
 fi

@@ -542,7 +542,7 @@ func (tm *TutorialManager) showTutorialCompletion() {
 	fmt.Println()
 
 	fmt.Println("Need more help?")
-	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/CosmoDev-R2Go2"))
+	fmt.Printf("  • Documentation: %s\n", Info("https://github.com/CosmoLabs-org/cosmoflare"))
 	fmt.Printf("  • Tutorial replay: %s\n", Info("cosmoflare tutorial"))
 	fmt.Printf("  • Advanced help: %s\n", Info("cosmoflare help advanced"))
 

@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/analytics"
+	"github.com/CosmoLabs-org/cosmoflare/internal/api"
+	"github.com/CosmoLabs-org/cosmoflare/internal/analytics"
 )
 
 // analyticsCmd represents the analytics command

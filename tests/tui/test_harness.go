@@ -14,7 +14,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/require"
 
-	r2tui "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui"
+	r2tui "github.com/CosmoLabs-org/cosmoflare/internal/tui"
 )
 
 // TestModel wraps the unexported DashboardModel for testing

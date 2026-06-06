@@ -18,10 +18,10 @@ import (
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/interactive"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/installer"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/tui/components/navigation"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/installer"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/navigation"
 )
 
 // InstallerModel represents the main installer model
@@ -1260,7 +1260,7 @@ func (m *InstallerModel) renderQuickStartState() string {
 
 // openDocumentation opens the documentation in browser
 func (m *InstallerModel) openDocumentation() tea.Cmd {
-	url := "https://github.com/CosmoLabs-org/CosmoDev-R2Go2"
+	url := "https://github.com/CosmoLabs-org/cosmoflare"
 
 	return func() tea.Msg {
 		var cmd *exec.Cmd

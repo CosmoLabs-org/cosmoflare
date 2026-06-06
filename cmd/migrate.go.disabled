@@ -18,8 +18,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/cheggaaa/pb/v3"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/migration"
+	"github.com/CosmoLabs-org/cosmoflare/internal/api"
+	"github.com/CosmoLabs-org/cosmoflare/internal/migration"
 )
 
 // migrateCmd represents the migrate command

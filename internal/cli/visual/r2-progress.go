@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	bubbleProgress "github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"

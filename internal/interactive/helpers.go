@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 )
 
 // Color definitions for consistent theming

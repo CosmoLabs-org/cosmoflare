@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/batch"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/operations"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/progress"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/ux"
-	visual "github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/cli/visual"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/batch"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/progress"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
+	visual "github.com/CosmoLabs-org/cosmoflare/internal/cli/visual"
 )
 
 // Enhanced copy command with progress monitoring and batch support

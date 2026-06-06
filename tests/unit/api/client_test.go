@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/api"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/config"
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/tests/helpers"
+	"github.com/CosmoLabs-org/cosmoflare/internal/api"
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/CosmoLabs-org/cosmoflare/tests/helpers"
 )
 
 func TestNewClient(t *testing.T) {

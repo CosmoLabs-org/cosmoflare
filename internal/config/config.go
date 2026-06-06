@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/CosmoLabs-org/CosmoDev-R2Go2/internal/utils"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/spf13/viper"
 )
 
