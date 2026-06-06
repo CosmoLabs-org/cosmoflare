@@ -1,5 +1,5 @@
 version: 1
-project: CosmoDev-R2Go2
+project: cosmoflare
 settings:
     timeout: 30s
     fail_fast: true

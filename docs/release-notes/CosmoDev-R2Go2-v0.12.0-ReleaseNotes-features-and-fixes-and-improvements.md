@@ -1,5 +1,5 @@
 ---
-project: CosmoDev-R2Go2
+project: cosmoflare
 version: 0.12.0
 date: 2026-05-30
 previous: 0.11.0
