@@ -1,0 +1,9 @@
+id: ROAD-067
+created_at: 2026-06-06T04:09:31.097999-03:00
+updated_at: 2026-06-06T04:09:31.0998-03:00
+title: Wrangler compatibility layer — read wrangler.toml and translate to .cosmoflare.yaml
+status: captured
+priority: 72
+category: integration
+origin:
+    session: 17
