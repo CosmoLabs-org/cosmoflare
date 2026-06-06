@@ -2,7 +2,7 @@
 
 **Company**: CosmoLabs (https://cosmolabs.org)
 **License**: MIT (open-source)
-**Repo**: github.com/CosmoLabs-org/CosmoDev-R2Go2
+**Repo**: github.com/CosmoLabs-org/cosmoflare
 
 ## Mission
 
@@ -15,7 +15,7 @@ Cosmoflare is the MCP-powered Cloudflare control plane. It exists so that Claude
 1. **Agent-first UX** — Every command must be usable by an AI agent without human guidance. `--json` on every command, predictable exit codes, rich `--help` for agent discovery, actionable error messages.
 2. **Full platform coverage** — If the Cloudflare API exposes it, Cosmoflare manages it. No service left behind.
 3. **Security is paramount** — API keys handled securely (never logged, never in output unless explicit). The CLI is the trust boundary between agents and Cloudflare infrastructure.
-4. **Library-first** — The Go library (`pkg/r2go2/`) is the stable API surface. The CLI wraps it. The future mobile app wraps it. No separate implementations.
+4. **Library-first** — The Go library (`pkg/cosmoflare/`) is the stable API surface. The CLI wraps it. The future mobile app wraps it. No separate implementations.
 5. **MCP-native** — Cosmoflare will serve as an MCP server, letting Claude Code and other AI tools control Cloudflare natively through tool-use protocol.
 6. **Open-source core, paid mobile** — The CLI is free (MIT). The React Native mobile app with push notifications and one-tap actions is the paid product.
 7. **Backward compatible** — `r2go2` binary always works. `cosmoflare` is the primary name. Module path changes are planned, not forced.
@@ -90,7 +90,7 @@ Everything the Cloudflare API allows us to interact with:
 
 ## Repo Strategy
 
-- **CosmoDev-R2Go2** (this repo) — CLI + Go library. Open-source, community contributions. Pure Go.
+- **cosmoflare** (this repo) — CLI + Go library. Open-source, community contributions. Pure Go.
 - **Cosmoflare-apps** (future repo) — React Native mobile (+ eventually Tauri desktop). Can be private/paid.
 - Keeps contribution simple: Go devs don't need Node. Mobile devs import the Go library's logic via API layer.
 

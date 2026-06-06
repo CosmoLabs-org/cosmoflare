@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go" alt="Go 1.26+">
   <img src="https://img.shields.io/badge/Cloudflare-Platform-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare">
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License">
-  <img src="https://img.shields.io/github/actions/workflow/status/CosmoLabs-org/CosmoDev-R2Go2/ci.yml?style=flat-square&label=CI" alt="CI">
+  <img src="https://img.shields.io/github/actions/workflow/status/CosmoLabs-org/cosmoflare/ci.yml?style=flat-square&label=CI" alt="CI">
 </p>
 
 **Open-source CLI and Go library for the full Cloudflare developer platform.**
@@ -19,7 +19,7 @@ Cosmoflare lets you control the entire Cloudflare platform from the terminal. It
 
 It is designed agent-first: every command supports `--json` output, has detailed `--help`, uses predictable exit codes, and returns actionable error messages. Claude Code, AI agents, and human developers all use the same interface.
 
-The Go library (`pkg/r2go2/`) is the stable API surface. The CLI wraps it. A future React Native mobile app will wrap the same library. The `r2go2` binary remains as a backward-compatible alias.
+The Go library (`pkg/cosmoflare/`) is the stable API surface. The CLI wraps it. A future React Native mobile app will wrap the same library. The `r2go2` binary remains as a backward-compatible alias.
 
 ## Services
 
@@ -47,14 +47,14 @@ The Go library (`pkg/r2go2/`) is the stable API surface. The CLI wraps it. A fut
 ### Install
 
 ```bash
-go install github.com/CosmoLabs-org/CosmoDev-R2Go2@latest
+go install github.com/CosmoLabs-org/cosmoflare@latest
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/CosmoLabs-org/CosmoDev-R2Go2.git
-cd CosmoDev-R2Go2
+git clone https://github.com/CosmoLabs-org/cosmoflare.git
+cd cosmoflare
 make build
 ```
 
@@ -68,39 +68,39 @@ export CLOUDFLARE_ACCOUNT_ID="your-account-id"
 Or use the interactive setup wizard:
 
 ```bash
-r2go2 config init
+cosmoflare config init
 ```
 
 ### Use
 
 ```bash
 # Zones and DNS
-r2go2 zone list --json
-r2go2 dns list ZONE_ID
-r2go2 dns create ZONE_ID --type A --name app --content 1.2.3.4
+cosmoflare zone list --json
+cosmoflare dns list ZONE_ID
+cosmoflare dns create ZONE_ID --type A --name app --content 1.2.3.4
 
 # SSL/TLS
-r2go2 ssl status ZONE_ID
-r2go2 ssl settings ZONE_ID
+cosmoflare ssl status ZONE_ID
+cosmoflare ssl settings ZONE_ID
 
 # Cache
-r2go2 cache purge ZONE_ID --all --force
-r2go2 cache settings ZONE_ID
+cosmoflare cache purge ZONE_ID --all --force
+cosmoflare cache settings ZONE_ID
 
 # R2 Storage
-r2go2 bucket list
-r2go2 object put my-bucket ./file.txt --key="uploads/file.txt"
-r2go2 object get my-bucket uploads/file.txt --output=local.txt
-r2go2 object presign my-bucket uploads/file.txt --expires=1h
+cosmoflare bucket list
+cosmoflare object put my-bucket ./file.txt --key="uploads/file.txt"
+cosmoflare object get my-bucket uploads/file.txt --output=local.txt
+cosmoflare object presign my-bucket uploads/file.txt --expires=1h
 
 # Workers
-r2go2 worker list
-r2go2 worker deploy --name my-worker --script worker.js
+cosmoflare worker list
+cosmoflare worker deploy --name my-worker --script worker.js
 
 # KV
-r2go2 kv namespace list
-r2go2 kv put NAMESPACE_ID my-key "my-value"
-r2go2 kv get NAMESPACE_ID my-key
+cosmoflare kv namespace list
+cosmoflare kv put NAMESPACE_ID my-key "my-value"
+cosmoflare kv get NAMESPACE_ID my-key
 ```
 
 ## Agent-First Design
@@ -114,10 +114,10 @@ Every command is built to be used programmatically:
 
 ```bash
 # Machine-readable output
-r2go2 bucket list --json | jq '.buckets[].name'
+cosmoflare bucket list --json | jq '.buckets[].name'
 
 # Scripting
-result=$(r2go2 object put my-bucket ./file.txt --json)
+result=$(cosmoflare object put my-bucket ./file.txt --json)
 echo "$result" | jq -e '.success'
 ```
 
@@ -126,28 +126,28 @@ echo "$result" | jq -e '.success'
 The public library can be imported by any Go project:
 
 ```go
-import r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+import cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 
 // DNS management
-dnsSvc, _ := r2go2.NewDNSServiceFromCreds(zoneID, apiToken)
+dnsSvc, _ := cosmoflare.NewDNSServiceFromCreds(zoneID, apiToken)
 records, _ := dnsSvc.List(ctx)
 
 // Zone management
-zoneSvc, _ := r2go2.NewZoneServiceFromCreds(accountID, apiToken)
+zoneSvc, _ := cosmoflare.NewZoneServiceFromCreds(accountID, apiToken)
 zones, _ := zoneSvc.List(ctx)
 
 // SSL/TLS
-sslSvc, _ := r2go2.NewSSLServiceFromCreds(zoneID, apiToken)
+sslSvc, _ := cosmoflare.NewSSLServiceFromCreds(zoneID, apiToken)
 status, _ := sslSvc.GetSSL(ctx)
 
 // Cache
-cacheSvc, _ := r2go2.NewCacheServiceFromCreds(zoneID, apiToken)
+cacheSvc, _ := cosmoflare.NewCacheServiceFromCreds(zoneID, apiToken)
 result, _ := cacheSvc.PurgeAll(ctx)
 
 // R2 Storage
-client, _ := r2go2.NewClient(
-    r2go2.WithAccountID(accountID),
-    r2go2.WithAPIToken(apiToken),
+client, _ := cosmoflare.NewClient(
+    cosmoflare.WithAccountID(accountID),
+    cosmoflare.WithAPIToken(apiToken),
 )
 buckets, _ := client.ListBuckets(ctx)
 ```
@@ -156,20 +156,20 @@ buckets, _ := client.ListBuckets(ctx)
 
 ```bash
 # Bash
-r2go2 completion bash > /etc/bash_completion.d/r2go2
+cosmoflare completion bash > /etc/bash_completion.d/cosmoflare
 
 # Zsh
-r2go2 completion zsh > "${fpath[1]}/_r2go2"
+cosmoflare completion zsh > "${fpath[1]}/_cosmoflare"
 
 # Fish
-r2go2 completion fish > ~/.config/fish/completions/r2go2.fish
+cosmoflare completion fish > ~/.config/fish/completions/cosmoflare.fish
 ```
 
 ## Development
 
 ```bash
 # Build
-go build -o build/r2go2 .
+go build -o build/cosmoflare .
 
 # Unit tests (no network required)
 go test ./pkg/... ./internal/...
@@ -195,7 +195,7 @@ cmd/                  CLI commands (Cobra)
   cache.go            Cache purge and settings
   config.go           Profile management
   root.go             Root command and global flags
-pkg/r2go2/            Public Go library (stable API)
+pkg/cosmoflare/            Public Go library (stable API)
 internal/             Private packages (config, tui, utils)
 tests/                Integration tests
 docs/                 Documentation, roadmap, planning

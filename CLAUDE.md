@@ -1,6 +1,6 @@
-# CosmoDev-R2Go2 (Cosmoflare)
+# Cosmoflare
 
-Open-source Go library and CLI tool for managing the full Cloudflare developer platform. R2Go2 is the R2 storage component within the larger **Cosmoflare** ecosystem.
+Open-source Go library and CLI for managing the full Cloudflare developer platform. The `pkg/cosmoflare/` library provides importable Go packages for every Cloudflare service — R2 storage, Workers, KV, DNS, and 20+ more.
 
 ## Product Vision
 
@@ -8,36 +8,61 @@ Cosmoflare is a **3-tier product** by CosmoLabs:
 
 | Tier | Product | Model | Purpose |
 |------|---------|-------|---------|
-| **CLI** | `cosmoflare` (alias: `r2go2`) | Free, open-source (MIT) | Developer tool, agent-friendly, community adoption |
+| **CLI** | `cosmoflare` | Free, open-source (MIT) | Developer tool, agent-friendly, community adoption |
 | **Desktop** | Tauri app (macOS/Windows/Linux) | Paid | GUI dashboard, real-time notifications, infrastructure graph |
 | **Mobile** | React Native (iOS/Android) | Paid (subscription) | On-the-go monitoring, push alerts, quick actions |
 
 **Design principle**: Library-first, CLI on top, GUI apps wrap the same core. No separate API implementations per tier.
 
 ### Full Cloudflare Platform Coverage
-Everything the Cloudflare API allows us to interact with:
 
-| Service | Status | Phase |
-|---------|--------|-------|
-| **R2** (storage) | Implemented | Phase 1 |
-| **Workers** (compute) | Implemented | Phase 3 |
-| **KV** (key-value) | Implemented | Phase 3 |
-| **DNS Records** | Implemented | Phase 4 |
-| **Zones** | Implemented | Phase 4 |
-| **SSL/TLS** | Implemented | Phase 4 |
-| **Cache** | Implemented | Phase 4 |
-| **Page/Redirect Rules** | ROAD-039 | Phase 4 |
-| **WAF/Firewall** | ROAD-040 | Phase 5 |
-| **Email Routing** | ROAD-041 | Phase 5 |
-| **D1** (SQL database) | Stub → ROAD-042 | Phase 5 |
-| **Pages** (static hosting) | Stub → ROAD-043 | Phase 5 |
-| **Queues** (message queues) | Stub | Phase 5 |
-| **Images** | ROAD-044 | Phase 6 |
-| **Hyperdrive** | ROAD-046 | Phase 6 |
-| **Vectorize** | ROAD-048 | Phase 6 |
-| **Workers AI / AI Gateway** | ROAD-049 | Phase 6 |
-| **Stream** (video) | ROAD-045 | Phase 7 |
-| All managed through a single `.cosmoflare.yaml` project config |
+| Service | Status | Library |
+|---------|--------|---------|
+| **R2** (storage) | Implemented | `client.go`, `storage.go`, `upload.go`, `download.go`, `multipart.go` |
+| **Workers** (compute) | Implemented | `worker.go` |
+| **KV** (key-value) | Implemented | `kv.go` |
+| **DNS Records** | Implemented | `dns.go` |
+| **Zones** | Implemented | `zone.go` |
+| **SSL/TLS** | Implemented | `ssl.go` |
+| **Cache** | Implemented | `cloudflare_cache.go` |
+| **Page/Redirect Rules** | Implemented | `pagerules.go` |
+| **WAF/Firewall** | Implemented | `waf.go`, `firewall.go` |
+| **Email Routing** | Implemented | `email.go` |
+| **CORS** | Implemented | `cors.go` |
+| **D1** (SQL database) | Implemented | `d1.go` |
+| **Pages** (static hosting) | Implemented | `pages.go` |
+| **Queues** (message queues) | Implemented | `queue.go` |
+| **Images** | Implemented | `images.go` |
+| **Hyperdrive** | Implemented | `hyperdrive.go` |
+| **Vectorize** | Implemented | `vectorize.go` |
+| **Workers AI / AI Gateway** | Implemented | `ai.go` |
+| **Stream** (video) | Implemented | `stream.go` |
+| **Healthchecks** | Implemented | `healthcheck.go` |
+| **Diagnostics** | Implemented | `doctor.go` |
+| **Domains** | Implemented | `domains.go` |
+
+### Workflow Commands (not service-specific)
+
+| Command | Purpose |
+|---------|---------|
+| `cosmoflare dev` | Local dev server proxy with hot-reload |
+| `cosmoflare init` | Project scaffolding with framework detection |
+| `cosmoflare diff` | Compare local config vs live Cloudflare state |
+| `cosmoflare apply` | Declarative config reconciliation |
+| `cosmoflare sync` | rsync-like directory synchronization with R2 |
+| `cosmoflare watch` | Auto-sync local directory to R2 on file changes |
+| `cosmoflare cost` | Monthly cost estimation |
+| `cosmoflare export/import` | Full account config backup/restore |
+| `cosmoflare templates` | Project scaffolding from 5 built-in templates |
+| `cosmoflare validate` | Config validation against CF API constraints |
+| `cosmoflare terraform` | Generate Terraform .tf files from live state |
+| `cosmoflare mcp` | MCP tool server for AI agent integration |
+| `cosmoflare wrangler` | Import wrangler.toml compatibility |
+| `cosmoflare audit` | CLI mutation audit logging |
+| `cosmoflare alerts` | Alert rules for error rates, limits, failures |
+| `cosmoflare account` | Multi-account switching |
+| `cosmoflare plugin` | Community extension system |
+| `cosmoflare doctor` | Domain health diagnostics |
 
 ### Agent-First UX
 The CLI must be as usable by an AI agent as by a human:
@@ -47,45 +72,35 @@ The CLI must be as usable by an AI agent as by a human:
 - Clear error messages with actionable fix suggestions
 - Predictable, consistent command structure
 - Deterministic exit codes for scripting
+- MCP server mode for direct AI agent integration
 
 ## Project
 
 - **Language**: Go 1.26
-- **Module**: `github.com/CosmoLabs-org/CosmoDev-R2Go2`
+- **Module**: `github.com/CosmoLabs-org/cosmoflare`
 - **Version**: See `.version-registry.json`
-- **Binary**: `r2go2`
+- **Binary**: `cosmoflare` (backward-compat alias: `r2go2`)
 - **License**: MIT (open-source)
 
 ## Structure
 
-- `cmd/` - CLI commands (cobra): `bucket.go`, `object.go`, `worker.go`, `kv.go`, `dns.go`, `zone.go`, `ssl.go`, `cache.go`, `domains.go`, `doctor.go`
-- `pkg/r2go2/` - Public library (importable by any Go project):
-  - **R2 Storage**: `client.go`, `storage.go`, `upload.go`, `download.go`
-  - **Workers**: `worker.go` — `WorkerService` (Deploy, List, Get, Delete, Logs, UpdateSettings)
-  - **KV**: `kv.go` — `KVService` (CreateNamespace, ListNamespaces, GetNamespace, DeleteNamespace, Put, Get, Delete, ListKeys)
-  - **Shared**: `types.go`, `errors.go`, `options.go`, `config.go`
-  - **DNS**: `dns.go` — `DNSService` (Create, List, Get, Update, Delete) — zone-scoped
-  - **Zones**: `zone.go` — `ZoneService` (Create, List, Get, Delete, GetSettings) — account-scoped
-  - **SSL/TLS**: `ssl.go` — `SSLService` (GetSSL, UpdateSSL, GetVerification, GetSettings, UpdateSettings) — zone-scoped
-  - **Cache**: `cloudflare_cache.go` — `CacheService` (PurgeAll, PurgeByURLs/Tags/Hosts, GetSettings, UpdateSettings) — zone-scoped
-  - **Healthchecks**: `healthcheck.go` — `HealthcheckService` (List, Get, Create, Update, Delete) — zone-scoped
-  - **Diagnostics**: `doctor.go` — `DoctorService` (CheckDNSPropagation, CheckSSL, CheckHTTP, CheckNameservers, RunDiagnostics) — stdlib-only probes
-  - **Domain Overview**: `domains.go` — `DomainService` (List with pagination/filtering, GetDetail, EnrichWithHealth)
-  - **Future stubs**: `d1.go`, `pages.go`, `queue.go`
-- `internal/` - Internal packages (api, cli, config, interactive, tui, utils)
+- `cmd/` - CLI commands (cobra): 40+ command files
+- `pkg/cosmoflare/` - Public library (importable by any Go project):
+  - Each Cloudflare service has its own file with a `*Service` struct
+  - Shared: `types.go`, `errors.go`, `options.go`, `config.go`
+  - Import as: `cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"`
+- `internal/` - Internal packages (cli, config, interactive, tui, utils, webhook)
 - `docs/` - Documentation, sessions, planning, issues, roadmap
-- `docs/PRODUCT-VISION.md` - Full Cosmoflare product vision, 3-tier model, roadmap references
-- `docs/USAGE.md` - Agent-reference CLI usage guide
-- `docs/roadmap/` - Roadmap items (ROAD-001 through ROAD-065+)
-- `docs/audit/` - Comprehensive codebase audits
-- `.claude/CLAUDE.md` - Claude Code project instructions (build/test, architecture, known gaps)
+- `docs/PRODUCT-VISION.md` - Full Cosmoflare product vision, 3-tier model
+- `docs/USAGE.md` - Agent-reference CLI usage guide (1500+ lines)
+- `docs/roadmap/` - Roadmap items (ROAD-001 through ROAD-072)
 
 ## Development
 
 ```bash
-go build -o r2go2 .        # Build
-go test ./...               # Test all
-go vet ./...                # Vet
+go build -o build/cosmoflare .   # Build
+go test ./cmd/ ./pkg/cosmoflare/ ./internal/... -timeout 60s  # Test
+go vet ./...                     # Vet
 ```
 
 ## Conventions
@@ -96,7 +111,6 @@ go vet ./...                # Vet
 - Every command must support `--json` output
 - Every command must have detailed `--help` with examples
 - Agent-readable error messages (include what failed, why, and how to fix)
-- Full Cloudflare platform coverage: see roadmap for all 20+ services
 - Each service gets its own subcommand group and library package
-- All services configured via single `.cosmoflare.yaml` (legacy: `.r2go2.yaml`) project config
-- `r2go2` binary remains as backward-compatible alias for `cosmoflare`
+- All services configured via single `.cosmoflare.yaml` project config
+- `r2go2` binary remains as backward-compatible alias

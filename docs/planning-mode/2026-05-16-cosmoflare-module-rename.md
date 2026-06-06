@@ -5,7 +5,7 @@ goals_completed: 0
 goals_total: 3
 origin: manual
 priority: medium
-status: PLANNED
+status: COMPLETED
 tags:
   - rebrand
   - module-path
