@@ -2,7 +2,7 @@
 
 Cosmoflare is a CLI tool for managing the full Cloudflare developer platform: R2 (storage), Workers (compute), KV (key-value), DNS, Zones, SSL/TLS, Cache, and more. All commands support `--json` for machine-readable output.
 
-> **Binary names:** `cosmoflare` is the primary binary name. `r2go2` remains available as a backward-compatible alias and all examples below work with either name.
+> **Binary names:** `cosmoflare` is the primary binary name. `r2go2` remains available as a backward-compatible alias.
 
 ## Setup
 
@@ -72,9 +72,9 @@ The server shuts down cleanly on SIGINT/SIGTERM.
 
 ### Create a bucket
 ```bash
-r2go2 bucket create my-bucket
-r2go2 bucket create my-bucket --location=eu --tags=env=prod
-r2go2 bucket create my-bucket --metadata=team=platform
+cosmoflare bucket create my-bucket
+cosmoflare bucket create my-bucket --location=eu --tags=env=prod
+cosmoflare bucket create my-bucket --metadata=team=platform
 ```
 JSON output:
 ```json
@@ -83,23 +83,23 @@ JSON output:
 
 ### List buckets
 ```bash
-r2go2 bucket list
-r2go2 bucket list --json
-r2go2 bucket list --format=csv
-r2go2 bucket list --prefix=prod-
-r2go2 bucket list --tag=env=prod
+cosmoflare bucket list
+cosmoflare bucket list --json
+cosmoflare bucket list --format=csv
+cosmoflare bucket list --prefix=prod-
+cosmoflare bucket list --tag=env=prod
 ```
 
 ### Get bucket details
 ```bash
-r2go2 bucket get my-bucket
-r2go2 bucket get my-bucket --output json
-r2go2 bucket get my-bucket --include-objects
+cosmoflare bucket get my-bucket
+cosmoflare bucket get my-bucket --output json
+cosmoflare bucket get my-bucket --include-objects
 ```
 
 ### Check if bucket exists
 ```bash
-r2go2 bucket exists my-bucket && echo "exists"
+cosmoflare bucket exists my-bucket && echo "exists"
 ```
 Exit codes: 0=exists, 1=not found, 2=error.
 JSON output:
@@ -109,23 +109,23 @@ JSON output:
 
 ### Update bucket metadata
 ```bash
-r2go2 bucket update my-bucket --tags=env=staging
-r2go2 bucket update my-bucket --metadata=team=platform
-r2go2 bucket update my-bucket --add-tags=v2
-r2go2 bucket update my-bucket --remove-tags=deprecated
+cosmoflare bucket update my-bucket --tags=env=staging
+cosmoflare bucket update my-bucket --metadata=team=platform
+cosmoflare bucket update my-bucket --add-tags=v2
+cosmoflare bucket update my-bucket --remove-tags=deprecated
 ```
 
 ### Delete a bucket
 ```bash
-r2go2 bucket delete my-bucket
-r2go2 bucket delete my-bucket --force
-r2go2 bucket delete my-bucket --dry-run
+cosmoflare bucket delete my-bucket
+cosmoflare bucket delete my-bucket --force
+cosmoflare bucket delete my-bucket --dry-run
 ```
 
 ### Import buckets from spec
 ```bash
-r2go2 bucket import buckets.json
-r2go2 bucket import buckets.yaml --continue
+cosmoflare bucket import buckets.json
+cosmoflare bucket import buckets.yaml --continue
 ```
 JSON output:
 ```json
@@ -136,16 +136,16 @@ JSON output:
 
 ### List objects
 ```bash
-r2go2 object ls my-bucket
-r2go2 object ls my-bucket --prefix=images/ --recursive
-r2go2 object ls my-bucket --max-keys=10 --json
+cosmoflare object ls my-bucket
+cosmoflare object ls my-bucket --prefix=images/ --recursive
+cosmoflare object ls my-bucket --max-keys=10 --json
 ```
 
 ### Upload an object
 ```bash
-r2go2 object put my-bucket file.txt
-r2go2 object put my-bucket image.jpg --key=assets/logo.jpg
-r2go2 object put my-bucket data.csv --content-type=text/csv --metadata=source=api
+cosmoflare object put my-bucket file.txt
+cosmoflare object put my-bucket image.jpg --key=assets/logo.jpg
+cosmoflare object put my-bucket data.csv --content-type=text/csv --metadata=source=api
 ```
 JSON output:
 ```json
@@ -191,9 +191,9 @@ on successful completion.
 
 ### Download an object
 ```bash
-r2go2 object get my-bucket file.txt
-r2go2 object get my-bucket file.txt --output=local.txt
-r2go2 object get my-bucket large.zip --range-start=0 --range-end=1023
+cosmoflare object get my-bucket file.txt
+cosmoflare object get my-bucket file.txt --output=local.txt
+cosmoflare object get my-bucket large.zip --range-start=0 --range-end=1023
 ```
 JSON output:
 ```json
@@ -204,13 +204,13 @@ Progress bars are shown by default for downloads.
 
 ### Get object metadata
 ```bash
-r2go2 object head my-bucket file.txt
-r2go2 object head my-bucket file.txt --output json
+cosmoflare object head my-bucket file.txt
+cosmoflare object head my-bucket file.txt --output json
 ```
 
 ### Delete an object
 ```bash
-r2go2 object delete my-bucket file.txt
+cosmoflare object delete my-bucket file.txt
 ```
 JSON output:
 ```json
@@ -219,7 +219,7 @@ JSON output:
 
 ### Copy an object
 ```bash
-r2go2 object copy source-bucket/file.txt dest-bucket/backup.txt
+cosmoflare object copy source-bucket/file.txt dest-bucket/backup.txt
 ```
 JSON output:
 ```json
@@ -228,15 +228,15 @@ JSON output:
 
 ### Search for objects
 ```bash
-r2go2 object search my-bucket ".jpg"
-r2go2 object search my-bucket "image-*" --type=glob
-r2go2 object search my-bucket ".*\.png$" --type=regex
+cosmoflare object search my-bucket ".jpg"
+cosmoflare object search my-bucket "image-*" --type=glob
+cosmoflare object search my-bucket ".*\.png$" --type=regex
 ```
 
 ### Batch operations
 ```bash
-r2go2 object batch my-bucket operations.json
-r2go2 object batch my-bucket operations.json --continue --dry-run
+cosmoflare object batch my-bucket operations.json
+cosmoflare object batch my-bucket operations.json --continue --dry-run
 ```
 JSON output:
 ```json
@@ -247,9 +247,9 @@ JSON output:
 
 ### Deploy a Worker
 ```bash
-r2go2 worker deploy my-worker --script=worker.js
-r2go2 worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
-r2go2 worker deploy my-worker --script=worker.js --module --bindings=MY_KV:kv:ns-123 --tags=prod,v2
+cosmoflare worker deploy my-worker --script=worker.js
+cosmoflare worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
+cosmoflare worker deploy my-worker --script=worker.js --module --bindings=MY_KV:kv:ns-123 --tags=prod,v2
 ```
 JSON output:
 ```json
@@ -258,34 +258,34 @@ JSON output:
 
 ### List Workers
 ```bash
-r2go2 worker list
-r2go2 worker list --json
+cosmoflare worker list
+cosmoflare worker list --json
 ```
 
 ### Get Worker script
 ```bash
-r2go2 worker get my-worker
-r2go2 worker get my-worker --json
+cosmoflare worker get my-worker
+cosmoflare worker get my-worker --json
 ```
 
 ### Delete a Worker
 ```bash
-r2go2 worker delete my-worker
-r2go2 worker delete my-worker --force
+cosmoflare worker delete my-worker
+cosmoflare worker delete my-worker --force
 ```
 
 ### View Worker logs
 ```bash
-r2go2 worker logs my-worker
-r2go2 worker logs my-worker --limit=50 --json
+cosmoflare worker logs my-worker
+cosmoflare worker logs my-worker --limit=50 --json
 ```
 
 ### Follow Worker logs (real-time tailing)
 ```bash
-r2go2 worker logs my-worker --follow
-r2go2 worker logs my-worker -f --level=error
-r2go2 worker logs my-worker -f --since=15m --interval=5
-r2go2 worker logs my-worker -f --json
+cosmoflare worker logs my-worker --follow
+cosmoflare worker logs my-worker -f --level=error
+cosmoflare worker logs my-worker -f --since=15m --interval=5
+cosmoflare worker logs my-worker -f --json
 ```
 
 | Flag | Default | Description |
@@ -299,16 +299,16 @@ r2go2 worker logs my-worker -f --json
 
 ### Update Worker settings
 ```bash
-r2go2 worker settings my-worker --compatibility-date=2024-01-01
-r2go2 worker settings my-worker --usage-model=bundled --bindings=MY_R2:r2:my-bucket
+cosmoflare worker settings my-worker --compatibility-date=2024-01-01
+cosmoflare worker settings my-worker --usage-model=bundled --bindings=MY_R2:r2:my-bucket
 ```
 
 ## KV Commands
 
 ### Create a KV namespace
 ```bash
-r2go2 kv namespace create my-cache
-r2go2 kv namespace create production-data --json
+cosmoflare kv namespace create my-cache
+cosmoflare kv namespace create production-data --json
 ```
 JSON output:
 ```json
@@ -317,39 +317,39 @@ JSON output:
 
 ### List KV namespaces
 ```bash
-r2go2 kv namespace list
-r2go2 kv namespace list --json
+cosmoflare kv namespace list
+cosmoflare kv namespace list --json
 ```
 
 ### Delete a KV namespace
 ```bash
-r2go2 kv namespace delete ns-abc123
-r2go2 kv namespace delete ns-abc123 --force
+cosmoflare kv namespace delete ns-abc123
+cosmoflare kv namespace delete ns-abc123 --force
 ```
 
 ### Write a key-value pair
 ```bash
-r2go2 kv put ns-abc123 my-key --value="hello world"
-r2go2 kv put ns-abc123 config.json --file=config.json
-r2go2 kv put ns-abc123 session-123 --value="data" --ttl=3600
+cosmoflare kv put ns-abc123 my-key --value="hello world"
+cosmoflare kv put ns-abc123 config.json --file=config.json
+cosmoflare kv put ns-abc123 session-123 --value="data" --ttl=3600
 ```
 
 ### Read a key-value pair
 ```bash
-r2go2 kv get ns-abc123 my-key
-r2go2 kv get ns-abc123 my-key --json
+cosmoflare kv get ns-abc123 my-key
+cosmoflare kv get ns-abc123 my-key --json
 ```
 
 ### Delete a key
 ```bash
-r2go2 kv delete ns-abc123 my-key
+cosmoflare kv delete ns-abc123 my-key
 ```
 
 ### List keys in a namespace
 ```bash
-r2go2 kv list ns-abc123
-r2go2 kv list ns-abc123 --prefix=cache/
-r2go2 kv list ns-abc123 --limit=100 --json
+cosmoflare kv list ns-abc123
+cosmoflare kv list ns-abc123 --prefix=cache/
+cosmoflare kv list ns-abc123 --limit=100 --json
 ```
 
 ## DNS Commands
@@ -358,10 +358,10 @@ DNS record management is zone-scoped. All DNS commands require a `<zone-id>` as 
 
 ### Create a DNS record
 ```bash
-r2go2 dns create <zone-id> --type=A --name=www --content=1.2.3.4
-r2go2 dns create <zone-id> --type=A --name=www --content=1.2.3.4 --proxied --ttl=300
-r2go2 dns create <zone-id> --type=CNAME --name=blog --content=blog.example.com --comment="Blog subdomain"
-r2go2 dns create <zone-id> --type=MX --name=@ --content=mail.example.com --priority=10
+cosmoflare dns create <zone-id> --type=A --name=www --content=1.2.3.4
+cosmoflare dns create <zone-id> --type=A --name=www --content=1.2.3.4 --proxied --ttl=300
+cosmoflare dns create <zone-id> --type=CNAME --name=blog --content=blog.example.com --comment="Blog subdomain"
+cosmoflare dns create <zone-id> --type=MX --name=@ --content=mail.example.com --priority=10
 ```
 JSON output:
 ```json
@@ -370,22 +370,22 @@ JSON output:
 
 ### List DNS records
 ```bash
-r2go2 dns list <zone-id>
-r2go2 dns list <zone-id> --json
-r2go2 dns list <zone-id> --type=CNAME
-r2go2 dns list <zone-id> --name=www --content=1.2.3.4
+cosmoflare dns list <zone-id>
+cosmoflare dns list <zone-id> --json
+cosmoflare dns list <zone-id> --type=CNAME
+cosmoflare dns list <zone-id> --name=www --content=1.2.3.4
 ```
 
 ### Get a DNS record
 ```bash
-r2go2 dns get <zone-id> <record-id>
-r2go2 dns get <zone-id> <record-id> --json
+cosmoflare dns get <zone-id> <record-id>
+cosmoflare dns get <zone-id> <record-id> --json
 ```
 
 ### Update a DNS record
 ```bash
-r2go2 dns update <zone-id> <record-id> --content=5.6.7.8
-r2go2 dns update <zone-id> <record-id> --ttl=300 --proxied --comment="Updated IP" --json
+cosmoflare dns update <zone-id> <record-id> --content=5.6.7.8
+cosmoflare dns update <zone-id> <record-id> --ttl=300 --proxied --comment="Updated IP" --json
 ```
 JSON output:
 ```json
@@ -394,8 +394,8 @@ JSON output:
 
 ### Delete a DNS record
 ```bash
-r2go2 dns delete <zone-id> <record-id>
-r2go2 dns delete <zone-id> <record-id> --force
+cosmoflare dns delete <zone-id> <record-id>
+cosmoflare dns delete <zone-id> <record-id> --force
 ```
 JSON output:
 ```json
@@ -408,8 +408,8 @@ Zone management is account-scoped and uses the configured account ID.
 
 ### Create a zone
 ```bash
-r2go2 zone create example.com
-r2go2 zone create example.com --type=full --json
+cosmoflare zone create example.com
+cosmoflare zone create example.com --type=full --json
 ```
 JSON output:
 ```json
@@ -418,26 +418,26 @@ JSON output:
 
 ### List zones
 ```bash
-r2go2 zone list
-r2go2 zone list --json
+cosmoflare zone list
+cosmoflare zone list --json
 ```
 
 ### Get zone details
 ```bash
-r2go2 zone get <zone-id>
-r2go2 zone get <zone-id> --json
+cosmoflare zone get <zone-id>
+cosmoflare zone get <zone-id> --json
 ```
 
 ### Get zone settings
 ```bash
-r2go2 zone settings <zone-id>
-r2go2 zone settings <zone-id> --json
+cosmoflare zone settings <zone-id>
+cosmoflare zone settings <zone-id> --json
 ```
 
 ### Delete a zone
 ```bash
-r2go2 zone delete <zone-id>
-r2go2 zone delete <zone-id> --force
+cosmoflare zone delete <zone-id>
+cosmoflare zone delete <zone-id> --force
 ```
 JSON output:
 ```json
@@ -450,8 +450,8 @@ SSL/TLS management is zone-scoped. Inspect and configure encryption settings for
 
 ### Check SSL status
 ```bash
-r2go2 ssl status <zone-id>
-r2go2 ssl status <zone-id> --json
+cosmoflare ssl status <zone-id>
+cosmoflare ssl status <zone-id> --json
 ```
 JSON output:
 ```json
@@ -460,14 +460,14 @@ JSON output:
 
 ### Get SSL settings
 ```bash
-r2go2 ssl settings <zone-id>
-r2go2 ssl settings <zone-id> --json
+cosmoflare ssl settings <zone-id>
+cosmoflare ssl settings <zone-id> --json
 ```
 
 ### Update SSL settings
 ```bash
-r2go2 ssl update <zone-id> --mode=full
-r2go2 ssl update <zone-id> --mode=full --min-tls=1.2 --always-https --auto-rewrites --json
+cosmoflare ssl update <zone-id> --mode=full
+cosmoflare ssl update <zone-id> --mode=full --min-tls=1.2 --always-https --auto-rewrites --json
 ```
 JSON output:
 ```json
@@ -478,8 +478,8 @@ Supported `--mode` values: `off`, `flexible`, `full`, `strict` (full strict).
 
 ### Verify SSL certificate
 ```bash
-r2go2 ssl verify <zone-id>
-r2go2 ssl verify <zone-id> --json
+cosmoflare ssl verify <zone-id>
+cosmoflare ssl verify <zone-id> --json
 ```
 JSON output:
 ```json
@@ -492,8 +492,8 @@ Cache management is zone-scoped. Purge cached content and configure caching beha
 
 ### Purge all cached content
 ```bash
-r2go2 cache purge <zone-id> --all
-r2go2 cache purge <zone-id> --all --force
+cosmoflare cache purge <zone-id> --all
+cosmoflare cache purge <zone-id> --all --force
 ```
 JSON output:
 ```json
@@ -502,31 +502,31 @@ JSON output:
 
 ### Purge by URL
 ```bash
-r2go2 cache purge <zone-id> --url=https://example.com/style.css
-r2go2 cache purge <zone-id> --url=https://example.com/a.js --url=https://example.com/b.js
+cosmoflare cache purge <zone-id> --url=https://example.com/style.css
+cosmoflare cache purge <zone-id> --url=https://example.com/a.js --url=https://example.com/b.js
 ```
 
 ### Purge by cache tag
 ```bash
-r2go2 cache purge <zone-id> --tag=static
-r2go2 cache purge <zone-id> --tag=static --tag=images
+cosmoflare cache purge <zone-id> --tag=static
+cosmoflare cache purge <zone-id> --tag=static --tag=images
 ```
 
 ### Purge by hostname
 ```bash
-r2go2 cache purge <zone-id> --host=example.com
-r2go2 cache purge <zone-id> --host=example.com --host=cdn.example.com
+cosmoflare cache purge <zone-id> --host=example.com
+cosmoflare cache purge <zone-id> --host=example.com --host=cdn.example.com
 ```
 
 ### Get cache settings
 ```bash
-r2go2 cache settings <zone-id>
-r2go2 cache settings <zone-id> --json
+cosmoflare cache settings <zone-id>
+cosmoflare cache settings <zone-id> --json
 ```
 
 ### Update cache settings
 ```bash
-r2go2 cache settings <zone-id> --browser-ttl=3600 --dev-mode --cache-level=aggressive
+cosmoflare cache settings <zone-id> --browser-ttl=3600 --dev-mode --cache-level=aggressive
 ```
 JSON output:
 ```json
@@ -541,32 +541,32 @@ Manage Cloudflare Pages projects and deployments.
 
 ### Create a Pages project
 ```bash
-r2go2 pages create my-site --branch main
-r2go2 pages create my-blog --branch master --json
+cosmoflare pages create my-site --branch main
+cosmoflare pages create my-blog --branch master --json
 ```
 
 ### List Pages projects
 ```bash
-r2go2 pages list
-r2go2 pages list --json
+cosmoflare pages list
+cosmoflare pages list --json
 ```
 
 ### Get Pages project details
 ```bash
-r2go2 pages get my-site
-r2go2 pages get my-site --json
+cosmoflare pages get my-site
+cosmoflare pages get my-site --json
 ```
 
 ### Delete a Pages project
 ```bash
-r2go2 pages delete my-site
-r2go2 pages delete my-site --force
+cosmoflare pages delete my-site
+cosmoflare pages delete my-site --force
 ```
 
 ### List deployments
 ```bash
-r2go2 pages deployments my-site
-r2go2 pages deployments my-site --json
+cosmoflare pages deployments my-site
+cosmoflare pages deployments my-site --json
 ```
 
 ## Queue Commands
@@ -575,37 +575,37 @@ Manage Cloudflare Queues for message-based communication between Workers.
 
 ### Create a queue
 ```bash
-r2go2 queue create my-queue
-r2go2 queue create production-events --json
+cosmoflare queue create my-queue
+cosmoflare queue create production-events --json
 ```
 
 ### List queues
 ```bash
-r2go2 queue list
-r2go2 queue list --json
+cosmoflare queue list
+cosmoflare queue list --json
 ```
 
 ### Get queue details
 ```bash
-r2go2 queue get my-queue
-r2go2 queue get my-queue --json
+cosmoflare queue get my-queue
+cosmoflare queue get my-queue --json
 ```
 
 ### Update (rename) a queue
 ```bash
-r2go2 queue update my-queue --name new-name
+cosmoflare queue update my-queue --name new-name
 ```
 
 ### Delete a queue
 ```bash
-r2go2 queue delete my-queue
-r2go2 queue delete my-queue --force
+cosmoflare queue delete my-queue
+cosmoflare queue delete my-queue --force
 ```
 
 ### List consumers
 ```bash
-r2go2 queue consumers my-queue
-r2go2 queue consumers my-queue --json
+cosmoflare queue consumers my-queue
+cosmoflare queue consumers my-queue --json
 ```
 
 ## D1 Commands
@@ -1094,7 +1094,7 @@ cosmoflare auth status --json
 ```bash
 cosmoflare auth logout
 ```
-Clears in-memory credentials. Profile configurations in `~/.r2go2/config.yaml` are preserved.
+Clears in-memory credentials. Profile configurations in `~/.cosmoflare/config.yaml` are preserved.
 
 ## Setup Command
 
@@ -1207,51 +1207,51 @@ Manage Cloudflare Images — upload, store, resize, and deliver optimized images
 
 ### Upload an image (file)
 ```bash
-r2go2 images upload photo.jpg
-r2go2 images upload banner.png --metadata '{"project":"website"}'
-r2go2 images upload photo.jpg --require-signed-urls
-r2go2 images upload photo.jpg --json
+cosmoflare images upload photo.jpg
+cosmoflare images upload banner.png --metadata '{"project":"website"}'
+cosmoflare images upload photo.jpg --require-signed-urls
+cosmoflare images upload photo.jpg --json
 ```
 
 ### Upload an image (URL)
 ```bash
-r2go2 images upload --url https://example.com/photo.jpg
-r2go2 images upload --url https://example.com/img.png --require-signed-urls
-r2go2 images upload --url https://example.com/img.png --metadata '{"source":"external"}' --json
+cosmoflare images upload --url https://example.com/photo.jpg
+cosmoflare images upload --url https://example.com/img.png --require-signed-urls
+cosmoflare images upload --url https://example.com/img.png --metadata '{"source":"external"}' --json
 ```
 
 ### List images
 ```bash
-r2go2 images list
-r2go2 images list --json
+cosmoflare images list
+cosmoflare images list --json
 ```
 
 ### Get image details
 ```bash
-r2go2 images get IMG_ID
-r2go2 images get IMG_ID --json
+cosmoflare images get IMG_ID
+cosmoflare images get IMG_ID --json
 ```
 
 ### Delete an image
 ```bash
-r2go2 images delete IMG_ID
-r2go2 images delete IMG_ID --force
-r2go2 images delete IMG_ID --json
+cosmoflare images delete IMG_ID
+cosmoflare images delete IMG_ID --force
+cosmoflare images delete IMG_ID --json
 ```
 
 ### List delivery variants
 ```bash
-r2go2 images variants list
-r2go2 images variants list --json
+cosmoflare images variants list
+cosmoflare images variants list --json
 ```
 
 ### Create a delivery variant
 ```bash
-r2go2 images variants create hero --fit=cover --width=1200 --height=630
-r2go2 images variants create thumb --fit=cover --width=150 --height=150
-r2go2 images variants create avatar --fit=crop --width=100 --height=100 --metadata-mode=none
-r2go2 images variants create public --fit=scale-down --width=1920 --height=1080 --never-require-signed-urls
-r2go2 images variants create hero --json
+cosmoflare images variants create hero --fit=cover --width=1200 --height=630
+cosmoflare images variants create thumb --fit=cover --width=150 --height=150
+cosmoflare images variants create avatar --fit=crop --width=100 --height=100 --metadata-mode=none
+cosmoflare images variants create public --fit=scale-down --width=1920 --height=1080 --never-require-signed-urls
+cosmoflare images variants create hero --json
 ```
 
 Fit modes: `scale-down` (default), `contain`, `cover`, `crop`, `pad`.
@@ -1259,8 +1259,8 @@ Metadata modes: `none` (default), `keep`, `copyright`.
 
 ### Delete a delivery variant
 ```bash
-r2go2 images variants delete old-variant
-r2go2 images variants delete old-variant --force
+cosmoflare images variants delete old-variant
+cosmoflare images variants delete old-variant --force
 ```
 ## Stream Commands
 
@@ -1406,35 +1406,35 @@ Compare your local `.cosmoflare.yaml` configuration against live Cloudflare stat
 
 ### Compare all configured services
 ```bash
-r2go2 diff                           # Full diff across all services
-r2go2 diff --output=summary          # Show counts only
-r2go2 diff --json                    # Structured JSON output
+cosmoflare diff                           # Full diff across all services
+cosmoflare diff --output=summary          # Show counts only
+cosmoflare diff --json                    # Structured JSON output
 ```
 
 ### Compare only Workers
 ```bash
-r2go2 diff workers
-r2go2 diff workers --json
-r2go2 diff workers --output=summary
+cosmoflare diff workers
+cosmoflare diff workers --json
+cosmoflare diff workers --output=summary
 ```
 
 ### Compare only DNS records
 ```bash
-r2go2 diff dns
-r2go2 diff dns --json
+cosmoflare diff dns
+cosmoflare diff dns --json
 ```
 Requires `dns.zone_id` to be set in `.cosmoflare.yaml`.
 
 ### Compare only KV namespaces
 ```bash
-r2go2 diff kv
-r2go2 diff kv --json
+cosmoflare diff kv
+cosmoflare diff kv --json
 ```
 
 ### Compare only R2 buckets
 ```bash
-r2go2 diff r2
-r2go2 diff r2 --json
+cosmoflare diff r2
+cosmoflare diff r2 --json
 ```
 
 ### Output format
@@ -1513,14 +1513,14 @@ Auto-sync a local directory to an R2 bucket when files change. Uses polling-base
 
 ### Start watching
 ```bash
-r2go2 watch my-bucket                              # Watch cwd, sync to bucket root
-r2go2 watch my-bucket ./dist                        # Watch ./dist directory
-r2go2 watch my-bucket ./build --prefix=assets/      # Upload under assets/ prefix
-r2go2 watch my-bucket . --exclude="*.log,*.tmp"     # Skip log and tmp files
-r2go2 watch my-bucket . --interval=5s               # Poll every 5 seconds
-r2go2 watch my-bucket . --delete                    # Sync deletions too
-r2go2 watch my-bucket . --dry-run                   # Preview without uploading
-r2go2 watch my-bucket . --json                      # NDJSON event stream
+cosmoflare watch my-bucket                              # Watch cwd, sync to bucket root
+cosmoflare watch my-bucket ./dist                        # Watch ./dist directory
+cosmoflare watch my-bucket ./build --prefix=assets/      # Upload under assets/ prefix
+cosmoflare watch my-bucket . --exclude="*.log,*.tmp"     # Skip log and tmp files
+cosmoflare watch my-bucket . --interval=5s               # Poll every 5 seconds
+cosmoflare watch my-bucket . --delete                    # Sync deletions too
+cosmoflare watch my-bucket . --dry-run                   # Preview without uploading
+cosmoflare watch my-bucket . --json                      # NDJSON event stream
 ```
 
 ### Flags
@@ -2028,16 +2028,16 @@ cosmoflare alerts history --json
 ### Workers
 
 ```go
-import r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+import cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 
 // Create a Worker service
-ws, err := r2go2.NewWorkerServiceFromCreds("account-id", "api-token")
+ws, err := cosmoflare.NewWorkerServiceFromCreds("account-id", "api-token")
 
 // Deploy a Worker
 script := strings.NewReader("export default { fetch() { return new Response('hello') } }")
 worker, err := ws.Deploy(ctx, "my-worker", script,
-    r2go2.WithWorkerCompatibilityDate("2024-01-01"),
-    r2go2.WithWorkerBindings([]r2go2.WorkerBinding{
+    cosmoflare.WithWorkerCompatibilityDate("2024-01-01"),
+    cosmoflare.WithWorkerBindings([]cosmoflare.WorkerBinding{
         {Name: "MY_KV", Type: "kv", ID: "ns-123"},
     }),
 )
@@ -2046,7 +2046,7 @@ worker, err := ws.Deploy(ctx, "my-worker", script,
 workers, err := ws.List(ctx)
 
 // Update settings
-err = ws.UpdateSettings(ctx, "my-worker", r2go2.WorkerSettings{
+err = ws.UpdateSettings(ctx, "my-worker", cosmoflare.WorkerSettings{
     CompatibilityDate: "2024-06-01",
     UsageModel:        "bundled",
 })
@@ -2056,14 +2056,14 @@ err = ws.UpdateSettings(ctx, "my-worker", r2go2.WorkerSettings{
 
 ```go
 // Create a KV service
-ks, err := r2go2.NewKVServiceFromCreds("account-id", "api-token")
+ks, err := cosmoflare.NewKVServiceFromCreds("account-id", "api-token")
 
 // Create a namespace
 ns, err := ks.CreateNamespace(ctx, "my-cache")
 
 // Write a key
 err = ks.Put(ctx, ns.ID, "user:123", strings.NewReader(`{"name":"alice"}`),
-    r2go2.WithKVTTL(3600),
+    cosmoflare.WithKVTTL(3600),
 )
 
 // Read a key
@@ -2071,8 +2071,8 @@ data, err := ks.Get(ctx, ns.ID, "user:123")
 
 // List keys
 keys, err := ks.ListKeys(ctx, ns.ID,
-    r2go2.WithKVPrefix("user:"),
-    r2go2.WithKVLimit(100),
+    cosmoflare.WithKVPrefix("user:"),
+    cosmoflare.WithKVLimit(100),
 )
 ```
 
@@ -2080,24 +2080,24 @@ keys, err := ks.ListKeys(ctx, ns.ID,
 
 Import as a Go library:
 ```go
-import r2go2 "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
+import cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
 
-client, err := r2go2.NewClient(
-    r2go2.WithAccountID("..."),
-    r2go2.WithAPIToken("..."),
+client, err := cosmoflare.NewClient(
+    cosmoflare.WithAccountID("..."),
+    cosmoflare.WithAPIToken("..."),
 )
 
 // Upload with options
 result, err := client.Upload(ctx, "my-bucket", "key.txt", reader, size,
-    r2go2.WithContentType("text/plain"),
-    r2go2.WithMetadata(map[string]string{"env": "prod"}),
+    cosmoflare.WithContentType("text/plain"),
+    cosmoflare.WithMetadata(map[string]string{"env": "prod"}),
 )
 
 // Multipart upload (automatic for files > 100MB)
 result, err := client.MultipartUpload(ctx, "my-bucket", "large.bin", reader, size,
-    r2go2.WithPartSize(16*1024*1024),
-    r2go2.WithConcurrency(5),
-    r2go2.WithProgressCallback(func(uploaded, total int64) {
+    cosmoflare.WithPartSize(16*1024*1024),
+    cosmoflare.WithConcurrency(5),
+    cosmoflare.WithProgressCallback(func(uploaded, total int64) {
         fmt.Printf("\rProgress: %d/%d", uploaded, total)
     }),
 )
@@ -2114,23 +2114,23 @@ fmt.Println("Download URL (expires in 1h):", url)
 
 Generate temporary download URLs without exposing credentials:
 ```bash
-r2go2 object presign my-bucket file.txt
-r2go2 object presign my-bucket file.txt --expires=24h
-r2go2 object presign my-bucket file.txt --expires=30m --json
+cosmoflare object presign my-bucket file.txt
+cosmoflare object presign my-bucket file.txt --expires=24h
+cosmoflare object presign my-bucket file.txt --expires=30m --json
 ```
 
 ## Pipe and Stdin Support
 
 Upload from stdin (pipe):
 ```bash
-echo "hello world" | r2go2 object put my-bucket - --key=stdin-data.txt
-cat large.json | r2go2 object put my-bucket - --key=data.json --content-type=application/json
+echo "hello world" | cosmoflare object put my-bucket - --key=stdin-data.txt
+cat large.json | cosmoflare object put my-bucket - --key=data.json --content-type=application/json
 ```
 
 Download to stdout (pipe):
 ```bash
-r2go2 object get my-bucket file.txt --output=- | gzip > file.gz
-r2go2 object get my-bucket file.txt | cat
+cosmoflare object get my-bucket file.txt --output=- | gzip > file.gz
+cosmoflare object get my-bucket file.txt | cat
 ```
 
 Automatic stdout detection: when stdout is not a terminal (piped), output goes to stdout without `--output=-`.
@@ -2139,9 +2139,9 @@ Automatic stdout detection: when stdout is not a terminal (piped), output goes t
 
 Compare objects between two buckets:
 ```bash
-r2go2 compare src-bucket dst-bucket
-r2go2 compare src-bucket dst-bucket --prefix=images/
-r2go2 compare src-bucket dst-bucket --json
+cosmoflare compare src-bucket dst-bucket
+cosmoflare compare src-bucket dst-bucket --prefix=images/
+cosmoflare compare src-bucket dst-bucket --json
 ```
 
 Output categories: `only_in_source`, `only_in_dest`, `different_size`, `same`.
@@ -2150,59 +2150,59 @@ Output categories: `only_in_source`, `only_in_dest`, `different_size`, `same`.
 
 Show R2 usage statistics:
 ```bash
-r2go2 analytics
-r2go2 analytics --bucket=my-bucket
-r2go2 analytics --period=30d --json
+cosmoflare analytics
+cosmoflare analytics --bucket=my-bucket
+cosmoflare analytics --period=30d --json
 ```
 
 Displays bucket sizes, object counts, and storage distribution. Note: `--period` is advisory until the Cloudflare Analytics API is integrated.
 
 ## Config Profile Commands
 
-Manage named credential profiles for multi-account workflows. Profiles are stored in `~/.r2go2/config.yaml` with 0600 permissions.
+Manage named credential profiles for multi-account workflows. Profiles are stored in `~/.cosmoflare/config.yaml` with 0600 permissions.
 
 ### Initialize configuration
 ```bash
-r2go2 config init
+cosmoflare config init
 ```
 
 ### List profiles
 ```bash
-r2go2 config list
-r2go2 config list --json
+cosmoflare config list
+cosmoflare config list --json
 ```
 
 ### Create or update a profile
 ```bash
-r2go2 config set my-profile --account-id=1234567890abcdef1234567890abcdef --api-token=your_token
-r2go2 config set prod --account-id=... --api-token=... --description="Production" --region=us-east-1
-r2go2 config set staging --account-id=... --api-token=... --endpoint=https://custom.r2.cloudflarestorage.com
+cosmoflare config set my-profile --account-id=1234567890abcdef1234567890abcdef --api-token=your_token
+cosmoflare config set prod --account-id=... --api-token=... --description="Production" --region=us-east-1
+cosmoflare config set staging --account-id=... --api-token=... --endpoint=https://custom.r2.cloudflarestorage.com
 ```
 
 ### Show profile details
 ```bash
-r2go2 config show
-r2go2 config show my-profile
-r2go2 config show my-profile --show-secrets
+cosmoflare config show
+cosmoflare config show my-profile
+cosmoflare config show my-profile --show-secrets
 ```
 
 ### Validate a profile
 ```bash
-r2go2 config validate
-r2go2 config validate my-profile
+cosmoflare config validate
+cosmoflare config validate my-profile
 ```
 
 ### Switch active profile
 ```bash
-r2go2 config switch staging
+cosmoflare config switch staging
 ```
 
 ### Export profile as environment variables
 ```bash
-eval $(r2go2 config export my-profile)
+eval $(cosmoflare config export my-profile)
 ```
 
 ### Delete a profile
 ```bash
-r2go2 config delete old-profile
+cosmoflare config delete old-profile
 ```
