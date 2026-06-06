@@ -1710,6 +1710,66 @@ cosmoflare ai gateway logs my-gateway --json
 
 Output columns: ID, MODEL, STATUS, CACHED, TOKENS, COST.
 
+## Plugin Commands
+
+Manage community extensions that add new capabilities to cosmoflare.
+
+### List installed plugins
+```bash
+cosmoflare plugin list
+cosmoflare plugin list --json
+```
+JSON output:
+```json
+{"success":true,"message":"plugins listed","data":{"plugins":[{"manifest":{"name":"analytics","version":"1.0.0","description":"R2 usage analytics","author":"community","commands":[{"name":"report","description":"Generate analytics report","binary":"bin/analytics"}]},"path":"~/.cosmoflare/plugins/analytics"}],"count":1,"path":"~/.cosmoflare/plugins"}}
+```
+
+### Install a plugin
+```bash
+cosmoflare plugin install https://github.com/user/cosmoflare-analytics.git
+cosmoflare plugin install git@github.com:user/my-plugin.git
+cosmoflare plugin install ./my-local-plugin
+cosmoflare plugin install /path/to/plugin
+```
+
+### Remove a plugin
+```bash
+cosmoflare plugin remove analytics
+cosmoflare plugin remove my-plugin
+```
+
+### Scaffold a new plugin
+```bash
+cosmoflare plugin init my-plugin
+```
+Creates the standard plugin structure:
+```
+~/.cosmoflare/plugins/my-plugin/
+  plugin.yaml    # Plugin manifest
+  bin/           # Compiled binary directory
+  README.md      # Documentation
+```
+
+### Run a plugin
+```bash
+cosmoflare plugin run my-plugin                  # Run default command
+cosmoflare plugin run my-plugin --verbose        # Pass flags to plugin
+cosmoflare plugin run multi-cmd subcommand       # Run specific subcommand
+cosmoflare plugin run analytics export --format csv
+```
+
+### Plugin manifest format (plugin.yaml)
+```yaml
+name: my-plugin
+version: 1.0.0
+description: Does cool things
+author: someone
+commands:
+  - name: do-thing
+    description: Does the thing
+    binary: bin/my-plugin
+```
+
 ## Library Usage (Workers and KV)
 
 ### Workers
