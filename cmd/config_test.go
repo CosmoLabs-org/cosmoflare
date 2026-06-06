@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -199,5 +200,294 @@ func TestConfigFlagsParsing_Interactive(t *testing.T) {
 	}
 	if interactive {
 		t.Error("interactive should be false after --interactive=false")
+	}
+}
+
+// --- Long description content ---
+
+func TestConfigCmd_LongContainsSubcommands(t *testing.T) {
+	subcommands := []string{"init", "validate", "list", "show", "set", "delete", "switch", "export"}
+	for _, sub := range subcommands {
+		if !strings.Contains(configCmd.Long, sub) {
+			t.Errorf("configCmd.Long does not mention subcommand %q", sub)
+		}
+	}
+}
+
+func TestConfigCmd_LongContainsProfilesPath(t *testing.T) {
+	if !strings.Contains(configCmd.Long, "config.yaml") {
+		t.Error("configCmd.Long does not mention config.yaml storage path")
+	}
+}
+
+// --- Use patterns with optional args ---
+
+func TestConfigValidateCmd_UsePattern(t *testing.T) {
+	if configValidateCmd.Use == "" {
+		t.Fatal("configValidateCmd.Use is empty")
+	}
+	if !strings.Contains(configValidateCmd.Use, "validate") {
+		t.Errorf("configValidateCmd.Use = %q, expected to contain 'validate'", configValidateCmd.Use)
+	}
+}
+
+func TestConfigShowCmd_UsePattern(t *testing.T) {
+	if !strings.Contains(configShowCmd.Use, "show") {
+		t.Errorf("configShowCmd.Use = %q, expected to contain 'show'", configShowCmd.Use)
+	}
+}
+
+func TestConfigSetCmd_UsePattern(t *testing.T) {
+	if !strings.Contains(configSetCmd.Use, "set") {
+		t.Errorf("configSetCmd.Use = %q, expected to contain 'set'", configSetCmd.Use)
+	}
+}
+
+func TestConfigDeleteCmd_UsePattern(t *testing.T) {
+	if !strings.Contains(configDeleteCmd.Use, "delete") {
+		t.Errorf("configDeleteCmd.Use = %q, expected to contain 'delete'", configDeleteCmd.Use)
+	}
+}
+
+func TestConfigSwitchCmd_UsePattern(t *testing.T) {
+	if !strings.Contains(configSwitchCmd.Use, "switch") {
+		t.Errorf("configSwitchCmd.Use = %q, expected to contain 'switch'", configSwitchCmd.Use)
+	}
+}
+
+func TestConfigExportCmd_UsePattern(t *testing.T) {
+	if !strings.Contains(configExportCmd.Use, "export") {
+		t.Errorf("configExportCmd.Use = %q, expected to contain 'export'", configExportCmd.Use)
+	}
+}
+
+// --- configCmd has no RunE (group command) ---
+
+func TestConfigCmd_NoRunE(t *testing.T) {
+	if configCmd.RunE != nil {
+		t.Error("configCmd.RunE should be nil (it is a group command)")
+	}
+	if configCmd.Run != nil {
+		t.Error("configCmd.Run should be nil (it is a group command)")
+	}
+}
+
+// --- Flag type correctness ---
+
+func TestConfigSet_FlagTypes(t *testing.T) {
+	boolFlags := []string{"interactive", "test-connection"}
+	for _, name := range boolFlags {
+		f := configSetCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on configSetCmd", name)
+		}
+		if f.Value.Type() != "bool" {
+			t.Errorf("flag --%s type = %q, want %q", name, f.Value.Type(), "bool")
+		}
+	}
+
+	stringFlags := []string{"description", "account-id", "api-token", "endpoint", "access-key", "secret-key", "region"}
+	for _, name := range stringFlags {
+		f := configSetCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on configSetCmd", name)
+		}
+		if f.Value.Type() != "string" {
+			t.Errorf("flag --%s type = %q, want %q", name, f.Value.Type(), "string")
+		}
+	}
+}
+
+func TestConfigShow_FlagType(t *testing.T) {
+	f := configShowCmd.Flags().Lookup("show-secrets")
+	if f == nil {
+		t.Fatal("--show-secrets flag not found on configShowCmd")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--show-secrets type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+// --- Flag usage strings non-empty ---
+
+func TestConfigSet_FlagUsageStrings(t *testing.T) {
+	flags := []string{"description", "account-id", "api-token", "endpoint", "access-key", "secret-key", "region", "interactive", "test-connection"}
+	for _, name := range flags {
+		f := configSetCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on configSetCmd", name)
+		}
+		if f.Usage == "" {
+			t.Errorf("flag --%s has empty usage string", name)
+		}
+	}
+}
+
+func TestConfigShow_FlagUsageString(t *testing.T) {
+	f := configShowCmd.Flags().Lookup("show-secrets")
+	if f == nil {
+		t.Fatal("--show-secrets flag not found on configShowCmd")
+	}
+	if f.Usage == "" {
+		t.Error("--show-secrets has empty usage string")
+	}
+}
+
+// --- Short descriptions non-empty on all subcommands ---
+
+func TestConfigSubcommands_ShortDescriptions(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"init":     configInitCmd,
+		"validate": configValidateCmd,
+		"list":     configListCmd,
+		"show":     configShowCmd,
+		"set":      configSetCmd,
+		"delete":   configDeleteCmd,
+		"switch":   configSwitchCmd,
+		"export":   configExportCmd,
+	}
+	for name, c := range cmds {
+		if c.Short == "" {
+			t.Errorf("config %s subcommand has empty Short description", name)
+		}
+	}
+}
+
+// --- Long descriptions non-empty on all subcommands ---
+
+func TestConfigSubcommands_LongDescriptions(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"init":     configInitCmd,
+		"validate": configValidateCmd,
+		"list":     configListCmd,
+		"show":     configShowCmd,
+		"set":      configSetCmd,
+		"delete":   configDeleteCmd,
+		"switch":   configSwitchCmd,
+		"export":   configExportCmd,
+	}
+	for name, c := range cmds {
+		if c.Long == "" {
+			t.Errorf("config %s subcommand has empty Long description", name)
+		}
+	}
+}
+
+// --- account-id required annotation ---
+
+func TestConfigSet_AccountIDIsRequired(t *testing.T) {
+	f := configSetCmd.Flags().Lookup("account-id")
+	if f == nil {
+		t.Fatal("--account-id flag not found on configSetCmd")
+	}
+	requiredAnnotation, ok := f.Annotations[cobra.BashCompOneRequiredFlag]
+	if !ok {
+		t.Fatal("--account-id is not marked as required (no cobra.BashCompOneRequiredFlag annotation)")
+	}
+	if len(requiredAnnotation) == 0 || requiredAnnotation[0] != "true" {
+		t.Errorf("--account-id required annotation = %v, want [\"true\"]", requiredAnnotation)
+	}
+}
+
+// --- configSet error message specifics ---
+
+func TestConfigSet_ErrorMessageContent(t *testing.T) {
+	err := runConfigSet(configSetCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when profile name is empty")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "required") && !strings.Contains(msg, "profile name") {
+		t.Errorf("error = %q, expected mention of 'profile name' or 'required'", msg)
+	}
+}
+
+func TestConfigDelete_ErrorMessageContent(t *testing.T) {
+	err := runConfigDelete(configDeleteCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no args provided")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "required") && !strings.Contains(msg, "profile name") {
+		t.Errorf("error = %q, expected mention of 'profile name' or 'required'", msg)
+	}
+}
+
+func TestConfigSwitch_ErrorMessageContent(t *testing.T) {
+	err := runConfigSwitch(configSwitchCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no args provided")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "required") && !strings.Contains(msg, "profile name") {
+		t.Errorf("error = %q, expected mention of 'profile name' or 'required'", msg)
+	}
+}
+
+// --- configCmd parent/child relationship ---
+
+func TestConfigSubcommands_ParentIsConfigCmd(t *testing.T) {
+	cmds := []*cobra.Command{
+		configInitCmd,
+		configValidateCmd,
+		configListCmd,
+		configShowCmd,
+		configSetCmd,
+		configDeleteCmd,
+		configSwitchCmd,
+		configExportCmd,
+	}
+	for _, c := range cmds {
+		if c.Parent() == nil {
+			t.Errorf("command %q has nil parent", c.Use)
+			continue
+		}
+		if c.Parent().Use != "config" {
+			t.Errorf("command %q parent.Use = %q, want %q", c.Use, c.Parent().Use, "config")
+		}
+	}
+}
+
+// --- configSet region default value override ---
+
+func TestConfigSet_RegionDefaultIsAuto(t *testing.T) {
+	f := configSetCmd.Flags().Lookup("region")
+	if f == nil {
+		t.Fatal("--region flag not found on configSetCmd")
+	}
+	if f.DefValue != "auto" {
+		t.Errorf("--region default = %q, want %q", f.DefValue, "auto")
+	}
+	// Ensure the default is a valid non-empty string
+	if f.DefValue == "" {
+		t.Error("--region default value should not be empty")
+	}
+}
+
+// --- configSet test-connection default is false ---
+
+func TestConfigSet_TestConnectionDefaultIsFalse(t *testing.T) {
+	f := configSetCmd.Flags().Lookup("test-connection")
+	if f == nil {
+		t.Fatal("--test-connection flag not found on configSetCmd")
+	}
+	if f.DefValue != "false" {
+		t.Errorf("--test-connection default = %q, want %q", f.DefValue, "false")
+	}
+}
+
+// --- configExportCmd Long content ---
+
+func TestConfigExportCmd_LongMentionsEval(t *testing.T) {
+	if !strings.Contains(configExportCmd.Long, "eval") && !strings.Contains(configExportCmd.Long, "export") {
+		t.Error("configExportCmd.Long should mention eval or export usage")
+	}
+}
+
+// --- configSetCmd Long content (examples) ---
+
+func TestConfigSetCmd_LongHasExample(t *testing.T) {
+	if !strings.Contains(configSetCmd.Long, "cosmoflare") && !strings.Contains(configSetCmd.Long, "Example") {
+		t.Error("configSetCmd.Long should contain usage examples")
 	}
 }

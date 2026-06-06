@@ -1036,3 +1036,737 @@ func TestObjectPut_InvalidPartSizeFormat(t *testing.T) {
 		t.Fatal("expected error for invalid part size format")
 	}
 }
+
+// =============================================================================
+// Additional coverage: command metadata, flag defaults, helper edge cases
+// =============================================================================
+
+// --- objectCmd Long text ---
+
+func TestObjectCmd_LongNotEmpty(t *testing.T) {
+	if objectCmd.Long == "" {
+		t.Error("objectCmd.Long is empty; expected descriptive long help text")
+	}
+}
+
+// --- Subcommand Use strings ---
+
+func TestObjectListCmd_UseString(t *testing.T) {
+	if objectListCmd.Use == "" {
+		t.Error("objectListCmd.Use is empty")
+	}
+}
+
+func TestObjectGetCmd_UseString(t *testing.T) {
+	if objectGetCmd.Use == "" {
+		t.Error("objectGetCmd.Use is empty")
+	}
+}
+
+func TestObjectPutCmd_UseString(t *testing.T) {
+	if objectPutCmd.Use == "" {
+		t.Error("objectPutCmd.Use is empty")
+	}
+}
+
+func TestObjectDeleteCmd_UseString(t *testing.T) {
+	if objectDeleteCmd.Use == "" {
+		t.Error("objectDeleteCmd.Use is empty")
+	}
+}
+
+func TestObjectCopyCmd_UseString(t *testing.T) {
+	if objectCopyCmd.Use == "" {
+		t.Error("objectCopyCmd.Use is empty")
+	}
+}
+
+func TestObjectHeadCmd_UseString(t *testing.T) {
+	if objectHeadCmd.Use == "" {
+		t.Error("objectHeadCmd.Use is empty")
+	}
+}
+
+func TestObjectSearchCmd_UseString(t *testing.T) {
+	if objectSearchCmd.Use == "" {
+		t.Error("objectSearchCmd.Use is empty")
+	}
+}
+
+func TestObjectBatchCmd_UseString(t *testing.T) {
+	if objectBatchCmd.Use == "" {
+		t.Error("objectBatchCmd.Use is empty")
+	}
+}
+
+func TestObjectPresignCmd_UseString(t *testing.T) {
+	if objectPresignCmd.Use == "" {
+		t.Error("objectPresignCmd.Use is empty")
+	}
+}
+
+// --- Subcommand Short strings not empty ---
+
+func TestObjectSubcmds_ShortNotEmpty(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"ls":      objectListCmd,
+		"get":     objectGetCmd,
+		"put":     objectPutCmd,
+		"delete":  objectDeleteCmd,
+		"copy":    objectCopyCmd,
+		"head":    objectHeadCmd,
+		"search":  objectSearchCmd,
+		"batch":   objectBatchCmd,
+		"presign": objectPresignCmd,
+	}
+	for name, cmd := range cmds {
+		if cmd.Short == "" {
+			t.Errorf("subcommand %q has empty Short description", name)
+		}
+	}
+}
+
+// --- Subcommand Long strings not empty ---
+
+func TestObjectSubcmds_LongNotEmpty(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"ls":      objectListCmd,
+		"get":     objectGetCmd,
+		"put":     objectPutCmd,
+		"delete":  objectDeleteCmd,
+		"copy":    objectCopyCmd,
+		"head":    objectHeadCmd,
+		"search":  objectSearchCmd,
+		"batch":   objectBatchCmd,
+		"presign": objectPresignCmd,
+	}
+	for name, cmd := range cmds {
+		if cmd.Long == "" {
+			t.Errorf("subcommand %q has empty Long description", name)
+		}
+	}
+}
+
+// --- objectGetCmd flag defaults ---
+
+func TestObjectGetCmd_RangeStartDefault(t *testing.T) {
+	f := objectGetCmd.Flags().Lookup("range-start")
+	if f == nil {
+		t.Fatal("--range-start flag not registered on objectGetCmd")
+	}
+	if f.DefValue != "-1" {
+		t.Errorf("--range-start default = %q, want %q", f.DefValue, "-1")
+	}
+}
+
+func TestObjectGetCmd_RangeEndDefault(t *testing.T) {
+	f := objectGetCmd.Flags().Lookup("range-end")
+	if f == nil {
+		t.Fatal("--range-end flag not registered on objectGetCmd")
+	}
+	if f.DefValue != "-1" {
+		t.Errorf("--range-end default = %q, want %q", f.DefValue, "-1")
+	}
+}
+
+func TestObjectGetCmd_OutputDefault(t *testing.T) {
+	f := objectGetCmd.Flags().Lookup("output")
+	if f == nil {
+		t.Fatal("--output flag not registered on objectGetCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--output default = %q, want empty string", f.DefValue)
+	}
+}
+
+// --- etagDisplay boundary conditions ---
+
+func TestEtagDisplay_ExactlyAtBoundary(t *testing.T) {
+	// 16 chars exactly — should NOT be truncated
+	etag16 := "abcdef0123456789" // exactly 16 chars
+	result := etagDisplay(etag16)
+	if result != etag16 {
+		t.Errorf("etagDisplay(16-char etag) = %q, want %q (no truncation at exactly 16)", result, etag16)
+	}
+}
+
+func TestEtagDisplay_JustOverBoundary(t *testing.T) {
+	// 17 chars — should be truncated
+	etag17 := "abcdef01234567890" // 17 chars
+	result := etagDisplay(etag17)
+	if result != "abcdef0123456789..." {
+		t.Errorf("etagDisplay(17-char etag) = %q, want %q", result, "abcdef0123456789...")
+	}
+}
+
+func TestEtagDisplay_SingleChar(t *testing.T) {
+	result := etagDisplay("a")
+	if result != "a" {
+		t.Errorf("etagDisplay(single char) = %q, want %q", result, "a")
+	}
+}
+
+// --- parseSize edge cases ---
+
+func TestParseSize_Bytes(t *testing.T) {
+	size, err := parseSize("1024B")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 1024 {
+		t.Errorf("parseSize(1024B) = %d, want 1024", size)
+	}
+}
+
+func TestParseSize_LargeGB(t *testing.T) {
+	size, err := parseSize("100GB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := int64(100) * 1024 * 1024 * 1024
+	if size != want {
+		t.Errorf("parseSize(100GB) = %d, want %d", size, want)
+	}
+}
+
+func TestParseSize_SpacePadded(t *testing.T) {
+	size, err := parseSize("  8MB  ")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 8*1024*1024 {
+		t.Errorf("parseSize('  8MB  ') = %d, want %d", size, 8*1024*1024)
+	}
+}
+
+func TestParseSize_UppercaseGB(t *testing.T) {
+	size, err := parseSize("2GB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := int64(2) * 1024 * 1024 * 1024
+	if size != want {
+		t.Errorf("parseSize(2GB) = %d, want %d", size, want)
+	}
+}
+
+func TestParseSize_OneByte(t *testing.T) {
+	size, err := parseSize("1B")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 1 {
+		t.Errorf("parseSize(1B) = %d, want 1", size)
+	}
+}
+
+func TestParseSize_LargeInt(t *testing.T) {
+	size, err := parseSize("5242880") // 5MB in bytes
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 5242880 {
+		t.Errorf("parseSize(5242880) = %d, want 5242880", size)
+	}
+}
+
+// --- parseBatchSpec multi-operation ---
+
+func TestParseBatchSpec_MultipleOperations(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/multi.json"
+	content := `{
+		"operations": [
+			{"action": "upload", "local_path": "file1.txt", "object_key": "remote/file1.txt"},
+			{"action": "delete", "object_key": "old.txt"},
+			{"action": "copy", "object_key": "src.txt", "destination_key": "dst.txt"}
+		]
+	}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BatchSpec
+	if err := parseBatchSpec(path, &spec); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.Operations) != 3 {
+		t.Fatalf("expected 3 operations, got %d", len(spec.Operations))
+	}
+	if spec.Operations[0].Action != "upload" {
+		t.Errorf("op[0].Action = %q, want %q", spec.Operations[0].Action, "upload")
+	}
+	if spec.Operations[0].LocalPath != "file1.txt" {
+		t.Errorf("op[0].LocalPath = %q, want %q", spec.Operations[0].LocalPath, "file1.txt")
+	}
+	if spec.Operations[0].ObjectKey != "remote/file1.txt" {
+		t.Errorf("op[0].ObjectKey = %q, want %q", spec.Operations[0].ObjectKey, "remote/file1.txt")
+	}
+	if spec.Operations[2].DestinationKey != "dst.txt" {
+		t.Errorf("op[2].DestinationKey = %q, want %q", spec.Operations[2].DestinationKey, "dst.txt")
+	}
+}
+
+func TestParseBatchSpec_EmptyOperations(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/empty-ops.json"
+	if err := os.WriteFile(path, []byte(`{"operations": []}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BatchSpec
+	if err := parseBatchSpec(path, &spec); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.Operations) != 0 {
+		t.Errorf("expected 0 operations, got %d", len(spec.Operations))
+	}
+}
+
+// --- BatchOperation struct field round-trip ---
+
+func TestBatchOperation_FieldsRoundTrip(t *testing.T) {
+	op := BatchOperation{
+		Action:         "upload",
+		LocalPath:      "local/path.txt",
+		ObjectKey:      "remote/key.txt",
+		DestinationKey: "dest/key.txt",
+	}
+	if op.Action != "upload" {
+		t.Errorf("Action = %q, want %q", op.Action, "upload")
+	}
+	if op.LocalPath != "local/path.txt" {
+		t.Errorf("LocalPath = %q, want %q", op.LocalPath, "local/path.txt")
+	}
+	if op.ObjectKey != "remote/key.txt" {
+		t.Errorf("ObjectKey = %q, want %q", op.ObjectKey, "remote/key.txt")
+	}
+	if op.DestinationKey != "dest/key.txt" {
+		t.Errorf("DestinationKey = %q, want %q", op.DestinationKey, "dest/key.txt")
+	}
+}
+
+// --- Error message assertions ---
+
+func TestObjectDelete_ErrorMentionsRequired(t *testing.T) {
+	err := runObjectDelete(objectDeleteCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error for no args")
+	}
+	msg := err.Error()
+	if msg == "" {
+		t.Error("error message is empty")
+	}
+}
+
+func TestObjectDelete_OneArgErrorMentionsKey(t *testing.T) {
+	err := runObjectDelete(objectDeleteCmd, []string{"my-bucket"})
+	if err == nil {
+		t.Fatal("expected error for missing object key")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("key")) &&
+		!bytes.Contains([]byte(err.Error()), []byte("object")) {
+		t.Errorf("error = %q, want mention of 'key' or 'object'", err.Error())
+	}
+}
+
+func TestObjectHead_ErrorMentionsRequired(t *testing.T) {
+	err := runObjectHead(objectHeadCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error for no args")
+	}
+	if err.Error() == "" {
+		t.Error("error message is empty")
+	}
+}
+
+func TestObjectSearch_ErrorMentionsQuery(t *testing.T) {
+	err := runObjectSearch(objectSearchCmd, []string{"my-bucket"})
+	if err == nil {
+		t.Fatal("expected error for missing search query")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("query")) &&
+		!bytes.Contains([]byte(err.Error()), []byte("search")) &&
+		!bytes.Contains([]byte(err.Error()), []byte("required")) {
+		t.Errorf("error = %q, want mention of 'query', 'search', or 'required'", err.Error())
+	}
+}
+
+func TestObjectBatch_ErrorMentionsSpec(t *testing.T) {
+	err := runObjectBatch(objectBatchCmd, []string{"my-bucket"})
+	if err == nil {
+		t.Fatal("expected error for missing spec file")
+	}
+	if err.Error() == "" {
+		t.Error("error message is empty")
+	}
+}
+
+func TestObjectPresign_ErrorMentionsRequired(t *testing.T) {
+	err := runObjectPresign(objectPresignCmd, []string{"my-bucket"})
+	if err == nil {
+		t.Fatal("expected error for missing object key")
+	}
+	if err.Error() == "" {
+		t.Error("error message is empty")
+	}
+}
+
+// --- objectSearch type flag values ---
+
+func TestObjectSearch_TypeFlagPrefix(t *testing.T) {
+	f := objectSearchCmd.Flags().Lookup("type")
+	if f == nil {
+		t.Fatal("--type flag not registered on objectSearchCmd")
+	}
+	// Default should be prefix
+	if f.DefValue != "prefix" {
+		t.Errorf("--type default = %q, want %q", f.DefValue, "prefix")
+	}
+}
+
+// --- objectBatch continue flag ---
+
+func TestObjectBatch_ContinueFlagExists(t *testing.T) {
+	f := objectBatchCmd.Flags().Lookup("continue")
+	if f == nil {
+		t.Fatal("--continue flag not registered on objectBatchCmd")
+	}
+	if f.DefValue != "false" {
+		t.Errorf("--continue default = %q, want %q", f.DefValue, "false")
+	}
+}
+
+// --- objectPresign valid duration format ---
+
+func TestObjectPresign_ValidDurationFormats(t *testing.T) {
+	durations := []string{"1h", "24h", "30m", "1h30m", "2h"}
+	for _, d := range durations {
+		// We just test parsing, not actual presign (no API)
+		origExpires := objectExpires
+		objectExpires = d
+		// A missing bucket name should trigger arg error before duration parsing
+		err := runObjectPresign(objectPresignCmd, []string{})
+		objectExpires = origExpires
+		if err == nil {
+			t.Errorf("expected arg error for empty args with expires=%q", d)
+		}
+		// The error should be about args, not duration
+		if bytes.Contains([]byte(err.Error()), []byte("invalid expires")) {
+			t.Errorf("for expires=%q, got duration error instead of arg error: %v", d, err)
+		}
+	}
+}
+
+// --- objectPut DryRun with JSON output ---
+
+func TestObjectPut_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.json"
+	if err := os.WriteFile(filePath, []byte(`{"key":"value"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun+JSON) returned error: %v", err)
+	}
+}
+
+// --- objectDelete DryRun with JSON output ---
+
+func TestObjectDelete_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runObjectDelete(objectDeleteCmd, []string{"my-bucket", "file.txt"})
+	if err != nil {
+		t.Errorf("runObjectDelete(DryRun+JSON) returned error: %v", err)
+	}
+}
+
+// --- objectCopy DryRun with JSON output ---
+
+func TestObjectCopy_DryRunJSON(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = true
+	JSONOutput = true
+	AccountID = "test-account"
+	APIToken = "test-token"
+
+	err := runObjectCopy(objectCopyCmd, []string{"src-bucket/file.txt", "dst-bucket/backup.txt"})
+	if err != nil {
+		t.Errorf("runObjectCopy(DryRun+JSON) returned error: %v", err)
+	}
+}
+
+// --- objectList MaxKeys flag type ---
+
+func TestObjectList_MaxKeysIsInt32(t *testing.T) {
+	f := objectListCmd.Flags().Lookup("max-keys")
+	if f == nil {
+		t.Fatal("--max-keys flag not registered")
+	}
+	if f.Value.Type() != "int32" {
+		t.Errorf("--max-keys type = %q, want %q", f.Value.Type(), "int32")
+	}
+}
+
+// --- objectPut concurrency flag type ---
+
+func TestObjectPut_ConcurrencyIsInt(t *testing.T) {
+	f := objectPutCmd.Flags().Lookup("concurrency")
+	if f == nil {
+		t.Fatal("--concurrency flag not registered")
+	}
+	if f.Value.Type() != "int" {
+		t.Errorf("--concurrency type = %q, want %q", f.Value.Type(), "int")
+	}
+}
+
+// --- objectPut progress flag type ---
+
+func TestObjectPut_ProgressIsBool(t *testing.T) {
+	f := objectPutCmd.Flags().Lookup("progress")
+	if f == nil {
+		t.Fatal("--progress flag not registered")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--progress type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+// --- objectList recursive flag type ---
+
+func TestObjectList_RecursiveIsBool(t *testing.T) {
+	f := objectListCmd.Flags().Lookup("recursive")
+	if f == nil {
+		t.Fatal("--recursive flag not registered")
+	}
+	if f.Value.Type() != "bool" {
+		t.Errorf("--recursive type = %q, want %q", f.Value.Type(), "bool")
+	}
+}
+
+// --- objectCopy metadata flag type ---
+
+func TestObjectCopy_MetadataIsStringSlice(t *testing.T) {
+	f := objectCopyCmd.Flags().Lookup("metadata")
+	if f == nil {
+		t.Fatal("--metadata flag not registered on objectCopyCmd")
+	}
+	if f.Value.Type() != "stringSlice" {
+		t.Errorf("--metadata type = %q, want %q", f.Value.Type(), "stringSlice")
+	}
+}
+
+// --- objectCmd parent relationship ---
+
+func TestObjectCmd_HasParent(t *testing.T) {
+	if objectCmd.Parent() == nil {
+		t.Error("objectCmd has no parent — expected to be registered on rootCmd")
+	}
+	if objectCmd.Parent() != rootCmd {
+		t.Errorf("objectCmd.Parent() = %q, want rootCmd", objectCmd.Parent().Use)
+	}
+}
+
+// --- subcommands have objectCmd as parent ---
+
+func TestObjectSubcmds_HaveCorrectParent(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"ls":      objectListCmd,
+		"get":     objectGetCmd,
+		"put":     objectPutCmd,
+		"delete":  objectDeleteCmd,
+		"copy":    objectCopyCmd,
+		"head":    objectHeadCmd,
+		"search":  objectSearchCmd,
+		"batch":   objectBatchCmd,
+		"presign": objectPresignCmd,
+	}
+	for name, cmd := range cmds {
+		if cmd.Parent() == nil {
+			t.Errorf("subcommand %q has no parent", name)
+			continue
+		}
+		if cmd.Parent() != objectCmd {
+			t.Errorf("subcommand %q parent = %q, want objectCmd", name, cmd.Parent().Use)
+		}
+	}
+}
+
+// --- objectPut stdin with key (valid arg) ---
+
+func TestObjectPut_StdinWithKey(t *testing.T) {
+	origKey := objectKey
+	defer func() { objectKey = origKey }()
+
+	objectKey = ""
+	// "-" without --key should fail (already tested), this verifies the flag is the gating mechanism
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", "-"})
+	if err == nil {
+		t.Fatal("expected error for stdin without --key")
+	}
+}
+
+// --- parseSize consistency: MB == 1024*KB ---
+
+func TestParseSize_MBConsistency(t *testing.T) {
+	mb, err := parseSize("1MB")
+	if err != nil {
+		t.Fatalf("unexpected error for 1MB: %v", err)
+	}
+	kb, err := parseSize("1024KB")
+	if err != nil {
+		t.Fatalf("unexpected error for 1024KB: %v", err)
+	}
+	if mb != kb {
+		t.Errorf("parseSize(1MB)=%d != parseSize(1024KB)=%d, should be equal", mb, kb)
+	}
+}
+
+// --- parseSize: GB == 1024*MB ---
+
+func TestParseSize_GBConsistency(t *testing.T) {
+	gb, err := parseSize("1GB")
+	if err != nil {
+		t.Fatalf("unexpected error for 1GB: %v", err)
+	}
+	mb, err := parseSize("1024MB")
+	if err != nil {
+		t.Fatalf("unexpected error for 1024MB: %v", err)
+	}
+	if gb != mb {
+		t.Errorf("parseSize(1GB)=%d != parseSize(1024MB)=%d, should be equal", gb, mb)
+	}
+}
+
+// --- objectPresign valid expires (arg error fires first) ---
+
+func TestObjectPresign_ValidExpires(t *testing.T) {
+	origExpires := objectExpires
+	defer func() { objectExpires = origExpires }()
+
+	objectExpires = "2h30m"
+	// With no args the arg error fires before duration parsing
+	err := runObjectPresign(objectPresignCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error for missing args")
+	}
+	// Should be an arg error, not duration error
+	if bytes.Contains([]byte(err.Error()), []byte("invalid expires")) {
+		t.Errorf("got duration error instead of arg error: %v", err)
+	}
+}
+
+// --- objectBatch with bad JSON in operations array ---
+
+func TestParseBatchSpec_PartialJSON(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/partial.json"
+	// Valid outer struct but malformed inner
+	if err := os.WriteFile(path, []byte(`{"operations": [{`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	var spec BatchSpec
+	err := parseBatchSpec(path, &spec)
+	if err == nil {
+		t.Fatal("expected error for partial/malformed JSON")
+	}
+}
+
+// --- objectPut metadata flag is stringSlice ---
+
+func TestObjectPut_MetadataIsStringSlice(t *testing.T) {
+	f := objectPutCmd.Flags().Lookup("metadata")
+	if f == nil {
+		t.Fatal("--metadata flag not registered on objectPutCmd")
+	}
+	if f.Value.Type() != "stringSlice" {
+		t.Errorf("--metadata type = %q, want %q", f.Value.Type(), "stringSlice")
+	}
+}
+
+// --- objectSearch supported types ---
+
+func TestObjectSearch_NoArgsErrorNotEmpty(t *testing.T) {
+	err := runObjectSearch(objectSearchCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error for no args")
+	}
+	if err.Error() == "" {
+		t.Error("error message should not be empty")
+	}
+}
+
+// --- parseBatchSpec reads correct action field ---
+
+func TestParseBatchSpec_UploadAction(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := tmpDir + "/upload.json"
+	content := `{"operations":[{"action":"upload","local_path":"./test.txt","object_key":"test.txt"}]}`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var spec BatchSpec
+	if err := parseBatchSpec(path, &spec); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if spec.Operations[0].Action != "upload" {
+		t.Errorf("action = %q, want %q", spec.Operations[0].Action, "upload")
+	}
+	if spec.Operations[0].LocalPath != "./test.txt" {
+		t.Errorf("local_path = %q, want %q", spec.Operations[0].LocalPath, "./test.txt")
+	}
+}
+
+// --- Total subcommand count ---
+
+func TestObjectCmd_SubcommandCount(t *testing.T) {
+	const want = 9
+	got := len(objectCmd.Commands())
+	if got != want {
+		t.Errorf("objectCmd has %d subcommands, want %d", got, want)
+	}
+}

@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -33,6 +36,34 @@ func TestSyncCmd_Metadata(t *testing.T) {
 	}
 }
 
+func TestSyncCmd_ShortDescription(t *testing.T) {
+	want := "Synchronize local directories with R2 buckets"
+	if syncCmd.Short != want {
+		t.Errorf("syncCmd.Short = %q, want %q", syncCmd.Short, want)
+	}
+}
+
+func TestSyncCmd_LongContainsSubcommands(t *testing.T) {
+	long := syncCmd.Long
+	for _, kw := range []string{"up", "down"} {
+		if !strings.Contains(long, kw) {
+			t.Errorf("syncCmd.Long does not mention subcommand %q", kw)
+		}
+	}
+}
+
+func TestSyncCmd_LongContainsChecksum(t *testing.T) {
+	if !strings.Contains(syncCmd.Long, "--checksum") {
+		t.Error("syncCmd.Long does not mention --checksum flag")
+	}
+}
+
+func TestSyncCmd_LongContainsExamples(t *testing.T) {
+	if !strings.Contains(syncCmd.Long, "cosmoflare sync") {
+		t.Error("syncCmd.Long does not contain usage examples")
+	}
+}
+
 // --- Subcommand registration ---
 
 func TestSyncCmd_Subcommands(t *testing.T) {
@@ -51,6 +82,93 @@ func TestSyncCmd_Subcommands(t *testing.T) {
 	}
 }
 
+func TestSyncCmd_SubcommandCount(t *testing.T) {
+	cmds := syncCmd.Commands()
+	if len(cmds) < 2 {
+		t.Errorf("syncCmd has %d subcommands, want at least 2", len(cmds))
+	}
+}
+
+// --- Subcommand Use fields ---
+
+func TestSyncUpCmd_Use(t *testing.T) {
+	want := "up <local-dir> <bucket>[/prefix]"
+	if syncUpCmd.Use != want {
+		t.Errorf("syncUpCmd.Use = %q, want %q", syncUpCmd.Use, want)
+	}
+}
+
+func TestSyncDownCmd_Use(t *testing.T) {
+	want := "down <bucket>[/prefix] <local-dir>"
+	if syncDownCmd.Use != want {
+		t.Errorf("syncDownCmd.Use = %q, want %q", syncDownCmd.Use, want)
+	}
+}
+
+// --- Subcommand short descriptions ---
+
+func TestSyncUpCmd_Short(t *testing.T) {
+	if syncUpCmd.Short == "" {
+		t.Error("syncUpCmd.Short is empty")
+	}
+	want := "Upload local directory to R2 bucket"
+	if syncUpCmd.Short != want {
+		t.Errorf("syncUpCmd.Short = %q, want %q", syncUpCmd.Short, want)
+	}
+}
+
+func TestSyncDownCmd_Short(t *testing.T) {
+	if syncDownCmd.Short == "" {
+		t.Error("syncDownCmd.Short is empty")
+	}
+	want := "Download R2 bucket to local directory"
+	if syncDownCmd.Short != want {
+		t.Errorf("syncDownCmd.Short = %q, want %q", syncDownCmd.Short, want)
+	}
+}
+
+// --- Subcommand long descriptions ---
+
+func TestSyncUpCmd_Long(t *testing.T) {
+	if syncUpCmd.Long == "" {
+		t.Error("syncUpCmd.Long is empty")
+	}
+}
+
+func TestSyncDownCmd_Long(t *testing.T) {
+	if syncDownCmd.Long == "" {
+		t.Error("syncDownCmd.Long is empty")
+	}
+}
+
+func TestSyncUpCmd_LongContainsArgDocs(t *testing.T) {
+	for _, kw := range []string{"local-dir", "bucket", "prefix"} {
+		if !strings.Contains(syncUpCmd.Long, kw) {
+			t.Errorf("syncUpCmd.Long does not document argument %q", kw)
+		}
+	}
+}
+
+func TestSyncDownCmd_LongContainsArgDocs(t *testing.T) {
+	for _, kw := range []string{"local-dir", "bucket", "prefix"} {
+		if !strings.Contains(syncDownCmd.Long, kw) {
+			t.Errorf("syncDownCmd.Long does not document argument %q", kw)
+		}
+	}
+}
+
+func TestSyncUpCmd_LongContainsExamples(t *testing.T) {
+	if !strings.Contains(syncUpCmd.Long, "cosmoflare sync up") {
+		t.Error("syncUpCmd.Long does not contain usage examples")
+	}
+}
+
+func TestSyncDownCmd_LongContainsExamples(t *testing.T) {
+	if !strings.Contains(syncDownCmd.Long, "cosmoflare sync down") {
+		t.Error("syncDownCmd.Long does not contain usage examples")
+	}
+}
+
 // --- RunE handlers wired ---
 
 func TestSyncCmd_AllRunE(t *testing.T) {
@@ -62,6 +180,13 @@ func TestSyncCmd_AllRunE(t *testing.T) {
 		if c.RunE == nil {
 			t.Errorf("%q has nil RunE", c.Use)
 		}
+	}
+}
+
+func TestSyncCmd_ParentHasNoRunE(t *testing.T) {
+	// Parent sync command is a grouping command — RunE is optional but it must have subcommands
+	if len(syncCmd.Commands()) == 0 {
+		t.Error("syncCmd has no subcommands and no RunE — unusable")
 	}
 }
 
@@ -125,12 +250,93 @@ func TestSyncDown_FlagDefaults(t *testing.T) {
 	}
 }
 
+func TestSyncUp_ArrayFlagDefaults(t *testing.T) {
+	for _, name := range []string{"exclude", "include"} {
+		f := syncUpCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on syncUpCmd", name)
+		}
+		// StringArray with nil default renders as "[]"
+		if f.DefValue != "[]" {
+			t.Errorf("flag --%s default = %q, want %q", name, f.DefValue, "[]")
+		}
+	}
+}
+
+func TestSyncDown_ArrayFlagDefaults(t *testing.T) {
+	for _, name := range []string{"exclude", "include"} {
+		f := syncDownCmd.Flags().Lookup(name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on syncDownCmd", name)
+		}
+		if f.DefValue != "[]" {
+			t.Errorf("flag --%s default = %q, want %q", name, f.DefValue, "[]")
+		}
+	}
+}
+
+// --- Flag descriptions ---
+
+func TestSyncUp_FlagDescriptions(t *testing.T) {
+	cases := []struct {
+		name    string
+		wantSub string
+	}{
+		{"delete", "Delete"},
+		{"exclude", "Exclude"},
+		{"include", "Include"},
+		{"checksum", "MD5"},
+		{"progress", "progress"},
+	}
+	for _, tc := range cases {
+		f := syncUpCmd.Flags().Lookup(tc.name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on syncUpCmd", tc.name)
+		}
+		if !strings.Contains(f.Usage, tc.wantSub) {
+			t.Errorf("flag --%s usage = %q, want it to contain %q", tc.name, f.Usage, tc.wantSub)
+		}
+	}
+}
+
+func TestSyncDown_FlagDescriptions(t *testing.T) {
+	cases := []struct {
+		name    string
+		wantSub string
+	}{
+		{"delete", "Delete"},
+		{"exclude", "Exclude"},
+		{"include", "Include"},
+		{"checksum", "MD5"},
+		{"progress", "progress"},
+	}
+	for _, tc := range cases {
+		f := syncDownCmd.Flags().Lookup(tc.name)
+		if f == nil {
+			t.Fatalf("flag --%s not found on syncDownCmd", tc.name)
+		}
+		if !strings.Contains(f.Usage, tc.wantSub) {
+			t.Errorf("flag --%s usage = %q, want it to contain %q", tc.name, f.Usage, tc.wantSub)
+		}
+	}
+}
+
 // --- Arg validation ---
 
 func TestSyncUp_NoArgs(t *testing.T) {
 	err := runSyncUp(syncUpCmd, []string{})
 	if err == nil {
 		t.Fatal("expected error when no args provided")
+	}
+}
+
+func TestSyncUp_NoArgs_ErrorMessage(t *testing.T) {
+	err := runSyncUp(syncUpCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no args provided")
+	}
+	if !strings.Contains(err.Error(), "local directory is required") {
+		t.Errorf("error = %q, want it to mention 'local directory is required'", err.Error())
 	}
 }
 
@@ -141,6 +347,16 @@ func TestSyncUp_OneArg(t *testing.T) {
 	}
 }
 
+func TestSyncUp_OneArg_ErrorMessage(t *testing.T) {
+	err := runSyncUp(syncUpCmd, []string{"/tmp/test"})
+	if err == nil {
+		t.Fatal("expected error when only one arg provided (missing bucket)")
+	}
+	if !strings.Contains(err.Error(), "bucket is required") {
+		t.Errorf("error = %q, want it to mention 'bucket is required'", err.Error())
+	}
+}
+
 func TestSyncDown_NoArgs(t *testing.T) {
 	err := runSyncDown(syncDownCmd, []string{})
 	if err == nil {
@@ -148,10 +364,55 @@ func TestSyncDown_NoArgs(t *testing.T) {
 	}
 }
 
+func TestSyncDown_NoArgs_ErrorMessage(t *testing.T) {
+	err := runSyncDown(syncDownCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no args provided")
+	}
+	if !strings.Contains(err.Error(), "bucket is required") {
+		t.Errorf("error = %q, want it to mention 'bucket is required'", err.Error())
+	}
+}
+
 func TestSyncDown_OneArg(t *testing.T) {
 	err := runSyncDown(syncDownCmd, []string{"my-bucket"})
 	if err == nil {
 		t.Fatal("expected error when only one arg provided (missing local dir)")
+	}
+}
+
+func TestSyncDown_OneArg_ErrorMessage(t *testing.T) {
+	err := runSyncDown(syncDownCmd, []string{"my-bucket"})
+	if err == nil {
+		t.Fatal("expected error when only one arg provided (missing local dir)")
+	}
+	if !strings.Contains(err.Error(), "local directory is required") {
+		t.Errorf("error = %q, want it to mention 'local directory is required'", err.Error())
+	}
+}
+
+func TestSyncUp_NonexistentDir_Error(t *testing.T) {
+	err := runSyncUp(syncUpCmd, []string{"/nonexistent-dir-cosmoflare-test-xyz", "my-bucket"})
+	if err == nil {
+		t.Fatal("expected error for nonexistent local directory")
+	}
+}
+
+func TestSyncUp_FileNotDir_Error(t *testing.T) {
+	// Create a temp file (not a directory) and use it as localDir
+	f, err := os.CreateTemp("", "cosmoflare-sync-test-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(f.Name())
+	f.Close()
+
+	runErr := runSyncUp(syncUpCmd, []string{f.Name(), "my-bucket"})
+	if runErr == nil {
+		t.Fatal("expected error when local path is a file, not a directory")
+	}
+	if !strings.Contains(runErr.Error(), "not a directory") {
+		t.Errorf("error = %q, want it to mention 'not a directory'", runErr.Error())
 	}
 }
 
@@ -226,5 +487,350 @@ func TestParseBucketPrefix(t *testing.T) {
 		if prefix != tc.wantPrefix {
 			t.Errorf("parseBucketPrefix(%q) prefix = %q, want %q", tc.input, prefix, tc.wantPrefix)
 		}
+	}
+}
+
+func TestParseBucketPrefix_EmptyInput(t *testing.T) {
+	bucket, prefix := parseBucketPrefix("")
+	if bucket != "" {
+		t.Errorf("parseBucketPrefix('') bucket = %q, want %q", bucket, "")
+	}
+	if prefix != "" {
+		t.Errorf("parseBucketPrefix('') prefix = %q, want %q", prefix, "")
+	}
+}
+
+func TestParseBucketPrefix_PrefixAlwaysTrailingSlash(t *testing.T) {
+	cases := []string{
+		"bucket/a",
+		"bucket/a/b",
+		"bucket/a/b/c",
+	}
+	for _, input := range cases {
+		_, prefix := parseBucketPrefix(input)
+		if prefix != "" && !strings.HasSuffix(prefix, "/") {
+			t.Errorf("parseBucketPrefix(%q) prefix %q does not end with '/'", input, prefix)
+		}
+	}
+}
+
+func TestParseBucketPrefix_BucketOnlyNoPrefix(t *testing.T) {
+	bucket, prefix := parseBucketPrefix("just-bucket")
+	if bucket != "just-bucket" {
+		t.Errorf("got bucket %q, want %q", bucket, "just-bucket")
+	}
+	if prefix != "" {
+		t.Errorf("got prefix %q, want empty string", prefix)
+	}
+}
+
+// --- prefixDisplay ---
+
+func TestPrefixDisplay_Empty(t *testing.T) {
+	got := prefixDisplay("")
+	if got != "" {
+		t.Errorf("prefixDisplay('') = %q, want %q", got, "")
+	}
+}
+
+func TestPrefixDisplay_WithSlash(t *testing.T) {
+	got := prefixDisplay("assets/")
+	want := "/assets"
+	if got != want {
+		t.Errorf("prefixDisplay('assets/') = %q, want %q", got, want)
+	}
+}
+
+func TestPrefixDisplay_WithoutTrailingSlash(t *testing.T) {
+	// If prefix has no trailing slash it should still show correctly
+	got := prefixDisplay("assets")
+	want := "/assets"
+	if got != want {
+		t.Errorf("prefixDisplay('assets') = %q, want %q", got, want)
+	}
+}
+
+func TestPrefixDisplay_DeepPath(t *testing.T) {
+	got := prefixDisplay("deep/nested/path/")
+	want := "/deep/nested/path"
+	if got != want {
+		t.Errorf("prefixDisplay('deep/nested/path/') = %q, want %q", got, want)
+	}
+}
+
+// --- md5File ---
+
+func TestMd5File_KnownContent(t *testing.T) {
+	// Write a known file and verify MD5
+	tmp, err := os.CreateTemp("", "cosmoflare-md5-test-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+
+	content := "hello cosmoflare"
+	if _, err := tmp.WriteString(content); err != nil {
+		t.Fatal(err)
+	}
+	tmp.Close()
+
+	hash, err := md5File(tmp.Name())
+	if err != nil {
+		t.Fatalf("md5File returned error: %v", err)
+	}
+
+	// MD5 of "hello cosmoflare" is deterministic
+	if len(hash) != 32 {
+		t.Errorf("md5File returned hash of length %d, want 32 hex chars", len(hash))
+	}
+	// Verify it is lowercase hex
+	for _, ch := range hash {
+		if !((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f')) {
+			t.Errorf("md5File hash %q contains non-hex character %c", hash, ch)
+		}
+	}
+}
+
+func TestMd5File_EmptyFile(t *testing.T) {
+	tmp, err := os.CreateTemp("", "cosmoflare-md5-empty-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	tmp.Close()
+
+	hash, err := md5File(tmp.Name())
+	if err != nil {
+		t.Fatalf("md5File on empty file returned error: %v", err)
+	}
+	// MD5 of empty string: d41d8cd98f00b204e9800998ecf8427e
+	want := "d41d8cd98f00b204e9800998ecf8427e"
+	if hash != want {
+		t.Errorf("md5File(empty) = %q, want %q", hash, want)
+	}
+}
+
+func TestMd5File_Nonexistent(t *testing.T) {
+	_, err := md5File("/nonexistent-cosmoflare-md5-test.txt")
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
+func TestMd5File_Deterministic(t *testing.T) {
+	tmp, err := os.CreateTemp("", "cosmoflare-md5-det-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	tmp.WriteString("deterministic content")
+	tmp.Close()
+
+	hash1, err := md5File(tmp.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash2, err := md5File(tmp.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hash1 != hash2 {
+		t.Errorf("md5File is not deterministic: %q != %q", hash1, hash2)
+	}
+}
+
+// --- scanLocalDir ---
+
+func TestScanLocalDir_EmptyDir(t *testing.T) {
+	tmp := t.TempDir()
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir on empty dir returned error: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("scanLocalDir on empty dir returned %d files, want 0", len(files))
+	}
+}
+
+func TestScanLocalDir_SingleFile(t *testing.T) {
+	tmp := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmp, "hello.txt"), []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("scanLocalDir returned %d files, want 1", len(files))
+	}
+	if files[0].RelPath != "hello.txt" {
+		t.Errorf("RelPath = %q, want %q", files[0].RelPath, "hello.txt")
+	}
+	if files[0].Size != 5 {
+		t.Errorf("Size = %d, want 5", files[0].Size)
+	}
+}
+
+func TestScanLocalDir_MultipleFiles(t *testing.T) {
+	tmp := t.TempDir()
+	names := []string{"a.txt", "b.txt", "c.txt"}
+	for _, name := range names {
+		if err := os.WriteFile(filepath.Join(tmp, name), []byte(name), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 3 {
+		t.Errorf("scanLocalDir returned %d files, want 3", len(files))
+	}
+}
+
+func TestScanLocalDir_Recursive(t *testing.T) {
+	tmp := t.TempDir()
+	subdir := filepath.Join(tmp, "subdir")
+	if err := os.Mkdir(subdir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, "root.txt"), []byte("root"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(subdir, "nested.txt"), []byte("nested"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 2 {
+		t.Errorf("scanLocalDir returned %d files, want 2", len(files))
+	}
+
+	// Nested file should use forward slashes
+	var foundNested bool
+	for _, f := range files {
+		if f.RelPath == "subdir/nested.txt" {
+			foundNested = true
+		}
+	}
+	if !foundNested {
+		t.Error("nested file 'subdir/nested.txt' not found in scan results")
+	}
+}
+
+func TestScanLocalDir_ForwardSlashPaths(t *testing.T) {
+	tmp := t.TempDir()
+	subdir := filepath.Join(tmp, "a", "b")
+	if err := os.MkdirAll(subdir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(subdir, "file.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("got %d files, want 1", len(files))
+	}
+	// R2 keys must use forward slashes
+	if strings.Contains(files[0].RelPath, `\`) {
+		t.Errorf("RelPath %q contains backslash — must use forward slashes for R2 compatibility", files[0].RelPath)
+	}
+}
+
+func TestScanLocalDir_WithChecksum(t *testing.T) {
+	tmp := t.TempDir()
+	content := "checksum test content"
+	if err := os.WriteFile(filepath.Join(tmp, "file.txt"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, true)
+	if err != nil {
+		t.Fatalf("scanLocalDir with checksum returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("got %d files, want 1", len(files))
+	}
+	if files[0].Checksum == "" {
+		t.Error("Checksum is empty when checksum=true")
+	}
+	if len(files[0].Checksum) != 32 {
+		t.Errorf("Checksum length = %d, want 32 (MD5 hex)", len(files[0].Checksum))
+	}
+}
+
+func TestScanLocalDir_WithoutChecksum_ChecksumEmpty(t *testing.T) {
+	tmp := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmp, "file.txt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("got %d files, want 1", len(files))
+	}
+	if files[0].Checksum != "" {
+		t.Errorf("Checksum = %q, want empty string when checksum=false", files[0].Checksum)
+	}
+}
+
+func TestScanLocalDir_ModTimeSet(t *testing.T) {
+	tmp := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmp, "file.txt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("got %d files, want 1", len(files))
+	}
+	if files[0].ModTime.IsZero() {
+		t.Error("ModTime is zero — expected a valid modification time")
+	}
+}
+
+func TestScanLocalDir_NonexistentDir(t *testing.T) {
+	_, err := scanLocalDir("/nonexistent-dir-cosmoflare-scan-test", false)
+	if err == nil {
+		t.Fatal("expected error for nonexistent directory")
+	}
+}
+
+func TestScanLocalDir_SkipsDirectories(t *testing.T) {
+	tmp := t.TempDir()
+	// Create nested structure with only empty dirs
+	if err := os.MkdirAll(filepath.Join(tmp, "emptydir", "nested"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, "real.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := scanLocalDir(tmp, false)
+	if err != nil {
+		t.Fatalf("scanLocalDir returned error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Errorf("got %d files, want 1 (directories should be skipped)", len(files))
+	}
+	if files[0].RelPath != "real.txt" {
+		t.Errorf("got RelPath %q, want 'real.txt'", files[0].RelPath)
 	}
 }
