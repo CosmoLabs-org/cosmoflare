@@ -1880,6 +1880,55 @@ cosmoflare wrangler validate --json                   # JSON validation output
 - Missing `compatibility_date` (warning)
 - Missing entry point `main` (warning)
 
+## Account Management
+
+Manage multiple Cloudflare accounts. Credentials are stored locally in
+`~/.cosmoflare/accounts.yaml` (permissions 0600). The active account is
+tracked in `~/.cosmoflare/active-account`.
+
+### List accounts
+
+```bash
+cosmoflare account list              # Human-readable table
+cosmoflare account list --json       # JSON output
+```
+
+### Add an account
+
+```bash
+cosmoflare account add production --account-id abc123 --api-token tok_xxx
+cosmoflare account add staging --account-id def456 --api-token tok_yyy --email user@example.com
+```
+
+The first account added automatically becomes the active account.
+
+### Switch active account
+
+```bash
+cosmoflare account switch staging
+```
+
+### Show current account
+
+```bash
+cosmoflare account current
+cosmoflare account current --json
+```
+
+### Verify credentials
+
+```bash
+cosmoflare account verify production
+cosmoflare account verify staging --json
+```
+
+### Remove an account
+
+```bash
+cosmoflare account remove old-staging
+cosmoflare account remove production --force   # Remove even if active
+```
+
 ## Library Usage (Workers and KV)
 
 ### Workers
