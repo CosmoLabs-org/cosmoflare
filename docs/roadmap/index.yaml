@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-06-06T04:09:31.287671-03:00
+last_updated: 2026-06-06T09:56:57.211139-03:00
 next_id: 73
 items:
     - id: ROAD-072
@@ -11,46 +11,53 @@ items:
       created_at: 2026-06-06T04:09:31.285041-03:00
     - id: ROAD-071
       title: Terraform export — generate .tf files from live Cloudflare state
-      status: captured
+      status: completed
       priority: 60
       category: integration
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.246415-03:00
     - id: ROAD-070
       title: Config validation — cosmoflare validate checks .cosmoflare.yaml against CF API constraints
-      status: captured
+      status: completed
       priority: 65
       category: core
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.210039-03:00
     - id: ROAD-069
       title: Multi-account switching — cosmoflare account list/switch for managing multiple CF accounts
-      status: captured
+      status: completed
       priority: 68
       category: ux
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.170277-03:00
     - id: ROAD-068
       title: Audit log — track all CLI mutations with timestamps, user, before/after state
-      status: captured
+      status: completed
       priority: 70
       category: core
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.132464-03:00
     - id: ROAD-067
       title: Wrangler compatibility layer — read wrangler.toml and translate to .cosmoflare.yaml
-      status: captured
+      status: completed
       priority: 72
       category: integration
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.097999-03:00
     - id: ROAD-066
       title: MCP Server mode — expose cosmoflare as an MCP tool server for Claude Code and AI agents
-      status: captured
+      status: completed
       priority: 85
       category: intelligence
+      completed_in: v0.12.0
       created_at: 2026-06-06T04:09:31.060224-03:00
     - id: ROAD-065
       title: Plugin system — community extensions with cosmoflare plugin install
-      status: captured
+      status: completed
       priority: 65
       category: infra
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-05-16T00:10:55.324422-03:00
     - id: ROAD-064
       title: React Native mobile app — on-the-go monitoring and quick actions
@@ -68,10 +75,11 @@ items:
       created_at: 2026-05-16T00:10:46.882401-03:00
     - id: ROAD-062
       title: Alert rules — notify on error rates, storage limits, worker failures
-      status: captured
+      status: completed
       priority: 78
       category: intelligence
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-05-16T00:10:46.793368-03:00
     - id: ROAD-061
       title: Cost estimator — project monthly costs from current usage patterns
@@ -139,10 +147,11 @@ items:
       created_at: 2026-05-16T00:10:13.803125-03:00
     - id: ROAD-053
       title: cosmoflare import/export — full account config as YAML for disaster recovery
-      status: captured
+      status: completed
       priority: 78
       category: infra
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-05-16T00:10:06.508648-03:00
     - id: ROAD-052
       title: cosmoflare diff — show what would change before applying
@@ -171,10 +180,11 @@ items:
       created_at: 2026-05-16T00:09:56.286855-03:00
     - id: ROAD-049
       title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
-      status: captured
+      status: completed
       priority: 70
       category: intelligence
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-05-16T00:09:47.693133-03:00
     - id: ROAD-048
       title: Vectorize — vector storage and indexing for AI workloads
@@ -198,10 +208,11 @@ items:
       created_at: 2026-05-16T00:09:41.114769-03:00
     - id: ROAD-045
       title: Stream video — upload, live inputs, token management
-      status: captured
+      status: completed
       priority: 65
       category: core
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-05-16T00:09:34.01034-03:00
     - id: ROAD-044
       title: Images service — upload, transform, variants, delivery URL generation
@@ -421,10 +432,11 @@ items:
       created_at: 2026-03-02T23:33:04.050263+01:00
     - id: ROAD-013
       title: Multipart uploads and resumable transfers for large files
-      status: captured
+      status: completed
       priority: 77
       category: core
       effort: large
+      completed_in: v0.12.0
       created_at: 2026-03-02T23:33:03.291987+01:00
     - id: ROAD-012
       title: Shell completions (bash, zsh, fish) via Cobra generation

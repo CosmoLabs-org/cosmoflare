@@ -1,9 +1,11 @@
 id: ROAD-068
 created_at: 2026-06-06T04:09:31.132464-03:00
-updated_at: 2026-06-06T04:09:31.134206-03:00
+updated_at: 2026-06-06T09:56:57.089387-03:00
 title: Audit log — track all CLI mutations with timestamps, user, before/after state
-status: captured
+status: completed
 priority: 70
 category: core
+completed_in: v0.12.0
+completed_at: 2026-06-06T09:56:57.089384-03:00
 origin:
     session: 17

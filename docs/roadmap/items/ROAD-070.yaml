@@ -1,9 +1,11 @@
 id: ROAD-070
 created_at: 2026-06-06T04:09:31.210039-03:00
-updated_at: 2026-06-06T04:09:31.211967-03:00
+updated_at: 2026-06-06T09:56:57.153457-03:00
 title: Config validation — cosmoflare validate checks .cosmoflare.yaml against CF API constraints
-status: captured
+status: completed
 priority: 65
 category: core
+completed_in: v0.12.0
+completed_at: 2026-06-06T09:56:57.153454-03:00
 origin:
     session: 17

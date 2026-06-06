@@ -1,8 +1,10 @@
 id: ROAD-013
 created_at: 2026-03-02T23:33:03.291987+01:00
-updated_at: 2026-03-02T23:33:20.449037+01:00
+updated_at: 2026-06-06T09:21:23.260766-03:00
 title: Multipart uploads and resumable transfers for large files
-status: captured
+status: completed
 priority: 77
 category: core
 effort: large
+completed_in: v0.12.0
+completed_at: 2026-06-06T09:21:23.260763-03:00
