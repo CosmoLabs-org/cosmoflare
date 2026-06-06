@@ -1770,6 +1770,57 @@ commands:
     binary: bin/my-plugin
 ```
 
+## MCP Server (Model Context Protocol)
+
+Expose Cosmoflare operations as MCP tools so AI agents (Claude Code, etc.) can manage Cloudflare infrastructure directly.
+
+### Start MCP Server
+
+```bash
+cosmoflare mcp serve
+```
+
+The server reads JSON-RPC 2.0 requests from stdin and writes responses to stdout. It implements the Model Context Protocol specification with support for `initialize`, `tools/list`, `tools/call`, and `ping` methods.
+
+### List Available Tools
+
+```bash
+cosmoflare mcp tools              # Human-readable table
+cosmoflare mcp tools --json       # JSON with full input schemas
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `cosmoflare_bucket_list` | List R2 storage buckets |
+| `cosmoflare_worker_list` | List Cloudflare Workers |
+| `cosmoflare_worker_deploy` | Deploy a Worker script |
+| `cosmoflare_dns_list` | List DNS records for a zone |
+| `cosmoflare_kv_list` | List KV namespaces |
+| `cosmoflare_zone_list` | List Cloudflare zones |
+| `cosmoflare_cache_purge` | Purge cache for a zone |
+| `cosmoflare_doctor` | Run domain diagnostics |
+
+### Claude Code Configuration
+
+Add Cosmoflare as an MCP server in Claude Code:
+
+```bash
+claude mcp add cosmoflare cosmoflare mcp serve
+```
+
+### JSON-RPC Example
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | cosmoflare mcp serve
+```
+
+### Environment Variables
+
+- `CLOUDFLARE_API_TOKEN` — Your Cloudflare API token (required)
+- `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare Account ID (required)
+
 ## Library Usage (Workers and KV)
 
 ### Workers
