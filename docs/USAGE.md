@@ -1227,6 +1227,81 @@ Metadata modes: `none` (default), `keep`, `copyright`.
 r2go2 images variants delete old-variant
 r2go2 images variants delete old-variant --force
 ```
+## Stream Commands
+
+Cloudflare Stream is an account-scoped service for uploading, encoding, and delivering video via HLS and DASH. Supports signed playback URLs, custom metadata, watermarks, and live streaming.
+
+### Upload a video
+
+```bash
+# Upload from local file
+cosmoflare stream upload video.mp4
+cosmoflare stream upload recording.mov --metadata '{"project":"docs"}'
+cosmoflare stream upload video.mp4 --json
+
+# Upload from URL
+cosmoflare stream upload --url https://example.com/video.mp4
+cosmoflare stream upload --url https://example.com/vid.mp4 --require-signed-urls
+cosmoflare stream upload --url https://example.com/vid.mp4 --watermark WM_UID
+```
+
+### List videos
+
+```bash
+cosmoflare stream list
+cosmoflare stream list --json
+cosmoflare stream list --status ready
+cosmoflare stream list --status processing
+cosmoflare stream list --status error
+```
+
+### Get video details
+
+```bash
+cosmoflare stream get VIDEO_ID
+cosmoflare stream get VIDEO_ID --json
+```
+
+### Delete a video
+
+```bash
+cosmoflare stream delete VIDEO_ID
+cosmoflare stream delete VIDEO_ID --force
+cosmoflare stream delete VIDEO_ID --json
+```
+
+### Generate a signed playback token
+
+```bash
+cosmoflare stream token VIDEO_ID
+cosmoflare stream token VIDEO_ID --expires 24h
+cosmoflare stream token VIDEO_ID --expires 7d
+cosmoflare stream token VIDEO_ID --json
+```
+
+Duration format: `1h`, `30m`, `24h`, `7d` (supports Go duration and `d` suffix for days).
+
+### Live Inputs
+
+Manage live streaming inputs with RTMPS, SRT, and WebRTC endpoints.
+
+```bash
+# Create a live input
+cosmoflare stream live create my-stream
+cosmoflare stream live create my-stream --mode automatic
+cosmoflare stream live create my-stream --json
+
+# List live inputs
+cosmoflare stream live list
+cosmoflare stream live list --json
+
+# Delete a live input
+cosmoflare stream live delete INPUT_ID
+cosmoflare stream live delete INPUT_ID --force
+```
+
+Recording modes: `off` (default), `automatic` (records live streams automatically).
+
 ## Hyperdrive Management
 
 Hyperdrive accelerates database connections from Cloudflare Workers. Manage Hyperdrive configs to connect Workers to your existing databases with connection pooling and query caching.
