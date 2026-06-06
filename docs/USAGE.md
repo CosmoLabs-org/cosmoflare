@@ -1440,6 +1440,98 @@ NDJSON (--json):
 
 The command runs until interrupted with Ctrl+C (SIGINT) or SIGTERM. Hidden directories (`.git`, `.DS_Store`, etc.) are automatically excluded.
 
+## Export / Import Commands
+
+Full account configuration backup and restore for disaster recovery, migration, or version control.
+
+### Export configuration
+
+```bash
+# Export all services to default file (cosmoflare-export.yaml)
+cosmoflare export
+
+# Export to a specific file
+cosmoflare export backup.yaml
+
+# Export only specific services
+cosmoflare export --services=r2,dns
+
+# Export as JSON
+cosmoflare export --format=json backup.json
+
+# Preview export (dry run)
+cosmoflare export --dry-run
+
+# JSON output for scripting
+cosmoflare export --services=workers,kv --json
+```
+
+### Import configuration
+
+```bash
+# Import from default file (cosmoflare-export.yaml)
+cosmoflare import --yes
+
+# Import from a specific file
+cosmoflare import backup.yaml --yes
+
+# Preview what would change (dry run)
+cosmoflare import backup.yaml --dry-run
+
+# Merge with existing config (skip existing resources)
+cosmoflare import backup.yaml --merge --yes
+
+# Preview merge as JSON
+cosmoflare import backup.yaml --dry-run --merge --json
+```
+
+### Export file format
+
+The export file captures a snapshot of your account's service configurations:
+
+```yaml
+version: 1
+exported_at: "2026-06-06T12:00:00Z"
+account_id: "your-account-id"
+services:
+  workers:
+    - name: api-worker
+      script_size: 4096
+      compatibility_date: "2024-01-01"
+      bindings:
+        - name: MY_KV
+          type: kv
+          id: ns-123
+  kv_namespaces:
+    - id: ns-123
+      title: MY_KV
+  r2_buckets:
+    - name: assets
+      location: wnam
+  dns_records:
+    - zone_id: zone-abc
+      type: A
+      name: www.example.com
+      content: 1.2.3.4
+      proxied: true
+      ttl: 1
+  zones:
+    - id: zone-abc
+      name: example.com
+      status: active
+```
+
+### Flags
+
+| Flag | Command | Default | Description |
+|------|---------|---------|-------------|
+| `--services` | export | all | Comma-separated services to export (workers,kv,r2,dns,zones) |
+| `--format` | export | yaml | Output format (yaml or json) |
+| `--yes` | import | false | Skip confirmation prompt |
+| `--merge` | import | false | Merge with existing config (skip existing resources) |
+| `--dry-run` | both | false | Preview changes without applying (global flag) |
+| `--json` | both | false | Output in JSON format (global flag) |
+
 ## Library Usage (Workers and KV)
 
 ### Workers
