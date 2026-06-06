@@ -51,22 +51,26 @@ Examples:
 }
 
 var (
-	objectPrefix     string
-	objectDelimiter  string
-	objectMaxKeys    int32
-	objectRecursive  bool
-	objectOutput     string
-	objectRangeStart int64
-	objectRangeEnd   int64
-	objectKey        string
-	objectContentType string
+	objectPrefix       string
+	objectDelimiter    string
+	objectMaxKeys      int32
+	objectRecursive    bool
+	objectOutput       string
+	objectRangeStart   int64
+	objectRangeEnd     int64
+	objectKey          string
+	objectContentType  string
 	objectCacheControl string
-	objectMetadata   []string
-	objectProgress   bool
-	objectSpec       string
-	objectPattern    string
-	objectSearchType string
-	objectExpires    string
+	objectMetadata     []string
+	objectProgress     bool
+	objectSpec         string
+	objectPattern      string
+	objectSearchType   string
+	objectExpires      string
+	objectPartSize     string
+	objectConcurrency  int
+	objectResume       bool
+	objectNoMultipart  bool
 )
 
 // objectListCmd represents the object list command
@@ -119,17 +123,27 @@ var objectPutCmd = &cobra.Command{
 	Short: "Upload an object",
 	Long: `Upload a local file to R2 with metadata options.
 
+Files over 100MB automatically use multipart upload for better throughput.
+Multipart uploads track progress so interrupted uploads can be resumed.
+
 Options:
 - --key: Remote object key (defaults to filename)
 - --content-type: Content type (auto-detected if not specified)
 - --cache-control: Cache control header
 - --metadata: Additional metadata (key=value format)
 - --progress: Show progress bar
+- --part-size: Part size for multipart uploads (default 8MB, min 5MB)
+- --concurrency: Number of concurrent part uploads (default 4)
+- --resume: Resume a previously interrupted multipart upload
+- --no-multipart: Force single-part upload even for large files
 
 Examples:
   cosmoflare object put my-bucket file.txt
   cosmoflare object put my-bucket file.txt --key=remote/file.txt
   cosmoflare object put my-bucket image.jpg --content-type=image/jpeg --metadata=author=admin
+  cosmoflare object put my-bucket large.iso --part-size=16MB --concurrency=8
+  cosmoflare object put my-bucket large.iso --resume
+  cosmoflare object put my-bucket small.zip --no-multipart
   echo "hello" | cosmoflare object put my-bucket - --key=stdin-data.txt`,
 	RunE: runObjectPut,
 }
@@ -284,6 +298,10 @@ func init() {
 	objectPutCmd.Flags().StringVar(&objectCacheControl, "cache-control", "", "Cache control header")
 	objectPutCmd.Flags().StringSliceVar(&objectMetadata, "metadata", []string{}, "Additional metadata (key=value)")
 	objectPutCmd.Flags().BoolVar(&objectProgress, "progress", true, "Show progress bar")
+	objectPutCmd.Flags().StringVar(&objectPartSize, "part-size", "8MB", "Part size for multipart uploads (min 5MB, e.g. 8MB, 16MB, 32MB)")
+	objectPutCmd.Flags().IntVar(&objectConcurrency, "concurrency", 4, "Number of concurrent part uploads")
+	objectPutCmd.Flags().BoolVar(&objectResume, "resume", false, "Resume a previously interrupted multipart upload")
+	objectPutCmd.Flags().BoolVar(&objectNoMultipart, "no-multipart", false, "Force single-part upload even for large files")
 
 	// Flags for object copy
 	objectCopyCmd.Flags().StringSliceVar(&objectMetadata, "metadata", []string{}, "New metadata (key=value)")
@@ -524,6 +542,77 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		key = filepath.Base(localPath)
 	}
 
+	// Parse part size
+	partSize, err := parseSize(objectPartSize)
+	if err != nil {
+		return fmt.Errorf("invalid --part-size: %w", err)
+	}
+	if err := cosmoflare.ValidatePartSize(partSize); err != nil {
+		return fmt.Errorf("invalid --part-size: %w", err)
+	}
+
+	// Handle --resume: attempt to resume a previous upload
+	if objectResume {
+		state, err := cosmoflare.LoadUploadState(bucketName, key)
+		if err != nil {
+			return fmt.Errorf("failed to load upload state: %w", err)
+		}
+		if state == nil {
+			return fmt.Errorf("no interrupted upload found for %s/%s; start a new upload instead", bucketName, key)
+		}
+
+		printInfo("⬆️  Resuming upload: %s -> %s/%s", localPath, bucketName, key)
+		printInfo("  Upload ID: %s", state.UploadID)
+		printInfo("  Progress: %d/%d parts completed (%s/%s)",
+			len(state.CompletedParts), state.TotalParts,
+			utils.FormatBytes(state.CompletedBytes()),
+			utils.FormatBytes(state.TotalSize))
+
+		file, err := os.Open(localPath)
+		if err != nil {
+			return fmt.Errorf("failed to open local file: %w", err)
+		}
+		defer file.Close()
+
+		client, err := getAPIClient()
+		if err != nil {
+			return fmt.Errorf("failed to create API client: %w", err)
+		}
+
+		opts := []cosmoflare.UploadOption{}
+		if objectProgress && !JSONOutput {
+			progress := utils.NewTransferProgress(state.TotalSize)
+			opts = append(opts, cosmoflare.WithProgressCallback(func(uploaded, total int64) {
+				fmt.Printf("\r  %s", progress.FormatBar())
+			}))
+		}
+
+		result, err := client.ResumeMultipartUpload(context.Background(), bucketName, key, file, state.TotalSize, opts...)
+		if err != nil {
+			if JSONOutput {
+				return printErrorJSON(fmt.Sprintf("failed to resume upload: %v", err))
+			}
+			return fmt.Errorf("failed to resume upload: %w", err)
+		}
+
+		if objectProgress && !JSONOutput {
+			fmt.Println() // newline after progress bar
+		}
+
+		if JSONOutput {
+			return printSuccessJSON("Upload resumed and completed", result)
+		}
+
+		printSuccess("Upload resumed and completed!")
+		printInfo("Key: %s", result.Key)
+		printInfo("Size: %s", utils.FormatBytes(result.Size))
+		printInfo("ETag: %s", result.ETag)
+		if result.Parts > 0 {
+			printInfo("Parts: %d", result.Parts)
+		}
+		return nil
+	}
+
 	printInfo("⬆️  Uploading: %s -> %s/%s", localPath, bucketName, key)
 
 	file, err := os.Open(localPath)
@@ -556,6 +645,12 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		if len(metadataMap) > 0 {
 			printInfo("  Metadata: %v", metadataMap)
 		}
+		useMultipart := !objectNoMultipart && cosmoflare.ShouldUseMultipart(fileInfo.Size(), 0)
+		if useMultipart {
+			printInfo("  Multipart: yes (part-size: %s, concurrency: %d)", objectPartSize, objectConcurrency)
+		} else {
+			printInfo("  Multipart: no")
+		}
 		return nil
 	}
 
@@ -574,6 +669,8 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	if len(metadataMap) > 0 {
 		opts = append(opts, cosmoflare.WithMetadata(metadataMap))
 	}
+	opts = append(opts, cosmoflare.WithPartSize(partSize))
+	opts = append(opts, cosmoflare.WithConcurrency(objectConcurrency))
 	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
 		progress := utils.NewTransferProgress(fileInfo.Size())
 		opts = append(opts, cosmoflare.WithProgressCallback(func(uploaded, total int64) {
@@ -581,7 +678,13 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		}))
 	}
 
-	result, err := client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+	var result *cosmoflare.UploadResult
+	if objectNoMultipart {
+		// Force single-part upload regardless of file size
+		result, err = client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+	} else {
+		result, err = client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+	}
 	if err != nil {
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to upload object: %v", err))
@@ -589,14 +692,21 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to upload object: %w", err)
 	}
 
+	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
+		fmt.Println() // newline after progress bar
+	}
+
 	if JSONOutput {
 		return printSuccessJSON("Upload successful", result)
 	}
 
-	printSuccess("✅ Uploaded successfully!")
+	printSuccess("Uploaded successfully!")
 	printInfo("Key: %s", result.Key)
 	printInfo("Size: %s", utils.FormatBytes(result.Size))
 	printInfo("ETag: %s", result.ETag)
+	if result.Parts > 0 {
+		printInfo("Parts: %d (multipart)", result.Parts)
+	}
 	return nil
 }
 
@@ -1026,4 +1136,49 @@ func runObjectPresign(cmd *cobra.Command, args []string) error {
 // isTerminal checks if a file descriptor is a terminal.
 func isTerminal(f *os.File) bool {
 	return term.IsTerminal(int(f.Fd()))
+}
+
+// parseSize parses a human-readable size string (e.g. "8MB", "16MB", "1GB") into bytes.
+func parseSize(s string) (int64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, fmt.Errorf("empty size string")
+	}
+
+	s = strings.ToUpper(s)
+
+	multipliers := []struct {
+		suffix string
+		mult   int64
+	}{
+		{"GB", 1024 * 1024 * 1024},
+		{"MB", 1024 * 1024},
+		{"KB", 1024},
+		{"B", 1},
+	}
+
+	for _, m := range multipliers {
+		if strings.HasSuffix(s, m.suffix) {
+			numStr := strings.TrimSuffix(s, m.suffix)
+			numStr = strings.TrimSpace(numStr)
+			var num int64
+			if _, err := fmt.Sscanf(numStr, "%d", &num); err != nil {
+				return 0, fmt.Errorf("invalid size %q: %w", s, err)
+			}
+			if num <= 0 {
+				return 0, fmt.Errorf("size must be positive, got %d", num)
+			}
+			return num * m.mult, nil
+		}
+	}
+
+	// Try parsing as plain number (bytes)
+	var num int64
+	if _, err := fmt.Sscanf(s, "%d", &num); err != nil {
+		return 0, fmt.Errorf("invalid size %q: expected format like 8MB, 16MB, 1GB", s)
+	}
+	if num <= 0 {
+		return 0, fmt.Errorf("size must be positive, got %d", num)
+	}
+	return num, nil
 }

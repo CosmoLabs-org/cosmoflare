@@ -33,6 +33,8 @@ type R2Client interface {
 	// Upload / Download
 	Upload(ctx context.Context, bucket, key string, reader io.Reader, size int64, opts ...UploadOption) (*UploadResult, error)
 	MultipartUpload(ctx context.Context, bucket, key string, reader io.Reader, size int64, opts ...UploadOption) (*UploadResult, error)
+	ResumableMultipartUpload(ctx context.Context, bucket, key string, reader io.Reader, size int64, opts ...UploadOption) (*UploadResult, error)
+	ResumeMultipartUpload(ctx context.Context, bucket, key string, reader io.ReadSeeker, size int64, opts ...UploadOption) (*UploadResult, error)
 	Download(ctx context.Context, bucket, key string, opts ...DownloadOption) (*DownloadResult, error)
 
 	// Copy

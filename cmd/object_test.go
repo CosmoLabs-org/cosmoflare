@@ -113,7 +113,8 @@ func TestObjectGet_Flags(t *testing.T) {
 }
 
 func TestObjectPut_Flags(t *testing.T) {
-	expected := []string{"key", "content-type", "cache-control", "metadata", "progress"}
+	expected := []string{"key", "content-type", "cache-control", "metadata", "progress",
+		"part-size", "concurrency", "resume", "no-multipart"}
 	for _, name := range expected {
 		if objectPutCmd.Flags().Lookup(name) == nil {
 			t.Errorf("flag --%s not registered on objectPutCmd", name)
@@ -130,6 +131,10 @@ func TestObjectPut_FlagDefaults(t *testing.T) {
 		{"content-type", ""},
 		{"cache-control", ""},
 		{"progress", "true"},
+		{"part-size", "8MB"},
+		{"concurrency", "4"},
+		{"resume", "false"},
+		{"no-multipart", "false"},
 	}
 	for _, tc := range cases {
 		f := objectPutCmd.Flags().Lookup(tc.name)
@@ -776,5 +781,258 @@ func TestObjectCopy_ErrorMentionsDest(t *testing.T) {
 	}
 	if !bytes.Contains([]byte(err.Error()), []byte("destination")) {
 		t.Errorf("error = %q, want it to mention 'destination'", err.Error())
+	}
+}
+
+// --- parseSize tests ---
+
+func TestParseSize_MB(t *testing.T) {
+	size, err := parseSize("8MB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 8*1024*1024 {
+		t.Errorf("parseSize(8MB) = %d, want %d", size, 8*1024*1024)
+	}
+}
+
+func TestParseSize_GB(t *testing.T) {
+	size, err := parseSize("1GB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 1024*1024*1024 {
+		t.Errorf("parseSize(1GB) = %d, want %d", size, 1024*1024*1024)
+	}
+}
+
+func TestParseSize_KB(t *testing.T) {
+	size, err := parseSize("512KB")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 512*1024 {
+		t.Errorf("parseSize(512KB) = %d, want %d", size, 512*1024)
+	}
+}
+
+func TestParseSize_LowerCase(t *testing.T) {
+	size, err := parseSize("16mb")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 16*1024*1024 {
+		t.Errorf("parseSize(16mb) = %d, want %d", size, 16*1024*1024)
+	}
+}
+
+func TestParseSize_PlainNumber(t *testing.T) {
+	size, err := parseSize("1048576")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if size != 1048576 {
+		t.Errorf("parseSize(1048576) = %d, want 1048576", size)
+	}
+}
+
+func TestParseSize_Empty(t *testing.T) {
+	_, err := parseSize("")
+	if err == nil {
+		t.Fatal("expected error for empty string")
+	}
+}
+
+func TestParseSize_Invalid(t *testing.T) {
+	_, err := parseSize("not-a-size")
+	if err == nil {
+		t.Fatal("expected error for invalid size")
+	}
+}
+
+func TestParseSize_Zero(t *testing.T) {
+	_, err := parseSize("0MB")
+	if err == nil {
+		t.Fatal("expected error for zero size")
+	}
+}
+
+func TestParseSize_Negative(t *testing.T) {
+	_, err := parseSize("-5MB")
+	if err == nil {
+		t.Fatal("expected error for negative size")
+	}
+}
+
+// --- DryRun with multipart flags ---
+
+func TestObjectPut_DryRunWithMultipartFlags(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origPartSize := objectPartSize
+	origConcurrency := objectConcurrency
+	origNoMultipart := objectNoMultipart
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		objectPartSize = origPartSize
+		objectConcurrency = origConcurrency
+		objectNoMultipart = origNoMultipart
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectPartSize = "16MB"
+	objectConcurrency = 8
+	objectNoMultipart = false
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello world"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun+multipart flags) returned error: %v", err)
+	}
+}
+
+func TestObjectPut_DryRunNoMultipart(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origPartSize := objectPartSize
+	origNoMultipart := objectNoMultipart
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		objectPartSize = origPartSize
+		objectNoMultipart = origNoMultipart
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectPartSize = "8MB"
+	objectNoMultipart = true
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err != nil {
+		t.Errorf("runObjectPut(DryRun+no-multipart) returned error: %v", err)
+	}
+}
+
+// --- Resume with no state file ---
+
+func TestObjectPut_ResumeNoState(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origPartSize := objectPartSize
+	origResume := objectResume
+	origKey := objectKey
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		objectPartSize = origPartSize
+		objectResume = origResume
+		objectKey = origKey
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectPartSize = "8MB"
+	objectResume = true
+	objectKey = "nonexistent-resume-key-xyz"
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err == nil {
+		t.Fatal("expected error when resuming with no state file")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("no interrupted upload")) {
+		t.Errorf("error = %q, want it to mention 'no interrupted upload'", err.Error())
+	}
+}
+
+// --- Invalid part size ---
+
+func TestObjectPut_InvalidPartSize(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origPartSize := objectPartSize
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		objectPartSize = origPartSize
+	}()
+
+	DryRun = false
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	objectPartSize = "1MB" // below 5MB minimum
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err == nil {
+		t.Fatal("expected error for part size below minimum")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("part-size")) {
+		t.Errorf("error = %q, want it to mention 'part-size'", err.Error())
+	}
+}
+
+func TestObjectPut_InvalidPartSizeFormat(t *testing.T) {
+	origPartSize := objectPartSize
+	defer func() { objectPartSize = origPartSize }()
+
+	objectPartSize = "not-a-size"
+
+	tmpDir := t.TempDir()
+	filePath := tmpDir + "/test.txt"
+	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runObjectPut(objectPutCmd, []string{"my-bucket", filePath})
+	if err == nil {
+		t.Fatal("expected error for invalid part size format")
 	}
 }

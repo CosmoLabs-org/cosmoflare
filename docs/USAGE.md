@@ -154,6 +154,41 @@ JSON output:
 
 Files over 100MB automatically use multipart upload for better throughput.
 
+### Multipart Upload Options
+
+Large file uploads can be tuned with multipart-specific flags:
+
+```bash
+# Custom part size (default 8MB, min 5MB per S3 spec)
+cosmoflare object put my-bucket large.iso --part-size=16MB
+
+# Higher concurrency for faster uploads on good connections
+cosmoflare object put my-bucket large.iso --concurrency=8
+
+# Combine both for maximum throughput
+cosmoflare object put my-bucket large.iso --part-size=32MB --concurrency=8
+
+# Force single-part upload even for large files
+cosmoflare object put my-bucket large.iso --no-multipart
+```
+
+### Resume Interrupted Uploads
+
+Multipart uploads automatically save progress. If an upload is interrupted
+(network error, process killed, etc.), resume it:
+
+```bash
+# Resume a previously interrupted upload
+cosmoflare object put my-bucket large.iso --resume
+
+# The state file tracks which parts completed; only remaining parts upload
+# State files are stored in $TMPDIR as .cosmoflare-upload-{hash}.json
+```
+
+The `--resume` flag loads the saved upload state, skips already-completed parts,
+and uploads only the remaining parts. The state file is automatically cleaned up
+on successful completion.
+
 ### Download an object
 ```bash
 r2go2 object get my-bucket file.txt
