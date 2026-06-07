@@ -1,7 +1,6 @@
 package cosmoflare
 
 import (
-	"os"
 	"testing"
 )
 
@@ -87,18 +86,8 @@ func TestR2ValidationError(t *testing.T) {
 }
 
 func TestNewClientValidation(t *testing.T) {
-	origAccountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
-	origAPIToken := os.Getenv("CLOUDFLARE_API_TOKEN")
-	os.Unsetenv("CLOUDFLARE_ACCOUNT_ID")
-	os.Unsetenv("CLOUDFLARE_API_TOKEN")
-	t.Cleanup(func() {
-		if origAccountID != "" {
-			os.Setenv("CLOUDFLARE_ACCOUNT_ID", origAccountID)
-		}
-		if origAPIToken != "" {
-			os.Setenv("CLOUDFLARE_API_TOKEN", origAPIToken)
-		}
-	})
+	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
+	t.Setenv("CLOUDFLARE_API_TOKEN", "")
 
 	_, err := NewClient()
 	if err == nil {
