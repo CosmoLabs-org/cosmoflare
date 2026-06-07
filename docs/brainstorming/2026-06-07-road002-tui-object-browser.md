@@ -4,6 +4,8 @@ created: 2026-06-07T04:30:00-03:00
 status: approved
 roadmap: ROAD-002
 origin: ROAD-002
+last_reviewed: 2026-06-07T05:00:00-03:00
+last_review_findings: 6
 deliverables:
   - BR-01: BrowserModel sub-model with split-pane layout
   - BR-02: Pane focus management and narrow/wide mode switching
@@ -11,7 +13,8 @@ deliverables:
   - BR-04: Bottom detail panel with live metadata
   - BR-05: Object delete with two-keypress confirmation
   - BR-06: HeadObject modal for full metadata view
-  - BR-07: DataSource interface extension (prefix, HeadObject)
+  - BR-07: DataSource interface extension (prefix, HeadObject, DeleteObject)
+  - BR-08: Library extension — ListResult.CommonPrefixes
 ---
 
 # ROAD-002: TUI Object Browser with Split-Pane Layout
@@ -146,23 +149,37 @@ type ObjectDetail struct {
     LastModified time.Time
     ContentType  string
     ETag         string
-    StorageClass string
     Metadata     map[string]string
 }
 ```
 
-The `apiDataSource` implementation:
-- `FetchObjects`: calls `r2.ListObjects(ctx, bucket, prefix, "/", objectsPerPage)`. Extracts `CommonPrefixes` for directories and `Items` for files.
-- `HeadObject`: calls `r2.HeadObject(ctx, bucket, key)`. Maps `*HeadResult` to `ObjectDetail`.
+**Library gap — CommonPrefixes:** The current `pkg/cosmoflare` `ListObjects` implementation discards `CommonPrefixes` from the S3 `ListObjectsV2` response. The `ListResult[*Object]` type has no field for them. **The implementation plan must extend `ListResult` with a `CommonPrefixes []string` field** and update `ListObjects` in `pkg/cosmoflare/storage.go` to populate it from `result.CommonPrefixes`. This is a ~5-line library change.
 
-The `nullDataSource`: returns empty `ObjectListing` for `FetchObjects`, returns error for `HeadObject`.
+**Library gap — HeadResult.StorageClass:** `HeadResult` has no `StorageClass` field. Drop `StorageClass` from `ObjectDetail` — it's not critical for the detail panel and avoids a library change. If needed later, extend `HeadResult`.
+
+**Pagination:** S3 uses continuation tokens, not page numbers. Change `FetchObjects` to use a token-based approach:
+
+```go
+FetchObjects(ctx context.Context, bucket, prefix, continuationToken string) (ObjectListing, error)
+```
+
+`ObjectListing` gains `NextToken string` and `HasMore bool`. The `BrowserModel` stores `nextToken` and passes it on `n` key. Previous-page is not natively supported by S3 — the browser stores seen tokens in a `[]string` stack (one per page visited).
+
+**ContentType availability:** S3 `ListObjectsV2` does not return `ContentType` per object. The detail panel shows ContentType only after `HeadObject` is fetched (when user presses `Enter`). The inline listing shows `"—"` for content type. `ObjectItem` gains an `ETag` field (available from `ListObjects` via the `Object` type).
+
+The `apiDataSource` implementation:
+- `FetchObjects`: calls `r2.ListObjects(ctx, bucket, prefix, "/", objectsPerPage)` with continuation token support. Extracts `CommonPrefixes` for directories and `Items` for files.
+- `HeadObject`: calls `r2.HeadObject(ctx, bucket, key)`. Maps `*HeadResult` to `ObjectDetail` (without StorageClass).
+- `DeleteObject`: calls `r2.DeleteObject(ctx, bucket, key)`.
+
+The `nullDataSource`: returns empty `ObjectListing` for `FetchObjects`, returns error for `HeadObject` and `DeleteObject`.
 
 ### Bottom Detail Panel
 
 A 4-line strip at the bottom of the right pane, always visible when an object (not a directory) is highlighted:
 - Line 1: Full key path (untruncated)
 - Line 2: Size (formatted) | Last Modified (full timestamp) | ETag
-- Line 3: Content Type | Storage Class
+- Line 3: Content Type (shown as "—" until HeadObject fetched via Enter)
 - Line 4: Action hints: `d = delete | Enter = head details`
 
 When a directory is highlighted: `"📁 <prefix> — Enter to browse, Backspace to go up"`
@@ -173,11 +190,9 @@ The detail panel shows data from the `ObjectItem` (already loaded). The `Enter` 
 
 ### Object Actions
 
-- `d` on an object → two-keypress confirmation in footer: `"Delete 'images/photo.jpg'? (y/n)"`. On `y`, calls `DataSource.DeleteBucket` equivalent for objects (add `DeleteObject` to `DataSource` interface). On success, refresh the listing.
-- `Enter` on an object → fetch `HeadObject`, show modal overlay with full metadata. `Esc` dismisses.
+- `d` on an object → two-keypress confirmation in footer: `"Delete 'images/photo.jpg'? (y/n)"`. On `y`, calls `DataSource.DeleteObject(ctx, bucket, key)`. On success, refresh the listing. On failure, show error notification inline: `"❌ Failed to delete: <error>"`. Object stays in the list (next refresh will reflect actual state).
+- `Enter` on an object → fetch `HeadObject`, show modal overlay with full metadata. On API error (timeout, 404), show error in the modal body: `"❌ Failed to fetch details: <error>"` with `Esc` to dismiss. `Esc` dismisses on success too.
 - `Enter` on a directory → push prefix, fetch objects at new level.
-
-**DataSource addition needed:** `DeleteObject(ctx, bucket, key string) error`. The R2Client already has this method.
 
 ### Keyboard Shortcuts (Browser Section)
 
@@ -199,9 +214,11 @@ The detail panel shows data from the `ObjectItem` (already loaded). The `Enter` 
 
 | File | Change |
 |------|--------|
+| `pkg/cosmoflare/types.go` | Add `CommonPrefixes []string` field to `ListResult`. |
+| `pkg/cosmoflare/storage.go` | Populate `CommonPrefixes` from S3 `ListObjectsV2` response (~5 lines). |
 | `internal/tui/browser.go` | **New.** `BrowserModel` sub-model with dual-pane layout, prefix navigation, detail panel, object actions |
 | `internal/tui/browser_test.go` | **New.** Tests for pane switching, prefix nav, narrow/wide mode, detail panel |
-| `internal/tui/datasource.go` | Extend `FetchObjects` with prefix param, add `HeadObject` and `DeleteObject` methods, add `ObjectListing` and `ObjectDetail` types. Update both backends. |
+| `internal/tui/datasource.go` | Change `FetchObjects` to token-based pagination with prefix. Add `HeadObject` and `DeleteObject` methods. Add `ObjectListing` and `ObjectDetail` types. Add `ETag` to `ObjectItem`. Update both backends. |
 | `internal/tui/datasource_test.go` | Update tests for new signatures |
 | `internal/tui/model.go` | Add `browser BrowserModel` field. Remove `SectionObjectList` — browser handles both. Remove object-specific fields (`objects`, `objectPage`, `objectTotal`). |
 | `internal/tui/update.go` | Delegate `SectionBucketList` keys/messages to `browser.Update()`. Remove object-specific handlers. |
