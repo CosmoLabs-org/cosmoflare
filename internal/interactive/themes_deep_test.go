@@ -343,7 +343,7 @@ func TestThemeDeep_AllThemesHaveDescriptions(t *testing.T) {
 func TestThemeDeep_GetThemePath_ContainsR2Go2(t *testing.T) {
 	tm := NewThemeManager()
 	path := tm.GetThemePath()
-	assert.Contains(t, path, ".r2go2")
+	assert.Contains(t, path, ".cosmoflare")
 	assert.Contains(t, path, "themes")
 }
 

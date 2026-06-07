@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/spf13/viper"
 )
@@ -101,18 +103,20 @@ func (cm *ConfigManager) load() error {
 
 // Save saves configuration to file
 func (cm *ConfigManager) Save() error {
-	// Use viper for saving
-	v := viper.New()
-	v.Set("profiles", cm.config.Profiles)
-	v.Set("current", cm.config.Current)
-
 	// Ensure config directory exists
 	if err := os.MkdirAll(filepath.Dir(cm.configPath), 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	tmpPath := cm.configPath + ".tmp"
-	if err := v.WriteConfigAs(tmpPath); err != nil {
+	tmpPath := cm.configPath + "~"
+	data, err := yaml.Marshal(map[string]interface{}{
+		"profiles": cm.config.Profiles,
+		"current":  cm.config.Current,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.WriteFile(tmpPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

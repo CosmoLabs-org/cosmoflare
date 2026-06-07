@@ -30,7 +30,7 @@ func TestThemeManager_GetThemePath(t *testing.T) {
 	tm := NewThemeManager()
 	path := tm.GetThemePath()
 	assert.NotEmpty(t, path)
-	assert.Contains(t, path, ".r2go2")
+	assert.Contains(t, path, ".cosmoflare")
 	assert.Contains(t, path, "themes")
 }
 

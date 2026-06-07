@@ -186,12 +186,12 @@ func TestFindLatestBackup_FromBackupManager(t *testing.T) {
 		bm := &BackupManager{Input: newMockReader()}
 
 		// Create some backup files
-		writeFile(t, filepath.Join(dir, ".r2go2-backup-2026-01-01.json"), "{}")
+		writeFile(t, filepath.Join(dir, ".cosmoflare-backup-2026-01-01.json"), "{}")
 		time.Sleep(10 * time.Millisecond) // ensure different mtime
-		writeFile(t, filepath.Join(dir, ".r2go2-backup-2026-05-15.enc"), "ciphertext")
+		writeFile(t, filepath.Join(dir, ".cosmoflare-backup-2026-05-15.enc"), "ciphertext")
 
 		latest := bm.findLatestBackup(dir)
-		assert.Contains(t, latest, ".r2go2-backup-2026-05-15.enc")
+		assert.Contains(t, latest, ".cosmoflare-backup-2026-05-15.enc")
 	})
 
 	t.Run("returns empty for nonexistent dir", func(t *testing.T) {
@@ -204,9 +204,9 @@ func TestFindLatestBackup_FromBackupManager(t *testing.T) {
 		dir := t.TempDir()
 		bm := &BackupManager{Input: newMockReader()}
 
-		writeFile(t, filepath.Join(dir, ".r2go2-backup-2026-01-01.json"), "{}")
+		writeFile(t, filepath.Join(dir, ".cosmoflare-backup-2026-01-01.json"), "{}")
 		writeFile(t, filepath.Join(dir, "other-file.txt"), "data")
-		writeFile(t, filepath.Join(dir, ".r2go2-backup.sh"), "#!/bin/bash") // .sh not matched
+		writeFile(t, filepath.Join(dir, ".cosmoflare-backup.sh"), "#!/bin/bash") // .sh not matched
 
 		latest := bm.findLatestBackup(dir)
 		assert.Contains(t, latest, ".json")
@@ -285,7 +285,7 @@ func TestCreateEncryptedBackup(t *testing.T) {
 		err := bm.CreateEncryptedBackup()
 		require.NoError(t, err)
 		// No backup file should exist
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.enc"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.enc"))
 		assert.Empty(t, matches)
 	})
 
@@ -298,7 +298,7 @@ func TestCreateEncryptedBackup(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "password mismatch")
 		// No file written
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.enc"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.enc"))
 		assert.Empty(t, matches)
 	})
 
@@ -310,7 +310,7 @@ func TestCreateEncryptedBackup(t *testing.T) {
 		err := bm.CreateEncryptedBackup()
 		require.NoError(t, err)
 
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.enc"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.enc"))
 		assert.Len(t, matches, 1)
 
 		// File should be decryptable
@@ -339,7 +339,7 @@ func TestCreatePlainBackup(t *testing.T) {
 		err := bm.CreatePlainBackup()
 		require.NoError(t, err)
 
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.json"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.json"))
 		assert.Len(t, matches, 1)
 
 		data, err := os.ReadFile(matches[0])
@@ -360,7 +360,7 @@ func TestCreatePlainBackup(t *testing.T) {
 		err := bm.CreatePlainBackup()
 		require.NoError(t, err)
 
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.json"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.json"))
 		assert.Len(t, matches, 1)
 
 		data, err := os.ReadFile(matches[0])
@@ -390,7 +390,7 @@ func TestCreateEnvironmentBackup(t *testing.T) {
 		err := bm.CreateEnvironmentBackup()
 		require.NoError(t, err)
 		// No .sh file
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.sh"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.sh"))
 		assert.Empty(t, matches)
 	})
 
@@ -402,7 +402,7 @@ func TestCreateEnvironmentBackup(t *testing.T) {
 		err := bm.CreateEnvironmentBackup()
 		require.NoError(t, err)
 
-		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".r2go2-backup-*.sh"))
+		matches, _ := filepath.Glob(filepath.Join(tmpDir, ".cosmoflare-backup-*.sh"))
 		assert.Len(t, matches, 1)
 
 		data, err := os.ReadFile(matches[0])
@@ -447,7 +447,7 @@ func TestShowRestoreInterface(t *testing.T) {
 			},
 		}
 		jsonData, _ := json.MarshalIndent(backupData, "", "  ")
-		backupPath := filepath.Join(tmpDir, ".r2go2-backup-2026-05-15.json")
+		backupPath := filepath.Join(tmpDir, ".cosmoflare-backup-2026-05-15.json")
 		require.NoError(t, os.WriteFile(backupPath, jsonData, 0644))
 
 		err := bm.ShowRestoreInterface()
@@ -459,7 +459,7 @@ func TestShowRestoreInterface(t *testing.T) {
 		bm, tmpDir := newTestBackupManager(t, "", "n") // "" empty filepath, "n" don't use found backup
 		seedProfile(t, bm, "decline-test")
 
-		backupPath := filepath.Join(tmpDir, ".r2go2-backup-2026-05-15.json")
+		backupPath := filepath.Join(tmpDir, ".cosmoflare-backup-2026-05-15.json")
 		require.NoError(t, os.WriteFile(backupPath, []byte(`{"version":"1.0","profiles":{}}`), 0644))
 
 		err := bm.ShowRestoreInterface()
