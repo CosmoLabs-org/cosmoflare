@@ -2028,7 +2028,7 @@ cosmoflare alerts history --json
 ### Workers
 
 ```go
-import cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+import cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 
 // Create a Worker service
 ws, err := cosmoflare.NewWorkerServiceFromCreds("account-id", "api-token")
@@ -2080,7 +2080,7 @@ keys, err := ks.ListKeys(ctx, ns.ID,
 
 Import as a Go library:
 ```go
-import cosmoflare "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/cosmoflare"
+import cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 
 client, err := cosmoflare.NewClient(
     cosmoflare.WithAccountID("..."),
@@ -2206,3 +2206,12 @@ eval $(cosmoflare config export my-profile)
 ```bash
 cosmoflare config delete old-profile
 ```
+
+### Migrate credentials to OS keychain
+```bash
+cosmoflare config migrate-keychain            # Move plaintext secrets to keychain
+cosmoflare config migrate-keychain --status    # Check keychain availability
+cosmoflare config migrate-keychain --json      # JSON output
+```
+
+After migration, `config.yaml` stores a `"keychain"` sentinel instead of the actual secret. Profiles are hydrated from the keychain automatically — no workflow changes needed. Supported backends: macOS Keychain, Linux Secret Service (via D-Bus), Windows Credential Manager.

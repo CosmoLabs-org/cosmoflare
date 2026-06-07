@@ -159,6 +159,7 @@ func init() {
 	configCmd.AddCommand(configDeleteCmd)
 	configCmd.AddCommand(configSwitchCmd)
 	configCmd.AddCommand(configExportCmd)
+	configCmd.AddCommand(configMigrateKeychainCmd)
 
 	// Flags for config set command
 	configSetCmd.Flags().StringVar(&configDescription, "description", "", "Profile description")
@@ -639,4 +640,80 @@ func fillProfileInteractively(profile *config.Profile) error {
 	}
 
 	return nil
+}
+
+var configMigrateKeychainCmd = &cobra.Command{
+	Use:   "migrate-keychain",
+	Short: "Move plaintext credentials to OS keychain",
+	Long: `Migrate stored API tokens and secret keys from plaintext config.yaml
+into the OS keychain (macOS Keychain, Linux Secret Service, Windows
+Credential Manager).
+
+After migration, config.yaml stores a "keychain" sentinel instead of
+the actual secret. The keychain is queried automatically when loading
+profiles — no workflow changes needed.
+
+Use --status to check whether the keychain is available and which
+profiles have been migrated.`,
+	Example: `  cosmoflare config migrate-keychain
+  cosmoflare config migrate-keychain --status
+  cosmoflare config migrate-keychain --json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cm, err := config.NewConfigManager()
+		if err != nil {
+			return fmt.Errorf("failed to initialize config: %w", err)
+		}
+
+		statusOnly, _ := cmd.Flags().GetBool("status")
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		if statusOnly {
+			available := cm.KeychainAvailable()
+			profiles := cm.ListProfiles()
+			migrated := 0
+			for _, name := range profiles {
+				raw, err := cm.GetProfileRaw(name)
+				if err != nil {
+					continue
+				}
+				if raw.APIToken == "keychain" || raw.AccessKey == "keychain" || raw.SecretKey == "keychain" {
+					migrated++
+				}
+			}
+			if jsonOutput {
+				fmt.Printf(`{"keychain_available":%v,"total_profiles":%d,"migrated_profiles":%d}`+"\n",
+					available, len(profiles), migrated)
+			} else {
+				if available {
+					fmt.Println("✅ OS keychain is available")
+				} else {
+					fmt.Println("❌ OS keychain is not available (credentials stored in config.yaml)")
+				}
+				fmt.Printf("   Profiles: %d total, %d using keychain\n", len(profiles), migrated)
+			}
+			return nil
+		}
+
+		if !cm.KeychainAvailable() {
+			return fmt.Errorf("OS keychain is not available on this system — credentials will remain in config.yaml")
+		}
+
+		count, err := cm.MigrateToKeychain()
+		if err != nil {
+			return fmt.Errorf("migration failed: %w", err)
+		}
+
+		if jsonOutput {
+			fmt.Printf(`{"migrated_profiles":%d}`+"\n", count)
+		} else if count == 0 {
+			fmt.Println("All profiles already use the keychain — nothing to migrate.")
+		} else {
+			fmt.Printf("✅ Migrated %d profile(s) to OS keychain. Plaintext secrets removed from config.yaml.\n", count)
+		}
+		return nil
+	},
+}
+
+func init() {
+	configMigrateKeychainCmd.Flags().Bool("status", false, "Show keychain status without migrating")
 }

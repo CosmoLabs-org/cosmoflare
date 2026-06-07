@@ -16,6 +16,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/keychain"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/spf13/viper"
 )
@@ -39,10 +40,19 @@ type Profile struct {
 	Region    string `json:"region,omitempty" yaml:"region,omitempty" mapstructure:"region,omitempty"`
 }
 
+// Secrets abstracts credential storage for testability.
+type Secrets interface {
+	Available() bool
+	Get(profile, key string) (string, error)
+	Set(profile, key, value string) error
+	Delete(profile, key string) error
+}
+
 // ConfigManager manages configuration operations
 type ConfigManager struct {
 	configPath string
 	config     *Config
+	secrets    Secrets
 }
 
 // NewConfigManager creates a new configuration manager
@@ -66,6 +76,7 @@ func NewConfigManager() (*ConfigManager, error) {
 			Profiles: make(map[string]*Profile),
 			Current:  "default",
 		},
+		secrets: keychain.New(),
 	}
 
 	// Load existing configuration if it exists
@@ -133,35 +144,45 @@ func (cm *ConfigManager) Save() error {
 	return nil
 }
 
-// GetProfile returns a profile by name
+// GetProfile returns a profile by name with secrets hydrated from keychain.
 func (cm *ConfigManager) GetProfile(name string) (*Profile, error) {
+	profile, exists := cm.config.Profiles[name]
+	if !exists {
+		return nil, fmt.Errorf("profile '%s' not found", name)
+	}
+	return cm.hydrateSecrets(profile), nil
+}
+
+// GetProfileRaw returns a profile without hydrating keychain secrets.
+func (cm *ConfigManager) GetProfileRaw(name string) (*Profile, error) {
 	if profile, exists := cm.config.Profiles[name]; exists {
 		return profile, nil
 	}
 	return nil, fmt.Errorf("profile '%s' not found", name)
 }
 
-// SetProfile adds or updates a profile
+// SetProfile adds or updates a profile, storing secrets in the keychain when available.
 func (cm *ConfigManager) SetProfile(profile *Profile) error {
 	if profile.Name == "" {
 		return fmt.Errorf("profile name is required")
 	}
 
+	cm.storeSecrets(profile)
 	cm.config.Profiles[profile.Name] = profile
 	return cm.Save()
 }
 
-// DeleteProfile removes a profile
+// DeleteProfile removes a profile and its keychain secrets.
 func (cm *ConfigManager) DeleteProfile(name string) error {
 	if !cm.ProfileExists(name) {
 		return fmt.Errorf("profile '%s' not found", name)
 	}
 
-	// Don't allow deleting the current profile
 	if cm.config.Current == name {
 		return fmt.Errorf("cannot delete current profile '%s'", name)
 	}
 
+	cm.deleteSecrets(name)
 	delete(cm.config.Profiles, name)
 	return cm.Save()
 }
@@ -191,12 +212,17 @@ func (cm *ConfigManager) SetCurrent(name string) error {
 	return cm.Save()
 }
 
-// GetCurrent returns the current profile
+// GetCurrent returns the current profile with secrets hydrated from keychain.
 func (cm *ConfigManager) GetCurrent() (*Profile, error) {
 	if cm.config.Current == "" {
 		return nil, fmt.Errorf("no current profile set")
 	}
 	return cm.GetProfile(cm.config.Current)
+}
+
+// GetSecretStore returns the underlying secret store for direct access.
+func (cm *ConfigManager) GetSecretStore() Secrets {
+	return cm.secrets
 }
 
 // ValidateProfile validates a profile configuration
@@ -339,4 +365,110 @@ func MaskAccountID(accountID string) string {
 // MaskKey exports the maskKey function for use in other packages
 func MaskKey(key string) string {
 	return maskKey(key)
+}
+
+const keychainSentinel = "keychain"
+
+var secretFields = []string{"api_token", "access_key", "secret_key"}
+
+// KeychainAvailable reports whether the OS keychain is usable.
+func (cm *ConfigManager) KeychainAvailable() bool {
+	return cm.secrets.Available()
+}
+
+// storeSecrets moves sensitive fields from a profile into the keychain,
+// replacing them with a sentinel value in the YAML-persisted struct.
+func (cm *ConfigManager) storeSecrets(profile *Profile) {
+	if !cm.secrets.Available() {
+		return
+	}
+	for _, field := range secretFields {
+		val := getSecretField(profile, field)
+		if val == "" || val == keychainSentinel {
+			continue
+		}
+		if err := cm.secrets.Set(profile.Name, field, val); err != nil {
+			continue
+		}
+		setSecretField(profile, field, keychainSentinel)
+	}
+}
+
+// hydrateSecrets replaces sentinel values in a profile with actual secrets
+// from the keychain. Returns a copy so the in-memory config keeps sentinels.
+func (cm *ConfigManager) hydrateSecrets(profile *Profile) *Profile {
+	hydrated := *profile
+	for _, field := range secretFields {
+		if getSecretField(&hydrated, field) != keychainSentinel {
+			continue
+		}
+		val, err := cm.secrets.Get(profile.Name, field)
+		if err != nil {
+			continue
+		}
+		setSecretField(&hydrated, field, val)
+	}
+	return &hydrated
+}
+
+// deleteSecrets removes all keychain entries for a profile.
+func (cm *ConfigManager) deleteSecrets(profileName string) {
+	for _, field := range secretFields {
+		_ = cm.secrets.Delete(profileName, field)
+	}
+}
+
+// MigrateToKeychain moves plaintext secrets from all profiles into the keychain.
+// Returns the number of profiles migrated and any error.
+func (cm *ConfigManager) MigrateToKeychain() (int, error) {
+	if !cm.secrets.Available() {
+		return 0, fmt.Errorf("OS keychain is not available on this system")
+	}
+	count := 0
+	for _, profile := range cm.config.Profiles {
+		migrated := false
+		for _, field := range secretFields {
+			val := getSecretField(profile, field)
+			if val == "" || val == keychainSentinel {
+				continue
+			}
+			if err := cm.secrets.Set(profile.Name, field, val); err != nil {
+				return count, fmt.Errorf("failed to store %s for profile %s: %w", field, profile.Name, err)
+			}
+			setSecretField(profile, field, keychainSentinel)
+			migrated = true
+		}
+		if migrated {
+			count++
+		}
+	}
+	if count > 0 {
+		if err := cm.Save(); err != nil {
+			return count, fmt.Errorf("failed to save config after migration: %w", err)
+		}
+	}
+	return count, nil
+}
+
+func getSecretField(p *Profile, field string) string {
+	switch field {
+	case "api_token":
+		return p.APIToken
+	case "access_key":
+		return p.AccessKey
+	case "secret_key":
+		return p.SecretKey
+	}
+	return ""
+}
+
+func setSecretField(p *Profile, field, value string) {
+	switch field {
+	case "api_token":
+		p.APIToken = value
+	case "access_key":
+		p.AccessKey = value
+	case "secret_key":
+		p.SecretKey = value
+	}
 }

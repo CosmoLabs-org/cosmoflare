@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-06-07T00:52:02.65286-03:00
+last_updated: 2026-06-07T01:26:32.847851-03:00
 next_bug_id: 20
 next_feat_id: 6
 next_task_id: 5
@@ -162,6 +162,6 @@ issues:
       created_at: 2026-05-18T16:39:52.105811-03:00
     - id: FEAT-005
       type: feature
-      status: open
+      status: implemented
       title: Add config encryption or keychain integration for stored credentials
       created_at: 2026-06-06T20:21:26.749571-03:00

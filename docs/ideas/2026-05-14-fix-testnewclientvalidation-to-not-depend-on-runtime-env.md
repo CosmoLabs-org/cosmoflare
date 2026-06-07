@@ -11,6 +11,7 @@ origin:
 
 
 
+
 # Fix TestNewClientValidation to not depend on runtime env vars
 
 Test fails when CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are set in the shell. Should use t.Setenv or clear env in test setup.
