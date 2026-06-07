@@ -27,6 +27,12 @@ entries:
         - description: internal/migration/s3.go — resolved 11 build errors (missing helpers, AWS SDK call, pointer dereference)
           source: manual
           date: 2026-06-07T00:21:02.04206-03:00
+        - description: config.Save() viper .tmp extension bug — replaced with yaml.Marshal for reliable config persistence
+          source: manual
+          date: 2026-06-07T00:52:53.361832-03:00
+        - description: pre-existing test failures in internal/interactive and internal/webhook from r2go2→cosmoflare rename
+          source: manual
+          date: 2026-06-07T00:52:53.394422-03:00
     changed:
         - description: USAGE.md — replaced 226 r2go2 references with cosmoflare across all CLI examples
           source: manual
