@@ -11,7 +11,7 @@ import (
 // --- Key handling in Update() for navigation ---
 
 func TestUpdate_KeyUp(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	m.selectedRow = 1
 
@@ -21,7 +21,7 @@ func TestUpdate_KeyUp(t *testing.T) {
 }
 
 func TestUpdate_KeyDown(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}}
 
 	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyDown})
@@ -30,7 +30,7 @@ func TestUpdate_KeyDown(t *testing.T) {
 }
 
 func TestUpdate_KeyEnterSelectsBucket(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.currentSection = SectionBucketList
 	m.buckets = []Bucket{{Name: "pick-me", Size: 512}}
 	m.selectedRow = 0
@@ -42,7 +42,7 @@ func TestUpdate_KeyEnterSelectsBucket(t *testing.T) {
 }
 
 func TestUpdate_KeyQ_Quits(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.showHelp = false
 
 	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
@@ -50,7 +50,7 @@ func TestUpdate_KeyQ_Quits(t *testing.T) {
 }
 
 func TestUpdate_KeyQ_ClosesHelp(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.showHelp = true
 
 	result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
@@ -60,7 +60,7 @@ func TestUpdate_KeyQ_ClosesHelp(t *testing.T) {
 }
 
 func TestUpdate_Escape_QuitsFromMainView(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.showHelp = false
 
 	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
@@ -68,7 +68,7 @@ func TestUpdate_Escape_QuitsFromMainView(t *testing.T) {
 }
 
 func TestUpdate_Escape_ClosesHelp(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.showHelp = true
 
 	result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
@@ -80,7 +80,7 @@ func TestUpdate_Escape_ClosesHelp(t *testing.T) {
 // --- getCurrentProfile ---
 
 func TestGetCurrentProfile(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	assert.Equal(t, "default", m.getCurrentProfile())
 
 	m.currentProfile = "production"
@@ -90,7 +90,7 @@ func TestGetCurrentProfile(t *testing.T) {
 // --- moveUp / moveDown boundaries via Update ---
 
 func TestUpdate_KeyUp_AtTop(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}}
 	m.selectedRow = 0
 
@@ -100,7 +100,7 @@ func TestUpdate_KeyUp_AtTop(t *testing.T) {
 }
 
 func TestUpdate_KeyDown_AtBottom(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}}
 	m.selectedRow = 1
 
@@ -126,7 +126,7 @@ func TestUpdate_SectionShortcuts_ThroughUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("key_"+tt.key, func(t *testing.T) {
-			m := initialModel()
+			m := initialModel(nil, 0)
 			result, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(tt.key)})
 			dm := result.(DashboardModel)
 			assert.Equal(t, tt.expected, dm.currentSection)
@@ -137,7 +137,7 @@ func TestUpdate_SectionShortcuts_ThroughUpdate(t *testing.T) {
 // --- Vim-style navigation keys via Update ---
 
 func TestUpdate_VimKeys_JK(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	m.selectedRow = 0
 
@@ -153,7 +153,7 @@ func TestUpdate_VimKeys_JK(t *testing.T) {
 }
 
 func TestUpdate_VimKeys_HL(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.currentSection = SectionOverview
 
 	// l = next section
@@ -168,7 +168,7 @@ func TestUpdate_VimKeys_HL(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToOverview(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.currentSection = SectionBucketList
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Overview"}}
 	result, _ := m.handlePaletteSelect(msg)
@@ -177,7 +177,7 @@ func TestHandlePaletteSelect_GoToOverview(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToBuckets(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Buckets"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -185,7 +185,7 @@ func TestHandlePaletteSelect_GoToBuckets(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToObjects(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Objects"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -193,7 +193,7 @@ func TestHandlePaletteSelect_GoToObjects(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToSettings(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Settings"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -201,7 +201,7 @@ func TestHandlePaletteSelect_GoToSettings(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_ToggleHelp(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	assert.False(t, m.showHelp)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Toggle Help"}}
 	result, _ := m.handlePaletteSelect(msg)
@@ -210,21 +210,21 @@ func TestHandlePaletteSelect_ToggleHelp(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_Quit(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Quit"}}
 	_, cmd := m.handlePaletteSelect(msg)
 	assert.NotNil(t, cmd, "Quit should return a tea.Cmd")
 }
 
 func TestHandlePaletteSelect_Refresh(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Refresh Data"}}
 	_, cmd := m.handlePaletteSelect(msg)
 	assert.NotNil(t, cmd, "Refresh Data should return a tea.Cmd")
 }
 
 func TestHandlePaletteSelect_UnknownCommand(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Unknown Command"}}
 	result, cmd := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -233,7 +233,7 @@ func TestHandlePaletteSelect_UnknownCommand(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_CustomAction(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{
 		Name: "Custom",
 		Action: func() tea.Cmd {
@@ -247,7 +247,7 @@ func TestHandlePaletteSelect_CustomAction(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToMonitoring(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Monitoring"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -255,7 +255,7 @@ func TestHandlePaletteSelect_GoToMonitoring(t *testing.T) {
 }
 
 func TestHandlePaletteSelect_GoToUpload(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Upload"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
@@ -263,15 +263,15 @@ func TestHandlePaletteSelect_GoToUpload(t *testing.T) {
 }
 
 func TestView_ReturnsNonEmpty(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.width = 80
 	m.height = 24
 	view := m.View()
 	assert.NotEmpty(t, view)
 }
 
-func TestInit_ReturnsCmd(t *testing.T) {
-	m := initialModel()
+func TestInit_ReturnsNilForNullDataSource(t *testing.T) {
+	m := initialModel(nil, 0)
 	cmd := m.Init()
-	assert.NotNil(t, cmd, "Init should return a tea.Cmd for initial data load")
+	assert.Nil(t, cmd, "Init should return nil when DataSource is not available")
 }

@@ -1,7 +1,7 @@
 /*
-Package tui provides the interactive terminal dashboard for R2Go2
+Package tui provides the interactive terminal dashboard for Cosmoflare
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 
@@ -10,6 +10,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/charmbracelet/lipgloss"
@@ -47,7 +48,7 @@ func (m DashboardModel) View() string {
 
 // renderHeader renders the dashboard header
 func (m DashboardModel) renderHeader() string {
-	title := titleStyle.Render(fmt.Sprintf("🎯 R2Go2 Dashboard - %s", m.getCurrentProfile()))
+	title := titleStyle.Render(fmt.Sprintf("🎯 Cosmoflare Dashboard - %s", m.getCurrentProfile()))
 
 	// Add help indicator
 	helpIndicator := ""
@@ -86,10 +87,32 @@ func (m DashboardModel) renderMainContent() string {
 
 // renderFooter renders the dashboard footer
 func (m DashboardModel) renderFooter() string {
+	// Input mode rendering
+	if m.inputMode {
+		prompt := fmt.Sprintf("Create bucket: %s█  (Enter = confirm, Esc = cancel)", m.inputBuffer)
+		return lipgloss.NewStyle().
+			Foreground(primaryColor).
+			Bold(true).
+			Render(prompt)
+	}
+
+	// Confirmation mode rendering
+	if m.confirmAction != "" {
+		prompt := fmt.Sprintf("Delete bucket '%s'? (y/n)", m.confirmTarget)
+		return lipgloss.NewStyle().
+			Foreground(warningColor).
+			Bold(true).
+			Render(prompt)
+	}
+
 	// Status line
+	lastUpdate := "N/A"
+	if !m.metrics.FetchedAt.IsZero() {
+		lastUpdate = m.metrics.FetchedAt.Format("2006-01-02 15:04:05")
+	}
 	statusText := fmt.Sprintf("📍 %s | Last Update: %s",
 		m.getStatusText(),
-		m.realTimeStats.LastUpdate.Format("2006-01-02 15:04:05"))
+		lastUpdate)
 
 	// Navigation hint
 	navHint := "Use Arrow Keys + Enter"
@@ -125,7 +148,7 @@ func (m DashboardModel) renderLoading() string {
 	loadingText := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Render(fmt.Sprintf("%s Loading R2Go2 Dashboard...", frame))
+		Render(fmt.Sprintf("%s Loading Cosmoflare Dashboard...", frame))
 
 	return lipgloss.NewStyle().
 		Height(m.height - 4).
@@ -133,8 +156,20 @@ func (m DashboardModel) renderLoading() string {
 		Render(loadingText)
 }
 
+// renderNoCreds renders a credential warning banner.
+func (m DashboardModel) renderNoCreds() string {
+	return lipgloss.NewStyle().
+		Foreground(warningColor).
+		Bold(true).
+		Padding(2, 4).
+		Render("⚠ No credentials configured — press 6 for Settings or run cosmoflare setup")
+}
+
 // renderOverview renders the overview dashboard
 func (m DashboardModel) renderOverview() string {
+	if !m.data.Available() {
+		return m.renderNoCreds()
+	}
 	var content strings.Builder
 
 	// Usage statistics
@@ -228,15 +263,54 @@ func (m DashboardModel) renderObjectList() string {
 			Render("No bucket selected. Navigate to bucket list and select a bucket.")
 	}
 
+	if !m.data.Available() {
+		return m.renderNoCreds()
+	}
+
 	title := headerStyle.Render(fmt.Sprintf("📁 Objects in %s", m.currentBucket.Name))
-	content := lipgloss.NewStyle().
-		Foreground(mutedColor).
-		Render("🚫 Object listing functionality coming soon.")
+
+	if m.objects == nil {
+		content := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("Loading...")
+		return lipgloss.JoinVertical(lipgloss.Left, title, lipgloss.NewStyle().MarginTop(1).Render(content))
+	}
+
+	if len(m.objects) == 0 {
+		content := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("Bucket is empty.")
+		return lipgloss.JoinVertical(lipgloss.Left, title, lipgloss.NewStyle().MarginTop(1).Render(content))
+	}
+
+	// Table header
+	headers := []string{"Key", "Size", "Last Modified", "Content Type"}
+	headerRow := m.renderTableRow(headers, true)
+
+	// Table rows
+	var rows []string
+	for _, obj := range m.objects {
+		rowData := []string{
+			truncate(obj.Key, 40),
+			utils.FormatBytes(obj.Size),
+			obj.LastModified.Format("2006-01-02 15:04"),
+			truncate(obj.ContentType, 20),
+		}
+		rows = append(rows, m.renderTableRow(rowData, false))
+	}
+
+	tableContent := lipgloss.JoinVertical(lipgloss.Left, headerRow, strings.Join(rows, "\n"))
+
+	pageInfo := fmt.Sprintf("Page %d | %d objects | n = next | p = prev | Backspace = back",
+		m.objectPage+1, m.objectTotal)
+	pageInfoLine := lipgloss.NewStyle().Foreground(mutedColor).Render(pageInfo)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
-		lipgloss.NewStyle().MarginTop(1).Render(content),
+		lipgloss.NewStyle().MarginTop(1).Render(tableContent),
+		"",
+		pageInfoLine,
 	)
 }
 
@@ -260,23 +334,51 @@ func (m DashboardModel) renderUploadInterface() string {
 	)
 }
 
-// renderMonitoring renders the monitoring dashboard
+// renderMonitoring renders the monitoring dashboard with live service metrics.
 func (m DashboardModel) renderMonitoring() string {
+	if !m.data.Available() {
+		return m.renderNoCreds()
+	}
+
 	title := headerStyle.Render("📈 Real-Time Monitoring")
 
-	var content strings.Builder
+	// Build per-service blocks
+	r2Lines := []string{
+		fmt.Sprintf("Buckets:  %d%s", m.metrics.R2.BucketCount, m.delta(m.prevMetrics.R2.BucketCount, m.metrics.R2.BucketCount)),
+		fmt.Sprintf("Objects:  %s%s", formatNumber(m.metrics.R2.TotalObjects), m.deltaI64(m.prevMetrics.R2.TotalObjects, m.metrics.R2.TotalObjects)),
+		fmt.Sprintf("Size:     %s", utils.FormatBytes(m.metrics.R2.TotalSize)),
+	}
+	workersLines := []string{
+		fmt.Sprintf("Scripts:  %d%s", m.metrics.Workers.Count, m.delta(m.prevMetrics.Workers.Count, m.metrics.Workers.Count)),
+	}
+	kvLines := []string{
+		fmt.Sprintf("Namespaces: %d%s", m.metrics.KV.NamespaceCount, m.delta(m.prevMetrics.KV.NamespaceCount, m.metrics.KV.NamespaceCount)),
+	}
 
-	// Real-time stats
-	content.WriteString(m.renderRealTimeStats())
-	content.WriteString("\n\n")
+	r2Block := m.renderServiceBlock("R2 Storage", r2Lines)
+	wBlock := m.renderServiceBlock("Workers", workersLines)
+	kvBlock := m.renderServiceBlock("KV", kvLines)
+
+	var blocks string
+	if m.width > 100 {
+		blocks = lipgloss.JoinHorizontal(lipgloss.Top, r2Block, "  ", wBlock, "  ", kvBlock)
+	} else {
+		blocks = lipgloss.JoinVertical(lipgloss.Left, r2Block, wBlock, kvBlock)
+	}
+
+	pollLine := m.renderPollStatus()
 
 	// Activity feed
-	content.WriteString(m.renderActivityFeed())
+	feed := m.renderActivityFeed()
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
-		lipgloss.NewStyle().MarginTop(1).Render(content.String()),
+		lipgloss.NewStyle().MarginTop(1).Render(blocks),
+		"",
+		pollLine,
+		"",
+		feed,
 	)
 }
 
@@ -316,7 +418,7 @@ func (m DashboardModel) renderQuickActions() string {
 
 // renderHelp renders the help screen
 func (m DashboardModel) renderHelp() string {
-	title := titleStyle.Render("📚 R2Go2 Dashboard Help")
+	title := titleStyle.Render("📚 Cosmoflare Dashboard Help")
 
 	helpContent := []string{
 		"",
@@ -408,31 +510,74 @@ func (m DashboardModel) renderFileSelector() string {
 	)
 }
 
-// renderRealTimeStats renders real-time statistics
-func (m DashboardModel) renderRealTimeStats() string {
-	title := headerStyle.Render("🔥 Real-Time Activity")
+// delta returns an indicator string for a change between two int values.
+func (m DashboardModel) delta(prev, curr int) string {
+	if prev == 0 && curr == 0 {
+		return ""
+	}
+	diff := curr - prev
+	if diff > 0 {
+		return lipgloss.NewStyle().Foreground(successColor).Render(fmt.Sprintf(" ↑%d", diff))
+	} else if diff < 0 {
+		return lipgloss.NewStyle().Foreground(errorColor).Render(fmt.Sprintf(" ↓%d", -diff))
+	}
+	return ""
+}
 
-	stats := m.realTimeStats
+// deltaI64 returns an indicator string for a change between two int64 values.
+func (m DashboardModel) deltaI64(prev, curr int64) string {
+	if prev == 0 && curr == 0 {
+		return ""
+	}
+	diff := curr - prev
+	if diff > 0 {
+		return lipgloss.NewStyle().Foreground(successColor).Render(fmt.Sprintf(" ↑%s", formatNumber(diff)))
+	} else if diff < 0 {
+		return lipgloss.NewStyle().Foreground(errorColor).Render(fmt.Sprintf(" ↓%s", formatNumber(-diff)))
+	}
+	return ""
+}
 
-	// Create progress bars for upload/download rates
-	uploadBar := m.createProgressBar(stats.UploadRate, 100, "⬆️")
-	downloadBar := m.createProgressBar(stats.DownloadRate, 100, "⬇️")
+// renderServiceBlock renders a bordered box for a service's metrics.
+func (m DashboardModel) renderServiceBlock(name string, lines []string) string {
+	content := lipgloss.JoinVertical(lipgloss.Left, lines...)
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Width(30).
+		Padding(1, 2).
+		Render(lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.NewStyle().Bold(true).Foreground(primaryColor).Render(name),
+			content,
+		))
+}
 
-	// Request rate indicator
-	requestRate := fmt.Sprintf("🔄 %d req/min", stats.RequestsPerMin)
+// renderPollStatus renders the monitoring poll status line.
+func (m DashboardModel) renderPollStatus() string {
+	pauseLabel := "▶ Polling"
+	if m.pollPaused {
+		pauseLabel = "⏸ Paused"
+	}
 
-	statsContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		uploadBar,
-		downloadBar,
-		requestRate,
-	)
+	lastUpdate := "never"
+	if !m.metrics.FetchedAt.IsZero() {
+		lastUpdate = m.metrics.FetchedAt.Format("15:04:05")
+	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		title,
-		lipgloss.NewStyle().MarginTop(1).Render(statsContent),
-	)
+	status := fmt.Sprintf("%s | Last: %s | Interval: %s | r = refresh | p = pause/resume",
+		pauseLabel, lastUpdate, m.pollInterval.Round(time.Second))
+	return lipgloss.NewStyle().Foreground(mutedColor).Render(status)
+}
+
+// truncate shortens a string to max characters, adding "..." if truncated.
+func truncate(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	if max <= 3 {
+		return s[:max]
+	}
+	return s[:max-3] + "..."
 }
 
 // renderActivityFeed renders the activity feed

@@ -1,14 +1,39 @@
 package tui
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+// availableTestDS is a DataSource that reports Available() == true but
+// delegates all operations to the null implementation (returns empty data).
+type availableTestDS struct{ nullDataSource }
+
+func (a *availableTestDS) Available() bool { return true }
+
+func (a *availableTestDS) FetchBuckets(_ context.Context) ([]Bucket, UsageStats, error) {
+	return []Bucket{}, UsageStats{}, nil
+}
+
 func newTestModel() DashboardModel {
-	m := initialModel()
+	m := initialModel(nil, 0)
+	m.width = 120
+	m.height = 40
+	m.loading = false
+	m.buckets = []Bucket{
+		{Name: "prod-assets", Size: 1024 * 1024, ObjectCount: 50, Status: "active", CreatedAt: time.Now()},
+		{Name: "backups", Size: 2048 * 1024, ObjectCount: 100, Status: "active", CreatedAt: time.Now()},
+	}
+	m.usageStats = UsageStats{TotalUsed: 3 * 1024 * 1024, BucketCount: 2}
+	return m
+}
+
+// newAvailableTestModel returns a model with an Available data source.
+func newAvailableTestModel() DashboardModel {
+	m := initialModel(&availableTestDS{}, 30*time.Second)
 	m.width = 120
 	m.height = 40
 	m.loading = false
@@ -26,7 +51,7 @@ func TestViewRendersOverview(t *testing.T) {
 
 	view := m.View()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "R2Go2")
+	assert.Contains(t, view, "Cosmoflare")
 }
 
 func TestViewRendersBucketList(t *testing.T) {
@@ -178,7 +203,7 @@ func TestRenderUsageStats_ZeroDivision(t *testing.T) {
 // --- renderOverview with various stat combinations ---
 
 func TestRenderOverview_ZeroValues(t *testing.T) {
-	m := newTestModel()
+	m := newAvailableTestModel()
 	m.usageStats = UsageStats{TotalUsed: 0, TotalLimit: 0, BucketCount: 0}
 	m.buckets = []Bucket{}
 
@@ -189,7 +214,7 @@ func TestRenderOverview_ZeroValues(t *testing.T) {
 }
 
 func TestRenderOverview_LargeNumbers(t *testing.T) {
-	m := newTestModel()
+	m := newAvailableTestModel()
 	m.usageStats = UsageStats{
 		TotalUsed:   500 * 1024 * 1024 * 1024 * 1024, // 500 TB
 		TotalLimit:  1024 * 1024 * 1024 * 1024 * 1024, // 1 PB
@@ -317,51 +342,34 @@ func TestRenderUploadQueue_MultipleTasks(t *testing.T) {
 	assert.Contains(t, view, "queued.txt")
 }
 
-// --- renderRealTimeStats with various rate values ---
+// --- renderMonitoring with various metric states ---
 
-func TestRenderRealTimeStats_ZeroRates(t *testing.T) {
-	m := newTestModel()
-	m.realTimeStats = RealTimeStats{
-		UploadRate:     0,
-		DownloadRate:   0,
-		RequestsPerMin: 0,
-		LastUpdate:     time.Now(),
-	}
-
-	view := m.renderRealTimeStats()
+func TestRenderMonitoring_ZeroMetrics(t *testing.T) {
+	m := newAvailableTestModel()
+	m.metrics = ServiceMetrics{FetchedAt: time.Now()}
+	view := m.renderMonitoring()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "0 req/min")
+	assert.Contains(t, view, "R2 Storage")
 }
 
-func TestRenderRealTimeStats_HighRates(t *testing.T) {
-	m := newTestModel()
-	m.realTimeStats = RealTimeStats{
-		UploadRate:     95.7,
-		DownloadRate:   88.3,
-		RequestsPerMin: 9999,
-		LastUpdate:     time.Now(),
+func TestRenderMonitoring_WithMetrics(t *testing.T) {
+	m := newAvailableTestModel()
+	m.metrics = ServiceMetrics{
+		R2:        R2Metrics{BucketCount: 5, TotalSize: 1024 * 1024, TotalObjects: 9999},
+		Workers:   WorkersMetrics{Count: 12},
+		KV:        KVMetrics{NamespaceCount: 3},
+		FetchedAt: time.Now(),
 	}
-
-	view := m.renderRealTimeStats()
+	view := m.renderMonitoring()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "9999")
-	assert.Contains(t, view, "95.7%")
-	assert.Contains(t, view, "88.3%")
+	assert.Contains(t, view, "R2 Storage")
+	assert.Contains(t, view, "Workers")
+	assert.Contains(t, view, "KV")
 }
 
-func TestRenderRealTimeStats_MaxedRates(t *testing.T) {
+func TestRenderMonitoring_NoCreds(t *testing.T) {
 	m := newTestModel()
-	m.realTimeStats = RealTimeStats{
-		UploadRate:     150.0, // Exceeds 100 max in createProgressBar
-		DownloadRate:   200.0, // Exceeds 100 max in createProgressBar
-		RequestsPerMin: 50000,
-		LastUpdate:     time.Now(),
-	}
-
-	view := m.renderRealTimeStats()
-	assert.NotEmpty(t, view)
-	// Should clamp to 100% without panicking
-	assert.NotPanics(t, func() {
-		m.renderRealTimeStats()
-	})
+	// nullDataSource is not Available
+	view := m.renderMonitoring()
+	assert.Contains(t, view, "No credentials configured")
 }

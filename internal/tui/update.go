@@ -1,13 +1,15 @@
 /*
-Package tui provides the interactive terminal dashboard for R2Go2
+Package tui provides the interactive terminal dashboard for Cosmoflare
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 
 package tui
 
 import (
+	"context"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -58,21 +60,57 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		return m, nil
 
-	case realTimeUpdateMsg:
-		m.realTimeStats.LastUpdate = msg.timestamp
-		// Simulate some real-time stats
-		m.realTimeStats.UploadRate = 15.3 + float64(msg.timestamp.Second()%10)
-		m.realTimeStats.DownloadRate = 8.7 + float64(msg.timestamp.Second()%8)
-		m.realTimeStats.RequestsPerMin = 500 + msg.timestamp.Second()%100
-		return m, tea.Tick(time.Second*5, func(t time.Time) tea.Msg {
-			return realTimeUpdateMsg{timestamp: t}
-		})
+	case monitoringTickMsg:
+		if m.pollPaused || m.skipNextPoll {
+			m.skipNextPoll = false
+			return m, monitoringTick(m.pollInterval)
+		}
+		return m, tea.Batch(fetchMetricsCmd(m.data), monitoringTick(m.pollInterval))
+
+	case metricsLoadedMsg:
+		if msg.err != nil {
+			m.addNotification("Metrics error: "+msg.err.Error(), "error")
+			if strings.Contains(msg.err.Error(), "429") {
+				m.skipNextPoll = true
+			}
+			return m, nil
+		}
+		m.prevMetrics = m.metrics
+		m.metrics = msg.metrics
+		return m, nil
+
+	case objectsLoadedMsg:
+		if msg.err != nil {
+			m.addNotification("Failed to load objects: "+msg.err.Error(), "error")
+			return m, nil
+		}
+		m.objects = msg.objects
+		m.objectTotal = msg.total
+		return m, nil
+
+	case bucketCreatedMsg:
+		if msg.err != nil {
+			m.addNotification("Failed to create bucket: "+msg.err.Error(), "error")
+		} else {
+			m.addNotification("Bucket created", "success")
+		}
+		return m, refreshDataCmd(m.data)
+
+	case bucketDeletedMsg:
+		if msg.err != nil {
+			m.addNotification("Failed to delete bucket: "+msg.err.Error(), "error")
+		} else {
+			m.addNotification("Bucket deleted", "success")
+		}
+		return m, refreshDataCmd(m.data)
 
 	case bucketSelectedMsg:
 		m.currentBucket = msg.bucket
 		m.currentSection = SectionObjectList
+		m.objectPage = 0
+		m.objects = nil
 		m.addNotification("Selected bucket: "+msg.bucket.Name, "info")
-		return m, nil
+		return m, fetchObjectsCmd(m.data, msg.bucket.Name, 0)
 
 	case uploadProgressMsg:
 		// Update upload progress
@@ -106,6 +144,51 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeyMsg processes keyboard input
 func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Input mode: creating a bucket
+	if m.inputMode {
+		switch msg.String() {
+		case "enter":
+			name := strings.TrimSpace(m.inputBuffer)
+			m.inputMode = false
+			m.inputBuffer = ""
+			if name == "" {
+				return m, nil
+			}
+			return m, createBucketAPICmd(m.data, name)
+		case "esc":
+			m.inputMode = false
+			m.inputBuffer = ""
+			return m, nil
+		case "backspace":
+			if len(m.inputBuffer) > 0 {
+				m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+			}
+			return m, nil
+		default:
+			if len(msg.String()) == 1 {
+				m.inputBuffer += msg.String()
+			}
+			return m, nil
+		}
+	}
+
+	// Confirmation mode: deleting a bucket
+	if m.confirmAction != "" {
+		switch msg.String() {
+		case "y":
+			target := m.confirmTarget
+			m.confirmAction = ""
+			m.confirmTarget = ""
+			return m, deleteBucketAPICmd(m.data, target)
+		case "n", "esc":
+			m.confirmAction = ""
+			m.confirmTarget = ""
+			return m, nil
+		default:
+			return m, nil
+		}
+	}
+
 	// Handle search mode
 	if m.searchQuery != "" {
 		switch msg.String() {
@@ -160,25 +243,82 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-	// Quick actions
+	// Refresh
+	case "r":
+		if m.data.Available() {
+			if m.currentSection == SectionMonitoring {
+				return m, fetchMetricsCmd(m.data)
+			}
+			return m, refreshDataCmd(m.data)
+		}
+
+	// Poll toggle / previous page
+	case "p":
+		if m.currentSection == SectionMonitoring {
+			m.pollPaused = !m.pollPaused
+			return m, nil
+		}
+		if m.currentSection == SectionObjectList && m.objectPage > 0 {
+			m.objectPage--
+			if m.currentBucket != nil {
+				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, m.objectPage)
+			}
+		}
+
+	// Next page
+	case "n":
+		if m.currentSection == SectionObjectList && len(m.objects) >= objectsPerPage {
+			m.objectPage++
+			if m.currentBucket != nil {
+				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, m.objectPage)
+			}
+		}
+
+	// Create bucket
 	case "c":
-		return m, createBucketCmd()
-	case "u":
-		return m, uploadFileCmd()
+		if m.currentSection == SectionBucketList && m.data.Available() {
+			m.inputMode = true
+			m.inputBuffer = ""
+			return m, nil
+		}
+
+	// Delete bucket
 	case "d":
-		return m, deleteBucketCmd()
+		if m.currentSection == SectionBucketList && m.data.Available() && m.selectedRow < len(m.buckets) {
+			m.confirmAction = "delete"
+			m.confirmTarget = m.buckets[m.selectedRow].Name
+			return m, nil
+		}
+
+	// Upload (placeholder)
+	case "u":
+		m.addNotification("Upload file functionality coming soon", "info")
+
+	// Monitoring mode shortcut
 	case "m":
-		return m, startMonitoringCmd()
+		m.currentSection = SectionMonitoring
+
+	// Settings
 	case "s":
 		m.currentSection = SectionSettings
-	case "p":
-		m.currentSection = SectionSettings
+
+	// Backspace: go back from object list to bucket list
+	case "backspace":
+		if m.currentSection == SectionObjectList {
+			m.currentSection = SectionBucketList
+			m.objects = nil
+			m.objectPage = 0
+			m.currentBucket = nil
+			return m, nil
+		}
 
 	// Function keys
 	case "f1":
 		m.showHelp = !m.showHelp
 	case "f5":
-		return m, refreshDataCmd()
+		if m.data.Available() {
+			return m, refreshDataCmd(m.data)
+		}
 	case "f10":
 		m.currentSection = SectionSettings
 
@@ -191,17 +331,29 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "?":
 		m.showHelp = true
 
-	// Section-specific shortcuts
+	// Section-specific shortcuts (with refresh on section change)
 	case "1":
+		prev := m.currentSection
 		m.currentSection = SectionOverview
+		if prev != SectionOverview && m.data.Available() {
+			return m, refreshDataCmd(m.data)
+		}
 	case "2":
+		prev := m.currentSection
 		m.currentSection = SectionBucketList
+		if prev != SectionBucketList && m.data.Available() {
+			return m, refreshDataCmd(m.data)
+		}
 	case "3":
 		m.currentSection = SectionObjectList
 	case "4":
 		m.currentSection = SectionUpload
 	case "5":
+		prev := m.currentSection
 		m.currentSection = SectionMonitoring
+		if prev != SectionMonitoring && m.data.Available() {
+			return m, fetchMetricsCmd(m.data)
+		}
 	case "6":
 		m.currentSection = SectionSettings
 	}
@@ -211,60 +363,42 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // Command functions
 
-func createBucketCmd() tea.Cmd {
+func monitoringTick(d time.Duration) tea.Cmd {
+	return tea.Tick(d, func(_ time.Time) tea.Msg { return monitoringTickMsg{} })
+}
+
+func fetchMetricsCmd(ds DataSource) tea.Cmd {
 	return func() tea.Msg {
-		// For now, just show a notification
-		return notificationMsg{
-			notification: Notification{
-				Message:   "Create bucket functionality coming soon",
-				Type:      "info",
-				Timestamp: time.Now(),
-			},
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		metrics, err := ds.FetchMetrics(ctx)
+		return metricsLoadedMsg{metrics: metrics, err: err}
 	}
 }
 
-func uploadFileCmd() tea.Cmd {
+func fetchObjectsCmd(ds DataSource, bucket string, page int) tea.Cmd {
 	return func() tea.Msg {
-		// For now, just show a notification
-		return notificationMsg{
-			notification: Notification{
-				Message:   "Upload file functionality coming soon",
-				Type:      "info",
-				Timestamp: time.Now(),
-			},
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		objects, total, err := ds.FetchObjects(ctx, bucket, page)
+		return objectsLoadedMsg{objects: objects, total: total, err: err}
 	}
 }
 
-func deleteBucketCmd() tea.Cmd {
+func createBucketAPICmd(ds DataSource, name string) tea.Cmd {
 	return func() tea.Msg {
-		// For now, just show a notification
-		return notificationMsg{
-			notification: Notification{
-				Message:   "Delete bucket functionality coming soon",
-				Type:      "warning",
-				Timestamp: time.Now(),
-			},
-		}
+		return bucketCreatedMsg{err: ds.CreateBucket(context.Background(), name)}
 	}
 }
 
-func startMonitoringCmd() tea.Cmd {
+func deleteBucketAPICmd(ds DataSource, name string) tea.Cmd {
 	return func() tea.Msg {
-		// For now, just show a notification
-		return notificationMsg{
-			notification: Notification{
-				Message:   "Enhanced monitoring coming soon",
-				Type:      "info",
-				Timestamp: time.Now(),
-			},
-		}
+		return bucketDeletedMsg{err: ds.DeleteBucket(context.Background(), name)}
 	}
 }
 
-func refreshDataCmd() tea.Cmd {
-	return loadDataCmd()
+func refreshDataCmd(ds DataSource) tea.Cmd {
+	return loadDataCmd(ds)
 }
 
 // handlePaletteSelect processes a command selected from the palette.
@@ -293,7 +427,7 @@ func (m DashboardModel) handlePaletteSelect(msg palette.PaletteSelectMsg) (tea.M
 	case "Toggle Help":
 		m.showHelp = !m.showHelp
 	case "Refresh Data":
-		return m, refreshDataCmd()
+		return m, refreshDataCmd(m.data)
 	case "Quit":
 		return m, tea.Quit
 	default:

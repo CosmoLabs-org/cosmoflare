@@ -342,8 +342,9 @@ func TestRenderObjectList_NoBucket(t *testing.T) {
 }
 
 func TestRenderObjectList_WithBucket(t *testing.T) {
-	m := newTestModel()
+	m := newAvailableTestModel()
 	m.currentBucket = &Bucket{Name: "test-bucket"}
+	m.objects = []ObjectItem{} // empty but non-nil = bucket is empty
 	view := m.renderObjectList()
 	assert.Contains(t, view, "test-bucket")
 }
@@ -555,15 +556,10 @@ func TestUpdate_DataLoaded_WithNotification(t *testing.T) {
 	assert.Contains(t, dm.notifications[0].Message, "successfully")
 }
 
-func TestUpdate_RealTimeStats_ReturnsTick(t *testing.T) {
+func TestUpdate_MonitoringTick_ReturnsBatch(t *testing.T) {
 	m := newTestModel()
-	now := time.Now()
-	_, cmd := m.Update(realTimeUpdateMsg{timestamp: now})
-	assert.NotNil(t, cmd)
-	// The returned cmd should produce another realTimeUpdateMsg
-	msg := cmd()
-	_, ok := msg.(realTimeUpdateMsg)
-	assert.True(t, ok, "tick cmd should produce realTimeUpdateMsg")
+	_, cmd := m.Update(monitoringTickMsg{})
+	assert.NotNil(t, cmd, "monitoringTickMsg should return a batch cmd")
 }
 
 func TestUpdate_BucketSelected_SetsSection(t *testing.T) {
@@ -622,16 +618,23 @@ func TestHandleKeyMsg_SpaceSelects(t *testing.T) {
 	assert.NotNil(t, cmd)
 }
 
-func TestHandleKeyMsg_SandPGoToSettings(t *testing.T) {
+func TestHandleKeyMsg_SGoesToSettings(t *testing.T) {
 	m := newTestModel()
 	result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("s")})
 	dm := result.(DashboardModel)
 	assert.Equal(t, SectionSettings, dm.currentSection)
+}
 
-	m2 := initialModel()
-	result2, _ := m2.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("p")})
+func TestHandleKeyMsg_PTogglesPollInMonitoring(t *testing.T) {
+	m := newTestModel()
+	m.currentSection = SectionMonitoring
+	result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("p")})
+	dm := result.(DashboardModel)
+	assert.True(t, dm.pollPaused)
+
+	result2, _ := dm.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("p")})
 	dm2 := result2.(DashboardModel)
-	assert.Equal(t, SectionSettings, dm2.currentSection)
+	assert.False(t, dm2.pollPaused)
 }
 
 func TestHandleKeyMsg_F10GoesToSettings(t *testing.T) {
@@ -680,30 +683,24 @@ func TestAddNotification_Overflow(t *testing.T) {
 
 // --- Init command execution ---
 
-func TestInit_ReturnsBatch(t *testing.T) {
-	m := initialModel()
+func TestInit_NullDataSource_ReturnsNil(t *testing.T) {
+	m := initialModel(nil, 0)
 	cmd := m.Init()
-	assert.NotNil(t, cmd)
-	// Execute the batch - tea.Batch returns a Cmd that produces messages
-	msgs := cmd()
-	// tea.Batch wraps multiple cmds; the result is the first message.
-	// We just verify it returns something without panicking.
-	assert.NotNil(t, msgs)
+	assert.Nil(t, cmd, "Init should return nil when DataSource is not available")
 }
 
 // --- loadDataCmd ---
 
 func TestLoadDataCmd_ReturnsCmd(t *testing.T) {
-	cmd := loadDataCmd()
+	ds := &nullDataSource{}
+	cmd := loadDataCmd(ds)
 	assert.NotNil(t, cmd)
-	// Executing the cmd will call the real API, which likely fails without credentials.
-	// But it should return a valid message, not panic.
 	msg := cmd()
 	assert.NotNil(t, msg)
-	// Should be either dataLoadedMsg or errorMsg
-	_, isDataLoaded := msg.(dataLoadedMsg)
-	_, isError := msg.(errorMsg)
-	assert.True(t, isDataLoaded || isError, "expected dataLoadedMsg or errorMsg, got %T", msg)
+	// nullDataSource always returns empty data without error
+	dlm, ok := msg.(dataLoadedMsg)
+	assert.True(t, ok, "expected dataLoadedMsg, got %T", msg)
+	assert.Nil(t, dlm.err)
 }
 
 // --- RunDashboard / RunDashboardWithConfig ---
@@ -884,19 +881,49 @@ func TestRobustness_ScrollBoundaries(t *testing.T) {
 	assert.Equal(t, SectionOverview, m.currentSection)
 }
 
-// --- renderRealTimeStats ---
+// --- delta / renderServiceBlock / renderPollStatus ---
 
-func TestRenderRealTimeStats(t *testing.T) {
+func TestDelta(t *testing.T) {
 	m := newTestModel()
-	m.realTimeStats = RealTimeStats{
-		UploadRate:     42.5,
-		DownloadRate:   18.3,
-		RequestsPerMin: 1234,
-		LastUpdate:     time.Now(),
-	}
-	view := m.renderRealTimeStats()
-	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "1234")
+
+	t.Run("no change", func(t *testing.T) {
+		assert.Equal(t, "", m.delta(5, 5))
+	})
+	t.Run("both zero", func(t *testing.T) {
+		assert.Equal(t, "", m.delta(0, 0))
+	})
+	t.Run("increase", func(t *testing.T) {
+		d := m.delta(3, 7)
+		assert.Contains(t, d, "↑4")
+	})
+	t.Run("decrease", func(t *testing.T) {
+		d := m.delta(10, 6)
+		assert.Contains(t, d, "↓4")
+	})
+}
+
+func TestRenderServiceBlock(t *testing.T) {
+	m := newTestModel()
+	block := m.renderServiceBlock("R2", []string{"Buckets: 5", "Objects: 100"})
+	assert.NotEmpty(t, block)
+	assert.Contains(t, block, "R2")
+	assert.Contains(t, block, "Buckets: 5")
+}
+
+func TestRenderPollStatus(t *testing.T) {
+	m := newTestModel()
+	status := m.renderPollStatus()
+	assert.Contains(t, status, "Polling")
+
+	m.pollPaused = true
+	status = m.renderPollStatus()
+	assert.Contains(t, status, "Paused")
+}
+
+func TestTruncate(t *testing.T) {
+	assert.Equal(t, "hello", truncate("hello", 10))
+	assert.Equal(t, "hel...", truncate("hello world", 6))
+	assert.Equal(t, "ab", truncate("abcdef", 2))
 }
 
 // --- renderQuickActions ---
@@ -924,7 +951,7 @@ func TestRenderFileSelector(t *testing.T) {
 func TestRenderHelp_ContainsSections(t *testing.T) {
 	m := newTestModel()
 	view := m.renderHelp()
-	assert.Contains(t, view, "R2Go2 Dashboard Help")
+	assert.Contains(t, view, "Cosmoflare Dashboard Help")
 	assert.Contains(t, view, "Navigation:")
 	assert.Contains(t, view, "Quick Actions:")
 	assert.Contains(t, view, "Search & Filter:")
@@ -973,7 +1000,7 @@ func TestRenderHeader_Normal(t *testing.T) {
 	header := m.renderHeader()
 	assert.NotEmpty(t, header)
 	assert.Contains(t, header, "[F1] Help")
-	assert.Contains(t, header, "R2Go2 Dashboard")
+	assert.Contains(t, header, "Cosmoflare Dashboard")
 }
 
 // --- strings.Contains helper for footer verification ---
@@ -987,12 +1014,12 @@ func TestRenderFooter_ContainsNavigationHint(t *testing.T) {
 // --- Test renderMonitoring full content ---
 
 func TestRenderMonitoring_Full(t *testing.T) {
-	m := newTestModel()
-	m.realTimeStats = RealTimeStats{
-		UploadRate:     10.0,
-		DownloadRate:   5.0,
-		RequestsPerMin: 200,
-		LastUpdate:     time.Now(),
+	m := newAvailableTestModel()
+	m.metrics = ServiceMetrics{
+		R2:      R2Metrics{BucketCount: 3, TotalSize: 1024 * 1024, TotalObjects: 150},
+		Workers: WorkersMetrics{Count: 5},
+		KV:      KVMetrics{NamespaceCount: 2},
+		FetchedAt: time.Now(),
 	}
 	m.notifications = []Notification{
 		{Message: "activity 1", Type: "info", Timestamp: time.Now()},

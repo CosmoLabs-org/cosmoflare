@@ -29,10 +29,10 @@ func TestSectionString(t *testing.T) {
 }
 
 func TestInitialModel(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	assert.Equal(t, SectionOverview, m.currentSection)
 	assert.Equal(t, 0, m.selectedRow)
-	assert.True(t, m.loading)
+	assert.False(t, m.loading) // nullDataSource is not Available, so no loading
 	assert.Equal(t, "default", m.currentProfile)
 	assert.NotNil(t, m.buckets)
 	assert.Empty(t, m.buckets)
@@ -49,13 +49,13 @@ func TestInitializeStyles(t *testing.T) {
 }
 
 func TestDashboardModelInit(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	cmd := m.Init()
-	assert.NotNil(t, cmd)
+	assert.Nil(t, cmd) // nullDataSource is not Available, so Init returns nil
 }
 
 func TestDashboardModelUpdateWindowSize(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	updatedModel, cmd := m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
 	assert.Nil(t, cmd)
 
@@ -65,7 +65,7 @@ func TestDashboardModelUpdateWindowSize(t *testing.T) {
 }
 
 func TestDashboardModelUpdateDataLoaded(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 
 	buckets := []Bucket{
 		{Name: "test-bucket", Size: 1024, ObjectCount: 10, Status: "active"},
@@ -80,7 +80,7 @@ func TestDashboardModelUpdateDataLoaded(t *testing.T) {
 }
 
 func TestDashboardModelUpdateDataLoadError(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 
 	updatedModel, _ := m.Update(dataLoadedMsg{err: assert.AnError})
 	dm := updatedModel.(DashboardModel)
@@ -90,27 +90,38 @@ func TestDashboardModelUpdateDataLoadError(t *testing.T) {
 }
 
 func TestDashboardModelUpdateError(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 
 	updatedModel, _ := m.Update(errorMsg{err: assert.AnError})
 	dm := updatedModel.(DashboardModel)
 	assert.False(t, dm.loading)
 }
 
-func TestDashboardModelUpdateRealTimeStats(t *testing.T) {
-	m := initialModel()
+func TestDashboardModelUpdateMetricsLoaded(t *testing.T) {
+	m := initialModel(nil, 0)
 
-	now := time.Now()
-	updatedModel, cmd := m.Update(realTimeUpdateMsg{timestamp: now})
-	assert.NotNil(t, cmd) // Returns a tick command
-
+	metrics := ServiceMetrics{
+		R2:        R2Metrics{BucketCount: 3, TotalSize: 1024, TotalObjects: 50},
+		Workers:   WorkersMetrics{Count: 2},
+		KV:        KVMetrics{NamespaceCount: 1},
+		FetchedAt: time.Now(),
+	}
+	updatedModel, _ := m.Update(metricsLoadedMsg{metrics: metrics})
 	dm := updatedModel.(DashboardModel)
-	assert.Equal(t, now, dm.realTimeStats.LastUpdate)
-	assert.Greater(t, dm.realTimeStats.UploadRate, 0.0)
+	assert.Equal(t, 3, dm.metrics.R2.BucketCount)
+	assert.Equal(t, 2, dm.metrics.Workers.Count)
+}
+
+func TestDashboardModelUpdateMonitoringTick(t *testing.T) {
+	m := initialModel(nil, 0)
+	_, cmd := m.Update(monitoringTickMsg{})
+	// With nullDataSource, pollPaused=false, skipNextPoll=false,
+	// so it returns a batch of fetchMetrics + monitoringTick
+	assert.NotNil(t, cmd)
 }
 
 func TestDashboardModelUpdateBucketSelected(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 
 	bucket := &Bucket{Name: "selected", Size: 2048}
 	updatedModel, _ := m.Update(bucketSelectedMsg{bucket: bucket})
@@ -120,7 +131,7 @@ func TestDashboardModelUpdateBucketSelected(t *testing.T) {
 }
 
 func TestDashboardModelUpdateUploadProgress(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.uploadQueue = []UploadTask{
 		{ID: "up-1", FileName: "test.txt", Status: "running", Progress: 0},
 	}
@@ -145,18 +156,18 @@ func TestDashboardModelUpdateUploadProgress(t *testing.T) {
 }
 
 func TestDashboardModelView(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.width = 80
 	m.height = 24
 	m.loading = false
 
 	view := m.View()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "R2Go2")
+	assert.Contains(t, view, "Cosmoflare")
 }
 
 func TestDashboardModelViewLoading(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.width = 80
 	m.height = 24
 	m.loading = true

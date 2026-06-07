@@ -1,7 +1,7 @@
 /*
-Package tui provides the interactive terminal dashboard for R2Go2
+Package tui provides the interactive terminal dashboard for Cosmoflare
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 
@@ -11,12 +11,18 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// RunDashboard starts the TUI dashboard
+// RunDashboard starts the TUI dashboard with a default 30s poll interval.
 func RunDashboard() error {
+	return RunDashboardWithInterval(30 * time.Second)
+}
+
+// RunDashboardWithInterval starts the TUI dashboard with the given poll interval.
+func RunDashboardWithInterval(interval time.Duration) error {
 	// Handle Ctrl+C gracefully
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -25,8 +31,8 @@ func RunDashboard() error {
 		// Let Bubble Tea handle the cleanup
 	}()
 
-	// Create the initial model
-	model := initialModel()
+	ds := newDataSource()
+	model := initialModel(ds, interval)
 
 	// Start the Bubble Tea program
 	p := tea.NewProgram(
@@ -42,12 +48,17 @@ func RunDashboard() error {
 }
 
 // RunDashboardWithConfig starts the TUI dashboard with custom configuration
-func RunDashboardWithConfig(config DashboardConfig) error {
-	// Create the initial model with custom config
-	model := initialModel()
-	model.currentProfile = config.Profile
-	if config.Theme != "" {
-		switch config.Theme {
+func RunDashboardWithConfig(cfg DashboardConfig) error {
+	ds := newDataSource()
+	interval := cfg.Interval
+	if interval <= 0 {
+		interval = 30 * time.Second
+	}
+
+	model := initialModel(ds, interval)
+	model.currentProfile = cfg.Profile
+	if cfg.Theme != "" {
+		switch cfg.Theme {
 		case "light":
 			model.theme = lightTheme
 		case "dark":
@@ -57,11 +68,14 @@ func RunDashboardWithConfig(config DashboardConfig) error {
 	}
 
 	// Apply other config options
-	if config.Width > 0 {
-		model.width = config.Width
+	if cfg.Width > 0 {
+		model.width = cfg.Width
 	}
-	if config.Height > 0 {
-		model.height = config.Height
+	if cfg.Height > 0 {
+		model.height = cfg.Height
+	}
+	if cfg.StartSection > 0 {
+		model.currentSection = Section(cfg.StartSection)
 	}
 
 	// Start the Bubble Tea program
@@ -77,9 +91,11 @@ func RunDashboardWithConfig(config DashboardConfig) error {
 
 // DashboardConfig holds configuration for the TUI dashboard
 type DashboardConfig struct {
-	Profile string
-	Theme   string
-	Width   int
-	Height  int
-	Debug   bool
+	Profile      string
+	Theme        string
+	Width        int
+	Height       int
+	Debug        bool
+	Interval     time.Duration
+	StartSection int
 }

@@ -12,7 +12,7 @@ import (
 // --- Navigation methods ---
 
 func TestMoveUp(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.selectedRow = 2
 
 	m.moveUp()
@@ -26,7 +26,7 @@ func TestMoveUp(t *testing.T) {
 }
 
 func TestMoveDown(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	m.selectedRow = 0
 
@@ -41,7 +41,7 @@ func TestMoveDown(t *testing.T) {
 }
 
 func TestPreviousSection(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.currentSection = SectionBucketList
 
 	m.previousSection()
@@ -52,7 +52,7 @@ func TestPreviousSection(t *testing.T) {
 }
 
 func TestNextSection(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.currentSection = SectionSettings
 
 	m.nextSection()
@@ -64,7 +64,7 @@ func TestNextSection(t *testing.T) {
 
 func TestSelectCurrent(t *testing.T) {
 	t.Run("selects bucket in bucket list", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.currentSection = SectionBucketList
 		m.buckets = []Bucket{{Name: "my-bucket", Size: 1024}}
 		m.selectedRow = 0
@@ -79,7 +79,7 @@ func TestSelectCurrent(t *testing.T) {
 	})
 
 	t.Run("returns nil for other sections", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.currentSection = SectionOverview
 
 		cmd := m.selectCurrent()
@@ -87,7 +87,7 @@ func TestSelectCurrent(t *testing.T) {
 	})
 
 	t.Run("returns nil when row out of bounds", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.currentSection = SectionBucketList
 		m.selectedRow = 5
 		m.buckets = []Bucket{{Name: "only-one"}}
@@ -100,11 +100,11 @@ func TestSelectCurrent(t *testing.T) {
 // --- handleKeyMsg ---
 
 func TestHandleKeyMsg_Navigation(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	m.buckets = []Bucket{{Name: "a"}, {Name: "b"}}
 
 	t.Run("down moves row", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.buckets = []Bucket{{Name: "a"}, {Name: "b"}}
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("down")})
 		dm := result.(DashboardModel)
@@ -112,7 +112,7 @@ func TestHandleKeyMsg_Navigation(t *testing.T) {
 	})
 
 	t.Run("up moves row", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.selectedRow = 1
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("k")})
 		dm := result.(DashboardModel)
@@ -120,14 +120,14 @@ func TestHandleKeyMsg_Navigation(t *testing.T) {
 	})
 
 	t.Run("right advances section", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")})
 		dm := result.(DashboardModel)
 		assert.Equal(t, SectionBucketList, dm.currentSection)
 	})
 
 	t.Run("left goes back section", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.currentSection = SectionBucketList
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")})
 		dm := result.(DashboardModel)
@@ -150,7 +150,7 @@ func TestHandleKeyMsg_SectionShortcuts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("section_"+tt.key, func(t *testing.T) {
-			m := initialModel()
+			m := initialModel(nil, 0)
 			result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(tt.key)})
 			dm := result.(DashboardModel)
 			assert.Equal(t, tt.expected, dm.currentSection)
@@ -160,14 +160,14 @@ func TestHandleKeyMsg_SectionShortcuts(t *testing.T) {
 
 func TestHandleKeyMsg_Help(t *testing.T) {
 	t.Run("question mark shows help", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")})
 		dm := result.(DashboardModel)
 		assert.True(t, dm.showHelp)
 	})
 
 	t.Run("f1 toggles help", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyF1})
 		dm := result.(DashboardModel)
 		assert.True(t, dm.showHelp)
@@ -178,7 +178,7 @@ func TestHandleKeyMsg_Help(t *testing.T) {
 	})
 
 	t.Run("esc closes help", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.showHelp = true
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyEsc})
 		dm := result.(DashboardModel)
@@ -187,40 +187,42 @@ func TestHandleKeyMsg_Help(t *testing.T) {
 }
 
 func TestHandleKeyMsg_QuickActions(t *testing.T) {
-	actions := []struct {
-		key     string
-		message string
-	}{
-		{"c", "Create bucket"},
-		{"u", "Upload file"},
-		{"d", "Delete bucket"},
-		{"m", "monitoring"},
-	}
+	t.Run("c enters input mode on bucket list", func(t *testing.T) {
+		m := initialModel(nil, 0)
+		m.currentSection = SectionBucketList
+		// nullDataSource is not Available, so c does nothing
+		result, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("c")})
+		dm := result.(DashboardModel)
+		assert.False(t, dm.inputMode) // not available, no input mode
+		assert.Nil(t, cmd)
+	})
 
-	for _, tt := range actions {
-		t.Run("action_"+tt.key, func(t *testing.T) {
-			m := initialModel()
-			_, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(tt.key)})
-			require.NotNil(t, cmd)
+	t.Run("m goes to monitoring", func(t *testing.T) {
+		m := initialModel(nil, 0)
+		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("m")})
+		dm := result.(DashboardModel)
+		assert.Equal(t, SectionMonitoring, dm.currentSection)
+	})
 
-			msg := cmd()
-			nm, ok := msg.(notificationMsg)
-			require.True(t, ok)
-			assert.NotEmpty(t, nm.notification.Message)
-		})
-	}
+	t.Run("u shows upload notification", func(t *testing.T) {
+		m := initialModel(nil, 0)
+		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("u")})
+		dm := result.(DashboardModel)
+		require.NotEmpty(t, dm.notifications)
+		assert.Contains(t, dm.notifications[0].Message, "Upload")
+	})
 }
 
 func TestHandleKeyMsg_SearchMode(t *testing.T) {
 	t.Run("slash enters search mode", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("/")})
 		dm := result.(DashboardModel)
 		assert.Equal(t, "", dm.searchQuery) // initialized empty
 	})
 
 	t.Run("typing in search mode appends chars", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.searchQuery = "te"
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("s")})
 		dm := result.(DashboardModel)
@@ -228,7 +230,7 @@ func TestHandleKeyMsg_SearchMode(t *testing.T) {
 	})
 
 	t.Run("backspace removes last char", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.searchQuery = "test"
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyBackspace})
 		dm := result.(DashboardModel)
@@ -236,7 +238,7 @@ func TestHandleKeyMsg_SearchMode(t *testing.T) {
 	})
 
 	t.Run("enter applies search", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.searchQuery = "test"
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyEnter})
 		dm := result.(DashboardModel)
@@ -245,7 +247,7 @@ func TestHandleKeyMsg_SearchMode(t *testing.T) {
 	})
 
 	t.Run("escape cancels search", func(t *testing.T) {
-		m := initialModel()
+		m := initialModel(nil, 0)
 		m.searchQuery = "test"
 		result, _ := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyEsc})
 		dm := result.(DashboardModel)
@@ -255,49 +257,59 @@ func TestHandleKeyMsg_SearchMode(t *testing.T) {
 }
 
 func TestHandleKeyMsg_Refresh(t *testing.T) {
-	m := initialModel()
-	_, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyF5})
-	assert.NotNil(t, cmd) // Should return refreshDataCmd
+	t.Run("f5 with unavailable data source returns nil", func(t *testing.T) {
+		m := initialModel(nil, 0) // nullDataSource, not Available
+		_, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyF5})
+		assert.Nil(t, cmd) // No refresh when data not available
+	})
 }
 
 // --- Command functions ---
 
 func TestCmdFunctions(t *testing.T) {
-	t.Run("createBucketCmd returns notification", func(t *testing.T) {
-		cmd := createBucketCmd()
+	ds := &nullDataSource{}
+
+	t.Run("createBucketAPICmd returns bucketCreatedMsg", func(t *testing.T) {
+		cmd := createBucketAPICmd(ds, "test-bucket")
 		msg := cmd()
-		nm, ok := msg.(notificationMsg)
+		bcm, ok := msg.(bucketCreatedMsg)
 		require.True(t, ok)
-		assert.Contains(t, nm.notification.Message, "Create bucket")
-		assert.Equal(t, "info", nm.notification.Type)
+		// nullDataSource returns an error for create
+		assert.Error(t, bcm.err)
 	})
 
-	t.Run("uploadFileCmd returns notification", func(t *testing.T) {
-		cmd := uploadFileCmd()
+	t.Run("deleteBucketAPICmd returns bucketDeletedMsg", func(t *testing.T) {
+		cmd := deleteBucketAPICmd(ds, "test-bucket")
 		msg := cmd()
-		nm, ok := msg.(notificationMsg)
+		bdm, ok := msg.(bucketDeletedMsg)
 		require.True(t, ok)
-		assert.Contains(t, nm.notification.Message, "Upload")
+		// nullDataSource returns an error for delete
+		assert.Error(t, bdm.err)
 	})
 
-	t.Run("deleteBucketCmd returns warning notification", func(t *testing.T) {
-		cmd := deleteBucketCmd()
+	t.Run("fetchMetricsCmd returns metricsLoadedMsg", func(t *testing.T) {
+		cmd := fetchMetricsCmd(ds)
 		msg := cmd()
-		nm, ok := msg.(notificationMsg)
+		mlm, ok := msg.(metricsLoadedMsg)
 		require.True(t, ok)
-		assert.Equal(t, "warning", nm.notification.Type)
+		assert.Nil(t, mlm.err)
 	})
 
-	t.Run("startMonitoringCmd returns notification", func(t *testing.T) {
-		cmd := startMonitoringCmd()
+	t.Run("fetchObjectsCmd returns objectsLoadedMsg", func(t *testing.T) {
+		cmd := fetchObjectsCmd(ds, "bucket", 0)
 		msg := cmd()
-		nm, ok := msg.(notificationMsg)
+		olm, ok := msg.(objectsLoadedMsg)
 		require.True(t, ok)
-		assert.Contains(t, nm.notification.Message, "monitoring")
+		assert.Nil(t, olm.err)
 	})
 
 	t.Run("refreshDataCmd is not nil", func(t *testing.T) {
-		cmd := refreshDataCmd()
+		cmd := refreshDataCmd(ds)
+		assert.NotNil(t, cmd)
+	})
+
+	t.Run("monitoringTick returns cmd", func(t *testing.T) {
+		cmd := monitoringTick(5 * time.Second)
 		assert.NotNil(t, cmd)
 	})
 }
@@ -305,7 +317,7 @@ func TestCmdFunctions(t *testing.T) {
 // --- Notification handling ---
 
 func TestDashboardModelUpdateNotification(t *testing.T) {
-	m := initialModel()
+	m := initialModel(nil, 0)
 	msg := notificationMsg{
 		notification: Notification{
 			Message:   "test notification",

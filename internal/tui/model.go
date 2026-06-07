@@ -15,7 +15,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // Section represents different sections of the dashboard
@@ -69,16 +68,6 @@ type UsageStats struct {
 	BucketCount int
 }
 
-// RealTimeStats represents real-time activity statistics
-type RealTimeStats struct {
-	UploadRate       float64
-	DownloadRate     float64
-	RequestsPerMin   int
-	LastUpdate       time.Time
-	ActiveUploads    int
-	ActiveDownloads  int
-}
-
 // Notification represents a system notification
 type Notification struct {
 	Message   string
@@ -114,11 +103,31 @@ type DashboardModel struct {
 	selectedRow     int
 	cursor          int
 
+	// Data source
+	data DataSource
+
 	// Data state
 	buckets       []Bucket
 	currentBucket *Bucket
 	usageStats    UsageStats
-	realTimeStats RealTimeStats
+
+	// Monitoring state
+	metrics      ServiceMetrics
+	prevMetrics  ServiceMetrics
+	pollInterval time.Duration
+	pollPaused   bool
+	skipNextPoll bool
+
+	// Object list state
+	objects     []ObjectItem
+	objectPage  int
+	objectTotal int
+
+	// Input/confirmation state
+	inputMode     bool
+	inputBuffer   string
+	confirmAction string
+	confirmTarget string
 
 	// UI state
 	showHelp       bool
@@ -270,8 +279,16 @@ func InitializeStyles(theme Theme) {
 		Background(lipgloss.Color("#34495E"))
 }
 
-// initialModel creates the initial dashboard model
-func initialModel() DashboardModel {
+// initialModel creates the initial dashboard model.
+// If ds is nil a nullDataSource is used. If interval is zero a 30s default is applied.
+func initialModel(ds DataSource, interval time.Duration) DashboardModel {
+	if ds == nil {
+		ds = &nullDataSource{}
+	}
+	if interval <= 0 {
+		interval = 30 * time.Second
+	}
+
 	theme := darkTheme // Use dark theme by default
 	InitializeStyles(theme)
 
@@ -280,10 +297,12 @@ func initialModel() DashboardModel {
 	p := palette.New(paletteCommands, 80, 24)
 
 	return DashboardModel{
+		data:            ds,
+		pollInterval:    interval,
 		buckets:         []Bucket{},
 		currentSection:  SectionOverview,
 		selectedRow:     0,
-		loading:         true,
+		loading:         ds.Available(),
 		loadingFrame:    0,
 		notifications:   []Notification{},
 		backgroundTasks: []BackgroundTask{},
@@ -291,19 +310,17 @@ func initialModel() DashboardModel {
 		currentProfile:  "default",
 		theme:           theme,
 		palette:         p,
-		realTimeStats: RealTimeStats{
-			LastUpdate: time.Now(),
-		},
 	}
 }
 
 // Init initializes the dashboard model
 func (m DashboardModel) Init() tea.Cmd {
+	if !m.data.Available() {
+		return nil
+	}
 	return tea.Batch(
-		loadDataCmd(),
-		tea.Tick(time.Second*5, func(t time.Time) tea.Msg {
-			return realTimeUpdateMsg{timestamp: t}
-		}),
+		loadDataCmd(m.data),
+		monitoringTick(m.pollInterval),
 	)
 }
 
@@ -319,9 +336,22 @@ type errorMsg struct {
 	err error
 }
 
-type realTimeUpdateMsg struct {
-	timestamp time.Time
+type monitoringTickMsg struct{}
+
+type metricsLoadedMsg struct {
+	metrics ServiceMetrics
+	err     error
 }
+
+type objectsLoadedMsg struct {
+	objects []ObjectItem
+	total   int
+	err     error
+}
+
+type bucketCreatedMsg struct{ err error }
+
+type bucketDeletedMsg struct{ err error }
 
 type bucketSelectedMsg struct {
 	bucket *Bucket
@@ -337,45 +367,19 @@ type notificationMsg struct {
 	notification Notification
 }
 
-// loadDataCmd loads initial data from the API
-func loadDataCmd() tea.Cmd {
+// loadDataCmd loads initial data from the DataSource
+func loadDataCmd(ds DataSource) tea.Cmd {
 	return func() tea.Msg {
-		client, err := cosmoflare.NewClient()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		buckets, stats, err := ds.FetchBuckets(ctx)
 		if err != nil {
-			return errorMsg{fmt.Errorf("failed to create API client: %w", err)}
-		}
-
-		buckets, err := client.ListBuckets(context.Background())
-		if err != nil {
-			return errorMsg{fmt.Errorf("failed to list buckets: %w", err)}
-		}
-
-		// Convert to TUI bucket format
-		var tuiBuckets []Bucket
-		for _, bucket := range buckets {
-			tuiBuckets = append(tuiBuckets, Bucket{
-				Name:        bucket.Name,
-				Size:        bucket.Size,
-				ObjectCount: bucket.ObjectCount,
-				Status:      "active",
-				CreatedAt:   bucket.CreatedAt,
-			})
-		}
-
-		// For now, create mock usage stats (will be enhanced later)
-		var totalUsed int64
-		for _, bucket := range tuiBuckets {
-			totalUsed += bucket.Size
-		}
-
-		stats := UsageStats{
-			TotalUsed:   totalUsed,
-			TotalLimit:  1024 * 1024 * 1024 * 1024, // 1TB (default limit)
-			BucketCount: len(tuiBuckets),
+			return errorMsg{fmt.Errorf("failed to load data: %w", err)}
 		}
 
 		return dataLoadedMsg{
-			buckets: tuiBuckets,
+			buckets: buckets,
 			stats:   stats,
 		}
 	}
