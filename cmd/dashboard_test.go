@@ -36,11 +36,11 @@ func TestDashboardCmd_NoSubcommands(t *testing.T) {
 	}
 }
 
-// --- Run handler wired ---
+// --- RunE handler wired ---
 
-func TestDashboardCmd_Run(t *testing.T) {
-	if dashboardCmd.Run == nil {
-		t.Error("dashboardCmd has nil Run")
+func TestDashboardCmd_RunE(t *testing.T) {
+	if dashboardCmd.RunE == nil {
+		t.Error("dashboardCmd has nil RunE")
 	}
 }
 
@@ -50,18 +50,20 @@ func TestDashboardCmd_LongDescription(t *testing.T) {
 	}
 }
 
-func TestDashboardCmd_NoRunE(t *testing.T) {
-	// dashboard uses Run (not RunE), verify RunE is nil
-	if dashboardCmd.RunE != nil {
-		t.Error("dashboardCmd.RunE should be nil — dashboard uses Run, not RunE")
+func TestDashboardCmd_NoRun(t *testing.T) {
+	// dashboard uses RunE (not Run), verify Run is nil
+	if dashboardCmd.Run != nil {
+		t.Error("dashboardCmd.Run should be nil — dashboard uses RunE, not Run")
 	}
 }
 
-func TestDashboardCmd_NoLocalFlags(t *testing.T) {
-	// dashboard command has no local flags (only inherits persistent from root)
-	// No local flags are defined in dashboard init()
-	if dashboardCmd.HasLocalFlags() {
-		t.Error("dashboardCmd should not have local flags")
+func TestDashboardCmd_IntervalFlag(t *testing.T) {
+	f := dashboardCmd.Flags().Lookup("interval")
+	if f == nil {
+		t.Fatal("--interval flag not registered on dashboard command")
+	}
+	if f.DefValue != "30s" {
+		t.Errorf("expected default interval '30s', got %q", f.DefValue)
 	}
 }
 

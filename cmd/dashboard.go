@@ -8,23 +8,27 @@ License: MIT
 package cmd
 
 import (
-	"os"
+	"time"
 
 	"github.com/spf13/cobra"
+
 	"github.com/CosmoLabs-org/cosmoflare/internal/tui"
 )
+
+var dashboardInterval time.Duration
 
 // dashboardCmd represents the dashboard command
 var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
-	Short: "Launch interactive TUI dashboard for R2 bucket management",
-	Long: `Launch a beautiful, interactive terminal-based dashboard for managing Cloudflare R2 buckets.
+	Short: "Launch interactive TUI dashboard",
+	Long: `Launch a beautiful, interactive terminal-based dashboard for monitoring
+and managing your Cloudflare infrastructure.
 
 Features:
+  • Real-time monitoring with configurable poll interval
+  • Bucket management (create, delete, list)
+  • Interactive object listing with pagination
   • Professional keyboard navigation
-  • Real-time monitoring and statistics
-  • Interactive file management
-  • Beautiful visual design
   • Search and filtering capabilities
   • Settings management
 
@@ -32,24 +36,15 @@ The dashboard provides a GUI-like experience entirely within your terminal,
 perfect for SSH connections and command-line workflows.
 
 Examples:
-  cosmoflare dashboard                    # Launch dashboard
-  cosmoflare dashboard --help            # Show dashboard help`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// Launch TUI dashboard
-		if err := runDashboard(); err != nil {
-			printError("Dashboard error: %v", err)
-			os.Exit(1)
-		}
+  cosmoflare dashboard                    # Launch dashboard (30s poll interval)
+  cosmoflare dashboard --interval 10s     # Poll every 10 seconds
+  cosmoflare dashboard --help             # Show dashboard help`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return tui.RunDashboardWithInterval(dashboardInterval)
 	},
 }
 
 func init() {
-	// Add dashboard command to root command
 	rootCmd.AddCommand(dashboardCmd)
-}
-
-// runDashboard initializes and starts the TUI dashboard
-func runDashboard() error {
-	// Import and use the TUI package
-	return tui.RunDashboard()
+	dashboardCmd.Flags().DurationVar(&dashboardInterval, "interval", 30*time.Second, "Monitoring poll interval")
 }
