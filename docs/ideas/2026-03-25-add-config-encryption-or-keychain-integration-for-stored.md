@@ -1,9 +1,8 @@
 ---
 id: IDEA-033
-legacy_id: IDEA-MN5GDZ4D
 title: Add config encryption or keychain integration for stored credentials
 created: "2026-03-25T03:57:40.621742+01:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 17
@@ -11,7 +10,10 @@ origin:
 tags:
     - audit
     - security
+promoted_to: FEAT-005
 ---
+
+# Add config encryption or keychain integration for stored credentials
 
 # Add config encryption or keychain integration for stored credentials
 

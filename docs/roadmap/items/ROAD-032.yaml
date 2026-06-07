@@ -1,12 +1,14 @@
 id: ROAD-032
 created_at: 2026-05-07T19:29:31.341162-03:00
-updated_at: 2026-05-07T19:29:31.341822-03:00
+updated_at: 2026-06-06T20:11:43.760146-03:00
 title: Pages static hosting support
 description: 'Full Cloudflare Pages support: deploy projects, list deployments, view logs, manage custom domains. Library: pkg/r2go2/pages.go. CLI: r2go2 pages deploy/list/logs/delete. Config via .r2go2.yaml pages section.'
-status: captured
+status: completed
 priority: 50
 refs:
     - type: brainstorm
       path: docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md
+completed_in: v0.13.0
+completed_at: 2026-06-06T20:11:43.760143-03:00
 origin:
     session: 17

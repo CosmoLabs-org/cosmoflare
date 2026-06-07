@@ -9,6 +9,8 @@ origin:
 ---
 
 
+
+
 # GLM agent destructive diff detection — validate that agent diffs don't remove existing features (JSON output, progress bars, error handling)
 
 Session 2026-05-14: 4/4 GLM agents produced destructive diffs that removed working features. The ccs glm-agent validation should detect net-negative diffs or removal of known patterns (printJSON, printSuccessJSON, etc.).

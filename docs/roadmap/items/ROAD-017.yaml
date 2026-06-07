@@ -1,10 +1,12 @@
 id: ROAD-017
 created_at: 2026-03-10T04:39:12.200948+01:00
-updated_at: 2026-05-15T02:38:20.382312-03:00
+updated_at: 2026-06-06T20:10:47.175421-03:00
 title: Cmd-level integration test suite
 description: Zero cmd-level tests exist. Add integration tests for all 16 Cobra commands covering happy paths, error cases, and flag validation.
-status: captured
+status: completed
 priority: 80
 effort: medium
 notes:
     - 'Integration test suite created: 19 cmd-level tests in tests/integration/cli/ (basic, advanced, error). Config mapstructure tags fixed.'
+completed_in: v0.13.0
+completed_at: 2026-06-06T20:10:47.175418-03:00

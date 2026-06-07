@@ -1,13 +1,14 @@
 version: ""
 project: ""
-last_updated: 2026-06-06T09:56:57.211139-03:00
+last_updated: 2026-06-06T20:17:40.27112-03:00
 next_id: 73
 items:
     - id: ROAD-072
       title: Notifications and webhooks — receive CF webhook events locally for dev
-      status: captured
+      status: completed
       priority: 58
       category: workflow
+      completed_in: v0.13.0
       created_at: 2026-06-06T04:09:31.285041-03:00
     - id: ROAD-071
       title: Terraform export — generate .tf files from live Cloudflare state
@@ -91,10 +92,11 @@ items:
       created_at: 2026-05-16T00:10:37.971345-03:00
     - id: ROAD-060
       title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
-      status: captured
+      status: completed
       priority: 80
       category: ux
       effort: large
+      completed_in: v0.13.0
       created_at: 2026-05-16T00:10:37.873954-03:00
     - id: ROAD-059
       title: Template library — cosmoflare create --template=api scaffolds full projects
@@ -196,7 +198,8 @@ items:
       created_at: 2026-05-16T00:09:47.594725-03:00
     - id: ROAD-047
       title: Vectorize — vector storage and indexing for AI workloads
-      status: captured
+      status: completed
+      completed_in: v0.13.0
       created_at: 2026-05-16T00:09:41.216059-03:00
     - id: ROAD-046
       title: Hyperdrive — database connection pooling for Workers
@@ -309,11 +312,13 @@ items:
       created_at: 2026-05-07T19:29:33.804736-03:00
     - id: ROAD-032
       title: Pages static hosting support
-      status: captured
+      status: completed
+      completed_in: v0.13.0
       created_at: 2026-05-07T19:29:31.341162-03:00
     - id: ROAD-031
       title: D1 SQL database support
-      status: captured
+      status: completed
+      completed_in: v0.13.0
       created_at: 2026-05-07T19:29:28.806175-03:00
     - id: ROAD-030
       title: KV namespace support
@@ -383,11 +388,12 @@ items:
       created_at: 2026-03-10T04:39:18.089831+01:00
     - id: ROAD-019
       title: Re-enable S3-to-R2 migration engine
-      status: captured
+      status: completed
       priority: 50
       effort: medium
       linked_issues:
         - FEAT-004
+      completed_in: v0.13.0
       created_at: 2026-03-10T04:39:15.88984+01:00
     - id: ROAD-018
       title: Re-enable analytics command
@@ -398,9 +404,10 @@ items:
       created_at: 2026-03-10T04:39:14.038127+01:00
     - id: ROAD-017
       title: Cmd-level integration test suite
-      status: captured
+      status: completed
       priority: 80
       effort: medium
+      completed_in: v0.13.0
       created_at: 2026-03-10T04:39:12.200948+01:00
     - id: ROAD-016
       title: CORS and access control configuration commands
@@ -476,12 +483,13 @@ items:
       created_at: 2026-03-02T23:32:57.861436+01:00
     - id: ROAD-008
       title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
-      status: captured
+      status: completed
       priority: 70
       category: ux
       effort: large
       linked_issues:
         - FEAT-003
+      completed_in: v0.13.0
       created_at: 2026-03-02T12:31:53.781451+01:00
     - id: ROAD-007
       title: S3 to R2 migration engine with resume support
@@ -494,10 +502,11 @@ items:
       created_at: 2026-02-26T01:32:48.403851+01:00
     - id: ROAD-006
       title: Real-time cost calculator and usage analytics
-      status: captured
+      status: completed
       priority: 45
       category: intelligence
       effort: medium
+      completed_in: v0.13.0
       created_at: 2026-02-26T01:32:47.355325+01:00
     - id: ROAD-005
       title: 'Watch mode: auto-sync local directory to R2 on file changes'

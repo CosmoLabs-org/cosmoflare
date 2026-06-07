@@ -1,10 +1,12 @@
 id: ROAD-019
 created_at: 2026-03-10T04:39:15.88984+01:00
-updated_at: 2026-03-10T04:39:37.679637+01:00
+updated_at: 2026-06-06T20:17:40.270076-03:00
 title: Re-enable S3-to-R2 migration engine
 description: Working migration code in cmd/migrate.go.disabled (14KB) and internal/migration_disabled/. Port back after ROAD-000. Links ROAD-007.
-status: captured
+status: completed
 priority: 50
 effort: medium
 linked_issues:
     - FEAT-004
+completed_in: v0.13.0
+completed_at: 2026-06-06T20:17:40.270072-03:00

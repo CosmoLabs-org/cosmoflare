@@ -1,13 +1,15 @@
 id: ROAD-008
 created_at: 2026-03-02T12:31:53.781451+01:00
-updated_at: 2026-03-02T12:31:59.197853+01:00
+updated_at: 2026-06-06T20:10:47.212928-03:00
 title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
 description: '# Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency'
-status: captured
+status: completed
 priority: 70
 category: ux
 effort: large
 linked_issues:
     - FEAT-003
+completed_in: v0.13.0
+completed_at: 2026-06-06T20:10:47.212925-03:00
 origin:
     idea_slug: 2026-02-26-refactor-interactive-package-from-fmt-scanln-to-bubble-tea
