@@ -1,8 +1,10 @@
 id: ROAD-020
 created_at: 2026-03-10T04:39:18.089831+01:00
-updated_at: 2026-03-10T04:39:30.711928+01:00
+updated_at: 2026-06-07T06:32:18.239201-03:00
 title: Dashboard TUI real implementation
 description: cmd/dashboard.go is a stub showing coming soon. Build real TUI dashboard with bucket overview, usage stats, and quick actions per vision doc.
-status: captured
+status: completed
 priority: 45
 effort: large
+completed_in: v0.14.0
+completed_at: 2026-06-07T06:32:18.239197-03:00

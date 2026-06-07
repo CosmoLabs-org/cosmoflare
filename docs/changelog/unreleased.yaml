@@ -8,6 +8,9 @@ entries:
         - description: Add OS keychain credential storage with automatic fallback to file-based config (FEAT-005)
           source: manual
           date: 2026-06-07T01:26:37.458054-03:00
+        - description: Add real-time TUI dashboard with live monitoring, bucket CRUD, and object browsing (ROAD-020)
+          source: manual
+          date: 2026-06-07T06:32:15.111254-03:00
     fixed: []
     changed: []
     deprecated: []

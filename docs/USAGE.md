@@ -68,6 +68,43 @@ JSON output:
 
 The server shuts down cleanly on SIGINT/SIGTERM.
 
+## Dashboard
+
+Launch an interactive terminal dashboard for managing Cloudflare services.
+
+### Launch dashboard
+```bash
+cosmoflare dashboard                    # Full dashboard
+cosmoflare dashboard --interval 10s     # Custom monitoring poll interval
+```
+
+Features:
+- Real-time monitoring of R2, Workers, and KV with delta indicators
+- Bucket management (create, delete, browse objects)
+- Object listing with pagination
+- Tiered refresh: monitoring auto-polls, other sections refresh on navigation
+- Graceful launch without credentials (banner with setup instructions)
+- Command palette (Ctrl+P), keyboard navigation, dark/light themes
+
+### Keyboard shortcuts
+
+| Key | Context | Action |
+|-----|---------|--------|
+| `1`-`6` | Global | Jump to section (Overview, Buckets, Objects, Upload, Monitoring, Settings) |
+| `r` | Any | Refresh current section |
+| `p` | Monitoring | Pause/resume auto-poll |
+| `Enter` | Buckets | Drill into object list |
+| `Backspace` | Objects | Back to bucket list |
+| `c` | Buckets | Create bucket |
+| `d` | Buckets | Delete bucket (with confirmation) |
+| `/` | Buckets | Search/filter |
+| `n`/`p` | Objects | Next/previous page |
+| `Ctrl+P` | Global | Command palette |
+| `F1` | Global | Toggle help |
+| `q` | Global | Quit |
+
+> **Note:** `cosmoflare metrics` now launches the dashboard and navigates directly to the Monitoring section. Use `cosmoflare metrics --json` for machine-readable output without the TUI.
+
 ## Bucket Commands
 
 ### Create a bucket
