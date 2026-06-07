@@ -597,3 +597,190 @@ func TestKVPut_BothValueAndFile(t *testing.T) {
 		t.Fatal("expected error (no API client available)")
 	}
 }
+
+// --- Additional arg/error message coverage ---
+
+func TestKVDelete_OneArg(t *testing.T) {
+	err := runKVDelete(kvDeleteCmd, []string{"ns-abc"})
+	if err == nil {
+		t.Fatal("expected error when only namespace ID provided (missing key)")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("namespace ID")) {
+		t.Errorf("error = %q, want it to mention 'namespace ID'", err.Error())
+	}
+}
+
+func TestKVGet_ErrorMentionsNamespaceAndKey(t *testing.T) {
+	err := runKVGet(kvGetCmd, []string{"ns-abc"})
+	if err == nil {
+		t.Fatal("expected error when only namespace ID provided")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("namespace ID")) {
+		t.Errorf("error = %q, want it to mention 'namespace ID'", err.Error())
+	}
+}
+
+func TestKVDelete_ErrorMentionsNamespaceAndKey(t *testing.T) {
+	err := runKVDelete(kvDeleteCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no args provided")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("namespace ID")) {
+		t.Errorf("error = %q, want it to mention 'namespace ID'", err.Error())
+	}
+}
+
+func TestKVList_ErrorMentionsNamespaceID(t *testing.T) {
+	err := runKVList(kvListCmd, []string{})
+	if err == nil {
+		t.Fatal("expected error when no namespace ID provided")
+	}
+	if !bytes.Contains([]byte(err.Error()), []byte("namespace ID")) {
+		t.Errorf("error = %q, want it to mention 'namespace ID'", err.Error())
+	}
+}
+
+// --- Command Use fields ---
+
+func TestKVSubcmdUseFields(t *testing.T) {
+	cases := []struct {
+		cmd  *cobra.Command
+		want string
+	}{
+		{kvPutCmd, "put [namespace-id] [key]"},
+		{kvGetCmd, "get [namespace-id] [key]"},
+		{kvDeleteCmd, "delete [namespace-id] [key]"},
+		{kvListCmd, "list [namespace-id]"},
+		{kvNamespaceCreateCmd, "create [title]"},
+		{kvNamespaceListCmd, "list"},
+		{kvNamespaceDeleteCmd, "delete [namespace-id]"},
+	}
+	for _, tc := range cases {
+		if tc.cmd.Use != tc.want {
+			t.Errorf("%s.Use = %q, want %q", tc.cmd.Name(), tc.cmd.Use, tc.want)
+		}
+	}
+}
+
+// --- kvNamespaceCmd metadata ---
+
+func TestKVNamespaceCmd_Metadata(t *testing.T) {
+	if kvNamespaceCmd.Use != "namespace" {
+		t.Errorf("kvNamespaceCmd.Use = %q, want %q", kvNamespaceCmd.Use, "namespace")
+	}
+	if kvNamespaceCmd.Short == "" {
+		t.Error("kvNamespaceCmd.Short is empty")
+	}
+}
+
+// --- All leaf subcommand Short fields non-empty ---
+
+func TestKVSubcmds_ShortNotEmpty(t *testing.T) {
+	cmds := []*cobra.Command{
+		kvNamespaceCreateCmd,
+		kvNamespaceListCmd,
+		kvNamespaceDeleteCmd,
+		kvPutCmd,
+		kvGetCmd,
+		kvDeleteCmd,
+		kvListCmd,
+	}
+	for _, c := range cmds {
+		if c.Short == "" {
+			t.Errorf("%q Short is empty", c.Use)
+		}
+	}
+}
+
+// --- Long description content ---
+
+func TestKVCmd_LongContainsExamples(t *testing.T) {
+	if !bytes.Contains([]byte(kvCmd.Long), []byte("cosmoflare kv")) {
+		t.Error("kvCmd.Long should contain example with 'cosmoflare kv'")
+	}
+	if !bytes.Contains([]byte(kvCmd.Long), []byte("namespace")) {
+		t.Error("kvCmd.Long should mention 'namespace'")
+	}
+}
+
+func TestKVPutCmd_LongContainsValueFlag(t *testing.T) {
+	if !bytes.Contains([]byte(kvPutCmd.Long), []byte("--value")) {
+		t.Error("kvPutCmd.Long should mention '--value'")
+	}
+	if !bytes.Contains([]byte(kvPutCmd.Long), []byte("--file")) {
+		t.Error("kvPutCmd.Long should mention '--file'")
+	}
+}
+
+func TestKVNamespaceDeleteCmd_LongWarning(t *testing.T) {
+	if !bytes.Contains([]byte(kvNamespaceDeleteCmd.Long), []byte("WARNING")) {
+		t.Error("kvNamespaceDeleteCmd.Long should contain 'WARNING' about irreversibility")
+	}
+}
+
+// --- kvList prefix default ---
+
+func TestKVList_PrefixDefault(t *testing.T) {
+	f := kvListCmd.Flags().Lookup("prefix")
+	if f == nil {
+		t.Fatal("--prefix flag not found on kvListCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--prefix default = %q, want empty string", f.DefValue)
+	}
+}
+
+// --- kvNamespaceDelete force=true with DryRun=false and no creds ---
+
+func TestKVNamespaceDelete_ForceTrueNoCreds(t *testing.T) {
+	origDryRun := DryRun
+	origForce := kvForce
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		kvForce = origForce
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	kvForce = true
+	AccountID = ""
+	APIToken = ""
+
+	err := runKVNamespaceDelete(kvNamespaceDeleteCmd, []string{"ns-abc123"})
+	// Fails at service creation — proves force bypasses the confirmation prompt
+	if err == nil {
+		t.Fatal("expected error when no credentials provided")
+	}
+}
+
+// --- kvPut with DryRun and TTL=0 (no TTL option appended) ---
+
+func TestKVPut_DryRunZeroTTL(t *testing.T) {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		kvValue = ""
+		kvTTL = 0
+	}()
+
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	kvValue = "hello"
+	kvTTL = 0
+
+	err := runKVPut(kvPutCmd, []string{"ns-abc", "zero-ttl-key"})
+	if err != nil {
+		t.Errorf("runKVPut(DryRun, TTL=0) returned error: %v", err)
+	}
+}

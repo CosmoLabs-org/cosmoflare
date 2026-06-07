@@ -655,6 +655,580 @@ func TestAuditLogger_Close_Nil(t *testing.T) {
 	}
 }
 
+// --- ReadAuditLogWithLimit additional cases ---
+
+func TestReadAuditLogWithLimit_NegativeReturnsAll(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	for i := 0; i < 4; i++ {
+		logger.LogMutation("op", "svc", "res", "create", nil, true)
+	}
+	logger.Close()
+
+	entries, err := ReadAuditLogWithLimit(path, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 4 {
+		t.Fatalf("expected 4 entries for negative limit, got %d", len(entries))
+	}
+}
+
+func TestReadAuditLogWithLimit_LimitExceedsCount(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.LogMutation("op", "svc", "res", "create", nil, true)
+	logger.Close()
+
+	entries, err := ReadAuditLogWithLimit(path, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry (limit > count), got %d", len(entries))
+	}
+}
+
+func TestReadAuditLogWithLimit_ReturnsLastN(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	for i := 0; i < 5; i++ {
+		logger.LogMutation("op", "svc", "res", "create", nil, true)
+	}
+	// Add a distinguishable last entry
+	logger.LogMutation("last.op", "svc", "res", "delete", nil, false)
+	logger.Close()
+
+	entries, err := ReadAuditLogWithLimit(path, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(entries))
+	}
+	if entries[1].Operation != "last.op" {
+		t.Errorf("last entry Operation = %q, want %q", entries[1].Operation, "last.op")
+	}
+}
+
+// --- ReadAuditLogSince additional cases ---
+
+func TestReadAuditLogSince_AllFiltered(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.Log(AuditEntry{
+		Timestamp: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		Operation: "old.op",
+		Service:   "svc",
+		Action:    "create",
+		Success:   true,
+	})
+	logger.Close()
+
+	since := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	entries, err := ReadAuditLogSince(path, since)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries, got %d", len(entries))
+	}
+}
+
+func TestReadAuditLogSince_ExactBoundary(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	boundary := time.Date(2026, 3, 15, 12, 0, 0, 0, time.UTC)
+
+	logger, _ := NewAuditLogger(path)
+	// Exactly at boundary — should be included (>= since)
+	logger.Log(AuditEntry{
+		Timestamp: boundary,
+		Operation: "boundary.op",
+		Service:   "svc",
+		Action:    "create",
+		Success:   true,
+	})
+	// One second before — should be excluded
+	logger.Log(AuditEntry{
+		Timestamp: boundary.Add(-time.Second),
+		Operation: "before.op",
+		Service:   "svc",
+		Action:    "create",
+		Success:   true,
+	})
+	logger.Close()
+
+	entries, err := ReadAuditLogSince(path, boundary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry at exact boundary, got %d", len(entries))
+	}
+	if entries[0].Operation != "boundary.op" {
+		t.Errorf("Operation = %q, want %q", entries[0].Operation, "boundary.op")
+	}
+}
+
+func TestReadAuditLogSince_NonExistentFile(t *testing.T) {
+	entries, err := ReadAuditLogSince("/nonexistent/audit.log", time.Now())
+	if err != nil {
+		t.Fatalf("expected nil error for missing file, got %v", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries, got %d", len(entries))
+	}
+}
+
+// --- SearchAuditLog additional cases ---
+
+func TestSearchAuditLog_EmptyQuery(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.LogMutation("op1", "svc", "res", "create", nil, true)
+	logger.LogMutation("op2", "svc", "res", "delete", nil, false)
+	logger.Close()
+
+	// Empty query should match everything (every string contains "")
+	results, err := SearchAuditLog(path, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results for empty query, got %d", len(results))
+	}
+}
+
+func TestSearchAuditLog_NoResults(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.LogMutation("bucket.create", "r2", "my-bucket", "create", nil, true)
+	logger.Close()
+
+	results, err := SearchAuditLog(path, "zzznomatch", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 0 {
+		t.Errorf("expected 0 results, got %d", len(results))
+	}
+}
+
+func TestSearchAuditLog_MatchesDetailKey(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.LogMutation("r2.upload", "r2", "bucket", "create",
+		map[string]string{"content_type": "application/json"}, true)
+	logger.LogMutation("r2.upload", "r2", "bucket", "create",
+		map[string]string{"size": "1024"}, true)
+	logger.Close()
+
+	results, err := SearchAuditLog(path, "content_type", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result matching detail key, got %d", len(results))
+	}
+	if results[0].Details["content_type"] != "application/json" {
+		t.Errorf("Details[content_type] = %q, want %q", results[0].Details["content_type"], "application/json")
+	}
+}
+
+func TestSearchAuditLog_ActionFilterCaseInsensitive(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.LogMutation("op1", "svc", "res", "CREATE", nil, true)
+	logger.LogMutation("op2", "svc", "res", "delete", nil, false)
+	logger.Close()
+
+	// Filter by lowercase "create" should match "CREATE"
+	results, err := SearchAuditLog(path, "", "create")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result for case-insensitive action filter, got %d", len(results))
+	}
+	if results[0].Operation != "op1" {
+		t.Errorf("Operation = %q, want %q", results[0].Operation, "op1")
+	}
+}
+
+func TestSearchAuditLog_NonExistentFile(t *testing.T) {
+	results, err := SearchAuditLog("/nonexistent/audit.log", "test", "")
+	if err != nil {
+		t.Fatalf("expected nil error for missing file, got %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("expected 0 results, got %d", len(results))
+	}
+}
+
+// --- ExportAuditLogJSON additional cases ---
+
+func TestExportAuditLogJSON_EmptySlice(t *testing.T) {
+	var buf bytes.Buffer
+	if err := ExportAuditLogJSON([]AuditEntry{}, &buf); err != nil {
+		t.Fatal(err)
+	}
+	var parsed []AuditEntry
+	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
+		t.Fatalf("failed to parse exported JSON: %v", err)
+	}
+	if len(parsed) != 0 {
+		t.Errorf("expected 0 entries, got %d", len(parsed))
+	}
+}
+
+func TestExportAuditLogJSON_MultipleEntries(t *testing.T) {
+	entries := []AuditEntry{
+		{Operation: "op1", Service: "s1", Action: "create", Success: true},
+		{Operation: "op2", Service: "s2", Action: "delete", Success: false},
+		{Operation: "op3", Service: "s3", Action: "update", Success: true},
+	}
+	var buf bytes.Buffer
+	if err := ExportAuditLogJSON(entries, &buf); err != nil {
+		t.Fatal(err)
+	}
+	var parsed []AuditEntry
+	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
+		t.Fatalf("failed to parse exported JSON: %v", err)
+	}
+	if len(parsed) != 3 {
+		t.Fatalf("expected 3 entries, got %d", len(parsed))
+	}
+	if parsed[1].Operation != "op2" {
+		t.Errorf("parsed[1].Operation = %q, want %q", parsed[1].Operation, "op2")
+	}
+}
+
+func TestExportAuditLogJSON_IsIndented(t *testing.T) {
+	entries := []AuditEntry{
+		{Operation: "op1", Service: "s1", Action: "create", Success: true},
+	}
+	var buf bytes.Buffer
+	if err := ExportAuditLogJSON(entries, &buf); err != nil {
+		t.Fatal(err)
+	}
+	// Indented JSON should contain newlines
+	if !strings.Contains(buf.String(), "\n") {
+		t.Error("expected indented JSON output with newlines")
+	}
+}
+
+// --- ExportAuditLogCSV additional cases ---
+
+func TestExportAuditLogCSV_EmptyEntries(t *testing.T) {
+	var buf bytes.Buffer
+	if err := ExportAuditLogCSV([]AuditEntry{}, &buf); err != nil {
+		t.Fatal(err)
+	}
+	reader := csv.NewReader(strings.NewReader(buf.String()))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Only the header row
+	if len(records) != 1 {
+		t.Fatalf("expected 1 row (header only), got %d", len(records))
+	}
+}
+
+func TestExportAuditLogCSV_SuccessTrue(t *testing.T) {
+	entries := []AuditEntry{
+		{
+			Timestamp: time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),
+			Operation: "kv.put",
+			Service:   "kv",
+			Resource:  "my-ns",
+			Action:    "update",
+			User:      "admin",
+			Success:   true,
+		},
+	}
+	var buf bytes.Buffer
+	if err := ExportAuditLogCSV(entries, &buf); err != nil {
+		t.Fatal(err)
+	}
+	reader := csv.NewReader(strings.NewReader(buf.String()))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(records) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(records))
+	}
+	if records[1][6] != "true" {
+		t.Errorf("success col = %q, want %q", records[1][6], "true")
+	}
+}
+
+func TestExportAuditLogCSV_NoDetails(t *testing.T) {
+	entries := []AuditEntry{
+		{
+			Timestamp: time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),
+			Operation: "zone.list",
+			Service:   "zones",
+			Resource:  "all",
+			Action:    "list",
+			User:      "viewer",
+			Success:   true,
+		},
+	}
+	var buf bytes.Buffer
+	if err := ExportAuditLogCSV(entries, &buf); err != nil {
+		t.Fatal(err)
+	}
+	reader := csv.NewReader(strings.NewReader(buf.String()))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(records) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(records))
+	}
+	// Details column should be empty string when no details
+	if records[1][7] != "" {
+		t.Errorf("details col = %q, want empty string", records[1][7])
+	}
+}
+
+func TestExportAuditLogCSV_HeaderColumns(t *testing.T) {
+	var buf bytes.Buffer
+	if err := ExportAuditLogCSV([]AuditEntry{}, &buf); err != nil {
+		t.Fatal(err)
+	}
+	reader := csv.NewReader(strings.NewReader(buf.String()))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(records))
+	}
+	expected := []string{"timestamp", "operation", "service", "resource", "action", "user", "success", "details"}
+	for i, col := range expected {
+		if records[0][i] != col {
+			t.Errorf("header[%d] = %q, want %q", i, records[0][i], col)
+		}
+	}
+}
+
+// --- ClearAuditLog additional cases ---
+
+func TestClearAuditLog_NonExistentFile(t *testing.T) {
+	// ReadAuditLog returns nil for missing file, so ClearAuditLog on a
+	// non-existent file should succeed (Truncate will fail, but test
+	// confirms the zero-entry path when ReadAuditLog returns nil).
+	dir := t.TempDir()
+	path := filepath.Join(dir, "missing.log")
+
+	// Before is non-zero so it goes through partial-clear path (no Truncate call).
+	cutoff := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
+	removed, err := ClearAuditLog(path, cutoff)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if removed != 0 {
+		t.Errorf("removed = %d, want 0", removed)
+	}
+}
+
+func TestClearAuditLog_AllBeforeCutoff(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	logger.Log(AuditEntry{
+		Timestamp: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		Operation: "old1",
+		Service:   "svc",
+		Action:    "create",
+		Success:   true,
+	})
+	logger.Log(AuditEntry{
+		Timestamp: time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC),
+		Operation: "old2",
+		Service:   "svc",
+		Action:    "delete",
+		Success:   true,
+	})
+	logger.Close()
+
+	cutoff := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	removed, err := ClearAuditLog(path, cutoff)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if removed != 2 {
+		t.Errorf("removed = %d, want 2", removed)
+	}
+
+	entries, _ := ReadAuditLog(path)
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries after clearing all old entries, got %d", len(entries))
+	}
+}
+
+// --- AuditEntry JSON round-trip ---
+
+func TestAuditEntry_JSONRoundTrip(t *testing.T) {
+	original := AuditEntry{
+		Timestamp: time.Date(2026, 3, 10, 8, 0, 0, 0, time.UTC),
+		Operation: "worker.deploy",
+		Service:   "workers",
+		Resource:  "my-worker",
+		Action:    "deploy",
+		User:      "devuser",
+		Details:   map[string]string{"version": "v2", "env": "production"},
+		Success:   true,
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	var decoded AuditEntry
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	if decoded.Operation != original.Operation {
+		t.Errorf("Operation = %q, want %q", decoded.Operation, original.Operation)
+	}
+	if decoded.Service != original.Service {
+		t.Errorf("Service = %q, want %q", decoded.Service, original.Service)
+	}
+	if decoded.Details["version"] != "v2" {
+		t.Errorf("Details[version] = %q, want %q", decoded.Details["version"], "v2")
+	}
+	if !decoded.Success {
+		t.Error("expected Success=true")
+	}
+}
+
+func TestAuditEntry_OmitEmptyDetails(t *testing.T) {
+	entry := AuditEntry{
+		Operation: "test.op",
+		Service:   "svc",
+		Action:    "create",
+		Success:   true,
+	}
+	data, err := json.Marshal(entry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Details should be omitted when nil (omitempty tag)
+	if strings.Contains(string(data), "details") {
+		t.Errorf("expected 'details' to be omitted from JSON when nil, got: %s", string(data))
+	}
+}
+
+// --- LogMutation nil logger ---
+
+func TestAuditLogger_LogMutation_NilLogger(t *testing.T) {
+	var logger *AuditLogger
+	// Should not panic
+	logger.LogMutation("op", "svc", "res", "create", nil, true)
+}
+
+// --- Log preserves explicit user ---
+
+func TestAuditLogger_Log_PreservesExplicitUser(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, _ := NewAuditLogger(path)
+	entry := AuditEntry{
+		Operation: "test.op",
+		Service:   "svc",
+		Resource:  "res",
+		Action:    "create",
+		User:      "explicit-user",
+		Success:   true,
+	}
+	if err := logger.Log(entry); err != nil {
+		t.Fatal(err)
+	}
+	logger.Close()
+
+	entries, err := ReadAuditLog(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(entries))
+	}
+	if entries[0].User != "explicit-user" {
+		t.Errorf("User = %q, want %q", entries[0].User, "explicit-user")
+	}
+}
+
+// --- Close normal (non-nil) ---
+
+func TestAuditLogger_Close_Normal(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	logger, err := NewAuditLogger(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger.LogMutation("op", "svc", "res", "create", nil, true)
+
+	if err := logger.Close(); err != nil {
+		t.Errorf("Close() returned error: %v", err)
+	}
+}
+
+// --- matchesQuery (indirect via SearchAuditLog) ---
+
+func TestMatchesQuery_Timestamp(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "audit.log")
+
+	ts := time.Date(2026, 5, 20, 0, 0, 0, 0, time.UTC)
+	logger, _ := NewAuditLogger(path)
+	logger.Log(AuditEntry{
+		Timestamp: ts,
+		Operation: "op",
+		Service:   "svc",
+		Action:    "create",
+		User:      "user",
+		Success:   true,
+	})
+	logger.Close()
+
+	// Search by year+month in RFC3339 timestamp format
+	results, err := SearchAuditLog(path, "2026-05", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result matching timestamp, got %d", len(results))
+	}
+}
+
 // --- Concurrent writes ---
 
 func TestAuditLogger_ConcurrentWrites(t *testing.T) {

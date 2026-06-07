@@ -115,7 +115,7 @@ func TestPresignValidationKeyVariants(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty key")
 	}
-	if !contains(err.Error(), "object key is required") {
+	if !containsSubstr(err.Error(), "object key is required") {
 		t.Errorf("expected 'object key is required' error, got: %s", err.Error())
 	}
 
@@ -143,7 +143,7 @@ func TestPresignValidationCombinations(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty key with valid bucket")
 	}
-	if !contains(err.Error(), "object key is required") {
+	if !containsSubstr(err.Error(), "object key is required") {
 		t.Errorf("expected key validation error, got: %s", err.Error())
 	}
 
@@ -152,13 +152,9 @@ func TestPresignValidationCombinations(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for negative duration with valid bucket and key")
 	}
-	if !contains(err.Error(), "must be positive") {
+	if !containsSubstr(err.Error(), "must be positive") {
 		t.Errorf("expected duration validation error, got: %s", err.Error())
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && containsSubstr(s, substr)
 }
 
 func containsSubstr(s, substr string) bool {

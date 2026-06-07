@@ -328,3 +328,120 @@ func TestCommandString(t *testing.T) {
 	c := Command{Name: "bucket create", Description: "Create a new bucket"}
 	assert.Equal(t, "bucket create Create a new bucket", c.String())
 }
+
+func TestIconForCategory_AllCategories(t *testing.T) {
+	cases := map[string]string{
+		"bucket":    "🪣",
+		"object":    "📦",
+		"worker":    "⚡",
+		"kv":        "🔑",
+		"dns":       "🌐",
+		"zone":      "🏷️",
+		"ssl":       "🔒",
+		"cache":     "💨",
+		"config":    "⚙️",
+		"doctor":    "🩺",
+		"domains":   "🌍",
+		"analytics": "📊",
+		"unknown":   "▸",
+		"":          "▸",
+	}
+	for cat, want := range cases {
+		got := iconForCategory(cat)
+		assert.Equal(t, want, got, "iconForCategory(%q)", cat)
+	}
+}
+
+func TestInit_ReturnsBlink(t *testing.T) {
+	p := newTestPalette()
+	cmd := p.Init()
+	assert.NotNil(t, cmd, "Init should return textinput.Blink")
+}
+
+func TestResultCount_Empty(t *testing.T) {
+	p := New([]Command{}, 80, 24)
+	p.Show()
+	assert.Equal(t, 0, p.resultCount())
+}
+
+func TestResultCount_WithFilter(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	typeString(p, "bucket")
+	count := p.resultCount()
+	assert.True(t, count > 0 && count <= 8, "expected filtered results, got %d", count)
+}
+
+func TestSelectedCommand_NoResults(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	typeString(p, "zzzznonexistent")
+	cmd := p.selectedCommand()
+	assert.Nil(t, cmd, "selectedCommand should be nil when no results")
+}
+
+func TestSelectedCommand_ValidSelection(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	cmd := p.selectedCommand()
+	assert.NotNil(t, cmd, "selectedCommand should return first command")
+}
+
+func TestApplyFilter_EmptyQuery(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	p.applyFilter()
+	assert.Equal(t, len(p.availableCommands()), p.resultCount())
+}
+
+func TestApplyFilter_CaseInsensitive(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	typeString(p, "BUCKET")
+	count := p.resultCount()
+	assert.True(t, count > 0, "filter should be case-insensitive")
+}
+
+func TestView_WithFilteredResults(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	typeString(p, "dns")
+	view := p.View()
+	assert.NotEmpty(t, view)
+	assert.Contains(t, view, "result")
+}
+
+func TestView_NoResults(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	typeString(p, "xyznonexistent")
+	view := p.View()
+	assert.Contains(t, view, "0 result")
+}
+
+func TestUpdate_ArrowDownWraps(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	for i := 0; i < 20; i++ {
+		updated, _ := p.Update(tea.KeyMsg{Type: tea.KeyDown})
+		*p = updated
+	}
+	cmd := p.selectedCommand()
+	assert.NotNil(t, cmd)
+}
+
+func TestRenderResult_WithIcon(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	result := p.renderResult(0, "🪣", "bucket create", "Create a bucket", nil)
+	assert.NotEmpty(t, result)
+	assert.Contains(t, result, "bucket create")
+}
+
+func TestRenderResult_Selected(t *testing.T) {
+	p := newTestPalette()
+	p.Show()
+	selected := p.renderResult(0, "🪣", "test", "desc", nil)
+	notSelected := p.renderResult(1, "🪣", "test", "desc", nil)
+	assert.NotEqual(t, selected, notSelected)
+}

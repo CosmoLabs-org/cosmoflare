@@ -606,3 +606,193 @@ func TestWorkerLogs_FollowShorthand(t *testing.T) {
 		t.Errorf("--follow shorthand = %q, want %q", f.Shorthand, "f")
 	}
 }
+
+// --- Additional flag coverage ---
+
+func TestWorkerDeploy_ModuleFlag(t *testing.T) {
+	f := workerDeployCmd.Flags().Lookup("module")
+	if f == nil {
+		t.Fatal("--module flag not registered on workerDeployCmd")
+	}
+	if f.DefValue != "false" {
+		t.Errorf("--module default = %q, want %q", f.DefValue, "false")
+	}
+}
+
+func TestWorkerDeploy_BindingsDefault(t *testing.T) {
+	f := workerDeployCmd.Flags().Lookup("bindings")
+	if f == nil {
+		t.Fatal("--bindings flag not registered on workerDeployCmd")
+	}
+	// StringSlice default is "[]"
+	if f.DefValue != "[]" {
+		t.Errorf("--bindings default = %q, want %q", f.DefValue, "[]")
+	}
+}
+
+func TestWorkerDeploy_TagsDefault(t *testing.T) {
+	f := workerDeployCmd.Flags().Lookup("tags")
+	if f == nil {
+		t.Fatal("--tags flag not registered on workerDeployCmd")
+	}
+	if f.DefValue != "[]" {
+		t.Errorf("--tags default = %q, want %q", f.DefValue, "[]")
+	}
+}
+
+func TestWorkerSettings_CompatibilityDateDefault(t *testing.T) {
+	f := workerSettingsCmd.Flags().Lookup("compatibility-date")
+	if f == nil {
+		t.Fatal("--compatibility-date flag not registered on workerSettingsCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--compatibility-date default = %q, want empty string", f.DefValue)
+	}
+}
+
+func TestWorkerSettings_UsageModelDefault(t *testing.T) {
+	f := workerSettingsCmd.Flags().Lookup("usage-model")
+	if f == nil {
+		t.Fatal("--usage-model flag not registered on workerSettingsCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--usage-model default = %q, want empty string", f.DefValue)
+	}
+}
+
+func TestWorkerDeploy_CompatibilityDateDefault(t *testing.T) {
+	f := workerDeployCmd.Flags().Lookup("compatibility-date")
+	if f == nil {
+		t.Fatal("--compatibility-date flag not registered on workerDeployCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--compatibility-date default = %q, want empty string", f.DefValue)
+	}
+}
+
+// --- Command Use fields ---
+
+func TestWorkerSubcmdUseFields(t *testing.T) {
+	cases := []struct {
+		cmd  *cobra.Command
+		want string
+	}{
+		{workerDeployCmd, "deploy [name]"},
+		{workerListCmd, "list"},
+		{workerGetCmd, "get [name]"},
+		{workerDeleteCmd, "delete [name]"},
+		{workerLogsCmd, "logs [name]"},
+		{workerSettingsCmd, "settings [name]"},
+	}
+	for _, tc := range cases {
+		if tc.cmd.Use != tc.want {
+			t.Errorf("%s.Use = %q, want %q", tc.cmd.Name(), tc.cmd.Use, tc.want)
+		}
+	}
+}
+
+// --- Long description content ---
+
+func TestWorkerCmd_LongContainsExamples(t *testing.T) {
+	if !bytes.Contains([]byte(workerCmd.Long), []byte("deploy")) {
+		t.Error("workerCmd.Long should mention 'deploy'")
+	}
+	if !bytes.Contains([]byte(workerCmd.Long), []byte("cosmoflare worker")) {
+		t.Error("workerCmd.Long should contain example with 'cosmoflare worker'")
+	}
+}
+
+func TestWorkerDeployCmd_LongContainsExamples(t *testing.T) {
+	if !bytes.Contains([]byte(workerDeployCmd.Long), []byte("--script")) {
+		t.Error("workerDeployCmd.Long should mention '--script'")
+	}
+}
+
+func TestWorkerLogsCmd_LongContainsFollow(t *testing.T) {
+	if !bytes.Contains([]byte(workerLogsCmd.Long), []byte("--follow")) {
+		t.Error("workerLogsCmd.Long should mention '--follow'")
+	}
+}
+
+// --- parseWorkerBindings: colon in ID (SplitN 3 parts) ---
+
+func TestParseWorkerBindings_ColonInID(t *testing.T) {
+	// SplitN with n=3 means the ID part can contain colons
+	bindings, err := parseWorkerBindings([]string{"MY_DO:d1:db:extra"})
+	if err != nil {
+		t.Fatalf("unexpected error for binding with colon in ID: %v", err)
+	}
+	if len(bindings) != 1 {
+		t.Fatalf("expected 1 binding, got %d", len(bindings))
+	}
+	if bindings[0].ID != "db:extra" {
+		t.Errorf("ID = %q, want %q", bindings[0].ID, "db:extra")
+	}
+}
+
+// --- runWorkerDeploy: DryRun=false exits early at service creation with bad creds ---
+
+func TestWorkerDelete_DryRunFalseForceTrue(t *testing.T) {
+	origDryRun := DryRun
+	origForce := workerForce
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		workerForce = origForce
+		AccountID = origAccountID
+		APIToken = origAPIToken
+	}()
+
+	DryRun = false
+	workerForce = true
+	AccountID = ""
+	APIToken = ""
+
+	err := runWorkerDelete(workerDeleteCmd, []string{"my-worker"})
+	// Should fail at service creation, not at arg validation
+	if err == nil {
+		t.Fatal("expected error when no credentials provided")
+	}
+}
+
+// --- workerLogsCmd interval default ---
+
+func TestWorkerLogs_IntervalDefault(t *testing.T) {
+	f := workerLogsCmd.Flags().Lookup("interval")
+	if f == nil {
+		t.Fatal("--interval flag not found on workerLogsCmd")
+	}
+	if f.DefValue != "2" {
+		t.Errorf("--interval default = %q, want %q", f.DefValue, "2")
+	}
+}
+
+// --- worker delete Short description ---
+
+func TestWorkerDeleteCmd_ShortNotEmpty(t *testing.T) {
+	if workerDeleteCmd.Short == "" {
+		t.Error("workerDeleteCmd.Short is empty")
+	}
+	if !bytes.Contains([]byte(workerDeleteCmd.Short), []byte("Delete")) {
+		t.Errorf("workerDeleteCmd.Short = %q, want it to mention 'Delete'", workerDeleteCmd.Short)
+	}
+}
+
+// --- All subcommand Short fields non-empty ---
+
+func TestWorkerSubcmds_ShortNotEmpty(t *testing.T) {
+	cmds := []*cobra.Command{
+		workerDeployCmd,
+		workerListCmd,
+		workerGetCmd,
+		workerDeleteCmd,
+		workerLogsCmd,
+		workerSettingsCmd,
+	}
+	for _, c := range cmds {
+		if c.Short == "" {
+			t.Errorf("%q Short is empty", c.Use)
+		}
+	}
+}

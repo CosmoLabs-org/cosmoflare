@@ -365,3 +365,500 @@ func TestDoctorToolInputSchema(t *testing.T) {
 		t.Fatalf("expected required [domain], got %v", schema["required"])
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests
+// ---------------------------------------------------------------------------
+
+// TestNewMCPServerStoresCredentials verifies that NewMCPServer persists the
+// accountID and apiToken for later use by tool handlers.
+func TestNewMCPServerStoresCredentials(t *testing.T) {
+	s := NewMCPServer("my-account", "my-token")
+	if s.accountID != "my-account" {
+		t.Fatalf("expected accountID 'my-account', got %q", s.accountID)
+	}
+	if s.apiToken != "my-token" {
+		t.Fatalf("expected apiToken 'my-token', got %q", s.apiToken)
+	}
+}
+
+// TestNewMCPServerEmptyCredentials ensures the server can be created with
+// blank credentials (tools that don't need auth still work).
+func TestNewMCPServerEmptyCredentials(t *testing.T) {
+	s := NewMCPServer("", "")
+	if s == nil {
+		t.Fatal("expected non-nil server")
+	}
+	if s.tools == nil {
+		t.Fatal("tools map must be initialised")
+	}
+}
+
+// TestHandleRequestStringID checks that string IDs are round-tripped correctly.
+func TestHandleRequestStringID(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":"req-abc","method":"ping"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Error != nil {
+		t.Fatalf("unexpected error: %s", r.Error.Message)
+	}
+	if r.ID != "req-abc" {
+		t.Fatalf("expected id 'req-abc', got %v", r.ID)
+	}
+}
+
+// TestHandleRequestNullID ensures null IDs are handled without crashing.
+func TestHandleRequestNullID(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":null,"method":"ping"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Error != nil {
+		t.Fatalf("unexpected error: %s", r.Error.Message)
+	}
+}
+
+// TestHandleToolsListEmpty verifies that tools/list returns an empty list when
+// no tools have been registered.
+func TestHandleToolsListEmpty(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Error != nil {
+		t.Fatalf("unexpected error: %s", r.Error.Message)
+	}
+	var result toolsListResult
+	if err := json.Unmarshal(r.Result, &result); err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Tools) != 0 {
+		t.Fatalf("expected 0 tools, got %d", len(result.Tools))
+	}
+}
+
+// TestHandleToolsListMultiple verifies that all registered tools appear in the
+// tools/list response and that they are sorted alphabetically.
+func TestHandleToolsListMultiple(t *testing.T) {
+	s := NewMCPServer("", "")
+	s.RegisterTool(MCPTool{Name: "zebra", Description: "last"})
+	s.RegisterTool(MCPTool{Name: "apple", Description: "first"})
+	s.RegisterTool(MCPTool{Name: "mango", Description: "middle"})
+
+	req := `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		t.Fatal(err)
+	}
+	var result toolsListResult
+	json.Unmarshal(r.Result, &result)
+	if len(result.Tools) != 3 {
+		t.Fatalf("expected 3 tools, got %d", len(result.Tools))
+	}
+	if result.Tools[0].Name != "apple" || result.Tools[1].Name != "mango" || result.Tools[2].Name != "zebra" {
+		t.Fatalf("tools not in sorted order: %v", result.Tools)
+	}
+}
+
+// TestHandleToolsListPreservesSchema verifies that the InputSchema JSON is
+// faithfully round-tripped through tools/list.
+func TestHandleToolsListPreservesSchema(t *testing.T) {
+	schema := `{"type":"object","properties":{"key":{"type":"string"}},"required":["key"]}`
+	s := NewMCPServer("", "")
+	s.RegisterTool(MCPTool{
+		Name:        "schema_tool",
+		InputSchema: json.RawMessage(schema),
+	})
+
+	req := `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	var result toolsListResult
+	json.Unmarshal(r.Result, &result)
+	if len(result.Tools) != 1 {
+		t.Fatalf("expected 1 tool")
+	}
+	got := string(result.Tools[0].InputSchema)
+	// Unmarshal both and compare to avoid whitespace issues.
+	var wantObj, gotObj interface{}
+	json.Unmarshal([]byte(schema), &wantObj)
+	json.Unmarshal([]byte(got), &gotObj)
+	wantBytes, _ := json.Marshal(wantObj)
+	gotBytes, _ := json.Marshal(gotObj)
+	if string(wantBytes) != string(gotBytes) {
+		t.Fatalf("schema mismatch: want %s, got %s", wantBytes, gotBytes)
+	}
+}
+
+// TestHandleInitializeCapabilities verifies that the capabilities block
+// returned by initialize contains the expected "tools" key.
+func TestHandleInitializeCapabilities(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":1,"method":"initialize"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	if r.Error != nil {
+		t.Fatalf("unexpected error: %s", r.Error.Message)
+	}
+	var result map[string]interface{}
+	json.Unmarshal(r.Result, &result)
+	caps, ok := result["capabilities"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected capabilities map")
+	}
+	if _, hasTools := caps["tools"]; !hasTools {
+		t.Fatal("expected capabilities to contain 'tools'")
+	}
+}
+
+// TestHandleInitializeServerInfo verifies the serverInfo version field.
+func TestHandleInitializeServerInfo(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":1,"method":"initialize"}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	var result map[string]interface{}
+	json.Unmarshal(r.Result, &result)
+	serverInfo, ok := result["serverInfo"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected serverInfo map")
+	}
+	if serverInfo["version"] == "" {
+		t.Fatal("expected non-empty server version")
+	}
+}
+
+// TestServeSkipsBlankLines verifies that blank lines in the input stream do
+// not cause errors and produce no spurious output.
+func TestServeSkipsBlankLines(t *testing.T) {
+	s := NewMCPServer("", "")
+	// Input with blank lines interspersed between valid requests.
+	input := "\n" + `{"jsonrpc":"2.0","id":1,"method":"ping"}` + "\n\n" + `{"jsonrpc":"2.0","id":2,"method":"ping"}` + "\n\n"
+	var out bytes.Buffer
+	err := s.Serve(context.Background(), strings.NewReader(input), &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 response lines, got %d: %q", len(lines), out.String())
+	}
+}
+
+// TestServeContextCancellation verifies that Serve returns the context error
+// when the context is cancelled before reading completes.
+func TestServeContextCancellation(t *testing.T) {
+	s := NewMCPServer("", "")
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Cancel immediately so the first select{} in the scan loop exits.
+	cancel()
+
+	// Use a long input; it should be abandoned after ctx is done.
+	input := `{"jsonrpc":"2.0","id":1,"method":"ping"}` + "\n"
+	var out bytes.Buffer
+	err := s.Serve(ctx, strings.NewReader(input), &out)
+	if err == nil {
+		// Cancellation may race with scan; if we produced output it means the
+		// scan completed before the select ran — that's still valid Go behaviour.
+		// Only fail if the scanner returns an error other than context.Canceled.
+		return
+	}
+	if err != context.Canceled {
+		t.Fatalf("expected context.Canceled, got %v", err)
+	}
+}
+
+// TestHandleWorkerDeployMissingName verifies that handleWorkerDeploy returns
+// an error when the "name" param is absent.
+func TestHandleWorkerDeployMissingName(t *testing.T) {
+	s := NewMCPServer("", "")
+	s.RegisterDefaultTools()
+
+	params := json.RawMessage(`{"script":"addEventListener('fetch',e=>e.respondWith(new Response('ok')))"}`)
+	_, err := s.handleWorkerDeploy(context.Background(), params)
+	if err == nil {
+		t.Fatal("expected error when name is missing")
+	}
+	if !strings.Contains(err.Error(), "name") {
+		t.Fatalf("expected error to mention 'name', got: %v", err)
+	}
+}
+
+// TestHandleWorkerDeployMissingScript verifies that handleWorkerDeploy returns
+// an error when the "script" param is absent.
+func TestHandleWorkerDeployMissingScript(t *testing.T) {
+	s := NewMCPServer("", "")
+	params := json.RawMessage(`{"name":"my-worker"}`)
+	_, err := s.handleWorkerDeploy(context.Background(), params)
+	if err == nil {
+		t.Fatal("expected error when script is missing")
+	}
+	if !strings.Contains(err.Error(), "script") {
+		t.Fatalf("expected error to mention 'script', got: %v", err)
+	}
+}
+
+// TestHandleWorkerDeployInvalidJSON verifies that handleWorkerDeploy returns
+// an error when params JSON is malformed.
+func TestHandleWorkerDeployInvalidJSON(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleWorkerDeploy(context.Background(), json.RawMessage(`not-json`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON params")
+	}
+}
+
+// TestHandleDNSListMissingZoneID verifies that handleDNSList returns an error
+// when zone_id is absent.
+func TestHandleDNSListMissingZoneID(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleDNSList(context.Background(), json.RawMessage(`{}`))
+	if err == nil {
+		t.Fatal("expected error when zone_id is missing")
+	}
+	if !strings.Contains(err.Error(), "zone_id") {
+		t.Fatalf("expected error to mention 'zone_id', got: %v", err)
+	}
+}
+
+// TestHandleDNSListInvalidJSON verifies that handleDNSList returns an error
+// when params JSON is malformed.
+func TestHandleDNSListInvalidJSON(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleDNSList(context.Background(), json.RawMessage(`{bad}`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON params")
+	}
+}
+
+// TestHandleCachePurgeMissingZoneID verifies that handleCachePurge returns an
+// error when zone_id is absent.
+func TestHandleCachePurgeMissingZoneID(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleCachePurge(context.Background(), json.RawMessage(`{}`))
+	if err == nil {
+		t.Fatal("expected error when zone_id is missing")
+	}
+	if !strings.Contains(err.Error(), "zone_id") {
+		t.Fatalf("expected error to mention 'zone_id', got: %v", err)
+	}
+}
+
+// TestHandleCachePurgeNoPurgeStrategy verifies that handleCachePurge returns
+// an error when no purge strategy is specified alongside a valid zone_id.
+// With empty credentials the service constructor fails before the strategy
+// check, so we accept either failure reason.
+func TestHandleCachePurgeNoPurgeStrategy(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleCachePurge(context.Background(), json.RawMessage(`{"zone_id":"z1"}`))
+	if err == nil {
+		t.Fatal("expected error when no purge strategy specified")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "purge") && !strings.Contains(msg, "cache service") && !strings.Contains(msg, "token") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// TestHandleCachePurgeInvalidJSON verifies that handleCachePurge returns an
+// error when params JSON is malformed.
+func TestHandleCachePurgeInvalidJSON(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleCachePurge(context.Background(), json.RawMessage(`{{`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON params")
+	}
+}
+
+// TestHandleDoctorMissingDomain verifies that handleDoctor returns an error
+// when the domain param is absent.
+func TestHandleDoctorMissingDomain(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleDoctor(context.Background(), json.RawMessage(`{}`))
+	if err == nil {
+		t.Fatal("expected error when domain is missing")
+	}
+	if !strings.Contains(err.Error(), "domain") {
+		t.Fatalf("expected error to mention 'domain', got: %v", err)
+	}
+}
+
+// TestHandleDoctorInvalidJSON verifies that handleDoctor returns an error when
+// params JSON is malformed.
+func TestHandleDoctorInvalidJSON(t *testing.T) {
+	s := NewMCPServer("", "")
+	_, err := s.handleDoctor(context.Background(), json.RawMessage(`not-json`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON params")
+	}
+}
+
+// TestDefaultToolDescriptionsNonEmpty verifies that every default tool has a
+// non-empty Description field.
+func TestDefaultToolDescriptionsNonEmpty(t *testing.T) {
+	s := NewMCPServer("acct", "tok")
+	s.RegisterDefaultTools()
+	for _, tool := range s.Tools() {
+		if tool.Description == "" {
+			t.Errorf("tool %q has empty description", tool.Name)
+		}
+	}
+}
+
+// TestDefaultToolSchemasValidJSON verifies that every default tool exposes a
+// valid JSON object as its InputSchema.
+func TestDefaultToolSchemasValidJSON(t *testing.T) {
+	s := NewMCPServer("acct", "tok")
+	s.RegisterDefaultTools()
+	for _, tool := range s.Tools() {
+		var schema map[string]interface{}
+		if err := json.Unmarshal(tool.InputSchema, &schema); err != nil {
+			t.Errorf("tool %q has invalid InputSchema JSON: %v", tool.Name, err)
+			continue
+		}
+		if schema["type"] != "object" {
+			t.Errorf("tool %q InputSchema type is not 'object': %v", tool.Name, schema["type"])
+		}
+	}
+}
+
+// TestDefaultToolHandlersNotNil verifies that every default tool has a non-nil
+// Handler assigned.
+func TestDefaultToolHandlersNotNil(t *testing.T) {
+	s := NewMCPServer("acct", "tok")
+	s.RegisterDefaultTools()
+	// Access the internal map directly to check handler presence (Tools() strips Handler).
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for name, tool := range s.tools {
+		if tool.Handler == nil {
+			t.Errorf("tool %q has nil Handler", name)
+		}
+	}
+}
+
+// TestConcurrentRegisterAndList verifies that RegisterTool and Tools() can be
+// called concurrently without data races.
+func TestConcurrentRegisterAndList(t *testing.T) {
+	s := NewMCPServer("", "")
+	done := make(chan struct{})
+
+	go func() {
+		for i := 0; i < 50; i++ {
+			s.RegisterTool(MCPTool{Name: fmt.Sprintf("tool_%d", i)})
+		}
+		close(done)
+	}()
+
+	for {
+		select {
+		case <-done:
+			return
+		default:
+			_ = s.Tools()
+		}
+	}
+}
+
+// TestWorkerDeployToolInputSchemaRequiredFields verifies the worker deploy
+// schema marks "name" and "script" as required.
+func TestWorkerDeployToolInputSchemaRequiredFields(t *testing.T) {
+	s := NewMCPServer("acct", "tok")
+	s.RegisterDefaultTools()
+
+	var deployTool *MCPTool
+	for i, tool := range s.Tools() {
+		if tool.Name == "cosmoflare_worker_deploy" {
+			t := s.Tools()[i]
+			deployTool = &t
+			break
+		}
+	}
+	if deployTool == nil {
+		t.Fatal("cosmoflare_worker_deploy tool not found")
+	}
+
+	var schema map[string]interface{}
+	json.Unmarshal(deployTool.InputSchema, &schema)
+	required, ok := schema["required"].([]interface{})
+	if !ok {
+		t.Fatal("expected 'required' array in worker deploy schema")
+	}
+	requiredSet := map[string]bool{}
+	for _, v := range required {
+		if s, ok := v.(string); ok {
+			requiredSet[s] = true
+		}
+	}
+	if !requiredSet["name"] {
+		t.Error("expected 'name' in required fields")
+	}
+	if !requiredSet["script"] {
+		t.Error("expected 'script' in required fields")
+	}
+}
+
+// TestErrorResponseFields verifies the structure of an error JSON-RPC response.
+func TestErrorResponseFields(t *testing.T) {
+	s := NewMCPServer("", "")
+	out := s.errorResponse("id-1", jsonRPCInternalError, "internal boom")
+	var r jsonRPCResponse
+	if err := json.Unmarshal(out, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.JSONRPC != "2.0" {
+		t.Fatalf("expected jsonrpc '2.0', got %q", r.JSONRPC)
+	}
+	if r.Error == nil {
+		t.Fatal("expected error field")
+	}
+	if r.Error.Code != jsonRPCInternalError {
+		t.Fatalf("expected code %d, got %d", jsonRPCInternalError, r.Error.Code)
+	}
+	if !strings.Contains(r.Error.Message, "internal boom") {
+		t.Fatalf("expected message to contain 'internal boom', got %q", r.Error.Message)
+	}
+	if r.Result != nil {
+		t.Fatal("expected nil result on error response")
+	}
+}
+
+// TestSuccessResponseFields verifies the structure of a success JSON-RPC response.
+func TestSuccessResponseFields(t *testing.T) {
+	s := NewMCPServer("", "")
+	payload := map[string]string{"key": "value"}
+	out := s.successResponse(float64(99), payload)
+	var r jsonRPCResponse
+	if err := json.Unmarshal(out, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.JSONRPC != "2.0" {
+		t.Fatalf("expected jsonrpc '2.0', got %q", r.JSONRPC)
+	}
+	if r.Error != nil {
+		t.Fatalf("expected nil error on success response, got %v", r.Error)
+	}
+	if r.Result == nil {
+		t.Fatal("expected non-nil result on success response")
+	}
+	var decoded map[string]string
+	json.Unmarshal(r.Result, &decoded)
+	if decoded["key"] != "value" {
+		t.Fatalf("expected key=value in result, got %v", decoded)
+	}
+}
