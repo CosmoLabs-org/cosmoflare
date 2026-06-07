@@ -4,9 +4,33 @@
 
 version: pending
 entries:
-    added: []
-    fixed: []
-    changed: []
+    added:
+        - description: cosmoflare metrics — real-time TUI dashboard with live R2/Workers/KV stats, --interval flag, --json mode (ROAD-060)
+          source: manual
+          date: 2026-06-07T00:20:50.727335-03:00
+        - description: cosmoflare dev --notify — webhook notifications on dev server start/stop/error events (ROAD-072)
+          source: manual
+          date: 2026-06-07T00:20:56.888338-03:00
+        - description: cosmoflare migrate from-s3 — re-enabled S3-to-R2 migration command (ROAD-019)
+          source: manual
+          date: 2026-06-07T00:20:56.945122-03:00
+        - description: Bubble Tea interactive prompts — text input, list select, and confirm models replace hand-rolled stdin loop (ROAD-008)
+          source: manual
+          date: 2026-06-07T00:20:57.008025-03:00
+        - description: integration test suite with httptest mock servers for R2, Workers, and KV CRUD operations (ROAD-017)
+          source: manual
+          date: 2026-06-07T00:20:57.070234-03:00
+        - description: ~9,300 lines of unit tests across cmd/ and pkg/cosmoflare/ via 18 parallel Sonnet agents — covers command structure, flags, helpers, constructors, and validation
+          source: manual
+          date: 2026-06-07T00:21:10.786744-03:00
+    fixed:
+        - description: internal/migration/s3.go — resolved 11 build errors (missing helpers, AWS SDK call, pointer dereference)
+          source: manual
+          date: 2026-06-07T00:21:02.04206-03:00
+    changed:
+        - description: USAGE.md — replaced 226 r2go2 references with cosmoflare across all CLI examples
+          source: manual
+          date: 2026-06-07T00:21:01.968146-03:00
     deprecated: []
     removed: []
     security: []
