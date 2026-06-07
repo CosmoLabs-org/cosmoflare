@@ -275,8 +275,8 @@ func TestBucketUpdate_DryRun(t *testing.T) {
 	APIToken = "test-token"
 
 	err := runBucketUpdate(bucketUpdateCmd, []string{"my-bucket"})
-	if err != nil {
-		t.Errorf("runBucketUpdate(DryRun) returned error: %v", err)
+	if err == nil {
+		t.Error("runBucketUpdate should return error (metadata updates not supported by CF API)")
 	}
 }
 
@@ -307,14 +307,14 @@ func TestBucketUpdate_DryRunJSON(t *testing.T) {
 	os.Stdout = old
 
 	if err != nil {
-		t.Errorf("runBucketUpdate(DryRun+JSON) returned error: %v", err)
+		t.Errorf("runBucketUpdate(JSON) returned error: %v", err)
 	}
 
 	var buf bytes.Buffer
 	buf.ReadFrom(r)
 	output := buf.String()
-	if !bytes.Contains([]byte(output), []byte("DRY RUN")) {
-		t.Errorf("JSON dry-run output should contain 'DRY RUN', got: %q", output)
+	if !bytes.Contains([]byte(output), []byte("not supported")) {
+		t.Errorf("JSON output should mention 'not supported', got: %q", output)
 	}
 }
 

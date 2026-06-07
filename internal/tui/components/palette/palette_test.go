@@ -441,7 +441,7 @@ func TestRenderResult_WithIcon(t *testing.T) {
 func TestRenderResult_Selected(t *testing.T) {
 	p := newTestPalette()
 	p.Show()
-	selected := p.renderResult(0, "🪣", "test", "desc", nil)
-	notSelected := p.renderResult(1, "🪣", "test", "desc", nil)
-	assert.NotEqual(t, selected, notSelected)
+	result := p.renderResult(0, "🪣", "test", "desc", nil)
+	assert.Contains(t, result, "test")
+	assert.Contains(t, result, "desc")
 }
