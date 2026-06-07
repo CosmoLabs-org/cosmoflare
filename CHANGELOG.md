@@ -28,6 +28,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.14.0] - 2026-06-07
+
+### Added
+- cosmoflare metrics — real-time TUI dashboard with live R2/Workers/KV stats, --interval flag, --json mode (ROAD-060)
+- cosmoflare dev --notify — webhook notifications on dev server start/stop/error events (ROAD-072)
+- cosmoflare migrate from-s3 — re-enabled S3-to-R2 migration command (ROAD-019)
+- Bubble Tea interactive prompts — text input, list select, and confirm models replace hand-rolled stdin loop (ROAD-008)
+- integration test suite with httptest mock servers for R2, Workers, and KV CRUD operations (ROAD-017)
+- ~9,300 lines of unit tests across cmd/ and pkg/cosmoflare/ via 18 parallel Sonnet agents — covers command structure, flags, helpers, constructors, and validation
+- re-enable S3-to-R2 migration command (ROAD-019) (commit:2033f576)
+- add webhook notifications for dev server lifecycle (ROAD-072) (commit:9c691c8d)
+- add real-time TUI metrics dashboard (ROAD-060) (commit:6fc9299a)
+
+### Changed
+- USAGE.md — replaced 226 r2go2 references with cosmoflare across all CLI examples
+- migrate prompts to Bubble Tea models (ROAD-008) (commit:d6963f24)
+
+### Fixed
+- internal/migration/s3.go — resolved 11 build errors (missing helpers, AWS SDK call, pointer dereference)
+- config.Save() viper .tmp extension bug — replaced with yaml.Marshal for reliable config persistence
+- pre-existing test failures in internal/interactive and internal/webhook from r2go2→cosmoflare rename
+- correct bucket update and palette render assertions (commit:bbc61391)
+- resolve all pre-existing test failures in interactive and config (commit:0f6cd715)
+- resolve 11 build errors in s3.go (commit:3ab8302a)
+
 ## [0.13.0] - 2026-06-06
 
 ### Added
