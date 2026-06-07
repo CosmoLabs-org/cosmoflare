@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // helper: create a temp dir and return a fresh AccountService rooted there.
@@ -403,5 +404,366 @@ func TestAccountService_Paths(t *testing.T) {
 	}
 	if svc.activeAccountPath() != filepath.Join(dir, "active-account") {
 		t.Errorf("activeAccountPath = %q", svc.activeAccountPath())
+	}
+}
+
+// --- readActiveAccount / writeActiveAccount ---
+
+func TestAccountService_ReadWriteActiveAccount_RoundTrip(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	err := svc.writeActiveAccount("myaccount")
+	if err != nil {
+		t.Fatalf("writeActiveAccount: %v", err)
+	}
+
+	got, err := svc.readActiveAccount()
+	if err != nil {
+		t.Fatalf("readActiveAccount: %v", err)
+	}
+	if got != "myaccount" {
+		t.Errorf("readActiveAccount = %q, want %q", got, "myaccount")
+	}
+}
+
+func TestAccountService_ReadActiveAccount_AbsentFile(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	// No file written — should return empty string, no error.
+	got, err := svc.readActiveAccount()
+	if err != nil {
+		t.Fatalf("readActiveAccount on absent file: %v", err)
+	}
+	if got != "" {
+		t.Errorf("readActiveAccount = %q, want empty string", got)
+	}
+}
+
+func TestAccountService_ReadActiveAccount_TrimsWhitespace(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	// Write with surrounding whitespace to simulate editor accidents.
+	err := os.MkdirAll(svc.configDir, 0755)
+	if err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	err = os.WriteFile(svc.activeAccountPath(), []byte("  trimmed\n"), 0600)
+	if err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	got, err := svc.readActiveAccount()
+	if err != nil {
+		t.Fatalf("readActiveAccount: %v", err)
+	}
+	if got != "trimmed" {
+		t.Errorf("readActiveAccount = %q, want %q", got, "trimmed")
+	}
+}
+
+// --- Add: only first account becomes active ---
+
+func TestAccountService_Add_SecondAccountDoesNotChangeActive(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	_, err := svc.Add("first", "id1", "tok1", "")
+	if err != nil {
+		t.Fatalf("Add first: %v", err)
+	}
+	_, err = svc.Add("second", "id2", "tok2", "")
+	if err != nil {
+		t.Fatalf("Add second: %v", err)
+	}
+
+	cur, err := svc.Current()
+	if err != nil {
+		t.Fatalf("Current: %v", err)
+	}
+	if cur == nil || cur.Name != "first" {
+		t.Errorf("expected active='first' after adding second account, got %v", cur)
+	}
+}
+
+func TestAccountService_Add_ThirdAccount_ActiveUnchanged(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	for _, name := range []string{"alpha", "beta", "gamma"} {
+		_, err := svc.Add(name, "id-"+name, "tok-"+name, "")
+		if err != nil {
+			t.Fatalf("Add %q: %v", name, err)
+		}
+	}
+
+	cur, err := svc.Current()
+	if err != nil {
+		t.Fatalf("Current: %v", err)
+	}
+	if cur == nil || cur.Name != "alpha" {
+		t.Errorf("expected active='alpha', got %v", cur)
+	}
+}
+
+// --- Add: email is optional ---
+
+func TestAccountService_Add_NoEmail(t *testing.T) {
+	svc := newTestAccountService(t)
+
+	acct, err := svc.Add("noemail", "id1", "tok1", "")
+	if err != nil {
+		t.Fatalf("Add without email: %v", err)
+	}
+	if acct.Email != "" {
+		t.Errorf("Email = %q, want empty", acct.Email)
+	}
+}
+
+// --- Add: valid name edge cases ---
+
+func TestAccountService_Add_ValidNameEdgeCases(t *testing.T) {
+	cases := []string{
+		"a",        // single character
+		"A",        // single uppercase
+		"0",        // single digit
+		"a-b",      // hyphen
+		"a_b",      // underscore
+		"A1-B2_C3", // mixed
+	}
+	svc := newTestAccountService(t)
+	for i, name := range cases {
+		_, err := svc.Add(name, fmt.Sprintf("id%d", i), fmt.Sprintf("tok%d", i), "")
+		if err != nil {
+			t.Errorf("Add(%q) unexpected error: %v", name, err)
+		}
+	}
+}
+
+func TestAccountService_Add_InvalidNameEdgeCases(t *testing.T) {
+	cases := []string{
+		"has space",
+		"has@at",
+		"has.dot",
+		"has/slash",
+		"has\\backslash",
+		"has:colon",
+		"has+plus",
+	}
+	svc := newTestAccountService(t)
+	for _, name := range cases {
+		_, err := svc.Add(name, "id", "tok", "")
+		if err == nil {
+			t.Errorf("Add(%q) should have returned an error", name)
+		}
+	}
+}
+
+// --- Current: happy path ---
+
+func TestAccountService_Current_ReturnsCorrectAccount(t *testing.T) {
+	svc := newTestAccountService(t)
+	_, _ = svc.Add("one", "id1", "tok1", "a@example.com")
+	_, _ = svc.Add("two", "id2", "tok2", "b@example.com")
+	_, _ = svc.Switch("two")
+
+	cur, err := svc.Current()
+	if err != nil {
+		t.Fatalf("Current: %v", err)
+	}
+	if cur == nil {
+		t.Fatal("Current returned nil, want 'two'")
+	}
+	if cur.Name != "two" {
+		t.Errorf("Current.Name = %q, want %q", cur.Name, "two")
+	}
+	if cur.AccountID != "id2" {
+		t.Errorf("Current.AccountID = %q, want %q", cur.AccountID, "id2")
+	}
+}
+
+// --- Remove: clears active-account pointer file when force-removing active ---
+
+func TestAccountService_Remove_ForceActive_ClearsPointerFile(t *testing.T) {
+	svc := newTestAccountService(t)
+	_, _ = svc.Add("main", "id1", "tok1", "")
+	// "main" is now active (first account)
+
+	err := svc.Remove("main", true)
+	if err != nil {
+		t.Fatalf("Remove with force: %v", err)
+	}
+
+	// The active-account pointer file should be gone.
+	if _, statErr := os.Stat(svc.activeAccountPath()); !os.IsNotExist(statErr) {
+		t.Error("active-account pointer file should have been removed")
+	}
+}
+
+func TestAccountService_Remove_NonActive_DoesNotClearPointerFile(t *testing.T) {
+	svc := newTestAccountService(t)
+	_, _ = svc.Add("keeper", "id1", "tok1", "")
+	_, _ = svc.Add("goner", "id2", "tok2", "")
+	// "keeper" is active; switch to make it explicit
+	_, _ = svc.Switch("keeper")
+
+	err := svc.Remove("goner", false)
+	if err != nil {
+		t.Fatalf("Remove non-active: %v", err)
+	}
+
+	// Active pointer should still point to "keeper".
+	active, err := svc.readActiveAccount()
+	if err != nil {
+		t.Fatalf("readActiveAccount: %v", err)
+	}
+	if active != "keeper" {
+		t.Errorf("active account = %q, want %q", active, "keeper")
+	}
+}
+
+// --- loadAccounts: malformed YAML ---
+
+func TestAccountService_LoadAccounts_MalformedYAML(t *testing.T) {
+	svc := newTestAccountService(t)
+	err := os.MkdirAll(svc.configDir, 0755)
+	if err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	// Write garbage YAML
+	err = os.WriteFile(svc.accountsPath(), []byte(":\t: bad yaml {{{\n"), 0600)
+	if err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	_, err = svc.List()
+	if err == nil {
+		t.Fatal("expected error for malformed YAML")
+	}
+}
+
+// --- saveAccounts: creates missing directory ---
+
+func TestAccountService_SaveAccounts_CreatesMissingDirectory(t *testing.T) {
+	base := t.TempDir()
+	// Point to a sub-directory that does not exist yet.
+	subDir := filepath.Join(base, "nested", "config")
+	svc, err := NewAccountService(subDir)
+	if err != nil {
+		t.Fatalf("NewAccountService: %v", err)
+	}
+
+	_, err = svc.Add("x", "id-x", "tok-x", "")
+	if err != nil {
+		t.Fatalf("Add into missing dir: %v", err)
+	}
+
+	if _, statErr := os.Stat(svc.accountsPath()); os.IsNotExist(statErr) {
+		t.Error("accounts.yaml should have been created")
+	}
+}
+
+// --- Verify: result fields ---
+
+func TestAccountService_Verify_ResultNameField(t *testing.T) {
+	svc := newTestAccountService(t)
+	_, _ = svc.Add("myname", "id1", "tok1", "")
+
+	res, err := svc.Verify("myname")
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if res.Name != "myname" {
+		t.Errorf("result.Name = %q, want %q", res.Name, "myname")
+	}
+}
+
+func TestAccountService_Verify_InvalidResult_ContainsMessage(t *testing.T) {
+	svc := newTestAccountService(t)
+	svc.verifyFunc = func(_ context.Context, _, _ string) error {
+		return fmt.Errorf("token expired")
+	}
+	_, _ = svc.Add("expired", "id1", "tok1", "")
+
+	res, err := svc.Verify("expired")
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if res.Valid {
+		t.Error("expected Valid=false")
+	}
+	if res.Message == "" {
+		t.Error("expected non-empty Message for invalid credentials")
+	}
+}
+
+func TestAccountService_Verify_ValidResult_MessageSet(t *testing.T) {
+	svc := newTestAccountService(t)
+	_, _ = svc.Add("good", "id1", "tok1", "")
+
+	res, err := svc.Verify("good")
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if res.Message == "" {
+		t.Error("expected non-empty Message for valid credentials")
+	}
+}
+
+// --- isValidAccountName: boundary cases ---
+
+func TestIsValidAccountName_SingleChars(t *testing.T) {
+	for _, c := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" {
+		if !isValidAccountName(string(c)) {
+			t.Errorf("single char %q should be valid", c)
+		}
+	}
+}
+
+func TestIsValidAccountName_EmptyStringIsInvalid(t *testing.T) {
+	if isValidAccountName("") {
+		t.Error("empty string should be invalid")
+	}
+}
+
+// --- Account struct CreatedAt format ---
+
+func TestAccountService_Add_CreatedAtIsRFC3339(t *testing.T) {
+	svc := newTestAccountService(t)
+	acct, err := svc.Add("ts", "id1", "tok1", "")
+	if err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+
+	// Validate by re-parsing with the same format used in Add (time.RFC3339).
+	_, parseErr := time.Parse(time.RFC3339, acct.CreatedAt)
+	if parseErr != nil {
+		t.Errorf("CreatedAt = %q is not valid RFC3339: %v", acct.CreatedAt, parseErr)
+	}
+}
+
+// --- AccountVerifyResult struct fields ---
+
+func TestAccountVerifyResult_Fields(t *testing.T) {
+	r := AccountVerifyResult{
+		Name:    "test",
+		Valid:   true,
+		Message: "ok",
+	}
+	if r.Name != "test" || !r.Valid || r.Message != "ok" {
+		t.Error("AccountVerifyResult fields not set correctly")
+	}
+}
+
+// --- Account struct fields ---
+
+func TestAccount_StructFields(t *testing.T) {
+	a := Account{
+		Name:      "n",
+		AccountID: "aid",
+		APIToken:  "tok",
+		Email:     "e@example.com",
+		CreatedAt: "2026-01-01T00:00:00Z",
+	}
+	if a.Name != "n" || a.AccountID != "aid" || a.APIToken != "tok" ||
+		a.Email != "e@example.com" || a.CreatedAt != "2026-01-01T00:00:00Z" {
+		t.Error("Account struct fields not assigned correctly")
 	}
 }

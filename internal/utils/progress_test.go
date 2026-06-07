@@ -125,6 +125,68 @@ func TestTransferProgress_ETA(t *testing.T) {
 	}
 }
 
+func TestTransferProgress_ETA_WithSpeed(t *testing.T) {
+	p := NewTransferProgress(1000)
+	p.Transfer = 500
+	p.Speed = 100
+	eta := p.ETA()
+	if eta <= 0 {
+		t.Errorf("ETA with active transfer should be positive, got %v", eta)
+	}
+	expected := 5 * time.Second
+	if eta != expected {
+		t.Errorf("ETA = %v, want %v (500 remaining / 100 bytes/s)", eta, expected)
+	}
+}
+
+func TestTransferProgress_ETA_Complete(t *testing.T) {
+	p := NewTransferProgress(1000)
+	p.Transfer = 1000
+	p.Speed = 100
+	eta := p.ETA()
+	if eta != 0 {
+		t.Errorf("ETA when complete should be 0, got %v", eta)
+	}
+}
+
+func TestTransferProgress_ETA_OverTransferred(t *testing.T) {
+	p := NewTransferProgress(1000)
+	p.Transfer = 1200
+	p.Speed = 100
+	eta := p.ETA()
+	if eta != 0 {
+		t.Errorf("ETA when over-transferred should be 0, got %v", eta)
+	}
+}
+
+func TestTransferProgress_PrintTo(t *testing.T) {
+	p := NewTransferProgress(100)
+	p.Transfer = 50
+	p.Speed = 10
+	var buf bytes.Buffer
+	p.PrintTo(&buf)
+	output := buf.String()
+	if output == "" {
+		t.Error("PrintTo should write non-empty output")
+	}
+	if !strings.HasPrefix(output, "\r") {
+		t.Error("PrintTo should start with carriage return")
+	}
+	if !strings.Contains(output, "50.0%") {
+		t.Errorf("PrintTo should show 50%%, got: %s", output)
+	}
+}
+
+func TestTransferProgress_PrintTo_ZeroProgress(t *testing.T) {
+	p := NewTransferProgress(100)
+	var buf bytes.Buffer
+	p.PrintTo(&buf)
+	output := buf.String()
+	if !strings.Contains(output, "0.0%") {
+		t.Errorf("PrintTo at zero should show 0%%, got: %s", output)
+	}
+}
+
 func TestTransferProgress_FullBar(t *testing.T) {
 	p := NewTransferProgress(100)
 	p.Add(100)

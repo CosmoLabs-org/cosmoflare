@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -627,5 +628,445 @@ func TestCopyDir(t *testing.T) {
 	}
 	if string(data) != "nested" {
 		t.Errorf("sub/nested.txt content = %q, want %q", string(data), "nested")
+	}
+}
+
+// ── loadManifest edge cases ───────────────────────────────────────────────────
+
+// TestLoadManifestMissingName verifies that a plugin.yaml without a name field is rejected.
+func TestLoadManifestMissingName(t *testing.T) {
+	dir := t.TempDir()
+	pluginDir := filepath.Join(dir, "no-name")
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Write manifest without a name field
+	if err := os.WriteFile(filepath.Join(pluginDir, "plugin.yaml"), []byte("version: 1.0.0\ndescription: No name\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	svc, _ := NewPluginService(dir)
+	_, err := svc.loadManifest("no-name")
+	if err == nil {
+		t.Fatal("expected error for manifest missing 'name' field")
+	}
+}
+
+// TestLoadManifestInvalidYAML verifies that malformed YAML in plugin.yaml is rejected.
+func TestLoadManifestInvalidYAML(t *testing.T) {
+	dir := t.TempDir()
+	pluginDir := filepath.Join(dir, "bad-yaml")
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Write intentionally invalid YAML (tab character where not allowed)
+	if err := os.WriteFile(filepath.Join(pluginDir, "plugin.yaml"), []byte("name: bad\n\tversion: broken"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	svc, _ := NewPluginService(dir)
+	_, err := svc.loadManifest("bad-yaml")
+	if err == nil {
+		t.Fatal("expected error for invalid YAML")
+	}
+}
+
+// TestLoadManifestNotFound verifies that a non-existent plugin returns an error.
+func TestLoadManifestNotFound(t *testing.T) {
+	dir := t.TempDir()
+	svc, _ := NewPluginService(dir)
+	_, err := svc.loadManifest("phantom")
+	if err == nil {
+		t.Fatal("expected error for missing plugin directory")
+	}
+}
+
+// ── Get — path correctness ────────────────────────────────────────────────────
+
+// TestPluginServiceGetReturnsCorrectPath verifies Get populates the Path field.
+func TestPluginServiceGetReturnsCorrectPath(t *testing.T) {
+	dir, svc := setupTestPlugin(t, "path-check")
+
+	info, err := svc.Get("path-check")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := filepath.Join(dir, "path-check")
+	if info.Path != want {
+		t.Errorf("PluginInfo.Path = %q, want %q", info.Path, want)
+	}
+}
+
+// ── List — extra coverage ─────────────────────────────────────────────────────
+
+// TestPluginServiceListMultiplePlugins verifies List returns all installed plugins.
+func TestPluginServiceListMultiplePlugins(t *testing.T) {
+	dir := t.TempDir()
+	svc, _ := NewPluginService(dir)
+
+	for _, name := range []string{"alpha", "beta", "gamma"} {
+		pluginDir := filepath.Join(dir, name)
+		os.MkdirAll(pluginDir, 0755)
+		manifest := "name: " + name + "\nversion: 1.0.0\ndescription: Plugin " + name + "\n"
+		os.WriteFile(filepath.Join(pluginDir, "plugin.yaml"), []byte(manifest), 0644)
+	}
+
+	plugins, err := svc.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plugins) != 3 {
+		t.Fatalf("expected 3 plugins, got %d", len(plugins))
+	}
+}
+
+// TestPluginServiceListSkipsFiles verifies List ignores non-directory entries.
+func TestPluginServiceListSkipsFiles(t *testing.T) {
+	dir, svc := setupTestPlugin(t, "real-plugin")
+
+	// Place a plain file alongside the plugin directory
+	if err := os.WriteFile(filepath.Join(dir, "not-a-plugin.txt"), []byte("ignore me"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	plugins, err := svc.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plugins) != 1 {
+		t.Fatalf("expected 1 plugin (file should be skipped), got %d", len(plugins))
+	}
+	if plugins[0].Manifest.Name != "real-plugin" {
+		t.Errorf("plugin name = %q, want %q", plugins[0].Manifest.Name, "real-plugin")
+	}
+}
+
+// ── Init — content verification ───────────────────────────────────────────────
+
+// TestPluginServiceInitCommandsInManifest verifies Init writes correct commands in plugin.yaml.
+func TestPluginServiceInitCommandsInManifest(t *testing.T) {
+	dir := t.TempDir()
+	svc, _ := NewPluginService(dir)
+
+	_, err := svc.Init("cmd-check")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	manifest, err := svc.loadManifest("cmd-check")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Commands) != 1 {
+		t.Fatalf("expected 1 command, got %d", len(manifest.Commands))
+	}
+	cmd := manifest.Commands[0]
+	if cmd.Name != "cmd-check" {
+		t.Errorf("command name = %q, want %q", cmd.Name, "cmd-check")
+	}
+	if cmd.Binary != "bin/cmd-check" {
+		t.Errorf("command binary = %q, want %q", cmd.Binary, "bin/cmd-check")
+	}
+}
+
+// TestPluginServiceInitREADMEContent verifies Init writes a README referencing the plugin name.
+func TestPluginServiceInitREADMEContent(t *testing.T) {
+	dir := t.TempDir()
+	svc, _ := NewPluginService(dir)
+
+	pluginDir, err := svc.Init("readme-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(pluginDir, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	if !pluginContains(content, "readme-test") {
+		t.Error("README.md does not mention the plugin name")
+	}
+}
+
+// pluginContains is a helper to check for a substring in plugin test assertions.
+func pluginContains(s, sub string) bool {
+	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
+		func() bool {
+			for i := 0; i <= len(s)-len(sub); i++ {
+				if s[i:i+len(sub)] == sub {
+					return true
+				}
+			}
+			return false
+		}())
+}
+
+// ── Run — additional scenarios ────────────────────────────────────────────────
+
+// TestPluginServiceRunFallsBackToFirstCommand verifies that an unrecognised first arg
+// does not consume the arg and routes to the first command binary instead.
+func TestPluginServiceRunFallsBackToFirstCommand(t *testing.T) {
+	dir, svc := setupTestPlugin(t, "fallback-cmd")
+
+	// Create the binary expected by the single "greet" command
+	binPath := filepath.Join(dir, "fallback-cmd", "bin", "greet")
+	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho hi"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	var capturedBinary string
+	var capturedArgs []string
+	svc.execCommandFunc = func(binary string, args []string) ([]byte, error) {
+		capturedBinary = binary
+		capturedArgs = args
+		return []byte("hi"), nil
+	}
+
+	// "unknown" does not match any command name, so falls back to first command
+	// and the arg is passed through as-is.
+	_, err := svc.Run("fallback-cmd", []string{"unknown", "--flag"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if capturedBinary != binPath {
+		t.Errorf("binary = %q, want %q", capturedBinary, binPath)
+	}
+	// The args should be passed unchanged (no subcommand consumed)
+	if len(capturedArgs) != 2 {
+		t.Errorf("args = %v, expected 2 elements [unknown --flag]", capturedArgs)
+	}
+}
+
+// TestPluginServiceRunExecError verifies that an exec error is wrapped and returned.
+func TestPluginServiceRunExecError(t *testing.T) {
+	dir, svc := setupTestPlugin(t, "fail-exec")
+
+	binPath := filepath.Join(dir, "fail-exec", "bin", "greet")
+	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho fail"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	svc.execCommandFunc = func(binary string, args []string) ([]byte, error) {
+		return nil, fmt.Errorf("exit status 1")
+	}
+
+	_, err := svc.Run("fail-exec", nil)
+	if err == nil {
+		t.Fatal("expected error when exec fails")
+	}
+}
+
+// TestPluginServiceRunNotInstalledPlugin verifies Run returns error for unknown plugin.
+func TestPluginServiceRunNotInstalledPlugin(t *testing.T) {
+	dir := t.TempDir()
+	svc, _ := NewPluginService(dir)
+	_, err := svc.Run("ghost-plugin", nil)
+	if err == nil {
+		t.Fatal("expected error for non-installed plugin")
+	}
+}
+
+// ── Install — git failure cleanup ────────────────────────────────────────────
+
+// TestPluginServiceInstallGitCloneFailure verifies partial clone is cleaned up on failure.
+func TestPluginServiceInstallGitCloneFailure(t *testing.T) {
+	pluginsDir := t.TempDir()
+	svc, _ := NewPluginService(pluginsDir)
+
+	svc.gitCloneFunc = func(url, dest string) error {
+		// Simulate partial clone by creating the directory then failing
+		os.MkdirAll(dest, 0755)
+		return fmt.Errorf("git clone failed: connection refused")
+	}
+
+	_, err := svc.Install("https://github.com/example/cosmoflare-broken.git")
+	if err == nil {
+		t.Fatal("expected error on git clone failure")
+	}
+
+	// Cleanup: the dest dir should have been removed
+	destDir := filepath.Join(pluginsDir, "broken")
+	if _, statErr := os.Stat(destDir); !os.IsNotExist(statErr) {
+		t.Error("expected partial clone directory to be cleaned up after failure")
+	}
+}
+
+// TestPluginServiceInstallGitAlreadyInstalled verifies Install fails when plugin already exists.
+func TestPluginServiceInstallGitAlreadyInstalled(t *testing.T) {
+	dir, svc := setupTestPlugin(t, "my-plugin")
+
+	svc.gitCloneFunc = func(url, dest string) error {
+		return nil // should never be called
+	}
+
+	_, err := svc.Install("https://github.com/example/cosmoflare-my-plugin.git")
+	if err == nil {
+		t.Fatal("expected error when plugin is already installed")
+	}
+	_ = dir
+}
+
+// ── Install local — error paths ───────────────────────────────────────────────
+
+// TestPluginServiceInstallLocalMissingManifest verifies Install fails when source has no plugin.yaml.
+func TestPluginServiceInstallLocalMissingManifest(t *testing.T) {
+	pluginsDir := t.TempDir()
+	svc, _ := NewPluginService(pluginsDir)
+
+	srcDir := t.TempDir() // no plugin.yaml inside
+
+	_, err := svc.Install(srcDir)
+	if err == nil {
+		t.Fatal("expected error when source has no plugin.yaml")
+	}
+}
+
+// TestPluginServiceInstallLocalInvalidYAML verifies Install fails for invalid plugin.yaml.
+func TestPluginServiceInstallLocalInvalidYAML(t *testing.T) {
+	pluginsDir := t.TempDir()
+	svc, _ := NewPluginService(pluginsDir)
+
+	srcDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(srcDir, "plugin.yaml"), []byte("name: bad\n\tversion: broken"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := svc.Install(srcDir)
+	if err == nil {
+		t.Fatal("expected error for invalid plugin.yaml")
+	}
+}
+
+// TestPluginServiceInstallLocalMissingName verifies Install fails when plugin.yaml has no name.
+func TestPluginServiceInstallLocalMissingName(t *testing.T) {
+	pluginsDir := t.TempDir()
+	svc, _ := NewPluginService(pluginsDir)
+
+	srcDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(srcDir, "plugin.yaml"), []byte("version: 1.0.0\ndescription: No name\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := svc.Install(srcDir)
+	if err == nil {
+		t.Fatal("expected error when plugin.yaml is missing 'name' field")
+	}
+}
+
+// ── pluginNameFromURL — edge cases ────────────────────────────────────────────
+
+// TestPluginNameFromURLEdgeCases verifies edge-case URL patterns.
+func TestPluginNameFromURLEdgeCases(t *testing.T) {
+	tests := []struct {
+		url  string
+		want string
+	}{
+		// Trailing slash is stripped
+		{"https://github.com/user/cosmoflare-trim/", "trim"},
+		// No path after host — last component is the domain itself
+		{"https://github.com", "github.com"},
+		// cosmoflare- prefix is stripped only once
+		{"https://github.com/user/cosmoflare-cosmoflare-double.git", "cosmoflare-double"},
+		// SSH SCP-style without ://
+		{"git@github.com:user/cosmoflare-ssh.git", "ssh"},
+	}
+	for _, tc := range tests {
+		got := pluginNameFromURL(tc.url)
+		if got != tc.want {
+			t.Errorf("pluginNameFromURL(%q) = %q, want %q", tc.url, got, tc.want)
+		}
+	}
+}
+
+// ── PluginsDir — accessor ─────────────────────────────────────────────────────
+
+// TestPluginServicePluginsDirAccessor verifies PluginsDir returns the configured path.
+func TestPluginServicePluginsDirAccessor(t *testing.T) {
+	want := "/custom/plugins/path"
+	svc, err := NewPluginService(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if svc.PluginsDir() != want {
+		t.Errorf("PluginsDir() = %q, want %q", svc.PluginsDir(), want)
+	}
+}
+
+// ── PluginManifest / PluginCommand struct fields ──────────────────────────────
+
+// TestPluginManifestAllFields verifies all fields survive a roundtrip through loadManifest.
+func TestPluginManifestAllFields(t *testing.T) {
+	dir := t.TempDir()
+	pluginDir := filepath.Join(dir, "full-manifest")
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	yaml := `name: full-manifest
+version: 3.2.1
+description: Full manifest test
+author: CosmoLabs
+commands:
+  - name: cmd1
+    description: First command
+    binary: bin/cmd1
+  - name: cmd2
+    description: Second command
+    binary: bin/cmd2
+`
+	if err := os.WriteFile(filepath.Join(pluginDir, "plugin.yaml"), []byte(yaml), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	svc, _ := NewPluginService(dir)
+	manifest, err := svc.loadManifest("full-manifest")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if manifest.Name != "full-manifest" {
+		t.Errorf("Name = %q, want %q", manifest.Name, "full-manifest")
+	}
+	if manifest.Version != "3.2.1" {
+		t.Errorf("Version = %q, want %q", manifest.Version, "3.2.1")
+	}
+	if manifest.Description != "Full manifest test" {
+		t.Errorf("Description = %q, want %q", manifest.Description, "Full manifest test")
+	}
+	if manifest.Author != "CosmoLabs" {
+		t.Errorf("Author = %q, want %q", manifest.Author, "CosmoLabs")
+	}
+	if len(manifest.Commands) != 2 {
+		t.Fatalf("expected 2 commands, got %d", len(manifest.Commands))
+	}
+	if manifest.Commands[0].Name != "cmd1" || manifest.Commands[0].Binary != "bin/cmd1" {
+		t.Errorf("Commands[0] = %+v", manifest.Commands[0])
+	}
+	if manifest.Commands[1].Name != "cmd2" || manifest.Commands[1].Binary != "bin/cmd2" {
+		t.Errorf("Commands[1] = %+v", manifest.Commands[1])
+	}
+}
+
+// ── isGitURL — additional cases ───────────────────────────────────────────────
+
+// TestIsGitURLAdditionalCases covers HTTP (non-S) and plain .git suffix.
+func TestIsGitURLAdditionalCases(t *testing.T) {
+	tests := []struct {
+		source string
+		want   bool
+	}{
+		{"http://github.com/user/repo", true},  // http:// contains "://"
+		{"file:///local/repo", true},            // file:// contains "://"
+		{"just-a-name", false},                  // plain name
+		{"path/to/dir", false},                  // relative path, no ://, no .git
+		{"cosmoflare-plugin.git", true},         // ends in .git
+	}
+	for _, tc := range tests {
+		got := isGitURL(tc.source)
+		if got != tc.want {
+			t.Errorf("isGitURL(%q) = %v, want %v", tc.source, got, tc.want)
+		}
 	}
 }
