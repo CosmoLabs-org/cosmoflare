@@ -5,6 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/assert"
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 )
 
 // --- Key handling in Update() for navigation ---
@@ -164,4 +165,113 @@ func TestUpdate_VimKeys_HL(t *testing.T) {
 	result, _ = dm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")})
 	dm = result.(DashboardModel)
 	assert.Equal(t, SectionOverview, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_GoToOverview(t *testing.T) {
+	m := initialModel()
+	m.currentSection = SectionBucketList
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Overview"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionOverview, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_GoToBuckets(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Buckets"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionBucketList, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_GoToObjects(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Objects"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionObjectList, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_GoToSettings(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Settings"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionSettings, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_ToggleHelp(t *testing.T) {
+	m := initialModel()
+	assert.False(t, m.showHelp)
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Toggle Help"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.True(t, dm.showHelp)
+}
+
+func TestHandlePaletteSelect_Quit(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Quit"}}
+	_, cmd := m.handlePaletteSelect(msg)
+	assert.NotNil(t, cmd, "Quit should return a tea.Cmd")
+}
+
+func TestHandlePaletteSelect_Refresh(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Refresh Data"}}
+	_, cmd := m.handlePaletteSelect(msg)
+	assert.NotNil(t, cmd, "Refresh Data should return a tea.Cmd")
+}
+
+func TestHandlePaletteSelect_UnknownCommand(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Unknown Command"}}
+	result, cmd := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Nil(t, cmd)
+	assert.True(t, len(dm.notifications) > 0, "unknown command should add notification")
+}
+
+func TestHandlePaletteSelect_CustomAction(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{
+		Name: "Custom",
+		Action: func() tea.Cmd {
+			return func() tea.Msg { return "custom-fired" }
+		},
+	}}
+	_, cmd := m.handlePaletteSelect(msg)
+	assert.NotNil(t, cmd, "custom action should return a tea.Cmd")
+	result := cmd()
+	assert.Equal(t, "custom-fired", result)
+}
+
+func TestHandlePaletteSelect_GoToMonitoring(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Monitoring"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionMonitoring, dm.currentSection)
+}
+
+func TestHandlePaletteSelect_GoToUpload(t *testing.T) {
+	m := initialModel()
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Upload"}}
+	result, _ := m.handlePaletteSelect(msg)
+	dm := result.(DashboardModel)
+	assert.Equal(t, SectionUpload, dm.currentSection)
+}
+
+func TestView_ReturnsNonEmpty(t *testing.T) {
+	m := initialModel()
+	m.width = 80
+	m.height = 24
+	view := m.View()
+	assert.NotEmpty(t, view)
+}
+
+func TestInit_ReturnsCmd(t *testing.T) {
+	m := initialModel()
+	cmd := m.Init()
+	assert.NotNil(t, cmd, "Init should return a tea.Cmd for initial data load")
 }
