@@ -12,8 +12,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -76,19 +80,20 @@ type S3Object struct {
 // Execute performs the S3 to R2 migration
 func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, error) {
 	startTime := time.Now()
+	if m.Concurrency <= 0 {
+		m.Concurrency = 10
+	}
 
 	printInfo("🚀 Starting S3 to R2 migration")
 	printInfo("Source: s3://%s", m.S3Bucket)
 	printInfo("Destination: %s", m.R2Bucket)
 	printInfo("Concurrency: %d", m.Concurrency)
 
-	// Create S3 client
 	s3Client, err := m.createS3Client()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create S3 client: %w", err)
 	}
 
-	// List S3 objects
 	objects, err := m.listS3Objects(s3Client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
@@ -96,64 +101,204 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 
 	if len(objects) == 0 {
 		printInfo("No objects to migrate")
-		return &MigrationResult{
-			Duration: time.Since(startTime),
-		}, nil
+		return &MigrationResult{Duration: time.Since(startTime)}, nil
 	}
 
-	printInfo("Found %d objects to migrate (%s)",
-		len(objects), FormatBytes(m.getTotalSize(objects)))
+	totalSize := m.getTotalSize(objects)
+	printInfo("Found %d objects (%s)", len(objects), FormatBytes(totalSize))
 
 	if m.DryRun {
 		return m.performDryRun(objects)
 	}
 
-	// Create migration result
+	cpPath := m.checkpointPath()
+	var cp *Checkpoint
+
+	if m.Resume {
+		cp, err = loadCheckpoint(cpPath)
+		if err != nil {
+			printWarning("Corrupt checkpoint, starting fresh: %v", err)
+			cp = nil
+		}
+	} else {
+		existing, _ := loadCheckpoint(cpPath)
+		if existing != nil {
+			printWarning("Stale checkpoint found. Use --resume to continue or delete %s", cpPath)
+		}
+	}
+
+	if cp == nil {
+		cp = &Checkpoint{
+			Version:      1,
+			S3Bucket:     m.S3Bucket,
+			R2Bucket:     m.R2Bucket,
+			Filter:       m.Filter,
+			StartedAt:    startTime,
+			TotalObjects: int64(len(objects)),
+			TotalSize:    totalSize,
+			Completed:    make(map[string]int64),
+			path:         cpPath,
+		}
+	} else {
+		cp.path = cpPath
+		printInfo("Resuming: %d/%d already transferred (%s)",
+			len(cp.Completed), cp.TotalObjects, FormatBytes(cp.TransferredSize))
+	}
+
+	var remaining []*S3Object
+	for _, obj := range objects {
+		if !cp.isCompleted(obj.Key) {
+			remaining = append(remaining, obj)
+		}
+	}
+
+	if len(remaining) == 0 {
+		printInfo("All objects already transferred")
+		deleteCheckpoint(cpPath)
+		return &MigrationResult{
+			TotalObjects:    int64(len(objects)),
+			SuccessCount:    int64(len(objects)),
+			TransferredSize: totalSize,
+			Duration:        time.Since(startTime),
+		}, nil
+	}
+
+	printInfo("%d objects remaining", len(remaining))
+
+	var stopping atomic.Bool
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	work := make(chan *S3Object, m.Concurrency)
+	results := make(chan transferResult, m.Concurrency)
+
+	var wg sync.WaitGroup
+	for i := 0; i < m.Concurrency; i++ {
+		wg.Add(1)
+		go transferWorker(s3Client, r2Client, m.S3Bucket, m.R2Bucket, work, results, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	go func() {
+		for _, obj := range remaining {
+			if stopping.Load() {
+				break
+			}
+			work <- obj
+		}
+		close(work)
+	}()
+
+	go func() {
+		<-sigCh
+		stopping.Store(true)
+		signal.Stop(sigCh)
+	}()
+
+	bar := pb.StartNew(len(remaining))
+	bar.SetTemplateString(`{{counters . }} {{bar . }} {{percent . }} {{rtime . }} {{etime . }}`)
+
+	flushTicker := time.NewTicker(flushInterval)
+	defer flushTicker.Stop()
+	sinceLastFlush := 0
+
 	result := &MigrationResult{
 		TotalObjects: int64(len(objects)),
-		Duration:     time.Since(startTime),
+		SkippedCount: int64(len(objects) - len(remaining)),
 	}
 
-	// Create progress bar
-	bar := pb.StartNew(len(objects))
-	bar.SetTemplateString(`{{counters . }} {{bar . }} {{percent . }} {{rtime . }} {{etime . }}`)
-	defer bar.Finish()
-
-	// Simulate migration for now
-	for i := 0; i < len(objects); i++ {
-		time.Sleep(10 * time.Millisecond) // Simulate work
-		bar.Increment()
-		result.SuccessCount++
-		result.TransferredSize += objects[i].Size
-	}
-
-	// Save manifest if specified
-	if m.ManifestFile != "" {
-		manifest := &MigrationManifest{
-			S3Bucket:         m.S3Bucket,
-			R2Bucket:         m.R2Bucket,
-			StartTime:        startTime,
-			TotalObjects:     int64(len(objects)),
-			TotalSize:        m.getTotalSize(objects),
-			CompletedObjects: result.SuccessCount,
-			CompletedSize:    result.TransferredSize,
-			LastUpdated:      time.Now(),
-		}
-
-		if err := m.saveManifest(manifest); err != nil {
-			printWarning("Failed to save manifest: %v", err)
+	for r := range results {
+		if r.Err != nil {
+			cp.markFailed(r.Key)
+			result.ErrorCount++
+			result.Errors = append(result.Errors, fmt.Sprintf("%s: %v", r.Key, r.Err))
 		} else {
-			result.ManifestPath = m.ManifestFile
+			cp.markCompleted(r.Key, r.Size)
+			result.SuccessCount++
+			result.TransferredSize += r.Size
+		}
+		bar.Increment()
+		sinceLastFlush++
+
+		select {
+		case <-flushTicker.C:
+			cp.flush()
+			sinceLastFlush = 0
+		default:
+			if sinceLastFlush >= flushCount {
+				cp.flush()
+				sinceLastFlush = 0
+			}
 		}
 	}
 
+	bar.Finish()
 	result.Duration = time.Since(startTime)
 
-	// Print summary
-	printMigrationSummary(result)
+	if result.ErrorCount == 0 && !stopping.Load() {
+		deleteCheckpoint(cpPath)
+		printSuccess("✅ Migration completed successfully!")
+	} else if stopping.Load() {
+		cp.flush()
+		printWarning("Interrupted: %d/%d transferred. Run with --resume to continue.",
+			result.SuccessCount+result.SkippedCount, result.TotalObjects)
+		printMigrationSummary(result)
+		return result, fmt.Errorf("migration interrupted")
+	} else {
+		cp.flush()
+		printWarning("%d objects failed. Run with --resume to retry.", result.ErrorCount)
+	}
 
-	printSuccess("✅ Migration completed successfully!")
+	if m.Verify && !stopping.Load() && result.ErrorCount == 0 {
+		m.verifyTransfers(s3Client, r2Client, objects, result)
+	}
+
+	printMigrationSummary(result)
 	return result, nil
+}
+
+func (m *S3Migration) verifyTransfers(
+	s3Client *s3.Client,
+	r2Client cosmoflare.R2Client,
+	objects []*S3Object,
+	result *MigrationResult,
+) {
+	printInfo("🔍 Verifying transferred objects...")
+
+	mismatchCount := 0
+	bar := pb.StartNew(len(objects))
+	bar.SetTemplateString(`Verifying: {{counters . }} {{bar . }} {{percent . }}`)
+
+	for _, obj := range objects {
+		bar.Increment()
+
+		r2Head, err := r2Client.HeadObject(context.Background(), m.R2Bucket, obj.Key)
+		if err != nil {
+			printWarning("⚠ Verify failed for %s: %v", obj.Key, err)
+			mismatchCount++
+			continue
+		}
+
+		s3ETag := strings.Trim(obj.ETag, "\"")
+		r2ETag := strings.Trim(r2Head.ETag, "\"")
+
+		if s3ETag != r2ETag {
+			printWarning("⚠ ETag mismatch: %s (S3: %s, R2: %s)", obj.Key, s3ETag, r2ETag)
+			mismatchCount++
+		}
+	}
+
+	bar.Finish()
+
+	if mismatchCount == 0 {
+		printSuccess("✅ All %d objects verified", len(objects))
+	} else {
+		printWarning("⚠ %d verification mismatches found", mismatchCount)
+	}
 }
 
 // createS3Client creates an AWS S3 client
