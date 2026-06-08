@@ -79,9 +79,13 @@ cosmoflare dashboard --interval 10s     # Custom monitoring poll interval
 ```
 
 Features:
+- Split-pane object browser with folder navigation (bucket list left, objects right)
 - Real-time monitoring of R2, Workers, and KV with delta indicators
 - Bucket management (create, delete, browse objects)
-- Object listing with pagination
+- Object browsing with prefix-based folder hierarchy and pagination
+- Bottom detail panel with object metadata, HeadObject modal for full details
+- Object deletion with two-keypress confirmation
+- Wide mode (≥100 cols: side-by-side) and narrow mode (<100: single pane with Tab)
 - Tiered refresh: monitoring auto-polls, other sections refresh on navigation
 - Graceful launch without credentials (banner with setup instructions)
 - Command palette (Ctrl+P), keyboard navigation, dark/light themes
@@ -90,15 +94,18 @@ Features:
 
 | Key | Context | Action |
 |-----|---------|--------|
-| `1`-`6` | Global | Jump to section (Overview, Buckets, Objects, Upload, Monitoring, Settings) |
+| `1`-`5` | Global | Jump to section (Overview, Browser, Upload, Monitoring, Settings) |
+| `Tab` | Browser | Switch between bucket list and object list panes |
+| `Enter` | Browser, bucket | Select bucket, load objects |
+| `Enter` | Browser, directory | Navigate into folder |
+| `Enter` | Browser, object | Show HeadObject detail modal |
+| `Backspace` | Browser, in prefix | Go up one folder level |
+| `Backspace` | Browser, at root | Switch focus to bucket list |
+| `d` | Browser, object | Delete object (with confirmation) |
+| `c` | Browser, buckets | Create bucket |
+| `n`/`p` | Browser, objects | Next/previous page |
 | `r` | Any | Refresh current section |
 | `p` | Monitoring | Pause/resume auto-poll |
-| `Enter` | Buckets | Drill into object list |
-| `Backspace` | Objects | Back to bucket list |
-| `c` | Buckets | Create bucket |
-| `d` | Buckets | Delete bucket (with confirmation) |
-| `/` | Buckets | Search/filter |
-| `n`/`p` | Objects | Next/previous page |
 | `Ctrl+P` | Global | Command palette |
 | `F1` | Global | Toggle help |
 | `q` | Global | Quit |

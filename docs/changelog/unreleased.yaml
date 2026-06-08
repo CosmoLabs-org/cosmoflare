@@ -11,6 +11,9 @@ entries:
         - description: Add real-time TUI dashboard with live monitoring, bucket CRUD, and object browsing (ROAD-020)
           source: manual
           date: 2026-06-07T06:32:15.111254-03:00
+        - description: Add split-pane TUI object browser with folder navigation and object management (ROAD-002)
+          source: manual
+          date: 2026-06-08T06:17:46.504066-03:00
     fixed: []
     changed: []
     deprecated: []

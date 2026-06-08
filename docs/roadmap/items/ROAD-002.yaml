@@ -1,11 +1,13 @@
 id: ROAD-002
 created_at: 2026-02-26T01:32:43.333657+01:00
-updated_at: 2026-03-02T12:31:48.885896+01:00
+updated_at: 2026-06-08T06:17:47.074195-03:00
 title: TUI Object Browser with split-pane layout
-status: captured
+status: completed
 priority: 65
 category: ux
 effort: large
 linked_issues:
     - FEAT-001
     - BUG-004
+completed_in: v0.14.0
+completed_at: 2026-06-08T06:17:47.07419-03:00

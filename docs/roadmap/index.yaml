@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-06-07T06:32:18.2397-03:00
+last_updated: 2026-06-08T06:17:47.075128-03:00
 next_id: 73
 items:
     - id: ROAD-072
@@ -535,13 +535,14 @@ items:
       created_at: 2026-02-26T01:32:44.3795+01:00
     - id: ROAD-002
       title: TUI Object Browser with split-pane layout
-      status: captured
+      status: completed
       priority: 65
       category: ux
       effort: large
       linked_issues:
         - FEAT-001
         - BUG-004
+      completed_in: v0.14.0
       created_at: 2026-02-26T01:32:43.333657+01:00
     - id: ROAD-001
       title: Consolidate duplicated code (formatBytes x9, maskAccountID x3)
