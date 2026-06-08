@@ -14,6 +14,9 @@ entries:
         - description: Add split-pane TUI object browser with folder navigation and object management (ROAD-002)
           source: manual
           date: 2026-06-08T06:17:46.504066-03:00
+        - description: Add real S3-to-R2 migration with resume support, concurrent transfers, and ETag verification (ROAD-007)
+          source: manual
+          date: 2026-06-08T08:47:05.221387-03:00
     fixed: []
     changed: []
     deprecated: []

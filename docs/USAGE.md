@@ -1685,6 +1685,46 @@ services:
 | `--merge` | import | false | Merge with existing config (skip existing resources) |
 | `--dry-run` | both | false | Preview changes without applying (global flag) |
 | `--json` | both | false | Output in JSON format (global flag) |
+## S3 to R2 Migration
+
+Migrate data from AWS S3 to Cloudflare R2 with concurrent transfers, resume support, and integrity verification.
+
+### Basic migration
+```bash
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --filter="images/*"
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --concurrency=20
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --dry-run
+```
+
+Default concurrency: 10 parallel transfers. Objects over 100MB automatically use multipart upload.
+
+### Resume interrupted migration
+```bash
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --resume
+```
+
+Migration state is saved to `~/.cosmoflare/migrations/`. If interrupted (Ctrl+C, network failure), re-run with `--resume` to continue from where it left off. Completed objects are skipped automatically. Failed objects from the prior run are retried.
+
+### Verify migration integrity
+```bash
+cosmoflare migrate from-s3 my-s3-bucket to-r2 my-r2-bucket --verify
+```
+
+After transfer, compares S3 ETags with R2 ETags for each object. Reports mismatches as warnings.
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--filter` | all | Prefix pattern to filter objects (e.g., `"images/*"`) |
+| `--concurrency` | `10` | Number of parallel transfers |
+| `--resume` | `false` | Resume from checkpoint (skip completed objects) |
+| `--verify` | `false` | Verify ETags after transfer |
+| `--dry-run` | `false` | List objects without transferring |
+| `--region` | `us-east-1` | AWS region |
+| `--profile` | default | AWS credential profile |
+
 ## Workers AI & AI Gateway
 
 Manage Workers AI models and AI Gateway configurations for running AI inference at the edge.
