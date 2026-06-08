@@ -4,8 +4,9 @@ created: 2026-06-07T04:30:00-03:00
 status: approved
 roadmap: ROAD-002
 origin: ROAD-002
-last_reviewed: 2026-06-07T05:00:00-03:00
-last_review_findings: 6
+last_reviewed: 2026-06-08T00:30:00-03:00
+last_review_ref: docs/independent-reviews/2026-06-08T00-30-00-road002-tui-object-browser.md
+last_review_findings: 7
 deliverables:
   - BR-01: BrowserModel sub-model with split-pane layout
   - BR-02: Pane focus management and narrow/wide mode switching
@@ -109,7 +110,7 @@ The right pane maintains a `prefixStack []string`:
 - `Backspace`: pop → `["", "images/"]`
 - `Backspace` at root: switch focus to left pane (bucket list)
 
-The current prefix (top of stack) is passed to `DataSource.FetchObjects(ctx, bucket, prefix, page)`.
+The current prefix (top of stack) is passed to `DataSource.FetchObjects(ctx, bucket, prefix, "")` (empty token = first page).
 
 Display entries in the right pane:
 - **Directories** first: rendered with `📁` prefix, derived from `CommonPrefixes` in the API response. Show only the last segment (e.g., `"thumbnails/"` not `"images/thumbnails/"`). Sorted alphabetically.
@@ -123,16 +124,17 @@ Display entries in the right pane:
 // Before (ROAD-020):
 FetchObjects(ctx context.Context, bucket string, page int) ([]ObjectItem, int, error)
 
-// After:
-FetchObjects(ctx context.Context, bucket string, prefix string, page int) (ObjectListing, error)
+// After (token-based pagination):
+FetchObjects(ctx context.Context, bucket, prefix, continuationToken string) (ObjectListing, error)
 ```
 
 New types:
 ```go
 type ObjectListing struct {
-    Dirs    []string     // common prefixes ("images/", "logs/")
-    Objects []ObjectItem // files at this level
-    Total   int          // total file count at this prefix
+    Dirs      []string     // common prefixes ("images/", "logs/")
+    Objects   []ObjectItem // files at this level
+    NextToken string       // pass to next FetchObjects call for pagination
+    HasMore   bool         // true if more pages exist
 }
 ```
 
@@ -153,7 +155,9 @@ type ObjectDetail struct {
 }
 ```
 
-**Library gap — CommonPrefixes:** The current `pkg/cosmoflare` `ListObjects` implementation discards `CommonPrefixes` from the S3 `ListObjectsV2` response. The `ListResult[*Object]` type has no field for them. **The implementation plan must extend `ListResult` with a `CommonPrefixes []string` field** and update `ListObjects` in `pkg/cosmoflare/storage.go` to populate it from `result.CommonPrefixes`. This is a ~5-line library change.
+**Library gap — CommonPrefixes:** The current `pkg/cosmoflare` `ListObjects` implementation discards `CommonPrefixes` from the S3 `ListObjectsV2` response. The `ListResult[*Object]` type has no field for them. **The implementation plan must extend `ListResult` with a `CommonPrefixes []string` field** and update `ListObjects` in `pkg/cosmoflare/storage.go` to populate it. Note: the S3 SDK type is `[]types.CommonPrefix` (each has a `.Prefix` field) — extraction requires `aws.ToString(cp.Prefix)` per entry, not direct assignment.
+
+**Library gap — ContinuationToken:** The R2Client `ListObjects` method has no `ContinuationToken` parameter. The implementation plan must also extend the `ListObjects` signature (or add an overload) to accept an optional continuation token input. The S3 SDK's `ListObjectsV2Input` already supports `ContinuationToken`. This is a moderate library change (~15 lines across `client.go` interface + `storage.go` implementation).
 
 **Library gap — HeadResult.StorageClass:** `HeadResult` has no `StorageClass` field. Drop `StorageClass` from `ObjectDetail` — it's not critical for the detail panel and avoids a library change. If needed later, extend `HeadResult`.
 
@@ -193,6 +197,8 @@ The detail panel shows data from the `ObjectItem` (already loaded). The `Enter` 
 - `d` on an object → two-keypress confirmation in footer: `"Delete 'images/photo.jpg'? (y/n)"`. On `y`, calls `DataSource.DeleteObject(ctx, bucket, key)`. On success, refresh the listing. On failure, show error notification inline: `"❌ Failed to delete: <error>"`. Object stays in the list (next refresh will reflect actual state).
 - `Enter` on an object → fetch `HeadObject`, show modal overlay with full metadata. On API error (timeout, 404), show error in the modal body: `"❌ Failed to fetch details: <error>"` with `Esc` to dismiss. `Esc` dismisses on success too.
 - `Enter` on a directory → push prefix, fetch objects at new level.
+- `Enter` on left pane (select bucket) → if API call to fetch objects fails, show error notification and keep the right pane empty with `"❌ Failed to load objects: <error>"`. Don't switch focus — user stays on bucket list.
+- `Backspace` at root prefix in narrow mode → swap visible pane to bucket list (same as focus switch in wide mode, but affects visibility).
 
 ### Keyboard Shortcuts (Browser Section)
 
@@ -215,12 +221,13 @@ The detail panel shows data from the `ObjectItem` (already loaded). The `Enter` 
 | File | Change |
 |------|--------|
 | `pkg/cosmoflare/types.go` | Add `CommonPrefixes []string` field to `ListResult`. |
-| `pkg/cosmoflare/storage.go` | Populate `CommonPrefixes` from S3 `ListObjectsV2` response (~5 lines). |
+| `pkg/cosmoflare/client.go` | Extend `ListObjects` signature with optional `continuationToken` parameter (or add `ListObjectsOption` pattern). |
+| `pkg/cosmoflare/storage.go` | Populate `CommonPrefixes` from S3 response (extract `.Prefix` from `[]types.CommonPrefix`). Pass `ContinuationToken` to S3 SDK. ~15 lines total. |
 | `internal/tui/browser.go` | **New.** `BrowserModel` sub-model with dual-pane layout, prefix navigation, detail panel, object actions |
 | `internal/tui/browser_test.go` | **New.** Tests for pane switching, prefix nav, narrow/wide mode, detail panel |
 | `internal/tui/datasource.go` | Change `FetchObjects` to token-based pagination with prefix. Add `HeadObject` and `DeleteObject` methods. Add `ObjectListing` and `ObjectDetail` types. Add `ETag` to `ObjectItem`. Update both backends. |
 | `internal/tui/datasource_test.go` | Update tests for new signatures |
-| `internal/tui/model.go` | Add `browser BrowserModel` field. Remove `SectionObjectList` — browser handles both. Remove object-specific fields (`objects`, `objectPage`, `objectTotal`). |
+| `internal/tui/model.go` | Add `browser BrowserModel` field. Remove `SectionObjectList` from Section enum (18 references across source + tests need updating). Remove object-specific fields (`objects`, `objectPage`, `objectTotal`). Renumber section constants so `SectionUpload` takes the old `SectionObjectList` slot. |
 | `internal/tui/update.go` | Delegate `SectionBucketList` keys/messages to `browser.Update()`. Remove object-specific handlers. |
 | `internal/tui/view.go` | `SectionBucketList` renders `m.browser.View()`. Remove `renderObjectList()` and `renderBucketTable()` (moved to browser). |
 
