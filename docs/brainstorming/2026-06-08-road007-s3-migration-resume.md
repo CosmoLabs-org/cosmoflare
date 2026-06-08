@@ -4,6 +4,9 @@ created: 2026-06-08T02:00:00-03:00
 status: approved
 roadmap: ROAD-007
 origin: ROAD-007
+last_reviewed: 2026-06-08T03:00:00-03:00
+last_review_ref: docs/independent-reviews/2026-06-08T03-00-00-road007-s3-migration-resume.md
+last_review_findings: 5
 deliverables:
   - BR-01: Checkpoint persistence in ~/.cosmoflare/migrations/
   - BR-02: Worker pool with concurrent S3→R2 streaming transfers
@@ -116,14 +119,18 @@ type transferResult struct {
 }
 ```
 
+The worker function signature receives both clients: `func transferWorker(s3Client *s3.Client, r2Client cosmoflare.R2Client, s3Bucket, r2Bucket string, work <-chan *S3Object, results chan<- transferResult, wg *sync.WaitGroup)`.
+
 Each worker goroutine:
 1. Pull `*S3Object` from `work chan *S3Object`
 2. `s3Client.GetObject(ctx, &s3.GetObjectInput{Bucket: s3Bucket, Key: key})` → `io.ReadCloser` body + content length
-3. Stream body directly to `r2Client.Upload(ctx, r2Bucket, key, body, size)` — no temp file, no full-body buffering
+3. Stream body to `r2Client.Upload(ctx, r2Bucket, key, body, size)` — no temp file. For objects > 100MB, use `r2Client.MultipartUpload` instead (the library does NOT auto-switch).
 4. On success → send `transferResult{Key, Size, nil}` to results channel
 5. On failure → retry up to 3 times (backoff: 1s, 4s, 16s). If all fail → send `transferResult{Key, 0, err}` to results channel
 
-Workers use a per-transfer context with timeout (5 minutes per object) for network calls, NOT the global shutdown context. This lets in-flight transfers complete on SIGINT.
+Workers use a per-transfer context with a size-scaled timeout: `max(5 minutes, size / 1MB/s)` — ensures large objects (10GB+) have sufficient time. NOT the global shutdown context, so in-flight transfers complete on SIGINT.
+
+**Checkpoint corruption safety:** `saveCheckpoint` writes to a temp file then renames (atomic on POSIX). If a crash occurs during write, the old checkpoint survives. `loadCheckpoint` returns an error on corrupt JSON — `Execute()` treats this as "no checkpoint" and starts fresh, logging a warning.
 
 ### Graceful Shutdown
 
