@@ -59,9 +59,10 @@ type DownloadResult struct {
 
 // ListResult is a generic paginated list result.
 type ListResult[T any] struct {
-	Items      []T    `json:"items"`
-	NextToken  string `json:"next_token,omitempty"`
-	IsTruncated bool  `json:"is_truncated"`
+	Items          []T      `json:"items"`
+	NextToken      string   `json:"next_token,omitempty"`
+	IsTruncated    bool     `json:"is_truncated"`
+	CommonPrefixes []string `json:"common_prefixes,omitempty"`
 }
 
 // CopyResult contains the result of a copy operation.

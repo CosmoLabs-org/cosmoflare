@@ -58,12 +58,12 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	srcResult, err := client.ListObjects(context.Background(), srcBucket, comparePrefix, "", 0)
+	srcResult, err := client.ListObjects(context.Background(), srcBucket, comparePrefix, "", 0, "")
 	if err != nil {
 		return fmt.Errorf("failed to list source bucket: %w", err)
 	}
 
-	dstResult, err := client.ListObjects(context.Background(), dstBucket, comparePrefix, "", 0)
+	dstResult, err := client.ListObjects(context.Background(), dstBucket, comparePrefix, "", 0, "")
 	if err != nil {
 		return fmt.Errorf("failed to list destination bucket: %w", err)
 	}

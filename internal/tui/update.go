@@ -84,8 +84,8 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addNotification("Failed to load objects: "+msg.err.Error(), "error")
 			return m, nil
 		}
-		m.objects = msg.objects
-		m.objectTotal = msg.total
+		m.objects = msg.listing.Objects
+		m.objectTotal = len(msg.listing.Objects)
 		return m, nil
 
 	case bucketCreatedMsg:
@@ -110,7 +110,7 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.objectPage = 0
 		m.objects = nil
 		m.addNotification("Selected bucket: "+msg.bucket.Name, "info")
-		return m, fetchObjectsCmd(m.data, msg.bucket.Name, 0)
+		return m, fetchObjectsCmd(m.data, msg.bucket.Name, "", "")
 
 	case uploadProgressMsg:
 		// Update upload progress
@@ -261,7 +261,7 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.currentSection == SectionObjectList && m.objectPage > 0 {
 			m.objectPage--
 			if m.currentBucket != nil {
-				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, m.objectPage)
+				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, "", "")
 			}
 		}
 
@@ -270,7 +270,7 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.currentSection == SectionObjectList && len(m.objects) >= objectsPerPage {
 			m.objectPage++
 			if m.currentBucket != nil {
-				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, m.objectPage)
+				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, "", "")
 			}
 		}
 
@@ -376,12 +376,12 @@ func fetchMetricsCmd(ds DataSource) tea.Cmd {
 	}
 }
 
-func fetchObjectsCmd(ds DataSource, bucket string, page int) tea.Cmd {
+func fetchObjectsCmd(ds DataSource, bucket string, prefix string, token string) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
-		objects, total, err := ds.FetchObjects(ctx, bucket, page)
-		return objectsLoadedMsg{objects: objects, total: total, err: err}
+		listing, err := ds.FetchObjects(ctx, bucket, prefix, token)
+		return objectsLoadedMsg{listing: listing, err: err}
 	}
 }
 

@@ -69,7 +69,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 }
 
 func runSingleBucketAnalytics(client cosmoflare.R2Client) error {
-	result, err := client.ListObjects(context.Background(), analyticsBucket, "", "", 0)
+	result, err := client.ListObjects(context.Background(), analyticsBucket, "", "", 0, "")
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}
@@ -119,7 +119,7 @@ func runAllBucketsAnalytics(client cosmoflare.R2Client) error {
 	var grandTotal int64
 
 	for _, b := range buckets {
-		result, err := client.ListObjects(context.Background(), b.Name, "", "", 0)
+		result, err := client.ListObjects(context.Background(), b.Name, "", "", 0, "")
 		if err != nil {
 			printInfo("Skipping bucket %s: %v", b.Name, err)
 			stats = append(stats, BucketStat{Name: b.Name})

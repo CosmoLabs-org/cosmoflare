@@ -304,7 +304,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 	}
 
 	if includeObjects {
-		result, err := client.ListObjects(context.Background(), bucketName, "", "", 0)
+		result, err := client.ListObjects(context.Background(), bucketName, "", "", 0, "")
 		if err == nil {
 			bucket.ObjectCount = int64(len(result.Items))
 			var totalSize int64

@@ -340,7 +340,7 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	}
 
 	// List objects
-	result, err := client.ListObjects(context.Background(), bucketName, prefix, delimiter, int32(maxKeys))
+	result, err := client.ListObjects(context.Background(), bucketName, prefix, delimiter, int32(maxKeys), "")
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}
@@ -865,7 +865,7 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	}
 
 	// List all objects (would be more efficient with server-side filtering)
-	listResult, err := client.ListObjects(context.Background(), bucketName, "", "", 0)
+	listResult, err := client.ListObjects(context.Background(), bucketName, "", "", 0, "")
 	if err != nil {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}

@@ -25,7 +25,7 @@ type R2Client interface {
 	BucketExists(ctx context.Context, name string) (bool, error)
 
 	// Object operations
-	ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxKeys int32) (*ListResult[*Object], error)
+	ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxKeys int32, continuationToken string) (*ListResult[*Object], error)
 	GetObject(ctx context.Context, bucket, key string) (*DownloadResult, error)
 	HeadObject(ctx context.Context, bucket, key string) (*HeadResult, error)
 	DeleteObject(ctx context.Context, bucket, key string) error

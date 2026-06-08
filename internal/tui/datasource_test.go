@@ -30,15 +30,28 @@ func TestNullDataSourceFetchBuckets(t *testing.T) {
 
 func TestNullDataSourceFetchObjects(t *testing.T) {
 	ds := &nullDataSource{}
-	objects, total, err := ds.FetchObjects(context.Background(), "test-bucket", 1)
+	listing, err := ds.FetchObjects(context.Background(), "test", "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(objects) != 0 {
-		t.Fatalf("expected 0 objects, got %d", len(objects))
+	if len(listing.Objects) != 0 {
+		t.Errorf("expected 0 objects, got %d", len(listing.Objects))
 	}
-	if total != 0 {
-		t.Fatalf("expected total 0, got %d", total)
+}
+
+func TestNullDataSourceHeadObject(t *testing.T) {
+	ds := &nullDataSource{}
+	_, err := ds.HeadObject(context.Background(), "bucket", "key")
+	if err == nil {
+		t.Error("expected error from nullDataSource.HeadObject")
+	}
+}
+
+func TestNullDataSourceDeleteObject(t *testing.T) {
+	ds := &nullDataSource{}
+	err := ds.DeleteObject(context.Background(), "bucket", "key")
+	if err == nil {
+		t.Error("expected error from nullDataSource.DeleteObject")
 	}
 }
 

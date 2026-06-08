@@ -129,7 +129,7 @@ func TestIntegration_ObjectLifecycle(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		// Clean up objects first
-		result, _ := client.ListObjects(ctx, bucketName, "", "", 0)
+		result, _ := client.ListObjects(ctx, bucketName, "", "", 0, "")
 		if result != nil {
 			for _, obj := range result.Items {
 				client.DeleteObject(ctx, bucketName, obj.Key)
@@ -231,7 +231,7 @@ func TestIntegration_ObjectPagination(t *testing.T) {
 		t.Fatalf("CreateBucket failed: %v", err)
 	}
 	t.Cleanup(func() {
-		result, _ := client.ListObjects(ctx, bucketName, "", "", 0)
+		result, _ := client.ListObjects(ctx, bucketName, "", "", 0, "")
 		if result != nil {
 			for _, obj := range result.Items {
 				client.DeleteObject(ctx, bucketName, obj.Key)
@@ -251,7 +251,7 @@ func TestIntegration_ObjectPagination(t *testing.T) {
 	}
 
 	// List with maxKeys=5
-	result, err := client.ListObjects(ctx, bucketName, "page/", "", 5)
+	result, err := client.ListObjects(ctx, bucketName, "page/", "", 5, "")
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
 	}
@@ -266,7 +266,7 @@ func TestIntegration_ObjectPagination(t *testing.T) {
 	}
 
 	// Continue with next token
-	result2, err := client.ListObjects(ctx, bucketName, "page/", "", 5)
+	result2, err := client.ListObjects(ctx, bucketName, "page/", "", 5, result.NextToken)
 	if err != nil {
 		t.Fatalf("ListObjects page 2 failed: %v", err)
 	}
@@ -324,7 +324,7 @@ func TestIntegration_MetadataRoundTrip(t *testing.T) {
 		t.Fatalf("CreateBucket failed: %v", err)
 	}
 	t.Cleanup(func() {
-		result, _ := client.ListObjects(ctx, bucketName, "", "", 0)
+		result, _ := client.ListObjects(ctx, bucketName, "", "", 0, "")
 		if result != nil {
 			for _, obj := range result.Items {
 				client.DeleteObject(ctx, bucketName, obj.Key)

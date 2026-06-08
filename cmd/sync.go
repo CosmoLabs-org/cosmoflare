@@ -427,7 +427,7 @@ func newR2StorageBackend(accountID, apiToken string) (*r2StorageBackend, error) 
 
 func (b *r2StorageBackend) ListRemoteObjects(ctx context.Context, bucket, prefix string) ([]cosmoflare.ObjectInfo, error) {
 	var allObjects []cosmoflare.ObjectInfo
-	result, err := b.client.ListObjects(ctx, bucket, prefix, "", 1000)
+	result, err := b.client.ListObjects(ctx, bucket, prefix, "", 1000, "")
 	if err != nil {
 		return nil, err
 	}

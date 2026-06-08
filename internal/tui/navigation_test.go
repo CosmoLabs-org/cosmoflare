@@ -296,7 +296,7 @@ func TestCmdFunctions(t *testing.T) {
 	})
 
 	t.Run("fetchObjectsCmd returns objectsLoadedMsg", func(t *testing.T) {
-		cmd := fetchObjectsCmd(ds, "bucket", 0)
+		cmd := fetchObjectsCmd(ds, "bucket", "", "")
 		msg := cmd()
 		olm, ok := msg.(objectsLoadedMsg)
 		require.True(t, ok)

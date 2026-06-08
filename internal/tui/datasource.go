@@ -24,6 +24,25 @@ type ObjectItem struct {
 	Size         int64
 	LastModified time.Time
 	ContentType  string
+	ETag         string
+}
+
+// ObjectListing holds a page of objects returned by FetchObjects.
+type ObjectListing struct {
+	Dirs      []string
+	Objects   []ObjectItem
+	NextToken string
+	HasMore   bool
+}
+
+// ObjectDetail holds full metadata for a single object (from HeadObject).
+type ObjectDetail struct {
+	Key          string
+	Size         int64
+	LastModified time.Time
+	ContentType  string
+	ETag         string
+	Metadata     map[string]string
 }
 
 // ServiceMetrics aggregates metrics across Cloudflare services.
@@ -54,10 +73,12 @@ type KVMetrics struct {
 // DataSource abstracts Cloudflare API access for the dashboard.
 type DataSource interface {
 	FetchBuckets(ctx context.Context) ([]Bucket, UsageStats, error)
-	FetchObjects(ctx context.Context, bucket string, page int) ([]ObjectItem, int, error)
+	FetchObjects(ctx context.Context, bucket, prefix, continuationToken string) (ObjectListing, error)
 	FetchMetrics(ctx context.Context) (ServiceMetrics, error)
+	HeadObject(ctx context.Context, bucket, key string) (*ObjectDetail, error)
 	CreateBucket(ctx context.Context, name string) error
 	DeleteBucket(ctx context.Context, name string) error
+	DeleteObject(ctx context.Context, bucket, key string) error
 	Available() bool
 }
 
@@ -73,8 +94,16 @@ func (n *nullDataSource) FetchBuckets(_ context.Context) ([]Bucket, UsageStats, 
 	return []Bucket{}, UsageStats{}, nil
 }
 
-func (n *nullDataSource) FetchObjects(_ context.Context, _ string, _ int) ([]ObjectItem, int, error) {
-	return []ObjectItem{}, 0, nil
+func (n *nullDataSource) FetchObjects(_ context.Context, _, _, _ string) (ObjectListing, error) {
+	return ObjectListing{}, nil
+}
+
+func (n *nullDataSource) HeadObject(_ context.Context, _, _ string) (*ObjectDetail, error) {
+	return nil, errors.New("no credentials configured — run cosmoflare setup")
+}
+
+func (n *nullDataSource) DeleteObject(_ context.Context, _, _ string) error {
+	return errors.New("no credentials configured — run cosmoflare setup")
 }
 
 func (n *nullDataSource) FetchMetrics(_ context.Context) (ServiceMetrics, error) {
@@ -129,10 +158,10 @@ func (a *apiDataSource) FetchBuckets(ctx context.Context) ([]Bucket, UsageStats,
 	return buckets, stats, nil
 }
 
-func (a *apiDataSource) FetchObjects(ctx context.Context, bucket string, page int) ([]ObjectItem, int, error) {
-	result, err := a.r2.ListObjects(ctx, bucket, "", "", int32(objectsPerPage))
+func (a *apiDataSource) FetchObjects(ctx context.Context, bucket, prefix, continuationToken string) (ObjectListing, error) {
+	result, err := a.r2.ListObjects(ctx, bucket, prefix, "/", int32(objectsPerPage), continuationToken)
 	if err != nil {
-		return nil, 0, err
+		return ObjectListing{}, err
 	}
 
 	items := make([]ObjectItem, 0, len(result.Items))
@@ -142,10 +171,35 @@ func (a *apiDataSource) FetchObjects(ctx context.Context, bucket string, page in
 			Size:         obj.Size,
 			LastModified: obj.LastModified,
 			ContentType:  obj.ContentType,
+			ETag:         obj.ETag,
 		})
 	}
 
-	return items, len(items), nil
+	return ObjectListing{
+		Dirs:      result.CommonPrefixes,
+		Objects:   items,
+		NextToken: result.NextToken,
+		HasMore:   result.IsTruncated,
+	}, nil
+}
+
+func (a *apiDataSource) HeadObject(ctx context.Context, bucket, key string) (*ObjectDetail, error) {
+	result, err := a.r2.HeadObject(ctx, bucket, key)
+	if err != nil {
+		return nil, err
+	}
+	return &ObjectDetail{
+		Key:          result.Key,
+		Size:         result.Size,
+		LastModified: result.LastModified,
+		ContentType:  result.ContentType,
+		ETag:         result.ETag,
+		Metadata:     result.Metadata,
+	}, nil
+}
+
+func (a *apiDataSource) DeleteObject(ctx context.Context, bucket, key string) error {
+	return a.r2.DeleteObject(ctx, bucket, key)
 }
 
 func (a *apiDataSource) FetchMetrics(ctx context.Context) (ServiceMetrics, error) {

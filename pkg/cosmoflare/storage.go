@@ -102,7 +102,7 @@ func (c *client) BucketExists(ctx context.Context, name string) (bool, error) {
 }
 
 // ListObjects lists objects in a bucket with optional prefix, delimiter, and max keys.
-func (c *client) ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxKeys int32) (*ListResult[*Object], error) {
+func (c *client) ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxKeys int32, continuationToken string) (*ListResult[*Object], error) {
 	if err := validateBucketName(bucket); err != nil {
 		return nil, validationError("ListObjects", err.Error())
 	}
@@ -118,6 +118,9 @@ func (c *client) ListObjects(ctx context.Context, bucket, prefix, delimiter stri
 	}
 	if maxKeys > 0 {
 		params.MaxKeys = aws.Int32(maxKeys)
+	}
+	if continuationToken != "" {
+		params.ContinuationToken = aws.String(continuationToken)
 	}
 
 	result, err := c.s3Client().ListObjectsV2(ctx, params)
@@ -136,10 +139,16 @@ func (c *client) ListObjects(ctx context.Context, bucket, prefix, delimiter stri
 		})
 	}
 
+	prefixes := make([]string, 0, len(result.CommonPrefixes))
+	for _, cp := range result.CommonPrefixes {
+		prefixes = append(prefixes, aws.ToString(cp.Prefix))
+	}
+
 	return &ListResult[*Object]{
-		Items:       items,
-		NextToken:   aws.ToString(result.NextContinuationToken),
-		IsTruncated: aws.ToBool(result.IsTruncated),
+		Items:          items,
+		NextToken:      aws.ToString(result.NextContinuationToken),
+		IsTruncated:    aws.ToBool(result.IsTruncated),
+		CommonPrefixes: prefixes,
 	}, nil
 }
 

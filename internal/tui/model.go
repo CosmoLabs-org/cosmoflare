@@ -344,8 +344,7 @@ type metricsLoadedMsg struct {
 }
 
 type objectsLoadedMsg struct {
-	objects []ObjectItem
-	total   int
+	listing ObjectListing
 	err     error
 }
 

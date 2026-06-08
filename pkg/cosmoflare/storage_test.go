@@ -184,7 +184,7 @@ func TestBucketExistsValidation(t *testing.T) {
 
 func TestListObjectsValidation(t *testing.T) {
 	c := &client{cfg: &clientConfig{}}
-	_, err := c.ListObjects(context.Background(), "", "", "", 0)
+	_, err := c.ListObjects(context.Background(), "", "", "", 0, "")
 	if err == nil {
 		t.Error("expected error for empty bucket name")
 	}
@@ -600,7 +600,7 @@ func TestListObjectsSuccess(t *testing.T) {
 	})
 	defer server.Close()
 
-	result, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0)
+	result, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0, "")
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
 	}
@@ -631,7 +631,7 @@ func TestListObjectsEmpty(t *testing.T) {
 	})
 	defer server.Close()
 
-	result, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0)
+	result, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0, "")
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
 	}
@@ -646,7 +646,7 @@ func TestListObjectsError(t *testing.T) {
 	})
 	defer server.Close()
 
-	_, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0)
+	_, err := c.ListObjects(context.Background(), "test-bucket", "", "", 0, "")
 	if err == nil {
 		t.Error("expected error from S3 failure")
 	}
@@ -1435,7 +1435,7 @@ func TestListObjectsWithPrefixAndDelimiter(t *testing.T) {
 	})
 	defer server.Close()
 
-	result, err := c.ListObjects(context.Background(), "test-bucket", "photos/", "/", 100)
+	result, err := c.ListObjects(context.Background(), "test-bucket", "photos/", "/", 100, "")
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
 	}
