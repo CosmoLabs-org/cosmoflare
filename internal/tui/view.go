@@ -71,9 +71,7 @@ func (m DashboardModel) renderMainContent() string {
 	case SectionOverview:
 		return m.renderOverview()
 	case SectionBucketList:
-		return m.renderBucketTable()
-	case SectionObjectList:
-		return m.renderObjectList()
+		return m.browser.View()
 	case SectionUpload:
 		return m.renderUploadInterface()
 	case SectionMonitoring:
@@ -162,7 +160,7 @@ func (m DashboardModel) renderNoCreds() string {
 		Foreground(warningColor).
 		Bold(true).
 		Padding(2, 4).
-		Render("⚠ No credentials configured — press 6 for Settings or run cosmoflare setup")
+		Render("⚠ No credentials configured — press 5 for Settings or run cosmoflare setup")
 }
 
 // renderOverview renders the overview dashboard
@@ -176,8 +174,8 @@ func (m DashboardModel) renderOverview() string {
 	content.WriteString(m.renderUsageStats())
 	content.WriteString("\n\n")
 
-	// Bucket table
-	content.WriteString(m.renderBucketTable())
+	// Bucket summary
+	content.WriteString(m.renderBucketSummary())
 	content.WriteString("\n\n")
 
 	// Quick actions
@@ -217,13 +215,13 @@ func (m DashboardModel) renderUsageStats() string {
 	)
 }
 
-// renderBucketTable renders the bucket list table
-func (m DashboardModel) renderBucketTable() string {
+// renderBucketSummary renders a lightweight bucket summary for the overview page.
+func (m DashboardModel) renderBucketSummary() string {
 	if len(m.buckets) == 0 {
 		return lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Render("🚫 No buckets found. Press 'C' to create your first bucket.")
+			Render("🚫 No buckets found. Press '2' to open the Browser or 'C' to create your first bucket.")
 	}
 
 	title := headerStyle.Render("🪣 Bucket Overview")
@@ -234,15 +232,14 @@ func (m DashboardModel) renderBucketTable() string {
 
 	// Table rows
 	var rows []string
-	for i, bucket := range m.buckets {
-		isSelected := i == m.selectedRow && m.currentSection == SectionBucketList
+	for _, bucket := range m.buckets {
 		rowData := []string{
 			"🪣 " + bucket.Name,
 			utils.FormatBytes(bucket.Size),
 			formatNumber(bucket.ObjectCount),
 			m.getStatusIcon(bucket.Status),
 		}
-		rows = append(rows, m.renderTableRow(rowData, isSelected))
+		rows = append(rows, m.renderTableRow(rowData, false))
 	}
 
 	// Combine with table borders
@@ -252,65 +249,6 @@ func (m DashboardModel) renderBucketTable() string {
 		lipgloss.Left,
 		title,
 		lipgloss.NewStyle().MarginTop(1).Render(tableContent),
-	)
-}
-
-// renderObjectList renders the object list for current bucket
-func (m DashboardModel) renderObjectList() string {
-	if m.currentBucket == nil {
-		return lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("No bucket selected. Navigate to bucket list and select a bucket.")
-	}
-
-	if !m.data.Available() {
-		return m.renderNoCreds()
-	}
-
-	title := headerStyle.Render(fmt.Sprintf("📁 Objects in %s", m.currentBucket.Name))
-
-	if m.objects == nil {
-		content := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("Loading...")
-		return lipgloss.JoinVertical(lipgloss.Left, title, lipgloss.NewStyle().MarginTop(1).Render(content))
-	}
-
-	if len(m.objects) == 0 {
-		content := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("Bucket is empty.")
-		return lipgloss.JoinVertical(lipgloss.Left, title, lipgloss.NewStyle().MarginTop(1).Render(content))
-	}
-
-	// Table header
-	headers := []string{"Key", "Size", "Last Modified", "Content Type"}
-	headerRow := m.renderTableRow(headers, true)
-
-	// Table rows
-	var rows []string
-	for _, obj := range m.objects {
-		rowData := []string{
-			truncate(obj.Key, 40),
-			utils.FormatBytes(obj.Size),
-			obj.LastModified.Format("2006-01-02 15:04"),
-			truncate(obj.ContentType, 20),
-		}
-		rows = append(rows, m.renderTableRow(rowData, false))
-	}
-
-	tableContent := lipgloss.JoinVertical(lipgloss.Left, headerRow, strings.Join(rows, "\n"))
-
-	pageInfo := fmt.Sprintf("Page %d | %d objects | n = next | p = prev | Backspace = back",
-		m.objectPage+1, m.objectTotal)
-	pageInfoLine := lipgloss.NewStyle().Foreground(mutedColor).Render(pageInfo)
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		title,
-		lipgloss.NewStyle().MarginTop(1).Render(tableContent),
-		"",
-		pageInfoLine,
 	)
 }
 

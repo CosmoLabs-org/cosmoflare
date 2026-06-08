@@ -63,34 +63,19 @@ func TestNextSection(t *testing.T) {
 }
 
 func TestSelectCurrent(t *testing.T) {
-	t.Run("selects bucket in bucket list", func(t *testing.T) {
+	t.Run("returns nil — browser handles selection internally", func(t *testing.T) {
 		m := initialModel(nil, 0)
 		m.currentSection = SectionBucketList
 		m.buckets = []Bucket{{Name: "my-bucket", Size: 1024}}
 		m.selectedRow = 0
 
 		cmd := m.selectCurrent()
-		require.NotNil(t, cmd)
-
-		msg := cmd()
-		bsm, ok := msg.(bucketSelectedMsg)
-		require.True(t, ok)
-		assert.Equal(t, "my-bucket", bsm.bucket.Name)
+		assert.Nil(t, cmd)
 	})
 
 	t.Run("returns nil for other sections", func(t *testing.T) {
 		m := initialModel(nil, 0)
 		m.currentSection = SectionOverview
-
-		cmd := m.selectCurrent()
-		assert.Nil(t, cmd)
-	})
-
-	t.Run("returns nil when row out of bounds", func(t *testing.T) {
-		m := initialModel(nil, 0)
-		m.currentSection = SectionBucketList
-		m.selectedRow = 5
-		m.buckets = []Bucket{{Name: "only-one"}}
 
 		cmd := m.selectCurrent()
 		assert.Nil(t, cmd)
@@ -142,10 +127,9 @@ func TestHandleKeyMsg_SectionShortcuts(t *testing.T) {
 	}{
 		{"1", SectionOverview},
 		{"2", SectionBucketList},
-		{"3", SectionObjectList},
-		{"4", SectionUpload},
-		{"5", SectionMonitoring},
-		{"6", SectionSettings},
+		{"3", SectionUpload},
+		{"4", SectionMonitoring},
+		{"5", SectionSettings},
 	}
 
 	for _, tt := range tests {
@@ -295,13 +279,7 @@ func TestCmdFunctions(t *testing.T) {
 		assert.Nil(t, mlm.err)
 	})
 
-	t.Run("fetchObjectsCmd returns objectsLoadedMsg", func(t *testing.T) {
-		cmd := fetchObjectsCmd(ds, "bucket", "", "")
-		msg := cmd()
-		olm, ok := msg.(objectsLoadedMsg)
-		require.True(t, ok)
-		assert.Nil(t, olm.err)
-	})
+	// fetchObjectsCmd removed — browser handles object fetching internally.
 
 	t.Run("refreshDataCmd is not nil", func(t *testing.T) {
 		cmd := refreshDataCmd(ds)

@@ -22,8 +22,7 @@ type Section int
 
 const (
 	SectionOverview Section = iota
-	SectionBucketList
-	SectionObjectList
+	SectionBucketList // Browser (buckets + objects in split-pane)
 	SectionUpload
 	SectionMonitoring
 	SectionSettings
@@ -36,9 +35,7 @@ func (s Section) String() string {
 	case SectionOverview:
 		return "Overview"
 	case SectionBucketList:
-		return "Buckets"
-	case SectionObjectList:
-		return "Objects"
+		return "Browser"
 	case SectionUpload:
 		return "Upload"
 	case SectionMonitoring:
@@ -118,10 +115,8 @@ type DashboardModel struct {
 	pollPaused   bool
 	skipNextPoll bool
 
-	// Object list state
-	objects     []ObjectItem
-	objectPage  int
-	objectTotal int
+	// Browser sub-model (split-pane bucket/object browser)
+	browser BrowserModel
 
 	// Input/confirmation state
 	inputMode     bool
@@ -310,6 +305,7 @@ func initialModel(ds DataSource, interval time.Duration) DashboardModel {
 		currentProfile:  "default",
 		theme:           theme,
 		palette:         p,
+		browser:         NewBrowserModel(ds),
 	}
 }
 
@@ -340,11 +336,6 @@ type monitoringTickMsg struct{}
 
 type metricsLoadedMsg struct {
 	metrics ServiceMetrics
-	err     error
-}
-
-type objectsLoadedMsg struct {
-	listing ObjectListing
 	err     error
 }
 
@@ -415,17 +406,8 @@ func (m *DashboardModel) nextSection() {
 }
 
 func (m *DashboardModel) selectCurrent() tea.Cmd {
-	switch m.currentSection {
-	case SectionBucketList:
-		if m.selectedRow < len(m.buckets) {
-			m.currentBucket = &m.buckets[m.selectedRow]
-			return func() tea.Msg {
-				return bucketSelectedMsg{bucket: m.currentBucket}
-			}
-		}
-	case SectionObjectList:
-		// Handle object selection
-	}
+	// Browser section handles its own Enter key via BrowserModel.Update.
+	// Other sections can add selection logic here as needed.
 	return nil
 }
 

@@ -25,6 +25,7 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.palette != nil {
 			m.palette.SetSize(msg.Width, msg.Height)
 		}
+		m.browser.SetSize(msg.Width, msg.Height)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -52,6 +53,7 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.buckets = msg.buckets
 		m.usageStats = msg.stats
 		m.loading = false
+		m.browser.SetBuckets(msg.buckets)
 		m.addNotification("Data loaded successfully", "success")
 		return m, nil
 
@@ -79,14 +81,10 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.metrics = msg.metrics
 		return m, nil
 
-	case objectsLoadedMsg:
-		if msg.err != nil {
-			m.addNotification("Failed to load objects: "+msg.err.Error(), "error")
-			return m, nil
-		}
-		m.objects = msg.listing.Objects
-		m.objectTotal = len(msg.listing.Objects)
-		return m, nil
+	case browserObjectsMsg, browserHeadMsg, browserDeleteMsg:
+		var cmd tea.Cmd
+		m.browser, cmd = m.browser.Update(msg)
+		return m, cmd
 
 	case bucketCreatedMsg:
 		if msg.err != nil {
@@ -105,12 +103,10 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, refreshDataCmd(m.data)
 
 	case bucketSelectedMsg:
+		// Browser handles bucket selection internally via BrowserModel.Update.
 		m.currentBucket = msg.bucket
-		m.currentSection = SectionObjectList
-		m.objectPage = 0
-		m.objects = nil
 		m.addNotification("Selected bucket: "+msg.bucket.Name, "info")
-		return m, fetchObjectsCmd(m.data, msg.bucket.Name, "", "")
+		return m, nil
 
 	case uploadProgressMsg:
 		// Update upload progress
@@ -227,14 +223,29 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// Navigation
 	case "up", "k":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
+		}
 		m.moveUp()
 	case "down", "j":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
+		}
 		m.moveDown()
 	case "left", "h":
 		m.previousSection()
 	case "right", "l":
 		m.nextSection()
 	case "enter", " ":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
+		}
 		return m, m.selectCurrent()
 	case "esc", "q":
 		if m.showHelp {
@@ -245,6 +256,11 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// Refresh
 	case "r":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
+		}
 		if m.data.Available() {
 			if m.currentSection == SectionMonitoring {
 				return m, fetchMetricsCmd(m.data)
@@ -252,26 +268,32 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, refreshDataCmd(m.data)
 		}
 
-	// Poll toggle / previous page
+	// Poll toggle / browser previous page
 	case "p":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
+		}
 		if m.currentSection == SectionMonitoring {
 			m.pollPaused = !m.pollPaused
 			return m, nil
 		}
-		if m.currentSection == SectionObjectList && m.objectPage > 0 {
-			m.objectPage--
-			if m.currentBucket != nil {
-				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, "", "")
-			}
+
+	// Next page (browser handles its own)
+	case "n":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
 		}
 
-	// Next page
-	case "n":
-		if m.currentSection == SectionObjectList && len(m.objects) >= objectsPerPage {
-			m.objectPage++
-			if m.currentBucket != nil {
-				return m, fetchObjectsCmd(m.data, m.currentBucket.Name, "", "")
-			}
+	// Tab — browser focus toggle
+	case "tab":
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
 		}
 
 	// Create bucket
@@ -282,12 +304,12 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-	// Delete bucket
+	// Delete — browser handles object delete, dashboard handles bucket delete
 	case "d":
-		if m.currentSection == SectionBucketList && m.data.Available() && m.selectedRow < len(m.buckets) {
-			m.confirmAction = "delete"
-			m.confirmTarget = m.buckets[m.selectedRow].Name
-			return m, nil
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
 		}
 
 	// Upload (placeholder)
@@ -302,14 +324,12 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "s":
 		m.currentSection = SectionSettings
 
-	// Backspace: go back from object list to bucket list
+	// Backspace: browser handles back navigation
 	case "backspace":
-		if m.currentSection == SectionObjectList {
-			m.currentSection = SectionBucketList
-			m.objects = nil
-			m.objectPage = 0
-			m.currentBucket = nil
-			return m, nil
+		if m.currentSection == SectionBucketList {
+			var cmd tea.Cmd
+			m.browser, cmd = m.browser.Update(msg)
+			return m, cmd
 		}
 
 	// Function keys
@@ -345,16 +365,14 @@ func (m DashboardModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, refreshDataCmd(m.data)
 		}
 	case "3":
-		m.currentSection = SectionObjectList
-	case "4":
 		m.currentSection = SectionUpload
-	case "5":
+	case "4":
 		prev := m.currentSection
 		m.currentSection = SectionMonitoring
 		if prev != SectionMonitoring && m.data.Available() {
 			return m, fetchMetricsCmd(m.data)
 		}
-	case "6":
+	case "5":
 		m.currentSection = SectionSettings
 	}
 
@@ -373,15 +391,6 @@ func fetchMetricsCmd(ds DataSource) tea.Cmd {
 		defer cancel()
 		metrics, err := ds.FetchMetrics(ctx)
 		return metricsLoadedMsg{metrics: metrics, err: err}
-	}
-}
-
-func fetchObjectsCmd(ds DataSource, bucket string, prefix string, token string) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-		listing, err := ds.FetchObjects(ctx, bucket, prefix, token)
-		return objectsLoadedMsg{listing: listing, err: err}
 	}
 }
 
@@ -414,10 +423,8 @@ func (m DashboardModel) handlePaletteSelect(msg palette.PaletteSelectMsg) (tea.M
 	switch cmd.Name {
 	case "Go to Overview":
 		m.currentSection = SectionOverview
-	case "Go to Buckets":
+	case "Go to Buckets", "Go to Browser":
 		m.currentSection = SectionBucketList
-	case "Go to Objects":
-		m.currentSection = SectionObjectList
 	case "Go to Upload":
 		m.currentSection = SectionUpload
 	case "Go to Monitoring":

@@ -111,16 +111,10 @@ func DefaultDashboardActions() []Command {
 			Icon:        "🏠",
 		},
 		{
-			Name:        "Go to Buckets",
-			Description: "Switch to the bucket list",
+			Name:        "Go to Browser",
+			Description: "Switch to the bucket/object browser",
 			Category:    "Navigation",
 			Icon:        "🪣",
-		},
-		{
-			Name:        "Go to Objects",
-			Description: "Switch to the object browser",
-			Category:    "Navigation",
-			Icon:        "📦",
 		},
 		{
 			Name:        "Go to Upload",

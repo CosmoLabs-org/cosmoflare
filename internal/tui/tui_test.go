@@ -14,8 +14,7 @@ func TestSectionString(t *testing.T) {
 		expected string
 	}{
 		{SectionOverview, "Overview"},
-		{SectionBucketList, "Buckets"},
-		{SectionObjectList, "Objects"},
+		{SectionBucketList, "Browser"},
 		{SectionUpload, "Upload"},
 		{SectionMonitoring, "Monitoring"},
 		{SectionSettings, "Settings"},
@@ -126,7 +125,8 @@ func TestDashboardModelUpdateBucketSelected(t *testing.T) {
 	bucket := &Bucket{Name: "selected", Size: 2048}
 	updatedModel, _ := m.Update(bucketSelectedMsg{bucket: bucket})
 	dm := updatedModel.(DashboardModel)
-	assert.Equal(t, SectionObjectList, dm.currentSection)
+	// Browser handles section navigation internally; dashboard just records current bucket.
+	assert.Equal(t, SectionOverview, dm.currentSection)
 	assert.Equal(t, "selected", dm.currentBucket.Name)
 }
 

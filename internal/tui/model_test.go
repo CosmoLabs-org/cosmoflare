@@ -29,16 +29,18 @@ func TestUpdate_KeyDown(t *testing.T) {
 	assert.Equal(t, 1, dm.selectedRow)
 }
 
-func TestUpdate_KeyEnterSelectsBucket(t *testing.T) {
+func TestUpdate_KeyEnterOnBrowserDelegatesToBrowser(t *testing.T) {
 	m := initialModel(nil, 0)
 	m.currentSection = SectionBucketList
 	m.buckets = []Bucket{{Name: "pick-me", Size: 512}}
-	m.selectedRow = 0
+	m.browser.SetBuckets(m.buckets)
+	m.browser.SetSize(120, 40)
 
-	result, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	assert.NotNil(t, cmd)
+	// Enter on browser section delegates to BrowserModel
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	dm := result.(DashboardModel)
-	assert.Equal(t, "pick-me", dm.currentBucket.Name)
+	// Browser should have switched focus to right pane
+	assert.False(t, dm.browser.focusLeft)
 }
 
 func TestUpdate_KeyQ_Quits(t *testing.T) {
@@ -118,10 +120,9 @@ func TestUpdate_SectionShortcuts_ThroughUpdate(t *testing.T) {
 	}{
 		{"1", SectionOverview},
 		{"2", SectionBucketList},
-		{"3", SectionObjectList},
-		{"4", SectionUpload},
-		{"5", SectionMonitoring},
-		{"6", SectionSettings},
+		{"3", SectionUpload},
+		{"4", SectionMonitoring},
+		{"5", SectionSettings},
 	}
 
 	for _, tt := range tests {
@@ -184,12 +185,12 @@ func TestHandlePaletteSelect_GoToBuckets(t *testing.T) {
 	assert.Equal(t, SectionBucketList, dm.currentSection)
 }
 
-func TestHandlePaletteSelect_GoToObjects(t *testing.T) {
+func TestHandlePaletteSelect_GoToBrowser(t *testing.T) {
 	m := initialModel(nil, 0)
-	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Objects"}}
+	msg := palette.PaletteSelectMsg{Command: palette.Command{Name: "Go to Browser"}}
 	result, _ := m.handlePaletteSelect(msg)
 	dm := result.(DashboardModel)
-	assert.Equal(t, SectionObjectList, dm.currentSection)
+	assert.Equal(t, SectionBucketList, dm.currentSection)
 }
 
 func TestHandlePaletteSelect_GoToSettings(t *testing.T) {

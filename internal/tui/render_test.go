@@ -303,7 +303,6 @@ func TestRenderMainContent_AllSections(t *testing.T) {
 	sections := []Section{
 		SectionOverview,
 		SectionBucketList,
-		SectionObjectList,
 		SectionUpload,
 		SectionMonitoring,
 		SectionSettings,
@@ -332,37 +331,18 @@ func TestRenderMainContent_DefaultSection(t *testing.T) {
 	assert.NotEmpty(t, content)
 }
 
-// --- renderObjectList edge cases ---
+// --- renderBucketSummary edge cases ---
 
-func TestRenderObjectList_NoBucket(t *testing.T) {
-	m := newTestModel()
-	m.currentBucket = nil
-	view := m.renderObjectList()
-	assert.Contains(t, view, "No bucket selected")
-}
-
-func TestRenderObjectList_WithBucket(t *testing.T) {
-	m := newAvailableTestModel()
-	m.currentBucket = &Bucket{Name: "test-bucket"}
-	m.objects = []ObjectItem{} // empty but non-nil = bucket is empty
-	view := m.renderObjectList()
-	assert.Contains(t, view, "test-bucket")
-}
-
-// --- renderBucketTable edge cases ---
-
-func TestRenderBucketTable_Empty(t *testing.T) {
+func TestRenderBucketSummary_Empty(t *testing.T) {
 	m := newTestModel()
 	m.buckets = []Bucket{}
-	view := m.renderBucketTable()
+	view := m.renderBucketSummary()
 	assert.Contains(t, view, "No buckets found")
 }
 
-func TestRenderBucketTable_WithSelectedRow(t *testing.T) {
+func TestRenderBucketSummary_WithBuckets(t *testing.T) {
 	m := newTestModel()
-	m.currentSection = SectionBucketList
-	m.selectedRow = 1
-	view := m.renderBucketTable()
+	view := m.renderBucketSummary()
 	assert.Contains(t, view, "prod-assets")
 	assert.Contains(t, view, "backups")
 }
@@ -562,12 +542,12 @@ func TestUpdate_MonitoringTick_ReturnsBatch(t *testing.T) {
 	assert.NotNil(t, cmd, "monitoringTickMsg should return a batch cmd")
 }
 
-func TestUpdate_BucketSelected_SetsSection(t *testing.T) {
+func TestUpdate_BucketSelected_SetsCurrentBucket(t *testing.T) {
 	m := newTestModel()
 	bucket := &Bucket{Name: "selected-bucket", Size: 999}
 	result, _ := m.Update(bucketSelectedMsg{bucket: bucket})
 	dm := result.(DashboardModel)
-	assert.Equal(t, SectionObjectList, dm.currentSection)
+	// Browser handles section navigation internally; dashboard records current bucket.
 	assert.Equal(t, "selected-bucket", dm.currentBucket.Name)
 	// Notification added
 	assert.Contains(t, dm.notifications[0].Message, "selected-bucket")
@@ -600,22 +580,27 @@ func TestHandleKeyMsg_EscWhenHelpShown(t *testing.T) {
 	assert.False(t, dm.showHelp)
 }
 
-func TestHandleKeyMsg_EnterSelects(t *testing.T) {
+func TestHandleKeyMsg_EnterDelegatesToBrowser(t *testing.T) {
 	m := newTestModel()
 	m.currentSection = SectionBucketList
-	m.buckets = []Bucket{{Name: "test"}, {Name: "test2"}}
-	m.selectedRow = 0
-	_, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyEnter})
+	m.browser.SetBuckets(m.buckets)
+	m.browser.SetSize(m.width, m.height)
+	// Enter on browser section delegates to BrowserModel — selects bucket and fetches objects
+	result, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyEnter})
+	dm := result.(DashboardModel)
 	assert.NotNil(t, cmd)
+	assert.False(t, dm.browser.focusLeft) // focus moved to right pane
 }
 
-func TestHandleKeyMsg_SpaceSelects(t *testing.T) {
+func TestHandleKeyMsg_SpaceDelegatesToBrowser(t *testing.T) {
 	m := newTestModel()
 	m.currentSection = SectionBucketList
-	m.buckets = []Bucket{{Name: "test"}}
-	m.selectedRow = 0
+	m.browser.SetBuckets(m.buckets)
+	m.browser.SetSize(m.width, m.height)
+	// Space delegates to browser but browser only handles "enter", not " ",
+	// so the browser returns nil cmd (no-op).
 	_, cmd := m.handleKeyMsg(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(" ")})
-	assert.NotNil(t, cmd)
+	assert.Nil(t, cmd)
 }
 
 func TestHandleKeyMsg_SGoesToSettings(t *testing.T) {

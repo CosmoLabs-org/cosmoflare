@@ -54,23 +54,16 @@ func TestViewRendersOverview(t *testing.T) {
 	assert.Contains(t, view, "Cosmoflare")
 }
 
-func TestViewRendersBucketList(t *testing.T) {
+func TestViewRendersBrowser(t *testing.T) {
 	m := newTestModel()
 	m.currentSection = SectionBucketList
+	m.browser.SetBuckets(m.buckets)
+	m.browser.SetSize(m.width, m.height)
 
 	view := m.View()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "prod-assets")
-	assert.Contains(t, view, "backups")
-}
-
-func TestViewRendersObjectList(t *testing.T) {
-	m := newTestModel()
-	m.currentSection = SectionObjectList
-	m.currentBucket = &Bucket{Name: "prod-assets"}
-
-	view := m.View()
-	assert.NotEmpty(t, view)
+	// Browser renders bucket list in its left pane
+	assert.Contains(t, view, "Buckets")
 }
 
 func TestViewRendersUpload(t *testing.T) {
@@ -252,9 +245,9 @@ func TestRenderOverview_NearFullUsage(t *testing.T) {
 	assert.Contains(t, stats, "99.9%")
 }
 
-// --- renderBucketTable with various states ---
+// --- renderBucketSummary with various states ---
 
-func TestRenderBucketTable_MultipleStatuses(t *testing.T) {
+func TestRenderBucketSummary_MultipleStatuses(t *testing.T) {
 	m := newTestModel()
 	m.buckets = []Bucket{
 		{Name: "active-bucket", Size: 1024, ObjectCount: 10, Status: "active"},
@@ -262,23 +255,21 @@ func TestRenderBucketTable_MultipleStatuses(t *testing.T) {
 		{Name: "disabled-bucket", Size: 512, ObjectCount: 5, Status: "disabled"},
 		{Name: "unknown-bucket", Size: 256, ObjectCount: 1, Status: "unknown"},
 	}
-	m.currentSection = SectionBucketList
 
-	view := m.renderBucketTable()
+	view := m.renderBucketSummary()
 	assert.Contains(t, view, "active-bucket")
 	assert.Contains(t, view, "archived-bucket")
 	assert.Contains(t, view, "disabled-bucket")
 	assert.Contains(t, view, "unknown-bucket")
 }
 
-func TestRenderBucketTable_LargeObjectCount(t *testing.T) {
+func TestRenderBucketSummary_LargeObjectCount(t *testing.T) {
 	m := newTestModel()
 	m.buckets = []Bucket{
 		{Name: "big-bucket", Size: 10 * 1024 * 1024 * 1024, ObjectCount: 5000000000, Status: "active"},
 	}
-	m.currentSection = SectionBucketList
 
-	view := m.renderBucketTable()
+	view := m.renderBucketSummary()
 	assert.Contains(t, view, "big-bucket")
 }
 
