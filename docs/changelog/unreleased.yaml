@@ -4,19 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: Add OS keychain credential storage with automatic fallback to file-based config (FEAT-005)
-          source: manual
-          date: 2026-06-07T01:26:37.458054-03:00
-        - description: Add real-time TUI dashboard with live monitoring, bucket CRUD, and object browsing (ROAD-020)
-          source: manual
-          date: 2026-06-07T06:32:15.111254-03:00
-        - description: Add split-pane TUI object browser with folder navigation and object management (ROAD-002)
-          source: manual
-          date: 2026-06-08T06:17:46.504066-03:00
-        - description: Add real S3-to-R2 migration with resume support, concurrent transfers, and ETag verification (ROAD-007)
-          source: manual
-          date: 2026-06-08T08:47:05.221387-03:00
+    added: []
     fixed: []
     changed: []
     deprecated: []
