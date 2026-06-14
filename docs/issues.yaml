@@ -1,11 +1,30 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-06-07T01:26:32.847851-03:00
-next_bug_id: 20
-next_feat_id: 6
+last_updated: 2026-06-14T08:29:51.368609-03:00
+next_bug_id: 22
+next_feat_id: 7
 next_task_id: 5
 next_imp_id: 1
 issues:
+    - id: FEAT-006
+      type: feature
+      status: open
+      title: Domain Management Center — TUI dashboard, redirect visibility, registrar overlay
+      created_at: 2026-06-14T08:29:51.366577-03:00
+    - id: BUG-021
+      type: bug
+      status: open
+      title: 7 test files reference removed packages (R2Go2 rebrand leftovers), break go test ./... compilation
+      severity: medium
+      area: infra
+      created_at: 2026-06-14T07:54:40.931-03:00
+    - id: BUG-020
+      type: bug
+      status: open
+      title: Webhook and alert ID collisions silently overwrite configs (~70% collision rate)
+      severity: high
+      area: reliability
+      created_at: 2026-06-14T07:54:22.957707-03:00
     - id: BUG-001
       type: bug
       status: resolved

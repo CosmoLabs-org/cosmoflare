@@ -1,0 +1,16 @@
+id: BUG-020
+type: bug
+created_at: 2026-06-14T07:54:22.957707-03:00
+updated_at: 2026-06-14T07:54:22.959875-03:00
+source: local
+severity: high
+status: open
+area: reliability
+origin:
+    session: 17
+title: Webhook and alert ID collisions silently overwrite configs (~70% collision rate)
+description: 'generateID() in internal/webhook/manager.go used time.Now().UnixNano() alone, which is not guaranteed unique. Reproduced this session: 1000 CreateWebhook calls stored only 298 entries (702 silently lost) and concurrent generation duplicated 100% of IDs. CreateWebhook stores webhooks in an ID-keyed map, so a collision silently overwrites the earlier entry. This was the root cause of the flaky TestTriggerAlert_WithStoreMultipleWebhooks (intermittent ''expected 2 calls, got 1'' — when the disabled webhook collided with an enabled one and overwrote it). Impact: rapid or concurrent webhook/alert creation silently loses entries, so monitoring/notifications silently stop firing. FIX APPLIED this session: generateID() now combines a monotonic atomic counter (sync/atomic) with the timestamp. Regression tests added. Awaiting commit.'
+actual_behavior: 1000 CreateWebhook calls stored only 298 entries; flaky test failed ~2 of 6 runs
+fix_direction: Rewrite generateID() in internal/webhook/manager.go to combine a monotonic atomic counter (sync/atomic.AddUint64) with the wall-clock timestamp so IDs are unique under rapid and concurrent creation; add TestGenerateID_Uniqueness and TestCreateWebhook_NoSilentOverwrite regression tests.
+affected_files:
+    - internal/webhook/manager.go
