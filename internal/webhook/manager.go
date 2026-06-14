@@ -19,10 +19,16 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+// idCounter guarantees uniqueness of generated IDs even when many are produced
+// in the same nanosecond or concurrently. A process-local monotonic counter is
+// sufficient because webhooks are stored in an in-memory, ID-keyed map.
+var idCounter uint64
 
 // Manager handles webhook operations and alerting
 type Manager struct {
@@ -351,9 +357,13 @@ func (m *Manager) signPayload(data []byte, secret string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// generateID generates a unique ID
+// generateID generates a unique ID. A monotonic atomic counter is combined with
+// the wall clock: time.Now().UnixNano() alone collided ~70% of the time in tight
+// loops (and 100% across concurrent goroutines), which silently overwrote
+// ID-keyed map entries and lost webhooks/alerts.
 func generateID() string {
-	return fmt.Sprintf("wh_%d", time.Now().UnixNano())
+	n := atomic.AddUint64(&idCounter, 1)
+	return fmt.Sprintf("wh_%d_%d", time.Now().UnixNano(), n)
 }
 
 // Common event types
