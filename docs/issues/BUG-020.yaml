@@ -1,10 +1,10 @@
 id: BUG-020
 type: bug
 created_at: 2026-06-14T07:54:22.957707-03:00
-updated_at: 2026-06-14T07:54:22.959875-03:00
+updated_at: 2026-06-19T17:49:21.651582-03:00
 source: local
 severity: high
-status: open
+status: closed
 area: reliability
 origin:
     session: 17
@@ -14,3 +14,6 @@ actual_behavior: 1000 CreateWebhook calls stored only 298 entries; flaky test fa
 fix_direction: Rewrite generateID() in internal/webhook/manager.go to combine a monotonic atomic counter (sync/atomic.AddUint64) with the wall-clock timestamp so IDs are unique under rapid and concurrent creation; add TestGenerateID_Uniqueness and TestCreateWebhook_NoSilentOverwrite regression tests.
 affected_files:
     - internal/webhook/manager.go
+revisions:
+    - date: "2026-06-19"
+      action: closed
