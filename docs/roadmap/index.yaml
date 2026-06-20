@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-06-08T08:47:05.327316-03:00
+last_updated: 2026-06-20T17:59:25.335488-03:00
 next_id: 73
 items:
     - id: ROAD-072
@@ -73,6 +73,9 @@ items:
       priority: 85
       category: ux
       effort: large
+      has_plan: true
+      linked_issues:
+        - FEAT-007
       created_at: 2026-05-16T00:10:46.882401-03:00
     - id: ROAD-062
       title: Alert rules — notify on error rates, storage limits, worker failures
