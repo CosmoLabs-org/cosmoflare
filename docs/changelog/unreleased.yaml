@@ -4,8 +4,17 @@
 
 version: pending
 entries:
-    added: []
-    fixed: []
+    added:
+        - description: domain Management Center — TUI dashboard, redirect visibility, registrar overlay
+          source: FEAT-006
+          date: 2026-06-20T12:15:54.110549-03:00
+    fixed:
+        - description: Removed 7 orphaned R2Go2-era test files that broke 'go test ./...' compilation (BUG-021)
+          source: manual
+          date: 2026-06-20T12:15:54.157135-03:00
+        - description: Keychain layer no longer probes the macOS keychain under tests or when COSMOFLARE_NO_KEYCHAIN=1, eliminating spurious security dialogs
+          source: manual
+          date: 2026-06-20T12:15:54.19633-03:00
     changed: []
     deprecated: []
     removed: []

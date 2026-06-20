@@ -1059,6 +1059,45 @@ JSON output:
 | `--detail` | `false` | Show detailed per-domain cards |
 | `--enrich` | `false` | Run live health probes (HTTP, SSL) |
 
+### Domain subcommands (Domain Management Center)
+
+```bash
+cosmoflare domains get example.com        # Full detail card: NS, SSL, records, redirects, registrar
+cosmoflare domains stats                  # Aggregate counts + the "needs attention" list
+cosmoflare domains ns                     # Nameserver status for every domain
+cosmoflare domains redirects              # Domains that have redirect rules + where they point
+cosmoflare domains tui                    # Interactive split-pane domain browser
+cosmoflare domains get example.com --json # Machine-readable detail
+cosmoflare domains stats --json
+```
+
+- `get <name>` resolves a domain by name and prints its enriched `DomainDetail` (nameservers, record types, SSL mode/expiry, redirect rules, and registrar overlay).
+- `stats` prints totals broken down by nameserver and SSL status plus the list of domains needing attention (external/mismatched NS, expired/expiring/missing SSL, or down health).
+- `ns` lists each domain's nameserver status (`cloudflare`, `external`, `mismatch`).
+- `redirects` lists, per domain, the active redirect rules and their destinations.
+- `tui` launches a full-screen browser: arrow keys / `j`/`k` to navigate, `a` to quick-add a redirect on the selected domain, `q` to quit.
+
+> Note: registrar auto-renew is not displayed — the Cloudflare API read model does not expose it.
+
+## Redirects Commands
+
+Manage modern Cloudflare Redirect Rules (Rulesets API, `http_request_dynamic_redirect` phase).
+
+```bash
+cosmoflare redirects list <zone-id>                                          # List redirect rules in a zone
+cosmoflare redirects create <zone-id> --when '<expr>' --dest '<url>'         # Create a rule (default 301)
+cosmoflare redirects create <zone-id> --when '...' --dest '...' --status 302 --preserve-query
+cosmoflare redirects delete <zone-id> <rule-id>                              # Delete a rule
+cosmoflare redirects list <zone-id> --json
+```
+
+| Flag (create) | Default | Description |
+|------|---------|-------------|
+| `--when` | | Match expression (Cloudflare ruleset expression syntax) — required |
+| `--dest` | | Destination URL (may use `$1..$n` captures) — required |
+| `--status` | `301` | HTTP redirect status (301, 302, 307, 308) |
+| `--preserve-query` | `false` | Preserve the original query string on redirect |
+
 ## Doctor Command
 
 Deep diagnostic health checks for domains. Runs 4 probes: DNS propagation, SSL certificate, HTTP response, and nameserver consistency.
