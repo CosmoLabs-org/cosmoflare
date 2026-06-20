@@ -1001,3 +1001,33 @@
 {"id":"6","subject":"","status":"completed","completed_at":"2026-06-20T04:31:44Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"7","subject":"","status":"completed","completed_at":"2026-06-20T04:31:44Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"8","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-06-20T10:27:06Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"9","subject":"Wave B: study existing domains.go + verify plan assumptions","status":"pending","created_at":"2026-06-20T11:47:21Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"10","subject":"Wave B: TDD P-03 enrichment + summary helpers","status":"pending","created_at":"2026-06-20T11:47:24Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"11","subject":"Wave B: verify (test+build+vet, silent) + commit P-03","status":"pending","created_at":"2026-06-20T11:47:25Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-06-20T11:49:33Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"10","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-06-20T11:52:25Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"11","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-06-20T11:53:07Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"12","subject":"Wave C: scout cmd/ seam + decide shared-helper ownership","status":"pending","created_at":"2026-06-20T14:31:49Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"13","subject":"Wave C: P-04 domains CLI tree agent (get/stats/ns/redirects)","status":"pending","created_at":"2026-06-20T14:31:51Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"14","subject":"Wave C: P-05 redirects CLI group agent (list/create/delete)","status":"pending","created_at":"2026-06-20T14:31:52Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"15","subject":"Wave C: verify diffs + re-run tests + merge both CLI deliverables","status":"pending","created_at":"2026-06-20T14:31:59Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-06-20T14:36:03Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"13","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"14","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-06-20T14:43:15Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-06-20T14:43:15Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-06-20T14:43:16Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"16","subject":"Wave D: study internal/tui (BrowserModel, colors, DataSource, tui launch)","status":"pending","created_at":"2026-06-20T15:07:41Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"17","subject":"Wave D: TDD P-06 DomainBrowserModel (model + panes + navigation)","status":"pending","created_at":"2026-06-20T15:07:41Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"18","subject":"Wave D: TDD P-07 quick-add + domainDataSource + `domains tui` command","status":"pending","created_at":"2026-06-20T15:07:41Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"19","subject":"Wave D: verify (test+build+vet, silent) + commit + close FEAT-006","status":"pending","created_at":"2026-06-20T15:07:41Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-06-20T15:10:48Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"17","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-06-20T15:13:00Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"18","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-06-20T15:15:10Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"19","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-06-20T15:16:55Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
