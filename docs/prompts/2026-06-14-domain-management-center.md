@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-06-14-domain-management-center.md
 branch: master
+completed: "2026-06-20"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -17,17 +18,22 @@ covers_plan_deliverables:
     - P-05
     - P-06
     - P-07
-created: "2026-06-14"
+created: "2026-06-14T12:00:00-03:00"
+goals_completed: 7
+goals_total: 7
 id: P-2026-06-14-domain-management-center
 plan_ref: docs/planning-mode/2026-06-14-domain-management-center.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-06-14-domain-management-center.md
     - docs/planning-mode/2026-06-14-domain-management-center.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
+tags: []
 title: Domain Management Center — Implementation
 ---
+
 # Domain Management Center — Implementation
 
 ## BEFORE Starting — Required Reading
@@ -67,25 +73,25 @@ useful; **Wave 2** (G-06..G-07, TUI) builds only on Wave 1's library surface.
 
 ## Goals
 
-### [ ] G-01 RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)
+### [x] G-01 RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)
 Covers P-01.
 
-### [ ] G-02 RegistrarService library — registration overlay
+### [x] G-02 RegistrarService library — registration overlay
 Covers P-02.
 
-### [ ] G-03 DomainService enrichment — DomainDetail carries Redirects + Registrar + attention helpers
+### [x] G-03 DomainService enrichment — DomainDetail carries Redirects + Registrar + attention helpers
 Covers P-03.
 
-### [ ] G-04 domains CLI command tree — get / stats / redirects / ns
+### [x] G-04 domains CLI command tree — get / stats / redirects / ns
 Covers P-04.
 
-### [ ] G-05 redirects CLI command group — Redirect Rules CRUD
+### [x] G-05 redirects CLI command group — Redirect Rules CRUD
 Covers P-05.
 
-### [ ] G-06 DomainBrowserModel TUI — split-pane browser with per-domain detail
+### [x] G-06 DomainBrowserModel TUI — split-pane browser with per-domain detail
 Covers P-06.
 
-### [ ] G-07 Quick-add redirect prompt + domainDataSource dashboard wiring
+### [x] G-07 Quick-add redirect prompt + domainDataSource dashboard wiring
 Covers P-07.
 
 ## Related
