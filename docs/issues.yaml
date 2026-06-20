@@ -1,11 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-06-20T12:15:38.176916-03:00
+last_updated: 2026-06-20T17:59:15.62117-03:00
 next_bug_id: 22
-next_feat_id: 7
+next_feat_id: 8
 next_task_id: 5
 next_imp_id: 1
 issues:
+    - id: FEAT-007
+      type: feature
+      status: open
+      title: Cosmoflare Desktop (Tauri) v1 — daemon + dashboard + notifications
+      created_at: 2026-06-20T17:59:15.616796-03:00
     - id: FEAT-006
       type: feature
       status: closed
