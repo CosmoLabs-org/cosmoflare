@@ -26,6 +26,8 @@ type DomainDetail struct {
 	SSLMode     string         `json:"ssl_mode,omitempty"`
 	SSLExpiry   string         `json:"ssl_expiry,omitempty"`
 	ResponseTime string        `json:"response_time,omitempty"`
+	Redirects   []RedirectRule `json:"redirects,omitempty"`
+	Registrar   *RegistrarInfo `json:"registrar,omitempty"`
 }
 
 // DomainListOptions configures domain listing behavior.
@@ -47,10 +49,12 @@ type Pagination struct {
 
 // DomainService provides domain overview and health enrichment.
 type DomainService struct {
-	zones  *ZoneService
-	ssl    *SSLService
-	dns    *DNSService
-	doctor *DoctorService
+	zones     *ZoneService
+	ssl       *SSLService
+	dns       *DNSService
+	doctor    *DoctorService
+	redirects *RedirectService
+	registrar *RegistrarService
 }
 
 // NewDomainService creates a DomainService from its component services.
@@ -66,6 +70,20 @@ func NewDomainService(zones *ZoneService, ssl *SSLService, dns *DNSService, doct
 		dns:    dns,
 		doctor: doctor,
 	}, nil
+}
+
+// WithRedirects wires modern Redirect Rules enrichment into GetDetail. It returns
+// the receiver for fluent chaining and leaves the base constructor untouched.
+func (s *DomainService) WithRedirects(r *RedirectService) *DomainService {
+	s.redirects = r
+	return s
+}
+
+// WithRegistrar wires registration-overlay enrichment into GetDetail. It returns
+// the receiver for fluent chaining and leaves the base constructor untouched.
+func (s *DomainService) WithRegistrar(r *RegistrarService) *DomainService {
+	s.registrar = r
+	return s
 }
 
 // List returns domains with health indicators, supporting pagination and filtering.
@@ -177,6 +195,28 @@ func (s *DomainService) GetDetail(ctx context.Context, zoneID string) (*DomainDe
 		}
 	}
 
+	// Optional redirect enrichment — modern Redirect Rules for the zone.
+	if s.redirects != nil {
+		if rules, err := s.redirects.List(ctx, zoneID); err == nil {
+			detail.Redirects = rules
+		}
+	}
+
+	// Optional registrar enrichment — registration overlay keyed by domain name.
+	// A domain absent from the registrar map is registered elsewhere ("external").
+	// NOTE: RegistrarInfo.AutoRenew is always false (cloudflare-go v0.116.0 exposes
+	// no auto-renew flag on the read model) — display layers must not render it as
+	// "auto-renew off".
+	if s.registrar != nil {
+		if all, err := s.registrar.List(ctx); err == nil {
+			if info, ok := all[zone.Name]; ok {
+				detail.Registrar = &info
+			} else {
+				detail.Registrar = &RegistrarInfo{Registrar: "external"}
+			}
+		}
+	}
+
 	return detail, nil
 }
 
@@ -205,6 +245,63 @@ func (s *DomainService) EnrichWithHealth(ctx context.Context, domains []*DomainS
 			ds.SSLStatus = classifySSLStatus(sslResult.DaysLeft, sslResult.Valid)
 		}
 	}
+}
+
+// DomainSummary aggregates counts across a list of domains plus an attention list.
+type DomainSummary struct {
+	Total          int            `json:"total"`
+	ByNSStatus     map[string]int `json:"by_ns_status"`
+	BySSLStatus    map[string]int `json:"by_ssl_status"`
+	ByRegistrar    map[string]int `json:"by_registrar"`
+	NeedsAttention int            `json:"needs_attention"`
+	Attention      []string       `json:"attention"`
+}
+
+// SummarizeDomains computes aggregate stats and the attention list over a set of
+// domain statuses. ByRegistrar is intentionally left empty here: DomainStatus
+// carries no registrar data (that lives on the enriched DomainDetail), so a
+// breakdown would be fabricated. Callers needing it should summarize details.
+func SummarizeDomains(ds []*DomainStatus) DomainSummary {
+	s := DomainSummary{
+		ByNSStatus:  map[string]int{},
+		BySSLStatus: map[string]int{},
+		ByRegistrar: map[string]int{},
+	}
+	for _, d := range ds {
+		if d == nil {
+			continue
+		}
+		s.Total++
+		s.ByNSStatus[d.NSStatus]++
+		s.BySSLStatus[d.SSLStatus]++
+		if domainNeedsAttention(d) {
+			s.NeedsAttention++
+			if d.Zone != nil {
+				s.Attention = append(s.Attention, d.Zone.Name)
+			}
+		}
+	}
+	return s
+}
+
+// domainNeedsAttention reports whether a domain has a condition an operator should
+// look at: non-Cloudflare or mismatched nameservers, an SSL problem, or a failing
+// health check.
+func domainNeedsAttention(d *DomainStatus) bool {
+	return d.NSStatus == "external" || d.NSStatus == "mismatch" ||
+		d.SSLStatus == "expired" || d.SSLStatus == "expiring" || d.SSLStatus == "none" ||
+		d.HealthStatus == "down"
+}
+
+// classifyRegistrarStatus returns "cloudflare" if the domain is present in the
+// registrar map as a Cloudflare-registered domain, otherwise "external".
+func classifyRegistrarStatus(name string, reg map[string]RegistrarInfo) string {
+	if reg != nil {
+		if info, ok := reg[name]; ok && info.Registrar == "cloudflare" {
+			return "cloudflare"
+		}
+	}
+	return "external"
 }
 
 func (s *DomainService) applyFilters(zones []*Zone, opts DomainListOptions) []*Zone {

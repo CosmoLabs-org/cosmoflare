@@ -765,5 +765,73 @@ func TestPaginationFields(t *testing.T) {
 	}
 }
 
+// -----------------------------------------------------------------------------
+// P-03: DomainService enrichment + summary helpers
+// -----------------------------------------------------------------------------
+
+func TestSummarizeDomains_Attention(t *testing.T) {
+	ds := []*DomainStatus{
+		{Zone: &Zone{Name: "ok.com"}, NSStatus: "cloudflare", SSLStatus: "valid", HealthStatus: "up"},
+		{Zone: &Zone{Name: "badns.com"}, NSStatus: "external", SSLStatus: "valid"},
+		{Zone: &Zone{Name: "expirssl.com"}, NSStatus: "cloudflare", SSLStatus: "expired"},
+	}
+	summary := SummarizeDomains(ds)
+
+	if summary.Total != 3 {
+		t.Fatalf("Total = %d, want 3", summary.Total)
+	}
+	if summary.NeedsAttention != 2 { // badns (external NS) + expirssl (expired SSL)
+		t.Fatalf("NeedsAttention = %d, want 2", summary.NeedsAttention)
+	}
+	if summary.ByNSStatus["cloudflare"] != 2 || summary.ByNSStatus["external"] != 1 {
+		t.Errorf("ByNSStatus = %+v", summary.ByNSStatus)
+	}
+	if len(summary.Attention) != 2 {
+		t.Errorf("Attention = %v, want 2 entries", summary.Attention)
+	}
+}
+
+func TestSummarizeDomains_SkipsNil(t *testing.T) {
+	summary := SummarizeDomains([]*DomainStatus{nil, {Zone: &Zone{Name: "a.com"}, NSStatus: "cloudflare", SSLStatus: "valid"}})
+	if summary.Total != 1 {
+		t.Errorf("Total = %d, want 1 (nil entry skipped)", summary.Total)
+	}
+}
+
+func TestRegistrarStatusFor(t *testing.T) {
+	reg := map[string]RegistrarInfo{"a.com": {Registrar: "cloudflare"}}
+	if got := classifyRegistrarStatus("a.com", reg); got != "cloudflare" {
+		t.Errorf("a.com = %q, want cloudflare", got)
+	}
+	if got := classifyRegistrarStatus("b.com", reg); got != "external" {
+		t.Errorf("b.com = %q, want external", got)
+	}
+	if got := classifyRegistrarStatus("x.com", nil); got != "external" {
+		t.Errorf("nil map = %q, want external", got)
+	}
+}
+
+func TestDomainServiceEnrichmentWiring(t *testing.T) {
+	svc, err := NewDomainService(&ZoneService{}, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("NewDomainService: %v", err)
+	}
+	if svc.redirects != nil || svc.registrar != nil {
+		t.Fatal("expected redirects/registrar unset on a fresh service")
+	}
+
+	rs := NewRedirectService(nil, "acct-1")
+	rg := NewRegistrarService(nil, "acct-1")
+	if got := svc.WithRedirects(rs).WithRegistrar(rg); got != svc {
+		t.Error("setters should return the receiver for fluent chaining")
+	}
+	if svc.redirects != rs {
+		t.Error("WithRedirects did not wire the RedirectService")
+	}
+	if svc.registrar != rg {
+		t.Error("WithRegistrar did not wire the RegistrarService")
+	}
+}
+
 // Suppress unused import warning
 var _ = time.Now
