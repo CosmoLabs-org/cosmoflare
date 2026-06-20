@@ -89,6 +89,39 @@ func TestSecretStoreNotFound(t *testing.T) {
 	}
 }
 
+// TestNew_NoOSKeychainUnderTest verifies that New() never touches the OS
+// keychain when running under `go test`: Available() must report false (so no
+// shelling out to macOS `security`), yet the in-memory backend must still
+// round-trip secrets so credential-dependent tests keep working.
+func TestNew_NoOSKeychainUnderTest(t *testing.T) {
+	s := New()
+
+	if s.Available() {
+		t.Fatal("Available() must be false under test — the OS keychain must not be used")
+	}
+	if _, ok := s.backend.(*memBackend); !ok {
+		t.Fatalf("expected in-memory backend under test, got %T", s.backend)
+	}
+
+	if err := s.Set("profile", "api_token", "secret123"); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	got, err := s.Get("profile", "api_token")
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if got != "secret123" {
+		t.Errorf("Get = %q, want %q", got, "secret123")
+	}
+
+	if err := s.Delete("profile", "api_token"); err != nil {
+		t.Fatalf("Delete: %v", err)
+	}
+	if _, err := s.Get("profile", "api_token"); err != ErrNotFound {
+		t.Errorf("expected ErrNotFound after delete, got %v", err)
+	}
+}
+
 // failingBackend always fails (simulates unavailable keychain).
 type failingBackend struct{}
 
