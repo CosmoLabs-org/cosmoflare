@@ -795,3 +795,209 @@
 {"id":"20","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
 {"id":"20","subject":"","status":"completed","completed_at":"2026-06-06T19:06:07Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
 {"id":"21","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"22","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-06-06T19:06:17Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-06-06T19:06:38Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"23","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-06-06T19:07:49Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"24","subject":"","status":"in_progress","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-06-06T19:08:01Z","session":"28979d88-6818-4907-b203-9b4f0e0515c7"}
+{"id":"1","subject":"1. Fix build failures in internal/migration/s3.go — BLOCKER","status":"pending","created_at":"2026-06-06T22:32:07Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"2","subject":"3. ROAD-017 — Integration test suite","status":"pending","created_at":"2026-06-06T22:32:09Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"3","subject":"4. ROAD-060 — Real-time metrics dashboard","status":"pending","created_at":"2026-06-06T22:32:11Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"4","subject":"5. ROAD-072 — Notifications/webhooks for dev server","status":"pending","created_at":"2026-06-06T22:32:14Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"5","subject":"6. ROAD-008 — Refactor interactive package to Bubble Tea","status":"pending","created_at":"2026-06-06T22:32:16Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"6","subject":"8. USAGE.md cleanup — replace r2go2 with cosmoflare","status":"pending","created_at":"2026-06-06T22:32:18Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"1","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-06T22:34:48Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"6","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-06T22:35:14Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"2","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-06T22:42:11Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"3","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-06T22:43:35Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"4","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-06T22:45:21Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"5","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-06T22:47:27Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"7","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-06-07T03:51:46Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"8","subject":"Phase 1.75: Verification gate","status":"pending","created_at":"2026-06-07T03:51:47Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"9","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-06-07T03:51:48Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"10","subject":"Phase 2.25-2.75: Post-commit (changelog, task preservation)","status":"pending","created_at":"2026-06-07T03:51:50Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"11","subject":"Phase 3: Parallel blast (CCS + agents)","status":"pending","created_at":"2026-06-07T03:51:51Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"12","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-06-07T03:51:52Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"13","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-06-07T03:51:53Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"7","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-06-07T03:52:05Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"8","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-06-07T03:52:20Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"9","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-06-07T03:52:37Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"10","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-06-07T03:53:00Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"11","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"12","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-06-07T03:54:39Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-06-07T03:54:40Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"13","subject":"","status":"in_progress","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-06-07T03:54:54Z","session":"4918d7f3-2153-45bd-8e12-ddb44826ddd9"}
+{"id":"1","subject":"1. Fix internal/api test build failure (BLOCKER)","status":"pending","created_at":"2026-06-07T04:13:10Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"2","subject":"2. Release v0.14.0","status":"pending","created_at":"2026-06-07T04:13:11Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"3","subject":"3. ROAD-020 — Dashboard TUI real implementation","status":"pending","created_at":"2026-06-07T04:13:14Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"4","subject":"4. ROAD-002 — TUI Object Browser (split-pane)","status":"pending","created_at":"2026-06-07T04:13:16Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"5","subject":"5. FEAT-005 — Keychain credential storage","status":"pending","created_at":"2026-06-07T04:13:17Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"6","subject":"6. ROAD-007 — S3 migration with resume support","status":"pending","created_at":"2026-06-07T04:13:19Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"7","subject":"7. cmd/ coverage — DI refactoring","status":"pending","created_at":"2026-06-07T04:13:21Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"1","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-07T04:17:30Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"2","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-07T04:17:49Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"8","subject":"Triage ideas IDEA-019 and IDEA-020","status":"pending","created_at":"2026-06-07T04:19:58Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"9","subject":"FEAT-005: Implement keychain credential storage","status":"pending","created_at":"2026-06-07T04:20:00Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"8","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-06-07T04:20:48Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"9","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-06-07T04:26:40Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-07T04:26:40Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"3","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"10","subject":"Brainstorm: Explore project context for ROAD-020","status":"pending","created_at":"2026-06-07T04:29:09Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"10","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-06-07T04:29:45Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"11","subject":"Brainstorm: Clarifying questions for ROAD-020","status":"pending","created_at":"2026-06-07T05:03:59Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"11","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-06-07T08:34:33Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"12","subject":"Brainstorm: Present and validate design for ROAD-020","status":"pending","created_at":"2026-06-07T08:34:38Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"12","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-06-07T08:42:09Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"13","subject":"Brainstorm: Write design doc and spec self-review","status":"pending","created_at":"2026-06-07T08:42:14Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"13","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-06-07T08:51:35Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"14","subject":"P-01: DataSource interface and null backend","status":"pending","created_at":"2026-06-07T09:12:11Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"15","subject":"P-02: API DataSource backend","status":"pending","created_at":"2026-06-07T09:12:12Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"16","subject":"P-03: Wire DataSource into DashboardModel","status":"pending","created_at":"2026-06-07T09:12:14Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"17","subject":"P-04: Monitoring with live polling and deltas","status":"pending","created_at":"2026-06-07T09:12:16Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"18","subject":"P-05: Object list with pagination","status":"pending","created_at":"2026-06-07T09:12:17Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"19","subject":"P-06: Bucket CRUD with confirmation","status":"pending","created_at":"2026-06-07T09:12:19Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"20","subject":"P-07: Section-entry refresh and credential banner","status":"pending","created_at":"2026-06-07T09:12:21Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"21","subject":"P-08: CMD layer — interval flag and metrics absorption","status":"pending","created_at":"2026-06-07T09:12:22Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"22","subject":"P-09: Documentation and close-out","status":"pending","created_at":"2026-06-07T09:12:24Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"14","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-06-07T09:15:20Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-06-07T09:15:20Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"16","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-06-07T09:28:40Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-06-07T09:28:41Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-06-07T09:28:41Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-06-07T09:28:41Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-06-07T09:28:42Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"21","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"22","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-06-07T09:31:40Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-06-07T09:32:34Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-07T09:32:34Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"4","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"23","subject":"Brainstorm: Explore context for ROAD-002","status":"pending","created_at":"2026-06-07T11:29:55Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"23","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-06-07T11:30:24Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"24","subject":"Brainstorm: Present design for ROAD-002","status":"pending","created_at":"2026-06-07T11:49:22Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"24","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-06-07T11:57:54Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"25","subject":"Brainstorm: Write design doc for ROAD-002","status":"pending","created_at":"2026-06-07T11:57:56Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"25","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-06-07T11:59:31Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-06-07T12:10:13Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"26","subject":"P-01: Library — CommonPrefixes + ContinuationToken","status":"pending","created_at":"2026-06-08T08:57:51Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"27","subject":"P-02: DataSource — FetchObjects, HeadObject, DeleteObject","status":"pending","created_at":"2026-06-08T08:57:53Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"28","subject":"P-03: BrowserModel core — struct, panes, rendering","status":"pending","created_at":"2026-06-08T08:57:54Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"29","subject":"P-04: Folder navigation + Update handler","status":"pending","created_at":"2026-06-08T08:57:55Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"30","subject":"P-05: Detail panel + HeadObject modal","status":"pending","created_at":"2026-06-08T08:57:57Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"31","subject":"P-06: Integration — wire into DashboardModel","status":"pending","created_at":"2026-06-08T08:57:58Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"32","subject":"P-07: Documentation and close-out","status":"pending","created_at":"2026-06-08T08:57:58Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"26","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"27","subject":"","status":"completed","completed_at":"2026-06-08T09:04:54Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"26","subject":"","status":"completed","completed_at":"2026-06-08T09:04:54Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"28","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"28","subject":"","status":"completed","completed_at":"2026-06-08T09:08:53Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"29","subject":"","status":"completed","completed_at":"2026-06-08T09:08:53Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"30","subject":"","status":"completed","completed_at":"2026-06-08T09:08:54Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"31","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"31","subject":"","status":"completed","completed_at":"2026-06-08T09:17:17Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"32","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"32","subject":"","status":"completed","completed_at":"2026-06-08T09:17:55Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-08T09:17:55Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"6","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"33","subject":"Brainstorm: Explore context for ROAD-007","status":"pending","created_at":"2026-06-08T09:48:24Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"33","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"33","subject":"","status":"completed","completed_at":"2026-06-08T09:48:46Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"34","subject":"Brainstorm: Present and write ROAD-007 design","status":"pending","created_at":"2026-06-08T10:26:20Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"34","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"34","subject":"","status":"completed","completed_at":"2026-06-08T10:32:15Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"35","subject":"P-01: Checkpoint persistence","status":"pending","created_at":"2026-06-08T11:40:37Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"36","subject":"P-02: Worker pool with retry","status":"pending","created_at":"2026-06-08T11:40:38Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"37","subject":"P-03: Orchestrator — wire into Execute()","status":"pending","created_at":"2026-06-08T11:40:39Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"38","subject":"P-04: ETag verification mode","status":"pending","created_at":"2026-06-08T11:40:40Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"39","subject":"P-05: ROAD-007 docs and close-out","status":"pending","created_at":"2026-06-08T11:40:41Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"35","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"35","subject":"","status":"completed","completed_at":"2026-06-08T11:43:51Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"36","subject":"","status":"completed","completed_at":"2026-06-08T11:43:51Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"37","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"37","subject":"","status":"completed","completed_at":"2026-06-08T11:46:35Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"38","subject":"","status":"completed","completed_at":"2026-06-08T11:46:35Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"39","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"39","subject":"","status":"completed","completed_at":"2026-06-08T11:47:15Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-08T11:47:15Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"40","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-06-09T10:11:08Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"41","subject":"Phase 2: Commit changes","status":"pending","created_at":"2026-06-09T10:11:08Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"42","subject":"Phase 3: Post-commit + session summary","status":"pending","created_at":"2026-06-09T10:11:10Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"43","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-06-09T10:11:11Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"44","subject":"Phase 6+7: Finalize and cleanup","status":"pending","created_at":"2026-06-09T10:11:11Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"40","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"40","subject":"","status":"completed","completed_at":"2026-06-09T10:11:28Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"41","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"41","subject":"","status":"completed","completed_at":"2026-06-09T10:11:43Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"42","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"42","subject":"","status":"completed","completed_at":"2026-06-09T10:12:13Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"43","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"43","subject":"","status":"completed","completed_at":"2026-06-09T10:12:49Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"44","subject":"","status":"in_progress","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"44","subject":"","status":"completed","completed_at":"2026-06-09T10:12:57Z","session":"26b93284-9949-40cb-9493-de70724769a7"}
+{"id":"1","subject":"Fix TestTriggerAlert_WithStoreMultipleWebhooks race","status":"pending","created_at":"2026-06-14T10:45:18Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"2","subject":"Investigate domain management coverage in cosmoflare","status":"pending","created_at":"2026-06-14T10:45:18Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"3","subject":"Check roadmap for domain management items","status":"pending","created_at":"2026-06-14T10:45:18Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"4","subject":"Mark v0.15.0 goal done + roadmap health fix (quick cleanup)","status":"pending","created_at":"2026-06-14T10:45:18Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"1","subject":"","status":"in_progress","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-14T10:52:16Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"2","subject":"","status":"in_progress","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-14T10:57:03Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-14T10:57:03Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"5","subject":"Brainstorm domain management design (clarifying Q\u0026A)","status":"pending","created_at":"2026-06-14T10:59:34Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"6","subject":"Write domain management design doc","status":"pending","created_at":"2026-06-14T10:59:34Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"7","subject":"Plan + prompt + GLM manifest for domain management","status":"pending","created_at":"2026-06-14T10:59:34Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-14T10:59:34Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"4","subject":"","status":"pending","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-14T11:11:14Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"6","subject":"","status":"in_progress","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-14T11:20:34Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"7","subject":"","status":"in_progress","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-06-14T11:31:20Z","session":"d702a441-5eb8-49fb-b439-6cdcda16ca5e"}
+{"id":"1","subject":"Investigate 6-7 orphaned test files (delete vs repoint)","status":"pending","created_at":"2026-06-19T20:45:35Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"2","subject":"Apply BUG-021 fix (delete orphaned / repoint salvageable)","status":"pending","created_at":"2026-06-19T20:45:36Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"3","subject":"Verify go vet ./... compiles clean","status":"pending","created_at":"2026-06-19T20:45:37Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"4","subject":"Close BUG-020 (fix already shipped in 07017e8)","status":"pending","created_at":"2026-06-19T20:45:38Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"5","subject":"Commit BUG-021 fix + BUG-020 closure","status":"pending","created_at":"2026-06-19T20:45:39Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-19T20:48:18Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"2","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-19T20:49:05Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"3","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-19T20:49:19Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"4","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-19T20:50:21Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-19T20:50:21Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"6","subject":"Wave A: implement RedirectService (P-01) in worktree","status":"pending","created_at":"2026-06-20T04:25:08Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"7","subject":"Wave A: implement RegistrarService (P-02) in worktree","status":"pending","created_at":"2026-06-20T04:25:10Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"8","subject":"Wave A: verify diffs + re-run tests + merge both services","status":"pending","created_at":"2026-06-20T04:25:12Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"6","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"7","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-20T04:31:44Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-06-20T04:31:44Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"8","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
