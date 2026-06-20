@@ -1,6 +1,7 @@
 ---
 created: "2026-06-20T17:44:43-03:00"
 updated: "2026-06-20T17:44:43-03:00"
+last_reviewed: "2026-06-20"
 status: PLANNED
 priority: high
 origin: "/brainplan"
@@ -169,7 +170,18 @@ func writeJSON(w http.ResponseWriter, v any) {
 
 - [ ] **Step 4: Run test to verify it passes** — same command → PASS.
 
-- [ ] **Step 5: Implement `cmd/serve.go`** — a cobra command that: generates a random token (or reads `--token`), binds `net.Listen("tcp", "127.0.0.1:<port>")` (port from `--addr`, default `:0`), prints the handshake `{"addr":"127.0.0.1:<actual>","token":"<token>"}` as one JSON line to stdout, sets `COSMOFLARE_NO_KEYCHAIN=1` in its own env path, then `http.Serve(ln, s.Handler())`. Handle SIGINT/SIGTERM for graceful shutdown. Mirror `cmd/mcp.go`'s structure for cobra wiring and credential resolution. (No keychain — read creds from config/globals only.)
+- [ ] **Step 5: Implement `cmd/serve.go`** — a cobra command that: generates a random token (or reads `--token`), binds `net.Listen("tcp", "127.0.0.1:<port>")` (port from `--addr`, default `:0`), prints the handshake `{"addr":"127.0.0.1:<actual>","token":"<token>"}` as one JSON line to stdout, then `http.Serve(ln, s.Handler())`. Handle SIGINT/SIGTERM for graceful shutdown. Mirror `cmd/mcp.go`'s cobra wiring.
+
+  **Keychain gate (verified):** the ONLY gate is the env var — `internal/keychain/keychain.go` reads `os.Getenv("COSMOFLARE_NO_KEYCHAIN") == "1"`, there is no flag. So `serve` must call `os.Setenv("COSMOFLARE_NO_KEYCHAIN", "1")` in its `RunE` (or `PreRun`) before any `config`/`keychain.New()` use. Do NOT add a cosmetic `--no-keychain` flag — it gates nothing.
+
+- [ ] **Step 5b: Exempt `serve` from the global credential gate (REQUIRED — verified blocker).** `cmd/root.go`'s `PersistentPreRun` calls `os.Exit(1)` when `CLOUDFLARE_API_TOKEN`/account are missing, and `serve` is NOT in its `skipValidation` slice (currently: `setup, config, auth, completion, help, version, theme, demo, backup, plugin, account`). Add `"serve"` to that slice. Rationale: BR-03/BR-04 require the daemon to start *without* valid creds so it can report `cloudflare_online=false` and drive the first-run setup screen — incompatible with the current hard exit. `serve` resolves creds itself, lazily, per request (missing/invalid → `cloudflare_online=false`, never a process exit).
+```go
+// cmd/root.go — add "serve" to the existing skipValidation slice
+skipValidation := []string{
+	"setup", "config", "auth", "completion", "help", "version",
+	"theme", "demo", "backup", "plugin", "account", "serve",
+}
+```
 
 - [ ] **Step 6: Build + smoke** — `GOWORK=off go build ./... && go vet ./internal/server/`. Manual: `cosmoflare serve --addr 127.0.0.1:0 --token test &` then `curl -H 'Authorization: Bearer test' 127.0.0.1:<port>/healthz` → JSON.
 
@@ -177,9 +189,9 @@ func writeJSON(w http.ResponseWriter, v any) {
 
 ## Task 2: REST read endpoints (P-02)
 
-**Files:** Create `internal/server/rest.go`, `internal/server/rest_test.go`; modify `internal/server/server.go` (register routes).
+**Files:** Create `internal/server/rest.go`, `internal/server/rest_test.go`; modify `internal/server/server.go` (register routes) and `cmd/serve.go` (wire the real adapter, Step 5).
 
-The endpoints delegate to the existing services / `DataSource`. **Inject the data source via an interface** so tests need no live credentials:
+The endpoints delegate to the existing services via a **new** daemon-local interface (`ServeSource`). ⚠️ This is NOT `internal/tui.DataSource` — that interface is R2-storage-specific (`FetchBuckets`/`FetchObjects`/`FetchMetrics`/`HeadObject`/...) and has no zones/workers/KV/accounts methods. `ServeSource` is its own abstraction; inject it so tests need no live credentials:
 
 - [ ] **Step 1: Define the seam + failing test** (`internal/server/rest_test.go`)
 ```go
@@ -222,11 +234,18 @@ func TestZonesEndpoint(t *testing.T) {
 
 - [ ] **Step 2: Run → FAIL** (`undefined: SetData`, no `/zones` route).
 
-- [ ] **Step 3: Implement** — add a `DataSource` interface (`Accounts/Zones/R2Buckets/Workers/KV`) to `rest.go`, a `SetData(DataSource)` setter on `Server`, register `/accounts /zones /r2/buckets /workers /kv` in `Handler()`, each calling the corresponding method, returning JSON. On error → 502 + `s.SetCloudflareOnline(false)`; on success → `s.SetCloudflareOnline(true)`.
+- [ ] **Step 3: Implement** — add a `ServeSource` interface (`Accounts/Zones/R2Buckets/Workers/KV`) to `rest.go`, a `SetData(ServeSource)` setter on `Server`, register `/accounts /zones /r2/buckets /workers /kv` in `Handler()`, each calling the corresponding method, returning JSON. On error → 502 + `s.SetCloudflareOnline(false)`; on success → `s.SetCloudflareOnline(true)`. (`fakeData` in the Step-1 test implements `ServeSource`.)
 
 - [ ] **Step 4: Run → PASS.**
 
-- [ ] **Step 5: Wire the real adapter in `cmd/serve.go`** — implement the `DataSource` interface backed by the existing services (`NewZoneServiceFromCreds(AccountID, APIToken)`, the R2/Workers/KV services, and/or the `internal/tui` `DataSource`). Verify exact method names against `internal/tui/datasource.go` first.
+- [ ] **Step 5: Wire the real adapter in `cmd/serve.go`** — implement `ServeSource` backed by the existing services, using the **verified** constructors (do NOT invent `New*FromCreds` by analogy):
+  - `Zones()` → `cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)` then `.List(ctx, ...)` (zone.go:58/91)
+  - `Workers()` → `cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)` (worker service)
+  - `KV()` → `cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)`
+  - `R2Buckets()` → `cosmoflare.NewClient(cosmoflare.WithAccountID(AccountID), cosmoflare.WithAPIToken(APIToken))` → `.ListBuckets(ctx)` — **there is NO `NewR2ServiceFromCreds`**; R2 uses the `NewClient` option pattern.
+  - `Accounts()` → `config`'s `ConfigManager.ListProfiles()` (config.go:191) — this is a **local profile list**, NOT a Cloudflare API call. Account = a configured profile.
+  - Per-request account selection: read `?profile=<name>` (see Task 7); resolve creds from that profile via `ConfigManager.GetProfile`. Absent → current profile. This keeps v1 read-only (no write "switch").
+  Each method maps existing typed results into the JSON shape; on CF error → return the error so the handler sets `cloudflare_online=false`.
 
 - [ ] **Step 6: Build + commit** — `feat(serve): add REST read endpoints over existing services (P-02)`
 
@@ -261,6 +280,8 @@ func TestSSE_NotificationFrame(t *testing.T) {
 
 - [ ] **Step 3: Implement** — an SSE hub (`map[chan event]struct{}` guarded by a mutex), a `Publish(channel string, data any)` method that fans out, and a `/events` handler that registers a client channel, sets the SSE headers, flushes per event (`http.Flusher`), and cleans up on `r.Context().Done()`. Add a `status` heartbeat that emits `{systems_online, cloudflare_online}` on change. Wire REST handlers to `Publish("status", ...)` when `cloudflare_online` flips.
 
+  **Test-race note:** in the Step-1 test the subscriber must be registered before `Publish` fires, or the frame is missed. Either have `/events` signal readiness (e.g. an exported `Subscribers() int` or a registration channel the test polls) and publish only after, or give `resp.Body.Read` a short deadline + retry. Don't rely on the `go Publish` happening after the goroutine-scheduled subscribe.
+
 - [ ] **Step 4: Run → PASS.**
 
 - [ ] **Step 5: Build + commit** — `feat(serve): add SSE /events (metrics/notifications/status) + health (P-03)`
@@ -279,7 +300,7 @@ func TestSSE_NotificationFrame(t *testing.T) {
 
 - [ ] **Step 1:** Scaffold Tauri v2 + React-TS template into `desktop/`. Set product name `Cosmoflare`, identifier `org.cosmolabs.cosmoflare`.
 - [ ] **Step 2:** Declare the daemon as an `externalBin` sidecar in `tauri.conf.json` → `"externalBin": ["binaries/cosmoflare"]` (Tauri appends the target-triple). Add the `shell`/`process` capability scoped to the sidecar only.
-- [ ] **Step 3:** `cd desktop && npm install && npm run tauri build --debug` builds (with a placeholder sidecar binary). Acceptance: `desktop/src-tauri/target/debug/` produces an app bundle. 
+- [ ] **Step 3:** `cd desktop && npm install`, then smoke with `npm run tauri dev` (iterative) — or for a bundle `npm run tauri build -- --debug` (note the `--` so the flag reaches tauri, not npm; a bare `npm run tauri build --debug` is swallowed by npm). Use a placeholder sidecar binary for now. Acceptance: the app window launches (dev) or `src-tauri/target/debug/` produces a bundle.
 - [ ] **Step 4: Commit** — `feat(desktop): scaffold Tauri v2 app with sidecar config (P-04)`
 
 ## Task 5: Rust daemon lifecycle (P-05)
@@ -333,7 +354,7 @@ test("renders both health indicators", () => {
 
 - [ ] **Step 1: Failing test** — render `<Dashboard>` with a mocked client returning 2 zones + 1 R2 bucket; assert cards show the counts.
 - [ ] **Step 2: Run → FAIL.**
-- [ ] **Step 3: Implement** — service cards (Zones, R2, Workers, KV) hydrated via React Query against `/zones` etc., then updated from the `metrics` SSE channel. Re-scope on account-switch (query key includes account id).
+- [ ] **Step 3: Implement** — service cards (Zones, R2, Workers, KV) hydrated via React Query against `/zones` etc., then updated from the `metrics` SSE channel. **Account model (v1, read-only):** the header switcher lists `GET /accounts` (= local config profiles via `ConfigManager.ListProfiles()`), and selecting one re-scopes the dashboard by passing `?profile=<name>` on every REST call — the daemon re-resolves creds from that profile per request. This is read-only (no write "switch" of the active profile). React Query keys include the selected profile so switching refetches. If only one profile exists, the switcher is a static label.
 - [ ] **Step 4: Run → PASS.**
 - [ ] **Step 5: Commit** — `feat(desktop): multi-account read-only dashboard (P-07)`
 
@@ -344,6 +365,8 @@ test("renders both health indicators", () => {
 - [ ] **Step 1: Failing test** — mount the panel, push a `notifications` SSE event through the mock, assert the item renders and the unread badge increments.
 - [ ] **Step 2: Run → FAIL.**
 - [ ] **Step 3: Implement** — a panel subscribed to the `notifications` SSE channel with a scrollable history (capped, e.g. last 200) and an unread badge cleared on view.
+
+  **Server-side event source (verified gap — `internal/webhook.Manager` is outbound-only: `SendWebhook`/`TriggerAlert`/`sendNotification` POST to external URLs; it has NO subscribe/event-bus to tap).** v1 scope: the daemon emits `notifications` SSE frames from **daemon-internal events it already observes** — `cloudflare_online` transitions, per-poll errors/recoveries, and (optionally) alert-rule evaluations the daemon runs itself against the metrics it polls. Sourcing notifications from the existing webhook *sender* is explicitly **deferred** until an in-process pub/sub seam is added to `internal/webhook` (out of v1 scope). The daemon's SSE hub (`Publish("notifications", ...)`, Task 3) is the production point; wire the poll loop / health tracker to call it.
 - [ ] **Step 4: Run → PASS.**
 - [ ] **Step 5: Commit** — `feat(desktop): real-time notifications panel (P-08)`
 
@@ -369,4 +392,4 @@ test("renders both health indicators", () => {
 - **Spec coverage:** BR-01→Task1-3, BR-02→Task5, BR-03→Task1/3, BR-04→Task1(Step5)/Task5 (`--no-keychain`), BR-05→Task6, BR-06→Task7, BR-07→Task8, BR-08→Task4/9. All 8 brainstorm deliverables covered.
 - **Placeholder scan:** Go daemon tasks carry real test+impl code. Rust/React tasks specify exact files, the key test, and concrete implementation requirements (Tauri/React boilerplate is generated by the scaffold, not hand-written line-by-line) — acceptance criteria are machine-checkable (cargo test / vitest / go test + manual smoke).
 - **Type consistency:** `DataSource` interface (`Accounts/Zones/R2Buckets/Workers/KV`) is consistent across Task 2 test + impl + the `cmd/serve.go` adapter. Handshake shape `{addr, token}` is consistent between Task 1 (Go emits) and Task 5 (Rust parses). `daemon_endpoint` command (P-05) feeds `client.ts` (P-06).
-- **Open risk:** exact `internal/tui` `DataSource` method names must be confirmed at implementation time (listed in `requires_reading`); the adapter in `cmd/serve.go` Step 5 maps to whatever those are.
+- **Verified against repo (independent review, 2026-06-20):** corrected the data-access design — the daemon's `ServeSource` is a NEW interface (NOT `internal/tui.DataSource`, which is R2-only); spelled out the real constructors (`NewZoneServiceFromCreds`/`NewWorkerServiceFromCreds`/`NewKVServiceFromCreds` + `NewClient(WithAccountID,WithAPIToken)` for R2, `ConfigManager.ListProfiles()` for `/accounts`). Added the required `cmd/root.go` `skipValidation += "serve"` step (Task 1 Step 5b) without which the daemon hard-exits on missing creds. Scoped v1 notifications to daemon-internal events (the webhook system is outbound-only). Defined the read-only `?profile=` account-selection contract. Keychain gate is the env var only (no flag).

@@ -1,6 +1,7 @@
 ---
 created: "2026-06-20T17:44:43-03:00"
 updated: "2026-06-20T17:44:43-03:00"
+last_reviewed: "2026-06-20"
 status: APPROVED
 priority: high
 origin: "/brainplan"
@@ -62,13 +63,15 @@ more.
                                     ▼                      ▼
                     127.0.0.1:<ephemeral>  ◄── cosmoflare serve (Go daemon)
                                                       │ reuses existing services
-                                                      ▼  (DomainService, tui.DataSource, alerts/webhook)
+                                                      ▼  (Zone/Worker/KV services, R2 client, config profiles)
                                               Cloudflare API
 ```
 
 The desktop app adds **zero new Cloudflare logic**. `cosmoflare serve` is an HTTP/SSE
-layer over the existing service packages and the `internal/tui` `DataSource`
-abstraction that already powers the terminal dashboard.
+layer that delegates to the existing per-service constructors (`NewZoneServiceFromCreds`,
+`NewWorkerServiceFromCreds`, `NewKVServiceFromCreds`, `NewClient` for R2) and the
+config profile list — exposed through a small daemon-local `ServeSource` interface.
+(Note: `internal/tui.DataSource` is R2-storage-specific and is NOT reused here.)
 
 ## Components & interfaces
 
@@ -89,8 +92,9 @@ the existing services; it owns no Cloudflare logic of its own.
 
 ### BR-02 — Daemon lifecycle (Rust, `desktop/src-tauri/`)
 On app launch the Rust backend spawns the bundled `cosmoflare` binary as a Tauri
-**sidecar** (`externalBin`): `cosmoflare serve --addr 127.0.0.1:0 --token <random>
---no-keychain`. It reads the stdout handshake for the port, polls `/healthz` until
+**sidecar** (`externalBin`): `cosmoflare serve --addr 127.0.0.1:0 --token <random>`,
+with `COSMOFLARE_NO_KEYCHAIN=1` set in the child's environment (the env var is the
+only keychain gate — there is no `--no-keychain` flag). It reads the stdout handshake for the port, polls `/healthz` until
 ready (timeout + backoff), then exposes the URL+token to the webview via a Tauri
 command. On window-close / app-quit it terminates the child. A watchdog restarts
 the daemon on crash (3× exponential backoff, then surface an error screen).
@@ -122,13 +126,23 @@ contract (reused from the CLI's `--json`).
 
 ### BR-06 — Multi-account read-only dashboard
 Live cards for zones, R2 buckets, Workers, and KV, mirroring the terminal
-dashboard's layout and data (reusing the same `DataSource`-shaped data via the
-daemon). Account switcher in the header re-scopes all cards.
+dashboard's layout. (The daemon serves these via its own `ServeSource` interface
+over the per-service constructors — see the plan; `internal/tui.DataSource` is
+R2-only and is NOT the source.) **Account model (read-only):** an "account" is a
+local config profile (`ConfigManager.ListProfiles()`); the header switcher selects
+one and the frontend passes `?profile=<name>` on every REST call, so the daemon
+re-resolves creds per request. No write-side profile "switch" — that keeps v1
+strictly read-only. Single profile → switcher is a static label.
 
 ### BR-07 — Real-time notifications panel
-A panel fed by the SSE `notifications` channel, sourced from the existing
-alerts/webhook system. Shows live notifications with a scrollable history and
-unread badge.
+A panel fed by the SSE `notifications` channel, with a scrollable history and
+unread badge. **Source (v1):** the existing `internal/webhook` system is
+*outbound-only* (it POSTs to Slack/Discord/HTTP; no subscribe/event-bus to tap),
+so v1 notifications come from **daemon-internal events** the daemon already
+observes — `cloudflare_online` transitions, per-poll errors/recoveries, and any
+alert-rule evaluations the daemon runs against its polled metrics. Sourcing from
+the webhook sender is deferred to v2 (needs an in-process pub/sub seam added to
+`internal/webhook`).
 
 ### BR-08 — Cross-platform packaging
 Tauri v2 produces per-OS installers: `.dmg`/`.app` (macOS), `.msi`/`.exe`

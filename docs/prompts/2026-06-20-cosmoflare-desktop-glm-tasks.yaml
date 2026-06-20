@@ -34,8 +34,16 @@
     cmd/serve.go: a cobra command mirroring cmd/mcp.go. Generate a random token
     (or --token), net.Listen "tcp" on --addr (default 127.0.0.1:0), print ONE JSON
     handshake line to stdout: {"addr":"127.0.0.1:<actual-port>","token":"<token>"},
-    then http.Serve. Set COSMOFLARE_NO_KEYCHAIN=1 — read credentials from the config
-    flow only, NEVER the OS keychain. Handle SIGINT/SIGTERM graceful shutdown.
+    then http.Serve. Handle SIGINT/SIGTERM graceful shutdown.
+
+    REQUIRED: add "serve" to the skipValidation slice in cmd/root.go — otherwise its
+    PersistentPreRun calls os.Exit(1) on missing credentials BEFORE the handshake is
+    printed, breaking the first-run flow. The daemon must start without valid creds
+    (it reports cloudflare_online=false instead of exiting).
+
+    Keychain: call os.Setenv("COSMOFLARE_NO_KEYCHAIN", "1") in RunE before any config/
+    keychain use — the env var is the ONLY gate (internal/keychain/keychain.go reads it);
+    there is NO --no-keychain flag. Read credentials from the config flow, never the OS keychain.
 
     The exact reference test + implementation are in the plan (Task 1). Follow them.
 
@@ -51,6 +59,7 @@
     - internal/server/server.go
     - internal/server/server_test.go
     - cmd/serve.go
+    - cmd/root.go
   context_files:
     - docs/planning-mode/2026-06-20-cosmoflare-desktop.md
     - cmd/mcp.go
@@ -66,20 +75,27 @@
     Files: create internal/server/rest.go + internal/server/rest_test.go; modify
     internal/server/server.go (register routes).
 
-    Define a DataSource interface in rest.go:
-      type DataSource interface {
+    Define a NEW daemon-local interface named ServeSource in rest.go (do NOT call it
+    DataSource and do NOT import internal/tui.DataSource — that interface is R2-only,
+    FetchBuckets/FetchObjects/FetchMetrics, and does NOT fit):
+      type ServeSource interface {
         Accounts() ([]map[string]any, error)
         Zones() ([]map[string]any, error)
         R2Buckets() ([]map[string]any, error)
         Workers() ([]map[string]any, error)
         KV() ([]map[string]any, error)
       }
-    Add (s *Server) SetData(DataSource). Register GET /accounts /zones /r2/buckets
+    Add (s *Server) SetData(ServeSource). Register GET /accounts /zones /r2/buckets
     /workers /kv — each calls the matching method and writes JSON. On error → HTTP 502
     and s.SetCloudflareOnline(false); on success → s.SetCloudflareOnline(true).
-    In cmd/serve.go, wire a real DataSource adapter backed by the existing services
-    (NewZoneServiceFromCreds(AccountID, APIToken) and the R2/Workers/KV services).
-    CONFIRM the exact existing method names against internal/tui/datasource.go before wiring.
+
+    In cmd/serve.go, implement ServeSource with the VERIFIED constructors (do NOT
+    invent New*FromCreds by analogy):
+      Zones()    -> cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken).List(ctx, ...)
+      Workers()  -> cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+      KV()       -> cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+      R2Buckets()-> cosmoflare.NewClient(cosmoflare.WithAccountID(AccountID), cosmoflare.WithAPIToken(APIToken)).ListBuckets(ctx)   # there is NO NewR2ServiceFromCreds
+      Accounts() -> config ConfigManager.ListProfiles()  # local profiles, NOT a CF API call
 
     The reference test + impl are in the plan (Task 2). Follow them.
 
@@ -97,7 +113,10 @@
     - cmd/serve.go
   context_files:
     - docs/planning-mode/2026-06-20-cosmoflare-desktop.md
-    - internal/tui/datasource.go
+    - pkg/cosmoflare/zone.go
+    - pkg/cosmoflare/kv.go
+    - pkg/cosmoflare/client.go
+    - internal/config/config.go
   max_turns: 25
   verify: "GOWORK=off go test ./internal/server/ -run TestZonesEndpoint -v && GOWORK=off go build ./..."
 
