@@ -37,6 +37,23 @@ func NewRegistrarService(cf *cloudflare.API, accountID string) *RegistrarService
 	return &RegistrarService{cf: cf, accountID: accountID}
 }
 
+// NewRegistrarServiceFromCreds builds a RegistrarService from an account ID and
+// API token, constructing the underlying Cloudflare client (mirrors the other
+// *FromCreds constructors in this package).
+func NewRegistrarServiceFromCreds(accountID, apiToken string) (*RegistrarService, error) {
+	if accountID == "" {
+		return nil, validationError("NewRegistrarService", "account ID is required")
+	}
+	if apiToken == "" {
+		return nil, validationError("NewRegistrarService", "API token is required")
+	}
+	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	if err != nil {
+		return nil, authError("NewRegistrarService", "failed to create Cloudflare API client", err)
+	}
+	return &RegistrarService{cf: cf, accountID: accountID}, nil
+}
+
 // List returns registration info for every Cloudflare-registered domain in the
 // account, keyed by domain name. Domains registered elsewhere are absent from
 // the map — the caller marks those "external".

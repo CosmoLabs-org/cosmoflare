@@ -128,3 +128,16 @@ func TestRegistrarService_ListEmpty(t *testing.T) {
 		t.Errorf("expected 0 results, got %d", len(infos))
 	}
 }
+
+func TestNewRegistrarServiceFromCreds(t *testing.T) {
+	if _, err := NewRegistrarServiceFromCreds("", "tok"); err == nil {
+		t.Error("expected error for empty account ID")
+	}
+	if _, err := NewRegistrarServiceFromCreds("acct", ""); err == nil {
+		t.Error("expected error for empty API token")
+	}
+	svc, err := NewRegistrarServiceFromCreds("acct", "tok")
+	if err != nil || svc == nil {
+		t.Fatalf("expected service, got svc=%v err=%v", svc, err)
+	}
+}

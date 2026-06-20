@@ -47,6 +47,23 @@ func NewRedirectService(cf *cloudflare.API, accountID string) *RedirectService {
 	return &RedirectService{cf: cf, accountID: accountID}
 }
 
+// NewRedirectServiceFromCreds builds a RedirectService from an account ID and API
+// token, constructing the underlying Cloudflare client (mirrors the other
+// *FromCreds constructors in this package).
+func NewRedirectServiceFromCreds(accountID, apiToken string) (*RedirectService, error) {
+	if accountID == "" {
+		return nil, validationError("NewRedirectService", "account ID is required")
+	}
+	if apiToken == "" {
+		return nil, validationError("NewRedirectService", "API token is required")
+	}
+	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	if err != nil {
+		return nil, authError("NewRedirectService", "failed to create Cloudflare API client", err)
+	}
+	return &RedirectService{cf: cf, accountID: accountID}, nil
+}
+
 // List returns the redirect rules configured for a zone. If the zone has no
 // dynamic-redirect phase ruleset, an empty slice is returned (not an error).
 func (s *RedirectService) List(ctx context.Context, zoneID string) ([]RedirectRule, error) {

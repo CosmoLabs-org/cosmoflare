@@ -315,3 +315,16 @@ func TestRedirectService_Delete_Validation(t *testing.T) {
 		t.Error("expected validation error for empty rule ID")
 	}
 }
+
+func TestNewRedirectServiceFromCreds(t *testing.T) {
+	if _, err := NewRedirectServiceFromCreds("", "tok"); err == nil {
+		t.Error("expected error for empty account ID")
+	}
+	if _, err := NewRedirectServiceFromCreds("acct", ""); err == nil {
+		t.Error("expected error for empty API token")
+	}
+	svc, err := NewRedirectServiceFromCreds("acct", "tok")
+	if err != nil || svc == nil {
+		t.Fatalf("expected service, got svc=%v err=%v", svc, err)
+	}
+}
