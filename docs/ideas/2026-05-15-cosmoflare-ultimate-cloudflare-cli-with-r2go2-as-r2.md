@@ -2,11 +2,12 @@
 id: IDEA-020
 title: Cosmoflare — ultimate Cloudflare CLI with R2Go2 as R2 component
 created: "2026-05-15T23:47:45.081526-03:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 2027
 ---
+
 
 # Cosmoflare — ultimate Cloudflare CLI with R2Go2 as R2 component
 

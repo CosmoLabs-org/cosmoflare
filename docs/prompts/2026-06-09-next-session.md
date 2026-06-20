@@ -1,14 +1,15 @@
 ---
+completed: "2026-06-20"
 created: "2026-06-09T00:30:00-03:00"
-goals_completed: 0
+goals_completed: 4
 goals_total: 4
 priority: medium
 related_prompts:
-  - docs/prompts/2026-06-07-next-session.md
+    - docs/prompts/2026-06-07-next-session.md
 requires_reading:
-  - CLAUDE.md
+    - CLAUDE.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
 tags: []
 title: Cosmoflare — Next Session
 ---
@@ -53,24 +54,24 @@ When goals involve dispatching subagents:
 
 ## Goals
 
-### [ ] 1. Release v0.15.0
+### [x] 1. Release v0.15.0
 **Model:** `glm-turbo` | **Files:** `.version-registry.json`, `CHANGELOG.md`
 3 ROAD items + 1 FEAT since v0.14.0 = ready for a minor bump. Run `ccs changelog preview` to confirm 4 staged entries (ROAD-020, ROAD-002, ROAD-007, FEAT-005), then `/release` to bump, tag, update registry.
 
-### [ ] 2. cmd/ DI refactoring — brainplan
+### [x] 2. cmd/ DI refactoring — brainplan
 **Model:** `opus` | **Files:** `cmd/*.go`, `cmd/*_test.go`
 `cmd/` is at ~27.5% coverage. The blocker: `RunE` handlers all call `NewClient()` which requires live Cloudflare credentials. To test without credentials, commands need dependency injection (accept a `Client` interface or factory function). This is a design task — run `/brainplan` to explore the DI pattern before implementing. Key questions: inject via global var, per-command factory, or cobra context? How to handle commands that need multiple services (R2Client + WorkerService + KVService)? What's the minimum-touch approach that doesn't restructure every command?
 
-### [ ] 3. Fix internal/webhook flaky test
+### [x] 3. Fix internal/webhook flaky test
 **Model:** `sonnet` | **Files:** `internal/webhook/webhook_test.go` | **Reason:** requires diagnosis
 `TestTriggerAlert_WithStoreMultipleWebhooks` fails intermittently — "expected 2 calls (2 enabled + 1 disabled + 1 missing), got 1". Observed during this session's test runs. Likely a race condition or timing issue in the test's mock HTTP server. Diagnose and fix.
 
-### [ ] 4. Roadmap health cleanup
+### [x] 4. Roadmap health cleanup
 **Model:** `glm-turbo` | **Files:** `docs/roadmap/items/*.yaml`
 `ccs roadmap health` reports 19 findings: 7 drifted items (recent commits touch related files but item not updated), orphaned items (ROAD-002, ROAD-007 linked issues both closed). Run `ccs roadmap health --fix` for the auto-fixable ones, manually review the drifted BASE-* items.
 
 ## Carry-Over Tasks
-- [ ] cmd/ coverage — DI refactoring (was: pending)
+- [x] cmd/ coverage — DI refactoring (was: pending)
 
 ## Where We're Headed
 
