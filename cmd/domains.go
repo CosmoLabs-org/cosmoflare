@@ -46,6 +46,31 @@ var (
 	domainsEnrich  bool
 )
 
+// newDomainService is the service factory used by the domains subcommands.
+// It is a package-level var so tests can swap it for a stub without touching
+// live Cloudflare. When enrich is true, the optional Redirects and Registrar
+// overlays are wired in (best-effort: failures to construct them are skipped,
+// matching the optional nature of those services).
+var newDomainService = func(enrich bool) (*cosmoflare.DomainService, error) {
+	zoneSvc, err := getZoneService()
+	if err != nil {
+		return nil, err
+	}
+	svc, err := cosmoflare.NewDomainService(zoneSvc, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	if enrich {
+		if rs, err := cosmoflare.NewRedirectServiceFromCreds(AccountID, APIToken); err == nil {
+			svc = svc.WithRedirects(rs)
+		}
+		if rg, err := cosmoflare.NewRegistrarServiceFromCreds(AccountID, APIToken); err == nil {
+			svc = svc.WithRegistrar(rg)
+		}
+	}
+	return svc, nil
+}
+
 func init() {
 	rootCmd.AddCommand(domainsCmd)
 
@@ -56,6 +81,13 @@ func init() {
 	domainsCmd.Flags().StringVar(&domainsSort, "sort", "name", "Sort by: name, status, records")
 	domainsCmd.Flags().BoolVar(&domainsDetail, "detail", false, "Show detailed per-domain cards")
 	domainsCmd.Flags().BoolVar(&domainsEnrich, "enrich", false, "Run live health probes (slower)")
+
+	// Subcommands (defined in domains_get.go, domains_stats.go, domains_ns.go,
+	// domains_redirects.go).
+	domainsCmd.AddCommand(domainsGetCmd)
+	domainsCmd.AddCommand(domainsStatsCmd)
+	domainsCmd.AddCommand(domainsNSCmd)
+	domainsCmd.AddCommand(domainsRedirectsCmd)
 }
 
 // domainsResponse is the JSON envelope for the domains command output.
