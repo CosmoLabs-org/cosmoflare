@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-06-21T05:35:25.093107-03:00
+last_updated: 2026-06-21T07:58:02.317157-03:00
 next_id: 84
 items:
     - id: ROAD-083
@@ -31,6 +31,9 @@ items:
       priority: 70
       category: infra
       effort: medium
+      has_plan: true
+      linked_issues:
+        - FEAT-008
       created_at: 2026-06-20T21:01:19.018763-03:00
     - id: ROAD-079
       title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents

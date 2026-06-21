@@ -1,11 +1,16 @@
 id: ROAD-080
 created_at: 2026-06-20T21:01:19.018763-03:00
-updated_at: 2026-06-20T21:01:19.021069-03:00
+updated_at: 2026-06-21T07:58:02.316961-03:00
 title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
 description: internal/webhook is currently outbound-only (POSTs to Slack/Discord/HTTP, no subscribe API). Add an in-process pub/sub seam so the serve daemon (and other consumers) can subscribe to alert/webhook events and stream them as real-time notifications to desktop/mobile. Surfaced by the independent review of the desktop brainplan (BR-07 gap).
 status: captured
 priority: 70
 category: infra
 effort: medium
+refs:
+    - type: plan
+      path: docs/planning-mode/2026-06-21-inprocess-event-bus.md
+linked_issues:
+    - FEAT-008
 origin:
     session: 17
