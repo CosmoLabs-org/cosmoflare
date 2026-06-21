@@ -15,7 +15,7 @@ title: "features-and-fixes Release"
 
 ## Overview
 
-This release brings 11 new features, and 7 bug fixes.
+This release brings 9 new features, and 6 bug fixes.
 
 ## Highlights
 
@@ -23,16 +23,6 @@ Cosmoflare Desktop v1 + cosmoflare serve daemon: new local HTTP+SSE daemon (toke
 
 ## What's New
 
-- # FEAT-007: Cosmoflare Desktop (Tauri) v1 — daemon + dashboard + notifications
-
-**Type**: feature
-**Status**: closed
-**Created**: 2026-06-20
-
-## Description
-
-Implement v1 of the Cosmoflare desktop app (ROAD-063): a Tauri shell that spawns/supervises a local 'cosmoflare serve' daemon (HTTP+SSE over existing services) and renders a read-only multi-account dashboard with real-time notifications. Cross-platform via Rust-owned daemon lifecycle. Credentials via config flow, never the OS keychain. Design: docs/brainstorming/2026-06-20-cosmoflare-desktop.md. Plan: docs/planning-mode/2026-06-20-cosmoflare-desktop.md. GLM Wave-1 manifest: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml.
-- cosmoflare serve: local HTTP+SSE daemon (token auth, REST read endpoints, SSE /events, two-tier health) backing the desktop app
 - emit notifications on cloudflare_online transitions (BR-07) (commit:3cd093a1)
 - real-time notifications panel (P-08) (commit:be5ee69f)
 - multi-account read-only dashboard (P-07) (commit:0b82d646)
@@ -45,7 +35,6 @@ Implement v1 of the Cosmoflare desktop app (ROAD-063): a Tauri shell that spawns
 
 ## Bug Fixes
 
-- Desktop: fix daemon orphan on app quit, notifications reset on tab switch, accounts 401 swallow, and stale health indicators
 - independent review of ROAD-080 brainplan — 2 issues (commit:ccaf5a06)
 - persist notifications across tabs, harden accounts + SSE health (commit:21cf37f0)
 - kill daemon on app exit + make set_child atomic (commit:e3321ea0)
@@ -65,10 +54,10 @@ No breaking changes in this release. Standard upgrade applies.
 
 | Metric | Value |
 |--------|-------|
-| Commits | 40 |
-| Files changed | 116 |
-| New features | 11 |
-| Bug fixes | 7 |
+| Commits | 41 |
+| Files changed | 117 |
+| New features | 9 |
+| Bug fixes | 6 |
 
 ---
 _Full changelog: CHANGELOG.md_
