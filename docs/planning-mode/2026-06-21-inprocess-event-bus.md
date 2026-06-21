@@ -277,11 +277,11 @@ Refs: ROAD-080"
 - Test: `internal/webhook/manager_bus_test.go`
 
 > Read `internal/webhook/manager.go` first. `Manager` is built by
-> `NewManager(cf *cloudflare.API, accountID string)`. Add the bus field and a
-> setter, then publish **before** the outbound `SendWebhook` so alerts reach
-> in-process subscribers even when outbound delivery fails or no webhooks are
-> registered. Use the Manager's stored account id for `Event.Account` (match the
-> field name actually used in the struct).
+> `NewManager(cf *cloudflare.API, accountID string)` and stores the account id in
+> the `accountID` field. Add the bus field and a setter, then publish **before**
+> the outbound POST loop in `TriggerAlert` (the per-webhook `sendNotification`
+> calls) so alerts reach in-process subscribers even when outbound delivery fails
+> or no webhooks are registered. Use `m.accountID` for `Event.Account`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -363,13 +363,13 @@ a setter:
 func (m *Manager) SetBus(b *events.Bus) { m.bus = b }
 ```
 
-and, at the **top** of `TriggerAlert` (after the alert message/data are known but before the outbound `SendWebhook` call), publish:
+and, at the **top** of `TriggerAlert` (after `message`/`data` are in scope — they are parameters — but before the outbound per-webhook `sendNotification` loop), publish:
 
 ```go
 	if m.bus != nil {
 		m.bus.Publish(events.Event{
 			Topic:   "notifications",
-			Account: m.accountID, // match the struct's stored account-id field
+			Account: m.accountID, // the Manager's stored account-id field
 			Kind:    "alert",
 			Message: message,
 			Data:    data,

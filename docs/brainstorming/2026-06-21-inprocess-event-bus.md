@@ -16,7 +16,7 @@ deliverables:
   - id: BR-02
     title: "events.Event type carrying topic + account context + kind/message/data/time"
   - id: BR-03
-    title: "webhook.Manager gains optional nil-safe bus; TriggerAlert/SendWebhook also publish to it"
+    title: "webhook.Manager gains optional nil-safe bus; TriggerAlert publishes to it (before outbound)"
   - id: BR-04
     title: "serve daemon creates the bus, subscribes, and forwards events to the SSE notifications channel"
   - id: BR-05
@@ -79,7 +79,7 @@ review and captured as **ROAD-080**.
 2. **`internal/webhook/manager.go`** (modify)
 
    - Add an optional `bus *events.Bus` field, set via a constructor option or `SetBus(*events.Bus)`. **nil-safe** — when unset, behavior is exactly today's.
-   - In `TriggerAlert` (and `SendWebhook`), after building the event, also `bus.Publish(events.Event{Topic: "notifications", Kind: "alert", Account: ..., Message: ..., Data: ...})`. The existing outbound POST path is untouched.
+   - In `TriggerAlert`, after the alert `message`/`data` are known and **before** the outbound `sendNotification` loop, also `bus.Publish(events.Event{Topic: "notifications", Kind: "alert", Account: ..., Message: ..., Data: ...})`. The existing outbound POST path is untouched. (Only the alert path publishes for v1; generic `SendWebhook` events stay outbound-only — see Out of scope.)
 
 3. **`cmd/serve.go` + `internal/server`** (modify/wire)
 
