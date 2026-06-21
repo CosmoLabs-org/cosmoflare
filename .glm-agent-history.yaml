@@ -38,3 +38,228 @@ entries:
       completed: 2026-02-26T02:03:49.218924+01:00
       status: discarded
       reason: 'cleanup: failed'
+    - id: "0009"
+      task: |
+        Add REST read endpoints to the serve daemon (P-02 in the plan).
+
+        Files: create internal/server/rest.go + internal/server/rest_test.go; modify
+        internal/server/server.go (register routes).
+
+        Define a NEW daemon-local interface named ServeSource in rest.go (do NOT call it
+        DataSource and do NOT import internal/tui.DataSource — that interface is R2-only,
+        FetchBuckets/FetchObjects/FetchMetrics, and does NOT fit):
+          type ServeSource interface {
+            Accounts() ([]map[string]any, error)
+            Zones() ([]map[string]any, error)
+            R2Buckets() ([]map[string]any, error)
+            Workers() ([]map[string]any, error)
+            KV() ([]map[string]any, error)
+          }
+        Add (s *Server) SetData(ServeSource). Register GET /accounts /zones /r2/buckets
+        /workers /kv — each calls the matching method and writes JSON. On error → HTTP 502
+        and s.SetCloudflareOnline(false); on success → s.SetCloudflareOnline(true).
+
+        In cmd/serve.go, implement ServeSource with the VERIFIED constructors (do NOT
+        invent New*FromCreds by analogy):
+          Zones()    -> cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken).List(ctx, ...)
+          Workers()  -> cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+          KV()       -> cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+          R2Buckets()-> cosmoflare.NewClient(cosmoflare.WithAccountID(AccountID), cosmoflare.WithAPIToken(APIToken)).ListBuckets(ctx)   # there is NO NewR2ServiceFromCreds
+          Accounts() -> config ConfigManager.ListProfiles()  # local profiles, NOT a CF API call
+
+        The reference test + impl are in the plan (Task 2). Follow them.
+
+        Testability: tests inject a fake DataSource (no live credentials) and assert the
+        JSON body — do NOT call the real Cloudflare API in tests.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestZonesEndpoint -v
+          GOWORK=off go build ./...
+        Commit via: ccs commit-batch --message "feat(serve): add REST read endpoints over existing services (P-02)"
+      started: 2026-06-20T21:43:47.03417-03:00
+      completed: 2026-06-20T21:45:39.661737-03:00
+      status: failed
+    - id: "0010"
+      task: |
+        Add the SSE /events endpoint + two-tier health to the serve daemon (P-03 in the plan).
+
+        Files: create internal/server/sse.go + internal/server/sse_test.go; register /events.
+
+        Implement an SSE hub: a set of subscriber channels guarded by a mutex, a
+        Publish(channel string, data any) that fans out, and a GET /events handler that
+        registers a subscriber, sets Content-Type: text/event-stream, writes
+        "event: <channel>\ndata: <json>\n\n" frames flushed via http.Flusher, and cleans
+        up on r.Context().Done(). Channels: metrics, notifications, status. Emit a status
+        frame {systems_online, cloudflare_online} when cloudflare_online changes; have the
+        REST handlers (P-02) call Publish("status", ...) on that transition.
+
+        The reference test + impl are in the plan (Task 3). Follow them.
+
+        Testability: the test subscribes over httptest, calls s.Publish("notifications", ...),
+        and asserts the framed bytes contain the channel + payload — do NOT re-implement
+        the SSE framing in the test.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestSSE_NotificationFrame -v
+          GOWORK=off go test ./internal/server/ && GOWORK=off go build ./...
+        Commit via: ccs commit-batch --message "feat(serve): add SSE /events (metrics/notifications/status) + health (P-03)"
+      started: 2026-06-20T21:43:46.648672-03:00
+      completed: 2026-06-20T21:45:39.75986-03:00
+      status: failed
+    - id: "0011"
+      task: |
+        Create the cosmoflare serve daemon skeleton (P-01 in the plan).
+
+        Files to create:
+          internal/server/server.go, internal/server/server_test.go, cmd/serve.go
+
+        internal/server/server.go must provide:
+          type Config struct { Token string; Version string }
+          type Server struct { ... }                 // holds cfg + an atomic.Bool cfOnline
+          func New(cfg Config) *Server
+          func (s *Server) SetCloudflareOnline(ok bool)
+          func (s *Server) Handler() http.Handler     // mux wrapped in token-auth middleware
+        Routes: GET /healthz → JSON {systems_online:true, cloudflare_online:<bool>, version}.
+        Auth middleware: require header `Authorization: Bearer <cfg.Token>`, else 401.
+
+        cmd/serve.go: a cobra command mirroring cmd/mcp.go. Generate a random token
+        (or --token), net.Listen "tcp" on --addr (default 127.0.0.1:0), print ONE JSON
+        handshake line to stdout: {"addr":"127.0.0.1:<actual-port>","token":"<token>"},
+        then http.Serve. Handle SIGINT/SIGTERM graceful shutdown.
+
+        REQUIRED: add "serve" to the skipValidation slice in cmd/root.go — otherwise its
+        PersistentPreRun calls os.Exit(1) on missing credentials BEFORE the handshake is
+        printed, breaking the first-run flow. The daemon must start without valid creds
+        (it reports cloudflare_online=false instead of exiting).
+
+        Keychain: call os.Setenv("COSMOFLARE_NO_KEYCHAIN", "1") in RunE before any config/
+        keychain use — the env var is the ONLY gate (internal/keychain/keychain.go reads it);
+        there is NO --no-keychain flag. Read credentials from the config flow, never the OS keychain.
+
+        The exact reference test + implementation are in the plan (Task 1). Follow them.
+
+        Testability: the auth check belongs in `authMiddleware` — the test calls /healthz
+        over httptest with and without the bearer token; do NOT re-implement the token
+        comparison inside the test.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestHealthz_RequiresToken -v
+          GOWORK=off go build ./... && go vet ./internal/server/
+        Commit via: ccs commit-batch --message "feat(serve): add cosmoflare serve daemon skeleton with token auth + /healthz (P-01)"
+      started: 2026-06-20T21:43:46.714305-03:00
+      completed: 2026-06-20T21:45:39.860061-03:00
+      status: failed
+    - id: "0009"
+      task: |
+        Add REST read endpoints to the serve daemon (P-02 in the plan).
+
+        Files: create internal/server/rest.go + internal/server/rest_test.go; modify
+        internal/server/server.go (register routes).
+
+        Define a NEW daemon-local interface named ServeSource in rest.go (do NOT call it
+        DataSource and do NOT import internal/tui.DataSource — that interface is R2-only,
+        FetchBuckets/FetchObjects/FetchMetrics, and does NOT fit):
+          type ServeSource interface {
+            Accounts() ([]map[string]any, error)
+            Zones() ([]map[string]any, error)
+            R2Buckets() ([]map[string]any, error)
+            Workers() ([]map[string]any, error)
+            KV() ([]map[string]any, error)
+          }
+        Add (s *Server) SetData(ServeSource). Register GET /accounts /zones /r2/buckets
+        /workers /kv — each calls the matching method and writes JSON. On error → HTTP 502
+        and s.SetCloudflareOnline(false); on success → s.SetCloudflareOnline(true).
+
+        In cmd/serve.go, implement ServeSource with the VERIFIED constructors (do NOT
+        invent New*FromCreds by analogy):
+          Zones()    -> cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken).List(ctx, ...)
+          Workers()  -> cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+          KV()       -> cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+          R2Buckets()-> cosmoflare.NewClient(cosmoflare.WithAccountID(AccountID), cosmoflare.WithAPIToken(APIToken)).ListBuckets(ctx)   # there is NO NewR2ServiceFromCreds
+          Accounts() -> config ConfigManager.ListProfiles()  # local profiles, NOT a CF API call
+
+        The reference test + impl are in the plan (Task 2). Follow them.
+
+        Testability: tests inject a fake DataSource (no live credentials) and assert the
+        JSON body — do NOT call the real Cloudflare API in tests.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestZonesEndpoint -v
+          GOWORK=off go build ./...
+        Commit via: ccs commit-batch --message "feat(serve): add REST read endpoints over existing services (P-02)"
+      started: 2026-06-20T21:43:47.03417-03:00
+      completed: 2026-06-20T21:45:48.648767-03:00
+      status: discarded
+      reason: manually discarded by user
+    - id: "0010"
+      task: |
+        Add the SSE /events endpoint + two-tier health to the serve daemon (P-03 in the plan).
+
+        Files: create internal/server/sse.go + internal/server/sse_test.go; register /events.
+
+        Implement an SSE hub: a set of subscriber channels guarded by a mutex, a
+        Publish(channel string, data any) that fans out, and a GET /events handler that
+        registers a subscriber, sets Content-Type: text/event-stream, writes
+        "event: <channel>\ndata: <json>\n\n" frames flushed via http.Flusher, and cleans
+        up on r.Context().Done(). Channels: metrics, notifications, status. Emit a status
+        frame {systems_online, cloudflare_online} when cloudflare_online changes; have the
+        REST handlers (P-02) call Publish("status", ...) on that transition.
+
+        The reference test + impl are in the plan (Task 3). Follow them.
+
+        Testability: the test subscribes over httptest, calls s.Publish("notifications", ...),
+        and asserts the framed bytes contain the channel + payload — do NOT re-implement
+        the SSE framing in the test.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestSSE_NotificationFrame -v
+          GOWORK=off go test ./internal/server/ && GOWORK=off go build ./...
+        Commit via: ccs commit-batch --message "feat(serve): add SSE /events (metrics/notifications/status) + health (P-03)"
+      started: 2026-06-20T21:43:46.648672-03:00
+      completed: 2026-06-20T21:45:48.924299-03:00
+      status: discarded
+      reason: manually discarded by user
+    - id: "0011"
+      task: |
+        Create the cosmoflare serve daemon skeleton (P-01 in the plan).
+
+        Files to create:
+          internal/server/server.go, internal/server/server_test.go, cmd/serve.go
+
+        internal/server/server.go must provide:
+          type Config struct { Token string; Version string }
+          type Server struct { ... }                 // holds cfg + an atomic.Bool cfOnline
+          func New(cfg Config) *Server
+          func (s *Server) SetCloudflareOnline(ok bool)
+          func (s *Server) Handler() http.Handler     // mux wrapped in token-auth middleware
+        Routes: GET /healthz → JSON {systems_online:true, cloudflare_online:<bool>, version}.
+        Auth middleware: require header `Authorization: Bearer <cfg.Token>`, else 401.
+
+        cmd/serve.go: a cobra command mirroring cmd/mcp.go. Generate a random token
+        (or --token), net.Listen "tcp" on --addr (default 127.0.0.1:0), print ONE JSON
+        handshake line to stdout: {"addr":"127.0.0.1:<actual-port>","token":"<token>"},
+        then http.Serve. Handle SIGINT/SIGTERM graceful shutdown.
+
+        REQUIRED: add "serve" to the skipValidation slice in cmd/root.go — otherwise its
+        PersistentPreRun calls os.Exit(1) on missing credentials BEFORE the handshake is
+        printed, breaking the first-run flow. The daemon must start without valid creds
+        (it reports cloudflare_online=false instead of exiting).
+
+        Keychain: call os.Setenv("COSMOFLARE_NO_KEYCHAIN", "1") in RunE before any config/
+        keychain use — the env var is the ONLY gate (internal/keychain/keychain.go reads it);
+        there is NO --no-keychain flag. Read credentials from the config flow, never the OS keychain.
+
+        The exact reference test + implementation are in the plan (Task 1). Follow them.
+
+        Testability: the auth check belongs in `authMiddleware` — the test calls /healthz
+        over httptest with and without the bearer token; do NOT re-implement the token
+        comparison inside the test.
+
+        Verify:
+          GOWORK=off go test ./internal/server/ -run TestHealthz_RequiresToken -v
+          GOWORK=off go build ./... && go vet ./internal/server/
+        Commit via: ccs commit-batch --message "feat(serve): add cosmoflare serve daemon skeleton with token auth + /healthz (P-01)"
+      started: 2026-06-20T21:43:46.714305-03:00
+      completed: 2026-06-20T21:45:49.204817-03:00
+      status: discarded
+      reason: manually discarded by user
