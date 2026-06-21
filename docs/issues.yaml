@@ -1,11 +1,30 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-06-20T20:58:58.261512-03:00
-next_bug_id: 22
+last_updated: 2026-06-21T05:35:00.906433-03:00
+next_bug_id: 25
 next_feat_id: 8
 next_task_id: 5
 next_imp_id: 1
 issues:
+    - id: BUG-024
+      type: bug
+      status: open
+      title: 'Desktop: capabilities grant broad shell:default instead of sidecar-scoped'
+      severity: medium
+      area: security
+      created_at: 2026-06-21T05:31:35.731127-03:00
+    - id: BUG-023
+      type: bug
+      status: open
+      title: 'Desktop: Rust handshake-read loop can exceed HANDSHAKE_TIMEOUT'
+      severity: medium
+      created_at: 2026-06-21T05:31:29.964353-03:00
+    - id: BUG-022
+      type: bug
+      status: open
+      title: 'Desktop: cosmoflare serve graceful Shutdown can hang with an SSE client connected'
+      severity: low
+      created_at: 2026-06-21T05:30:39.6349-03:00
     - id: BUG-001
       type: bug
       status: resolved
@@ -186,6 +205,6 @@ issues:
       created_at: 2026-06-14T08:29:51.366577-03:00
     - id: FEAT-007
       type: feature
-      status: open
+      status: closed
       title: Cosmoflare Desktop (Tauri) v1 — daemon + dashboard + notifications
       created_at: 2026-06-20T17:59:15.616796-03:00

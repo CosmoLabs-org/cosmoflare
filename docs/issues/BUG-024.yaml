@@ -1,0 +1,15 @@
+id: BUG-024
+type: bug
+created_at: 2026-06-21T05:31:35.731127-03:00
+updated_at: 2026-06-21T05:31:35.733333-03:00
+source: local
+severity: medium
+status: open
+area: security
+origin:
+    session: 18
+title: 'Desktop: capabilities grant broad shell:default instead of sidecar-scoped'
+description: desktop/src-tauri/capabilities/default.json grants 'shell:default', exposing the shell plugin's execute/spawn surface broadly to the webview rather than scoping to the bundled cosmoflare sidecar. The file's own comment claims G-09 scopes it to the sidecar, but it does not. For a paid desktop app this is unnecessary, webview-reachable attack surface. Found in S334 review.
+fix_direction: In `desktop/src-tauri/capabilities/default.json`, replace `shell:default` with a scoped permission naming only the cosmoflare sidecar (Tauri v2 shell sidecar permission / allow-execute with the specific name + args pattern); grant only what the daemon spawn needs. Re-verify the sidecar still spawns after scoping.
+affected_files:
+    - desktop/src-tauri/capabilities/default.json

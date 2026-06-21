@@ -1,0 +1,14 @@
+id: BUG-023
+type: bug
+created_at: 2026-06-21T05:31:29.964353-03:00
+updated_at: 2026-06-21T05:31:29.966478-03:00
+source: local
+severity: medium
+status: open
+origin:
+    session: 18
+title: 'Desktop: Rust handshake-read loop can exceed HANDSHAKE_TIMEOUT'
+description: In desktop/src-tauri/src/daemon.rs spawn_and_handshake, the handshake-read loop guards on 'while Instant::now() < deadline', but the deadline is only re-evaluated between rx.recv().await calls — recv() itself has no timeout. A sidecar that emits non-handshake stdout slowly, or stalls without closing stdout, makes each recv() block indefinitely, so the effective wait is unbounded and the 10s HANDSHAKE_TIMEOUT gives false assurance. Found in S334 review of the merged Tauri app.
+fix_direction: In `desktop/src-tauri/src/daemon.rs` spawn_and_handshake, wrap `rx.recv()` in `tokio::time::timeout(deadline - Instant::now(), ...)` so the 10s cap is real (the tokio 'time' feature is already enabled). On elapsed, kill the child and return HandshakeTimeout.
+affected_files:
+    - desktop/src-tauri/src/daemon.rs

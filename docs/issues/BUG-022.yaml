@@ -1,0 +1,15 @@
+id: BUG-022
+type: bug
+created_at: 2026-06-21T05:30:39.6349-03:00
+updated_at: 2026-06-21T05:30:39.637968-03:00
+source: local
+severity: low
+status: open
+origin:
+    session: 18
+title: 'Desktop: cosmoflare serve graceful Shutdown can hang with an SSE client connected'
+description: cmd/serve.go runServe calls httpServer.Shutdown(context.Background()) on SIGINT/SIGTERM. The SSE /events handler (internal/server/sse.go) blocks until the request context is cancelled (client disconnect); http.Server.Shutdown waits for active connections and does not cancel in-flight request contexts, so with an SSE client connected, Shutdown (no deadline) can block indefinitely. Masked in the desktop model because the Rust shell SIGKILLs the child, but 'cosmoflare serve' + Ctrl-C with an SSE client connected hangs. Found in S334 review.
+fix_direction: Pass a bounded context to Shutdown (e.g. 5s timeout) AND/OR track SSE connections via a done-channel the handlers select on, closed at shutdown so streams exit promptly.
+affected_files:
+    - cmd/serve.go
+    - internal/server/sse.go
