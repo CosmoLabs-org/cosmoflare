@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:sidecar": "bash scripts/build-sidecar.sh",
+    "dev:sidecar": "bash scripts/build-sidecar.sh --host",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

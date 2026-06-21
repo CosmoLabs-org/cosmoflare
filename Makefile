@@ -310,6 +310,28 @@ run: build
 	@echo "🚀 Running $(BINARY_NAME)..."
 	./$(BUILD_DIR)/$(BINARY_NAME)
 
+# ─── Desktop (Tauri) ───────────────────────────────────────────────────────
+# The Cosmoflare desktop app (ROAD-063) lives in desktop/. The Go daemon is
+# bundled as a Tauri externalBin sidecar, cross-compiled per target triple.
+DESKTOP_DIR=desktop
+
+.PHONY: desktop-sidecar
+desktop-sidecar: ## Cross-compile the Go daemon as the Tauri sidecar (all triples)
+	bash $(DESKTOP_DIR)/scripts/build-sidecar.sh
+
+.PHONY: desktop-dev
+desktop-dev: ## Run the desktop app in dev mode (builds the host sidecar first)
+	cd $(DESKTOP_DIR) && bun run tauri dev
+
+.PHONY: desktop-build
+desktop-build: ## Build the desktop app installers/bundles for the host OS
+	cd $(DESKTOP_DIR) && bun run tauri build
+
+.PHONY: desktop-test
+desktop-test: ## Run desktop JS (vitest) + Rust (cargo test) suites
+	cd $(DESKTOP_DIR) && bun run test
+	cd $(DESKTOP_DIR)/src-tauri && cargo test
+
 # Docker targets
 .PHONY: docker-build
 docker-build:

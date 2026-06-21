@@ -68,6 +68,53 @@ JSON output:
 
 The server shuts down cleanly on SIGINT/SIGTERM.
 
+## Desktop Daemon (`serve`)
+
+`cosmoflare serve` is the local HTTP+SSE daemon the **Cosmoflare desktop app**
+(Tauri) spawns and supervises. It binds a localhost address, protects every
+endpoint with a bearer token, and exposes a read-only REST + SSE API over the
+existing service layer. It is not normally invoked by hand — the desktop shell
+spawns it — but it is fully usable for testing and scripting.
+
+```bash
+cosmoflare serve                              # ephemeral port, random token
+cosmoflare serve --addr 127.0.0.1:8421        # fixed port
+cosmoflare serve --token $(openssl rand -hex 16)   # caller-supplied token
+```
+
+On startup it prints a single JSON handshake line to stdout (everything else
+goes to stderr so the line is machine-parseable):
+
+```json
+{"addr":"127.0.0.1:54123","token":"<random>"}
+```
+
+### Endpoints (all require `Authorization: Bearer <token>`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/healthz` | Two-tier health: `{systems_online, cloudflare_online, version}` |
+| `GET` | `/accounts` | Local config profiles (not a Cloudflare call) |
+| `GET` | `/zones`, `/r2/buckets`, `/workers`, `/kv` | Service lists; `?profile=<name>` re-scopes per request (read-only) |
+| `GET` | `/events` | SSE: multiplexed `metrics` / `notifications` / `status` (token via `?token=` for browser EventSource) |
+
+Credentials are resolved lazily per request from the selected config profile;
+the daemon starts with no valid credentials and reports `cloudflare_online=false`
+so the desktop app can show its first-run setup screen. It never probes the OS
+keychain (`COSMOFLARE_NO_KEYCHAIN=1` is set in-process).
+
+### Desktop app
+
+The Tauri desktop app lives in `desktop/` and is driven through npm/bun scripts
+(see `make desktop-*`):
+
+```bash
+make desktop-sidecar     # cross-compile the Go daemon for all target triples
+make desktop-dev         # run the desktop app in dev mode
+make desktop-build       # build installers/bundles for the host OS
+make desktop-test        # run JS (vitest) + Rust (cargo test) suites
+```
+
 ## Dashboard
 
 Launch an interactive terminal dashboard for managing Cloudflare services.

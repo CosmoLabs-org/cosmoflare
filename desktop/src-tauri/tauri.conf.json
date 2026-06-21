@@ -4,9 +4,9 @@
   "version": "0.16.0",
   "identifier": "org.cosmolabs.cosmoflare",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "bun run dev:sidecar && bun run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "bun run build && bun run build:sidecar",
     "frontendDist": "../dist"
   },
   "app": {
