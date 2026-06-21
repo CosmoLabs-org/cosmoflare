@@ -36,6 +36,12 @@ title: Cosmoflare Desktop (Tauri) — v1 Implementation
 ---
 # Cosmoflare Desktop (Tauri) — v1 Implementation
 
+## BLOCKER — Fix GLM Pool Config First
+
+`ccs glm-agent exec-batch` currently fails with `unknown pool: glm-5.2[1m]`. **Do not attempt any GLM dispatch (Wave 1) until G-00 is resolved.** See Goal G-00 below for the diagnosis and fix sequence.
+
+---
+
 ## BEFORE Starting — Required Reading
 
 **You MUST read these files in full before writing any code. They are the gospel truth of what must be implemented.**
@@ -85,7 +91,41 @@ Manifest: `ccs glm-agent exec-batch docs/prompts/2026-06-20-cosmoflare-desktop-g
 - **React:** `desktop/src/` (`App.tsx`, `api/{client,sse}.ts`, `components/`, `views/`, `__tests__/`)
 - **Packaging:** `desktop/scripts/build-sidecar.sh`, `tauri.conf.json` build hooks
 
+## GLM Dispatch Rules
+
+When goals involve dispatching subagents:
+
+1. **ALWAYS** use `ccs glm-agent exec` / `exec-batch` for GLM agents (routes through queue with retry logic)
+2. **NEVER** use Agent tool with `model:sonnet` or `model:haiku` for GLM work (bypasses queue, risks 429)
+3. Agent tool with `model:opus` is fine for Opus subagents
+4. For Wave 1 parallel work: `ccs glm-agent exec-batch docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml --wave-size 1`
+
 ## Goals
+
+### [ ] G-00 Fix GLM pool config: `unknown pool: glm-5.2[1m]` blocks all GLM dispatch — BLOCKER
+**Model:** `sonnet` | **Reason:** diagnosis — root cause unknown (stale binary vs unwired code path)
+
+The error `unknown pool: glm-5.2[1m]` comes from `conductor.go:107` (`AcquireContext`). The normalization that should strip `[1m]` lives in `tools/ccsession/internal/glmqueue/daemon.go:325` (`resolveModel`), which is called at line 421 before the conductor acquire. If the running binary predates that wiring, the daemon passes the raw `glm-5.2[1m]` string directly to the conductor, which has no such pool.
+
+**Diagnosis + fix sequence (in order — stop at whichever step resolves it):**
+
+1. **Rebuild ccs binary** in ClaudeCodeSetup:
+   ```bash
+   ccs build
+   # or: go -C /Users/gabstudio/PROJECTS/ClaudeCodeSetup/tools/ccsession build -o ~/.local/bin/ccs .
+   ```
+2. **Restart the GLM queue daemon** (so it picks up the new binary):
+   ```bash
+   ccs glm-queue restart   # or: ccs daemon restart
+   ```
+3. **Smoke test**: `ccs glm-agent exec "echo hello" --model glm-5.2 --max-turns 1 --skip-validate` — should not error with `unknown pool`.
+4. **If still failing**: search for any caller that passes the raw model string directly to `conductor.Acquire` without going through `resolveModel`:
+   ```bash
+   grep -n "Acquire\|conductor" /Users/gabstudio/PROJECTS/ClaudeCodeSetup/tools/ccsession/internal/glmqueue/daemon.go
+   grep -rn "\.Acquire(" /Users/gabstudio/PROJECTS/ClaudeCodeSetup/tools/ccsession/ --include="*.go"
+   ```
+   If a second code path bypasses `resolveModel`, add the same `[` stripping logic there (mirror line 329-331 of `daemon.go`).
+5. **Acceptance**: `ccs glm-agent exec-batch docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml --wave-size 1 --dry-run` (or equivalent) exits 0 without `unknown pool` error.
 
 ### [ ] G-01 internal/server + `cosmoflare serve`: HTTP server, token auth, stdout handshake, /healthz
 Covers P-01.
@@ -114,7 +154,19 @@ Covers P-08.
 ### [ ] G-09 Cross-platform packaging: per-triple Go sidecar + Tauri bundles
 Covers P-09.
 
+## Where We're Headed
+
+The Cosmoflare Desktop is the bridge that turns the CLI into a product people pay for. Once v1 ships (read-only dashboard + real-time alerts), the desktop tier enables the subscription model that funds ongoing open-source CLI work. The GLM pool fix is the gate: Wave 1 (Go daemon) can't run without it, and without Wave 1 none of the Tauri/React waves can start. Fix the pool, run Wave 1, then Opus leads Waves 2-4. FEAT-007 / ROAD-063 tracks this milestone.
+
+## Priority Order
+
+1. **G-00 — GLM pool fix** (blocker for all GLM dispatch — do this first, takes minutes)
+2. **G-01 → G-03 — Wave 1 Go daemon** (GLM-dispatched sequentially after G-00; Opus reviews each diff before merge)
+3. **G-04/G-05 + G-06/G-07/G-08 — Waves 2 & 3** (run in parallel once Wave 1 lands; Opus-led)
+4. **G-09 — Wave 4 packaging** (last; depends on all prior waves)
+
 ## Related
 
 - Brainstorm: `docs/brainstorming/2026-06-20-cosmoflare-desktop.md`
 - Plan: `docs/planning-mode/2026-06-20-cosmoflare-desktop.md`
+- Issue: FEAT-007 | Roadmap: ROAD-063
