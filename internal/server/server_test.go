@@ -61,8 +61,32 @@ func TestHealthz_RequiresToken(t *testing.T) {
 	}
 }
 
-// TestHealthz_ReflectsCloudflareOnline verifies that SetCloudflareOnline
-// flips the cloudflare_online field reported by /healthz.
+// TestHealthz_QueryTokenFallback verifies the ?token= auth fallback used by the
+// browser EventSource API (which cannot set the Authorization header).
+func TestHealthz_QueryTokenFallback(t *testing.T) {
+	s := New(Config{Token: "secret", Version: "test"})
+	url := s.testServer(t)
+
+	// Correct token in query string -> 200.
+	resp, err := http.Get(url + "/healthz?token=secret")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("query token: got %d, want 200", resp.StatusCode)
+	}
+
+	// Wrong query token -> 401.
+	resp, err = http.Get(url + "/healthz?token=nope")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("wrong query token: got %d, want 401", resp.StatusCode)
+	}
+}
 func TestHealthz_ReflectsCloudflareOnline(t *testing.T) {
 	s := New(Config{Token: "t", Version: "test"})
 	url := s.testServer(t)

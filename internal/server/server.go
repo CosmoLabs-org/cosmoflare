@@ -89,16 +89,28 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 	s.registerSSERoutes(mux)
 }
 
-// authMiddleware rejects any request whose Authorization header is not the
-// configured bearer token. The token gates all endpoints (REST + SSE).
+// authMiddleware rejects any request that is not authorized. The token gates
+// all endpoints (REST + SSE). See authorized() for the accepted forms.
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") != "Bearer "+s.cfg.Token {
+		if !s.authorized(r) {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// authorized reports whether the request carries the configured token. The
+// primary form is the Bearer header; a ?token= query-string fallback exists so
+// the browser's EventSource API (which cannot set headers) can subscribe to the
+// SSE /events stream. Both are localhost-only desktop transports, so the
+// token-in-query threat model is acceptable.
+func (s *Server) authorized(r *http.Request) bool {
+	if r.Header.Get("Authorization") == "Bearer "+s.cfg.Token {
+		return true
+	}
+	return r.URL.Query().Get("token") != "" && r.URL.Query().Get("token") == s.cfg.Token
 }
 
 // handleHealthz reports the two-tier health model: systems_online is always
