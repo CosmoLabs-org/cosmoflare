@@ -26,7 +26,7 @@ plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 glm_tasks_ref: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml
 priority: high
 goals_total: 10
-goals_completed: 0
+goals_completed: 1
 requires_reading:
     - docs/brainstorming/2026-06-20-cosmoflare-desktop.md
     - docs/planning-mode/2026-06-20-cosmoflare-desktop.md
@@ -36,9 +36,9 @@ title: Cosmoflare Desktop (Tauri) — v1 Implementation
 ---
 # Cosmoflare Desktop (Tauri) — v1 Implementation
 
-## BLOCKER — Fix GLM Pool Config First
+## ✅ BLOCKER RESOLVED — GLM Pool Fixed (2026-06-20)
 
-`ccs glm-agent exec-batch` currently fails with `unknown pool: glm-5.2[1m]`. **Do not attempt any GLM dispatch (Wave 1) until G-00 is resolved.** See Goal G-00 below for the diagnosis and fix sequence.
+G-00 is done. Root cause: the `ccsdaemon` hosting the Conductor had been running since Jun 16 with stale in-memory code predating the BUG-582 `[1m]` normalization (`conductor.go:107` `glmconfig.ResolveQueueModel`). The on-disk binary already had the fix; **restarting the daemon** (`ccs daemon restart`) reloaded it. Verified: `glm-5.2[1m]` now resolves to the `glm-5.2` pool and dispatch succeeds. **GLM dispatch is unblocked — start at G-01.**
 
 ---
 
@@ -102,8 +102,8 @@ When goals involve dispatching subagents:
 
 ## Goals
 
-### [ ] G-00 Fix GLM pool config: `unknown pool: glm-5.2[1m]` blocks all GLM dispatch — BLOCKER
-**Model:** `sonnet` | **Reason:** diagnosis — root cause unknown (stale binary vs unwired code path)
+### [x] G-00 Fix GLM pool config: `unknown pool: glm-5.2[1m]` — ✅ RESOLVED 2026-06-20
+**Done:** stale `ccsdaemon` (running since Jun 16) served the Conductor with pre-BUG-582 code; `ccs daemon restart` reloaded the binary that normalizes `glm-5.2[1m]`→`glm-5.2`. Verified by a clean dispatch.
 
 The error `unknown pool: glm-5.2[1m]` comes from `conductor.go:107` (`AcquireContext`). The normalization that should strip `[1m]` lives in `tools/ccsession/internal/glmqueue/daemon.go:325` (`resolveModel`), which is called at line 421 before the conductor acquire. If the running binary predates that wiring, the daemon passes the raw `glm-5.2[1m]` string directly to the conductor, which has no such pool.
 
