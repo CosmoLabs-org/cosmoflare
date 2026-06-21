@@ -1,6 +1,6 @@
 version: ""
 project: ""
-last_updated: 2026-06-21T07:58:02.317157-03:00
+last_updated: 2026-06-21T08:07:38.143743-03:00
 next_id: 84
 items:
     - id: ROAD-083
@@ -69,7 +69,8 @@ items:
       created_at: 2026-06-20T21:01:03.076532-03:00
     - id: ROAD-073
       title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
-      status: captured
+      status: completed
+      completed_in: v0.16.0
       created_at: 2026-06-20T21:01:03.030854-03:00
     - id: ROAD-072
       title: Notifications and webhooks — receive CF webhook events locally for dev
