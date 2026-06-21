@@ -39,18 +39,34 @@ type Server struct {
 	// attachment.
 	mu  sync.Mutex
 	src ServeSource
+
+	// hub fans out SSE frames to /events clients. Created in New so Publish
+	// works before any client connects.
+	hub *sseHub
 }
 
 // New constructs a Server. Routes are registered lazily in Handler() so tests
-// can wire optional seams (ServeSource, SSE hub) before the mux is built.
+// can wire optional seams (ServeSource) before the mux is built. The SSE hub
+// is created eagerly so Publish is always safe to call.
 func New(cfg Config) *Server {
-	return &Server{cfg: cfg}
+	return &Server{cfg: cfg, hub: newSSEHub()}
 }
 
 // SetCloudflareOnline records the outcome of the most recent Cloudflare call.
 // REST handlers call this on success/failure; it feeds the "Cloudflare online"
-// tier of the health model.
-func (s *Server) SetCloudflareOnline(ok bool) { s.cfOnline.Store(ok) }
+// tier of the health model. When the value flips, a `status` SSE frame is
+// published so connected dashboards update the health indicator live. Repeated
+// same-value sets (e.g. every successful REST call) do NOT re-publish — only
+// transitions are pushed.
+func (s *Server) SetCloudflareOnline(ok bool) {
+	old := s.cfOnline.Swap(ok)
+	if old != ok {
+		s.Publish("status", map[string]any{
+			"systems_online":   true,
+			"cloudflare_online": ok,
+		})
+	}
+}
 
 // CloudflareOnline reports the current Cloudflare-online tier state.
 func (s *Server) CloudflareOnline() bool { return s.cfOnline.Load() }
