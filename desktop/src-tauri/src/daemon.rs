@@ -116,10 +116,15 @@ impl DaemonState {
 
     fn set_child(&self, child: CommandChild) {
         // Replace any previous child, killing it first (watchdog re-spawn).
-        if let Some(prev) = self.child.lock().unwrap().take() {
+        // The take-then-set MUST happen under a single lock guard: with two
+        // separate lock acquisitions a concurrent set_child/kill_child can
+        // interleave between them and a child gets stored then silently
+        // overwritten — leaking a process that never gets killed.
+        let mut guard = self.child.lock().unwrap();
+        if let Some(prev) = guard.take() {
             let _ = prev.kill();
         }
-        *self.child.lock().unwrap() = Some(child);
+        *guard = Some(child);
     }
 
     /// Kill the daemon child. Called on window close / app quit.
