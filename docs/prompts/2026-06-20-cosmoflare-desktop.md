@@ -26,12 +26,22 @@ plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 glm_tasks_ref: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml
 priority: high
 goals_total: 10
-goals_completed: 1
+goals_completed: 10
+implemented_commits:
+    - cae32ba5d9b9ea75f4f57b308209963c32083f2e  # P-01 / G-01 — serve daemon skeleton + /healthz
+    - 308788d2049d160f27658a1900453057ad7d82d1  # P-02 / G-02 — REST read endpoints over existing services
+    - b142676adc825428685bd947906b7f3de61ba816  # P-03 / G-03 — SSE /events + two-tier health
+    - e7401cd7be2d3683310aa3a3002c5631be7e6869  # P-04 / G-04 — Tauri v2 scaffold + sidecar config
+    - b4d0af3de3c975c8a9ca628e9fefcdd7bb51d754  # P-05 / G-05 — Rust daemon lifecycle
+    - 4302a56ecbbf6acf81510bf51f88023aa354b6dd  # P-06 / G-06 — app shell + API/SSE clients + health indicators
+    - 0b82d646c62d84152fccf747627f61d829e00f70  # P-07 / G-07 — multi-account read-only dashboard
+    - be5ee69fbd3362fec980868889ccd1992b8234d5  # P-08 / G-08 — real-time notifications panel
+    - 14fdb2c789f2f8276c7e888e45a0ce1b39b2722a  # P-09 / G-09 — cross-platform sidecar + Tauri bundles
 requires_reading:
     - docs/brainstorming/2026-06-20-cosmoflare-desktop.md
     - docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 schema_version: 1
-status: PENDING
+status: DONE
 title: Cosmoflare Desktop (Tauri) — v1 Implementation
 ---
 # Cosmoflare Desktop (Tauri) — v1 Implementation
@@ -127,32 +137,32 @@ The error `unknown pool: glm-5.2[1m]` comes from `conductor.go:107` (`AcquireCon
    If a second code path bypasses `resolveModel`, add the same `[` stripping logic there (mirror line 329-331 of `daemon.go`).
 5. **Acceptance**: `ccs glm-agent exec-batch docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml --wave-size 1 --dry-run` (or equivalent) exits 0 without `unknown pool` error.
 
-### [ ] G-01 internal/server + `cosmoflare serve`: HTTP server, token auth, stdout handshake, /healthz
-Covers P-01.
+### [x] G-01 internal/server + `cosmoflare serve`: HTTP server, token auth, stdout handshake, /healthz — ✅ cae32ba (2026-06-21)
+Covers P-01. Done: Server struct + token-auth middleware + /healthz (two-tier health), cmd/serve cobra command (handshake line on stdout, graceful shutdown, random token, COSMOFLARE_NO_KEYCHAIN=1), cmd/root skipValidation += "serve". go test green; e2e smoke verified.
 
-### [ ] G-02 REST read endpoints (/accounts /zones /r2/buckets /workers /kv) over existing services
-Covers P-02.
+### [x] G-02 REST read endpoints (/accounts /zones /r2/buckets /workers /kv) over existing services — ✅ 308788d (2026-06-21)
+Covers P-02. Done: ServeSource seam + read-only ?profile= per-request selection; serveAdapter over verified constructors; CF success/failure flips cloudflare_online + 502/200; /accounts local-only. 8 tests green; e2e smoke verified.
 
-### [ ] G-03 SSE /events (metrics/notifications/status) + two-tier health (systems/cloudflare online)
-Covers P-03.
+### [x] G-03 SSE /events (metrics/notifications/status) + two-tier health (systems/cloudflare online) — ✅ b142676 (2026-06-21)
+Covers P-03. Done: SSE hub + /events handler (text/event-stream, per-frame flush, ctx-done teardown), Publish() fan-out, SetCloudflareOnline publishes status frame on flips only. **Wave 1 (API contract) complete.** 12 tests green under -race.
 
-### [ ] G-04 Tauri v2 scaffold in desktop/ + sidecar (externalBin) + build config
-Covers P-04.
+### [x] G-04 Tauri v2 scaffold in desktop/ + sidecar (externalBin) + build config — ✅ e7401cd (2026-06-21)
+Covers P-04. Done: hand-authored Tauri v2 + React+Vite+TS scaffold in desktop/, externalBin sidecar declared, shell plugin wired, icons generated+committed. bun install + bun run build + cargo check all green.
 
-### [ ] G-05 Rust daemon lifecycle: spawn, handshake parse, health-poll state machine, kill, watchdog
-Covers P-05.
+### [x] G-05 Rust daemon lifecycle: spawn, handshake parse, health-poll state machine, kill, watchdog — ✅ b4d0af3 (2026-06-21)
+Covers P-05. Done: parse_handshake, wait_until_ready, backoff_delays, DaemonState, start_daemon (3x backoff retry), spawn_and_handshake (sidecar + COSMOFLARE_NO_KEYCHAIN), kill on window close, daemon_endpoint command. 8 Rust tests incl. 3 integration against the live Go binary.
 
-### [ ] G-06 React+Vite+TS app shell + REST/SSE client hooks + two health indicators
-Covers P-06.
+### [x] G-06 React+Vite+TS app shell + REST/SSE client hooks + two health indicators — ✅ 4302a56 (2026-06-21)
+Covers P-06. Done: Header (account switcher + 2 health dots w/ data-online), ApiClient (Bearer), useDaemonSSE (native EventSource + ?token= auth fallback), App shell wiring status SSE. 4 vitest green.
 
-### [ ] G-07 Multi-account read-only dashboard (zones/R2/Workers/KV cards)
-Covers P-07.
+### [x] G-07 Multi-account read-only dashboard (zones/R2/Workers/KV cards) — ✅ 0b82d64 (2026-06-21)
+Covers P-07. Done: 4 service cards via React Query, read-only ?profile= per-request selection (in query key → refetch on switch). 3 vitest green.
 
-### [ ] G-08 Real-time notifications panel (SSE notifications channel)
-Covers P-08.
+### [x] G-08 Real-time notifications panel (SSE notifications channel) — ✅ be5ee69 (2026-06-21)
+Covers P-08. Done: appendNotification reducer (200-cap), useNotifications hook, Notifications view (history + unread badge + mark-read), channel-filtered. 6 vitest green.
 
-### [ ] G-09 Cross-platform packaging: per-triple Go sidecar + Tauri bundles
-Covers P-09.
+### [x] G-09 Cross-platform packaging: per-triple Go sidecar + Tauri bundles — ✅ 14fdb2c (2026-06-21)
+Covers P-09. Done: build-sidecar.sh (4 triples, CGO_ENABLED=0 static), wired into beforeBuildCommand/beforeDevCommand, Makefile desktop-* targets, USAGE.md serve section. All sidecars build; go/JS/Rust suites green.
 
 ## Where We're Headed
 
