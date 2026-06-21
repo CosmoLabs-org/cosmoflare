@@ -1,0 +1,32 @@
+[package]
+name = "cosmoflare-desktop"
+version = "0.16.0"
+description = "Cosmoflare desktop dashboard (Tauri shell)"
+authors = ["CosmoLabs"]
+edition = "2021"
+rust-version = "1.77"
+
+# The lib is the Tauri entrypoint on mobile; the desktop binary (main.rs) calls
+# into it. Standard Tauri v2 lib+bin layout.
+[lib]
+name = "cosmoflare_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Lightweight blocking HTTP client for the daemon health-poll (localhost only,
+# no TLS). Avoids pulling reqwest+tokio just for GET /healthz.
+ureq = { version = "2", default-features = false }
+# Tokio runtime (Tauri uses it under the hood); the `time` feature backs the
+# spawn-watchdog backoff timer.
+tokio = { version = "1", features = ["time"] }
+
+[features]
+# This feature is used for production builds where `devUrl` is not used.
+custom-protocol = ["tauri/custom-protocol"]

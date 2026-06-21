@@ -77,7 +77,7 @@ Examples:
 		// Parent commands in this list cause all subcommands to skip too.
 		skipValidation := []string{
 			"setup", "config", "auth", "completion", "help", "version",
-			"theme", "demo", "backup", "plugin", "account",
+			"theme", "demo", "backup", "plugin", "account", "serve",
 		}
 		for _, skip := range skipValidation {
 			if cmd.Name() == skip {
