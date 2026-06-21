@@ -13,7 +13,7 @@ import (
 // TestConfigInit creates a fresh config in a temp home directory
 func TestConfigInit(t *testing.T) {
 	tempDir := t.TempDir()
-	configDir := tempDir + "/.r2go2"
+	configDir := tempDir + "/.cosmoflare"
 	require.NoError(t, os.MkdirAll(configDir, 0755))
 
 	origHome := os.Getenv("HOME")
