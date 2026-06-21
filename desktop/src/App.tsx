@@ -3,10 +3,11 @@
 // two health dots) wired to the SSE `status` channel, a service sidebar, and a
 // main pane that G-07 (dashboard) and G-08 (notifications) populate.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Header, type Account } from "./components/Header";
-import { type DaemonEndpoint, resolveEndpoint } from "./api/client";
+import { ApiClient, type DaemonEndpoint, resolveEndpoint } from "./api/client";
 import { useDaemonSSE, type StatusPayload } from "./api/sse";
+import { Dashboard } from "./views/Dashboard";
 
 const SIDEBAR_ITEMS = ["Dashboard", "Notifications"] as const;
 
@@ -44,6 +45,9 @@ export default function App() {
     if (typeof s.systems_online === "boolean") setSystemsOnline(s.systems_online);
     if (typeof s.cloudflare_online === "boolean") setCloudflareOnline(s.cloudflare_online);
   });
+
+  // Build the REST client once the endpoint is known.
+  const client = useMemo(() => (endpoint ? new ApiClient(endpoint) : null), [endpoint]);
 
   // Hydrate the account switcher once the endpoint is live (read-only list).
   useEffect(() => {
@@ -92,16 +96,13 @@ export default function App() {
           ))}
         </aside>
         <main className="cf-main">
-          {view === "Dashboard" && <DashboardPlaceholder />}
+          {view === "Dashboard" &&
+            (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
           {view === "Notifications" && <NotificationsPlaceholder />}
         </main>
       </div>
     </div>
   );
-}
-
-function DashboardPlaceholder() {
-  return <p>Dashboard — populated in G-07.</p>;
 }
 
 function NotificationsPlaceholder() {
