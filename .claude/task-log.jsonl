@@ -1081,3 +1081,42 @@
 {"id":"8","subject":"Verify fixes on master (go build/test; React + Rust compile if feasible)","status":"pending","created_at":"2026-06-21T07:59:36Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
 {"id":"9","subject":"Archive TauriApp worktree after live session confirmed closed","status":"pending","created_at":"2026-06-21T07:59:37Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
 {"id":"5","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-21T08:06:00Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"7","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-06-21T08:12:00Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"6","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-21T08:15:55Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"8","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-06-21T08:18:01Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"9","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"10","subject":"File 3 remaining medium findings as bugs","status":"pending","created_at":"2026-06-21T08:28:15Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"11","subject":"Run /triage to pick roadmap work","status":"pending","created_at":"2026-06-21T08:28:16Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-06-21T08:29:46Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"10","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-06-21T08:31:50Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"11","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-06-21T08:34:54Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"12","subject":"Close out Desktop v1: FEAT-007 + ROAD-063/ROAD-079 + commit artifacts","status":"pending","created_at":"2026-06-21T08:34:56Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"13","subject":"Start ROAD-080: in-process event bus (live notifications)","status":"pending","created_at":"2026-06-21T08:34:58Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-06-21T08:39:36Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"13","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"14","subject":"ROAD-080 brainstorm: clarify scope + requirements","status":"pending","created_at":"2026-06-21T08:41:47Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"15","subject":"ROAD-080 brainstorm: propose approaches + present design","status":"pending","created_at":"2026-06-21T08:41:48Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"16","subject":"ROAD-080: write spec → plan → continuation prompt (three-tier)","status":"pending","created_at":"2026-06-21T08:41:51Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"14","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-06-21T09:07:55Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"15","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-06-21T10:55:42Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"16","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-06-21T11:00:59Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-06-21T11:00:59Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"17","subject":"Phase 0+1: Pre-commit hygiene (ccs session-end-pre)","status":"pending","created_at":"2026-06-21T11:03:35Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"18","subject":"Phase 2: Commit changes (/commit-all)","status":"pending","created_at":"2026-06-21T11:03:36Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"19","subject":"Phase 2.75: Auto-stage changelog","status":"pending","created_at":"2026-06-21T11:03:38Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"20","subject":"Phase 3: Parallel blast (CCS audits + summary + continuation)","status":"pending","created_at":"2026-06-21T11:03:39Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"21","subject":"Phase 3c/3d/3f: Idea capture, reflect, efficiency","status":"pending","created_at":"2026-06-21T11:03:40Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"22","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-06-21T11:03:42Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"23","subject":"Phase 6+7: Finalize + cleanup","status":"pending","created_at":"2026-06-21T11:03:43Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"17","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-06-21T11:04:57Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"18","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
