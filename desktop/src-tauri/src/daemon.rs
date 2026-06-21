@@ -206,7 +206,12 @@ async fn spawn_and_handshake(handle: &tauri::AppHandle) -> Result<DaemonEndpoint
                                 token: hs.token,
                             })
                         }
-                        _ => return Err(SpawnError::Health),
+                        _ => {
+                            // Daemon handshook but never went healthy — kill it
+                            // so a hung process can't outlive the attempt.
+                            handle.state::<DaemonState>().kill_child();
+                            return Err(SpawnError::Health);
+                        }
                     }
                 }
             }
@@ -216,6 +221,8 @@ async fn spawn_and_handshake(handle: &tauri::AppHandle) -> Result<DaemonEndpoint
             None => break,
         }
     }
+    // No handshake line within the deadline — kill the silent child.
+    handle.state::<DaemonState>().kill_child();
     Err(SpawnError::HandshakeTimeout)
 }
 
