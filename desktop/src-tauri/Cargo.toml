@@ -20,6 +20,12 @@ tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Lightweight blocking HTTP client for the daemon health-poll (localhost only,
+# no TLS). Avoids pulling reqwest+tokio just for GET /healthz.
+ureq = { version = "2", default-features = false }
+# Tokio runtime (Tauri uses it under the hood); the `time` feature backs the
+# spawn-watchdog backoff timer.
+tokio = { version = "1", features = ["time"] }
 
 [features]
 # This feature is used for production builds where `devUrl` is not used.
