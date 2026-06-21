@@ -1061,3 +1061,40 @@
 {"id":"28","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"29","subject":"","status":"completed","completed_at":"2026-06-21T00:05:43Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"31","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"1","subject":"G-01: internal/server + cosmoflare serve (HTTP, token auth, handshake, /healthz)","status":"pending","created_at":"2026-06-21T03:41:45Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"2","subject":"G-02: REST read endpoints (/accounts /zones /r2/buckets /workers /kv)","status":"pending","created_at":"2026-06-21T03:41:46Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"3","subject":"G-03: SSE /events (metrics/notifications/status) + two-tier health","status":"pending","created_at":"2026-06-21T03:41:46Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"4","subject":"G-04: Tauri v2 scaffold in desktop/ + sidecar (externalBin) + build config","status":"pending","created_at":"2026-06-21T03:41:48Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"5","subject":"G-05: Rust daemon lifecycle (spawn, handshake parse, health-poll, kill, watchdog)","status":"pending","created_at":"2026-06-21T03:41:49Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"6","subject":"G-06: React+Vite+TS app shell + REST/SSE client hooks + health indicators","status":"pending","created_at":"2026-06-21T03:41:51Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"7","subject":"G-07: Multi-account read-only dashboard (zones/R2/Workers/KV cards)","status":"pending","created_at":"2026-06-21T03:41:52Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"8","subject":"G-08: Real-time notifications panel (SSE notifications channel)","status":"pending","created_at":"2026-06-21T03:41:54Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"9","subject":"G-09: Cross-platform packaging (per-triple Go sidecar + Tauri bundles)","status":"pending","created_at":"2026-06-21T03:41:56Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"1","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-21T03:46:17Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"2","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"3","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-21T03:52:29Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-21T03:55:40Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"4","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"5","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-21T04:06:59Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-06-21T04:15:11Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"6","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"7","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-06-21T04:19:48Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"8","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-06-21T04:21:16Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-06-21T04:23:52Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"9","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-06-21T04:30:03Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"10","subject":"Wire daemon notifications producer (BR-07 source gap)","status":"pending","created_at":"2026-06-21T05:25:16Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"11","subject":"Full tauri build bundle smoke (G-09 acceptance)","status":"pending","created_at":"2026-06-21T05:25:16Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"12","subject":"Update ROAD-063 + FEAT-007 status + changelog","status":"pending","created_at":"2026-06-21T05:25:18Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"13","subject":"Prepare worktree-end / merge handoff","status":"pending","created_at":"2026-06-21T05:25:19Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"10","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"11","subject":"","status":"in_progress","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-06-21T05:32:26Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-06-21T05:36:36Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-06-21T05:36:36Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-06-21T05:36:36Z","session":"327dd548-9778-4be4-9b2d-2a0f1e6cfa96"}
