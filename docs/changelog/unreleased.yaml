@@ -4,19 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: |-
-            # FEAT-007: Cosmoflare Desktop (Tauri) v1 — daemon + dashboard + notifications
-
-            **Type**: feature
-            **Status**: closed
-            **Created**: 2026-06-20
-
-            ## Description
-
-            Implement v1 of the Cosmoflare desktop app (ROAD-063): a Tauri shell that spawns/supervises a local 'cosmoflare serve' daemon (HTTP+SSE over existing services) and renders a read-only multi-account dashboard with real-time notifications. Cross-platform via Rust-owned daemon lifecycle. Credentials via config flow, never the OS keychain. Design: docs/brainstorming/2026-06-20-cosmoflare-desktop.md. Plan: docs/planning-mode/2026-06-20-cosmoflare-desktop.md. GLM Wave-1 manifest: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml.
-          source: manual
-          date: 2026-06-21T05:38:26.430685-03:00
+    added: []
     fixed: []
     changed: []
     deprecated: []
