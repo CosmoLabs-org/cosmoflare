@@ -14,7 +14,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/server"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 var (
@@ -83,6 +85,18 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	srv := server.New(server.Config{Token: token, Version: AppVersion})
+
+	// Wire the real data source: per-request credential resolution from the
+	// local config profiles, delegating to the existing per-service
+	// constructors. NewConfigManager is safe on first run (no config file →
+	// empty profile list → CF endpoints report cloudflare_online=false, which
+	// drives the first-run setup screen rather than crashing).
+	cm, err := config.NewConfigManager()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+	srv.SetData(&serveAdapter{cm: cm})
+
 	httpServer := &http.Server{Handler: srv.Handler()}
 
 	// Handshake: ONE JSON line on stdout. Everything else (logging, errors)
@@ -130,4 +144,85 @@ func randomToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// serveAdapter implements server.ServeSource over the existing per-service
+// constructors. It owns NO Cloudflare logic — each method constructs a service
+// from the resolved profile's credentials and calls its list method. Per-request
+// account selection is read-only: the daemon re-resolves creds from the named
+// profile (empty = current) on every call; there is no write-side "switch".
+type serveAdapter struct {
+	cm *config.ConfigManager
+}
+
+// resolveProfile returns the named profile, or the current profile when name is
+// empty. A missing/invalid profile yields an error so the handler records
+// cloudflare_online=false and surfaces the first-run setup screen.
+func (a *serveAdapter) resolveProfile(name string) (*config.Profile, error) {
+	if name == "" {
+		return a.cm.GetCurrent()
+	}
+	return a.cm.GetProfile(name)
+}
+
+// Accounts returns the local config profiles (NOT a Cloudflare API call).
+func (a *serveAdapter) Accounts(_ context.Context) (any, error) {
+	names := a.cm.ListProfiles()
+	out := make([]map[string]string, 0, len(names))
+	for _, n := range names {
+		out = append(out, map[string]string{"name": n})
+	}
+	return out, nil
+}
+
+func (a *serveAdapter) Zones(ctx context.Context, profile string) (any, error) {
+	p, err := a.resolveProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := cosmoflare.NewZoneServiceFromCreds(p.AccountID, p.APIToken)
+	if err != nil {
+		return nil, err
+	}
+	return svc.List(ctx)
+}
+
+func (a *serveAdapter) R2Buckets(ctx context.Context, profile string) (any, error) {
+	p, err := a.resolveProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	// R2 has no NewR2ServiceFromCreds — it uses the NewClient option pattern.
+	client, err := cosmoflare.NewClient(
+		cosmoflare.WithAccountID(p.AccountID),
+		cosmoflare.WithAPIToken(p.APIToken),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return client.ListBuckets(ctx)
+}
+
+func (a *serveAdapter) Workers(ctx context.Context, profile string) (any, error) {
+	p, err := a.resolveProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := cosmoflare.NewWorkerServiceFromCreds(p.AccountID, p.APIToken)
+	if err != nil {
+		return nil, err
+	}
+	return svc.List(ctx)
+}
+
+func (a *serveAdapter) KV(ctx context.Context, profile string) (any, error) {
+	p, err := a.resolveProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := cosmoflare.NewKVServiceFromCreds(p.AccountID, p.APIToken)
+	if err != nil {
+		return nil, err
+	}
+	return svc.ListNamespaces(ctx)
 }

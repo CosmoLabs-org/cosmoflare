@@ -10,6 +10,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 	"sync/atomic"
 )
 
@@ -32,6 +33,12 @@ type Server struct {
 	// true when the call succeeded (creds valid + API reachable). It backs
 	// the two-tier "Cloudflare online" health indicator.
 	cfOnline atomic.Bool
+
+	// mu guards src (the optional REST data source). cfOnline is atomic and
+	// the SSE hub has its own mutex, so this only protects the ServeSource
+	// attachment.
+	mu  sync.Mutex
+	src ServeSource
 }
 
 // New constructs a Server. Routes are registered lazily in Handler() so tests
@@ -62,6 +69,8 @@ func (s *Server) Handler() http.Handler {
 // rest.go and sse.go respectively.
 func (s *Server) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/healthz", s.handleHealthz)
+	s.registerRESTRoutes(mux)
+	s.registerSSERoutes(mux)
 }
 
 // authMiddleware rejects any request whose Authorization header is not the
