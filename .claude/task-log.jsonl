@@ -1031,3 +1031,25 @@
 {"id":"18","subject":"","status":"completed","completed_at":"2026-06-20T15:15:10Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"19","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"19","subject":"","status":"completed","completed_at":"2026-06-20T15:16:55Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"20","subject":"Brainplan Tauri: clarifying questions (architecture, stack, MVP scope)","status":"pending","created_at":"2026-06-20T20:23:28Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"21","subject":"Brainplan Tauri: propose approaches + present design, get approval","status":"pending","created_at":"2026-06-20T20:23:29Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"22","subject":"Brainplan Tauri: write brainstorm + plan + prompt + GLM manifest","status":"pending","created_at":"2026-06-20T20:23:31Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"23","subject":"Brainplan Tauri: independent-review the artifacts","status":"pending","created_at":"2026-06-20T20:23:32Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-06-20T20:39:00Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"21","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-06-20T20:44:38Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"22","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-06-20T20:50:22Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"23","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-06-20T20:59:03Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"24","subject":"Phase 0+1: Pre-commit hygiene (session-end-pre + workcheck)","status":"pending","created_at":"2026-06-20T23:58:37Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"25","subject":"Phase 2: Commit remaining changes (/commit-all)","status":"pending","created_at":"2026-06-20T23:58:38Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"26","subject":"Phase 3a: CCS post-audit (parallel)","status":"pending","created_at":"2026-06-20T23:58:39Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"27","subject":"Phase 3e: Expand roadmap with missed items (USER DIRECTIVE)","status":"pending","created_at":"2026-06-20T23:58:41Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"28","subject":"Phase 3b: Session summary + continuation prompt (background agents)","status":"pending","created_at":"2026-06-20T23:58:42Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"29","subject":"Phase 3c/3d: Idea capture + reflection","status":"pending","created_at":"2026-06-20T23:58:43Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"30","subject":"Phase 4: Release decision","status":"pending","created_at":"2026-06-20T23:58:44Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"31","subject":"Phase 6+7: Finalize + cleanup","status":"pending","created_at":"2026-06-20T23:58:45Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-06-21T00:01:45Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"27","subject":"","status":"completed","completed_at":"2026-06-21T00:01:46Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"25","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
