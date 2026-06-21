@@ -8,6 +8,7 @@ import { Header, type Account } from "./components/Header";
 import { ApiClient, type DaemonEndpoint, resolveEndpoint } from "./api/client";
 import { useDaemonSSE, type StatusPayload } from "./api/sse";
 import { Dashboard } from "./views/Dashboard";
+import { NotificationsPanel } from "./views/Notifications";
 
 const SIDEBAR_ITEMS = ["Dashboard", "Notifications"] as const;
 
@@ -98,13 +99,9 @@ export default function App() {
         <main className="cf-main">
           {view === "Dashboard" &&
             (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
-          {view === "Notifications" && <NotificationsPlaceholder />}
+          {view === "Notifications" && <NotificationsPanel endpoint={endpoint} />}
         </main>
       </div>
     </div>
   );
-}
-
-function NotificationsPlaceholder() {
-  return <p>Notifications — populated in G-08.</p>;
 }
