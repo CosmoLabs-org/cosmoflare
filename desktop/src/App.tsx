@@ -9,7 +9,7 @@ import { Header, type Account } from "./components/Header";
 import { ApiClient, type DaemonEndpoint, resolveEndpoint } from "./api/client";
 import { useDaemonSSE, type StatusPayload } from "./api/sse";
 import { Dashboard } from "./views/Dashboard";
-import { NotificationsPanel } from "./views/Notifications";
+import { Notifications, useNotifications } from "./views/Notifications";
 
 // Single QueryClient for the app (React Query recommendation: create once at
 // module scope so it persists across renders). Without this provider, the
@@ -52,41 +52,56 @@ export default function App() {
     };
   }, []);
 
-  // Live health from the SSE status channel.
-  useDaemonSSE(endpoint, (e) => {
-    if (e.channel !== "status") return;
-    const s = e.data as StatusPayload;
-    if (typeof s.systems_online === "boolean") setSystemsOnline(s.systems_online);
-    if (typeof s.cloudflare_online === "boolean") setCloudflareOnline(s.cloudflare_online);
-  });
+  // Live health from the SSE status channel. The connection callback drives the
+  // "systems" tier directly: an open stream means the daemon is up and
+  // answering, so the dot reads online immediately instead of waiting for the
+  // first status transition; an error means it is unreachable, so the dot can't
+  // falsely read "online" after the daemon dies.
+  useDaemonSSE(
+    endpoint,
+    (e) => {
+      if (e.channel !== "status") return;
+      const s = e.data as StatusPayload;
+      if (typeof s.systems_online === "boolean") setSystemsOnline(s.systems_online);
+      if (typeof s.cloudflare_online === "boolean") setCloudflareOnline(s.cloudflare_online);
+    },
+    (connected) => {
+      setSystemsOnline(connected);
+      if (!connected) setCloudflareOnline(false);
+    }
+  );
+
+  // Notifications accumulate at the app level (NOT inside the panel) so the
+  // history and unread badge survive switching away from the Notifications
+  // view — a panel-local hook would unmount and lose all state on every tab
+  // change.
+  const { items: notifications, unread, markSeen } = useNotifications(endpoint);
 
   // Build the REST client once the endpoint is known.
   const client = useMemo(() => (endpoint ? new ApiClient(endpoint) : null), [endpoint]);
 
-  // Hydrate the account switcher once the endpoint is live (read-only list).
+  // Hydrate the account switcher once the REST client is live (read-only list).
+  // Goes through ApiClient so a bad token / unreachable daemon surfaces as an
+  // ApiError we log, instead of silently rendering an empty account list.
   useEffect(() => {
-    if (!endpoint) return;
+    if (!client) return;
     let cancelled = false;
-    const load = async () => {
-      try {
-        const resp = await fetch(endpoint.url + "/accounts", {
-          headers: { Authorization: `Bearer ${endpoint.token}` },
-        });
-        if (!resp.ok) return;
-        const list = (await resp.json()) as Account[];
+    client
+      .get<Account[]>("/accounts")
+      .then((list) => {
         if (cancelled) return;
         setAccounts(list);
-        if (list.length && !selected) setSelected(list[0].name);
-      } catch {
-        // daemon not ready yet — will retry on next render cycle
-      }
-    };
-    void load();
+        // Functional update: auto-select the first account only when none is
+        // chosen yet — avoids capturing a stale `selected`.
+        setSelected((cur) => cur || (list[0]?.name ?? ""));
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("cosmoflare: failed to load accounts:", err);
+      });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endpoint]);
+  }, [client]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -113,7 +128,9 @@ export default function App() {
           <main className="cf-main">
             {view === "Dashboard" &&
               (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
-            {view === "Notifications" && <NotificationsPanel endpoint={endpoint} />}
+            {view === "Notifications" && (
+              <Notifications items={notifications} unread={unread} onSeen={markSeen} />
+            )}
           </main>
         </div>
       </div>

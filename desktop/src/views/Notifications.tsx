@@ -95,9 +95,3 @@ export function useNotifications(endpoint: DaemonEndpoint | null) {
   const markSeen = useCallback(() => setUnread(0), []);
   return { items, unread, markSeen };
 }
-
-/** Panel wiring the hook to the view — what App renders. */
-export function NotificationsPanel({ endpoint }: { endpoint: DaemonEndpoint | null }) {
-  const { items, unread, markSeen } = useNotifications(endpoint);
-  return <Notifications items={items} unread={unread} onSeen={markSeen} />;
-}
