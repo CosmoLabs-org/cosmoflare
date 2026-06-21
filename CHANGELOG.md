@@ -28,6 +28,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.16.0] - 2026-06-20
+
+### Added
+- Domain Management Center — TUI dashboard, redirect visibility, registrar overlay (FEAT-006) (FEAT-006)
+- add DomainBrowserModel + quick-add redirect + domains tui command (P-06/P-07) (commit:691e4598)
+- add domains command tree (get/stats/ns/redirects) with service factory (P-04) (commit:bea72bb6)
+- add redirects command group for modern Redirect Rules (P-05) (commit:5eda1243)
+- add NewRedirectServiceFromCreds + NewRegistrarServiceFromCreds (Wave C seam) (commit:403f08b9)
+- enrich DomainDetail with redirects+registrar, add SummarizeDomains (P-03) (commit:aaec93b6)
+- add RedirectService List/Create/Delete for modern Redirect Rules (P-01) (commit:556c8ca7)
+- add RegistrarService registration overlay (P-02) (commit:5dffe87c)
+
+### Fixed
+- Removed 7 orphaned R2Go2-era test files that broke 'go test ./...' compilation (BUG-021)
+- Keychain layer no longer probes the macOS keychain under tests or when COSMOFLARE_NO_KEYCHAIN=1, eliminating spurious security dialogs
+- independent review of Cosmoflare Desktop brainplan — 8 findings (commit:9bea55d6)
+- never use OS keychain under test or when disabled (no `security` noise) (commit:da335a3d)
+- remove 7 orphaned R2Go2-era test files breaking compilation (BUG-021) (commit:19b61398)
+- unique IDs via atomic counter, not UnixNano (BUG-020) (commit:07017e82)
+
 ## [0.15.0] - 2026-06-09
 
 ### Added
