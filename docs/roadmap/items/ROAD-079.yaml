@@ -1,0 +1,11 @@
+id: ROAD-079
+created_at: 2026-06-20T21:01:18.976171-03:00
+updated_at: 2026-06-20T21:01:18.979058-03:00
+title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
+description: A localhost HTTP+SSE server (cosmoflare serve) exposing the existing service layer (zones/R2/Workers/KV + SSE for metrics/notifications/status). Foundation for the desktop (ROAD-063) and mobile (ROAD-064) tiers and usable by automation/agents. Designed in docs/brainstorming/2026-06-20-cosmoflare-desktop.md (BR-01..03).
+status: captured
+priority: 82
+category: infra
+effort: medium
+origin:
+    session: 17

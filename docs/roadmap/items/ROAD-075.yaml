@@ -1,0 +1,12 @@
+id: ROAD-075
+created_at: 2026-06-20T21:01:03.126109-03:00
+updated_at: 2026-06-20T21:01:03.131088-03:00
+title: Desktop v2 — infrastructure graph + write/CRUD operations
+description: Deferred from desktop v1 (read-only dashboard + notifications). v2 adds the infrastructure graph visualization (zones -> records -> services) and write/CRUD operations through the serve daemon. Follow-up to ROAD-063 v1.
+status: captured
+priority: 60
+category: ux
+effort: large
+parent: ROAD-063
+origin:
+    session: 17

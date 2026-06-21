@@ -1,0 +1,11 @@
+id: ROAD-082
+created_at: 2026-06-20T21:01:19.105636-03:00
+updated_at: 2026-06-20T21:01:19.106687-03:00
+title: Paid-tier licensing & auth (desktop + mobile)
+description: The desktop and mobile tiers are paid products but have no licensing/entitlement or account-auth mechanism yet. Needed before monetizing ROAD-063/ROAD-064. Spans license validation, entitlement gating, and account sign-in.
+status: captured
+priority: 64
+category: security
+effort: large
+origin:
+    session: 17

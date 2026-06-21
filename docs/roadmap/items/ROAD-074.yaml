@@ -1,0 +1,5 @@
+id: ROAD-074
+created_at: 2026-06-20T21:01:03.076532-03:00
+updated_at: 2026-06-20T21:01:03.076773-03:00
+title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
+status: captured

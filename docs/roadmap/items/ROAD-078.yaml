@@ -1,0 +1,5 @@
+id: ROAD-078
+created_at: 2026-06-20T21:01:03.246361-03:00
+updated_at: 2026-06-20T21:01:03.24638-03:00
+title: cmd/ DI testability rollout — extend the factory-var pattern across all command handlers
+status: captured

@@ -1,8 +1,72 @@
 version: ""
 project: ""
-last_updated: 2026-06-20T17:59:25.335488-03:00
-next_id: 73
+last_updated: 2026-06-20T21:01:19.149266-03:00
+next_id: 84
 items:
+    - id: ROAD-083
+      title: cmd/ DI testability rollout — extend factory-var pattern across all command handlers
+      status: captured
+      priority: 55
+      category: testing
+      effort: medium
+      created_at: 2026-06-20T21:01:19.14651-03:00
+    - id: ROAD-082
+      title: Paid-tier licensing & auth (desktop + mobile)
+      status: captured
+      priority: 64
+      category: security
+      effort: large
+      created_at: 2026-06-20T21:01:19.105636-03:00
+    - id: ROAD-081
+      title: Desktop distribution — code-signing, notarization, auto-update
+      status: captured
+      priority: 68
+      category: infra
+      effort: medium
+      parent: ROAD-063
+      created_at: 2026-06-20T21:01:19.061717-03:00
+    - id: ROAD-080
+      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
+      status: captured
+      priority: 70
+      category: infra
+      effort: medium
+      created_at: 2026-06-20T21:01:19.018763-03:00
+    - id: ROAD-079
+      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
+      status: captured
+      priority: 82
+      category: infra
+      effort: medium
+      created_at: 2026-06-20T21:01:18.976171-03:00
+    - id: ROAD-078
+      title: cmd/ DI testability rollout — extend the factory-var pattern across all command handlers
+      status: captured
+      created_at: 2026-06-20T21:01:03.246361-03:00
+    - id: ROAD-077
+      title: Paid-tier licensing & auth (desktop + mobile)
+      status: captured
+      created_at: 2026-06-20T21:01:03.20834-03:00
+    - id: ROAD-076
+      title: Desktop distribution — code-signing, notarization, auto-update
+      status: captured
+      created_at: 2026-06-20T21:01:03.168784-03:00
+    - id: ROAD-075
+      title: Desktop v2 — infrastructure graph + write/CRUD operations
+      status: captured
+      priority: 60
+      category: ux
+      effort: large
+      parent: ROAD-063
+      created_at: 2026-06-20T21:01:03.126109-03:00
+    - id: ROAD-074
+      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
+      status: captured
+      created_at: 2026-06-20T21:01:03.076532-03:00
+    - id: ROAD-073
+      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
+      status: captured
+      created_at: 2026-06-20T21:01:03.030854-03:00
     - id: ROAD-072
       title: Notifications and webhooks — receive CF webhook events locally for dev
       status: completed

@@ -1,0 +1,11 @@
+id: ROAD-083
+created_at: 2026-06-20T21:01:19.14651-03:00
+updated_at: 2026-06-20T21:01:19.148454-03:00
+title: cmd/ DI testability rollout — extend factory-var pattern across all command handlers
+description: This session established a package-level service-factory DI pattern (newDomainService/newRedirectService) making cmd handlers unit-testable without live Cloudflare credentials. Roll it out across the remaining cmd/*.go handlers to close the ~27.5% cmd test-coverage gap.
+status: captured
+priority: 55
+category: testing
+effort: medium
+origin:
+    session: 17
