@@ -25,7 +25,7 @@ id: P-2026-06-20-cosmoflare-desktop
 plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 glm_tasks_ref: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml
 priority: high
-goals_total: 9
+goals_total: 10
 goals_completed: 0
 requires_reading:
     - docs/brainstorming/2026-06-20-cosmoflare-desktop.md
