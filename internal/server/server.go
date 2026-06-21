@@ -54,8 +54,10 @@ func New(cfg Config) *Server {
 
 // SetCloudflareOnline records the outcome of the most recent Cloudflare call.
 // REST handlers call this on success/failure; it feeds the "Cloudflare online"
-// tier of the health model. When the value flips, a `status` SSE frame is
-// published so connected dashboards update the health indicator live. Repeated
+// tier of the health model. When the value flips, two SSE frames are published:
+// a `status` frame (so dashboards update the health indicator live) AND a
+// `notifications` frame (BR-07's v1 notification source — daemon-internal
+// cloudflare_online transitions feed the notifications panel). Repeated
 // same-value sets (e.g. every successful REST call) do NOT re-publish — only
 // transitions are pushed.
 func (s *Server) SetCloudflareOnline(ok bool) {
@@ -65,7 +67,29 @@ func (s *Server) SetCloudflareOnline(ok bool) {
 			"systems_online":   true,
 			"cloudflare_online": ok,
 		})
+		s.Publish("notifications", map[string]any{
+			"message": cfOnlineMessage(ok),
+			"level":   cfOnlineLevel(ok),
+			"kind":    "cloudflare_online",
+		})
 	}
+}
+
+// cfOnlineMessage is the human-readable text for a cloudflare_online transition
+// notification.
+func cfOnlineMessage(online bool) string {
+	if online {
+		return "Cloudflare connection restored"
+	}
+	return "Cloudflare connection lost"
+}
+
+// cfOnlineLevel is the severity for a cloudflare_online transition notification.
+func cfOnlineLevel(online bool) string {
+	if online {
+		return "info"
+	}
+	return "warning"
 }
 
 // CloudflareOnline reports the current Cloudflare-online tier state.

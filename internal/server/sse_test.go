@@ -136,3 +136,56 @@ func TestSSE_NoSpamOnSameValue(t *testing.T) {
 	// sets do not panic and are cheap. The flip-vs-repeat logic is exercised by
 	// TestSSE_StatusPublishedOnHealthFlip (transition) above.
 }
+
+// TestSSE_NotificationOnHealthFlip verifies BR-07's v1 notification source: a
+// cloudflare_online transition produces a `notifications` frame (in addition to
+// the status frame), so the desktop notifications panel has real content.
+func TestSSE_NotificationOnHealthFlip(t *testing.T) {
+	s := New(Config{Token: "t", Version: "test"})
+	url := s.testServer(t)
+
+	req, _ := http.NewRequest(http.MethodGet, url+"/events", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("GET /events: %v", err)
+	}
+	defer resp.Body.Close()
+
+	waitForSubscriber(t, s)
+	s.SetCloudflareOnline(true) // false -> true: emits status + a notification
+
+	// Read frames asynchronously: the SSE stream stays open, so a blocking
+	// ReadString would hang past the frame we want. A goroutine + select lets us
+	// stop cleanly on the notifications frame or a deadline.
+	br := bufio.NewReader(resp.Body)
+	lines := make(chan string, 32)
+	go func() {
+		for {
+			line, err := br.ReadString('\n')
+			if err != nil {
+				return
+			}
+			lines <- line
+		}
+	}()
+
+	sawNotification := false
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case line := <-lines:
+			if strings.Contains(line, "event: notifications") {
+				sawNotification = true
+			}
+			if sawNotification && line == "\n" {
+				return // full notifications frame received
+			}
+		case <-deadline:
+			if !sawNotification {
+				t.Fatalf("health flip did not emit a notifications frame")
+			}
+			return
+		}
+	}
+}
