@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for the main window. Grants core defaults plus the shell plugin, used by the Rust lifecycle (G-05) to spawn the bundled cosmoflare sidecar daemon. G-09 tightens the shell scope to the sidecar binary only.",
+  "windows": ["main"],
+  "permissions": ["core:default", "shell:default"]
+}
