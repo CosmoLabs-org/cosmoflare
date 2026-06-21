@@ -1063,3 +1063,21 @@
 {"id":"31","subject":"","status":"in_progress","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"28","subject":"","status":"completed","completed_at":"2026-06-21T00:07:31Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
 {"id":"31","subject":"","status":"completed","completed_at":"2026-06-21T00:07:31Z","session":"cd8ef88b-59e8-48c6-a1bf-7ba279caa88d"}
+{"id":"1","subject":"Review Go daemon layer (internal/server + cmd/serve) — S334","status":"pending","created_at":"2026-06-21T05:27:40Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"2","subject":"Review Rust/Tauri lifecycle layer (P-04/P-05)","status":"pending","created_at":"2026-06-21T05:27:45Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"3","subject":"Review React UI layer (P-06/07/08)","status":"pending","created_at":"2026-06-21T05:27:46Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"4","subject":"Decide merge path given live TauriApp session (user decision)","status":"pending","created_at":"2026-06-21T05:27:47Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"1","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"2","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"3","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-06-21T05:35:26Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-06-21T05:35:26Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-06-21T05:35:27Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"4","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-06-21T07:59:25Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"5","subject":"Merge TauriApp branch → master (--no-ff, no kill)","status":"pending","created_at":"2026-06-21T07:59:27Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"6","subject":"Fix React blockers on master (#6 QueryClientProvider, #4 SSE token-staleness, #8 notifications persist)","status":"pending","created_at":"2026-06-21T07:59:30Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"7","subject":"Fix Rust HIGH bugs on master (#1 daemon orphan, #2 set_child race)","status":"pending","created_at":"2026-06-21T07:59:33Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"8","subject":"Verify fixes on master (go build/test; React + Rust compile if feasible)","status":"pending","created_at":"2026-06-21T07:59:36Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"9","subject":"Archive TauriApp worktree after live session confirmed closed","status":"pending","created_at":"2026-06-21T07:59:37Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"5","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
