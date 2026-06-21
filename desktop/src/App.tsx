@@ -4,11 +4,24 @@
 // main pane that G-07 (dashboard) and G-08 (notifications) populate.
 
 import { useEffect, useMemo, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Header, type Account } from "./components/Header";
 import { ApiClient, type DaemonEndpoint, resolveEndpoint } from "./api/client";
 import { useDaemonSSE, type StatusPayload } from "./api/sse";
 import { Dashboard } from "./views/Dashboard";
 import { NotificationsPanel } from "./views/Notifications";
+
+// Single QueryClient for the app (React Query recommendation: create once at
+// module scope so it persists across renders). Without this provider, the
+// Dashboard's useQuery calls throw "No QueryClient set" at runtime.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const SIDEBAR_ITEMS = ["Dashboard", "Notifications"] as const;
 
@@ -76,32 +89,34 @@ export default function App() {
   }, [endpoint]);
 
   return (
-    <div className="cf-app">
-      <Header
-        systemsOnline={systemsOnline}
-        cloudflareOnline={cloudflareOnline}
-        accounts={accounts}
-        selectedAccount={selected}
-        onAccountChange={setSelected}
-      />
-      <div className="cf-body">
-        <aside className="cf-sidebar">
-          {SIDEBAR_ITEMS.map((item) => (
-            <button
-              key={item}
-              className={`cf-nav-item ${view === item ? "is-active" : ""}`}
-              onClick={() => setView(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </aside>
-        <main className="cf-main">
-          {view === "Dashboard" &&
-            (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
-          {view === "Notifications" && <NotificationsPanel endpoint={endpoint} />}
-        </main>
+    <QueryClientProvider client={queryClient}>
+      <div className="cf-app">
+        <Header
+          systemsOnline={systemsOnline}
+          cloudflareOnline={cloudflareOnline}
+          accounts={accounts}
+          selectedAccount={selected}
+          onAccountChange={setSelected}
+        />
+        <div className="cf-body">
+          <aside className="cf-sidebar">
+            {SIDEBAR_ITEMS.map((item) => (
+              <button
+                key={item}
+                className={`cf-nav-item ${view === item ? "is-active" : ""}`}
+                onClick={() => setView(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </aside>
+          <main className="cf-main">
+            {view === "Dashboard" &&
+              (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
+            {view === "Notifications" && <NotificationsPanel endpoint={endpoint} />}
+          </main>
+        </div>
       </div>
-    </div>
+    </QueryClientProvider>
   );
 }
