@@ -20,6 +20,9 @@ src-tauri/icons/ios/
 
 # typescript incremental build cache
 *.tsbuildinfo
+# tsc -b (project references) emits these from vite.config.ts; regenerated each build
+vite.config.js
+vite.config.d.ts
 
 # macOS
 .DS_Store
