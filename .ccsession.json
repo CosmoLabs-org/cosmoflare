@@ -2,6 +2,7 @@
   "branch": "wf466094ba-e74-1",
   "dependencies": [],
   "dependents": [],
+  "final_merge_status": "merged",
   "id": "wf466094ba-e74-1",
   "merge": {
     "baseBranch": "master",
