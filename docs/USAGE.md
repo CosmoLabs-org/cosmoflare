@@ -80,6 +80,7 @@ spawns it — but it is fully usable for testing and scripting.
 cosmoflare serve                              # ephemeral port, random token
 cosmoflare serve --addr 127.0.0.1:8421        # fixed port
 cosmoflare serve --token $(openssl rand -hex 16)   # caller-supplied token
+cosmoflare serve --metrics-interval 60s       # poll CF every 60s (default 30s, 0 to disable)
 ```
 
 On startup it prints a single JSON handshake line to stdout (everything else
