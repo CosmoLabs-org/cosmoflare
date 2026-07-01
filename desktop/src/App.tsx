@@ -11,6 +11,14 @@ import { useDaemonSSE, type StatusPayload } from "./api/sse";
 import { Dashboard } from "./views/Dashboard";
 import { Notifications, useNotifications } from "./views/Notifications";
 
+interface MetricsPayload {
+  profile: string;
+  zones: unknown[];
+  r2_buckets: unknown[];
+  workers: unknown[];
+  kv_namespaces: unknown[];
+}
+
 // Single QueryClient for the app (React Query recommendation: create once at
 // module scope so it persists across renders). Without this provider, the
 // Dashboard's useQuery calls throw "No QueryClient set" at runtime.
@@ -60,10 +68,18 @@ export default function App() {
   useDaemonSSE(
     endpoint,
     (e) => {
-      if (e.channel !== "status") return;
-      const s = e.data as StatusPayload;
-      if (typeof s.systems_online === "boolean") setSystemsOnline(s.systems_online);
-      if (typeof s.cloudflare_online === "boolean") setCloudflareOnline(s.cloudflare_online);
+      if (e.channel === "status") {
+        const s = e.data as StatusPayload;
+        if (typeof s.systems_online === "boolean") setSystemsOnline(s.systems_online);
+        if (typeof s.cloudflare_online === "boolean") setCloudflareOnline(s.cloudflare_online);
+      } else if (e.channel === "metrics") {
+        const m = e.data as MetricsPayload;
+        const profile = m.profile || selected;
+        if (m.zones) queryClient.setQueryData(["/zones", profile], m.zones);
+        if (m.r2_buckets) queryClient.setQueryData(["/r2/buckets", profile], m.r2_buckets);
+        if (m.workers) queryClient.setQueryData(["/workers", profile], m.workers);
+        if (m.kv_namespaces) queryClient.setQueryData(["/kv", profile], m.kv_namespaces);
+      }
     },
     (connected) => {
       setSystemsOnline(connected);
