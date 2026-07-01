@@ -113,9 +113,10 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			// SSE framing: an event block is two field lines + a blank line.
 			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", f.channel, payload)
 			flusher.Flush()
+		case <-s.done:
+			return
 		case <-ctx.Done():
 			return
 		}

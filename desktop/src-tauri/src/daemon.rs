@@ -192,13 +192,16 @@ async fn spawn_and_handshake(handle: &tauri::AppHandle) -> Result<DaemonEndpoint
     handle.state::<DaemonState>().set_child(child);
 
     let deadline = Instant::now() + HANDSHAKE_TIMEOUT;
-    while Instant::now() < deadline {
-        match rx.recv().await {
-            Some(CommandEvent::Stdout(bytes)) => {
+    loop {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            break;
+        }
+        match tokio::time::timeout(remaining, rx.recv()).await {
+            Ok(Some(CommandEvent::Stdout(bytes))) => {
                 let line = String::from_utf8_lossy(&bytes);
                 if let Ok(hs) = parse_handshake(&line) {
                     let (addr, token) = (hs.addr.clone(), hs.token.clone());
-                    // Blocking health-poll off the async executor.
                     let ready =
                         tauri::async_runtime::spawn_blocking(move || {
                             wait_until_ready(&addr, &token, HANDSHAKE_TIMEOUT)
@@ -212,18 +215,17 @@ async fn spawn_and_handshake(handle: &tauri::AppHandle) -> Result<DaemonEndpoint
                             })
                         }
                         _ => {
-                            // Daemon handshook but never went healthy — kill it
-                            // so a hung process can't outlive the attempt.
                             handle.state::<DaemonState>().kill_child();
                             return Err(SpawnError::Health);
                         }
                     }
                 }
             }
-            Some(other) => {
+            Ok(Some(other)) => {
                 eprintln!("[cosmoflare] sidecar event: {:?}", other);
             }
-            None => break,
+            Ok(None) => break,
+            Err(_elapsed) => break,
         }
     }
     // No handshake line within the deadline — kill the silent child.

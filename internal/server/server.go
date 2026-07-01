@@ -43,13 +43,27 @@ type Server struct {
 	// hub fans out SSE frames to /events clients. Created in New so Publish
 	// works before any client connects.
 	hub *sseHub
+
+	// done is closed by Close() to signal SSE handlers to drain promptly,
+	// so http.Server.Shutdown does not block on long-lived streams.
+	done chan struct{}
 }
 
 // New constructs a Server. Routes are registered lazily in Handler() so tests
 // can wire optional seams (ServeSource) before the mux is built. The SSE hub
 // is created eagerly so Publish is always safe to call.
 func New(cfg Config) *Server {
-	return &Server{cfg: cfg, hub: newSSEHub()}
+	return &Server{cfg: cfg, hub: newSSEHub(), done: make(chan struct{})}
+}
+
+// Close signals all SSE handlers to drain. Call before http.Server.Shutdown
+// so long-lived streams exit promptly and Shutdown can complete.
+func (s *Server) Close() {
+	select {
+	case <-s.done:
+	default:
+		close(s.done)
+	}
 }
 
 // SetCloudflareOnline records the outcome of the most recent Cloudflare call.

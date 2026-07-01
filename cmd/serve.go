@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"crypto/rand"
+	"time"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -127,7 +128,10 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	select {
 	case <-ctx.Done():
-		_ = httpServer.Shutdown(context.Background())
+		srv.Close()
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+		_ = httpServer.Shutdown(shutdownCtx)
 		return nil
 	case err := <-errCh:
 		if err != nil && err != http.ErrServerClosed {

@@ -137,6 +137,36 @@ func TestSSE_NoSpamOnSameValue(t *testing.T) {
 	// TestSSE_StatusPublishedOnHealthFlip (transition) above.
 }
 
+// TestSSE_CloseUnblocksHandler verifies that Close() causes the SSE handler to
+// return promptly, preventing http.Server.Shutdown from hanging (BUG-022).
+func TestSSE_CloseUnblocksHandler(t *testing.T) {
+	s := New(Config{Token: "t", Version: "test"})
+	url := s.testServer(t)
+
+	req, _ := http.NewRequest(http.MethodGet, url+"/events", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("GET /events: %v", err)
+	}
+	defer resp.Body.Close()
+
+	waitForSubscriber(t, s)
+	s.Close()
+
+	buf := make([]byte, 1)
+	done := make(chan struct{})
+	go func() {
+		resp.Body.Read(buf)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("SSE handler did not exit after Close()")
+	}
+}
+
 // TestSSE_NotificationOnHealthFlip verifies BR-07's v1 notification source: a
 // cloudflare_online transition produces a `notifications` frame (in addition to
 // the status frame), so the desktop notifications panel has real content.
