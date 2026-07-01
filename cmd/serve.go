@@ -21,8 +21,9 @@ import (
 )
 
 var (
-	serveAddr  string // --addr, default 127.0.0.1:0 (ephemeral port)
-	serveToken string // --token, optional; generated if empty
+	serveAddr            string        // --addr, default 127.0.0.1:0 (ephemeral port)
+	serveToken           string        // --token, optional; generated if empty
+	serveMetricsInterval time.Duration // --metrics-interval
 )
 
 var serveCmd = &cobra.Command{
@@ -58,6 +59,7 @@ Examples:
 func init() {
 	serveCmd.Flags().StringVar(&serveAddr, "addr", "127.0.0.1:0", "address to bind (host:port; port 0 = ephemeral)")
 	serveCmd.Flags().StringVar(&serveToken, "token", "", "bearer auth token (random if empty)")
+	serveCmd.Flags().DurationVar(&serveMetricsInterval, "metrics-interval", 30*time.Second, "how often to poll Cloudflare for live metrics (0 to disable)")
 	rootCmd.AddCommand(serveCmd)
 }
 
@@ -96,7 +98,8 @@ func runServe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
-	srv.SetData(&serveAdapter{cm: cm})
+	adapter := &serveAdapter{cm: cm}
+	srv.SetData(adapter)
 
 	httpServer := &http.Server{Handler: srv.Handler()}
 
@@ -120,6 +123,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 		<-sigCh
 		cancel()
 	}()
+
+	if serveMetricsInterval > 0 {
+		mp := server.NewMetricsProducer(srv, adapter, serveMetricsInterval)
+		mp.Start(ctx)
+	}
 
 	errCh := make(chan error, 1)
 	go func() {
