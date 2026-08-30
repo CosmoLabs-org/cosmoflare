@@ -1,8 +1,12 @@
 version: ""
 project: ""
-last_updated: 2026-06-21T08:07:38.143743-03:00
-next_id: 84
+last_updated: 2026-08-31T03:57:00.037381+04:00
+next_id: 85
 items:
+    - id: ROAD-084
+      title: Desktop v1.1 reliability & live data (metrics + daemon watchdog)
+      status: captured
+      created_at: 2026-08-31T03:57:00.037174+04:00
     - id: ROAD-083
       title: cmd/ DI testability rollout — extend factory-var pattern across all command handlers
       status: captured
