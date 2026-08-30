@@ -1,8 +1,12 @@
 version: ""
 project: ""
-last_updated: 2026-08-31T03:57:06.177443+04:00
-next_id: 88
+last_updated: 2026-08-31T03:57:08.58444+04:00
+next_id: 89
 items:
+    - id: ROAD-088
+      title: Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)
+      status: captured
+      created_at: 2026-08-31T03:57:08.584204+04:00
     - id: ROAD-087
       title: Domain Center completion — Waves B–D
       status: captured
