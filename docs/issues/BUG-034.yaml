@@ -1,0 +1,13 @@
+id: BUG-034
+type: bug
+created_at: 2026-08-31T03:56:27.062744+04:00
+updated_at: 2026-08-31T03:56:27.064781+04:00
+source: local
+ulid: 01M1AHMR1RGGP0CXD3N657AH6N
+severity: high
+status: open
+title: --json mode prints nothing on configuration errors
+description: PersistentPreRun validates the token then calls printError and os.Exit(1) (cmd/root.go:99-110); printError returns immediately when JSONOutput is true (root.go:197-202). So 'cosmoflare zone list --json' with a missing token prints NOTHING and exits 1 — breaking the documented OutputResponse agent contract and the project's own agent-readable-errors rule. Found by audit agent-7.
+fix_direction: 'Branch on JSONOutput in PersistentPreRun and emit printErrorJSON before os.Exit(1). Add regression test: run a command with --json and no credentials, assert JSON error body on stdout.'
+affected_files:
+    - cmd/root.go
