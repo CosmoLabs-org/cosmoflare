@@ -1,0 +1,14 @@
+id: BUG-036
+type: bug
+created_at: 2026-08-31T03:56:36.240555+04:00
+updated_at: 2026-08-31T03:56:36.243312+04:00
+source: local
+ulid: 01M1AHN10KKPV14N08G5WQQJME
+severity: high
+status: open
+title: Desktop app ships unstyled — entire cf-* design system undefined
+description: Components reference 30+ cf-* classes (cf-app, cf-sidebar, cf-nav-item, cf-card-grid, cf-health-dot, cf-unread-badge) but desktop/src/styles.css is 15 lines defining none of them; the built CSS bundle is 167 bytes. The shipped app renders as an unstyled vertical stack on a dark background. Found by audit agents 17 and 18.
+fix_direction: 'Write the cf-* stylesheet: two-pane flex layout, card grid (auto-fill minmax), min-height 24px (prefer 44px) targets, :focus-visible outlines, semantic color tokens, state colors >=3:1 on #1a1a1a.'
+affected_files:
+    - desktop/src/styles.css
+    - desktop/src/App.tsx
