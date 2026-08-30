@@ -1,8 +1,12 @@
 version: ""
 project: ""
-last_updated: 2026-08-31T03:57:04.030775+04:00
-next_id: 87
+last_updated: 2026-08-31T03:57:06.177443+04:00
+next_id: 88
 items:
+    - id: ROAD-087
+      title: Domain Center completion — Waves B–D
+      status: captured
+      created_at: 2026-08-31T03:57:06.177224+04:00
     - id: ROAD-086
       title: Roadmap hygiene — dedupe double-imported items and regenerate index
       status: captured

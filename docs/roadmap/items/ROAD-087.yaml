@@ -1,0 +1,11 @@
+id: ROAD-087
+created_at: 2026-08-31T03:57:06.177224+04:00
+updated_at: 2026-08-31T03:57:06.178748+04:00
+title: Domain Center completion — Waves B–D
+description: Domain Management Center Waves B–D (registrar visibility, redirect governance, dashboard depth per the 2026-06-14 brainplan) are tracked only in project memory; FEAT-006 was closed after Waves 1–2. Create this item to carry the remaining scope with references to FEAT-006 and docs/brainstorming/2026-06-14-domain-management-center.md. Audit-hydrated 2026-08-31.
+status: captured
+tags:
+    - audit-hydrated
+origin:
+    session: 36
+ulid: 01M1AHNY8287HF81T4V7GCV4NA
