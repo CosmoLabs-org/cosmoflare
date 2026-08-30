@@ -1,0 +1,14 @@
+id: BUG-028
+type: bug
+created_at: 2026-08-31T03:55:56.877158+04:00
+updated_at: 2026-08-31T03:55:56.878942+04:00
+source: local
+ulid: 01M1AHKTJEWKSR26AKFC83Y6FK
+severity: high
+status: open
+title: Watcher swallows scan errors then --delete removes remote objects
+description: FileWatcher.Snapshot walk callback returns nil on every error (watcher.go:124-127), so an unreadable subtree silently vanishes from the snapshot. Diff then reports ChangeDeleted and cmd/watch.go:178-183 with --delete removes them from R2. A permissions change becomes remote data deletion. Found by 2026-08-31 audit agent-2.
+fix_direction: Distinguish root failure from per-entry failure; track unreadable paths and never emit ChangeDeleted for files under a path that failed to read.
+affected_files:
+    - pkg/cosmoflare/watcher.go
+    - cmd/watch.go
