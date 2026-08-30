@@ -1,0 +1,13 @@
+id: BUG-037
+type: bug
+created_at: 2026-08-31T03:56:41.076911+04:00
+updated_at: 2026-08-31T03:56:41.079842+04:00
+source: local
+ulid: 01M1AHN5QQCRC00VST54PHJQYP
+severity: high
+status: open
+title: Health online/offline state invisible — visually identical and hidden from screen readers
+description: HealthDot renders is-online/is-offline classes with no styles (visually identical states), while the state text lives in a title attribute that never computes into the accessible name and the dot is aria-hidden; data-online does not enter the accessibility tree. A monitoring dashboard whose primary signal is invisible to everyone. WCAG 1.4.1/4.1.2. Found by audit agents 17 and 18.
+fix_direction: 'Style .cf-dot-mark with success/danger colors AND set aria-label="Systems: online|offline" on the outer span; pair color with a non-color cue.'
+affected_files:
+    - desktop/src/components/Header.tsx
