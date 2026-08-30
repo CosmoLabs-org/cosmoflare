@@ -1,0 +1,15 @@
+id: BUG-031
+type: bug
+created_at: 2026-08-31T03:56:12.659832+04:00
+updated_at: 2026-08-31T03:56:12.662896+04:00
+source: local
+ulid: 01M1AHM9ZP6HGKHM0WZYCE9JGX
+severity: high
+status: open
+title: ldflags version injection targets dead module path — binaries report 'dev'
+description: go.mod declares github.com/CosmoLabs-org/cosmoflare but Makefile:19, Dockerfile:30-32, and release.yml:62-64 inject -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=... — Go -X silently ignores nonexistent symbols, so every built binary reports 'Cosmoflare version dev'. Verified empirically by audit agent-5. release.yml:87 also emits the dead path in go install instructions.
+fix_direction: Replace CosmoDev-R2Go2 with cosmoflare in all three ldflags sites; define the canonical string once; add post-build assertion that --version matches the tag.
+affected_files:
+    - Makefile
+    - Dockerfile
+    - .github/workflows/release.yml
