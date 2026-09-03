@@ -97,7 +97,7 @@ Examples:
 
 		// Validate API token is available (from flag or env)
 		if err := validateEnvironment(); err != nil {
-			printError("Configuration error: %v", err)
+			emitConfigError("Configuration error: %v", err)
 			os.Exit(1)
 		}
 
@@ -105,7 +105,7 @@ Examples:
 		if AccountID == "" {
 			AccountID = os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 			if AccountID == "" {
-				printError("Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
+				emitConfigError("Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
 				os.Exit(1)
 			}
 		}
@@ -239,6 +239,23 @@ func printErrorJSON(message string) error {
 		DryRun:  DryRun,
 	}
 	return printJSON(response)
+}
+
+// emitConfigError renders a fatal configuration error to stdout in the
+// active output mode. In --json mode it emits the standard OutputResponse
+// error envelope (via printErrorJSON) so agents get a parseable error body
+// instead of empty stdout with exit 1 (BUG-034); otherwise it prints the
+// human-readable error line via printError. The os.Exit(1) that follows is
+// left to the caller so this emission stays unit-testable.
+func emitConfigError(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
+	if JSONOutput {
+		// Marshal of OutputResponse (bool/string fields) cannot fail; the
+		// error return is ignored the same way printErrorAndExit does.
+		printErrorJSON(message)
+	} else {
+		printError("%s", message)
+	}
 }
 
 // printErrorAndExit prints an error and exits with status 1
