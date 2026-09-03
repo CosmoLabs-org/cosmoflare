@@ -50,6 +50,13 @@ func seedProfile(t *testing.T, bm *BackupManager, name string) {
 	require.NoError(t, bm.configMgr.SetProfile(p))
 }
 
+// disableAnim disables the global animator for the duration of the test.
+//
+// The global animator is package-level shared state. Mutating it from a
+// t.Parallel() test races with every other test running in the parallel
+// batch (BUG-030). Only call this helper from sequential tests. A parallel
+// test that needs animations off must drive an Animator instance it owns,
+// not the package global.
 func disableAnim(t *testing.T) {
 	t.Helper()
 	globalAnimator.Disabled = true
@@ -83,7 +90,6 @@ func TestReadPasswordWithReader(t *testing.T) {
 
 func TestEncryptDecryptRoundtrip(t *testing.T) {
 	t.Parallel()
-	disableAnim(t)
 
 	bm := &BackupManager{Input: newMockReader()}
 
@@ -123,7 +129,6 @@ func TestEncryptDecryptRoundtrip(t *testing.T) {
 
 func TestDecryptWrongPassword(t *testing.T) {
 	t.Parallel()
-	disableAnim(t)
 
 	bm := &BackupManager{Input: newMockReader()}
 
@@ -142,7 +147,6 @@ func TestDecryptWrongPassword(t *testing.T) {
 
 func TestDecryptInvalidData(t *testing.T) {
 	t.Parallel()
-	disableAnim(t)
 
 	bm := &BackupManager{Input: newMockReader()}
 
@@ -154,7 +158,6 @@ func TestDecryptInvalidData(t *testing.T) {
 
 func TestEncryptEmptyData(t *testing.T) {
 	t.Parallel()
-	disableAnim(t)
 
 	bm := &BackupManager{Input: newMockReader()}
 
