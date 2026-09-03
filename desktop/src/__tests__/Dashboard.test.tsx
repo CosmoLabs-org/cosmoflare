@@ -69,4 +69,21 @@ describe("Dashboard", () => {
       screen.getAllByTestId(/^card-/).every((c) => /loading/i.test(c.textContent ?? ""))
     ).toBe(true);
   });
+
+  // BUG-038 (audit finding): the error card rendered the bare word "Error",
+  // hiding the actual failure. It must render the real message as an alert.
+  it("renders the actual error message in a role=alert region", async () => {
+    const failing: DashboardClient = {
+      async get<T>(_path: string): Promise<T> {
+        throw new Error("daemon unreachable: HTTP 503");
+      },
+    };
+    withClient(<Dashboard client={failing} profile="" />);
+    const alerts = await screen.findAllByRole("alert");
+    expect(alerts).toHaveLength(4); // one per service card
+    for (const alert of alerts) {
+      expect(alert).toHaveTextContent("daemon unreachable: HTTP 503");
+      expect(alert).not.toHaveTextContent(/^Error$/);
+    }
+  });
 });

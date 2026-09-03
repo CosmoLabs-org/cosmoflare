@@ -44,7 +44,12 @@ export function Notifications({ items, unread, onSeen }: NotificationsProps) {
     <div className="cf-notifications">
       <div className="cf-notifications-header">
         <h2 className="cf-view-title">Notifications</h2>
-        <span className="cf-unread-badge" data-testid="unread-badge">
+        <span
+          className="cf-unread-badge"
+          data-testid="unread-badge"
+          role="status"
+          aria-label={`${unread} unread notification${unread === 1 ? "" : "s"}`}
+        >
           {unread}
         </span>
         <button
@@ -57,21 +62,26 @@ export function Notifications({ items, unread, onSeen }: NotificationsProps) {
           Mark read
         </button>
       </div>
-      {items.length === 0 ? (
-        <p className="cf-empty">No notifications yet.</p>
-      ) : (
-        <ul className="cf-notification-list">
-          {items.map((it, i) => (
-            <li
-              key={it.id ?? i}
-              data-testid={`notification-${i}`}
-              className="cf-notification-item"
-            >
-              {it.message ?? JSON.stringify(it.raw)}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* role=log + aria-live=polite (WCAG 4.1.3): incoming notifications are
+          announced without stealing focus. The wrapper div keeps the ul a real
+          list for assistive tech. */}
+      <div className="cf-notification-log" role="log" aria-live="polite">
+        {items.length === 0 ? (
+          <p className="cf-empty">No notifications yet.</p>
+        ) : (
+          <ul className="cf-notification-list">
+            {items.map((it, i) => (
+              <li
+                key={it.id ?? i}
+                data-testid={`notification-${i}`}
+                className="cf-notification-item"
+              >
+                {it.message ?? JSON.stringify(it.raw)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

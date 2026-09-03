@@ -29,14 +29,18 @@ interface CardProps {
 
 function ServiceCard({ testId, label, data, isLoading, error }: CardProps) {
   const count = Array.isArray(data) ? data.length : 0;
-  let body: string;
-  if (isLoading) body = "Loading…";
-  else if (error) body = "Error";
-  else body = String(count);
   return (
     <section className="cf-card" data-testid={testId}>
       <h3 className="cf-card-label">{label}</h3>
-      <p className="cf-card-count">{body}</p>
+      {error ? (
+        // Real failure reason, announced assertively (role=alert) — the bare
+        // word "Error" told the user nothing about what broke.
+        <p className="cf-card-count cf-card-error" role="alert">
+          {error instanceof Error ? error.message : String(error)}
+        </p>
+      ) : (
+        <p className="cf-card-count">{isLoading ? "Loading…" : String(count)}</p>
+      )}
     </section>
   );
 }
