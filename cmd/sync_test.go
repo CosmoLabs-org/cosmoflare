@@ -648,7 +648,7 @@ func TestMd5File_Deterministic(t *testing.T) {
 func TestScanLocalDir_EmptyDir(t *testing.T) {
 	tmp := t.TempDir()
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir on empty dir returned error: %v", err)
 	}
@@ -663,7 +663,7 @@ func TestScanLocalDir_SingleFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -687,7 +687,7 @@ func TestScanLocalDir_MultipleFiles(t *testing.T) {
 		}
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -709,7 +709,7 @@ func TestScanLocalDir_Recursive(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -739,7 +739,7 @@ func TestScanLocalDir_ForwardSlashPaths(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -759,7 +759,7 @@ func TestScanLocalDir_WithChecksum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, true)
+	files, err := scanLocalDir(tmp, true, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir with checksum returned error: %v", err)
 	}
@@ -780,7 +780,7 @@ func TestScanLocalDir_WithoutChecksum_ChecksumEmpty(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -798,7 +798,7 @@ func TestScanLocalDir_ModTimeSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}
@@ -811,7 +811,7 @@ func TestScanLocalDir_ModTimeSet(t *testing.T) {
 }
 
 func TestScanLocalDir_NonexistentDir(t *testing.T) {
-	_, err := scanLocalDir("/nonexistent-dir-cosmoflare-scan-test", false)
+	_, err := scanLocalDir("/nonexistent-dir-cosmoflare-scan-test", false, nil)
 	if err == nil {
 		t.Fatal("expected error for nonexistent directory")
 	}
@@ -827,7 +827,7 @@ func TestScanLocalDir_SkipsDirectories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := scanLocalDir(tmp, false)
+	files, err := scanLocalDir(tmp, false, nil)
 	if err != nil {
 		t.Fatalf("scanLocalDir returned error: %v", err)
 	}

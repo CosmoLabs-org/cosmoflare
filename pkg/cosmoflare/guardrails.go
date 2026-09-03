@@ -64,6 +64,23 @@ func (g *GuardrailChecker) CheckUpload(bucket, key string, size int64) *Guardrai
 	}
 }
 
+// enforceUploadGuardrails rejects an upload when the attached project config
+// denies it. A nil checker (no project config attached to the client)
+// enforces nothing. The check runs before any data is read or sent, so a
+// blocked upload never performs a partial transfer.
+func (c *client) enforceUploadGuardrails(op, bucket, key string, size int64) error {
+	if c.guardrails == nil {
+		return nil
+	}
+	res := c.guardrails.CheckUpload(bucket, key, size)
+	if res.Allowed {
+		return nil
+	}
+	return validationError(op, fmt.Sprintf(
+		"upload of %q to bucket %q blocked by project guardrails: %s — remove or adjust the guardrail rules in .cosmoflare.yaml if this upload is intentional",
+		key, bucket, strings.Join(res.Reasons, "; ")))
+}
+
 // CheckBucketAccess verifies that a bucket is in the declared allowlist.
 func (g *GuardrailChecker) CheckBucketAccess(bucket string) *GuardrailResult {
 	// If no allowed_buckets specified, all buckets are allowed

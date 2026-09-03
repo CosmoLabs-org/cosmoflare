@@ -73,6 +73,9 @@ func (c *client) Upload(ctx context.Context, bucket, key string, reader io.Reade
 	if reader == nil {
 		return nil, validationError("Upload", "reader is required")
 	}
+	if err := c.enforceUploadGuardrails("Upload", bucket, key, size); err != nil {
+		return nil, err
+	}
 
 	cfg := &uploadConfig{}
 	for _, o := range opts {
@@ -133,6 +136,9 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 	}
 	if reader == nil {
 		return nil, validationError("MultipartUpload", "reader is required")
+	}
+	if err := c.enforceUploadGuardrails("MultipartUpload", bucket, key, size); err != nil {
+		return nil, err
 	}
 
 	cfg := &uploadConfig{

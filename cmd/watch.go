@@ -103,13 +103,14 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	// Create R2 client (unless dry-run)
+	// Create R2 client (unless dry-run), with project guardrails attached so
+	// uploads violating allowed_buckets / max_file_size / blocked_keys fail
 	var r2client cosmoflare.R2Client
 	if !DryRun {
-		r2client, err = cosmoflare.NewClient(
+		r2client, err = cosmoflare.NewClient(append([]cosmoflare.ClientOption{
 			cosmoflare.WithAccountID(AccountID),
 			cosmoflare.WithAPIToken(APIToken),
-		)
+		}, projectConfigOptions(absDir)...)...)
 		if err != nil {
 			if JSONOutput {
 				return printErrorJSON(fmt.Sprintf("failed to create R2 client: %v", err))

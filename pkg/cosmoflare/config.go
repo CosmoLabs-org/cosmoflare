@@ -61,12 +61,17 @@ type ProfileConfig struct {
 	Description string `mapstructure:"description,omitempty" json:"description,omitempty"`
 }
 
-// LoadProjectConfig loads configuration from .r2go2.yaml in the given directory.
-// Searches upward from dir until a .r2go2.yaml is found.
+// LoadProjectConfig loads project configuration from the given directory,
+// searching upward through parent directories. The canonical filename is
+// .cosmoflare.yaml; the legacy .r2go2.yaml is still accepted when no
+// .cosmoflare.yaml is found.
 func LoadProjectConfig(dir string) (*ProjectConfig, error) {
-	path, err := findProjectFile(dir, ".r2go2.yaml")
+	path, err := findProjectFile(dir, ".cosmoflare.yaml")
 	if err != nil {
-		return nil, err
+		path, err = findProjectFile(dir, ".r2go2.yaml")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	v := viper.New()
