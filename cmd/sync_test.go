@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
+
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // --- Command registration ---
@@ -832,5 +836,115 @@ func TestScanLocalDir_SkipsDirectories(t *testing.T) {
 	}
 	if files[0].RelPath != "real.txt" {
 		t.Errorf("got RelPath %q, want 'real.txt'", files[0].RelPath)
+	}
+}
+
+// --- r2StorageBackend remote listing (BUG-027 pagination) ---
+
+// stubListPagesClient is a cosmoflare.R2Client stub serving canned
+// ListObjects pages so remote-listing pagination can be tested without
+// network access. Only ListObjects is overridden; every other interface
+// method is inherited from the embedded nil interface and would panic
+// if called.
+type stubListPagesClient struct {
+	cosmoflare.R2Client
+	pages []*cosmoflare.ListResult[*cosmoflare.Object]
+
+	// Call records, in call order.
+	receivedTokens []string
+	receivedBucket []string
+	receivedPrefix []string
+}
+
+func (s *stubListPagesClient) ListObjects(_ context.Context, bucket, prefix, _ string, _ int32, continuationToken string) (*cosmoflare.ListResult[*cosmoflare.Object], error) {
+	if len(s.receivedTokens) >= len(s.pages) {
+		return nil, fmt.Errorf("unexpected ListObjects call %d: only %d pages configured", len(s.receivedTokens)+1, len(s.pages))
+	}
+	s.receivedTokens = append(s.receivedTokens, continuationToken)
+	s.receivedBucket = append(s.receivedBucket, bucket)
+	s.receivedPrefix = append(s.receivedPrefix, prefix)
+	return s.pages[len(s.receivedTokens)-1], nil
+}
+
+// TestR2StorageBackend_ListRemoteObjects_FollowsNextToken verifies that
+// listing accumulates objects across every ListObjects page instead of
+// stopping after the first page of at most 1000 items.
+func TestR2StorageBackend_ListRemoteObjects_FollowsNextToken(t *testing.T) {
+	stub := &stubListPagesClient{
+		pages: []*cosmoflare.ListResult[*cosmoflare.Object]{
+			{
+				Items: []*cosmoflare.Object{
+					{Key: "data/a.txt", Size: 1, ETag: "etag-a"},
+					{Key: "data/b.txt", Size: 2, ETag: "etag-b"},
+				},
+				NextToken: "t2",
+			},
+			{
+				Items: []*cosmoflare.Object{
+					{Key: "data/c.txt", Size: 3, ETag: "etag-c"},
+				},
+				NextToken: "",
+			},
+		},
+	}
+
+	backend := &r2StorageBackend{client: stub}
+	objects, err := backend.ListRemoteObjects(context.Background(), "test-bucket", "data/")
+	if err != nil {
+		t.Fatalf("ListRemoteObjects returned error: %v", err)
+	}
+
+	if len(objects) != 3 {
+		t.Fatalf("got %d objects, want 3 (items from all pages must be accumulated)", len(objects))
+	}
+	wantKeys := []string{"data/a.txt", "data/b.txt", "data/c.txt"}
+	for i, want := range wantKeys {
+		if objects[i].Key != want {
+			t.Errorf("objects[%d].Key = %q, want %q", i, objects[i].Key, want)
+		}
+	}
+	if objects[2].Size != 3 || objects[2].ETag != "etag-c" {
+		t.Errorf("objects[2] fields not converted faithfully: size=%d etag=%q", objects[2].Size, objects[2].ETag)
+	}
+
+	if len(stub.receivedTokens) != 2 {
+		t.Fatalf("ListObjects called %d time(s), want 2 (one per page)", len(stub.receivedTokens))
+	}
+	if stub.receivedTokens[0] != "" {
+		t.Errorf("first call continuationToken = %q, want empty string", stub.receivedTokens[0])
+	}
+	if stub.receivedTokens[1] != "t2" {
+		t.Errorf("second call continuationToken = %q, want %q (NextToken from page 1)", stub.receivedTokens[1], "t2")
+	}
+	for i := range stub.receivedBucket {
+		if stub.receivedBucket[i] != "test-bucket" || stub.receivedPrefix[i] != "data/" {
+			t.Errorf("call %d used bucket=%q prefix=%q, want test-bucket / data/", i, stub.receivedBucket[i], stub.receivedPrefix[i])
+		}
+	}
+}
+
+// TestR2StorageBackend_ListRemoteObjects_SinglePage verifies the loop
+// terminates after one call when the first page reports no NextToken.
+func TestR2StorageBackend_ListRemoteObjects_SinglePage(t *testing.T) {
+	stub := &stubListPagesClient{
+		pages: []*cosmoflare.ListResult[*cosmoflare.Object]{
+			{Items: []*cosmoflare.Object{{Key: "solo.txt", Size: 7, ETag: "etag-solo"}}},
+		},
+	}
+
+	backend := &r2StorageBackend{client: stub}
+	objects, err := backend.ListRemoteObjects(context.Background(), "test-bucket", "")
+	if err != nil {
+		t.Fatalf("ListRemoteObjects returned error: %v", err)
+	}
+
+	if len(objects) != 1 {
+		t.Fatalf("got %d objects, want 1", len(objects))
+	}
+	if objects[0].Key != "solo.txt" || objects[0].Size != 7 || objects[0].ETag != "etag-solo" {
+		t.Errorf("objects[0] = %+v, want solo.txt/7/etag-solo", objects[0])
+	}
+	if len(stub.receivedTokens) != 1 {
+		t.Errorf("ListObjects called %d time(s), want 1 (empty NextToken must end the loop)", len(stub.receivedTokens))
 	}
 }
