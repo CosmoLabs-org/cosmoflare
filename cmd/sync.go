@@ -425,21 +425,35 @@ func newR2StorageBackend(accountID, apiToken string) (*r2StorageBackend, error) 
 	return &r2StorageBackend{client: client}, nil
 }
 
-func (b *r2StorageBackend) ListRemoteObjects(ctx context.Context, bucket, prefix string) ([]cosmoflare.ObjectInfo, error) {
+// listAllR2Objects lists every object under prefix by following the
+// continuation token returned by each ListObjects page. A single call
+// returns at most 1000 items, so stopping at the first page silently
+// drops every object beyond the first 1000.
+func listAllR2Objects(ctx context.Context, client cosmoflare.R2Client, bucket, prefix string) ([]cosmoflare.ObjectInfo, error) {
 	var allObjects []cosmoflare.ObjectInfo
-	result, err := b.client.ListObjects(ctx, bucket, prefix, "", 1000, "")
-	if err != nil {
-		return nil, err
+	continuationToken := ""
+	for {
+		result, err := client.ListObjects(ctx, bucket, prefix, "", 1000, continuationToken)
+		if err != nil {
+			return nil, err
+		}
+		for _, obj := range result.Items {
+			allObjects = append(allObjects, cosmoflare.ObjectInfo{
+				Key:          obj.Key,
+				Size:         obj.Size,
+				LastModified: obj.LastModified,
+				ETag:         obj.ETag,
+			})
+		}
+		if result.NextToken == "" {
+			return allObjects, nil
+		}
+		continuationToken = result.NextToken
 	}
-	for _, obj := range result.Items {
-		allObjects = append(allObjects, cosmoflare.ObjectInfo{
-			Key:          obj.Key,
-			Size:         obj.Size,
-			LastModified: obj.LastModified,
-			ETag:         obj.ETag,
-		})
-	}
-	return allObjects, nil
+}
+
+func (b *r2StorageBackend) ListRemoteObjects(ctx context.Context, bucket, prefix string) ([]cosmoflare.ObjectInfo, error) {
+	return listAllR2Objects(ctx, b.client, bucket, prefix)
 }
 
 func (b *r2StorageBackend) UploadFile(ctx context.Context, bucket, key, localPath string) error {
