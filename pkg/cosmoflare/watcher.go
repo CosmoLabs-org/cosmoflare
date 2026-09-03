@@ -80,6 +80,12 @@ type FileWatcher struct {
 	dir      string
 	opts     WatcherOptions
 	interval time.Duration
+	// unreadable holds the relative paths that could not be read during the
+	// most recent successful Snapshot. Diff never reports deletions at or
+	// beneath these paths: a file the scan could not see is unknown, not
+	// deleted, so a local permissions change cannot cascade into remote
+	// object deletions (BUG-028).
+	unreadable map[string]struct{}
 }
 
 // NewFileWatcher creates a watcher for the given directory.
@@ -118,12 +124,27 @@ func (w *FileWatcher) Interval() time.Duration { return w.interval }
 // Snapshot walks the directory tree and returns a map of relative paths
 // to file state (mod time + size). Hidden directories (starting with '.')
 // are skipped. Files matching exclude patterns are skipped.
+//
+// A failure to read the watch root itself is returned as an error: the scan
+// produced no usable data. Failures on individual entries are recorded
+// internally instead; paths at or beneath an unreadable entry are absent
+// from the returned snapshot but are never reported as deletions by Diff.
 func (w *FileWatcher) Snapshot() (FileSnapshot, error) {
 	snap := make(FileSnapshot)
+	unreadable := make(map[string]struct{})
 
 	err := filepath.Walk(w.dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // skip files/dirs we can't read
+			// The watch root itself failed: the whole scan is unusable.
+			if path == w.dir {
+				return err
+			}
+			// Per-entry failure (e.g. a directory that lost read
+			// permission): everything beneath it is unknown, not gone.
+			if rel, relErr := filepath.Rel(w.dir, path); relErr == nil {
+				unreadable[rel] = struct{}{}
+			}
+			return nil
 		}
 
 		// Skip hidden directories (e.g. .git, .DS_Store dirs)
@@ -153,8 +174,12 @@ func (w *FileWatcher) Snapshot() (FileSnapshot, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return snap, err
+	}
 
-	return snap, err
+	w.unreadable = unreadable
+	return snap, nil
 }
 
 // shouldExclude checks if a relative path matches any exclude pattern.
@@ -199,9 +224,13 @@ func (w *FileWatcher) Diff(old, cur FileSnapshot) []FileChange {
 		}
 	}
 
-	// Detect deleted files
+	// Detect deleted files. A path missing from the current snapshot is only
+	// a deletion when the scan could actually see it: anything at or beneath
+	// a path that failed to read is unknown, not deleted (BUG-028). This is
+	// what keeps `watch --delete` from removing live R2 objects when a local
+	// permissions change hides a subtree from the scan.
 	for path := range old {
-		if _, exists := cur[path]; !exists {
+		if _, exists := cur[path]; !exists && !w.scanFailed(path) {
 			changes = append(changes, FileChange{
 				Path:     path,
 				R2Key:    w.r2Key(path),
@@ -218,6 +247,17 @@ func (w *FileWatcher) Diff(old, cur FileSnapshot) []FileChange {
 	})
 
 	return changes
+}
+
+// scanFailed reports whether rel is at or beneath a path that could not be
+// read during the most recent successful Snapshot.
+func (w *FileWatcher) scanFailed(rel string) bool {
+	for failed := range w.unreadable {
+		if rel == failed || strings.HasPrefix(rel, failed+string(filepath.Separator)) {
+			return true
+		}
+	}
+	return false
 }
 
 // r2Key builds the R2 object key from a relative file path.
