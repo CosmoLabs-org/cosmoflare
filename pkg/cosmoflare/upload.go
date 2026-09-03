@@ -196,21 +196,13 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 	results := make(chan partResult, numParts)
 
 	for partNum := int64(1); partNum <= numParts; partNum++ {
-		// Calculate this part's size (last part may be smaller)
-		thisPartSize := partSize
-		remaining := size - uploadedBytes
-		if remaining < thisPartSize {
-			thisPartSize = remaining
-		}
-
-		// Read this part's data
-		buf := make([]byte, thisPartSize)
-		n, err := io.ReadFull(reader, buf)
-		if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		// Read this part's data (BUG-026: a reader shorter than the declared
+		// size aborts the upload instead of storing a truncated object)
+		buf, err := readUploadPart("MultipartUpload", reader, partSize, size, uploadedBytes, partNum)
+		if err != nil {
 			abort()
-			return nil, newError("MultipartUpload", fmt.Sprintf("failed to read part %d", partNum), err)
+			return nil, err
 		}
-		buf = buf[:n]
 		partOffset := uploadedBytes
 		partNumber := int32(partNum)
 
@@ -234,7 +226,7 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 			}}
 		}(partNumber, buf, partOffset)
 
-		uploadedBytes += int64(n)
+		uploadedBytes += int64(len(buf))
 
 		if cfg.progressCallback != nil {
 			cfg.progressCallback(uploadedBytes, size)
@@ -280,6 +272,37 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 		Uploaded:  time.Now().UTC(),
 		Parts:     int(numParts),
 	}, nil
+}
+
+// readUploadPart reads the next multipart part from reader, enforcing the
+// declared total size (BUG-026).
+//
+// The part length is capped at the bytes remaining for the final part.
+// io.EOF or io.ErrUnexpectedEOF while fewer than size bytes have been consumed
+// is a validation error ("reader shorter than declared size"), so a truncated
+// object can never be completed silently. A clean EOF exactly at the size
+// boundary is a success.
+func readUploadPart(op string, reader io.Reader, partSize, size, uploadedBytes, partNum int64) ([]byte, error) {
+	thisPartSize := partSize
+	if remaining := size - uploadedBytes; remaining < thisPartSize {
+		thisPartSize = remaining
+	}
+
+	buf := make([]byte, thisPartSize)
+	n, err := io.ReadFull(reader, buf)
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		total := uploadedBytes + int64(n)
+		if total < size {
+			return nil, validationError(op, fmt.Sprintf(
+				"reader shorter than declared size (%d of %d bytes)", total, size))
+		}
+		// Clean EOF exactly at the size boundary: every declared byte is read.
+		return buf[:n], nil
+	}
+	if err != nil {
+		return nil, newError(op, fmt.Sprintf("failed to read part %d", partNum), err)
+	}
+	return buf[:n], nil
 }
 
 // defaultCachePolicy returns a cache-control header based on file extension.

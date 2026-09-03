@@ -266,22 +266,17 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 
 	for _, partNum := range remaining {
 		offset := int64(partNum-1) * state.PartSize
-		thisPartSize := state.PartSize
-		remaining := size - offset
-		if remaining < thisPartSize {
-			thisPartSize = remaining
-		}
 
-		// Read this part's data
+		// Read this part's data (BUG-026: a reader shorter than the declared
+		// size fails the resume instead of storing a truncated object; the
+		// saved state is kept so a corrected retry can continue)
 		if _, err := reader.Seek(offset, io.SeekStart); err != nil {
 			return nil, newError("ResumeMultipartUpload", fmt.Sprintf("failed to seek to part %d offset", partNum), err)
 		}
-		buf := make([]byte, thisPartSize)
-		n, err := io.ReadFull(reader, buf)
-		if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
-			return nil, newError("ResumeMultipartUpload", fmt.Sprintf("failed to read part %d", partNum), err)
+		buf, err := readUploadPart("ResumeMultipartUpload", reader, state.PartSize, size, offset, int64(partNum))
+		if err != nil {
+			return nil, err
 		}
-		buf = buf[:n]
 		pn := partNum
 
 		sem <- struct{}{}
@@ -315,7 +310,7 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 			results <- partResult{info: info}
 		}(pn, buf)
 
-		uploadedBytes += int64(n)
+		uploadedBytes += int64(len(buf))
 		if cfg.progressCallback != nil {
 			cfg.progressCallback(uploadedBytes, size)
 		}
@@ -483,19 +478,13 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 	var uploadedBytes int64
 
 	for partNum := int64(1); partNum <= numParts; partNum++ {
-		thisPartSize := partSize
-		remaining := size - uploadedBytes
-		if remaining < thisPartSize {
-			thisPartSize = remaining
-		}
-
-		buf := make([]byte, thisPartSize)
-		n, err := io.ReadFull(reader, buf)
-		if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		// Read this part's data (BUG-026: a reader shorter than the declared
+		// size aborts the upload instead of storing a truncated object)
+		buf, err := readUploadPart("ResumableMultipartUpload", reader, partSize, size, uploadedBytes, partNum)
+		if err != nil {
 			abort()
-			return nil, newError("ResumableMultipartUpload", fmt.Sprintf("failed to read part %d", partNum), err)
+			return nil, err
 		}
-		buf = buf[:n]
 		pn := int32(partNum)
 
 		sem <- struct{}{}
@@ -529,7 +518,7 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 			results <- partResult{info: info}
 		}(pn, buf)
 
-		uploadedBytes += int64(n)
+		uploadedBytes += int64(len(buf))
 		if cfg.progressCallback != nil {
 			cfg.progressCallback(uploadedBytes, size)
 		}
