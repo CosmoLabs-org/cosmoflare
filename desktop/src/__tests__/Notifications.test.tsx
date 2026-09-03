@@ -52,6 +52,39 @@ describe("Notifications (view)", () => {
     fireEvent.click(screen.getByTestId("mark-seen"));
     expect(seen).toBe(1);
   });
+
+  // BUG-038 (WCAG 4.1.3): incoming notifications must be announced. The list
+  // wrapper is a polite live log, and the unread badge announces a described
+  // count instead of a bare number.
+  it("exposes the notification list as a polite live log (BUG-038)", () => {
+    render(<Notifications items={[{ raw: { message: "x" } }]} unread={1} />);
+    const log = screen.getByRole("log");
+    expect(log).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("announces the unread count with a descriptive label (BUG-038)", () => {
+    render(
+      <Notifications
+        items={[
+          { raw: { message: "a" } },
+          { raw: { message: "b" } },
+          { raw: { message: "c" } },
+        ]}
+        unread={3}
+      />
+    );
+    const badge = screen.getByRole("status");
+    expect(badge).toHaveAttribute("aria-label", "3 unread notifications");
+    expect(badge).toHaveTextContent("3");
+  });
+
+  it("uses singular wording for exactly one unread notification", () => {
+    render(<Notifications items={[{ raw: { message: "x" } }]} unread={1} />);
+    expect(screen.getByRole("status")).toHaveAttribute(
+      "aria-label",
+      "1 unread notification"
+    );
+  });
 });
 
 // --- SSE accumulation via a mocked EventSource ---

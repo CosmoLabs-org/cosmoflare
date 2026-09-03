@@ -130,20 +130,25 @@ export default function App() {
           onAccountChange={setSelected}
         />
         <div className="cf-body">
-          <aside className="cf-sidebar">
+          <nav className="cf-sidebar" aria-label="Views">
             {SIDEBAR_ITEMS.map((item) => (
               <button
                 key={item}
                 className={`cf-nav-item ${view === item ? "is-active" : ""}`}
+                aria-current={view === item ? "page" : undefined}
                 onClick={() => setView(item)}
               >
                 {item}
               </button>
             ))}
-          </aside>
+          </nav>
           <main className="cf-main">
             {view === "Dashboard" &&
-              (client ? <Dashboard client={client} profile={selected} /> : <p>Connecting to daemon…</p>)}
+              (client ? (
+                <Dashboard client={client} profile={selected} />
+              ) : (
+                <p role="status">Connecting to daemon…</p>
+              ))}
             {view === "Notifications" && (
               <Notifications items={notifications} unread={unread} onSeen={markSeen} />
             )}

@@ -1,6 +1,8 @@
 // App header: account switcher + the two health indicators. The health dots
-// carry `data-online` (string "true"/"false") so tests and a11y tooling can
-// assert state machine-readably.
+// carry `data-online` (string "true"/"false") so tests and tooling can assert
+// state machine-readably, plus an aria-label so screen readers announce the
+// state (data-* attributes never enter the accessibility tree, and `title`
+// never computes into the accessible name).
 
 export interface Account {
   name: string;
@@ -23,7 +25,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="cf-header">
-      <div className="cf-brand">⚡ Cosmoflare</div>
+      <h1 className="cf-brand">⚡ Cosmoflare</h1>
 
       {accounts.length > 1 ? (
         <select
@@ -62,12 +64,14 @@ function HealthDot({
   label: string;
   online: boolean;
 }) {
+  const state = online ? "online" : "offline";
   return (
     <span
       className={`cf-health-dot ${online ? "is-online" : "is-offline"}`}
       data-testid={testId}
       data-online={String(online)}
-      title={`${label}: ${online ? "online" : "offline"}`}
+      title={`${label}: ${state}`}
+      aria-label={`${label}: ${state}`}
     >
       <span className="cf-dot-mark" aria-hidden />
       {label}
