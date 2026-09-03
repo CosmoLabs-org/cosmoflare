@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -298,5 +299,79 @@ func TestWatcherOptions_CustomInterval(t *testing.T) {
 	})
 	if fw.Interval() != 500*time.Millisecond {
 		t.Errorf("interval = %v, want 500ms", fw.Interval())
+	}
+}
+
+// --- Unreadable paths must never look like deletions (BUG-028) ---
+
+func TestFileWatcher_Diff_UnreadableDirNeverDeleted(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod does not restrict directory reads on windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("running as root; chmod 000 does not block reads")
+	}
+
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "keep.txt"), []byte("keep"), 0644)
+	locked := filepath.Join(dir, "locked")
+	os.MkdirAll(locked, 0755)
+	os.WriteFile(filepath.Join(locked, "a.txt"), []byte("a"), 0644)
+	os.WriteFile(filepath.Join(locked, "b.txt"), []byte("b"), 0644)
+
+	fw, err := NewFileWatcher(dir, nil)
+	if err != nil {
+		t.Fatalf("NewFileWatcher() error: %v", err)
+	}
+
+	old, err := fw.Snapshot()
+	if err != nil {
+		t.Fatalf("initial Snapshot() error: %v", err)
+	}
+	if _, ok := old[filepath.Join("locked", "a.txt")]; !ok {
+		t.Fatal("precondition: initial snapshot must contain locked/a.txt")
+	}
+
+	// Simulate a permissions change: the subtree becomes unreadable.
+	if err := os.Chmod(locked, 0o000); err != nil {
+		t.Fatalf("chmod failed: %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(locked, 0o755) })
+
+	cur, err := fw.Snapshot()
+	if err != nil {
+		t.Fatalf("Snapshot() must not fail when only a subtree is unreadable: %v", err)
+	}
+
+	for _, c := range fw.Diff(old, cur) {
+		if c.Type == ChangeDeleted {
+			t.Errorf("Diff reported ChangeDeleted for %q: a path the scan could not read is unknown, not deleted", c.Path)
+		}
+	}
+}
+
+func TestFileWatcher_Snapshot_RootUnreadableReturnsError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod does not restrict directory reads on windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("running as root; chmod 000 does not block reads")
+	}
+
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "f.txt"), []byte("x"), 0644)
+
+	fw, err := NewFileWatcher(dir, nil)
+	if err != nil {
+		t.Fatalf("NewFileWatcher() error: %v", err)
+	}
+
+	if err := os.Chmod(dir, 0o000); err != nil {
+		t.Fatalf("chmod failed: %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(dir, 0o755) })
+
+	if _, err := fw.Snapshot(); err == nil {
+		t.Error("Snapshot() should return an error when the watch root itself cannot be read")
 	}
 }
