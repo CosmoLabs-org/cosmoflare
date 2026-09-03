@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
@@ -161,5 +165,74 @@ func TestGetRelativePath(t *testing.T) {
 	result := getRelativePath("/some/absolute/path")
 	if result == "" {
 		t.Error("getRelativePath returned empty string")
+	}
+}
+
+// --- BUG-034: --json mode must emit the JSON error envelope on config errors ---
+
+// captureStdout swaps os.Stdout for a pipe and returns the restore func and
+// the reader holding everything written after the swap.
+func captureStdout(t *testing.T) (*os.File, func()) {
+	t.Helper()
+	saved := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe failed: %v", err)
+	}
+	os.Stdout = w
+	return r, func() {
+		os.Stdout = saved
+		w.Close()
+	}
+}
+
+func TestEmitConfigError_JSONModeEmitsErrorEnvelope(t *testing.T) {
+	savedJSON := JSONOutput
+	defer func() { JSONOutput = savedJSON }()
+
+	JSONOutput = true
+	r, restore := captureStdout(t)
+	emitConfigError("Configuration error: %v", fmt.Errorf("Cloudflare API token is required. Set CLOUDFLARE_API_TOKEN environment variable or use --api-token flag"))
+	restore()
+
+	out, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("reading captured stdout failed: %v", err)
+	}
+
+	var resp OutputResponse
+	if err := json.Unmarshal(out, &resp); err != nil {
+		t.Fatalf("BUG-034 regression: stdout is not a parseable JSON error envelope: %v; raw output: %q", err, string(out))
+	}
+	if resp.Success {
+		t.Errorf("envelope success = true, want false")
+	}
+	if resp.Error == "" {
+		t.Errorf("envelope error field is empty, want the configuration error message; raw output: %q", string(out))
+	}
+	if !strings.Contains(resp.Error, "API token is required") {
+		t.Errorf("envelope error = %q, want it to contain the underlying validation message", resp.Error)
+	}
+}
+
+func TestEmitConfigError_TextModePrintsPlainMessage(t *testing.T) {
+	savedJSON := JSONOutput
+	defer func() { JSONOutput = savedJSON }()
+
+	JSONOutput = false
+	r, restore := captureStdout(t)
+	emitConfigError("Configuration error: %v", fmt.Errorf("token missing"))
+	restore()
+
+	out, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("reading captured stdout failed: %v", err)
+	}
+
+	if !strings.Contains(string(out), "Configuration error: token missing") {
+		t.Errorf("text-mode output = %q, want it to contain the plain error message", string(out))
+	}
+	if strings.Contains(string(out), `"success"`) {
+		t.Errorf("text-mode output unexpectedly contains a JSON envelope: %q", string(out))
 	}
 }
