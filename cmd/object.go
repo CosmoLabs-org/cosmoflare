@@ -1085,12 +1085,25 @@ func etagDisplay(etag string) string {
 	return etag
 }
 
+// projectConfigOptions returns client options that attach the project-level
+// configuration (guardrails) found in dir or any parent directory. A missing
+// config file is not an error: it yields no options, so guardrails are simply
+// inactive. This keeps upload guardrails (allowed_buckets, max_file_size,
+// blocked_keys) enforced on every upload performed through the CLI.
+func projectConfigOptions(dir string) []cosmoflare.ClientOption {
+	cfg, err := cosmoflare.LoadProjectConfig(dir)
+	if err != nil {
+		return nil
+	}
+	return []cosmoflare.ClientOption{cosmoflare.WithProjectConfig(cfg)}
+}
+
 // getAPIClient creates an R2 client using the pkg/cosmoflare library.
 func getAPIClient() (cosmoflare.R2Client, error) {
-	return cosmoflare.NewClient(
+	return cosmoflare.NewClient(append([]cosmoflare.ClientOption{
 		cosmoflare.WithAccountID(AccountID),
 		cosmoflare.WithAPIToken(APIToken),
-	)
+	}, projectConfigOptions(".")...)...)
 }
 
 func runObjectPresign(cmd *cobra.Command, args []string) error {

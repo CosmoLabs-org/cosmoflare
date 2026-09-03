@@ -369,8 +369,15 @@ func (s *SyncService) isUnchanged(local LocalFileInfo, remote ObjectInfo, checks
 }
 
 // isExcluded checks if a relative path matches any exclude glob patterns.
+// A pattern ending in "/" is a directory prefix: it excludes every path
+// nested under that directory, at any depth (e.g. ".git/" matches
+// ".git/objects/ab/cdef").
 func isExcluded(relPath string, excludes []string) bool {
 	for _, pattern := range excludes {
+		// Directory prefix match (pattern ends with "/")
+		if strings.HasSuffix(pattern, "/") && strings.HasPrefix(relPath, pattern) {
+			return true
+		}
 		// Match against the full relative path
 		if matched, _ := filepath.Match(pattern, relPath); matched {
 			return true

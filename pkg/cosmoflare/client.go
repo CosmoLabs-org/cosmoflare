@@ -56,6 +56,7 @@ type client struct {
 	apiToken   string
 	httpClient *http.Client
 	cfg        *clientConfig
+	guardrails *GuardrailChecker
 }
 
 // NewClient creates a new R2Client using functional options.
@@ -99,12 +100,20 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 		return nil, authError("NewClient", "failed to create Cloudflare API client", err)
 	}
 
+	// Guardrails are only active when a project config is attached; a nil
+	// checker enforces nothing (previous behavior for library callers).
+	var guardrails *GuardrailChecker
+	if cfg.projectCfg != nil {
+		guardrails = NewGuardrailChecker(cfg.projectCfg)
+	}
+
 	c := &client{
 		cf:         cfAPI,
 		accountID:  cfg.accountID,
 		apiToken:   cfg.apiToken,
 		httpClient: httpClient,
 		cfg:        cfg,
+		guardrails: guardrails,
 	}
 
 	// S3 client for object operations

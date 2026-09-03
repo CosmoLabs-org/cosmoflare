@@ -47,6 +47,20 @@ var (
 	syncFlagProgress bool
 )
 
+// defaultSyncExcludes are applied when the user provides no --exclude. They
+// keep VCS internals, environment files, and OS noise out of uploads by
+// default; explicit --exclude values REPLACE them (rsync-like semantics).
+var defaultSyncExcludes = []string{".git/", ".env", ".env.*", ".DS_Store"}
+
+// effectiveSyncExcludes returns the user's excludes when provided, otherwise
+// the default set. An explicit exclude list replaces the defaults entirely.
+func effectiveSyncExcludes(user []string) []string {
+	if len(user) > 0 {
+		return user
+	}
+	return defaultSyncExcludes
+}
+
 var syncUpCmd = &cobra.Command{
 	Use:   "up <local-dir> <bucket>[/prefix]",
 	Short: "Upload local directory to R2 bucket",
@@ -100,14 +114,14 @@ func init() {
 
 	// Shared flags for sync up
 	syncUpCmd.Flags().BoolVar(&syncFlagDelete, "delete", false, "Delete destination files not present at source")
-	syncUpCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated)")
+	syncUpCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated; replaces the default excludes .git/, .env, .env.*, .DS_Store)")
 	syncUpCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
 	syncUpCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime")
 	syncUpCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
 
 	// Shared flags for sync down
 	syncDownCmd.Flags().BoolVar(&syncFlagDelete, "delete", false, "Delete local files not present in bucket")
-	syncDownCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated)")
+	syncDownCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated; replaces the default excludes .git/, .env, .env.*, .DS_Store)")
 	syncDownCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
 	syncDownCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime")
 	syncDownCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
@@ -127,8 +141,12 @@ func parseBucketPrefix(input string) (bucket, prefix string) {
 	return
 }
 
-// scanLocalDir walks a directory and returns LocalFileInfo for each regular file.
-func scanLocalDir(dir string, checksum bool) ([]cosmoflare.LocalFileInfo, error) {
+// scanLocalDir walks a directory and returns LocalFileInfo for each regular
+// file. Paths matching an exclude pattern are skipped: globs match the full
+// relative path or the filename, and a pattern ending in "/" skips everything
+// nested under that directory (e.g. ".git/"). A nil exclude list keeps every
+// file; callers decide whether defaults apply (see effectiveSyncExcludes).
+func scanLocalDir(dir string, checksum bool, exclude []string) ([]cosmoflare.LocalFileInfo, error) {
 	var files []cosmoflare.LocalFileInfo
 
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -151,6 +169,10 @@ func scanLocalDir(dir string, checksum bool) ([]cosmoflare.LocalFileInfo, error)
 		// Normalize to forward slashes for R2 key compatibility
 		relPath = filepath.ToSlash(relPath)
 
+		if isLocalPathExcluded(relPath, exclude) {
+			return nil
+		}
+
 		lfi := cosmoflare.LocalFileInfo{
 			RelPath: relPath,
 			Size:    info.Size(),
@@ -170,6 +192,25 @@ func scanLocalDir(dir string, checksum bool) ([]cosmoflare.LocalFileInfo, error)
 	})
 
 	return files, err
+}
+
+// isLocalPathExcluded mirrors the exclude semantics used by the sync planner
+// (pkg/cosmoflare): glob against the full relative path or the filename, plus
+// directory-prefix matching for patterns ending in "/" so ".git/" excludes
+// nested content like ".git/objects/ab/cdef".
+func isLocalPathExcluded(relPath string, excludes []string) bool {
+	for _, pattern := range excludes {
+		if strings.HasSuffix(pattern, "/") && strings.HasPrefix(relPath, pattern) {
+			return true
+		}
+		if matched, _ := filepath.Match(pattern, relPath); matched {
+			return true
+		}
+		if matched, _ := filepath.Match(pattern, filepath.Base(relPath)); matched {
+			return true
+		}
+	}
+	return false
 }
 
 // md5File computes the MD5 hex digest of a file.
@@ -207,14 +248,16 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%q is not a directory", localDir)
 	}
 
-	// Scan local files
-	localFiles, err := scanLocalDir(localDir, syncFlagChecksum)
+	// Scan local files (default excludes keep sensitive files out unless
+	// the user passes explicit --exclude values, which replace the defaults)
+	excludes := effectiveSyncExcludes(syncFlagExclude)
+	localFiles, err := scanLocalDir(localDir, syncFlagChecksum, excludes)
 	if err != nil {
 		return fmt.Errorf("failed to scan local directory: %w", err)
 	}
 
-	// Create R2-backed storage backend
-	backend, err := newR2StorageBackend(AccountID, APIToken)
+	// Create R2-backed storage backend with project guardrails attached
+	backend, err := newR2StorageBackend(AccountID, APIToken, projectConfigOptions(localDir)...)
 	if err != nil {
 		return fmt.Errorf("failed to create storage backend: %w", err)
 	}
@@ -229,7 +272,7 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 		LocalDir:   localDir,
 		LocalFiles: localFiles,
 		Delete:     syncFlagDelete,
-		Exclude:    syncFlagExclude,
+		Exclude:    excludes,
 		Include:    syncFlagInclude,
 		Checksum:   syncFlagChecksum,
 	})
@@ -277,17 +320,19 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 	bucket, prefix := parseBucketPrefix(args[0])
 	localDir := args[1]
 
-	// Scan local files if directory exists
+	// Scan local files if directory exists (same exclude semantics as sync up,
+	// so default-skipped files are neither compared nor considered for deletion)
+	excludes := effectiveSyncExcludes(syncFlagExclude)
 	var localFiles []cosmoflare.LocalFileInfo
 	if info, err := os.Stat(localDir); err == nil && info.IsDir() {
-		localFiles, err = scanLocalDir(localDir, syncFlagChecksum)
+		localFiles, err = scanLocalDir(localDir, syncFlagChecksum, excludes)
 		if err != nil {
 			return fmt.Errorf("failed to scan local directory: %w", err)
 		}
 	}
 
-	// Create R2-backed storage backend
-	backend, err := newR2StorageBackend(AccountID, APIToken)
+	// Create R2-backed storage backend with project guardrails attached
+	backend, err := newR2StorageBackend(AccountID, APIToken, projectConfigOptions(localDir)...)
 	if err != nil {
 		return fmt.Errorf("failed to create storage backend: %w", err)
 	}
@@ -302,7 +347,7 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 		LocalDir:   localDir,
 		LocalFiles: localFiles,
 		Delete:     syncFlagDelete,
-		Exclude:    syncFlagExclude,
+		Exclude:    excludes,
 		Include:    syncFlagInclude,
 		Checksum:   syncFlagChecksum,
 	})
@@ -414,11 +459,11 @@ type r2StorageBackend struct {
 	client cosmoflare.R2Client
 }
 
-func newR2StorageBackend(accountID, apiToken string) (*r2StorageBackend, error) {
-	client, err := cosmoflare.NewClient(
+func newR2StorageBackend(accountID, apiToken string, opts ...cosmoflare.ClientOption) (*r2StorageBackend, error) {
+	client, err := cosmoflare.NewClient(append([]cosmoflare.ClientOption{
 		cosmoflare.WithAccountID(accountID),
 		cosmoflare.WithAPIToken(apiToken),
-	)
+	}, opts...)...)
 	if err != nil {
 		return nil, err
 	}

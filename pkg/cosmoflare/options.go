@@ -22,6 +22,7 @@ type clientConfig struct {
 	cacheControl bool
 	auditLog     string
 	dryRun       bool
+	projectCfg   *ProjectConfig
 }
 
 // WithProfile sets the named profile to load from ~/.r2go2/config.yaml.
@@ -80,6 +81,16 @@ func WithDryRun(enabled bool) ClientOption {
 // WithAccountID sets the Cloudflare account ID directly.
 func WithAccountID(id string) ClientOption {
 	return func(c *clientConfig) { c.accountID = id }
+}
+
+// WithProjectConfig attaches the project-level configuration
+// (.cosmoflare.yaml / .r2go2.yaml) to the client. When the config declares
+// guardrail rules (allowed_buckets, max_file_size, blocked_keys), every
+// upload through this client is validated against them and rejected with an
+// error before any data is sent. A nil config or a config with no guardrail
+// rules enforces nothing.
+func WithProjectConfig(cfg *ProjectConfig) ClientOption {
+	return func(c *clientConfig) { c.projectCfg = cfg }
 }
 
 // WithAPIToken sets the Cloudflare API token directly.

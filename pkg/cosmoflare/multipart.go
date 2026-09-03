@@ -221,6 +221,9 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 	if reader == nil {
 		return nil, validationError("ResumeMultipartUpload", "reader is required")
 	}
+	if err := c.enforceUploadGuardrails("ResumeMultipartUpload", bucket, key, size); err != nil {
+		return nil, err
+	}
 
 	// Load saved state
 	state, err := LoadUploadState(bucket, key)
@@ -388,6 +391,9 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 	}
 	if reader == nil {
 		return nil, validationError("ResumableMultipartUpload", "reader is required")
+	}
+	if err := c.enforceUploadGuardrails("ResumableMultipartUpload", bucket, key, size); err != nil {
+		return nil, err
 	}
 
 	cfg := &uploadConfig{
