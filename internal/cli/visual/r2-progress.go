@@ -189,7 +189,9 @@ func (rup *R2UploadProgress) GetActiveUpload() *R2UploadState {
 func (rup *R2UploadProgress) StartLiveDisplay() {
 	m := NewR2ProgressModel(rup)
 	program := tea.NewProgram(m)
+	rup.mu.Lock()
 	rup.program = program
+	rup.mu.Unlock()
 
 	go func() {
 		if _, err := program.Run(); err != nil {
@@ -198,11 +200,20 @@ func (rup *R2UploadProgress) StartLiveDisplay() {
 	}()
 }
 
+// liveProgram returns the bubbletea program driving the live display, or nil
+// if StartLiveDisplay has not created one yet. The program field is guarded
+// by mu; all access must go through this accessor (BUG-030).
+func (rup *R2UploadProgress) liveProgram() *tea.Program {
+	rup.mu.RLock()
+	defer rup.mu.RUnlock()
+	return rup.program
+}
+
 // StopLiveDisplay stops the live progress display
 func (rup *R2UploadProgress) StopLiveDisplay() {
-	if rup.program != nil {
+	if program := rup.liveProgram(); program != nil {
 		rup.cancel()
-		rup.program.Quit()
+		program.Quit()
 	}
 }
 

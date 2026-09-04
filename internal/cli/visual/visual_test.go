@@ -1964,11 +1964,11 @@ func TestStopLiveDisplay_WithProgram(t *testing.T) {
 
 	// Wait for program to be set
 	deadline := time.Now().Add(2 * time.Second)
-	for time.Now().Before(deadline) && rp.program == nil {
+	for time.Now().Before(deadline) && rp.liveProgram() == nil {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	if rp.program != nil {
+	if rp.liveProgram() != nil {
 		// Program was created — test the non-nil StopLiveDisplay path
 		assert.NotPanics(t, func() {
 			rp.StopLiveDisplay()
