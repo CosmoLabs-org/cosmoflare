@@ -1,11 +1,11 @@
 id: BUG-032
 type: bug
 created_at: 2026-08-31T03:56:17.52192+04:00
-updated_at: 2026-08-31T03:56:19.63012+04:00
+updated_at: 2026-09-05T04:40:43.94442+04:00
 source: local
 ulid: 01M1AHMEQTTF0SPSRKXHFE9FKQ
 severity: high
-status: open
+status: closed
 origin:
     session: 36
 title: All installer scripts download from dead repo — curl|bash returns 404
@@ -15,3 +15,6 @@ affected_files:
     - install.sh
     - install.ps1
     - install-menu.sh
+revisions:
+    - date: "2026-09-05"
+      action: closed

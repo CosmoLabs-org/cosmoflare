@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-05T04:27:58.237448+04:00
+last_updated: 2026-09-05T04:40:43.947129+04:00
 next_bug_id: 39
 next_feat_id: 9
 next_task_id: 5
@@ -197,7 +197,7 @@ issues:
       created_at: 2026-08-31T03:56:12.659832+04:00
     - id: BUG-032
       type: bug
-      status: open
+      status: closed
       title: All installer scripts download from dead repo — curl|bash returns 404
       severity: high
       created_at: 2026-08-31T03:56:17.52192+04:00
