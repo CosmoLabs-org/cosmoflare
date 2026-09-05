@@ -7,6 +7,8 @@ requires_reading:
     - docs/audit/latest/brief.md
     - docs/audit/latest/action-plan.md
 schema_version: 1
+supersedes: "docs/prompts/2026-08-31-cosmoflare-audit-followup.md"
+goals_total: 6
 ---
 # Cosmoflare — Next Session Continuation (2026-09-05)
 

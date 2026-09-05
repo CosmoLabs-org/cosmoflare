@@ -1,8 +1,10 @@
 ---
-status: PENDING
+status: SUPERSEDED
 type: audit-followup
 priority: high
 created: 2026-08-31T03:15:00-03:00
+superseded_by: "docs/prompts/2026-09-05-next-session.md"
+completed: "2026-09-05T20:25:51+04:00"
 ---
 # Audit Followup: Cosmoflare 2026-08-31
 
