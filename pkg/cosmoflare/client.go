@@ -61,9 +61,16 @@ type client struct {
 
 // NewClient creates a new R2Client using functional options.
 //
-// By default it reads credentials from environment variables
-// (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN). Use WithProfile,
-// WithAccountID, WithAPIToken, or WithCredentials to override.
+// Credentials are resolved with "options > env > profile" precedence:
+// WithAccountID/WithAPIToken first, then the CLOUDFLARE_ACCOUNT_ID /
+// CLOUDFLARE_API_TOKEN environment variables, then — only when an account
+// ID or API token is still missing — the named profile from
+// ~/.r2go2/config.yaml selected via WithProfile.
+//
+// Both transports (the Cloudflare API client and the R2 S3 client) issue
+// requests through a single HTTP client: the one given via WithHTTPClient,
+// or one carrying the WithTimeout timeout (default 30s) when no explicit
+// client was provided.
 func NewClient(opts ...ClientOption) (R2Client, error) {
 	cfg := &clientConfig{
 		region:     "auto",
@@ -81,6 +88,18 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 	if cfg.apiToken == "" {
 		cfg.apiToken = os.Getenv("CLOUDFLARE_API_TOKEN")
 	}
+	if cfg.profile != "" && (cfg.accountID == "" || cfg.apiToken == "") {
+		profile, err := loadNamedProfile(cfg.profile)
+		if err != nil {
+			return nil, err
+		}
+		if cfg.accountID == "" {
+			cfg.accountID = profile.AccountID
+		}
+		if cfg.apiToken == "" {
+			cfg.apiToken = profile.APIToken
+		}
+	}
 	if cfg.accountID == "" {
 		return nil, validationError("NewClient", "CLOUDFLARE_ACCOUNT_ID is required (set env or use WithAccountID)")
 	}
@@ -88,14 +107,14 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 		return nil, validationError("NewClient", "CLOUDFLARE_API_TOKEN is required (set env or use WithAPIToken)")
 	}
 
-	// HTTP client
+	// HTTP client shared by both transports.
 	httpClient := cfg.httpClient
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: cfg.timeout}
 	}
 
 	// Cloudflare API client
-	cfAPI, err := cloudflare.NewWithAPIToken(cfg.apiToken)
+	cfAPI, err := cloudflare.NewWithAPIToken(cfg.apiToken, cloudflare.HTTPClient(httpClient))
 	if err != nil {
 		return nil, authError("NewClient", "failed to create Cloudflare API client", err)
 	}
@@ -136,6 +155,7 @@ func (c *client) initS3() error {
 
 	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(),
 		awsconfig.WithRegion(c.cfg.region),
+		awsconfig.WithHTTPClient(c.httpClient),
 		awsconfig.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
 			if accessKey != "" && secretKey != "" {
 				return aws.Credentials{
@@ -163,6 +183,23 @@ func (c *client) initS3() error {
 }
 
 func (c *client) AccountID() string { return c.accountID }
+
+// loadNamedProfile resolves a profile by name from the machine config
+// (~/.r2go2/config.yaml). It returns a validation error naming the profile
+// when the config cannot be read or the profile does not exist.
+func loadNamedProfile(name string) (*ProfileConfig, error) {
+	mc, err := LoadMachineConfig()
+	if err != nil {
+		return nil, validationError("NewClient",
+			fmt.Sprintf("failed to read machine config for profile %q: %v", name, err))
+	}
+	profile, err := mc.GetProfile(name)
+	if err != nil {
+		return nil, validationError("NewClient",
+			fmt.Sprintf("profile %q not found in ~/.r2go2/config.yaml (create it with `cosmoflare account add` or use WithAccountID/WithAPIToken)", name))
+	}
+	return profile, nil
+}
 
 func (c *client) TestConnection(ctx context.Context) error {
 	if c.cf == nil {

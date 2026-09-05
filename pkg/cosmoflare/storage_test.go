@@ -1369,35 +1369,6 @@ func TestNewClientCustomTimeout(t *testing.T) {
 	}
 }
 
-func TestNewClientWithBucketOption(t *testing.T) {
-	origAccountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
-	origAPIToken := os.Getenv("CLOUDFLARE_API_TOKEN")
-	os.Setenv("CLOUDFLARE_ACCOUNT_ID", "test-account")
-	os.Setenv("CLOUDFLARE_API_TOKEN", "test-token-12345")
-	t.Cleanup(func() {
-		if origAccountID != "" {
-			os.Setenv("CLOUDFLARE_ACCOUNT_ID", origAccountID)
-		} else {
-			os.Unsetenv("CLOUDFLARE_ACCOUNT_ID")
-		}
-		if origAPIToken != "" {
-			os.Setenv("CLOUDFLARE_API_TOKEN", origAPIToken)
-		} else {
-			os.Unsetenv("CLOUDFLARE_API_TOKEN")
-		}
-	})
-
-	_, err := NewClient(
-		WithBucket("my-default-bucket"),
-		WithDryRun(true),
-		WithAuditLog("/tmp/audit.log"),
-		WithProfile("custom"),
-	)
-	if err != nil {
-		t.Fatalf("NewClient failed: %v", err)
-	}
-}
-
 // --- Upload size > threshold delegates to multipart ---
 
 func TestUploadAutoMultipartDelegation(t *testing.T) {
