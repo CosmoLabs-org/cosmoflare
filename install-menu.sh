@@ -141,6 +141,132 @@ show_main_menu() {
     echo -e "${DIM}Enter choice [1-5]:${NC} "
 }
 
+# Check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Detect OS and architecture
+detect_os_arch() {
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+    ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
+
+    case $ARCH in
+        x86_64|amd64)
+            ARCH="amd64"
+            ;;
+        arm64|aarch64)
+            ARCH="arm64"
+            ;;
+        armv7l)
+            ARCH="armv7"
+            ;;
+        *)
+            error_msg "Unsupported architecture: $ARCH"
+            return 1
+            ;;
+    esac
+
+    info_msg "Detected platform: $OS-$ARCH"
+}
+
+# Report an unavailable/unusable checksums file and refuse to continue
+# (fail-closed policy: never install an unverified binary)
+checksums_fail() {
+    error_msg "Checksums file unavailable: $1"
+    warning_msg "Refusing to install an unverified binary (fail-closed policy)."
+    rm -f "$CHECKSUMS_FILE"
+}
+
+# Download the checksums file published alongside the release assets
+download_checksums() {
+    local version="$1"
+
+    CHECKSUMS_FILE="checksums-sha256.txt"
+    CHECKSUMS_URL="https://github.com/CosmoLabs-org/cosmoflare/releases/download/v$version/$CHECKSUMS_FILE"
+
+    print_step "Downloading checksums file..."
+
+    if command_exists curl; then
+        if ! curl -sSfL -o "$CHECKSUMS_FILE" "$CHECKSUMS_URL"; then
+            checksums_fail "$CHECKSUMS_URL"
+            return 1
+        fi
+    elif command_exists wget; then
+        if ! wget -qO "$CHECKSUMS_FILE" "$CHECKSUMS_URL"; then
+            checksums_fail "$CHECKSUMS_URL"
+            return 1
+        fi
+    else
+        error_msg "Neither curl nor wget is available"
+        return 1
+    fi
+
+    if [ ! -s "$CHECKSUMS_FILE" ]; then
+        checksums_fail "$CHECKSUMS_URL returned an empty file"
+        return 1
+    fi
+
+    success_msg "Downloaded: $CHECKSUMS_FILE"
+    return 0
+}
+
+# Verify the SHA256 of a downloaded file against the published checksums.
+# Fail-closed: deletes the file and returns 1 on a missing checksums file,
+# a missing entry, a hash mismatch, or when no sha256 tool is available.
+# The caller must abort the install on a nonzero return.
+verify_checksum() {
+    local file="$1"
+    local asset="$2"
+    local checksums_file="$3"
+    local expected=""
+    local actual=""
+
+    print_step "Verifying SHA256 checksum..."
+
+    if [ ! -s "$checksums_file" ]; then
+        error_msg "Checksums file missing or empty: $checksums_file"
+        rm -f "$file"
+        return 1
+    fi
+
+    # Locate the entry for this release asset. sha256sum format is
+    # "<hash>  <filename>", with an optional "*" binary-mode marker.
+    expected=$(awk -v f="$asset" '{ name = $2; sub(/^\*/, "", name); if (name == f) { print $1; exit } }' "$checksums_file")
+    expected=$(printf '%s' "$expected" | tr '[:upper:]' '[:lower:]')
+
+    if [ -z "$expected" ]; then
+        error_msg "No checksum entry for '$asset' in $(basename "$checksums_file")"
+        warning_msg "Refusing to install an unverified binary (fail-closed policy)."
+        rm -f "$file"
+        return 1
+    fi
+
+    if command_exists shasum; then
+        actual=$(shasum -a 256 "$file" | awk '{print $1}')
+    elif command_exists sha256sum; then
+        actual=$(sha256sum "$file" | awk '{print $1}')
+    else
+        error_msg "Neither shasum nor sha256sum is available for checksum verification"
+        warning_msg "Refusing to install an unverified binary (fail-closed policy)."
+        rm -f "$file"
+        return 1
+    fi
+
+    actual=$(printf '%s' "$actual" | tr '[:upper:]' '[:lower:]')
+
+    if [ "$expected" != "$actual" ]; then
+        error_msg "Checksum mismatch for '$asset' - deleting unverified binary"
+        info_msg "Expected: $expected"
+        info_msg "Actual:   $actual"
+        rm -f "$file"
+        return 1
+    fi
+
+    success_msg "Checksum verified: $asset"
+    return 0
+}
+
 # Download from GitHub
 download_from_github() {
     show_header
@@ -168,6 +294,11 @@ download_from_github() {
     # Detect platform
     detect_os_arch
 
+    # Download the checksums file for verification (fail-closed)
+    if ! download_checksums "$VERSION"; then
+        return 1
+    fi
+
     # Download binary
     print_step "Downloading R2Go2 binary..."
     FILENAME="${BINARY_NAME}-${OS}-${ARCH}"
@@ -185,6 +316,12 @@ download_from_github() {
 
     if [ ! -f "$BINARY_NAME" ]; then
         error_msg "Download failed. Please check your internet connection."
+        return 1
+    fi
+
+    # Verify integrity before the binary is installed or made executable
+    if ! verify_checksum "$BINARY_NAME" "$FILENAME" "$CHECKSUMS_FILE"; then
+        rm -f "$CHECKSUMS_FILE"
         return 1
     fi
 
