@@ -3,7 +3,7 @@ ulid: 01M1AF1KXMS0BWCBN4EDXJRDM6
 id: IDEA-049
 title: Restore the binary release channel and ship first GitHub Release
 created: "2026-08-31T03:11:03.092324+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - distribution
     - release
+resolution:
+    reason: implemented
+    date: "2026-09-05T21:35:00.832744+04:00"
 ---
+
+# Restore the binary release channel and ship first GitHub Release
 
 # Restore the binary release channel and ship first GitHub Release
 

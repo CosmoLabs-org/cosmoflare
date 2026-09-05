@@ -22,16 +22,13 @@ Read these first:
 
 ## Carry-over Goals (priority order)
 
-### 1. [GOAL] Verify the first-ever GitHub Release
+### 1. [DONE 2026-09-05] First GitHub Release — shipped locally
 
-If billing is fixed, run:
-
-```
-gh run rerun 33934576121 --repo CosmoLabs-org/cosmoflare
-```
-
-and watch it complete (tests, cross-compile, version assertion, checksums, publish).
-If still blocked, it remains a billing action item — do **not** retry-loop.
+v0.19.0 published with 6 assets (5 binaries + checksums) via `gh release create`
+from the maintainer machine. **CI is permanently disabled on this repo**
+(all 3 workflows `disabled_manually`) — releases are ALWAYS local:
+cross-compile 5 platforms with version ldflags → `shasum -a 256` → assert
+`--version` → `gh release create <tag> dist/* --notes`. Never wait on Actions.
 
 ### 2. [GOAL] BUG-035 (last open audit bug)
 
