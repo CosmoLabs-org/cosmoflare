@@ -3,7 +3,7 @@ ulid: 01M1AF1EWD03RXB14DPCP3X5R6
 id: IDEA-048
 title: Re-scope FEAT-008 event bus to thin bridge over shipped sseHub
 created: "2026-08-31T03:10:57.93397+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - work-completion
     - desktop
+resolution:
+    reason: implemented
+    date: "2026-09-05T04:09:02.10003+04:00"
 ---
+
+# Re-scope FEAT-008 event bus to thin bridge over shipped sseHub
 
 # Re-scope FEAT-008 event bus to thin bridge over shipped sseHub
 
