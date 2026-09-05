@@ -111,3 +111,15 @@ Each bug fix followed the same gate: failing test written first (TDD), fix imple
 2. **Final audit bug (14th)** — carry to next session.
 3. **IDEA-049 (release channel)** — sole surviving idea from triage; schedule for roadmap.
 4. **FEAT-008** — thin `TriggerAlert → sseHub` bridge per re-scope.
+
+---
+
+## Continued Work — No-CI Pivot & Local Release (same session, post-finalize)
+
+User directive after the first session-end pass: **"NO CI please we dont do that anymore."** This retired the billing blocker entirely and changed the release model:
+
+- All three GitHub Actions workflows (CI, Release, Test) verified `disabled_manually` — CI is permanently off for this repo.
+- **v0.19.0 published locally**: cross-compiled 5 platforms with version ldflags, `shasum -a 256` → `checksums-sha256.txt`, asserted the binary reports `Cosmoflare version v0.19.0`, then `gh release create` — **the first GitHub Release in the repository's history**, 6 assets verified via API. The 19-attempt CI failure streak ends not with a green workflow but with no workflow at all.
+- Release model going forward (recorded in project memory `cosmoflare-no-ci-local-releases` and the continuation prompt): build on the machine → checksum → assert → `gh release create`. Verification gates run locally (`go test -race`, `ccs smoke`).
+- Continuation prompt Goal 1 marked DONE and rewritten as the standing local-release SOP; IDEA-049 archived as implemented — the idea queue is now empty.
+- Next-session carry-overs unchanged: BUG-035 (MCP generation), launch readiness (repo public, README regen, Homebrew), FEAT-008 bridge, ROAD-085/086 remainders, `/independent-review` backlog.
