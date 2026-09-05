@@ -4,6 +4,7 @@ created: 2026-06-07T04:30:00-03:00
 status: approved
 roadmap: ROAD-002
 origin: ROAD-002
+plan_ref: docs/planning-mode/2026-06-08-road002-tui-object-browser.md
 last_reviewed: 2026-06-08T00:30:00-03:00
 last_review_ref: docs/independent-reviews/2026-06-08T00-30-00-road002-tui-object-browser.md
 last_review_findings: 7

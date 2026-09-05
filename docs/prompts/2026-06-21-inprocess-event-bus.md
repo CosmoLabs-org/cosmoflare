@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-06-21-inprocess-event-bus.md
 branch: master
+completed: "2026-09-03T23:56:36+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -12,17 +13,22 @@ covers_plan_deliverables:
     - P-02
     - P-03
     - P-04
-created: "2026-06-21"
+created: "2026-06-21T12:00:00+04:00"
+goals_completed: 0
+goals_total: 4
 id: P-2026-06-21-inprocess-event-bus
 plan_ref: docs/planning-mode/2026-06-21-inprocess-event-bus.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-06-21-inprocess-event-bus.md
     - docs/planning-mode/2026-06-21-inprocess-event-bus.md
 schema_version: 1
-status: PENDING
+status: ABANDONED
+tags: []
 title: In-process event bus — full implementation (ROAD-080)
 ---
+
 # In-process event bus — full implementation (ROAD-080)
 
 ## BEFORE Starting — Required Reading

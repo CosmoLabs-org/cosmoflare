@@ -4,6 +4,7 @@ created: 2026-06-08T02:00:00-03:00
 status: approved
 roadmap: ROAD-007
 origin: ROAD-007
+plan_ref: docs/planning-mode/2026-06-08-road007-s3-migration-resume.md
 last_reviewed: 2026-06-08T03:00:00-03:00
 last_review_ref: docs/independent-reviews/2026-06-08T03-00-00-road007-s3-migration-resume.md
 last_review_findings: 5

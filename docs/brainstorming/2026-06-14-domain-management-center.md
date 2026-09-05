@@ -8,6 +8,7 @@ status: DRAFT
 priority: high
 title: "Domain Management Center — TUI Dashboard, Redirect Visibility, Registrar Overlay"
 origin: "/brainplan"
+plan_ref: docs/planning-mode/2026-06-14-domain-management-center.md
 tags: [domains, tui, redirects, registrar, design]
 deliverables:
   - id: BR-01

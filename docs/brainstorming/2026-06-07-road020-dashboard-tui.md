@@ -4,6 +4,7 @@ created: 2026-06-07T02:30:00-03:00
 status: approved
 roadmap: ROAD-020
 origin: ROAD-020
+plan_ref: docs/planning-mode/2026-06-07-road020-dashboard-tui.md
 last_reviewed: 2026-06-07T03:00:00-03:00
 last_review_ref: docs/independent-reviews/2026-06-07T03-00-00-road020-dashboard-tui.md
 last_review_findings: 6

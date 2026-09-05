@@ -33,7 +33,7 @@ toolchain is present: go 1.26, cargo, bun, node.
 
 ## Goals
 
-### [ ] G-01 BUG-023 — Rust handshake-read loop can exceed HANDSHAKE_TIMEOUT
+### [x] G-01 BUG-023 — Rust handshake-read loop can exceed HANDSHAKE_TIMEOUT
 **Model:** sonnet — bounded fix in one file. In `desktop/src-tauri/src/daemon.rs`
 `spawn_and_handshake`, the `while Instant::now() < deadline` loop only re-checks
 the deadline between `rx.recv().await` calls; `recv()` has no timeout, so a
@@ -43,7 +43,7 @@ feature already enabled); on elapsed, kill the child and return HandshakeTimeout
 Verify with `cargo check --manifest-path desktop/src-tauri/Cargo.toml` (build the
 host sidecar first: `bash desktop/scripts/build-sidecar.sh --host`).
 
-### [ ] G-02 BUG-024 — scope the Tauri shell capability to the sidecar
+### [x] G-02 BUG-024 — scope the Tauri shell capability to the sidecar
 **Model:** sonnet — needs the exact Tauri v2 shell-sidecar permission syntax.
 `desktop/src-tauri/capabilities/default.json` grants broad `shell:default`;
 replace it with a permission scoped to only the `cosmoflare` sidecar
@@ -51,7 +51,7 @@ replace it with a permission scoped to only the `cosmoflare` sidecar
 what the daemon spawn needs. Re-verify the sidecar still spawns. Security-relevant
 for the paid build.
 
-### [ ] G-03 BUG-022 — serve graceful Shutdown can hang with an SSE client
+### [x] G-03 BUG-022 — serve graceful Shutdown can hang with an SSE client
 **Model:** sonnet — touches `cmd/serve.go` + `internal/server/sse.go`.
 `httpServer.Shutdown(context.Background())` waits indefinitely for the long-lived
 SSE handler. Pass a bounded context (e.g. 5s) to Shutdown AND/OR have the SSE

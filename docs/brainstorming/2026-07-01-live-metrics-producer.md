@@ -6,6 +6,7 @@ title: "Live metrics producer for the SSE metrics channel (IDEA-037)"
 status: validated
 tags: [desktop, daemon, sse, metrics, polling]
 related_issues: [IDEA-037, ROAD-080]
+plan_ref: docs/planning-mode/2026-07-01-live-metrics-producer.md
 deliverables:
   - id: BR-01
     title: "Decision: hybrid server-side polling with subscriber gating"

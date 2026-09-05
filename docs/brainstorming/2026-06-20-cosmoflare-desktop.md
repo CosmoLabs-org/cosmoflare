@@ -6,6 +6,7 @@ status: APPROVED
 priority: high
 origin: "/brainplan"
 roadmap_ref: ROAD-063
+plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 title: "Cosmoflare Desktop (Tauri) — v1 Design"
 tags: [desktop, tauri, daemon, react, notifications, dashboard]
 deliverables:

@@ -1,22 +1,33 @@
 ---
-created: "2026-06-21T06:05:00-03:00"
-updated: "2026-06-21T06:05:00-03:00"
-status: PENDING
-priority: high
-branch: master
-title: "In-process event bus — implementation plan (ROAD-080)"
-roadmap_ref: ROAD-080
 brainstorm_ref: docs/brainstorming/2026-06-21-inprocess-event-bus.md
-tags: [plan, infra, events, notifications, ROAD-080]
+branch: master
+completed: "2026-09-03T23:56:36+04:00"
+created: "2026-06-21T06:05:00-03:00"
 deliverables:
-  - id: P-01
-    title: "internal/events package: Bus (Publish/Subscribe, drop-on-full, concurrent-safe) + tests"
-  - id: P-02
-    title: "webhook.Manager: optional nil-safe bus, TriggerAlert publishes to it before outbound + test"
-  - id: P-03
-    title: "internal/server: Server.SubscribeBus forwards bus events to the SSE topic + test"
-  - id: P-04
-    title: "cmd/serve.go: construct the bus, wire daemon subscription + Manager producer"
+    - id: P-01
+      title: 'internal/events package: Bus (Publish/Subscribe, drop-on-full, concurrent-safe) + tests'
+    - id: P-02
+      title: 'webhook.Manager: optional nil-safe bus, TriggerAlert publishes to it before outbound + test'
+    - id: P-03
+      title: 'internal/server: Server.SubscribeBus forwards bus events to the SSE topic + test'
+    - id: P-04
+      title: 'cmd/serve.go: construct the bus, wire daemon subscription + Manager producer'
+goals_completed: 0
+goals_total: 19
+priority: high
+related_prompts: []
+requires_reading: []
+roadmap_ref: ROAD-080
+schema_version: 1
+status: ABANDONED
+tags:
+    - plan
+    - infra
+    - events
+    - notifications
+    - ROAD-080
+title: In-process event bus — implementation plan (ROAD-080)
+updated: "2026-06-21T06:05:00-03:00"
 ---
 
 # In-Process Event Bus Implementation Plan

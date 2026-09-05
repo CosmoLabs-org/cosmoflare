@@ -6,6 +6,7 @@ priority: high
 branch: master
 title: "In-process event bus — real-time notification sourcing (ROAD-080)"
 roadmap_ref: ROAD-080
+plan_ref: docs/planning-mode/2026-06-21-inprocess-event-bus.md
 related_ideas:
   - IDEA-037   # SSE metrics channel has no producer (out of scope here)
   - IDEA-038   # watchdog startup-only (out of scope here)
