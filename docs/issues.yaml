@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-04T04:02:58.872984+04:00
+last_updated: 2026-09-05T04:27:58.237448+04:00
 next_bug_id: 39
 next_feat_id: 9
 next_task_id: 5
@@ -179,7 +179,7 @@ issues:
       created_at: 2026-08-31T03:55:56.877158+04:00
     - id: BUG-029
       type: bug
-      status: open
+      status: closed
       title: 6 of 14 exported client options are silent no-ops (WithTimeout = hang risk)
       severity: high
       created_at: 2026-08-31T03:56:02.911278+04:00
