@@ -19,14 +19,14 @@ import (
 
 // Build information
 var (
-	AppVersion   = "dev"
-	BuildTime    = "unknown"
-	GitCommit    = "unknown"
-	AccountID    string
-	APIToken     string
-	DryRun       bool
-	JSONOutput   bool
-	Verbose      bool
+	AppVersion = "dev"
+	BuildTime  = "unknown"
+	GitCommit  = "unknown"
+	AccountID  string
+	APIToken   string
+	DryRun     bool
+	JSONOutput bool
+	Verbose    bool
 )
 
 // SetBuildInfo sets the build information
@@ -34,6 +34,15 @@ func SetBuildInfo(version, buildTime, gitCommit string) {
 	AppVersion = version
 	BuildTime = buildTime
 	GitCommit = gitCommit
+}
+
+// noCredentialRequiredCommands lists commands (by name, including any parent
+// in their path) whose PersistentPreRun skips API credential validation.
+// Shared by the root PersistentPreRun and the MCP command-tool generator's
+// fail-closed credential guard (BUG-035).
+var noCredentialRequiredCommands = []string{
+	"setup", "config", "auth", "completion", "help", "version",
+	"theme", "demo", "backup", "plugin", "account", "serve",
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -75,19 +84,8 @@ Examples:
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Skip API validation for commands that don't need R2 access.
 		// Parent commands in this list cause all subcommands to skip too.
-		skipValidation := []string{
-			"setup", "config", "auth", "completion", "help", "version",
-			"theme", "demo", "backup", "plugin", "account", "serve",
-		}
-		for _, skip := range skipValidation {
-			if cmd.Name() == skip {
-				return
-			}
-			for p := cmd; p != nil; p = p.Parent() {
-				if p.Name() == skip {
-					return
-				}
-			}
+		if !commandRequiresCredentials(cmd) {
+			return
 		}
 
 		// Get API token from flag first, then environment

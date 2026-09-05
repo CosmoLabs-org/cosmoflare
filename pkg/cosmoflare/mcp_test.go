@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -81,14 +83,14 @@ func TestRegisterDefaultTools(t *testing.T) {
 	}
 
 	expected := map[string]bool{
-		"cosmoflare_bucket_list":  false,
-		"cosmoflare_worker_list":  false,
+		"cosmoflare_bucket_list":   false,
+		"cosmoflare_worker_list":   false,
 		"cosmoflare_worker_deploy": false,
-		"cosmoflare_dns_list":     false,
-		"cosmoflare_kv_list":      false,
-		"cosmoflare_zone_list":    false,
-		"cosmoflare_cache_purge":  false,
-		"cosmoflare_doctor":       false,
+		"cosmoflare_dns_list":      false,
+		"cosmoflare_kv_list":       false,
+		"cosmoflare_zone_list":     false,
+		"cosmoflare_cache_purge":   false,
+		"cosmoflare_doctor":        false,
 	}
 	for _, tool := range tools {
 		if _, ok := expected[tool.Name]; !ok {
@@ -240,7 +242,7 @@ func TestHandleToolsCallSuccess(t *testing.T) {
 func TestHandleToolsCallError(t *testing.T) {
 	s := NewMCPServer("", "")
 	s.RegisterTool(MCPTool{
-		Name:    "fail_tool",
+		Name: "fail_tool",
 		Handler: func(ctx context.Context, params json.RawMessage) (interface{}, error) {
 			return nil, fmt.Errorf("something went wrong")
 		},
@@ -860,5 +862,247 @@ func TestSuccessResponseFields(t *testing.T) {
 	json.Unmarshal(r.Result, &decoded)
 	if decoded["key"] != "value" {
 		t.Fatalf("expected key=value in result, got %v", decoded)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// BUG-035: dynamic tool registration, version injection, protocol echo
+// ---------------------------------------------------------------------------
+
+// TestRegisterToolFuncServedByToolsListAndCall verifies that a tool registered
+// through the simple registration API (plain schema map + decoded-args
+// handler) is served identically to the built-in tools: it appears in
+// tools/list and is callable via tools/call with its arguments decoded.
+func TestRegisterToolFuncServedByToolsListAndCall(t *testing.T) {
+	s := NewMCPServer("", "")
+	s.RegisterToolFunc("gen_dns_create", "Create a DNS record", map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"zone_id": map[string]interface{}{"type": "string"},
+		},
+		"required":             []string{"zone_id"},
+		"additionalProperties": false,
+	}, func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+		if args["zone_id"] != "z123" {
+			return nil, fmt.Errorf("unexpected zone_id: %v", args["zone_id"])
+		}
+		return map[string]interface{}{"record_id": "rec-1"}, nil
+	})
+
+	// tools/list must include the registered tool with its schema.
+	listResp := s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`))
+	var lr jsonRPCResponse
+	if err := json.Unmarshal(listResp, &lr); err != nil {
+		t.Fatal(err)
+	}
+	var listResult toolsListResult
+	if err := json.Unmarshal(lr.Result, &listResult); err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, tool := range listResult.Tools {
+		if tool.Name == "gen_dns_create" {
+			found = true
+			var schema map[string]interface{}
+			if err := json.Unmarshal(tool.InputSchema, &schema); err != nil {
+				t.Fatalf("invalid schema: %v", err)
+			}
+			if req, ok := schema["required"].([]interface{}); !ok || len(req) != 1 || req[0] != "zone_id" {
+				t.Fatalf("expected required [zone_id] in schema, got %v", schema["required"])
+			}
+			if tool.Description != "Create a DNS record" {
+				t.Fatalf("expected description preserved, got %q", tool.Description)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("gen_dns_create not served by tools/list")
+	}
+
+	// tools/call must decode arguments and dispatch to the handler.
+	callResp := s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"gen_dns_create","arguments":{"zone_id":"z123"}}}`))
+	var cr jsonRPCResponse
+	if err := json.Unmarshal(callResp, &cr); err != nil {
+		t.Fatal(err)
+	}
+	if cr.Error != nil {
+		t.Fatalf("unexpected error: %s", cr.Error.Message)
+	}
+	var callResult toolsCallResult
+	if err := json.Unmarshal(cr.Result, &callResult); err != nil {
+		t.Fatal(err)
+	}
+	if callResult.IsError {
+		t.Fatalf("expected success, got error content: %s", callResult.Content[0].Text)
+	}
+	if !strings.Contains(callResult.Content[0].Text, "rec-1") {
+		t.Fatalf("expected handler result in content, got %s", callResult.Content[0].Text)
+	}
+}
+
+// TestRegisterToolFuncDefaults verifies nil schema falls back to a valid empty
+// object schema and a call without arguments reaches the handler with a
+// non-nil empty map.
+func TestRegisterToolFuncDefaults(t *testing.T) {
+	s := NewMCPServer("", "")
+	var gotArgs map[string]interface{}
+	called := false
+	s.RegisterToolFunc("gen_noargs", "No args", nil, func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+		called = true
+		gotArgs = args
+		return "ok", nil
+	})
+
+	tools := s.Tools()
+	if len(tools) != 1 {
+		t.Fatalf("expected 1 tool, got %d", len(tools))
+	}
+	var schema map[string]interface{}
+	if err := json.Unmarshal(tools[0].InputSchema, &schema); err != nil {
+		t.Fatalf("nil schema must marshal to a valid JSON object: %v", err)
+	}
+	if schema["type"] != "object" {
+		t.Fatalf("expected fallback schema type object, got %v", schema["type"])
+	}
+
+	resp := s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"gen_noargs"}}`))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	if r.Error != nil {
+		t.Fatalf("unexpected error: %s", r.Error.Message)
+	}
+	if !called {
+		t.Fatal("handler was not called")
+	}
+	if gotArgs == nil || len(gotArgs) != 0 {
+		t.Fatalf("expected non-nil empty args map, got %#v", gotArgs)
+	}
+}
+
+// TestRegisterToolFuncInvalidArgumentsObject verifies that non-object
+// arguments produce a tool error rather than a panic.
+func TestRegisterToolFuncInvalidArgumentsObject(t *testing.T) {
+	s := NewMCPServer("", "")
+	s.RegisterToolFunc("gen_bad", "Bad args", nil, func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+		return "ok", nil
+	})
+	resp := s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"gen_bad","arguments":[1,2]}}`))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	if r.Error != nil {
+		t.Fatalf("argument errors must be tool errors, not JSON-RPC errors: %s", r.Error.Message)
+	}
+	var result toolsCallResult
+	json.Unmarshal(r.Result, &result)
+	if !result.IsError {
+		t.Fatal("expected isError=true for non-object arguments")
+	}
+}
+
+// TestMCPServerSetVersion verifies that serverInfo.version reports the
+// injected application version instead of the hardcoded fallback.
+func TestMCPServerSetVersion(t *testing.T) {
+	s := NewMCPServer("", "")
+	// Default version is the legacy fallback.
+	resp := s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}`))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	var result map[string]interface{}
+	json.Unmarshal(r.Result, &result)
+	serverInfo := result["serverInfo"].(map[string]interface{})
+	if serverInfo["version"] != "1.0.0" {
+		t.Fatalf("expected default version 1.0.0, got %v", serverInfo["version"])
+	}
+
+	// Injected version wins.
+	s.SetVersion("9.9.9")
+	resp = s.HandleRequest(context.Background(), []byte(`{"jsonrpc":"2.0","id":2,"method":"initialize","params":{}}`))
+	json.Unmarshal(resp, &r)
+	json.Unmarshal(r.Result, &result)
+	serverInfo = result["serverInfo"].(map[string]interface{})
+	if serverInfo["version"] != "9.9.9" {
+		t.Fatalf("expected injected version 9.9.9, got %v", serverInfo["version"])
+	}
+}
+
+// TestInitializeEchoesSupportedProtocolVersion verifies the handshake echoes a
+// requested protocol version the server supports.
+func TestInitializeEchoesSupportedProtocolVersion(t *testing.T) {
+	for _, requested := range []string{"2025-03-26", "2025-06-18", "2024-11-05"} {
+		s := NewMCPServer("", "")
+		req := fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":%q}}`, requested)
+		resp := s.HandleRequest(context.Background(), []byte(req))
+		var r jsonRPCResponse
+		json.Unmarshal(resp, &r)
+		if r.Error != nil {
+			t.Fatalf("unexpected error: %s", r.Error.Message)
+		}
+		var result map[string]interface{}
+		json.Unmarshal(r.Result, &result)
+		if result["protocolVersion"] != requested {
+			t.Fatalf("expected echo of %s, got %v", requested, result["protocolVersion"])
+		}
+	}
+}
+
+// TestInitializeUnsupportedProtocolVersionFallsBack verifies an unsupported
+// requested version falls back to the server's canonical protocol version.
+func TestInitializeUnsupportedProtocolVersionFallsBack(t *testing.T) {
+	s := NewMCPServer("", "")
+	req := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"1999-01-01"}}`
+	resp := s.HandleRequest(context.Background(), []byte(req))
+	var r jsonRPCResponse
+	json.Unmarshal(resp, &r)
+	var result map[string]interface{}
+	json.Unmarshal(r.Result, &result)
+	if result["protocolVersion"] != "2024-11-05" {
+		t.Fatalf("expected fallback 2024-11-05, got %v", result["protocolVersion"])
+	}
+}
+
+// TestHasTool verifies the collision helper used to keep curated tools winning
+// over generated ones.
+func TestHasTool(t *testing.T) {
+	s := NewMCPServer("", "")
+	if s.HasTool("cosmoflare_bucket_list") {
+		t.Fatal("empty server must not report any tool")
+	}
+	s.RegisterDefaultTools()
+	for _, name := range []string{"cosmoflare_bucket_list", "cosmoflare_doctor"} {
+		if !s.HasTool(name) {
+			t.Errorf("expected HasTool(%s) = true", name)
+		}
+	}
+	if s.HasTool("nonexistent") {
+		t.Error("expected HasTool(nonexistent) = false")
+	}
+}
+
+// TestLoadProjectConfigMCPAllowMutations verifies the project config loader
+// parses the mcp.allow_mutations fail-closed switch (BUG-035).
+func TestLoadProjectConfigMCPAllowMutations(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".cosmoflare.yaml"), []byte("mcp:\n  allow_mutations: true\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := LoadProjectConfig(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.MCP.AllowMutations {
+		t.Fatal("expected mcp.allow_mutations = true")
+	}
+
+	// Absent section defaults to false (fail-closed).
+	dir2 := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir2, ".cosmoflare.yaml"), []byte("bucket: my-bucket\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg2, err := LoadProjectConfig(dir2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg2.MCP.AllowMutations {
+		t.Fatal("expected mcp.allow_mutations to default to false")
 	}
 }

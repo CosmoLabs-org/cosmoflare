@@ -23,7 +23,9 @@ The MCP server speaks JSON-RPC 2.0 over stdin/stdout, following the Model
 Context Protocol specification. AI agents (Claude Code, etc.) connect to this
 server to list and invoke Cloudflare management tools.
 
-Available MCP tools:
+Tools come from two sources:
+
+1. Curated tools (always available):
   cosmoflare_bucket_list    List R2 storage buckets
   cosmoflare_worker_list    List Cloudflare Workers
   cosmoflare_worker_deploy  Deploy a Worker script
@@ -32,6 +34,25 @@ Available MCP tools:
   cosmoflare_zone_list      List Cloudflare zones
   cosmoflare_cache_purge    Purge cache for a zone
   cosmoflare_doctor         Run domain diagnostics
+
+2. Generated tools — one per eligible CLI command, covering the full
+  command surface (R2, DNS, D1, Pages, Queues, and every other service).
+  Each tool name is the command path with underscores (for example
+  kv_namespace_list, dns_record_create), its input schema is derived from
+  the command's positional arguments and flags, and calling it executes the
+  underlying command with --json and returns the JSON result.
+
+Mutation gating (FAIL-CLOSED):
+  Commands that mutate your Cloudflare account (create, update, delete,
+  upload, put, deploy, apply, sync, purge, import, and similar — or any
+  command with a --force/--confirm flag) are NOT exposed as tools by
+  default. To expose them, opt in via the project config (.cosmoflare.yaml):
+
+      mcp:
+        allow_mutations: true
+
+  Without that key, tools/list omits every mutating command and read-only
+  commands work normally.
 
 Commands:
   serve   Start the MCP server (JSON-RPC over stdio)
@@ -58,6 +79,18 @@ stdout, one JSON object per line. It supports the standard MCP methods:
   tools/list   — enumerate available tools with JSON Schema inputs
   tools/call   — invoke a tool by name with arguments
   ping         — health check
+
+The server exposes the curated tools plus one generated tool per eligible CLI
+command (full command surface). Generated tools execute the underlying CLI
+command with --json and return its JSON output.
+
+Mutation gating is FAIL-CLOSED: mutating commands (create, update, delete,
+upload, put, deploy, apply, sync, purge, import, and similar, or commands
+with a --force/--confirm flag) are omitted from tools/list unless the project
+config (.cosmoflare.yaml) opts in:
+
+    mcp:
+      allow_mutations: true
 
 The server runs until stdin is closed or SIGINT/SIGTERM is received.
 
@@ -91,9 +124,20 @@ func init() {
 	mcpCmd.AddCommand(mcpToolsCmd)
 }
 
-func runMCPServe(cmd *cobra.Command, args []string) error {
+// newMCPCLIServer builds the MCP server the CLI serves: the 8 curated tools
+// plus one generated tool per eligible cobra command (BUG-035), versioned
+// from the build info. Mutating commands are included only when the project
+// config opts in (fail-closed).
+func newMCPCLIServer() (*cosmoflare.MCPServer, mcpGenerateStats) {
 	server := cosmoflare.NewMCPServer(AccountID, APIToken)
+	server.SetVersion(AppVersion)
 	server.RegisterDefaultTools()
+	stats := registerGeneratedCLITools(server, rootCmd, loadMCPMutationAllowance("."))
+	return server, stats
+}
+
+func runMCPServe(cmd *cobra.Command, args []string) error {
+	server, stats := newMCPCLIServer()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -107,17 +151,24 @@ func runMCPServe(cmd *cobra.Command, args []string) error {
 	}()
 
 	if Verbose {
-		printInfo("MCP server starting on stdio (%d tools registered)", len(server.Tools()))
+		printInfo("MCP server starting on stdio (%d tools: %d generated, %d mutating commands excluded; mutations %s)",
+			len(server.Tools()), stats.Registered, stats.MutatingExcluded,
+			map[bool]string{true: "allowed", false: "excluded (fail-closed; set mcp.allow_mutations: true in .cosmoflare.yaml)"}[loadMCPMutationAllowance(".")])
 	}
 
 	return server.Serve(ctx, os.Stdin, os.Stdout)
 }
 
 func runMCPTools(cmd *cobra.Command, args []string) error {
-	server := cosmoflare.NewMCPServer("", "")
-	server.RegisterDefaultTools()
+	server, stats := newMCPCLIServer()
 
 	tools := server.Tools()
+
+	if !JSONOutput {
+		if stats.MutatingExcluded > 0 {
+			printInfo("%d mutating command(s) excluded (fail-closed); set mcp.allow_mutations: true in .cosmoflare.yaml to expose them", stats.MutatingExcluded)
+		}
+	}
 
 	if JSONOutput {
 		type toolInfo struct {

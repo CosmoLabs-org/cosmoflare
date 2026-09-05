@@ -17,6 +17,10 @@ type MCPServer struct {
 	mu    sync.RWMutex
 	tools map[string]MCPTool
 
+	// version is reported in the initialize handshake serverInfo block.
+	// Injected by the embedding application via SetVersion (BUG-035).
+	version string
+
 	// Service factories — called lazily on first tool invocation.
 	// Each returns the concrete service using the caller's credentials.
 	accountID string
@@ -25,14 +29,18 @@ type MCPServer struct {
 
 // MCPTool describes a single tool exposed over MCP.
 type MCPTool struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	InputSchema json.RawMessage   `json:"inputSchema"`
-	Handler     MCPToolHandler    `json:"-"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	InputSchema json.RawMessage `json:"inputSchema"`
+	Handler     MCPToolHandler  `json:"-"`
 }
 
 // MCPToolHandler processes a tool call and returns a result or error.
 type MCPToolHandler func(ctx context.Context, params json.RawMessage) (interface{}, error)
+
+// MCPToolHandlerFunc is the plain-handler form used by RegisterToolFunc:
+// arguments arrive already decoded from JSON instead of as raw bytes.
+type MCPToolHandlerFunc func(ctx context.Context, args map[string]interface{}) (interface{}, error)
 
 // jsonRPCRequest is a minimal JSON-RPC 2.0 request envelope.
 type jsonRPCRequest struct {
@@ -58,11 +66,39 @@ type jsonRPCError struct {
 
 // MCP protocol method constants.
 const (
-	mcpMethodInitialize   = "initialize"
-	mcpMethodToolsList    = "tools/list"
-	mcpMethodToolsCall    = "tools/call"
-	mcpMethodPing         = "ping"
+	mcpMethodInitialize = "initialize"
+	mcpMethodToolsList  = "tools/list"
+	mcpMethodToolsCall  = "tools/call"
+	mcpMethodPing       = "ping"
 )
+
+// mcpDefaultProtocolVersion is the canonical protocol version this server
+// speaks; it is returned when the client requests no version or a version the
+// server does not support (BUG-035).
+const mcpDefaultProtocolVersion = "2024-11-05"
+
+// mcpSupportedProtocolVersions lists every protocol version the server can
+// echo back when a client requests it during initialize.
+var mcpSupportedProtocolVersions = []string{
+	"2024-11-05",
+	"2025-03-26",
+	"2025-06-18",
+}
+
+// mcpDefaultServerVersion is the legacy fallback for serverInfo.version when
+// the embedding application does not inject its real version.
+const mcpDefaultServerVersion = "1.0.0"
+
+// isSupportedMCPProtocolVersion reports whether v is a protocol version the
+// server can speak.
+func isSupportedMCPProtocolVersion(v string) bool {
+	for _, supported := range mcpSupportedProtocolVersions {
+		if v == supported {
+			return true
+		}
+	}
+	return false
+}
 
 // JSON-RPC error codes.
 const (
@@ -108,6 +144,7 @@ type mcpContent struct {
 func NewMCPServer(accountID, apiToken string) *MCPServer {
 	return &MCPServer{
 		tools:     make(map[string]MCPTool),
+		version:   mcpDefaultServerVersion,
 		accountID: accountID,
 		apiToken:  apiToken,
 	}
@@ -118,6 +155,61 @@ func (s *MCPServer) RegisterTool(tool MCPTool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.tools[tool.Name] = tool
+}
+
+// RegisterToolFunc adds a tool from plain parts: a name, a description, a
+// JSON Schema object expressed as a plain map (nil becomes an empty object
+// schema), and a handler whose arguments arrive decoded from JSON. The tool
+// is served by tools/list and tools/call identically to tools registered via
+// RegisterTool (BUG-035).
+func (s *MCPServer) RegisterToolFunc(name, description string, inputSchema map[string]interface{}, handler MCPToolHandlerFunc) {
+	if inputSchema == nil {
+		inputSchema = map[string]interface{}{
+			"type":       "object",
+			"properties": map[string]interface{}{},
+		}
+	}
+	schemaBytes, err := json.Marshal(inputSchema)
+	if err != nil {
+		schemaBytes = []byte(`{"type":"object","properties":{}}`)
+	}
+
+	adapted := MCPToolHandler(func(ctx context.Context, params json.RawMessage) (interface{}, error) {
+		args := map[string]interface{}{}
+		if len(params) > 0 {
+			if err := json.Unmarshal(params, &args); err != nil {
+				return nil, fmt.Errorf("arguments must be a JSON object: %w", err)
+			}
+		}
+		return handler(ctx, args)
+	})
+
+	s.RegisterTool(MCPTool{
+		Name:        name,
+		Description: description,
+		InputSchema: schemaBytes,
+		Handler:     adapted,
+	})
+}
+
+// SetVersion overrides the version reported in the initialize handshake
+// serverInfo block so it reflects the embedding application's real version
+// instead of the library fallback (BUG-035).
+func (s *MCPServer) SetVersion(v string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if v != "" {
+		s.version = v
+	}
+}
+
+// HasTool reports whether a tool with the given name is registered. Used by
+// embedders to let pre-registered (curated) tools win over generated ones.
+func (s *MCPServer) HasTool(name string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	_, ok := s.tools[name]
+	return ok
 }
 
 // Tools returns all registered tools in deterministic order (sorted by name).
@@ -194,14 +286,31 @@ func (s *MCPServer) Serve(ctx context.Context, r io.Reader, w io.Writer) error {
 // --- internal handlers ---
 
 func (s *MCPServer) handleInitialize(req jsonRPCRequest) []byte {
+	// Echo the client's requested protocol version when it is one this
+	// server supports; otherwise answer with the canonical version (BUG-035).
+	var params struct {
+		ProtocolVersion string `json:"protocolVersion"`
+	}
+	if len(req.Params) > 0 {
+		_ = json.Unmarshal(req.Params, &params)
+	}
+	protocolVersion := mcpDefaultProtocolVersion
+	if isSupportedMCPProtocolVersion(params.ProtocolVersion) {
+		protocolVersion = params.ProtocolVersion
+	}
+
+	s.mu.RLock()
+	version := s.version
+	s.mu.RUnlock()
+
 	result := map[string]interface{}{
-		"protocolVersion": "2024-11-05",
+		"protocolVersion": protocolVersion,
 		"capabilities": map[string]interface{}{
 			"tools": map[string]interface{}{},
 		},
 		"serverInfo": map[string]interface{}{
 			"name":    "cosmoflare",
-			"version": "1.0.0",
+			"version": version,
 		},
 	}
 	return s.successResponse(req.ID, result)

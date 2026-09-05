@@ -10,15 +10,23 @@ import (
 
 // ProjectConfig represents a .r2go2.yaml project-level configuration.
 type ProjectConfig struct {
-	Bucket      string            `mapstructure:"bucket" json:"bucket"`
-	Region      string            `mapstructure:"region" json:"region,omitempty"`
-	Endpoint    string            `mapstructure:"endpoint" json:"endpoint,omitempty"`
-	CachePolicy CachePolicyConfig `mapstructure:"cache" json:"cache,omitempty"`
-	Guardrails  GuardrailConfig   `mapstructure:"guardrails" json:"guardrails,omitempty"`
-	Audit       AuditConfig       `mapstructure:"audit" json:"audit,omitempty"`
-	AllowedBuckets []string       `mapstructure:"allowed_buckets" json:"allowed_buckets,omitempty"`
-	MaxFileSize   int64           `mapstructure:"max_file_size" json:"max_file_size,omitempty"`
-	Environment   string          `mapstructure:"env" json:"env,omitempty"`
+	Bucket         string            `mapstructure:"bucket" json:"bucket"`
+	Region         string            `mapstructure:"region" json:"region,omitempty"`
+	Endpoint       string            `mapstructure:"endpoint" json:"endpoint,omitempty"`
+	CachePolicy    CachePolicyConfig `mapstructure:"cache" json:"cache,omitempty"`
+	Guardrails     GuardrailConfig   `mapstructure:"guardrails" json:"guardrails,omitempty"`
+	Audit          AuditConfig       `mapstructure:"audit" json:"audit,omitempty"`
+	MCP            MCPConfig         `mapstructure:"mcp" json:"mcp,omitempty"`
+	AllowedBuckets []string          `mapstructure:"allowed_buckets" json:"allowed_buckets,omitempty"`
+	MaxFileSize    int64             `mapstructure:"max_file_size" json:"max_file_size,omitempty"`
+	Environment    string            `mapstructure:"env" json:"env,omitempty"`
+}
+
+// MCPConfig configures the MCP tool server (BUG-035). AllowMutations is
+// FAIL-CLOSED: mutating CLI commands are only exposed as MCP tools when the
+// project config explicitly opts in with `mcp: allow_mutations: true`.
+type MCPConfig struct {
+	AllowMutations bool `mapstructure:"allow_mutations" json:"allow_mutations"`
 }
 
 // CachePolicyConfig configures automatic cache header injection.
@@ -39,8 +47,8 @@ type GuardrailConfig struct {
 
 // AuditConfig configures JSONL audit logging.
 type AuditConfig struct {
-	Enabled bool   `mapstructure:"enabled" json:"enabled"`
-	Path    string `mapstructure:"path" json:"path,omitempty"`
+	Enabled bool     `mapstructure:"enabled" json:"enabled"`
+	Path    string   `mapstructure:"path" json:"path,omitempty"`
 	Fields  []string `mapstructure:"fields" json:"fields,omitempty"`
 }
 
