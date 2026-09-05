@@ -1285,3 +1285,19 @@
 {"id":"42","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
 {"id":"42","subject":"","status":"completed","completed_at":"2026-09-05T00:41:08Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
 {"id":"43","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"44","subject":"Phase 0+1: Pre-commit hygiene","status":"pending","created_at":"2026-09-05T16:10:38Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"45","subject":"Phases 1.5-1.95: Quality gates","status":"pending","created_at":"2026-09-05T16:10:40Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"46","subject":"Phase 2-2.75: Commit + post-commit","status":"pending","created_at":"2026-09-05T16:10:41Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"47","subject":"Phase 3: Parallel blast","status":"pending","created_at":"2026-09-05T16:10:42Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"48","subject":"Phases 3c-3f: Capture + reflection","status":"pending","created_at":"2026-09-05T16:10:42Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"49","subject":"Phases 4 + 5.1: Release + prompt closure","status":"pending","created_at":"2026-09-05T16:10:43Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"50","subject":"Phases 6-7: Finalize + cleanup","status":"pending","created_at":"2026-09-05T16:10:44Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"44","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"44","subject":"","status":"completed","completed_at":"2026-09-05T16:11:57Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"45","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"45","subject":"","status":"completed","completed_at":"2026-09-05T16:18:08Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"46","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"46","subject":"","status":"completed","completed_at":"2026-09-05T16:19:06Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"47","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"48","subject":"","status":"completed","completed_at":"2026-09-05T16:21:44Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"49","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
