@@ -1120,3 +1120,162 @@
 {"id":"17","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
 {"id":"17","subject":"","status":"completed","completed_at":"2026-06-21T11:04:57Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
 {"id":"18","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-06-21T11:06:39Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-06-21T11:06:39Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"20","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-06-21T11:09:51Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"22","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-06-21T11:12:23Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"21","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-06-21T11:12:57Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"23","subject":"","status":"in_progress","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-06-21T11:14:08Z","session":"8539348e-e207-4f4a-a6b7-43e1428e366b"}
+{"id":"1","subject":"G-01 BUG-023: Fix Rust handshake-read loop timeout","status":"pending","created_at":"2026-07-01T11:41:16Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"2","subject":"G-02 BUG-024: Scope Tauri shell capability to sidecar","status":"pending","created_at":"2026-07-01T11:41:18Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"3","subject":"G-03 BUG-022: Fix serve graceful shutdown hang with SSE","status":"pending","created_at":"2026-07-01T11:41:20Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"4","subject":"G-05 IDEA-037: Brainplan live metrics producer","status":"pending","created_at":"2026-07-01T11:41:23Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"5","subject":"G-06 IDEA-038: Brainplan Rust watchdog mid-session restart","status":"pending","created_at":"2026-07-01T11:41:24Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"1","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-07-01T11:42:48Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"2","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-07-01T11:43:36Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"3","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-07-01T11:45:35Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"4","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-07-01T12:09:40Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"6","subject":"Plan Task 1: MetricsProducer core + tests","status":"pending","created_at":"2026-07-01T12:21:24Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"7","subject":"Plan Task 2: Wire MetricsProducer into cmd/serve.go","status":"pending","created_at":"2026-07-01T12:21:26Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"8","subject":"Plan Task 3: App.tsx SSE → React Query cache bridge","status":"pending","created_at":"2026-07-01T12:21:28Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"9","subject":"Plan Task 4: USAGE.md + close IDEA-037","status":"pending","created_at":"2026-07-01T12:21:29Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"6","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-07-01T12:23:37Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"7","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-07-01T12:25:02Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"8","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-07-01T12:26:15Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"9","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-07-01T12:27:12Z","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"5","subject":"","status":"in_progress","session":"45a0d177-4113-4977-960b-76f826b61fb3"}
+{"id":"1","subject":"Run 360° project audit","status":"pending","created_at":"2026-08-22T09:26:18Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"2","subject":"Gather project context","status":"pending","created_at":"2026-08-22T09:26:19Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"3","subject":"Select and dispatch audit agents","status":"pending","created_at":"2026-08-22T09:26:19Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"4","subject":"Synthesize agent results","status":"pending","created_at":"2026-08-22T09:26:20Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"5","subject":"File findings and write output","status":"pending","created_at":"2026-08-22T09:26:20Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"2","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-08-30T22:36:07Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"3","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"6","subject":"Agent 1: Code Quality","status":"pending","created_at":"2026-08-30T22:37:01Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"7","subject":"Agent 2: Core Logic","status":"pending","created_at":"2026-08-30T22:37:01Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"8","subject":"Agent 4: Competitive Analysis","status":"pending","created_at":"2026-08-30T22:37:01Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"9","subject":"Agent 5: Distribution","status":"pending","created_at":"2026-08-30T22:37:02Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"10","subject":"Agent 6: SEO/Content","status":"pending","created_at":"2026-08-30T22:37:02Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"11","subject":"Agent 7: API Design","status":"pending","created_at":"2026-08-30T22:37:02Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"12","subject":"Agent 9: Infrastructure","status":"pending","created_at":"2026-08-30T22:37:03Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"13","subject":"Agent 10: Documentation","status":"pending","created_at":"2026-08-30T22:37:03Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"14","subject":"Agent 12: Roadmap Health","status":"pending","created_at":"2026-08-30T22:37:03Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"15","subject":"Agent 14: Documentation Integrity","status":"pending","created_at":"2026-08-30T22:37:04Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"16","subject":"Agent 15: Work Completion","status":"pending","created_at":"2026-08-30T22:37:04Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"17","subject":"Agent 17: Design Taste","status":"pending","created_at":"2026-08-30T22:37:05Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"18","subject":"Agent 18: Accessibility","status":"pending","created_at":"2026-08-30T22:37:05Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"8","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"7","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"6","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"9","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-08-30T22:42:17Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-08-30T22:43:55Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-08-30T22:43:55Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-08-30T22:44:21Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"10","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"11","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"12","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"13","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"1","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"12","subject":"","status":"completed","completed_at":"2026-08-30T22:48:13Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-08-30T22:48:45Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-08-30T22:48:45Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-08-30T22:53:53Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"14","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"15","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"16","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"17","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-08-30T22:56:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"16","subject":"","status":"completed","completed_at":"2026-08-30T22:57:24Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"15","subject":"","status":"completed","completed_at":"2026-08-30T22:57:57Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"14","subject":"","status":"completed","completed_at":"2026-08-30T22:58:51Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"18","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-08-30T23:02:41Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-08-30T23:02:41Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"4","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"19","subject":"Write architecture.md","status":"pending","created_at":"2026-08-30T23:04:10Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"20","subject":"Write patterns.md","status":"pending","created_at":"2026-08-30T23:04:10Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"21","subject":"Write entry-points.md","status":"pending","created_at":"2026-08-30T23:04:10Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"22","subject":"Write risk-map.md","status":"pending","created_at":"2026-08-30T23:04:11Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"23","subject":"Write upgrade-plan.md","status":"pending","created_at":"2026-08-30T23:04:11Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"24","subject":"Write surprises.md","status":"pending","created_at":"2026-08-30T23:04:11Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"25","subject":"Write design-quality.md","status":"pending","created_at":"2026-08-30T23:04:12Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"26","subject":"Write doc-integrity.md + work-completion.md","status":"pending","created_at":"2026-08-30T23:04:12Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"27","subject":"Write action-plan.md + README.md + brief.md","status":"pending","created_at":"2026-08-30T23:04:13Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"28","subject":"Write tracking artifacts + symlink","status":"pending","created_at":"2026-08-30T23:04:13Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"19","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"19","subject":"","status":"completed","completed_at":"2026-08-30T23:04:39Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"20","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"20","subject":"","status":"completed","completed_at":"2026-08-30T23:05:04Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"21","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"21","subject":"","status":"completed","completed_at":"2026-08-30T23:05:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"22","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"22","subject":"","status":"completed","completed_at":"2026-08-30T23:05:55Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"23","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"23","subject":"","status":"completed","completed_at":"2026-08-30T23:06:19Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"24","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-08-30T23:06:45Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"25","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-08-30T23:07:10Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"26","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"26","subject":"","status":"completed","completed_at":"2026-08-30T23:07:40Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"27","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"27","subject":"","status":"completed","completed_at":"2026-08-30T23:08:47Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"28","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"28","subject":"","status":"completed","completed_at":"2026-08-30T23:09:23Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-08-30T23:09:23Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"5","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-08-30T23:57:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-08-30T23:57:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"29","subject":"Fix BUG-033: .dockerignore excludes go.mod/go.sum","status":"pending","created_at":"2026-09-03T19:52:28Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"30","subject":"Fix BUG-031: dead CosmoDev-R2Go2 path sweep","status":"pending","created_at":"2026-09-03T19:52:28Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"31","subject":"Add 7 plan_ref doc-chain back-links","status":"pending","created_at":"2026-09-03T19:52:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"32","subject":"Prompts cleanup + roadmap dedupe","status":"pending","created_at":"2026-09-03T19:52:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"29","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"29","subject":"","status":"completed","completed_at":"2026-09-03T19:53:01Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"30","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"31","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"30","subject":"","status":"completed","completed_at":"2026-09-03T19:55:27Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"31","subject":"","status":"completed","completed_at":"2026-09-03T19:56:32Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"32","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"33","subject":"Agent: BUG-026 multipart silent truncation","status":"pending","created_at":"2026-09-03T20:49:17Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"34","subject":"Agent: BUG-027 sync pagination","status":"pending","created_at":"2026-09-03T20:49:18Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"35","subject":"Agent: BUG-028 watcher phantom deletions","status":"pending","created_at":"2026-09-03T20:49:18Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"36","subject":"Agent: BUG-034 --json silent exit","status":"pending","created_at":"2026-09-03T20:49:19Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"33","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"34","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"35","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"36","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"34","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"34","subject":"","status":"completed","completed_at":"2026-09-03T20:56:23Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"32","subject":"","status":"completed","completed_at":"2026-09-03T20:56:24Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"36","subject":"","status":"completed","completed_at":"2026-09-03T20:58:22Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"33","subject":"","status":"completed","completed_at":"2026-09-03T21:06:59Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"35","subject":"","status":"completed","completed_at":"2026-09-03T21:06:59Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"37","subject":"Agent: BUG-030 interactive data races","status":"pending","created_at":"2026-09-03T23:33:12Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"38","subject":"Agent: BUG-025 guardrails enforcement","status":"pending","created_at":"2026-09-03T23:33:12Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"39","subject":"Agent: desktop BUG-036/037/038","status":"pending","created_at":"2026-09-03T23:33:12Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"37","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"38","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"39","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"38","subject":"","status":"completed","completed_at":"2026-09-03T23:49:45Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"39","subject":"","status":"completed","completed_at":"2026-09-03T23:56:49Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"37","subject":"","status":"completed","completed_at":"2026-09-04T00:02:55Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"40","subject":"Commit all uncommitted changes","status":"pending","created_at":"2026-09-04T23:59:28Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"41","subject":"Fix BUG-029: client options","status":"pending","created_at":"2026-09-04T23:59:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"42","subject":"Fix BUG-032: installer checksums","status":"pending","created_at":"2026-09-04T23:59:29Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"43","subject":"Ship v0.18.0 release","status":"pending","created_at":"2026-09-04T23:59:30Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"40","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
