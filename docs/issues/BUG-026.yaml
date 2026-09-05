@@ -1,14 +1,19 @@
 id: BUG-026
 type: bug
 created_at: 2026-08-31T03:55:47.542945+04:00
-updated_at: 2026-08-31T03:55:47.546279+04:00
+updated_at: 2026-09-04T01:06:55.595473+04:00
 source: local
 ulid: 01M1AHKHETDZ3NRPKMR69ATR53
 severity: high
-status: open
+status: closed
+origin:
+    session: 36
 title: Multipart upload silently stores truncated objects
 description: 'In MultipartUpload and ResumableMultipartUpload, io.ReadFull short reads are accepted as success: EOF/ErrUnexpectedEOF before uploadedBytes==size continues the loop, later parts upload empty, and the truncated object completes with NO error returned. A file changed after stat() or a stale size (cmd/sync.go:457, cmd/watch.go:218) stores short. Found by 2026-08-31 audit agent-2 (see docs/audit/2026-08-31-cosmoflare/agent-2-core-logic.md).'
 fix_direction: Track total read; on io.EOF or io.ErrUnexpectedEOF before uploadedBytes==size, return validationError('reader shorter than declared size (N of M bytes)') and abort. Add regression test with a reader shorter than declared size.
 affected_files:
     - pkg/cosmoflare/upload.go
     - pkg/cosmoflare/multipart.go
+revisions:
+    - date: "2026-09-04"
+      action: closed

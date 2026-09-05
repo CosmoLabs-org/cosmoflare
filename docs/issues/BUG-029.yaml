@@ -1,11 +1,13 @@
 id: BUG-029
 type: bug
 created_at: 2026-08-31T03:56:02.911278+04:00
-updated_at: 2026-08-31T03:56:03.237937+04:00
+updated_at: 2026-08-31T03:56:05.542517+04:00
 source: local
 ulid: 01M1AHM0S5ZYREHTH01MCP46R0
 severity: high
 status: open
+origin:
+    session: 36
 title: 6 of 14 exported client options are silent no-ops (WithTimeout = hang risk)
 description: WithTimeout/WithHTTPClient construct a client that is never passed to cloudflare.NewWithAPIToken or the AWS config — no API call has a timeout; a hung connection blocks forever. WithProfile is documented in NewClient but cfg.profile is never read. WithAuditLog, WithDryRun, WithBucket set fields nothing reads. Found by 2026-08-31 audit agent-2.
 fix_direction: Pass cloudflare.HTTPClient(httpClient) to NewWithAPIToken and awsconfig.WithHTTPClient to the S3 config; resolve profile via LoadMachineConfig when set; implement or delete the other three options.

@@ -1,13 +1,18 @@
 id: BUG-025
 type: bug
 created_at: 2026-08-31T03:54:36.663481+04:00
-updated_at: 2026-08-31T03:54:36.666283+04:00
+updated_at: 2026-09-04T03:56:54.458789+04:00
 source: local
 ulid: 01M1AHHC7T1G51MSN23V94V9G4
 severity: high
-status: open
+status: closed
+origin:
+    session: 36
 title: Guardrails parsed and tested but never enforced anywhere
 description: GuardrailChecker.CheckUpload (bucket allowlist, max_file_size, blocked_keys) has zero production callers — verified by grep across pkg/, cmd/, internal/. Neither client.Upload, apply, sync, nor watch invoke it. A user with blocked_keys:[.env] uploads .env to any bucket unimpeded — false sense of protection in the advertised agent-safety feature. Found by audit agent-2.
 fix_direction: Call CheckUpload inside client.Upload/MultipartUpload (loaded from project config) or at minimum in cmd/sync.go and cmd/watch.go before each upload; fail when !result.Allowed. Default-exclude .git/, .env*, .DS_Store.
 affected_files:
     - pkg/cosmoflare/guardrails.go:29
+revisions:
+    - date: "2026-09-04"
+      action: closed

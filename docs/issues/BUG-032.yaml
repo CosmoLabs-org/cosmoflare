@@ -1,11 +1,13 @@
 id: BUG-032
 type: bug
 created_at: 2026-08-31T03:56:17.52192+04:00
-updated_at: 2026-08-31T03:56:17.530439+04:00
+updated_at: 2026-08-31T03:56:19.63012+04:00
 source: local
 ulid: 01M1AHMEQTTF0SPSRKXHFE9FKQ
 severity: high
 status: open
+origin:
+    session: 36
 title: All installer scripts download from dead repo — curl|bash returns 404
 description: install.sh:19-20 sets REPO=CosmoLabs-org/CosmoDev-R2Go2 and BINARY_NAME=r2go2; download URL (install.sh:136) hits the nonexistent repo with wrong asset names (released assets are cosmoflare-OS-ARCH). Same in install.ps1:11-12 and install-menu.sh:159,178 (which also has a malformed API URL missing /repos/). Anyone running the documented install gets a 404. Found by audit agents 5 and 9.
 fix_direction: Point all scripts at CosmoLabs-org/cosmoflare with cosmoflare asset names; add sha256 verification against checksums-sha256.txt before chmod +x.

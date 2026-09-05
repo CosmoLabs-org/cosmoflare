@@ -1,11 +1,13 @@
 id: BUG-035
 type: bug
 created_at: 2026-08-31T03:56:31.31699+04:00
-updated_at: 2026-08-31T03:56:31.319964+04:00
+updated_at: 2026-08-31T03:56:33.582099+04:00
 source: local
 ulid: 01M1AHMW6QZ0QQPVYJV2E93WD4
 severity: high
 status: open
+origin:
+    session: 36
 title: MCP server exposes 8 tools vs 366 CLI commands (2% of own surface)
 description: pkg/cosmoflare/mcp.go:286-335 registers only bucket_list, worker_list, worker_deploy, dns_list, kv_list, zone_list, cache_purge, doctor. The flagship agent channel cannot create a DNS record, put an R2 object, write a KV key, or touch D1/Pages/Queues — while Cloudflare's official MCP exposes 2,500 endpoints. Also hardcodes serverInfo.version 1.0.0 and pins protocol 2024-11-05 without negotiation (mcp.go:198-207). Found by audit agents 4 and 7.
 fix_direction: Auto-generate MCP tool schemas from the cobra command tree (name, flags, --json output); expose read-only tools wholesale, gate mutations behind guardrails. Make serverInfo.version injectable; echo client-requested protocolVersion.

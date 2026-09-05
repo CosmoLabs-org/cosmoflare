@@ -1,12 +1,13 @@
 id: FEAT-008
 type: feature
 created_at: 2026-06-21T07:57:56.276869-03:00
-updated_at: 2026-06-21T07:58:02.319114-03:00
+updated_at: 2026-08-31T03:57:19.25363+04:00
 source: local
 status: open
 origin:
     roadmap_items:
         - ROAD-080
+        - ROAD-084
     session: 18
 title: In-process event bus for real-time notifications (ROAD-080)
 description: 'Implement ROAD-080: a standalone account-agnostic internal/events.Bus (pub/sub, non-blocking drop-on-full) that webhook.Manager.TriggerAlert publishes alerts to and the serve daemon subscribes to, forwarding events onto the SSE notifications channel so the Cosmoflare Desktop notifications panel is live. Closes the BR-07 gap. Scope: core bus only (live metrics IDEA-037 and the outbound sender are separate follow-ups). Design: docs/brainstorming/2026-06-21-inprocess-event-bus.md. Plan: docs/planning-mode/2026-06-21-inprocess-event-bus.md (4 TDD tasks). Prompt: docs/prompts/2026-06-21-inprocess-event-bus.md.'
