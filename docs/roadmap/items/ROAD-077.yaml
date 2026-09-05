@@ -1,5 +1,7 @@
 id: ROAD-077
 created_at: 2026-06-20T21:01:03.20834-03:00
-updated_at: 2026-06-20T21:01:03.208363-03:00
+updated_at: 2026-09-03T23:56:54.788835+04:00
 title: Paid-tier licensing & auth (desktop + mobile)
-status: captured
+status: archived
+notes:
+    - '[Archived 2026-09-03] Reason: Duplicate of ROAD-082 (identical title ''Paid-tier licensing'', batch import 8d4076c; keeping the richer 082 entry)'

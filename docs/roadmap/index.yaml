@@ -1,665 +1,8 @@
-version: ""
-project: ""
-last_updated: 2026-08-31T03:57:08.58444+04:00
+version: "1.0"
+project: cosmoflare
+last_updated: 2026-09-03T23:56:54.837631+04:00
 next_id: 89
 items:
-    - id: ROAD-088
-      title: Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)
-      status: captured
-      created_at: 2026-08-31T03:57:08.584204+04:00
-    - id: ROAD-087
-      title: Domain Center completion — Waves B–D
-      status: captured
-      created_at: 2026-08-31T03:57:06.177224+04:00
-    - id: ROAD-086
-      title: Roadmap hygiene — dedupe double-imported items and regenerate index
-      status: captured
-      created_at: 2026-08-31T03:57:04.030537+04:00
-    - id: ROAD-085
-      title: Secrets hygiene — purge scan findings from committed GOrchestra artifacts
-      status: captured
-      created_at: 2026-08-31T03:57:01.988278+04:00
-    - id: ROAD-084
-      title: Desktop v1.1 reliability & live data (metrics + daemon watchdog)
-      status: captured
-      created_at: 2026-08-31T03:57:00.037174+04:00
-    - id: ROAD-083
-      title: cmd/ DI testability rollout — extend factory-var pattern across all command handlers
-      status: captured
-      priority: 55
-      category: testing
-      effort: medium
-      created_at: 2026-06-20T21:01:19.14651-03:00
-    - id: ROAD-082
-      title: Paid-tier licensing & auth (desktop + mobile)
-      status: captured
-      priority: 64
-      category: security
-      effort: large
-      created_at: 2026-06-20T21:01:19.105636-03:00
-    - id: ROAD-081
-      title: Desktop distribution — code-signing, notarization, auto-update
-      status: captured
-      priority: 68
-      category: infra
-      effort: medium
-      parent: ROAD-063
-      created_at: 2026-06-20T21:01:19.061717-03:00
-    - id: ROAD-080
-      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
-      status: captured
-      priority: 70
-      category: infra
-      effort: medium
-      has_plan: true
-      linked_issues:
-        - FEAT-008
-      created_at: 2026-06-20T21:01:19.018763-03:00
-    - id: ROAD-079
-      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
-      status: completed
-      priority: 82
-      category: infra
-      effort: medium
-      completed_in: v0.16.0
-      created_at: 2026-06-20T21:01:18.976171-03:00
-    - id: ROAD-078
-      title: cmd/ DI testability rollout — extend the factory-var pattern across all command handlers
-      status: captured
-      created_at: 2026-06-20T21:01:03.246361-03:00
-    - id: ROAD-077
-      title: Paid-tier licensing & auth (desktop + mobile)
-      status: captured
-      created_at: 2026-06-20T21:01:03.20834-03:00
-    - id: ROAD-076
-      title: Desktop distribution — code-signing, notarization, auto-update
-      status: captured
-      created_at: 2026-06-20T21:01:03.168784-03:00
-    - id: ROAD-075
-      title: Desktop v2 — infrastructure graph + write/CRUD operations
-      status: captured
-      priority: 60
-      category: ux
-      effort: large
-      parent: ROAD-063
-      created_at: 2026-06-20T21:01:03.126109-03:00
-    - id: ROAD-074
-      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
-      status: captured
-      created_at: 2026-06-20T21:01:03.076532-03:00
-    - id: ROAD-073
-      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
-      status: completed
-      completed_in: v0.16.0
-      created_at: 2026-06-20T21:01:03.030854-03:00
-    - id: ROAD-072
-      title: Notifications and webhooks — receive CF webhook events locally for dev
-      status: completed
-      priority: 58
-      category: workflow
-      completed_in: v0.13.0
-      created_at: 2026-06-06T04:09:31.285041-03:00
-    - id: ROAD-071
-      title: Terraform export — generate .tf files from live Cloudflare state
-      status: completed
-      priority: 60
-      category: integration
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.246415-03:00
-    - id: ROAD-070
-      title: Config validation — cosmoflare validate checks .cosmoflare.yaml against CF API constraints
-      status: completed
-      priority: 65
-      category: core
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.210039-03:00
-    - id: ROAD-069
-      title: Multi-account switching — cosmoflare account list/switch for managing multiple CF accounts
-      status: completed
-      priority: 68
-      category: ux
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.170277-03:00
-    - id: ROAD-068
-      title: Audit log — track all CLI mutations with timestamps, user, before/after state
-      status: completed
-      priority: 70
-      category: core
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.132464-03:00
-    - id: ROAD-067
-      title: Wrangler compatibility layer — read wrangler.toml and translate to .cosmoflare.yaml
-      status: completed
-      priority: 72
-      category: integration
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.097999-03:00
-    - id: ROAD-066
-      title: MCP Server mode — expose cosmoflare as an MCP tool server for Claude Code and AI agents
-      status: completed
-      priority: 85
-      category: intelligence
-      completed_in: v0.12.0
-      created_at: 2026-06-06T04:09:31.060224-03:00
-    - id: ROAD-065
-      title: Plugin system — community extensions with cosmoflare plugin install
-      status: completed
-      priority: 65
-      category: infra
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-05-16T00:10:55.324422-03:00
-    - id: ROAD-064
-      title: React Native mobile app — on-the-go monitoring and quick actions
-      status: captured
-      priority: 80
-      category: ux
-      effort: large
-      created_at: 2026-05-16T00:10:55.225465-03:00
-    - id: ROAD-063
-      title: Tauri desktop app — GUI wrapper with notifications and infrastructure graph
-      status: completed
-      priority: 85
-      category: ux
-      effort: large
-      has_plan: true
-      linked_issues:
-        - FEAT-007
-      completed_in: v0.16.0
-      created_at: 2026-05-16T00:10:46.882401-03:00
-    - id: ROAD-062
-      title: Alert rules — notify on error rates, storage limits, worker failures
-      status: completed
-      priority: 78
-      category: intelligence
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-05-16T00:10:46.793368-03:00
-    - id: ROAD-061
-      title: Cost estimator — project monthly costs from current usage patterns
-      status: completed
-      priority: 78
-      category: intelligence
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:37.971345-03:00
-    - id: ROAD-060
-      title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
-      status: completed
-      priority: 80
-      category: ux
-      effort: large
-      completed_in: v0.13.0
-      created_at: 2026-05-16T00:10:37.873954-03:00
-    - id: ROAD-059
-      title: Template library — cosmoflare create --template=api scaffolds full projects
-      status: completed
-      priority: 70
-      category: workflow
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:30.498797-03:00
-    - id: ROAD-058
-      title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
-      status: completed
-      priority: 82
-      category: workflow
-      effort: large
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:30.399515-03:00
-    - id: ROAD-057
-      title: cosmoflare init — interactive project scaffolding with framework detection
-      status: completed
-      priority: 80
-      category: ux
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:21.515178-03:00
-    - id: ROAD-056
-      title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
-      status: completed
-      priority: 72
-      category: infra
-      effort: large
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:21.413705-03:00
-    - id: ROAD-055
-      title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
-      status: completed
-      priority: 75
-      category: ux
-      effort: small
-      completed_in: v0.7.1
-      created_at: 2026-05-16T00:10:13.900551-03:00
-    - id: ROAD-054
-      title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
-      status: completed
-      priority: 80
-      category: ux
-      effort: medium
-      has_plan: true
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:10:13.803125-03:00
-    - id: ROAD-053
-      title: cosmoflare import/export — full account config as YAML for disaster recovery
-      status: completed
-      priority: 78
-      category: infra
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-05-16T00:10:06.508648-03:00
-    - id: ROAD-052
-      title: cosmoflare diff — show what would change before applying
-      status: completed
-      priority: 78
-      category: core
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:10:06.409267-03:00
-    - id: ROAD-051
-      title: cosmoflare logs --follow — real-time log tailing with filtering
-      status: completed
-      priority: 82
-      category: core
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:09:56.384259-03:00
-    - id: ROAD-050
-      title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
-      status: completed
-      priority: 88
-      category: ux
-      effort: medium
-      has_plan: true
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:56.286855-03:00
-    - id: ROAD-049
-      title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
-      status: completed
-      priority: 70
-      category: intelligence
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-05-16T00:09:47.693133-03:00
-    - id: ROAD-048
-      title: Vectorize — vector storage and indexing for AI workloads
-      status: completed
-      priority: 65
-      category: intelligence
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:09:47.594725-03:00
-    - id: ROAD-047
-      title: Vectorize — vector storage and indexing for AI workloads
-      status: completed
-      completed_in: v0.13.0
-      created_at: 2026-05-16T00:09:41.216059-03:00
-    - id: ROAD-046
-      title: Hyperdrive — database connection pooling for Workers
-      status: completed
-      priority: 70
-      category: core
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:09:41.114769-03:00
-    - id: ROAD-045
-      title: Stream video — upload, live inputs, token management
-      status: completed
-      priority: 65
-      category: core
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-05-16T00:09:34.01034-03:00
-    - id: ROAD-044
-      title: Images service — upload, transform, variants, delivery URL generation
-      status: completed
-      priority: 70
-      category: core
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-05-16T00:09:33.913777-03:00
-    - id: ROAD-043
-      title: Pages static hosting — deploy from directory, custom domains, preview deployments
-      status: completed
-      priority: 75
-      category: core
-      effort: medium
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:26.389003-03:00
-    - id: ROAD-042
-      title: D1 SQL database — fill stub with query, migrate, list databases
-      status: completed
-      priority: 75
-      category: core
-      effort: medium
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:26.287955-03:00
-    - id: ROAD-041
-      title: Email Routing — create rules, list destinations, catch-all settings
-      status: completed
-      priority: 75
-      category: core
-      effort: small
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:18.924497-03:00
-    - id: ROAD-040
-      title: WAF and Firewall — rules, managed rulesets, rate limiting, IP access rules
-      status: completed
-      priority: 80
-      category: security
-      effort: medium
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:18.835502-03:00
-    - id: ROAD-039
-      title: Page Rules and Redirect Rules management
-      status: completed
-      priority: 80
-      category: core
-      effort: medium
-      completed_in: v0.10.0
-      created_at: 2026-05-16T00:09:11.555248-03:00
-    - id: ROAD-038
-      title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
-      status: completed
-      priority: 85
-      category: core
-      effort: small
-      completed_in: v0.7.1
-      created_at: 2026-05-16T00:09:11.456035-03:00
-    - id: ROAD-037
-      title: SSL/TLS certificate management — edge certs, origin pull, minimum TLS, always-https
-      status: completed
-      priority: 85
-      category: security
-      effort: small
-      completed_in: v0.7.1
-      created_at: 2026-05-16T00:09:05.427409-03:00
-    - id: ROAD-036
-      title: Zone management — list zones, settings, diagnostics
-      status: completed
-      priority: 90
-      category: core
-      effort: small
-      completed_in: v0.7.1
-      created_at: 2026-05-16T00:09:05.324556-03:00
-    - id: ROAD-035
-      title: Email Routing — create rules, list destinations, catch-all settings
-      status: completed
-      priority: 75
-      category: core
-      effort: small
-      completed_in: v0.7.1
-      created_at: 2026-05-16T00:08:47.131816-03:00
-    - id: ROAD-034
-      title: Upload guardrails system (allowed buckets, max file size, blocked keys)
-      status: completed
-      priority: 70
-      category: security
-      effort: medium
-      completed_in: v0.3.1
-      created_at: 2026-05-12T05:53:09.000185-03:00
-    - id: ROAD-033
-      title: Queues message queue support
-      status: completed
-      completed_in: v0.10.0
-      created_at: 2026-05-07T19:29:33.804736-03:00
-    - id: ROAD-032
-      title: Pages static hosting support
-      status: completed
-      completed_in: v0.13.0
-      created_at: 2026-05-07T19:29:31.341162-03:00
-    - id: ROAD-031
-      title: D1 SQL database support
-      status: completed
-      completed_in: v0.13.0
-      created_at: 2026-05-07T19:29:28.806175-03:00
-    - id: ROAD-030
-      title: KV namespace support
-      status: completed
-      completed_in: v0.4.0
-      created_at: 2026-05-07T19:29:25.530573-03:00
-    - id: ROAD-029
-      title: CCS r2 subcommand integration (deferred)
-      status: captured
-      created_at: 2026-05-07T05:16:14.365721-03:00
-    - id: ROAD-028
-      title: Project config (.r2go2.yaml) implementation
-      status: completed
-      completed_in: v0.3.1
-      created_at: 2026-05-07T05:16:14.286678-03:00
-    - id: ROAD-027
-      title: Edge caching strategy engine
-      status: completed
-      completed_in: v0.3.1
-      created_at: 2026-05-07T05:16:14.206242-03:00
-    - id: ROAD-026
-      title: Cloudflare Workers support
-      status: completed
-      completed_in: v0.4.0
-      created_at: 2026-05-07T05:16:14.126493-03:00
-    - id: ROAD-025
-      title: Library extraction into pkg/r2go2/
-      status: completed
-      completed_in: v0.3.1
-      created_at: 2026-05-07T05:16:14.029605-03:00
-    - id: ROAD-024
-      title: Audit logging for enterprise readiness
-      status: completed
-      priority: 35
-      effort: medium
-      completed_in: v0.3.1
-      created_at: 2026-03-10T04:39:22.049812+01:00
-    - id: ROAD-023
-      title: Local HTTP dev server proxying to R2
-      status: archived
-      priority: 52
-      effort: medium
-      linked_issues:
-        - FEAT-002
-      created_at: 2026-03-10T04:39:21.630704+01:00
-    - id: ROAD-022
-      title: Pipe and stdin support for Unix workflows
-      status: completed
-      priority: 58
-      effort: medium
-      linked_issues:
-        - FEAT-003
-      completed_in: v0.6.0
-      created_at: 2026-03-10T04:39:20.711518+01:00
-    - id: ROAD-021
-      title: Batch operations bulk upload and delete
-      status: completed
-      priority: 65
-      effort: medium
-      completed_in: v0.3.1
-      created_at: 2026-03-10T04:39:19.864181+01:00
-    - id: ROAD-020
-      title: Dashboard TUI real implementation
-      status: completed
-      priority: 45
-      effort: large
-      completed_in: v0.14.0
-      created_at: 2026-03-10T04:39:18.089831+01:00
-    - id: ROAD-019
-      title: Re-enable S3-to-R2 migration engine
-      status: completed
-      priority: 50
-      effort: medium
-      linked_issues:
-        - FEAT-004
-      completed_in: v0.13.0
-      created_at: 2026-03-10T04:39:15.88984+01:00
-    - id: ROAD-018
-      title: Re-enable analytics command
-      status: completed
-      priority: 55
-      effort: small
-      completed_in: v0.6.0
-      created_at: 2026-03-10T04:39:14.038127+01:00
-    - id: ROAD-017
-      title: Cmd-level integration test suite
-      status: completed
-      priority: 80
-      effort: medium
-      completed_in: v0.13.0
-      created_at: 2026-03-10T04:39:12.200948+01:00
-    - id: ROAD-016
-      title: CORS and access control configuration commands
-      status: completed
-      priority: 52
-      category: security
-      effort: medium
-      completed_in: v0.10.0
-      created_at: 2026-03-02T23:33:08.526846+01:00
-    - id: ROAD-015
-      title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions
-      status: completed
-      priority: 68
-      category: infra
-      effort: medium
-      linked_issues:
-        - BUG-003
-      completed_in: v0.11.0
-      created_at: 2026-03-02T23:33:07.711386+01:00
-    - id: ROAD-014
-      title: Retry logic with exponential backoff and error recovery
-      status: completed
-      priority: 76
-      category: infra
-      effort: small
-      linked_issues:
-        - BUG-002
-      completed_in: v0.4.0
-      created_at: 2026-03-02T23:33:04.050263+01:00
-    - id: ROAD-013
-      title: Multipart uploads and resumable transfers for large files
-      status: completed
-      priority: 77
-      category: core
-      effort: large
-      completed_in: v0.12.0
-      created_at: 2026-03-02T23:33:03.291987+01:00
-    - id: ROAD-012
-      title: Shell completions (bash, zsh, fish) via Cobra generation
-      status: completed
-      priority: 72
-      category: ux
-      effort: small
-      completed_in: v0.4.0
-      created_at: 2026-03-02T23:33:02.496126+01:00
-    - id: ROAD-011
-      title: Enhanced bucket management (get metadata, update tags, exists check, bulk import)
-      status: completed
-      priority: 78
-      category: core
-      effort: medium
-      completed_in: v0.3.1
-      created_at: 2026-03-02T23:32:59.512557+01:00
-    - id: ROAD-010
-      title: Complete object operations (copy, head, delete-version, range downloads)
-      status: completed
-      priority: 82
-      category: core
-      effort: large
-      linked_issues:
-        - BUG-006
-      completed_in: v0.3.1
-      created_at: 2026-03-02T23:32:58.753636+01:00
-    - id: ROAD-009
-      title: Config profiles system (init, validate, multi-profile switch)
-      status: completed
-      priority: 85
-      category: core
-      effort: medium
-      linked_issues:
-        - FEAT-002
-      completed_in: v0.7.0
-      created_at: 2026-03-02T23:32:57.861436+01:00
-    - id: ROAD-008
-      title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
-      status: completed
-      priority: 70
-      category: ux
-      effort: large
-      linked_issues:
-        - FEAT-003
-      completed_in: v0.13.0
-      created_at: 2026-03-02T12:31:53.781451+01:00
-    - id: ROAD-007
-      title: S3 to R2 migration engine with resume support
-      status: completed
-      priority: 50
-      category: integration
-      effort: large
-      linked_issues:
-        - FEAT-004
-      completed_in: v0.14.0
-      created_at: 2026-02-26T01:32:48.403851+01:00
-    - id: ROAD-006
-      title: Real-time cost calculator and usage analytics
-      status: completed
-      priority: 45
-      category: intelligence
-      effort: medium
-      completed_in: v0.13.0
-      created_at: 2026-02-26T01:32:47.355325+01:00
-    - id: ROAD-005
-      title: 'Watch mode: auto-sync local directory to R2 on file changes'
-      status: completed
-      priority: 55
-      category: workflow
-      effort: medium
-      completed_in: v0.11.0
-      created_at: 2026-02-26T01:32:46.485405+01:00
-    - id: ROAD-004
-      title: Pre-signed URL generation command
-      status: completed
-      priority: 60
-      category: core
-      effort: small
-      completed_in: v0.6.0
-      created_at: 2026-02-26T01:32:45.415402+01:00
-    - id: ROAD-003
-      title: rsync-like sync command for directory synchronization
-      status: completed
-      priority: 75
-      category: core
-      effort: large
-      completed_in: v0.11.0
-      created_at: 2026-02-26T01:32:44.3795+01:00
-    - id: ROAD-002
-      title: TUI Object Browser with split-pane layout
-      status: completed
-      priority: 65
-      category: ux
-      effort: large
-      linked_issues:
-        - FEAT-001
-        - BUG-004
-      completed_in: v0.14.0
-      created_at: 2026-02-26T01:32:43.333657+01:00
-    - id: ROAD-001
-      title: Consolidate duplicated code (formatBytes x9, maskAccountID x3)
-      status: completed
-      priority: 80
-      category: infra
-      effort: medium
-      linked_issues:
-        - TASK-001
-      completed_in: v0.2.1
-      created_at: 2026-02-26T01:32:42.300608+01:00
-    - id: ROAD-000
-      title: Wire up real S3 API client (replace placeholders)
-      status: completed
-      priority: 95
-      category: core
-      effort: large
-      linked_issues:
-        - BUG-001
-        - TASK-002
-        - BUG-006
-      completed_in: v0.3.1
-      created_at: 2026-02-26T01:32:40.944335+01:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -735,3 +78,686 @@ items:
       status: captured
       category: infra
       created_at: 2026-05-24T08:28:39.667621-03:00
+    - id: ROAD-000
+      title: Wire up real S3 API client (replace placeholders)
+      status: completed
+      priority: 95
+      category: core
+      effort: large
+      linked_issues:
+        - BUG-001
+        - TASK-002
+        - BUG-006
+      completed_in: v0.3.1
+      created_at: 2026-02-26T01:32:40.944335+01:00
+    - id: ROAD-001
+      title: Consolidate duplicated code (formatBytes x9, maskAccountID x3)
+      status: completed
+      priority: 80
+      category: infra
+      effort: medium
+      linked_issues:
+        - TASK-001
+      completed_in: v0.2.1
+      created_at: 2026-02-26T01:32:42.300608+01:00
+    - id: ROAD-002
+      title: TUI Object Browser with split-pane layout
+      status: completed
+      priority: 65
+      category: ux
+      effort: large
+      linked_issues:
+        - FEAT-001
+        - BUG-004
+      completed_in: v0.14.0
+      created_at: 2026-02-26T01:32:43.333657+01:00
+    - id: ROAD-003
+      title: rsync-like sync command for directory synchronization
+      status: completed
+      priority: 75
+      category: core
+      effort: large
+      completed_in: v0.11.0
+      created_at: 2026-02-26T01:32:44.3795+01:00
+    - id: ROAD-004
+      title: Pre-signed URL generation command
+      status: completed
+      priority: 60
+      category: core
+      effort: small
+      completed_in: v0.6.0
+      created_at: 2026-02-26T01:32:45.415402+01:00
+    - id: ROAD-005
+      title: 'Watch mode: auto-sync local directory to R2 on file changes'
+      status: completed
+      priority: 55
+      category: workflow
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-02-26T01:32:46.485405+01:00
+    - id: ROAD-006
+      title: Real-time cost calculator and usage analytics
+      status: completed
+      priority: 45
+      category: intelligence
+      effort: medium
+      completed_in: v0.13.0
+      created_at: 2026-02-26T01:32:47.355325+01:00
+    - id: ROAD-007
+      title: S3 to R2 migration engine with resume support
+      status: completed
+      priority: 50
+      category: integration
+      effort: large
+      linked_issues:
+        - FEAT-004
+      completed_in: v0.14.0
+      created_at: 2026-02-26T01:32:48.403851+01:00
+    - id: ROAD-008
+      title: Refactor interactive package from fmt.Scanln to Bubble Tea for UX consistency
+      status: completed
+      priority: 70
+      category: ux
+      effort: large
+      linked_issues:
+        - FEAT-003
+      completed_in: v0.13.0
+      created_at: 2026-03-02T12:31:53.781451+01:00
+    - id: ROAD-009
+      title: Config profiles system (init, validate, multi-profile switch)
+      status: completed
+      priority: 85
+      category: core
+      effort: medium
+      linked_issues:
+        - FEAT-002
+      completed_in: v0.7.0
+      created_at: 2026-03-02T23:32:57.861436+01:00
+    - id: ROAD-010
+      title: Complete object operations (copy, head, delete-version, range downloads)
+      status: completed
+      priority: 82
+      category: core
+      effort: large
+      linked_issues:
+        - BUG-006
+      completed_in: v0.3.1
+      created_at: 2026-03-02T23:32:58.753636+01:00
+    - id: ROAD-011
+      title: Enhanced bucket management (get metadata, update tags, exists check, bulk import)
+      status: completed
+      priority: 78
+      category: core
+      effort: medium
+      completed_in: v0.3.1
+      created_at: 2026-03-02T23:32:59.512557+01:00
+    - id: ROAD-012
+      title: Shell completions (bash, zsh, fish) via Cobra generation
+      status: completed
+      priority: 72
+      category: ux
+      effort: small
+      completed_in: v0.4.0
+      created_at: 2026-03-02T23:33:02.496126+01:00
+    - id: ROAD-013
+      title: Multipart uploads and resumable transfers for large files
+      status: completed
+      priority: 77
+      category: core
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-03-02T23:33:03.291987+01:00
+    - id: ROAD-014
+      title: Retry logic with exponential backoff and error recovery
+      status: completed
+      priority: 76
+      category: infra
+      effort: small
+      linked_issues:
+        - BUG-002
+      completed_in: v0.4.0
+      created_at: 2026-03-02T23:33:04.050263+01:00
+    - id: ROAD-015
+      title: Cross-platform release builds (Linux, macOS, Windows) with GitHub Actions
+      status: completed
+      priority: 68
+      category: infra
+      effort: medium
+      linked_issues:
+        - BUG-003
+      completed_in: v0.11.0
+      created_at: 2026-03-02T23:33:07.711386+01:00
+    - id: ROAD-016
+      title: CORS and access control configuration commands
+      status: completed
+      priority: 52
+      category: security
+      effort: medium
+      completed_in: v0.10.0
+      created_at: 2026-03-02T23:33:08.526846+01:00
+    - id: ROAD-017
+      title: Cmd-level integration test suite
+      status: completed
+      priority: 80
+      effort: medium
+      completed_in: v0.13.0
+      created_at: 2026-03-10T04:39:12.200948+01:00
+    - id: ROAD-018
+      title: Re-enable analytics command
+      status: completed
+      priority: 55
+      effort: small
+      completed_in: v0.6.0
+      created_at: 2026-03-10T04:39:14.038127+01:00
+    - id: ROAD-019
+      title: Re-enable S3-to-R2 migration engine
+      status: completed
+      priority: 50
+      effort: medium
+      linked_issues:
+        - FEAT-004
+      completed_in: v0.13.0
+      created_at: 2026-03-10T04:39:15.88984+01:00
+    - id: ROAD-020
+      title: Dashboard TUI real implementation
+      status: completed
+      priority: 45
+      effort: large
+      completed_in: v0.14.0
+      created_at: 2026-03-10T04:39:18.089831+01:00
+    - id: ROAD-021
+      title: Batch operations bulk upload and delete
+      status: completed
+      priority: 65
+      effort: medium
+      completed_in: v0.3.1
+      created_at: 2026-03-10T04:39:19.864181+01:00
+    - id: ROAD-022
+      title: Pipe and stdin support for Unix workflows
+      status: completed
+      priority: 58
+      effort: medium
+      linked_issues:
+        - FEAT-003
+      completed_in: v0.6.0
+      created_at: 2026-03-10T04:39:20.711518+01:00
+    - id: ROAD-023
+      title: Local HTTP dev server proxying to R2
+      status: archived
+      priority: 52
+      effort: medium
+      linked_issues:
+        - FEAT-002
+      created_at: 2026-03-10T04:39:21.630704+01:00
+    - id: ROAD-024
+      title: Audit logging for enterprise readiness
+      status: completed
+      priority: 35
+      effort: medium
+      completed_in: v0.3.1
+      created_at: 2026-03-10T04:39:22.049812+01:00
+    - id: ROAD-025
+      title: Library extraction into pkg/r2go2/
+      status: completed
+      priority: 85
+      has_brainstorm: true
+      completed_in: v0.3.1
+      created_at: 2026-05-07T05:16:14.029605-03:00
+    - id: ROAD-026
+      title: Cloudflare Workers support
+      status: completed
+      priority: 60
+      has_brainstorm: true
+      completed_in: v0.4.0
+      created_at: 2026-05-07T05:16:14.126493-03:00
+    - id: ROAD-027
+      title: Edge caching strategy engine
+      status: completed
+      priority: 75
+      has_brainstorm: true
+      completed_in: v0.3.1
+      created_at: 2026-05-07T05:16:14.206242-03:00
+    - id: ROAD-028
+      title: Project config (.r2go2.yaml) implementation
+      status: completed
+      priority: 80
+      has_brainstorm: true
+      completed_in: v0.3.1
+      created_at: 2026-05-07T05:16:14.286678-03:00
+    - id: ROAD-029
+      title: CCS r2 subcommand integration (deferred)
+      status: captured
+      priority: 30
+      has_brainstorm: true
+      created_at: 2026-05-07T05:16:14.365721-03:00
+    - id: ROAD-030
+      title: KV namespace support
+      status: completed
+      priority: 60
+      has_brainstorm: true
+      completed_in: v0.4.0
+      created_at: 2026-05-07T19:29:25.530573-03:00
+    - id: ROAD-031
+      title: D1 SQL database support
+      status: completed
+      priority: 50
+      has_brainstorm: true
+      completed_in: v0.13.0
+      created_at: 2026-05-07T19:29:28.806175-03:00
+    - id: ROAD-032
+      title: Pages static hosting support
+      status: completed
+      priority: 50
+      has_brainstorm: true
+      completed_in: v0.13.0
+      created_at: 2026-05-07T19:29:31.341162-03:00
+    - id: ROAD-033
+      title: Queues message queue support
+      status: completed
+      priority: 40
+      has_brainstorm: true
+      completed_in: v0.10.0
+      created_at: 2026-05-07T19:29:33.804736-03:00
+    - id: ROAD-034
+      title: Upload guardrails system (allowed buckets, max file size, blocked keys)
+      status: completed
+      priority: 70
+      category: security
+      effort: medium
+      completed_in: v0.3.1
+      created_at: 2026-05-12T05:53:09.000185-03:00
+    - id: ROAD-035
+      title: DNS record management — CRUD for A, AAAA, CNAME, MX, TXT, SRV records
+      status: completed
+      priority: 90
+      category: core
+      effort: medium
+      completed_in: v0.7.1
+      created_at: 2026-05-16T00:08:47.13094-03:00
+    - id: ROAD-036
+      title: Zone management — list zones, settings, diagnostics
+      status: completed
+      priority: 90
+      category: core
+      effort: small
+      completed_in: v0.7.1
+      created_at: 2026-05-16T00:09:05.324556-03:00
+    - id: ROAD-037
+      title: SSL/TLS certificate management — edge certs, origin pull, minimum TLS, always-https
+      status: completed
+      priority: 85
+      category: security
+      effort: small
+      completed_in: v0.7.1
+      created_at: 2026-05-16T00:09:05.427409-03:00
+    - id: ROAD-038
+      title: Cache management — purge by all/URL/tag/host, cache rules, TTL settings
+      status: completed
+      priority: 85
+      category: core
+      effort: small
+      completed_in: v0.7.1
+      created_at: 2026-05-16T00:09:11.456035-03:00
+    - id: ROAD-039
+      title: Page Rules and Redirect Rules management
+      status: completed
+      priority: 80
+      category: core
+      effort: medium
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:11.555248-03:00
+    - id: ROAD-040
+      title: WAF and Firewall — rules, managed rulesets, rate limiting, IP access rules
+      status: completed
+      priority: 80
+      category: security
+      effort: medium
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:18.835502-03:00
+    - id: ROAD-041
+      title: Email Routing — create rules, list destinations, catch-all settings
+      status: completed
+      priority: 75
+      category: core
+      effort: small
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:18.924497-03:00
+    - id: ROAD-042
+      title: D1 SQL database — fill stub with query, migrate, list databases
+      status: completed
+      priority: 75
+      category: core
+      effort: medium
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:26.287955-03:00
+    - id: ROAD-043
+      title: Pages static hosting — deploy from directory, custom domains, preview deployments
+      status: completed
+      priority: 75
+      category: core
+      effort: medium
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:26.389003-03:00
+    - id: ROAD-044
+      title: Images service — upload, transform, variants, delivery URL generation
+      status: completed
+      priority: 70
+      category: core
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:09:33.913777-03:00
+    - id: ROAD-045
+      title: Stream video — upload, live inputs, token management
+      status: completed
+      priority: 65
+      category: core
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-05-16T00:09:34.01034-03:00
+    - id: ROAD-046
+      title: Hyperdrive — database connection pooling for Workers
+      status: completed
+      priority: 70
+      category: core
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:09:41.114769-03:00
+    - id: ROAD-047
+      title: Vectorize — vector storage and indexing for AI workloads
+      status: completed
+      completed_in: v0.13.0
+      created_at: 2026-05-16T00:09:41.216059-03:00
+    - id: ROAD-048
+      title: Vectorize — vector storage and indexing for AI workloads
+      status: completed
+      priority: 65
+      category: intelligence
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:09:47.594725-03:00
+    - id: ROAD-049
+      title: Workers AI and AI Gateway — run models at edge, proxy AI requests, track costs
+      status: completed
+      priority: 70
+      category: intelligence
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-05-16T00:09:47.693133-03:00
+    - id: ROAD-050
+      title: cosmoflare status — dashboard-at-a-glance for zones, workers, storage, alerts
+      status: completed
+      priority: 88
+      category: ux
+      effort: medium
+      has_plan: true
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:09:56.286855-03:00
+    - id: ROAD-051
+      title: cosmoflare logs --follow — real-time log tailing with filtering
+      status: completed
+      priority: 82
+      category: core
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:09:56.384259-03:00
+    - id: ROAD-052
+      title: cosmoflare diff — show what would change before applying
+      status: completed
+      priority: 78
+      category: core
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:06.409267-03:00
+    - id: ROAD-053
+      title: cosmoflare import/export — full account config as YAML for disaster recovery
+      status: completed
+      priority: 78
+      category: infra
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-05-16T00:10:06.508648-03:00
+    - id: ROAD-054
+      title: cosmoflare doctor — diagnose DNS propagation, SSL status, cache hit rates, worker errors
+      status: completed
+      priority: 80
+      category: ux
+      effort: medium
+      has_plan: true
+      completed_in: v0.10.0
+      created_at: 2026-05-16T00:10:13.803125-03:00
+    - id: ROAD-055
+      title: Shell completion — Bash, Zsh, Fish auto-complete for all commands
+      status: completed
+      priority: 75
+      category: ux
+      effort: small
+      completed_in: v0.7.1
+      created_at: 2026-05-16T00:10:13.900551-03:00
+    - id: ROAD-056
+      title: Config as code — .cosmoflare.yaml desired state with cosmoflare apply reconciliation
+      status: completed
+      priority: 72
+      category: infra
+      effort: large
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:21.413705-03:00
+    - id: ROAD-057
+      title: cosmoflare init — interactive project scaffolding with framework detection
+      status: completed
+      priority: 80
+      category: ux
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:21.515178-03:00
+    - id: ROAD-058
+      title: cosmoflare dev — local dev server proxying to Cloudflare services with hot-reload
+      status: completed
+      priority: 82
+      category: workflow
+      effort: large
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:30.399515-03:00
+    - id: ROAD-059
+      title: Template library — cosmoflare create --template=api scaffolds full projects
+      status: completed
+      priority: 70
+      category: workflow
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:30.498797-03:00
+    - id: ROAD-060
+      title: Real-time metrics dashboard — R2 bandwidth, KV rates, worker invocations, latency
+      status: completed
+      priority: 80
+      category: ux
+      effort: large
+      completed_in: v0.13.0
+      created_at: 2026-05-16T00:10:37.873954-03:00
+    - id: ROAD-061
+      title: Cost estimator — project monthly costs from current usage patterns
+      status: completed
+      priority: 78
+      category: intelligence
+      effort: medium
+      completed_in: v0.11.0
+      created_at: 2026-05-16T00:10:37.971345-03:00
+    - id: ROAD-062
+      title: Alert rules — notify on error rates, storage limits, worker failures
+      status: completed
+      priority: 78
+      category: intelligence
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-05-16T00:10:46.793368-03:00
+    - id: ROAD-063
+      title: Tauri desktop app — GUI wrapper with notifications and infrastructure graph
+      status: completed
+      priority: 85
+      category: ux
+      effort: large
+      has_plan: true
+      linked_issues:
+        - FEAT-007
+      completed_in: v0.16.0
+      created_at: 2026-05-16T00:10:46.882401-03:00
+    - id: ROAD-064
+      title: React Native mobile app — on-the-go monitoring and quick actions
+      status: captured
+      priority: 80
+      category: ux
+      effort: large
+      created_at: 2026-05-16T00:10:55.225465-03:00
+    - id: ROAD-065
+      title: Plugin system — community extensions with cosmoflare plugin install
+      status: completed
+      priority: 65
+      category: infra
+      effort: large
+      completed_in: v0.12.0
+      created_at: 2026-05-16T00:10:55.324422-03:00
+    - id: ROAD-066
+      title: MCP Server mode — expose cosmoflare as an MCP tool server for Claude Code and AI agents
+      status: completed
+      priority: 85
+      category: intelligence
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.060224-03:00
+    - id: ROAD-067
+      title: Wrangler compatibility layer — read wrangler.toml and translate to .cosmoflare.yaml
+      status: completed
+      priority: 72
+      category: integration
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.097999-03:00
+    - id: ROAD-068
+      title: Audit log — track all CLI mutations with timestamps, user, before/after state
+      status: completed
+      priority: 70
+      category: core
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.132464-03:00
+    - id: ROAD-069
+      title: Multi-account switching — cosmoflare account list/switch for managing multiple CF accounts
+      status: completed
+      priority: 68
+      category: ux
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.170277-03:00
+    - id: ROAD-070
+      title: Config validation — cosmoflare validate checks .cosmoflare.yaml against CF API constraints
+      status: completed
+      priority: 65
+      category: core
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.210039-03:00
+    - id: ROAD-071
+      title: Terraform export — generate .tf files from live Cloudflare state
+      status: completed
+      priority: 60
+      category: integration
+      completed_in: v0.12.0
+      created_at: 2026-06-06T04:09:31.246415-03:00
+    - id: ROAD-072
+      title: Notifications and webhooks — receive CF webhook events locally for dev
+      status: completed
+      priority: 58
+      category: workflow
+      completed_in: v0.13.0
+      created_at: 2026-06-06T04:09:31.285041-03:00
+    - id: ROAD-073
+      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
+      status: completed
+      completed_in: v0.16.0
+      created_at: 2026-06-20T21:01:03.030854-03:00
+    - id: ROAD-074
+      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
+      status: archived
+      created_at: 2026-06-20T21:01:03.076532-03:00
+    - id: ROAD-075
+      title: Desktop v2 — infrastructure graph + write/CRUD operations
+      status: captured
+      priority: 60
+      category: ux
+      effort: large
+      parent: ROAD-063
+      created_at: 2026-06-20T21:01:03.126109-03:00
+    - id: ROAD-076
+      title: Desktop distribution — code-signing, notarization, auto-update
+      status: archived
+      created_at: 2026-06-20T21:01:03.168784-03:00
+    - id: ROAD-077
+      title: Paid-tier licensing & auth (desktop + mobile)
+      status: archived
+      created_at: 2026-06-20T21:01:03.20834-03:00
+    - id: ROAD-078
+      title: cmd/ DI testability rollout — extend the factory-var pattern across all command handlers
+      status: archived
+      created_at: 2026-06-20T21:01:03.246361-03:00
+    - id: ROAD-079
+      title: Local API daemon (cosmoflare serve) — HTTP+SSE backend for desktop, mobile, and agents
+      status: completed
+      priority: 82
+      category: infra
+      effort: medium
+      completed_in: v0.16.0
+      created_at: 2026-06-20T21:01:18.976171-03:00
+    - id: ROAD-080
+      title: In-process event bus for webhook/alerts (enables real-time notification sourcing)
+      status: captured
+      priority: 70
+      category: infra
+      effort: medium
+      has_plan: true
+      linked_issues:
+        - FEAT-008
+      created_at: 2026-06-20T21:01:19.018763-03:00
+    - id: ROAD-081
+      title: Desktop distribution — code-signing, notarization, auto-update
+      status: captured
+      priority: 68
+      category: infra
+      effort: medium
+      parent: ROAD-063
+      created_at: 2026-06-20T21:01:19.061717-03:00
+    - id: ROAD-082
+      title: Paid-tier licensing & auth (desktop + mobile)
+      status: captured
+      priority: 64
+      category: security
+      effort: large
+      created_at: 2026-06-20T21:01:19.105636-03:00
+    - id: ROAD-083
+      title: cmd/ DI testability rollout — extend factory-var pattern across all command handlers
+      status: captured
+      priority: 55
+      category: testing
+      effort: medium
+      created_at: 2026-06-20T21:01:19.14651-03:00
+    - id: ROAD-084
+      title: Desktop v1.1 reliability & live data (metrics + daemon watchdog)
+      status: captured
+      linked_issues:
+        - FEAT-008
+      created_at: 2026-08-31T03:57:00.037174+04:00
+    - id: ROAD-085
+      title: Secrets hygiene — purge scan findings from committed GOrchestra artifacts
+      status: captured
+      linked_issues:
+        - IDEA-046
+      created_at: 2026-08-31T03:57:01.988278+04:00
+    - id: ROAD-086
+      title: Roadmap hygiene — dedupe double-imported items and regenerate index
+      status: captured
+      linked_issues:
+        - IDEA-047
+      created_at: 2026-08-31T03:57:04.030537+04:00
+    - id: ROAD-087
+      title: Domain Center completion — Waves B–D
+      status: captured
+      linked_issues:
+        - FEAT-006
+      created_at: 2026-08-31T03:57:06.177224+04:00
+    - id: ROAD-088
+      title: Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)
+      status: captured
+      created_at: 2026-08-31T03:57:08.584204+04:00

@@ -1,11 +1,13 @@
 id: ROAD-084
 created_at: 2026-08-31T03:57:00.037174+04:00
-updated_at: 2026-08-31T03:57:00.038801+04:00
+updated_at: 2026-08-31T03:57:19.238374+04:00
 title: Desktop v1.1 reliability & live data (metrics + daemon watchdog)
 description: 'v1.1 hardening theme: IDEA-037 live metrics shipped 2026-07-01 (MetricsProducer, --metrics-interval, SSE bridge) but absent from the roadmap — mark that half completed_in v0.17.0. IDEA-038 covers the Rust daemon watchdog gap: CommandEvent::Terminated is only logged, not acted on (mid-session crash unhandled). Includes the FEAT-008 re-scope (bridge TriggerAlert to sseHub). Audit-hydrated 2026-08-31.'
 status: captured
 tags:
     - audit-hydrated
+linked_issues:
+    - FEAT-008
 origin:
     session: 36
 ulid: 01M1AHNR86PPX4GRCC6DVCASQT

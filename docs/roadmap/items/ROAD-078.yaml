@@ -1,5 +1,7 @@
 id: ROAD-078
 created_at: 2026-06-20T21:01:03.246361-03:00
-updated_at: 2026-06-20T21:01:03.24638-03:00
+updated_at: 2026-09-03T23:56:54.832275+04:00
 title: cmd/ DI testability rollout — extend the factory-var pattern across all command handlers
-status: captured
+status: archived
+notes:
+    - '[Archived 2026-09-03] Reason: Duplicate of ROAD-083 (same item ''cmd/ DI testability rollout'', batch import 8d4076c; keeping the richer 083 entry)'
