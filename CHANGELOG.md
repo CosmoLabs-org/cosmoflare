@@ -28,6 +28,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.18.0] - 2026-09-05
+
+### Added
+- bridge SSE metrics channel to React Query cache (commit:be8637b2)
+- wire MetricsProducer with --metrics-interval flag (commit:7f954756)
+- add MetricsProducer with subscriber gating and delta detection (commit:4a7bdd24)
+
+### Fixed
+- verify downloaded binary checksums before install (commit:ef7f8ed6)
+- wire transport options, implement profile resolution, drop no-op options (commit:3b21556b)
+- repoint version stamping and installers at cosmoflare (commit:342cf8e8)
+- eliminate shared-state data races (BUG-030) (commit:9606ac6e)
+- implement cf-* stylesheet, visible health state, and ARIA live regions (commit:5de362d6)
+- enforce CheckUpload on upload paths and default-exclude sensitive files (commit:5ac6e976)
+- abort multipart upload when reader is shorter than declared size (commit:3e826448)
+- never report deletions for paths that failed to scan (commit:b105502c)
+- emit JSON error envelope when config validation fails in --json mode (commit:eeee5864)
+- paginate remote object listing across NextToken pages (commit:06c0718e)
+- resolve three v1.1 review bugs (BUG-022, BUG-023, BUG-024) (commit:4f501e05)
+
 ## [0.17.0] - 2026-06-21
 
 ### Added
