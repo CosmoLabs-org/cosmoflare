@@ -1,7 +1,9 @@
 version: 1
 project: cosmoflare
 settings:
-    timeout: 30s
+    # Full suite (cmd + pkg/cosmoflare + internal/...) takes 90s+ on this
+    # machine; 30s killed the run with exit -1 and read as a test failure.
+    timeout: 300s
     fail_fast: true
 prerequisites:
     - name: Go installed
