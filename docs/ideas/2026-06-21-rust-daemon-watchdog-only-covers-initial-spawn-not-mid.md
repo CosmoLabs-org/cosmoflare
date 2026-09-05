@@ -2,7 +2,7 @@
 id: IDEA-038
 title: Rust daemon watchdog only covers initial spawn, not mid-session crash
 created: "2026-06-21T03:02:18.099971-03:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 18
@@ -12,7 +12,12 @@ tags:
     - desktop
     - rust
     - reliability
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:50.015003+04:00"
 ---
+
+# Rust daemon watchdog only covers initial spawn, not mid-session crash
 
 # Rust daemon watchdog only covers initial spawn, not mid-session crash
 

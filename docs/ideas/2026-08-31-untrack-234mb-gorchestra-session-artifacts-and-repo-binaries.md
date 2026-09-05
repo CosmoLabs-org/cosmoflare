@@ -3,7 +3,7 @@ ulid: 01M1AF0N2K0DR3RQXMVDCHEA0E
 id: IDEA-046
 title: Untrack 234MB GOrchestra session artifacts and repo binaries
 created: "2026-08-31T03:10:31.507685+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -12,7 +12,12 @@ origin:
 tags:
     - audit
     - hygiene
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.975359+04:00"
 ---
+
+# Untrack 234MB GOrchestra session artifacts and repo binaries
 
 # Untrack 234MB GOrchestra session artifacts and repo binaries
 

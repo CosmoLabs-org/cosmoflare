@@ -3,7 +3,7 @@ ulid: 01M1AF055NY4WGFNENKPFKJD1G
 id: IDEA-043
 title: Write the missing desktop cf-* design system stylesheet
 created: "2026-08-31T03:10:15.221421+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - design
     - desktop
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.872236+04:00"
 ---
+
+# Write the missing desktop cf-* design system stylesheet
 
 # Write the missing desktop cf-* design system stylesheet
 

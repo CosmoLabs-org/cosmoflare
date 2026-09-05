@@ -3,7 +3,7 @@ ulid: 01M1AF0FTBVH2ZA3V4Q3EG24S7
 id: IDEA-045
 title: Fix internal/interactive data races to unblock CI and Release
 created: "2026-08-31T03:10:26.123053+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - distribution
     - ci
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.906873+04:00"
 ---
+
+# Fix internal/interactive data races to unblock CI and Release
 
 # Fix internal/interactive data races to unblock CI and Release
 

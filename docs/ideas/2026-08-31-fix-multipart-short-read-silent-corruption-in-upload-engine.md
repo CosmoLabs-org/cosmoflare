@@ -3,7 +3,7 @@ ulid: 01M1AEZD1QGNRNZD6NNPND1F9J
 id: IDEA-039
 title: Fix multipart short-read silent corruption in upload engine
 created: "2026-08-31T03:09:50.519566+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -12,7 +12,12 @@ origin:
 tags:
     - audit
     - core-logic
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.700175+04:00"
 ---
+
+# Fix multipart short-read silent corruption in upload engine
 
 # Fix multipart short-read silent corruption in upload engine
 

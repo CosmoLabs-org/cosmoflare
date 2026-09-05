@@ -3,7 +3,7 @@ ulid: 01M1AF1A55Q5J95M6N8JYQGBP1
 id: IDEA-047
 title: Add plan_ref back-links to 7 orphaned brainstorms
 created: "2026-08-31T03:10:53.093494+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -12,7 +12,12 @@ origin:
 tags:
     - audit
     - doc-integrity
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.804828+04:00"
 ---
+
+# Add plan_ref back-links to 7 orphaned brainstorms
 
 # Add plan_ref back-links to 7 orphaned brainstorms
 

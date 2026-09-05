@@ -3,7 +3,7 @@ ulid: 01M1AF0ARSE9ZMS46G8C3QKDP7
 id: IDEA-044
 title: Auto-generate MCP tools from the cobra command tree
 created: "2026-08-31T03:10:20.953926+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - competitive
     - mcp
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.941255+04:00"
 ---
+
+# Auto-generate MCP tools from the cobra command tree
 
 # Auto-generate MCP tools from the cobra command tree
 

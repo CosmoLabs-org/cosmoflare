@@ -2,11 +2,16 @@
 id: IDEA-036
 title: Untrack build/r2go2 (38MB binary tracked inside a gitignored build/)
 created: "2026-06-20T21:05:23.090769-03:00"
-status: seed
+status: withered
 source: human
 origin:
     session: 17
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:36:20.636215+04:00"
 ---
+
+# Untrack build/r2go2 (38MB binary tracked inside a gitignored build/)
 
 # Untrack build/r2go2 (38MB binary tracked inside a gitignored build/)
 

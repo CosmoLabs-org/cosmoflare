@@ -2,7 +2,7 @@
 id: IDEA-037
 title: Desktop dashboard is not live — metrics SSE channel has no daemon producer
 created: "2026-06-21T03:02:12.326639-03:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 18
@@ -13,6 +13,7 @@ tags:
     - v1.1
     - notifications
 ---
+
 
 # Desktop dashboard is not live — metrics SSE channel has no daemon producer
 

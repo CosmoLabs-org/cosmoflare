@@ -3,7 +3,7 @@ ulid: 01M1AEZJ5B6PK573DTVHMRV04D
 id: IDEA-040
 title: Paginate sync ListRemoteObjects to stop --delete data destruction
 created: "2026-08-31T03:09:55.755283+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -12,7 +12,12 @@ origin:
 tags:
     - audit
     - core-logic
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.73714+04:00"
 ---
+
+# Paginate sync ListRemoteObjects to stop --delete data destruction
 
 # Paginate sync ListRemoteObjects to stop --delete data destruction
 

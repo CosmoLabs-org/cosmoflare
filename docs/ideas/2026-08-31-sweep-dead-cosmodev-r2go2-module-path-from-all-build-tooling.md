@@ -3,7 +3,7 @@ ulid: 01M1AEZQEP36Q652YQHVFAQ20A
 id: IDEA-041
 title: Sweep dead CosmoDev-R2Go2 module path from all build tooling
 created: "2026-08-31T03:10:01.174494+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -12,7 +12,12 @@ origin:
 tags:
     - audit
     - distribution
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.770587+04:00"
 ---
+
+# Sweep dead CosmoDev-R2Go2 module path from all build tooling
 
 # Sweep dead CosmoDev-R2Go2 module path from all build tooling
 

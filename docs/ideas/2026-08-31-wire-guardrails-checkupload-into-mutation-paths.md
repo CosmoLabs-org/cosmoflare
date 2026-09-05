@@ -3,7 +3,7 @@ ulid: 01M1AEZWX7A7BWXVHGBEZ4YNBB
 id: IDEA-042
 title: Wire guardrails CheckUpload into mutation paths
 created: "2026-08-31T03:10:06.759697+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 36
@@ -13,7 +13,12 @@ tags:
     - audit
     - core-logic
     - security
+resolution:
+    reason: implemented
+    date: "2026-09-04T03:35:49.839015+04:00"
 ---
+
+# Wire guardrails CheckUpload into mutation paths
 
 # Wire guardrails CheckUpload into mutation paths
 
