@@ -12,7 +12,6 @@ type clientConfig struct {
 	accountID    string
 	apiToken     string
 	profile      string
-	bucket       string
 	endpoint     string
 	accessKey    string
 	secretKey    string
@@ -20,19 +19,15 @@ type clientConfig struct {
 	httpClient   *http.Client
 	timeout      time.Duration
 	cacheControl bool
-	auditLog     string
-	dryRun       bool
 	projectCfg   *ProjectConfig
 }
 
-// WithProfile sets the named profile to load from ~/.r2go2/config.yaml.
+// WithProfile selects a named profile from ~/.r2go2/config.yaml. The profile
+// supplies the account ID and API token only when they were not already set
+// by an explicit option or the CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN
+// environment variables ("options > env > profile" precedence).
 func WithProfile(name string) ClientOption {
 	return func(c *clientConfig) { c.profile = name }
-}
-
-// WithBucket sets a default bucket for operations.
-func WithBucket(name string) ClientOption {
-	return func(c *clientConfig) { c.bucket = name }
 }
 
 // WithCacheControl enables automatic cache header injection on uploads.
@@ -40,12 +35,16 @@ func WithCacheControl(enabled bool) ClientOption {
 	return func(c *clientConfig) { c.cacheControl = enabled }
 }
 
-// WithHTTPClient sets a custom HTTP client.
+// WithHTTPClient sets the HTTP client used for every API call this client
+// makes, covering both the Cloudflare API and the R2 S3 endpoint. When set,
+// it takes precedence over WithTimeout.
 func WithHTTPClient(hc *http.Client) ClientOption {
 	return func(c *clientConfig) { c.httpClient = hc }
 }
 
-// WithTimeout sets the overall request timeout.
+// WithTimeout sets the overall request timeout applied to every API call
+// (default 30s). It is ignored when WithHTTPClient supplies an explicit
+// client; set the timeout on that client instead.
 func WithTimeout(d time.Duration) ClientOption {
 	return func(c *clientConfig) { c.timeout = d }
 }
@@ -66,16 +65,6 @@ func WithCredentials(accessKey, secretKey string) ClientOption {
 // WithRegion sets the AWS region (default: "auto").
 func WithRegion(region string) ClientOption {
 	return func(c *clientConfig) { c.region = region }
-}
-
-// WithAuditLog enables JSONL audit logging to the specified path.
-func WithAuditLog(path string) ClientOption {
-	return func(c *clientConfig) { c.auditLog = path }
-}
-
-// WithDryRun enables dry-run mode (no actual API calls).
-func WithDryRun(enabled bool) ClientOption {
-	return func(c *clientConfig) { c.dryRun = enabled }
 }
 
 // WithAccountID sets the Cloudflare account ID directly.
