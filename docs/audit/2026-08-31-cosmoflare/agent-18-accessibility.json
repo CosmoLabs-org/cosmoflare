@@ -1,0 +1,93 @@
+{
+  "agent": "accessibility",
+  "overall_score": 5,
+  "sub_scores": {
+    "color_contrast": 5,
+    "keyboard_nav": 8,
+    "screen_reader": 3,
+    "semantic_html": 6,
+    "forms_labels": 6
+  },
+  "critical_findings": [
+    {
+      "title": "No aria-live regions for SSE-driven notifications, unread badge, or connection status (WCAG 4.1.3)",
+      "severity": "high",
+      "file": "desktop/src/views/Notifications.tsx:44",
+      "fix": "Wrap notification list in role=\"log\" aria-live=\"polite\"; role=\"status\" on unread badge and the 'Connecting to daemon…' pane in App.tsx:146",
+      "effort": "small",
+      "escalate": true
+    },
+    {
+      "title": "Health online/offline state invisible to assistive tech — aria-hidden color dot plus title that never computes into the accessible name (WCAG 1.4.1, 4.1.2)",
+      "severity": "high",
+      "file": "desktop/src/components/Header.tsx:66",
+      "fix": "Set aria-label=\"{label}: online|offline\" on the outer span; add a non-color state cue once styled",
+      "effort": "small",
+      "escalate": true
+    },
+    {
+      "title": "Component stylesheet never written — 30+ cf-* classes undefined; target sizes default below 24px AA minimum (WCAG 2.5.8)",
+      "severity": "high",
+      "file": "desktop/src/styles.css:1",
+      "fix": "Implement cf-* styles: min-height 24px (prefer 44px) on .cf-nav-item/.cf-mark-seen, :focus-visible outlines, >=3:1 indicator colors on #1a1a1a",
+      "effort": "medium",
+      "escalate": true
+    },
+    {
+      "title": "Active sidebar view not programmatically indicated — is-active class only (WCAG 1.3.1, 4.1.2)",
+      "severity": "medium",
+      "file": "desktop/src/App.tsx:134",
+      "fix": "aria-current=\"page\" on active button; aside -> nav aria-label=\"Views\"",
+      "effort": "small"
+    },
+    {
+      "title": "Unread badge announces a bare number with no context (WCAG 1.3.1, 4.1.3)",
+      "severity": "medium",
+      "file": "desktop/src/views/Notifications.tsx:47",
+      "fix": "aria-label=\"{n} unread notifications\" on the badge span",
+      "effort": "small"
+    },
+    {
+      "title": "No h1 — document headings start at h2; brand is a div (WCAG 1.3.1)",
+      "severity": "medium",
+      "file": "desktop/src/components/Header.tsx:26",
+      "fix": "Make the brand an h1; keep view titles h2 and card labels h3",
+      "effort": "small"
+    },
+    {
+      "title": "Account select has aria-label only, with UA-default control colors against a forced dark theme (WCAG 1.4.3 risk, 3.3.2 gap)",
+      "severity": "medium",
+      "file": "desktop/src/components/Header.tsx:29",
+      "fix": "Add visible label htmlFor + explicit color/background on .cf-account-switcher when styling lands",
+      "effort": "small"
+    },
+    {
+      "title": "Dashboard card error state is the bare word 'Error' (WCAG 4.1.3 degenerate)",
+      "severity": "low",
+      "file": "desktop/src/views/Dashboard.tsx:34",
+      "fix": "Render the actual error message with role=\"alert\"",
+      "effort": "small"
+    },
+    {
+      "title": "Notification fallback dumps raw JSON.stringify output into the accessible tree (WCAG 1.3.1 degraded)",
+      "severity": "low",
+      "file": "desktop/src/views/Notifications.tsx:70",
+      "fix": "Human fallback string ('Event received') with raw payload in <details>",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    { "action": "Add role=\"log\"/aria-live=\"polite\" to notification list, role=\"status\" to unread badge and connecting pane", "effort": "small", "priority": "high" },
+    { "action": "Fix HealthDot accessible name to include online/offline state", "effort": "small", "priority": "high" },
+    { "action": "Write the missing cf-* stylesheet with >=24px targets, :focus-visible, >=3:1 indicator contrast", "effort": "medium", "priority": "high" },
+    { "action": "Add aria-current=\"page\" to active sidebar button and use nav landmark", "effort": "small", "priority": "medium" },
+    { "action": "Promote brand div to h1", "effort": "small", "priority": "medium" },
+    { "action": "Add axe-core checks to the Vitest suite as an a11y regression gate", "effort": "small", "priority": "medium" }
+  ],
+  "roadmap_suggestions": [
+    { "title": "Screen-reader-first pass on desktop app", "description": "Live regions, accessible health state, labeled badge, h1 hierarchy — makes the real-time dashboard usable with VoiceOver/NVDA", "priority": "high", "effort": "small" },
+    { "title": "Implement the desktop cf-* design system stylesheet", "description": "The styling layer was scaffolded (e7401cd) but never written; shipped app renders unstyled and cannot meet 1.4.11/2.5.8", "priority": "high", "effort": "medium" },
+    { "title": "Automated accessibility gate in CI", "description": "axe-core in Vitest + runtime axe sweep of the Tauri webview once styles exist", "priority": "medium", "effort": "small" },
+    { "title": "Runtime WCAG verification session", "description": "VoiceOver + keyboard-only + contrast instrumentation; static pass cannot certify focus order, live-region behavior, or rendered contrast", "priority": "medium", "effort": "medium" }
+  ]
+}

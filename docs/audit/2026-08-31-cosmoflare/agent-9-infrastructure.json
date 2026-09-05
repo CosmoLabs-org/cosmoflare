@@ -1,0 +1,93 @@
+{
+  "agent": "infrastructure",
+  "overall_score": 4,
+  "sub_scores": {
+    "containerization": 4,
+    "orchestration": 2,
+    "iac_quality": 3,
+    "security": 4
+  },
+  "critical_findings": [
+    {
+      "title": ".dockerignore excludes go.mod/go.sum — Docker build fails at COPY step",
+      "severity": "high",
+      "file": ".dockerignore:29-30",
+      "fix": "Remove *.mod and *.sum patterns; add docker build to CI so image breakage is detected",
+      "effort": "small"
+    },
+    {
+      "title": "All ldflags target dead module path CosmoDev-R2Go2 — version stamping silently no-ops in every artifact",
+      "severity": "high",
+      "file": "Makefile:19",
+      "fix": "Change -X targets to github.com/CosmoLabs-org/cosmoflare/cmd.* in Makefile:19, Dockerfile:30-32, release.yml:62-64; define the flag string once",
+      "effort": "small"
+    },
+    {
+      "title": "Release notes and installer point at dead repo CosmoDev-R2Go2",
+      "severity": "high",
+      "file": ".github/workflows/release.yml:87",
+      "fix": "Use github.com/CosmoLabs-org/cosmoflare in release notes go install line and install.sh REPO",
+      "effort": "small"
+    },
+    {
+      "title": "Installer downloads binary with no checksum verification",
+      "severity": "high",
+      "file": "install.sh:111-131",
+      "fix": "Fetch checksums-sha256.txt from the release and verify before chmod +x / install",
+      "effort": "small"
+    },
+    {
+      "title": "make dist packages 76MB of internal session transcripts into public release archives",
+      "severity": "medium",
+      "file": "Makefile:95-97",
+      "fix": "Ship only README.md, LICENSE, and docs/USAGE.md in archives",
+      "effort": "small"
+    },
+    {
+      "title": "No security scanning in CI (no govulncheck, CodeQL, trivy, or dependabot); golangci-lint unpinned at latest",
+      "severity": "medium",
+      "file": ".github/workflows/ci.yml:28-32",
+      "fix": "Pin golangci-lint version; add security job with govulncheck and trivy; add dependabot.yml",
+      "effort": "medium"
+    },
+    {
+      "title": "Duplicate test-integration Makefile target — one references dead ./pkg/r2go2/ path, the other hangs CI with interactive read prompt",
+      "severity": "medium",
+      "file": "Makefile:200-204",
+      "fix": "Delete first definition, fix package path to ./pkg/cosmoflare/, gate prompt on tty",
+      "effort": "small"
+    },
+    {
+      "title": "Profile API tokens and AWS secret keys persisted as plaintext YAML; keychain module unwired to profile storage",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/config.go:139-161",
+      "fix": "Opt-in flag to store tokens via internal/keychain with reference in YAML; keep 0600 plaintext as headless default",
+      "effort": "medium"
+    },
+    {
+      "title": "Docker builder golang:1.25-alpine lags go.mod go 1.26; alpine:latest unpinned; GOARCH=amd64 hardcoded",
+      "severity": "medium",
+      "file": "Dockerfile:5",
+      "fix": "Use golang:1.26-alpine, pin alpine by digest, add multi-arch buildx job",
+      "effort": "medium"
+    }
+  ],
+  "recommendations": [
+    { "action": "Fix .dockerignore and add docker build CI job", "effort": "small", "priority": "high" },
+    { "action": "Sweep all CosmoDev-R2Go2 references (ldflags, install paths, release notes) to cosmoflare", "effort": "small", "priority": "high" },
+    { "action": "Add checksum verification to install.sh; pin golangci-lint version", "effort": "small", "priority": "high" },
+    { "action": "Add govulncheck + trivy security job and dependabot.yml", "effort": "medium", "priority": "high" },
+    { "action": "Remove docs/ from make dist archives", "effort": "small", "priority": "medium" },
+    { "action": "Dedupe test-integration target and fix package path", "effort": "small", "priority": "medium" },
+    { "action": "Wire internal/keychain into profile save behind opt-in flag", "effort": "medium", "priority": "medium" },
+    { "action": "Consolidate test.yml into ci.yml; upload coverage artifact", "effort": "small", "priority": "low" },
+    { "action": "Rebrand Makefile/Dockerfile/packaging from r2go2 to cosmoflare", "effort": "medium", "priority": "medium" },
+    { "action": "Untrack simple-setup/test-setup binaries; exclude GOrchestra recovery patches from public repo", "effort": "medium", "priority": "low" }
+  ],
+  "roadmap_suggestions": [
+    { "title": "Supply-chain hardening: reproducible, verified releases", "description": "Pin CI tool versions, verify installer checksums, run make sbom in release workflow, sign release artifacts", "priority": "high", "effort": "medium" },
+    { "title": "Docker image publishing pipeline", "description": "Multi-arch buildx with digest-pinned bases, trivy scan gate, push to ghcr.io on tags; image currently unbuildable and unpublished", "priority": "medium", "effort": "medium" },
+    { "title": "Deployment story for cosmoflare serve", "description": "Example compose/systemd/k8s artifacts with resource limits and token-auth health checks for the daemon", "priority": "low", "effort": "medium" },
+    { "title": "Rename-debt cleanup: r2go2 to cosmoflare", "description": "Single sweep covering Makefile, Dockerfile, DEB/RPM, install scripts, ~/.r2go2 config dir migration, and removal of cicd.go.disabled", "priority": "high", "effort": "large" }
+  ]
+}

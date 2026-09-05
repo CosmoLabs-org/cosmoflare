@@ -1,0 +1,158 @@
+{
+  "project": "cosmoflare",
+  "version": "0.17.0",
+  "audit_date": "2026-08-31",
+  "overall_score": 46.1,
+  "maturity": "Developing",
+  "priority": "High",
+  "methodology": 2,
+  "audit_model": {
+    "provider": "glm",
+    "model_id": "glm-5.3",
+    "model_display": "GLM 5.3 (1M context)",
+    "timestamp": "2026-08-31T02:31:17+04:00"
+  },
+  "prior_audit": {
+    "path": "docs/audit/2026-05-19-r2go2",
+    "overall_score": 70.8,
+    "maturity": "Mature",
+    "delta": "REGRESSION (-24.7)",
+    "delta_note": "Dimension sets differ (5 agents then vs 13 now: SEO, distribution, design, doc-integrity added). But comparable dimensions also regressed: core-logic 78->50 (deeper analysis found silent corruption), infrastructure 62->40 (release pipeline found never-succeeding), api-design 78->60."
+  },
+  "agents": [
+    {
+      "name": "code-quality",
+      "score": 70,
+      "grade": "C-",
+      "delta": "(-4)",
+      "sub_scores": { "architecture": 70, "code_patterns": 70, "tech_debt": 60, "test_coverage": 70, "maintainability": 60 }
+    },
+    {
+      "name": "core-logic",
+      "score": 50,
+      "grade": "E",
+      "delta": "REGRESSION (-28)",
+      "sub_scores": { "bug_detection": 40, "performance": 50, "edge_cases": 40, "security": 50, "data_integrity": 40 }
+    },
+    {
+      "name": "competitive",
+      "score": 50,
+      "grade": "E",
+      "delta": "baseline",
+      "sub_scores": { "feature_parity": 60, "differentiation": 70, "market_position": 30, "technical_moat": 40, "growth_potential": 30 }
+    },
+    {
+      "name": "distribution",
+      "score": 30,
+      "grade": "F",
+      "delta": "baseline",
+      "sub_scores": { "ci_cd": 30, "packaging": 20, "deployment": 20, "multi_platform": 60, "developer_experience": 50 }
+    },
+    {
+      "name": "seo-content",
+      "score": 20,
+      "grade": "F-",
+      "delta": "baseline",
+      "sub_scores": { "meta_tags": 10, "structured_data": 0, "technical_seo": 10, "content_strategy": 40, "discoverability": 20, "conversion_cta": 30 }
+    },
+    {
+      "name": "api-design",
+      "score": 60,
+      "grade": "D",
+      "delta": "REGRESSION (-18)",
+      "sub_scores": { "api_design": 60, "versioning": 40, "auth_security": 70, "documentation": 70 }
+    },
+    {
+      "name": "infrastructure",
+      "score": 40,
+      "grade": "F+",
+      "delta": "REGRESSION (-22)",
+      "sub_scores": { "containerization": 40, "orchestration": 20, "iac_quality": 30, "security": 40 }
+    },
+    {
+      "name": "documentation",
+      "score": 50,
+      "grade": "E",
+      "delta": "(-12)",
+      "sub_scores": { "completeness": 60, "accuracy": 40, "onboarding": 50, "api_docs": 40 }
+    },
+    {
+      "name": "roadmap-health",
+      "score": 50,
+      "grade": "E",
+      "delta": "baseline",
+      "sub_scores": { "infrastructure": 60, "coverage": 60, "linkage": 50, "staleness": 30, "hydration_needed": 30 }
+    },
+    {
+      "name": "doc-integrity",
+      "score": 47,
+      "grade": "E-",
+      "delta": "baseline",
+      "deterministic": true,
+      "sub_scores": { "chain_integrity": 60, "enrichment": 60, "review_coverage": 10, "prompt_freshness": 60 }
+    },
+    {
+      "name": "work-completion",
+      "score": null,
+      "grade": "—",
+      "delta": "baseline",
+      "status": "not_applicable",
+      "note": "ccs audit completion-score returned -1, applicable=false. Agent 15 code-verified FEAT-008 as genuinely open (internal/events absent); zero possibly-done issues; only signals are 2 stalled plans (tracked in doc-integrity/roadmap dimensions). Excluded from the mean as a sentinel, not a score.",
+      "sub_scores": { "issue_closure": 90, "roadmap_sync": 40, "plan_freshness": 30 }
+    },
+    {
+      "name": "design",
+      "score": 40,
+      "grade": "F+",
+      "delta": "baseline",
+      "composite": true,
+      "methodology_note": "round(0.50*taste + 0.50*accessibility); Agent 19 (motion) skipped — no motion evidence",
+      "child_scores": {
+        "agent_17_taste": { "score": 30, "sub_scores": { "visual_hierarchy": 30, "typography": 20, "color_system": 20, "spacing_layout": 20, "anti_slop": 90, "responsiveness_states": 30 } },
+        "agent_18_accessibility": { "score": 50, "sub_scores": { "color_contrast": 50, "keyboard_nav": 80, "screen_reader": 30, "semantic_html": 60, "forms_labels": 60 } },
+        "agent_19_motion": { "score": null, "status": "skipped_no_motion" }
+      }
+    }
+  ],
+  "doc_integrity": {
+    "score": 47,
+    "inputs": { "broken_chains": 7, "unenriched_docs": 76, "unreviewed_docs": 127, "stale_docs": 6, "stale_prompts": 2 },
+    "delta": "baseline"
+  },
+  "work_completion": {
+    "score": null,
+    "status": "not_applicable",
+    "inputs": { "possibly_done_issues": 0, "orphaned_roadmap": 0, "stalled_plans": 2 }
+  },
+  "critical_bugs_count": 19,
+  "critical_bugs": [
+    { "id": "AUD-001", "location": "pkg/cosmoflare/upload.go:207", "severity": "high", "description": "Multipart upload silently stores truncated/corrupt objects (short read accepted as success)", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-002", "location": "cmd/sync.go:428", "severity": "high", "description": "sync lists only first 1000 objects, no pagination; --delete can destroy local files present remotely", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-003", "location": "pkg/cosmoflare/guardrails.go:29", "severity": "high", "description": "Guardrails parsed and tested but never enforced — zero production callers", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-004", "location": "pkg/cosmoflare/upload.go:184", "severity": "high", "description": "WithPartSize(0) integer-divide-by-zero panic in MultipartUpload", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-005", "location": "pkg/cosmoflare/watcher.go:124", "severity": "high", "description": "Watcher swallows scan errors then --delete removes remote objects for unreadable paths", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-006", "location": "pkg/cosmoflare/client.go:91", "severity": "high", "description": "6 of 14 client options are silent no-ops incl. WithTimeout (never wired to transports — hang risk)", "source": "agent-2-core-logic.md" },
+    { "id": "AUD-007", "location": "internal/interactive/", "severity": "high", "description": "Data races in internal/interactive block CI and Release (-race gate fails; master CI red)", "source": "agent-5-distribution.md" },
+    { "id": "AUD-008", "location": ".github/workflows/release.yml:62", "severity": "high", "description": "ldflags inject dead module path CosmoDev-R2Go2 — every binary reports version 'dev'", "source": "agent-5-distribution.md" },
+    { "id": "AUD-009", "location": "install.sh:19", "severity": "high", "description": "All installer scripts download from dead repo CosmoDev-R2Go2 with wrong asset names (curl|bash = 404)", "source": "agent-5-distribution.md" },
+    { "id": "AUD-010", "location": ".github/workflows/release.yml:31", "severity": "high", "description": "Release pipeline 18/18 failed runs; zero GitHub Releases ever shipped", "source": "agent-5-distribution.md" },
+    { "id": "AUD-011", "location": ".dockerignore:29", "severity": "high", "description": ".dockerignore excludes go.mod/go.sum — Docker build fails at COPY step", "source": "agent-9-infrastructure.md" },
+    { "id": "AUD-012", "location": "desktop/src/styles.css:1", "severity": "high", "description": "Entire cf-* design system undefined — desktop app ships unstyled (30+ dead classes)", "source": "agent-17-design-taste.md" },
+    { "id": "AUD-013", "location": "desktop/src/components/Header.tsx:66", "severity": "high", "description": "Health online/offline invisible to assistive tech AND visually identical (WCAG 1.4.1/4.1.2)", "source": "agent-18-accessibility.md" },
+    { "id": "AUD-014", "location": "desktop/src/views/Notifications.tsx:44", "severity": "high", "description": "No aria-live regions — SSE notifications silent to screen readers (WCAG 4.1.3)", "source": "agent-18-accessibility.md" },
+    { "id": "AUD-015", "location": "README.md:35", "severity": "high", "description": "README marks 13 shipped services as Planned; wrong quick-start syntax; repo claims open-source but is private", "source": "agent-6-seo-content.md" },
+    { "id": "AUD-016", "location": "docs/PRODUCT-VISION.md:25", "severity": "high", "description": "Cloudflare shipped cf CLI + official MCP servers Apr 2026 — two product pillars now vendor features", "source": "agent-4-competitive.md" },
+    { "id": "AUD-017", "location": "pkg/cosmoflare/mcp.go:286", "severity": "high", "description": "MCP server exposes 8 tools vs 366 CLI commands (2% of own surface)", "source": "agent-4-competitive.md" },
+    { "id": "AUD-018", "location": "docs/brainstorming/ (7 files)", "severity": "high", "description": "7 plan->brainstorm chains orphaned (missing plan_ref back-links; 25-pt doc-integrity penalty)", "source": "agent-14-doc-integrity.md" },
+    { "id": "AUD-019", "location": "docs/prompts/2026-06-21-inprocess-event-bus.md", "severity": "high", "description": "Event-bus three-tier chain (FEAT-008/ROAD-080) documents a feature with zero implementation, stalled 71 days", "source": "agent-14-doc-integrity.md" }
+  ],
+  "meta": {
+    "agent_count": 13,
+    "agents_skipped": { "cosmokit-synergy": "cosmokit not installed", "motion": "no motion evidence" },
+    "mode": "fresh",
+    "duration_minutes": 45,
+    "total_source_files": 202,
+    "total_test_files": 193,
+    "go_loc": 145037
+  }
+}

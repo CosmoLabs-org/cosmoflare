@@ -1,0 +1,128 @@
+{
+  "agent": "design-taste",
+  "overall_score": 3,
+  "sub_scores": {
+    "visual_hierarchy": 3,
+    "typography": 2,
+    "color_system": 2,
+    "spacing_layout": 2,
+    "anti_slop": 9,
+    "responsiveness_states": 3
+  },
+  "critical_findings": [
+    {
+      "title": "All cf-* classes are undefined — the visual design layer does not exist",
+      "severity": "high",
+      "file": "desktop/src/styles.css:1-15",
+      "fix": "Write the cf-* stylesheet (or adopt Tailwind 4 per stack) implementing the layout the class names already describe",
+      "effort": "medium"
+    },
+    {
+      "title": "Health dot online/offline states are visually identical",
+      "severity": "high",
+      "file": "desktop/src/components/Header.tsx:65-75",
+      "fix": "Style .cf-dot-mark with success/danger colors paired with the existing text label",
+      "effort": "small"
+    },
+    {
+      "title": "No layout: sidebar stacks above content, card grid never grids",
+      "severity": "high",
+      "file": "desktop/src/App.tsx:132-143",
+      "fix": "Flex two-pane body layout; cf-card-grid as auto-fill minmax grid",
+      "effort": "small"
+    },
+    {
+      "title": "Stack diverges from mandated desktop profile (React 18, no Tailwind/shadcn/Zustand/Framer Motion/icons)",
+      "severity": "medium",
+      "file": "desktop/package.json:19-37",
+      "fix": "Align dependencies to v2026.02 desktop-cross-platform profile; replace emoji brand with Lucide icon",
+      "effort": "large"
+    },
+    {
+      "title": "Error states render the bare word 'Error' with no detail or retry",
+      "severity": "medium",
+      "file": "desktop/src/views/Dashboard.tsx:30-41",
+      "fix": "Surface ApiError status/message and add a retry via queryClient.invalidateQueries",
+      "effort": "small"
+    },
+    {
+      "title": "Hardcoded dark-only palette, no tokens, unstyled native controls on dark bg",
+      "severity": "medium",
+      "file": "desktop/src/styles.css:1-5",
+      "fix": "Define semantic CSS variables and style native controls against them; explicit light/dark strategy",
+      "effort": "small"
+    },
+    {
+      "title": "Typography is browser defaults end to end — no scale, weights, or line-height",
+      "severity": "medium",
+      "file": "desktop/src/styles.css:2",
+      "fix": "Add a minimal type scale and tabular-nums for card counts",
+      "effort": "small"
+    },
+    {
+      "title": "Nav buttons below comfortable target size with no active-state treatment",
+      "severity": "low",
+      "file": "desktop/src/App.tsx:134-142",
+      "fix": "Min-height 36-44px hit areas and a distinct is-active style",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Implement the cf-* stylesheet: two-pane layout, card grid, nav active state, styled controls",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Style is-online/is-offline health dots with success/danger colors",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Introduce semantic color tokens as CSS variables, keep the 13.9:1 text pair",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Show ApiError detail with retry in dashboard error states",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Align dependency stack to v2026.02 desktop profile (React 19, Tailwind 4, shadcn/ui, Zustand 5)",
+      "effort": "large",
+      "priority": "medium"
+    },
+    {
+      "action": "Replace the ⚡ emoji brand mark with a Lucide icon",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Desktop visual design system implementation",
+      "description": "Write the missing stylesheet and tokens for the existing cf-* class vocabulary; the app currently ships unstyled",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Design tokens and light/dark theming",
+      "description": "Replace the hardcoded #e6e6e6/#1a1a1a pair with semantic CSS variables and an explicit theme strategy",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Stack alignment to v2026.02 desktop-cross-platform profile",
+      "description": "React 18→19, Tailwind 4, shadcn/ui, Zustand 5, Lucide/Hugeicons icon set",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "State-change micro-motion pass",
+      "description": "Pulse transitions for health dots and unread badge once styling lands; currently all state changes are invisible",
+      "priority": "low",
+      "effort": "small"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "agent": "seo-content",
+  "overall_score": 2,
+  "sub_scores": {
+    "meta_tags": 1,
+    "structured_data": 0,
+    "technical_seo": 1,
+    "content_strategy": 4,
+    "discoverability": 2,
+    "conversion_cta": 3
+  },
+  "critical_findings": [
+    {
+      "title": "Repository is private while product claims open-source status",
+      "severity": "high",
+      "file": "repository metadata (GitHub API: isPrivate=true, topics=[], description=null, homepage=null)",
+      "fix": "Make repo public; set description, 15-20 topics (cloudflare, cli, go, r2, wrangler-alternative, mcp), homepage URL",
+      "effort": "small"
+    },
+    {
+      "title": "go install instruction in README is a dead path",
+      "severity": "high",
+      "file": "README.md:50",
+      "fix": "Publish repo, verify one-liner from clean machine, add install.sh curl and Homebrew tap alternates",
+      "effort": "small"
+    },
+    {
+      "title": "README services table marks 13 shipped services as Planned",
+      "severity": "high",
+      "file": "README.md:35-43",
+      "fix": "Regenerate table from CLAUDE.md service matrix or cmd/*.go registration; same fix for cmd/root.go:33-40 help text",
+      "effort": "small"
+    },
+    {
+      "title": "No GitHub Releases despite 21 tags and 19 changelog versions",
+      "severity": "medium",
+      "file": ".github/workflows/release.yml",
+      "fix": "Run release workflow with CHANGELOG-derived notes and cross-compiled binaries",
+      "effort": "small"
+    },
+    {
+      "title": "Legacy R2Go2/CosmoDev brand fragments dilute identity",
+      "severity": "medium",
+      "file": "docs/README.md:1",
+      "fix": "Rename or archive legacy docs (docs/FEATURES.md, GETTING_STARTED.md, install.sh branding, BUILD-SUMMARY.md)",
+      "effort": "small"
+    },
+    {
+      "title": "USAGE.md lacks any installation section",
+      "severity": "medium",
+      "file": "docs/USAGE.md:1-30",
+      "fix": "Add Installation section at top with go install, curl script, build-from-source",
+      "effort": "small"
+    },
+    {
+      "title": "No social preview image; GitHub falls back to org avatar",
+      "severity": "low",
+      "file": "repository root (asset absent)",
+      "fix": "Create 1280x640 OG image with terminal aesthetic and upload as repo social preview",
+      "effort": "small"
+    },
+    {
+      "title": "Go library ships without package-level documentation",
+      "severity": "low",
+      "file": "pkg/cosmoflare/client.go:1",
+      "fix": "Add pkg/cosmoflare/doc.go with package synopsis and runnable example before module goes public",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {"action": "Make repository public and complete GitHub metadata (description, topics, homepage)", "effort": "small", "priority": "high"},
+    {"action": "Rewrite README services table and roadmap from CLAUDE.md matrix; fix cmd/root.go help text", "effort": "small", "priority": "high"},
+    {"action": "Publish GitHub Release with binaries and verify install path from clean machine", "effort": "small", "priority": "high"},
+    {"action": "Archive/rename R2Go2 and CosmoDev branded docs; fix FEATURES.md placeholders", "effort": "small", "priority": "medium"},
+    {"action": "Add Installation section to docs/USAGE.md", "effort": "small", "priority": "medium"},
+    {"action": "Add pkg/cosmoflare/doc.go package documentation", "effort": "small", "priority": "medium"},
+    {"action": "Build Astro 5 docs site splitting USAGE.md's 53 sections into 53 SEO pages with sitemap and JSON-LD", "effort": "large", "priority": "high"},
+    {"action": "Publish Cosmoflare vs Wrangler vs cf comparison page targeting wrangler-alternative intent", "effort": "medium", "priority": "medium"},
+    {"action": "Link SECURITY.md from README and add terminal GIF above the fold", "effort": "small", "priority": "low"}
+  ],
+  "roadmap_suggestions": [
+    {"title": "Public launch readiness", "description": "Flip repo public, complete GitHub metadata, first Release with binaries, verified install paths, social preview image", "priority": "high", "effort": "small"},
+    {"title": "Astro documentation site", "description": "Split 53 USAGE sections into 53 indexable pages with per-page meta, sitemap.xml, robots.txt, SoftwareApplication JSON-LD, client-side search", "priority": "high", "effort": "large"},
+    {"title": "Comparison content hub", "description": "Pages targeting wrangler-alternative, terraform-alternative, and cloudflare-cost-calculator intent, each wired to an existing CLI command (terraform export, cost)", "priority": "medium", "effort": "medium"},
+    {"title": "pkg.go.dev presence program", "description": "doc.go, runnable examples, and doc-tested snippets so the registry page markets the Go library once public", "priority": "medium", "effort": "medium"}
+  ]
+}

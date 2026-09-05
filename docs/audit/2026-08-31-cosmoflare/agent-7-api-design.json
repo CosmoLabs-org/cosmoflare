@@ -1,0 +1,101 @@
+{
+  "agent": "api-design",
+  "overall_score": 6,
+  "sub_scores": {
+    "api_design": 6,
+    "versioning": 4,
+    "auth_security": 7,
+    "documentation": 7
+  },
+  "critical_findings": [
+    {
+      "title": "All backend failures collapse to HTTP 502; typed error taxonomy discarded",
+      "severity": "medium",
+      "file": "internal/server/rest.go:94",
+      "fix": "Map errors.As classes (R2ValidationError->400, R2AuthError->401, R2NotFoundError->404, R2QuotaError->429, default 502) and return structured {error, code} bodies",
+      "effort": "small"
+    },
+    {
+      "title": "--json mode fails silently on configuration errors",
+      "severity": "medium",
+      "file": "cmd/root.go:99",
+      "fix": "Emit printErrorJSON envelope before os.Exit(1) when JSONOutput is set; add regression test",
+      "effort": "small"
+    },
+    {
+      "title": "Error responses mix text/plain and JSON content types",
+      "severity": "medium",
+      "file": "internal/server/server.go:135",
+      "fix": "Use writeJSONStatus for all daemon error paths; set Content-Type in DevServer handlers (dev.go:161)",
+      "effort": "small"
+    },
+    {
+      "title": "No HTTP method enforcement on daemon routes",
+      "severity": "medium",
+      "file": "internal/server/rest.go:41",
+      "fix": "Wrap handlers with a GET-only guard returning 405 + Allow header",
+      "effort": "small"
+    },
+    {
+      "title": "MCP server hardcodes version 1.0.0 and pins protocol version without negotiation",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/mcp.go:198",
+      "fix": "Make serverInfo.version injectable via NewMCPServer option; echo client-requested protocolVersion when supported",
+      "effort": "small"
+    },
+    {
+      "title": "Non-constant-time token compare; empty configured token authenticates",
+      "severity": "medium",
+      "file": "internal/server/server.go:147",
+      "fix": "Use crypto/subtle.ConstantTimeCompare; reject empty Config.Token in New; add ReadHeaderTimeout to http.Server",
+      "effort": "small"
+    },
+    {
+      "title": "ZoneService.Get classifies every error as not-found",
+      "severity": "low",
+      "file": "pkg/cosmoflare/zone.go:112",
+      "fix": "Inspect wrapped status; map only 404 to R2NotFoundError; stop reusing Bucket/Key fields for zones",
+      "effort": "small"
+    },
+    {
+      "title": "R2 bucket list truncates at first page",
+      "severity": "low",
+      "file": "pkg/cosmoflare/storage.go:37",
+      "fix": "Loop with the pagination cursor (cloudflare-go v0.116 ListR2Buckets is single-page) and return ListResult[*Bucket]",
+      "effort": "medium"
+    },
+    {
+      "title": "Legacy r2go2 prefix leaks into public error strings and package doc",
+      "severity": "low",
+      "file": "pkg/cosmoflare/errors.go:16",
+      "fix": "Change format prefix to cosmoflare: and fix the package doc in types.go:2",
+      "effort": "small"
+    },
+    {
+      "title": "SSE channel is lossy with no replay on reconnect",
+      "severity": "low",
+      "file": "internal/server/sse.go:116",
+      "fix": "Retain last frame per channel and replay as first frame on subscribe",
+      "effort": "medium"
+    }
+  ],
+  "recommendations": [
+    { "action": "Map library error classes to HTTP statuses in withCloudflare", "effort": "small", "priority": "high" },
+    { "action": "Emit OutputResponse JSON envelope in PersistentPreRun error path", "effort": "small", "priority": "high" },
+    { "action": "Add GET-only method guard with 405 to daemon routes", "effort": "small", "priority": "medium" },
+    { "action": "Constant-time token compare and empty-token rejection in server.New", "effort": "small", "priority": "medium" },
+    { "action": "Inject AppVersion into MCP serverInfo and negotiate protocol version", "effort": "small", "priority": "medium" },
+    { "action": "Serve all error paths as application/json across daemon and dev server", "effort": "small", "priority": "medium" },
+    { "action": "Fix ZoneService.Get error classification", "effort": "small", "priority": "low" },
+    { "action": "Cursor-paginate ListBuckets and return ListResult[*Bucket]", "effort": "medium", "priority": "low" },
+    { "action": "Publish OpenAPI 3.1 spec for daemon REST + SSE channels", "effort": "medium", "priority": "medium" },
+    { "action": "Add protocol_version to serve handshake JSON and document compat policy", "effort": "medium", "priority": "medium" }
+  ],
+  "roadmap_suggestions": [
+    { "title": "Daemon error contract v2", "description": "Structured {error, code} bodies with status mapping from the existing error taxonomy so the desktop app can branch on failure class", "priority": "high", "effort": "small" },
+    { "title": "Versioned daemon API", "description": "/v1/ prefix or handshake protocol_version field plus documented shell/daemon skew policy", "priority": "medium", "effort": "medium" },
+    { "title": "OpenAPI spec for serve daemon", "description": "Machine-readable contract for 6 REST endpoints and 3 SSE channels; enables generated TS clients for the desktop app", "priority": "medium", "effort": "medium" },
+    { "title": "MCP version SSOT and protocol negotiation", "description": "Wire AppVersion into serverInfo; support client-requested protocol versions", "priority": "medium", "effort": "small" },
+    { "title": "SSE last-frame replay", "description": "Retain newest frame per channel and replay on subscribe so reconnecting clients converge without waiting for next poll", "priority": "low", "effort": "medium" }
+  ]
+}

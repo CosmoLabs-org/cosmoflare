@@ -1,0 +1,178 @@
+{
+  "agent": "roadmap-health",
+  "overall_score": 5,
+  "sub_scores": {
+    "infrastructure": 6,
+    "coverage": 6,
+    "linkage": 5,
+    "staleness": 3,
+    "hydration_needed": 3
+  },
+  "critical_findings": [
+    {
+      "title": "Roadmap frozen 70 days, zero in_progress items, no grooming cadence",
+      "severity": "high",
+      "file": "docs/roadmap/index.yaml:3",
+      "fix": "Run ccs roadmap lint/health grooming pass; promote ROAD-080 (plan ready); add roadmap check to /triage cadence",
+      "effort": "small"
+    },
+    {
+      "title": "Five duplicate roadmap item pairs from double batch import on 2026-06-20 (ROAD-073/079, 074/080, 076/081, 077/082, 078/083)",
+      "severity": "medium",
+      "file": "docs/roadmap/items/ROAD-074.yaml",
+      "fix": "Archive the priority-0 stub copies (ROAD-074, 076, 077, 078); keep the richer 079-083 entries",
+      "effort": "small"
+    },
+    {
+      "title": "index.yaml drifted from item files: ROAD-035 title mismatch (Email Routing vs DNS record management), priorities dropped for ROAD-025..032",
+      "severity": "medium",
+      "file": "docs/roadmap/index.yaml",
+      "fix": "Regenerate index from item files; resolve the ROAD-035 ID collision",
+      "effort": "small"
+    },
+    {
+      "title": "Post-freeze shipped work bypassed roadmap: IDEA-037 live metrics shipped 2026-07-01 with no roadmap item",
+      "severity": "medium",
+      "file": "docs/ideas/2026-06-21-desktop-dashboard-is-not-live-metrics-sse-channel-has-no.md",
+      "fix": "Create retroactive completed roadmap item (completed_in v0.17.0); wire idea harvest to roadmap",
+      "effort": "medium"
+    },
+    {
+      "title": "Domain Center Waves B-D tracked nowhere; FEAT-006 closed while memory records waves remaining",
+      "severity": "medium",
+      "file": "docs/issues/FEAT-006.yaml",
+      "fix": "Create roadmap item for Waves B-D linking FEAT-006 and the 2026-06-14 brainplan",
+      "effort": "small"
+    },
+    {
+      "title": "README feature table lists 8 shipped services (WAF, D1, Pages, Email, Images, Stream, Workers AI, Page Rules) as Planned",
+      "severity": "medium",
+      "file": "README.md:35",
+      "fix": "Update README status column to match completed roadmap items",
+      "effort": "small"
+    },
+    {
+      "title": "19 of 20 open roadmap items are thin: no linked issue, no brainstorm, no plan; several BASE items likely already satisfied",
+      "severity": "medium",
+      "file": "docs/roadmap/items/BASE-002.yaml",
+      "fix": "Audit 9 BASE items against reality, close satisfied ones, link or archive the rest",
+      "effort": "small"
+    },
+    {
+      "title": "Stale prose roadmap docs (PLANNED_FEATURES.md 2026-02-26 old R2Go2 branding; roadmap.md and GUI-INTEGRATION-STRATEGY.md 2025-11-24) plus CLAUDE.md claims ROAD-001..072 while items run to ROAD-083",
+      "severity": "low",
+      "file": "docs/roadmap/PLANNED_FEATURES.md:1",
+      "fix": "Delete or deprecate stale prose docs; fix CLAUDE.md roadmap range",
+      "effort": "small"
+    },
+    {
+      "title": "Continuation prompt PENDING 70 days after bug scope completed; ROAD-080 event bus unbuilt despite ready plan (no subscribe API in internal/webhook)",
+      "severity": "low",
+      "file": "docs/prompts/2026-06-21-desktop-followups-and-event-bus.md:4",
+      "fix": "Update prompt status; promote ROAD-080 to in_progress",
+      "effort": "small"
+    },
+    {
+      "title": "Issue status vocabulary inconsistent (5 values) and FEAT-005 stuck in implemented state since May, conflicting with keychain ban",
+      "severity": "low",
+      "file": "docs/issues/FEAT-005.yaml",
+      "fix": "Normalize statuses to open/closed; resolve FEAT-005 with keychain-reversal caveat",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Grooming pass: regenerate index.yaml, archive 4 duplicate stubs, resolve ROAD-035 collision",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Promote ROAD-080 event bus to in_progress; plan has been ready 70 days",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Audit and close satisfied BASE foundation items",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Wire ideas pipeline to roadmap so harvested+shipped ideas create roadmap items",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Fix README feature table and CLAUDE.md roadmap range",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Delete or deprecate three stale prose roadmap docs",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Add roadmap staleness check to /triage to prevent another 70-day freeze",
+      "effort": "small",
+      "priority": "medium"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Desktop v1.1 reliability & live data",
+      "description": "Coherent theme covering the shipped IDEA-037 live-metrics work (currently untracked in roadmap) plus IDEA-038 seed: Rust daemon watchdog only covers initial spawn, not mid-session crash",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Domain Center completion — Waves B–D",
+      "description": "Remaining Domain Management Center waves tracked only in project memory; FEAT-006 closed after Waves 1–2. Link FEAT-006 and docs/brainstorming/2026-06-14-domain-management-center.md",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Roadmap hygiene — dedupe, regenerate, close stale BASE items",
+      "description": "One-time cleanup: archive ROAD-074/076/077/078 duplicate stubs, regenerate index.yaml (ROAD-035 title mismatch, dropped priorities), audit 9 BASE items",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Secrets hygiene — purge committed GOrchestra recovery patches",
+      "description": "Security scan reports critical AWS access key patterns in GOrchestra/sessions/*/recovery.patch files committed to the repo; no roadmap or issue tracks the purge",
+      "priority": "high",
+      "effort": "medium"
+    }
+  ],
+  "roadmap_hydration": [
+    {
+      "title": "Desktop v1.1 reliability & live data (metrics + daemon watchdog)",
+      "description": "Track the v1.1 hardening theme: IDEA-037 live metrics shipped 2026-07-01 (MetricsProducer, --metrics-interval, SSE bridge) but absent from the roadmap; IDEA-038 (seed, 70 days) covers the Rust daemon watchdog gap where CommandEvent::Terminated is only logged, not acted on. Create the item, mark the metrics half completed_in v0.17.0, and promote the watchdog half.",
+      "linked_issues": ["FEAT-008"],
+      "priority": "high"
+    },
+    {
+      "title": "Domain Center completion — Waves B–D",
+      "description": "Domain Management Center Waves B–D (registrar visibility, redirect governance, dashboard depth per the 2026-06-14 brainplan) are tracked only in project memory. FEAT-006 was closed after Waves 1–2. Create a roadmap item linking FEAT-006 and docs/brainstorming/2026-06-14-domain-management-center.md.",
+      "linked_issues": ["FEAT-006"],
+      "priority": "medium"
+    },
+    {
+      "title": "Secrets hygiene — purge scan findings from committed GOrchestra artifacts",
+      "description": "ccs security flags critical AWS-access-key patterns in GOrchestra/sessions/agent-a1cdb2ac246339700/recovery.patch (lines 104, 157, 432+) and hardcoded IPs across .glm-agent-history.yaml. No roadmap or issue covers purging these multi-hundred-KB recovery patches from the repo. Also covers the 3.3MB cmd.test and 24K-line r2go2 binary tracked in-repo.",
+      "linked_issues": [],
+      "priority": "high"
+    },
+    {
+      "title": "Roadmap hygiene — dedupe double-imported items and regenerate index",
+      "description": "Archive duplicate stub items ROAD-074, ROAD-076, ROAD-077, ROAD-078 (created 15 seconds after their real counterparts ROAD-080, ROAD-081, ROAD-082, ROAD-083 in the 2026-06-20 batch import), regenerate docs/roadmap/index.yaml to fix the ROAD-035 title mismatch and restore dropped priorities for ROAD-025..032, and audit the 9 unclosed BASE foundation items for ones already satisfied (BASE-002 tech stack, BASE-010 linting).",
+      "linked_issues": [],
+      "priority": "high"
+    },
+    {
+      "title": "Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)",
+      "description": "spawn-check lint fails on cmd/installer_tui/main.go:1280 (`_ = cmd.Start() // Fire and forget`). The ROAD-525 daemon.SpawnAsync rollout has exactly one remaining violation, untracked in this project's roadmap. Small, bounded hardening item.",
+      "linked_issues": [],
+      "priority": "medium"
+    }
+  ]
+}

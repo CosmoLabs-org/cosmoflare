@@ -1,0 +1,161 @@
+{
+  "agent": "documentation",
+  "overall_score": 5,
+  "sub_scores": {
+    "completeness": 6,
+    "accuracy": 4,
+    "onboarding": 5,
+    "api_docs": 4
+  },
+  "critical_findings": [
+    {
+      "title": "README service table and roadmap 2.5 months stale",
+      "severity": "high",
+      "file": "README.md:26-43",
+      "fix": "Regenerate Services table from cmd/ and pkg/cosmoflare inventory; replace stale Upcoming list with link to docs/roadmap/",
+      "effort": "small"
+    },
+    {
+      "title": "README quick-start commands have wrong syntax (kv put positional value, worker deploy --name flag)",
+      "severity": "high",
+      "file": "README.md:102",
+      "fix": "Correct to 'kv put ns key --value=...' and 'worker deploy my-worker --script worker.js'; add CI check of README examples against Cobra Use strings",
+      "effort": "small"
+    },
+    {
+      "title": "GETTING_STARTED.md points at dead pre-rename repo URL",
+      "severity": "high",
+      "file": "GETTING_STARTED.md:12-18",
+      "fix": "Rewrite around go install github.com/CosmoLabs-org/cosmoflare@latest or delete and merge into README",
+      "effort": "small"
+    },
+    {
+      "title": "Public Go library has zero package documentation",
+      "severity": "high",
+      "file": "pkg/cosmoflare/client.go:14",
+      "fix": "Add doc.go with package overview, Example functions in example_test.go, and scrub retired 'R2Go2' name from interface comments",
+      "effort": "medium"
+    },
+    {
+      "title": "Release workflow emits dead install command and no-op version ldflags",
+      "severity": "high",
+      "file": ".github/workflows/release.yml:87",
+      "fix": "Replace CosmoDev-R2Go2 module path with cosmoflare in ldflags and release-note template; assert binary --version matches tag",
+      "effort": "small"
+    },
+    {
+      "title": "Pre-rename R2Go2 doc artifacts committed at repo root",
+      "severity": "medium",
+      "file": "TESTING-GUIDE.md:7",
+      "fix": "Archive or delete BUILD-SUMMARY.md, INTERACTIVE-SETUP-DEMO.md, TESTING-GUIDE.md; delete untracked root USAGE.md",
+      "effort": "small"
+    },
+    {
+      "title": "Template-only doc dirs, unfilled FEATURES.md, broken docs/SPEC.md link, zero ADRs",
+      "severity": "medium",
+      "file": "docs/README.md:31",
+      "fix": "Fill or delete template dirs; write one system-overview architecture doc; fix or remove SPEC.md link",
+      "effort": "medium"
+    },
+    {
+      "title": "R2GO2_SKIP_FIRST_RUN env var used in code but never documented",
+      "severity": "medium",
+      "file": "docs/USAGE.md:7",
+      "fix": "Add Environment Variables reference table covering CLOUDFLARE_*, COSMOFLARE_NO_KEYCHAIN, R2GO2_SKIP_FIRST_RUN",
+      "effort": "small"
+    },
+    {
+      "title": "No CONTRIBUTING.md, issue templates, or PR template",
+      "severity": "medium",
+      "file": ".github/",
+      "fix": "Write CONTRIBUTING.md covering build, test, conventional commits, and the --json/--help command conventions",
+      "effort": "medium"
+    },
+    {
+      "title": "docs/USAGE.md (2388 lines, 55+ sections) has no table of contents",
+      "severity": "low",
+      "file": "docs/USAGE.md:1",
+      "fix": "Generate linked TOC from ## headings in CI",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Rewrite README Services table and Roadmap from actual cmd/ inventory; fix kv put and worker deploy quick-start syntax",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Add pkg/cosmoflare/doc.go, package comments, and example_test.go with runnable examples for top 5 services",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Fix stale CosmoDev-R2Go2 module path in release.yml ldflags and generated install instructions",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Delete or rewrite GETTING_STARTED.md; remove untracked root USAGE.md; archive R2Go2-era root docs",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Write CONTRIBUTING.md plus minimal issue and PR templates",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add CI doc-accuracy gate validating fenced CLI examples against the Cobra command tree",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Fill or remove template dirs (docs/architecture, docs/api, docs/instructions, FEATURES.md) and add a real system-overview doc",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Document all environment variables in docs/USAGE.md including R2GO2_SKIP_FIRST_RUN",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Generate a linked TOC for docs/USAGE.md",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Documentation truth-align: README and root docs match v0.17.0 reality",
+      "description": "Regenerate service table from code, fix broken quick-start commands, purge pre-rename R2Go2 artifacts and dead CosmoDev-R2Go2 URLs",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Go library godoc program",
+      "description": "doc.go, package comments, Example functions, and a documented stability/versioning policy for pkg/cosmoflare",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Doc accuracy CI gate",
+      "description": "Validate documented CLI syntax against Cobra command definitions so README drift cannot recur",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Public contributor path",
+      "description": "CONTRIBUTING.md, issue templates, and a development workflow guide derived from existing CLAUDE.md conventions",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Architecture documentation and first ADRs",
+      "description": "One system-overview doc covering CLI/library/serve-daemon/desktop/MCP layering plus ADRs for key decisions like the daemon bearer-token model",
+      "priority": "medium",
+      "effort": "medium"
+    }
+  ]
+}

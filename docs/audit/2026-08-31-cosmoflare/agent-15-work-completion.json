@@ -1,0 +1,65 @@
+{
+  "agent": "work-completion",
+  "overall_score": -1,
+  "applicable": false,
+  "score_note": "ccs audit completion-score --possibly-done 0 returned score -1, applicable=false (only signal: 2 stalled plans; zero possibly-done issues found by code verification)",
+  "sub_scores": {
+    "issue_closure": 9,
+    "roadmap_sync": 4,
+    "plan_freshness": 3
+  },
+  "critical_findings": [
+    {
+      "title": "FEAT-008 core deliverable absent despite transport layer shipping",
+      "severity": "medium",
+      "file": "internal/webhook/manager.go:182",
+      "fix": "Re-scope FEAT-008 to bridging TriggerAlert onto the existing sseHub notifications channel; re-validate the 71-day-old plan against current code first",
+      "effort": "medium"
+    },
+    {
+      "title": "Four duplicate roadmap pairs (ROAD-074/080, 076/081, 077/082, 078/083) with identical titles",
+      "severity": "medium",
+      "file": "docs/roadmap/items/ROAD-074.yaml:2",
+      "fix": "Close one of each pair via ccs roadmap commands; keep ROAD-080 (linked to FEAT-008)",
+      "effort": "small"
+    },
+    {
+      "title": "Event-bus three-tier plan chain abandoned at 0 goals for 71 days, never marked ABANDONED",
+      "severity": "medium",
+      "file": "docs/planning-mode/2026-06-21-inprocess-event-bus.md",
+      "fix": "Run ccs prompts stale --cleanup or promote back to READY",
+      "effort": "small"
+    },
+    {
+      "title": "19 thin roadmap items with no linked issues, brainstorm, or plan",
+      "severity": "low",
+      "file": "docs/roadmap/items/BASE-002.yaml",
+      "fix": "Link issues or add references; archive completed BASE-* placeholders",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {"action": "Run ccs prompts stale --cleanup to mark the two abandoned event-bus docs", "effort": "small", "priority": "high"},
+    {"action": "Deduplicate the 4 roadmap pairs via ccs roadmap close with duplicate-of reasons", "effort": "small", "priority": "medium"},
+    {"action": "Re-validate the event-bus plan against current sseHub/MetricsProducer code before executing its 4 TDD tasks", "effort": "medium", "priority": "high"},
+    {"action": "Link or archive the 19 thin roadmap items (start: ROAD-064, ROAD-029)", "effort": "small", "priority": "low"}
+  ],
+  "roadmap_suggestions": [
+    {"title": "Roadmap dedup sweep", "description": "One-time removal of duplicate items plus a duplicate-title check in ccs roadmap to prevent recurrence", "priority": "medium", "effort": "small"},
+    {"title": "Stalled-plan review cadence", "description": "Monthly ccs prompts stale review so abandoned chains are marked within one cycle", "priority": "low", "effort": "small"}
+  ],
+  "possibly_done_issues": [],
+  "possibly_done_note": "FEAT-008 was code-verified as NOT done: internal/events package does not exist, TriggerAlert (internal/webhook/manager.go:182) publishes to no bus. The shipped MetricsProducer/SSE work is the explicitly-out-of-scope IDEA-037 follow-up, correctly closed in b9dffb1.",
+  "roadmap_reconciliation": [
+    {"id": "ROAD-074", "category": "duplicate", "fix": "Close as duplicate of ROAD-080 (identical title; FEAT-008 links ROAD-080)"},
+    {"id": "ROAD-081", "category": "duplicate", "fix": "Close as duplicate of ROAD-076 (identical title)"},
+    {"id": "ROAD-082", "category": "duplicate", "fix": "Close as duplicate of ROAD-077 (identical title)"},
+    {"id": "ROAD-083", "category": "duplicate", "fix": "Close as duplicate of ROAD-078 (same item, reworded)"},
+    {"id": "ROAD-064", "category": "thin", "fix": "Link issues or add brainstorm/plan references"},
+    {"id": "ROAD-029", "category": "thin", "fix": "Link issues or add brainstorm/plan references"}
+  ],
+  "stalled_plans": [
+    {"plan": "docs/prompts/2026-06-21-inprocess-event-bus.md", "age_days": 71, "goals": "0/4"},
+    {"plan": "docs/planning-mode/2026-06-21-inprocess-event-bus.md", "age_days": 71, "goals": "0/19"}
+  ]
+}

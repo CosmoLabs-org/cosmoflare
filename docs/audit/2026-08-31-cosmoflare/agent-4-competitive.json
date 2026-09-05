@@ -1,0 +1,125 @@
+{
+  "agent": "competitive",
+  "overall_score": 5,
+  "sub_scores": {
+    "feature_parity": 6,
+    "differentiation": 7,
+    "market_position": 3,
+    "technical_moat": 4,
+    "growth_potential": 3
+  },
+  "critical_findings": [
+    {
+      "title": "Vendor shipped the same product: cf CLI + two official MCP servers",
+      "severity": "high",
+      "file": "docs/PRODUCT-VISION.md:25",
+      "fix": "Pivot positioning to neutrality, agent safety (guardrails/audit), and pure-Go embeddability; write a competitive-response ADR",
+      "effort": "small"
+    },
+    {
+      "title": "MCP server exposes 8 tools vs 366 CLI commands (2% of own surface)",
+      "severity": "high",
+      "file": "pkg/cosmoflare/mcp.go:286",
+      "fix": "Auto-generate MCP tool schemas from the cobra command tree; gate mutations behind guardrails",
+      "effort": "large"
+    },
+    {
+      "title": "Zero distribution and growth infrastructure (no brew/scoop, no update check, no analytics, no web presence)",
+      "severity": "high",
+      "file": "install.sh",
+      "fix": "Ship brew tap + scoop manifest, opt-in update check, docs site with MCP install one-liner",
+      "effort": "medium"
+    },
+    {
+      "title": "README lists 15+ implemented services as Planned; version registry still says R2Go2 R2-bucket tool",
+      "severity": "medium",
+      "file": "README.md:35",
+      "fix": "Regenerate README service table from cmd/ reality; update .version-registry.json description",
+      "effort": "small"
+    },
+    {
+      "title": "Declarative apply/diff covers only 4 of 23 service domains",
+      "severity": "medium",
+      "file": "cmd/apply.go:54",
+      "fix": "Extend .cosmoflare.yaml reconciliation to zones, ssl, cache, d1 and publish a coverage matrix",
+      "effort": "large"
+    },
+    {
+      "title": "Dead advertised surface: four .disabled commands plus cmd_disabled/ policy, restore, upload, webhook",
+      "severity": "low",
+      "file": "cmd/analytics.go.disabled",
+      "fix": "Land behind the plugin system or remove from repo and roadmap",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Write competitive-response ADR for cf CLI + official MCP servers and re-anchor positioning",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Auto-generate MCP tools from the cobra command tree with guardrail-gated mutations",
+      "effort": "large",
+      "priority": "high"
+    },
+    {
+      "action": "Ship Homebrew tap, scoop manifest, and opt-in update notifier",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Regenerate README service table and version-registry description",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Extend declarative apply/diff beyond workers/dns/kv/r2 to all services",
+      "effort": "large",
+      "priority": "medium"
+    },
+    {
+      "action": "Ship agent trust tier: guardrail profiles, per-service mutation policy, SIEM-ready audit export",
+      "effort": "medium",
+      "priority": "high"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Full-surface MCP server",
+      "description": "Auto-generate MCP tool schemas covering the entire 366-command tree, with mutation guardrails, to reach parity with cloudflare/mcp's 2,500 endpoints",
+      "priority": "high",
+      "effort": "large"
+    },
+    {
+      "title": "Package-manager distribution",
+      "description": "Brew tap, scoop, AUR, deb/rpm with release automation so the CLI is installable without Go",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Declarative parity program",
+      "description": "Extend .cosmoflare.yaml diff/apply from 4 domains to all 23 services with a published coverage matrix",
+      "priority": "high",
+      "effort": "large"
+    },
+    {
+      "title": "Agent trust tier",
+      "description": "Guardrail profiles, per-service mutation policy, and SIEM-ready audit export positioned as the trust boundary between AI agents and Cloudflare accounts",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "cf migration tooling",
+      "description": "cosmoflare cf import converting official cf/wrangler config to .cosmoflare.yaml, mirroring the existing wrangler import",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Docs site + MCP install one-liner",
+      "description": "Landing page with copy-paste claude mcp add snippet and README regenerated from implemented features",
+      "priority": "medium",
+      "effort": "small"
+    }
+  ]
+}

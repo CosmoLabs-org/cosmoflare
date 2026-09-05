@@ -1,0 +1,169 @@
+{
+  "agent": "distribution",
+  "overall_score": 3,
+  "sub_scores": {
+    "ci_cd": 3,
+    "packaging": 2,
+    "deployment": 2,
+    "multi_platform": 6,
+    "developer_experience": 5
+  },
+  "critical_findings": [
+    {
+      "title": "Release pipeline has never succeeded — zero GitHub Releases exist",
+      "severity": "high",
+      "file": ".github/workflows/release.yml:31",
+      "fix": "Fix internal/interactive race failures, then tag v0.18.0 and verify artifacts + release notes publish",
+      "effort": "medium"
+    },
+    {
+      "title": "Data races in internal/interactive block CI and Release (-race gate fails)",
+      "severity": "high",
+      "file": "internal/interactive/",
+      "fix": "Guard package-level shared state with a mutex or per-test instances so go test -race passes",
+      "effort": "medium"
+    },
+    {
+      "title": "ldflags version injection targets dead module path — binaries report 'dev'",
+      "severity": "high",
+      "file": ".github/workflows/release.yml:62",
+      "fix": "Change CosmoDev-R2Go2 to cosmoflare in release.yml and Makefile:19 ldflags; assert --version matches tag after build",
+      "effort": "small"
+    },
+    {
+      "title": "All installer scripts (install.sh, install.ps1, install-menu.sh) download from dead repo CosmoDev-R2Go2 with r2go2 asset names",
+      "severity": "high",
+      "file": "install.sh:19",
+      "fix": "Point scripts at CosmoLabs-org/cosmoflare, asset name cosmoflare-{os}-{arch}",
+      "effort": "small"
+    },
+    {
+      "title": "golangci-lint v1.64.8 cannot lint Go 1.26 — lint job errors on config load every run",
+      "severity": "medium",
+      "file": ".github/workflows/ci.yml:28",
+      "fix": "Pin golangci-lint v2 (Go 1.26 support) and commit .golangci.yml",
+      "effort": "small"
+    },
+    {
+      "title": "Release notes embed broken install command (wrong go install path)",
+      "severity": "medium",
+      "file": ".github/workflows/release.yml:87",
+      "fix": "Use github.com/CosmoLabs-org/cosmoflare@${VERSION}",
+      "effort": "small"
+    },
+    {
+      "title": "Dockerfile builds on golang:1.25 while go.mod requires 1.26; no CI/publish path exists",
+      "severity": "medium",
+      "file": "Dockerfile:6",
+      "fix": "Bump to golang:1.26-alpine, add make docker and GHCR publish step",
+      "effort": "small"
+    },
+    {
+      "title": "Desktop tier: version drift (0.16.0 vs 0.17.0), committed macOS-arm64-only sidecar, no updater/signing/CI",
+      "severity": "medium",
+      "file": "desktop/src-tauri/tauri.conf.json:4",
+      "fix": "CI-build sidecars for all targets, sync version from .version-registry.json",
+      "effort": "large"
+    },
+    {
+      "title": "Makefile packages dead r2go2 brand: install target, RPM spec URL, broken brew cask, dead ./pkg/r2go2/ integration path",
+      "severity": "medium",
+      "file": "Makefile:14",
+      "fix": "Rename primary binary to cosmoflare, delete install-brew, fix test-integration path, slim dist archives",
+      "effort": "small"
+    },
+    {
+      "title": "Committed binaries and 419 MiB pack inflate clone size",
+      "severity": "low",
+      "file": "simple-setup",
+      "fix": "Untrack binaries, extend .gitignore",
+      "effort": "small"
+    },
+    {
+      "title": "Public library errors carry stale 'r2go2:' prefix in cosmoflare package",
+      "severity": "low",
+      "file": "pkg/cosmoflare/errors.go:12",
+      "fix": "Change prefix to 'cosmoflare:' before 1.0",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Fix data races in internal/interactive so go test -race passes (unblocks CI + Release)",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Correct ldflags module path in release.yml and Makefile; add post-build --version assertion",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Rewrite install.sh/install.ps1/install-menu.sh for the cosmoflare repo and binary names",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Pin golangci-lint v2 with committed .golangci.yml; remove redundant test.yml workflow",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Adopt GoReleaser for archives, checksums, SBOM, and Homebrew tap autoupdate",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Publish Homebrew tap formula and Scoop manifest",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Fix Dockerfile Go version and publish GHCR image in release workflow",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "CI-build desktop sidecars for all three platforms and sync version registry",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add release smoke gate: download assets, verify checksums and --version after publish",
+      "effort": "small",
+      "priority": "high"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Restore the binary release channel",
+      "description": "Zero GitHub Releases exist; fix races, ldflags, and installers, then ship verified v0.18.0",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Homebrew + Scoop distribution",
+      "description": "Package-manager installs without a Go toolchain via GoReleaser-driven tap and bucket",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Desktop (Tauri) release pipeline",
+      "description": "Multi-platform sidecars, signing, updater feed, version sync — prerequisite for the paid tier",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Linux package channels",
+      "description": "Publish existing deb/rpm Makefile targets to GitHub Releases with install docs",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Repo slimming",
+      "description": "Remove committed binaries, keep clone size competitive for an OSS CLI",
+      "priority": "low",
+      "effort": "small"
+    }
+  ]
+}

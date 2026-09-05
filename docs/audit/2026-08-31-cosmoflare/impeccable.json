@@ -1,0 +1,7 @@
+{
+  "impeccable": "unavailable",
+  "note": "Impeccable detector not installed in this environment during the 2026-08-31 audit; install was deliberately not attempted mid-audit. Agent 17's anti-slop facts are labeled partial; anti_slop=9 derived manually (single violation: default system font). Run `npx impeccable detect --json desktop/src/` post-audit to populate this file.",
+  "design_context": {
+    "frontend": { "detected": true, "dirs": ["desktop/src/"], "component_files": 9, "animation_instances": 0, "motion_evidence": false }
+  }
+}

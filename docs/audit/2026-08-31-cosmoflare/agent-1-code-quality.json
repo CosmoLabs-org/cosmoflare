@@ -1,0 +1,159 @@
+{
+  "agent": "code-quality",
+  "overall_score": 7,
+  "sub_scores": {
+    "architecture": 7,
+    "code_patterns": 7,
+    "tech_debt": 6,
+    "test_coverage": 7,
+    "maintainability": 6
+  },
+  "critical_findings": [
+    {
+      "title": "Dual project-config filenames split the single-config contract",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/config.go:67",
+      "fix": "Load .cosmoflare.yaml first with .r2go2.yaml as legacy fallback; single cosmoflare: error prefix constant",
+      "effort": "medium"
+    },
+    {
+      "title": "runObjectPut god function with triple-duplicated upload paths (230 lines)",
+      "severity": "medium",
+      "file": "cmd/object.go:483",
+      "fix": "Extract buildUploadOpts and reportUploadResult helpers; collapse stdin/resume/normal into one parameterized flow",
+      "effort": "medium"
+    },
+    {
+      "title": "489 duplicated JSON-vs-human output branches across cmd/",
+      "severity": "medium",
+      "file": "cmd/email.go:356",
+      "fix": "Add reportError/reportResult helpers that branch on JSONOutput once",
+      "effort": "medium"
+    },
+    {
+      "title": "internal/cli/operations (442 lines retry/batch logic) has zero tests; internal/migration at 10.4% coverage",
+      "severity": "medium",
+      "file": "internal/cli/operations/copy.go:205",
+      "fix": "Table-driven tests for isRetryableError and retry loop with fault-injecting fake; migration happy path + failure",
+      "effort": "small"
+    },
+    {
+      "title": "234MB GOrchestra session artifacts tracked in git (81 recovery.patch files, some 665K lines); scanner flags AWS example keys inside transcripts",
+      "severity": "medium",
+      "file": "GOrchestra/sessions/agent-a1cdb2ac246339700/recovery.patch:104",
+      "fix": "gitignore GOrchestra/sessions/, git rm --cached, archive outside repo",
+      "effort": "small"
+    },
+    {
+      "title": "golangci-lint panics (requires go1.27, built with go1.26) — no lint gate beyond go vet",
+      "severity": "medium",
+      "file": "toolchain/go.mod",
+      "fix": "Rebuild golangci-lint with repo toolchain or pin compatible version; add to CI",
+      "effort": "small"
+    },
+    {
+      "title": "CLI coverage 43.2% and library 65.3% while internals reach 93-100%",
+      "severity": "medium",
+      "file": "cmd/",
+      "fix": "Extend httptest-mock command test pattern to top-10 commands; target 60% for cmd",
+      "effort": "medium"
+    },
+    {
+      "title": "Raw cmd.Start() fire-and-forget violates ROAD-525 spawn policy (zombie processes)",
+      "severity": "low",
+      "file": "cmd/installer_tui/main.go:1280",
+      "fix": "Use daemon.SpawnAsync or a goroutine cmd.Wait()",
+      "effort": "small"
+    },
+    {
+      "title": "Non-constant-time token compare and no empty-token guard in server.New",
+      "severity": "low",
+      "file": "internal/server/server.go:147",
+      "fix": "Reject empty Config.Token in New(); use crypto/subtle.ConstantTimeCompare",
+      "effort": "small"
+    },
+    {
+      "title": "MetricsSnapshot.Profile never populated; reflect.DeepEqual on untyped any fields",
+      "severity": "low",
+      "file": "internal/server/metrics.go:50",
+      "fix": "Thread profile name from serve layer; type snapshot fields or compare via marshaled JSON",
+      "effort": "small"
+    },
+    {
+      "title": "Dead code litter: 4 disabled packages, 4 .go.disabled cmd files, 6 empty internal dirs",
+      "severity": "low",
+      "file": "internal/api_disabled/client.go:1",
+      "fix": "Delete empty dirs; archive disabled packages to a branch",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Unify project config to .cosmoflare.yaml with legacy .r2go2.yaml fallback and single error prefix",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Extract shared output helpers to collapse 489 JSONOutput branches",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Split runObjectPut, email.go, and installer_tui god files into subpackages",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add tests for internal/cli/operations and lift internal/migration from 10.4%",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Untrack GOrchestra/sessions recovery patches (234MB) and gitignore the directory",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Fix golangci-lint toolchain skew and add lint to CI",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Harden server.New token validation with constant-time compare",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Config unification (r2go2 to cosmoflare)",
+      "description": "One project config filename, one error prefix, migration path for existing .r2go2.yaml users",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "CLI output helper refactor",
+      "description": "Replace 489-site JSON/human dual-branch pattern with a shared reporting layer",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Coverage floor for cmd/ and internal/cli",
+      "description": "Bring cmd wiring to 60% using the proven httptest mock pattern; add CI coverage gate",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Repo hygiene: purge GOrchestra session artifacts",
+      "description": "234MB of tracked recovery patches bloat clones and pollute security scans with false AWS-key hits",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "God-file decomposition",
+      "description": "Break object.go (1183), email.go (1063), installer_tui/main.go (1299) into per-command subpackages under a 500-line budget",
+      "priority": "low",
+      "effort": "large"
+    }
+  ]
+}

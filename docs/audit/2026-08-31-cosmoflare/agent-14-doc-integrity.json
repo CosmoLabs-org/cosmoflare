@@ -1,0 +1,174 @@
+{
+  "agent": "doc-integrity",
+  "overall_score": 47,
+  "score_scale": "0-100 deterministic (ccs audit doc-score)",
+  "sub_scores": {
+    "chain_integrity": 6,
+    "enrichment": 6,
+    "review_coverage": 1,
+    "prompt_freshness": 6
+  },
+  "score_inputs": {
+    "chains_total": 76,
+    "broken_chains": 7,
+    "unenriched_docs": 76,
+    "reviewed_docs": 0,
+    "unreviewed_docs": 127,
+    "stale_docs": 6,
+    "stale_prompts": 2
+  },
+  "critical_findings": [
+    {
+      "title": "7 plan-to-brainstorm chains orphaned (no plan_ref back-link)",
+      "severity": "high",
+      "file": "docs/brainstorming/ (7 files: road020-dashboard-tui, road002-tui-object-browser, road007-s3-migration-resume, domain-management-center, cosmoflare-desktop, inprocess-event-bus, live-metrics-producer)",
+      "fix": "Add one plan_ref: line to each brainstorm frontmatter",
+      "effort": "small"
+    },
+    {
+      "title": "Zero independent review coverage: 0/133 reviewed, 127 unreviewed",
+      "severity": "high",
+      "file": "docs/brainstorming/ + docs/planning-mode/ (24 design docs)",
+      "fix": "Run /independent-review on the 24 unreviewed design docs",
+      "effort": "large"
+    },
+    {
+      "title": "Event-bus three-tier chain documents a feature with zero implementation",
+      "severity": "high",
+      "file": "docs/prompts/2026-06-21-inprocess-event-bus.md:4-14",
+      "fix": "Decide ROAD-080/FEAT-008 fate: implement or close chain + cleanup prompts",
+      "effort": "small"
+    },
+    {
+      "title": "6 docs stale: modified after last review stamp",
+      "severity": "medium",
+      "file": "docs/brainstorming/2026-06-07-road002-tui-object-browser.md (and 5 others)",
+      "fix": "Re-review after the unreviewed backlog",
+      "effort": "medium"
+    },
+    {
+      "title": "Two PENDING prompts 71 days old; 'latest' prompt no longer matches project frontier",
+      "severity": "medium",
+      "file": "docs/prompts/2026-06-21-desktop-followups-and-event-bus.md:1",
+      "fix": "ccs prompts scan, then author fresh continuation prompt",
+      "effort": "small"
+    },
+    {
+      "title": "3 date-only timestamps violate ISO8601 rule (IMP-032)",
+      "severity": "low",
+      "file": "docs/brainstorming/2026-06-20-cosmoflare-desktop.md:4",
+      "fix": "ccs timestamps backfill",
+      "effort": "small"
+    },
+    {
+      "title": "3 brainstorms carry malformed origin: values breaking issue traceability",
+      "severity": "low",
+      "file": "docs/brainstorming/2026-06-07-road002-tui-object-browser.md:6",
+      "fix": "Point origin at a valid issue ID",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Add plan_ref back-links to the 7 orphaned brainstorms (lifts 25-pt cap penalty)",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Run /independent-review on 24 unreviewed design docs, newest chains first",
+      "effort": "large",
+      "priority": "medium"
+    },
+    {
+      "action": "Decide event-bus feature fate and run ccs prompts stale --cleanup",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Run ccs prompts scan to reconcile 71-day-old PENDING prompts",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Fix 3 date-only stamps + 3 malformed origins",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Doc-chain repair pass",
+      "description": "Fix 7 orphaned back-links, 3 malformed origins, 3 date-only stamps in one sweep; restores ~28 score points",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Independent review backlog burn-down",
+      "description": "24 design docs with zero review stamps; batch through /independent-review",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Event-bus disposition (ROAD-080/FEAT-008)",
+      "description": "Three docs promise the feature, zero code exists; implement or close",
+      "priority": "high",
+      "effort": "small"
+    }
+  ],
+  "broken_chains": [
+    {"doc": "docs/planning-mode/2026-06-07-road020-dashboard-tui.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-07-road020-dashboard-tui.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-06-08-road002-tui-object-browser.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-08-road002-tui-object-browser.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-06-08-road007-s3-migration-resume.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-08-road007-s3-migration-resume.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-06-14-domain-management-center.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-14-domain-management-center.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-06-20-cosmoflare-desktop.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-20-cosmoflare-desktop.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-06-21-inprocess-event-bus.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-06-21-inprocess-event-bus.md frontmatter"},
+    {"doc": "docs/planning-mode/2026-07-01-live-metrics-producer.md", "broken_edge": "Plan -> Brainstorm orphaned (brainstorm lacks plan_ref back-link)", "fix": "Add plan_ref to docs/brainstorming/2026-07-01-live-metrics-producer.md frontmatter"}
+  ],
+  "unenriched_docs": [
+    "docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md",
+    "docs/brainstorming/2026-05-16-cors-transform-rules.md",
+    "docs/brainstorming/2026-05-16-domain-operations.md",
+    "docs/brainstorming/2026-05-18-service-interfaces.md",
+    "docs/brainstorming/2026-05-18-tui-command-palette.md",
+    "docs/brainstorming/2026-06-07-road002-tui-object-browser.md",
+    "docs/brainstorming/2026-06-07-road020-dashboard-tui.md",
+    "docs/brainstorming/2026-06-08-road007-s3-migration-resume.md",
+    "docs/brainstorming/2026-06-14-domain-management-center.md",
+    "docs/brainstorming/2026-06-20-cosmoflare-desktop.md",
+    "docs/brainstorming/2026-06-21-inprocess-event-bus.md",
+    "docs/brainstorming/2026-07-01-live-metrics-producer.md"
+  ],
+  "unenriched_note": "Tool counts 76 docs as unenriched (incomplete link frontmatter: 201 missing link fields). Verified: only README/USAGE files literally lack deliverables blocks; 31/35 design docs have them. The 12 listed are the actionable enrichment targets (missing plan_ref or malformed origin).",
+  "unreviewed_docs": [
+    "docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md",
+    "docs/brainstorming/2026-05-16-cors-transform-rules.md",
+    "docs/brainstorming/2026-05-16-domain-operations.md",
+    "docs/brainstorming/2026-05-18-service-interfaces.md",
+    "docs/brainstorming/2026-05-18-tui-command-palette.md",
+    "docs/brainstorming/2026-06-21-inprocess-event-bus.md",
+    "docs/brainstorming/2026-07-01-live-metrics-producer.md",
+    "docs/brainstorming/feature-ideas.md",
+    "docs/planning-mode/2025-11-24-r2go2-initial-development.md",
+    "docs/planning-mode/2026-02-26-codebase-analysis-v0.2.0.md",
+    "docs/planning-mode/2026-03-03-consolidate-duplicated-code.md",
+    "docs/planning-mode/2026-05-07-r2go2-phase0-phase1-implementation.md",
+    "docs/planning-mode/2026-05-12-phase3-workers-kv.md",
+    "docs/planning-mode/2026-05-16-cosmoflare-module-rename.md",
+    "docs/planning-mode/2026-05-16-domain-operations.md",
+    "docs/planning-mode/2026-05-16-phase4-cloudflare-services.md",
+    "docs/planning-mode/2026-05-18-service-interfaces.md",
+    "docs/planning-mode/2026-05-18-tui-command-palette.md",
+    "docs/planning-mode/2026-06-07-road020-dashboard-tui.md",
+    "docs/planning-mode/2026-06-08-road002-tui-object-browser.md",
+    "docs/planning-mode/2026-06-08-road007-s3-migration-resume.md",
+    "docs/planning-mode/2026-06-14-domain-management-center.md",
+    "docs/planning-mode/2026-06-21-inprocess-event-bus.md",
+    "docs/planning-mode/2026-07-01-live-metrics-producer.md"
+  ],
+  "unreviewed_note": "24 project design docs listed (candidates for /independent-review). Remaining 103 unreviewed: 40 docs/prompts/*.md (mostly historical continuation prompts) + 62 plugins/internal docs + template/README/USAGE files. 6 further docs are stale (modified after review): road002/road020/road007/domain-management-center brainstorms + both cosmoflare-desktop docs.",
+  "stale_prompts": [
+    "docs/prompts/2026-06-21-inprocess-event-bus.md",
+    "docs/planning-mode/2026-06-21-inprocess-event-bus.md"
+  ],
+  "stale_prompts_note": "Both abandoned (0/4 and 0/19 goals). Additionally 2 non-flagged PENDING prompts are 71 days old: docs/prompts/2026-06-21-desktop-followups-and-event-bus.md (3/6 goals) and docs/prompts/2026-06-21-master-session-next.md — candidates for ccs prompts scan."
+}

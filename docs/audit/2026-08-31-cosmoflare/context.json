@@ -1,0 +1,124 @@
+{
+  "project_name": "cosmoflare",
+  "version": "0.17.0",
+  "audit_model": {
+    "provider": "glm",
+    "model_id": "glm-5.3",
+    "model_display": "GLM 5.3 (1M context)",
+    "timestamp": "2026-08-31T02:31:17+04:00"
+  },
+  "mode": "fresh",
+  "prior_audit": "docs/audit/2026-05-19-r2go2 (overall 70.8, 5 agents)",
+  "design": {
+    "frontend": {
+      "detected": true,
+      "dirs": [
+        "desktop/src/"
+      ],
+      "motion_evidence": false
+    }
+  },
+  "cosmokit": "not installed",
+  "impeccable": "unavailable",
+  "deterministic_scores": {
+    "doc_integrity": {
+      "score": 47,
+      "applicable": true,
+      "inputs": {
+        "chains_total": 76,
+        "broken_chains": 7,
+        "unenriched_docs": 76,
+        "reviewed_docs": 0,
+        "unreviewed_docs": 127,
+        "stale_docs": 6,
+        "stale_prompts": 2
+      },
+      "weights": {
+        "broken_chain": 6,
+        "broken_cap_pt": 25,
+        "unenriched_pct": 0.1,
+        "unenriched_cap_pt": 12,
+        "unreviewed_pct": 0.1,
+        "unreviewed_cap_pt": 12,
+        "stale_doc": 1,
+        "stale_cap_pt": 8,
+        "stale_prompt": 1
+      }
+    },
+    "work_completion": {
+      "score": -1,
+      "applicable": false,
+      "inputs": {
+        "possibly_done_issues": 0,
+        "orphaned_roadmap": 0,
+        "stale_roadmap": 0,
+        "drifted_roadmap": 0,
+        "stalled_plans": 2
+      },
+      "weights": {
+        "possibly_done_issue": 5,
+        "orphaned_roadmap": 3,
+        "stale_roadmap": 2,
+        "drifted_roadmap": 0.3,
+        "stalled_plan": 4,
+        "drifted_cap_pt": 15
+      }
+    }
+  },
+  "readiness": {
+    "context": "Readiness:\n  PR: \u2713 No conflicts\n  CI: \u2717 Failing\n  Uncommitted: 15 files\n  \u26a0\ufe0f CI pipeline failing",
+    "pr_ready": false,
+    "deploy_ready": false,
+    "blockers": [
+      "CI pipeline failing"
+    ],
+    "tests_passing": true,
+    "ci_passing": false,
+    "has_conflicts": false,
+    "needs_rebase": false,
+    "analysis_ms": 2561
+  },
+  "filesize_audit": {
+    "working_tree": {
+      "warn": [
+        {
+          "path": "GOrchestra/sessions/wf466094ba-e74-2/recovery.patch",
+          "size_mb": 42.5,
+          "gitignored": false,
+          "tracked": false
+        },
+        {
+          "path": "GOrchestra/sessions/wf466094ba-e74-4/recovery.patch",
+          "size_mb": 42.5,
+          "gitignored": false,
+          "tracked": false
+        },
+        {
+          "path": "GOrchestra/sessions/wf466094ba-e74-5/recovery.patch",
+          "size_mb": 42.5,
+          "gitignored": false,
+          "tracked": false
+        },
+        {
+          "path": "GOrchestra/sessions/wf466094ba-e74-6/recovery.patch",
+          "size_mb": 42.5,
+          "gitignored": false,
+          "tracked": false
+        },
+        {
+          "path": "GOrchestra/sessions/wf466094ba-e74-7/recovery.patch",
+          "size_mb": 42.4,
+          "gitignored": false,
+          "tracked": false
+        }
+      ],
+      "error": []
+    },
+    "summary": {
+      "tree_warnings": 5,
+      "tree_errors": 0,
+      "history_errors": 0,
+      "clean": false
+    }
+  }
+}

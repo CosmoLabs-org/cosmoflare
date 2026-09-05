@@ -1,0 +1,193 @@
+{
+  "agent": "core-logic",
+  "overall_score": 5,
+  "sub_scores": {
+    "bug_detection": 4,
+    "performance": 5,
+    "edge_cases": 4,
+    "security": 5,
+    "data_integrity": 4
+  },
+  "critical_findings": [
+    {
+      "title": "Multipart upload silently stores truncated objects",
+      "severity": "high",
+      "file": "pkg/cosmoflare/upload.go:207",
+      "fix": "Treat io.EOF/ErrUnexpectedEOF before uploadedBytes==size as a fatal error and abort the upload",
+      "effort": "small"
+    },
+    {
+      "title": "sync lists only first 1000 objects; --delete can destroy local files present remotely",
+      "severity": "high",
+      "file": "cmd/sync.go:428",
+      "fix": "Loop on result.NextToken to paginate ListObjectsV2",
+      "effort": "small"
+    },
+    {
+      "title": "Guardrails parsed and tested but never enforced anywhere",
+      "severity": "high",
+      "file": "pkg/cosmoflare/guardrails.go:29",
+      "fix": "Call CheckUpload from client.Upload and from sync/watch command paths",
+      "effort": "medium"
+    },
+    {
+      "title": "sync down re-downloads everything on every run (mtime heuristic never matches)",
+      "severity": "high",
+      "file": "pkg/cosmoflare/sync.go:368",
+      "fix": "os.Chtimes downloaded files to remote.LastModified",
+      "effort": "small"
+    },
+    {
+      "title": "WithPartSize(0) causes integer-divide-by-zero panic in MultipartUpload",
+      "severity": "high",
+      "file": "pkg/cosmoflare/upload.go:184",
+      "fix": "Call ValidatePartSize before computing numParts",
+      "effort": "small"
+    },
+    {
+      "title": "Watcher swallows scan errors then deletes remote objects with --delete",
+      "severity": "high",
+      "file": "pkg/cosmoflare/watcher.go:124",
+      "fix": "Never emit ChangeDeleted for files under paths that failed to read",
+      "effort": "medium"
+    },
+    {
+      "title": "WithTimeout/WithHTTPClient never wired to transports; WithProfile/WithAuditLog/WithDryRun/WithBucket are no-ops",
+      "severity": "high",
+      "file": "pkg/cosmoflare/client.go:91",
+      "fix": "Pass httpClient to cloudflare.NewWithAPIToken and awsconfig; implement or delete dead options",
+      "effort": "medium"
+    },
+    {
+      "title": "Checksum mode never matches multipart ETags (perpetual re-upload)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/sync.go:364",
+      "fix": "Strip -N suffix from ETag before MD5 comparison",
+      "effort": "small"
+    },
+    {
+      "title": "Aborted multipart uploads leak on R2; abort reuses canceled context",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/upload.go:175",
+      "fix": "Abort with context.Background() plus timeout; GC stale /tmp state files",
+      "effort": "small"
+    },
+    {
+      "title": "Content-Type never auto-detected; detectContentType is dead code",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/upload.go:315",
+      "fix": "Default cfg.contentType from detectContentType(key) on upload",
+      "effort": "small"
+    },
+    {
+      "title": "--include flag accepted but never applied; no default excludes (.env, .git uploaded)",
+      "severity": "medium",
+      "file": "cmd/sync.go:104",
+      "fix": "Implement include filtering in planUp/planDown; default-exclude .git/.env/.DS_Store",
+      "effort": "medium"
+    },
+    {
+      "title": "DNS diff collapses duplicate records; deletion order non-deterministic",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/diff.go:345",
+      "fix": "Count duplicate keys and sort deletion entries for deterministic --json output",
+      "effort": "small"
+    },
+    {
+      "title": "One failing source suppresses all metrics publishing; Profile never set",
+      "severity": "medium",
+      "file": "internal/server/metrics.go:78",
+      "fix": "Publish partial snapshots with per-source errors; populate Profile from active account",
+      "effort": "small"
+    },
+    {
+      "title": "SSE stream has no heartbeat; proxies drop idle connections",
+      "severity": "medium",
+      "file": "internal/server/sse.go:109",
+      "fix": "Send a ': ping' comment frame every ~20 seconds",
+      "effort": "small"
+    },
+    {
+      "title": "Non-constant-time token compare; empty Config.Token bypasses auth",
+      "severity": "low",
+      "file": "internal/server/server.go:147",
+      "fix": "Use crypto/subtle.ConstantTimeCompare; reject empty token in New()",
+      "effort": "small"
+    },
+    {
+      "title": "KV apply does N+1 list calls for deletions",
+      "severity": "low",
+      "file": "pkg/cosmoflare/apply.go:474",
+      "fix": "List namespaces once before the op loop and reuse the title-to-ID map",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Add short-read regression test (reader shorter than declared size) and abort correctly in both multipart loops",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Paginate ListRemoteObjects on NextToken with a two-page fake-backend test",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Wire GuardrailChecker.CheckUpload into client.Upload and sync/watch command paths",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Preserve remote mtime on downloads and normalize multipart ETags for checksum compare",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Wire httpClient/timeout into cloudflare-go and AWS SDK; add ValidatePartSize to MultipartUpload",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Implement or remove WithProfile/WithAuditLog/WithDryRun/WithBucket; default Content-Type via detectContentType",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Suppress deletions for unreadable watch paths; retry failed watch uploads instead of advancing lastSnap",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add SSE heartbeat and partial metrics publishing with per-source error reporting",
+      "effort": "small",
+      "priority": "medium"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Storage engine integrity hardening",
+      "description": "Short-read aborts, part-size validation, orphaned multipart cleanup, /tmp state GC",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Make sync correct at scale",
+      "description": "Pagination, download mtime preservation, ETag normalization, deterministic op ordering",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Enforce declared guardrails",
+      "description": "Wire .cosmoflare.yaml guardrails/audit/dry-run into mutation paths so config stops being advisory",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Live-metrics reliability",
+      "description": "SSE keepalive, partial-snapshot publishing, byte-based delta detection",
+      "priority": "medium",
+      "effort": "small"
+    }
+  ]
+}
