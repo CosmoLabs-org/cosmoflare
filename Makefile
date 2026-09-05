@@ -16,7 +16,7 @@ BINARY_UNIX=$(BINARY_NAME)_unix
 VERSION=$(shell ccs version --short 2>/dev/null | sed 's/ .*//' || grep -o '"version":"[^"]*"' .version-registry.json 2>/dev/null | head -1 | cut -d'"' -f4 || echo "dev")
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=$(GIT_COMMIT)"
+LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/cosmoflare/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/cosmoflare/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/cosmoflare/cmd.GitCommit=$(GIT_COMMIT)"
 
 # Build settings
 BUILD_DIR=build
@@ -152,7 +152,7 @@ rpm: build
 	@echo "Release: 1%{?dist}" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
 	@echo "Summary: Cloudflare R2 CLI management tool" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
 	@echo "License: MIT" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "URL: https://github.com/CosmoLabs-org/CosmoDev-R2Go2" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
+	@echo "URL: https://github.com/CosmoLabs-org/cosmoflare" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
 	@echo "%description" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
 	@echo "A CLI tool for managing Cloudflare R2 storage buckets and objects." >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
 	@echo "%prep" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec

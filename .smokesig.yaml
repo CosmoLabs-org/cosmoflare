@@ -31,7 +31,7 @@ tests:
       run: ""
       expect:
         doc_integrity:
-            binary: ./CosmoDev-R2Go2
+            binary: ./build/cosmoflare
             docs:
                 - README.md
                 - CLAUDE.md

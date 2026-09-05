@@ -26,8 +26,6 @@ coverage.html
 
 # Go
 vendor/
-*.mod
-*.sum
 
 # OS
 .DS_Store

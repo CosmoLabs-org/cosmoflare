@@ -8,8 +8,8 @@ param(
 )
 
 # Configuration
-$Repo = "CosmoLabs-org/CosmoDev-R2Go2"
-$BinaryName = "r2go2"
+$Repo = "CosmoLabs-org/cosmoflare"
+$BinaryName = "cosmoflare"
 $InstallDir = "$env:USERPROFILE\.local\bin"
 
 # Emoji for beautiful output

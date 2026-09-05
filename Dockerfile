@@ -27,9 +27,9 @@ ARG GIT_COMMIT
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags "-w -s \
-    -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=${VERSION} \
-    -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=${BUILD_TIME} \
-    -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=${GIT_COMMIT}" \
+    -X github.com/CosmoLabs-org/cosmoflare/cmd.AppVersion=${VERSION} \
+    -X github.com/CosmoLabs-org/cosmoflare/cmd.BuildTime=${BUILD_TIME} \
+    -X github.com/CosmoLabs-org/cosmoflare/cmd.GitCommit=${GIT_COMMIT}" \
     -a -installsuffix cgo -o r2go2 .
 
 # Final stage
@@ -71,7 +71,7 @@ CMD ["--help"]
 LABEL maintainer="CosmoLabs <support@cosmolabs.org>" \
       org.opencontainers.image.title="R2Go2" \
       org.opencontainers.image.description="Cloudflare R2 CLI management tool" \
-      org.opencontainers.image.url="https://github.com/CosmoLabs-org/CosmoDev-R2Go2" \
-      org.opencontainers.image.source="https://github.com/CosmoLabs-org/CosmoDev-R2Go2" \
+      org.opencontainers.image.url="https://github.com/CosmoLabs-org/cosmoflare" \
+      org.opencontainers.image.source="https://github.com/CosmoLabs-org/cosmoflare" \
       org.opencontainers.image.vendor="CosmoLabs" \
       org.opencontainers.image.licenses="MIT"

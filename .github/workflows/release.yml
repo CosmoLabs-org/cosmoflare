@@ -59,13 +59,22 @@ jobs:
             echo "Building ${BINARY}..."
             CGO_ENABLED=0 GOOS="$OS" GOARCH="$ARCH" go build \
               -ldflags "-s -w \
-                -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.AppVersion=${VERSION} \
-                -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.BuildTime=${BUILD_TIME} \
-                -X github.com/CosmoLabs-org/CosmoDev-R2Go2/cmd.GitCommit=${GIT_COMMIT}" \
+                -X github.com/CosmoLabs-org/cosmoflare/cmd.AppVersion=${VERSION} \
+                -X github.com/CosmoLabs-org/cosmoflare/cmd.BuildTime=${BUILD_TIME} \
+                -X github.com/CosmoLabs-org/cosmoflare/cmd.GitCommit=${GIT_COMMIT}" \
               -o "dist/${BINARY}" .
           done
 
           ls -lh dist/
+
+      - name: Verify version stamping
+        run: |
+          STAMPED="$(./dist/cosmoflare-linux-amd64 --version)"
+          echo "Reported: ${STAMPED}"
+          echo "${STAMPED}" | grep -q "${VERSION}" || {
+            echo "::error::version mismatch — binary reports '${STAMPED}', expected '${VERSION}' (ldflags -X target broken?)"
+            exit 1
+          }
 
       - name: Generate checksums
         working-directory: dist
@@ -84,7 +93,7 @@ jobs:
             echo "Download the binary for your platform from the assets below, or install via Go:"
             echo ""
             echo '```bash'
-            echo "go install github.com/CosmoLabs-org/CosmoDev-R2Go2@${VERSION}"
+            echo "go install github.com/CosmoLabs-org/cosmoflare@${VERSION}"
             echo '```'
             echo ""
             echo "### Changes"

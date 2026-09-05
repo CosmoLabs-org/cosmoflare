@@ -16,8 +16,8 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="CosmoLabs-org/CosmoDev-R2Go2"
-BINARY_NAME="r2go2"
+REPO="CosmoLabs-org/cosmoflare"
+BINARY_NAME="cosmoflare"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/r2go2"
 

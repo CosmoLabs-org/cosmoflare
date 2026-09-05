@@ -156,7 +156,7 @@ download_from_github() {
     fi
 
     # Get latest version info
-    VERSION=$(curl -s "https://api.github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/latest" 2>/dev/null | grep -o '"tag_name": "[^"]*' | sed 's/"//g' | sed 's/^v//' || echo "latest")
+    VERSION=$(curl -s "https://api.github.com/repos/CosmoLabs-org/cosmoflare/releases/latest" 2>/dev/null | grep -o '"tag_name": "[^"]*' | sed 's/"//g' | sed 's/^v//' || echo "latest")
 
     if [ -z "$VERSION" ]; then
         VERSION="latest"
@@ -175,7 +175,7 @@ download_from_github() {
         FILENAME="${FILENAME}.exe"
     fi
 
-    DOWNLOAD_URL="https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases/download/v$VERSION/$FILENAME"
+    DOWNLOAD_URL="https://github.com/CosmoLabs-org/cosmoflare/releases/download/v$VERSION/$FILENAME"
 
     if command_exists curl; then
         curl -L -o "$BINARY_NAME" "$DOWNLOAD_URL" --progress-bar
@@ -369,7 +369,7 @@ exit_installer() {
     echo -e "${BOLD}${RED}──────────────────${NC}\n"
 
     echo -e "${DIM}Thank you for trying R2Go2!${NC}"
-    echo -e "${DIM}Visit: https://github.com/CosmoLabs-org/CosmoDev-R2Go2${NC}"
+    echo -e "${DIM}Visit: https://github.com/CosmoLabs-org/cosmoflare${NC}"
     echo -e "${DIM}Need help? Open an issue on GitHub!${NC}"
     echo ""
     exit 0
@@ -421,7 +421,7 @@ initialize() {
     trap 'echo -e "\n${YELLOW}⚠️  Installation interrupted${NC}"; exit 1' INT
 
     # Binary and installation configuration
-    BINARY_NAME="R2Go2"
+    BINARY_NAME="cosmoflare"
     INSTALL_DIR="$HOME/.local/bin"
     CONFIG_DIR="$HOME/.config/r2go2"
 
