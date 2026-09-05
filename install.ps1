@@ -11,6 +11,7 @@ param(
 $Repo = "CosmoLabs-org/cosmoflare"
 $BinaryName = "cosmoflare"
 $InstallDir = "$env:USERPROFILE\.local\bin"
+$ChecksumsFile = "checksums-sha256.txt"
 
 # Emoji for beautiful output
 $Rocket = "🚀"
@@ -23,11 +24,13 @@ $Download = "📥"
 $Install = "📦"
 
 # Color functions
+# Uses Write-Host (display stream) instead of Write-Output so status
+# messages never pollute function return values.
 function Write-ColorOutput($ForegroundColor) {
     $fc = $host.UI.RawUI.ForegroundColor
     $host.UI.RawUI.ForegroundColor = $ForegroundColor
     if ($args) {
-        Write-Output $args
+        Write-Host $args
     }
     $host.UI.RawUI.ForegroundColor = $fc
 }
@@ -88,6 +91,70 @@ function Get-LatestVersion {
     }
 }
 
+# Download the checksums file published alongside the release assets
+# (fail-closed: abort when it is unavailable — never install unverified)
+function Get-ChecksumsFile($version) {
+    Write-Step "Downloading checksums file..."
+
+    $checksumsUrl = "https://github.com/$Repo/releases/download/v$version/$ChecksumsFile"
+
+    try {
+        Invoke-WebRequest -Uri $checksumsUrl -OutFile $ChecksumsFile
+    }
+    catch {
+        Write-Error "Checksums file unavailable: $checksumsUrl"
+        Write-Warning "Refusing to install an unverified binary (fail-closed policy)."
+        exit 1
+    }
+
+    if (!(Test-Path $ChecksumsFile) -or (Get-Item $ChecksumsFile).Length -eq 0) {
+        Write-Error "Checksums file is missing or empty: $checksumsUrl"
+        Write-Warning "Refusing to install an unverified binary (fail-closed policy)."
+        Remove-Item $ChecksumsFile -Force -ErrorAction SilentlyContinue
+        exit 1
+    }
+
+    Write-Success "Downloaded: $ChecksumsFile"
+}
+
+# Verify the SHA256 of the downloaded binary against the published
+# checksums (fail-closed). Deletes the binary and exits 1 on a missing
+# entry or a hash mismatch. Must run before the binary is installed
+# or executed.
+function Test-BinaryChecksum($filename, $binaryPath) {
+    Write-Step "Verifying SHA256 checksum..."
+
+    $expected = $null
+    foreach ($line in @(Get-Content $ChecksumsFile)) {
+        # sha256sum format: "<hash>  <filename>", optional "*" binary marker
+        if ($line -match '^\s*([0-9A-Fa-f]{64})\s+\*?(.+?)\s*$' -and $Matches[2] -eq $filename) {
+            $expected = $Matches[1]
+            break
+        }
+    }
+
+    if (-not $expected) {
+        Write-Error "No checksum entry for '$filename' in $ChecksumsFile"
+        Write-Warning "Refusing to install an unverified binary (fail-closed policy)."
+        Remove-Item $binaryPath -Force -ErrorAction SilentlyContinue
+        exit 1
+    }
+
+    $actual = (Get-FileHash -Path $binaryPath -Algorithm SHA256).Hash
+
+    # String -eq/-ne comparisons are case-insensitive in PowerShell, so
+    # upper/lowercase hash spellings compare equal.
+    if ($actual -ne $expected) {
+        Write-Error "Checksum mismatch for '$filename' - deleting unverified binary"
+        Write-Info "Expected: $expected"
+        Write-Info "Actual:   $actual"
+        Remove-Item $binaryPath -Force -ErrorAction SilentlyContinue
+        exit 1
+    }
+
+    Write-Success "Checksum verified: $filename"
+}
+
 # Download binary
 function Download-Binary($version, $arch) {
     Write-Step "$Download Downloading R2Go2 binary..."
@@ -100,6 +167,8 @@ function Download-Binary($version, $arch) {
         Invoke-WebRequest -Uri $downloadUrl -OutFile $outputPath
         if (Test-Path $outputPath) {
             Write-Success "Downloaded: $filename"
+            # Verify integrity before the binary is installed or executed
+            Test-BinaryChecksum -filename $filename -binaryPath $outputPath
             return $outputPath
         } else {
             Write-Error "Failed to download binary"
@@ -195,6 +264,9 @@ function Cleanup {
     if (Test-Path $binaryPath) {
         Remove-Item $binaryPath -Force -ErrorAction SilentlyContinue
     }
+    if (Test-Path $ChecksumsFile) {
+        Remove-Item $ChecksumsFile -Force -ErrorAction SilentlyContinue
+    }
 }
 
 # Main installation function
@@ -218,7 +290,10 @@ function Main {
         # Get latest version
         $version = Get-LatestVersion
 
-        # Download binary
+        # Download the checksums file for verification (fail-closed)
+        Get-ChecksumsFile -version $version
+
+        # Download binary (verifies its checksum before returning)
         $binaryPath = Download-Binary -version $version -arch $arch
 
         # Install binary

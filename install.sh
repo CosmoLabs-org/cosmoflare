@@ -18,6 +18,7 @@ NC='\033[0m' # No Color
 # Configuration
 REPO="CosmoLabs-org/cosmoflare"
 BINARY_NAME="cosmoflare"
+CHECKSUMS_FILE="checksums-sha256.txt"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/r2go2"
 
@@ -124,6 +125,97 @@ get_latest_version() {
     print_success "Latest version: $VERSION"
 }
 
+# Report an unavailable/unusable checksums file and stop (fail-closed policy)
+checksums_fail() {
+    print_error "Checksums file unavailable: $1"
+    print_warning "Refusing to install an unverified binary (fail-closed policy)."
+    rm -f "$CHECKSUMS_FILE"
+}
+
+# Download the checksums file published alongside the release assets
+download_checksums() {
+    CHECKSUMS_URL="https://github.com/$REPO/releases/download/v$VERSION/$CHECKSUMS_FILE"
+
+    print_step "Downloading checksums file..."
+
+    if command_exists curl; then
+        if ! curl -sSfL -o "$CHECKSUMS_FILE" "$CHECKSUMS_URL"; then
+            checksums_fail "$CHECKSUMS_URL"
+            exit 1
+        fi
+    elif command_exists wget; then
+        if ! wget -qO "$CHECKSUMS_FILE" "$CHECKSUMS_URL"; then
+            checksums_fail "$CHECKSUMS_URL"
+            exit 1
+        fi
+    else
+        print_error "Neither curl nor wget is available"
+        exit 1
+    fi
+
+    if [ ! -s "$CHECKSUMS_FILE" ]; then
+        checksums_fail "$CHECKSUMS_URL returned an empty file"
+        exit 1
+    fi
+
+    print_success "Downloaded: $CHECKSUMS_FILE"
+}
+
+# Verify the SHA256 of a downloaded file against the published checksums.
+# Fail-closed: deletes the file and exits 1 on a missing checksums file,
+# a missing entry, a hash mismatch, or when no sha256 tool is available.
+# Must run BEFORE the binary is ever chmod +x or executed.
+verify_checksum() {
+    local file="$1"
+    local asset="$2"
+    local checksums_file="$3"
+    local expected=""
+    local actual=""
+
+    print_step "Verifying SHA256 checksum..."
+
+    if [ ! -s "$checksums_file" ]; then
+        checksums_fail "$checksums_file is missing or empty"
+        rm -f "$file"
+        exit 1
+    fi
+
+    # Locate the entry for this release asset. sha256sum format is
+    # "<hash>  <filename>", with an optional "*" binary-mode marker.
+    expected=$(awk -v f="$asset" '{ name = $2; sub(/^\*/, "", name); if (name == f) { print $1; exit } }' "$checksums_file")
+    expected=$(printf '%s' "$expected" | tr '[:upper:]' '[:lower:]')
+
+    if [ -z "$expected" ]; then
+        print_error "No checksum entry for '$asset' in $(basename "$checksums_file")"
+        print_warning "Refusing to install an unverified binary (fail-closed policy)."
+        rm -f "$file"
+        exit 1
+    fi
+
+    if command_exists shasum; then
+        actual=$(shasum -a 256 "$file" | awk '{print $1}')
+    elif command_exists sha256sum; then
+        actual=$(sha256sum "$file" | awk '{print $1}')
+    else
+        print_error "Neither shasum nor sha256sum is available for checksum verification"
+        print_warning "Refusing to install an unverified binary (fail-closed policy)."
+        rm -f "$file"
+        exit 1
+    fi
+
+    actual=$(printf '%s' "$actual" | tr '[:upper:]' '[:lower:]')
+
+    if [ "$expected" != "$actual" ]; then
+        print_error "Checksum mismatch for '$asset' - deleting unverified binary"
+        print_info "Expected: $expected"
+        print_info "Actual:   $actual"
+        rm -f "$file"
+        exit 1
+    fi
+
+    print_success "Checksum verified: $asset"
+}
+
 # Download binary
 download_binary() {
     print_step "${DOWNLOAD} Downloading R2Go2 binary..."
@@ -148,6 +240,9 @@ download_binary() {
         print_error "Failed to download binary"
         exit 1
     fi
+
+    # Verify integrity before the binary is made executable or installed
+    verify_checksum "$BINARY_NAME" "$FILENAME" "$CHECKSUMS_FILE"
 
     print_success "Downloaded: $BINARY_NAME"
 }
@@ -240,6 +335,9 @@ cleanup() {
     if [ -f "$BINARY_NAME" ]; then
         rm -f "$BINARY_NAME"
     fi
+    if [ -f "$CHECKSUMS_FILE" ]; then
+        rm -f "$CHECKSUMS_FILE"
+    fi
 }
 
 # Set up cleanup trap
@@ -264,7 +362,10 @@ main() {
     # Get latest version
     get_latest_version
 
-    # Download binary
+    # Download the checksums file for verification (fail-closed)
+    download_checksums
+
+    # Download binary (verifies its checksum before returning)
     download_binary
 
     # Install binary
