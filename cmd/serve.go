@@ -17,6 +17,7 @@ import (
 
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/server"
+	"github.com/CosmoLabs-org/cosmoflare/internal/webhook"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
@@ -89,6 +90,13 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	srv := server.New(server.Config{Token: token, Version: AppVersion})
 
+	// FEAT-008: bridge alert triggers onto the SSE notifications channel so
+	// desktop clients receive alert_triggered frames live. Held for the
+	// daemon's lifetime — the notifier closure only fans out in-process and
+	// never blocks (sseHub drops frames for slow clients by design).
+	alertBridge := newServeAlertBridge(srv)
+	_ = alertBridge
+
 	// Wire the real data source: per-request credential resolution from the
 	// local config profiles, delegating to the existing per-service
 	// constructors. NewConfigManager is safe on first run (no config file →
@@ -156,6 +164,18 @@ func randomToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// newServeAlertBridge constructs the daemon's alert manager and bridges every
+// TriggerAlert call onto the SSE hub's notifications channel (FEAT-008).
+// Webhook delivery is unchanged — the notifier only adds in-process fan-out
+// to connected /events clients.
+func newServeAlertBridge(srv *server.Server) *webhook.Manager {
+	m := webhook.NewManager(nil, "")
+	m.SetNotifier(func(p *webhook.NotificationPayload) {
+		srv.Publish("notifications", p)
+	})
+	return m
 }
 
 // serveAdapter implements server.ServeSource over the existing per-service

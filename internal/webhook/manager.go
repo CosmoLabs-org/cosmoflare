@@ -38,6 +38,7 @@ type Manager struct {
 	httpClient *http.Client
 	secrets    map[string]string // Webhook secrets for signature verification
 	webhooks   map[string]*Webhook
+	notifier   func(*NotificationPayload) // in-process alert listener (FEAT-008 bridge)
 }
 
 // NewManager creates a new webhook manager
@@ -178,6 +179,14 @@ func (m *Manager) SendWebhook(eventType string, event *Event) error {
 	return nil
 }
 
+// SetNotifier registers an in-process listener for alert payloads. The
+// serve daemon uses this to bridge alerts onto its SSE hub — every
+// TriggerAlert call delivers the same payload to the listener that the
+// configured webhooks receive. Passing nil removes the listener.
+func (m *Manager) SetNotifier(fn func(*NotificationPayload)) {
+	m.notifier = fn
+}
+
 // TriggerAlert triggers an alert
 func (m *Manager) TriggerAlert(alert *Alert, value float64, message string, data map[string]interface{}) error {
 	alert.LastTrigger = time.Now().UTC()
@@ -210,6 +219,13 @@ func (m *Manager) TriggerAlert(alert *Alert, value float64, message string, data
 		if err := m.sendNotification(webhook, payload); err != nil {
 			fmt.Printf("Failed to send alert notification to %s: %v\n", webhook.URL, err)
 		}
+	}
+
+	// FEAT-008: fan the same payload out to the in-process listener (the
+	// serve daemon bridges this to the SSE notifications channel). Delivery
+	// to webhooks above must not be affected by the listener failing.
+	if m.notifier != nil {
+		m.notifier(payload)
 	}
 
 	return nil
