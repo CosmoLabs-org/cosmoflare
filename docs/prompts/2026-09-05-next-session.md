@@ -8,10 +8,12 @@ requires_reading:
     - docs/audit/latest/brief.md
     - docs/audit/latest/action-plan.md
 schema_version: 1
-status: PENDING
+status: SUPERSEDED
 tags: []
 title: Cosmoflare — Next Session Continuation (2026-09-05)
 type: continuation
+superseded_by: "docs/prompts/2026-09-06-launch-and-hardening.md"
+completed: "2026-09-06T23:12:02+04:00"
 ---
 
 # Cosmoflare — Next Session Continuation (2026-09-05)
