@@ -3,7 +3,10 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // ServeSource is the daemon's data-access seam. It is a NEW abstraction for the
@@ -66,7 +69,7 @@ func (s *Server) handleAccounts(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := src.Accounts(r.Context())
 	if err != nil {
-		writeJSONStatus(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeAPIError(w, err)
 		return
 	}
 	writeJSON(w, data)
@@ -91,7 +94,7 @@ func (s *Server) withCloudflare(h cfHandler) http.HandlerFunc {
 		data, err := h(r.Context(), profile)
 		if err != nil {
 			s.SetCloudflareOnline(false)
-			writeJSONStatus(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
+			writeAPIError(w, err)
 			return
 		}
 		s.SetCloudflareOnline(true)
@@ -104,4 +107,39 @@ func writeJSONStatus(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+// mapError maps a typed pkg/cosmoflare error to a stable HTTP status and
+// error code for the daemon's REST error contract. Unclassified errors
+// (including plain errors.New from adapters) fall through to 502
+// upstream_error, matching the daemon's "transient failure" semantics.
+func mapError(err error) (status int, code string) {
+	var validationErr *cosmoflare.R2ValidationError
+	if errors.As(err, &validationErr) {
+		return http.StatusBadRequest, "validation_failed"
+	}
+	var authErr *cosmoflare.R2AuthError
+	if errors.As(err, &authErr) {
+		return http.StatusUnauthorized, "unauthorized"
+	}
+	var accessDeniedErr *cosmoflare.R2AccessDeniedError
+	if errors.As(err, &accessDeniedErr) {
+		return http.StatusForbidden, "forbidden"
+	}
+	var notFoundErr *cosmoflare.R2NotFoundError
+	if errors.As(err, &notFoundErr) {
+		return http.StatusNotFound, "not_found"
+	}
+	var quotaErr *cosmoflare.R2QuotaError
+	if errors.As(err, &quotaErr) {
+		return http.StatusTooManyRequests, "rate_limited"
+	}
+	return http.StatusBadGateway, "upstream_error"
+}
+
+// writeAPIError maps err via mapError and writes the daemon's stable error
+// body shape: {"error": <message>, "code": <stable-code>}.
+func writeAPIError(w http.ResponseWriter, err error) {
+	status, code := mapError(err)
+	writeJSONStatus(w, status, map[string]string{"error": err.Error(), "code": code})
 }
