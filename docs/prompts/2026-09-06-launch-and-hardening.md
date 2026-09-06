@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-09-06T23:10:19+04:00"
-goals_completed: 9
+goals_completed: 10
 goals_total: 11
 priority: high
 related_prompts: []
@@ -62,7 +62,7 @@ The attic blobs (234MB, incl. AWS example-key patterns inside recovery.patch fil
 `.cosmoflare.yaml` guardrails (blocked_keys, allowed_buckets) parse and test but never run — `sync up . bucket` uploads `.env` and `.git/` by default. Trace the upload call paths, wire guardrail checks at the library boundary, add default excludes, and TDD the enforcement (red test: uploading `.env` with guardrails configured must fail with an actionable error).
 **Acceptance:** `go test ./pkg/cosmoflare/ ./cmd/ -run Guardrail` passes with new enforcement tests; audit risk-map row "Guardrails never enforced" is closed with a file:line citation.
 
-### [ ] 4. Daemon error contract v2 (audit item 14)
+### [x] 4. Daemon error contract v2 (audit item 14)
 **Model:** `sonnet` | **Files:** `internal/server/rest.go`, `pkg/cosmoflare/errors.go`
 **Reason:** cross-file judgment — mapping typed R2Error/API errors to HTTP statuses touches the error hierarchy and all REST handlers.
 Everything currently returns 502 (rest.go:94). Map typed errors → 400/401/404/429/502 with `{error, code}` JSON bodies so the desktop app can distinguish user-fixable from transient. Follow the typed-error hierarchy in `pkg/cosmoflare/errors.go`.
