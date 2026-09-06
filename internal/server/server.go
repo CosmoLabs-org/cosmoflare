@@ -77,11 +77,11 @@ func (s *Server) Close() {
 func (s *Server) SetCloudflareOnline(ok bool) {
 	old := s.cfOnline.Swap(ok)
 	if old != ok {
-		s.Publish("status", map[string]any{
+		s.Publish(ChannelStatus, map[string]any{
 			"systems_online":   true,
 			"cloudflare_online": ok,
 		})
-		s.Publish("notifications", map[string]any{
+		s.Publish(ChannelNotifications, map[string]any{
 			"message": cfOnlineMessage(ok),
 			"level":   cfOnlineLevel(ok),
 			"kind":    "cloudflare_online",

@@ -7,6 +7,16 @@ import (
 	"sync"
 )
 
+// SSE channel names. These are a wire contract shared by this package's
+// producers, the serve daemon's glue code (cmd/serve.go), and the desktop
+// client — publish and subscribe through these constants, never literals,
+// so a rename cannot silently orphan one side.
+const (
+	ChannelMetrics       = "metrics"
+	ChannelNotifications = "notifications"
+	ChannelStatus        = "status"
+)
+
 // eventFrame is one SSE event enqueued by Publish and drained by the /events
 // handler. channel becomes the `event:` line; data is JSON-encoded as `data:`.
 type eventFrame struct {

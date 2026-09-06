@@ -179,10 +179,8 @@ func (m *Manager) SendWebhook(eventType string, event *Event) error {
 	return nil
 }
 
-// SetNotifier registers an in-process listener for alert payloads. The
-// serve daemon uses this to bridge alerts onto its SSE hub — every
-// TriggerAlert call delivers the same payload to the listener that the
-// configured webhooks receive. Passing nil removes the listener.
+// SetNotifier registers an optional in-process listener that receives the
+// same NotificationPayload the configured webhooks receive.
 func (m *Manager) SetNotifier(fn func(*NotificationPayload)) {
 	m.notifier = fn
 }
@@ -204,6 +202,13 @@ func (m *Manager) TriggerAlert(alert *Alert, value float64, message string, data
 		Data:      data,
 	}
 
+	// FEAT-008: fan the payload out to the in-process listener FIRST — the
+	// serve daemon bridges this to the live SSE stream, which must not
+	// inherit the webhook retry loop's latency.
+	if m.notifier != nil {
+		m.notifier(payload)
+	}
+
 	// Send to configured webhooks
 	for _, webhookID := range alert.Webhooks {
 		webhook, err := m.getWebhook(webhookID)
@@ -219,13 +224,6 @@ func (m *Manager) TriggerAlert(alert *Alert, value float64, message string, data
 		if err := m.sendNotification(webhook, payload); err != nil {
 			fmt.Printf("Failed to send alert notification to %s: %v\n", webhook.URL, err)
 		}
-	}
-
-	// FEAT-008: fan the same payload out to the in-process listener (the
-	// serve daemon bridges this to the SSE notifications channel). Delivery
-	// to webhooks above must not be affected by the listener failing.
-	if m.notifier != nil {
-		m.notifier(payload)
 	}
 
 	return nil

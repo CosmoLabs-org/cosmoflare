@@ -90,12 +90,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	srv := server.New(server.Config{Token: token, Version: AppVersion})
 
-	// FEAT-008: bridge alert triggers onto the SSE notifications channel so
-	// desktop clients receive alert_triggered frames live. Held for the
-	// daemon's lifetime — the notifier closure only fans out in-process and
-	// never blocks (sseHub drops frames for slow clients by design).
-	alertBridge := newServeAlertBridge(srv)
-	_ = alertBridge
+	// FEAT-008: wire the alert→SSE bridge. No alert producer exists yet
+	// (the evaluator needs metric producers that don't ship today) — this
+	// is the seam it will plug into. The bridge itself is covered by
+	// TestServeAlertBridge_PublishesAlertToNotificationsChannel.
+	newServeAlertBridge(srv)
 
 	// Wire the real data source: per-request credential resolution from the
 	// local config profiles, delegating to the existing per-service
@@ -173,7 +172,7 @@ func randomToken() (string, error) {
 func newServeAlertBridge(srv *server.Server) *webhook.Manager {
 	m := webhook.NewManager(nil, "")
 	m.SetNotifier(func(p *webhook.NotificationPayload) {
-		srv.Publish("notifications", p)
+		srv.Publish(server.ChannelNotifications, p)
 	})
 	return m
 }

@@ -82,5 +82,5 @@ func (m *MetricsProducer) poll(ctx context.Context) {
 		return
 	}
 	m.last = &snap
-	m.srv.Publish("metrics", snap)
+	m.srv.Publish(ChannelMetrics, snap)
 }
