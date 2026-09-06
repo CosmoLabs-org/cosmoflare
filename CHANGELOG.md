@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.21.0] - 2026-09-07
+
+### Added
+- Published first release with full binary distribution (v0.20.0: 5 binaries + checksums)
+- map typed daemon errors to stable HTTP status + code (commit:d8f8f3c8)
+
+### Changed
+- Daemon REST errors map typed R2 errors to stable HTTP statuses (400/401/403/404/429/502) with {error, code} JSON bodies — desktop can distinguish user-fixable from transient failures
+
+### Removed
+- Purged 630 MB of dead blobs from git history (recovery patches, 12 old binaries) via git filter-repo; repo pack 485 MiB → 16.7 MiB
+
 ## [0.20.0] - 2026-09-06
 
 ### Added
