@@ -15,6 +15,7 @@ implemented_commits:
         - P-01
         - P-02
       sha: bc18c4c13f7e
+    - {sha: 'eb7a0e361a82', covers: [P-03]}
 issue: FEAT-008
 related_prompts: []
 requires_reading: []
