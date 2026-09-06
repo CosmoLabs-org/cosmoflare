@@ -1,0 +1,10 @@
+id: ROAD-089
+created_at: 2026-09-07T02:48:56.20365+04:00
+updated_at: 2026-09-07T02:48:56.205801+04:00
+title: 'Launch: public flip + Homebrew tap'
+description: 'History purge complete (2026-09-07). Remaining launch steps awaiting user go: flip CosmoLabs-org/cosmoflare to public, create CosmoLabs-org/homebrew-cosmoflare tap, add brew pipe to .goreleaser.yaml, publish formula with next release. Commands documented in .goreleaser.yaml header and docs/prompts/2026-09-07 continuation.'
+status: captured
+priority: 70
+origin:
+    session: 40
+ulid: 01M1WEJ54DCCY464T38AH9E77B
