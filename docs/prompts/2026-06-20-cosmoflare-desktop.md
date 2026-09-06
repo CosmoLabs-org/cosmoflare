@@ -20,7 +20,7 @@ covers_plan_deliverables:
     - P-07
     - P-08
     - P-09
-created: "2026-06-20"
+created: "2026-06-20T17:50:03-03:00"
 id: P-2026-06-20-cosmoflare-desktop
 plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
 glm_tasks_ref: docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml

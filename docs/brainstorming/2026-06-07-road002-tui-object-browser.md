@@ -1,22 +1,23 @@
 ---
-title: "ROAD-002: TUI Object Browser with Split-Pane Layout"
 created: 2026-06-07T04:30:00-03:00
-status: approved
-roadmap: ROAD-002
+deliverables:
+    - BR-01: BrowserModel sub-model with split-pane layout
+    - BR-02: Pane focus management and narrow/wide mode switching
+    - BR-03: Prefix-based folder navigation with stack
+    - BR-04: Bottom detail panel with live metadata
+    - BR-05: Object delete with two-keypress confirmation
+    - BR-06: HeadObject modal for full metadata view
+    - BR-07: DataSource interface extension (prefix, HeadObject, DeleteObject)
+    - BR-08: Library extension — ListResult.CommonPrefixes
+last_review_content_hash: 9e341ab56b7ac7d212864712b34d74199f99bcbf19fb3af199c2c70fd9e51be2
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-06-07-road002-tui-object-browser.md
+last_reviewed: "2026-09-06T20:17:20.112825+04:00"
 origin: ROAD-002
 plan_ref: docs/planning-mode/2026-06-08-road002-tui-object-browser.md
-last_reviewed: 2026-06-08T00:30:00-03:00
-last_review_ref: docs/independent-reviews/2026-06-08T00-30-00-road002-tui-object-browser.md
-last_review_findings: 7
-deliverables:
-  - BR-01: BrowserModel sub-model with split-pane layout
-  - BR-02: Pane focus management and narrow/wide mode switching
-  - BR-03: Prefix-based folder navigation with stack
-  - BR-04: Bottom detail panel with live metadata
-  - BR-05: Object delete with two-keypress confirmation
-  - BR-06: HeadObject modal for full metadata view
-  - BR-07: DataSource interface extension (prefix, HeadObject, DeleteObject)
-  - BR-08: Library extension — ListResult.CommonPrefixes
+roadmap: ROAD-002
+status: approved
+title: 'ROAD-002: TUI Object Browser with Split-Pane Layout'
 ---
 
 # ROAD-002: TUI Object Browser with Split-Pane Layout

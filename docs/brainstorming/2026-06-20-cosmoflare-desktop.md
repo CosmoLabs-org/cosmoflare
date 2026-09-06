@@ -1,31 +1,40 @@
 ---
 created: "2026-06-20T17:44:43-03:00"
-updated: "2026-06-20T17:44:43-03:00"
-last_reviewed: "2026-06-20"
-status: APPROVED
-priority: high
-origin: "/brainplan"
-roadmap_ref: ROAD-063
-plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
-title: "Cosmoflare Desktop (Tauri) — v1 Design"
-tags: [desktop, tauri, daemon, react, notifications, dashboard]
 deliverables:
-  - id: BR-01
-    title: "cosmoflare serve — local HTTP+SSE daemon over existing services"
-  - id: BR-02
-    title: "Rust daemon lifecycle (spawn/handshake/health/kill/watchdog) + sidecar bundling"
-  - id: BR-03
-    title: "Two-tier health model: Systems online + Cloudflare online (/healthz + SSE status)"
-  - id: BR-04
-    title: "Credentials via config/.cosmoflare.yaml + first-run setup — never the OS keychain"
-  - id: BR-05
-    title: "React + Vite + TS app shell (header w/ account switcher + 2 health dots, sidebar, main pane)"
-  - id: BR-06
-    title: "Multi-account read-only dashboard (zones / R2 / Workers / KV live cards)"
-  - id: BR-07
-    title: "Real-time notifications panel (SSE from the alerts/webhook system)"
-  - id: BR-08
-    title: "Cross-platform packaging (Tauri v2 installers + per-target Go sidecar binary)"
+    - id: BR-01
+      title: cosmoflare serve — local HTTP+SSE daemon over existing services
+    - id: BR-02
+      title: Rust daemon lifecycle (spawn/handshake/health/kill/watchdog) + sidecar bundling
+    - id: BR-03
+      title: 'Two-tier health model: Systems online + Cloudflare online (/healthz + SSE status)'
+    - id: BR-04
+      title: Credentials via config/.cosmoflare.yaml + first-run setup — never the OS keychain
+    - id: BR-05
+      title: React + Vite + TS app shell (header w/ account switcher + 2 health dots, sidebar, main pane)
+    - id: BR-06
+      title: Multi-account read-only dashboard (zones / R2 / Workers / KV live cards)
+    - id: BR-07
+      title: Real-time notifications panel (SSE from the alerts/webhook system)
+    - id: BR-08
+      title: Cross-platform packaging (Tauri v2 installers + per-target Go sidecar binary)
+last_review_content_hash: 9cd91801345e238f0cf1017cde7a9df64f58f7d61965185cad59bfc0047d2f1b
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-06-20-cosmoflare-desktop.md
+last_reviewed: "2026-09-06T20:17:20.214377+04:00"
+origin: /brainplan
+plan_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
+priority: high
+roadmap_ref: ROAD-063
+status: APPROVED
+tags:
+    - desktop
+    - tauri
+    - daemon
+    - react
+    - notifications
+    - dashboard
+title: Cosmoflare Desktop (Tauri) — v1 Design
+updated: "2026-06-20T17:44:43-03:00"
 ---
 
 # Cosmoflare Desktop (Tauri) — v1 Design

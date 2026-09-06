@@ -1,21 +1,22 @@
 ---
-title: "ROAD-007: S3 to R2 Migration with Resume Support"
 created: 2026-06-08T02:00:00-03:00
-status: approved
-roadmap: ROAD-007
+deliverables:
+    - BR-01: Checkpoint persistence in ~/.cosmoflare/migrations/
+    - BR-02: Worker pool with concurrent S3→R2 streaming transfers
+    - BR-03: Per-object retry with exponential backoff (3 attempts)
+    - BR-04: Resume from checkpoint (--resume flag)
+    - BR-05: Graceful SIGINT shutdown with checkpoint save
+    - BR-06: Periodic checkpoint flush (every 10 objects or 30s)
+    - BR-07: ETag verification mode (--verify)
+last_review_content_hash: 0e404c53fb61ba7699633e2c05a94d3641f39bf908bfc00f78edf702defae945
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-06-08-road007-s3-migration-resume.md
+last_reviewed: "2026-09-06T20:17:20.181089+04:00"
 origin: ROAD-007
 plan_ref: docs/planning-mode/2026-06-08-road007-s3-migration-resume.md
-last_reviewed: 2026-06-08T03:00:00-03:00
-last_review_ref: docs/independent-reviews/2026-06-08T03-00-00-road007-s3-migration-resume.md
-last_review_findings: 5
-deliverables:
-  - BR-01: Checkpoint persistence in ~/.cosmoflare/migrations/
-  - BR-02: Worker pool with concurrent S3→R2 streaming transfers
-  - BR-03: Per-object retry with exponential backoff (3 attempts)
-  - BR-04: Resume from checkpoint (--resume flag)
-  - BR-05: Graceful SIGINT shutdown with checkpoint save
-  - BR-06: Periodic checkpoint flush (every 10 objects or 30s)
-  - BR-07: ETag verification mode (--verify)
+roadmap: ROAD-007
+status: approved
+title: 'ROAD-007: S3 to R2 Migration with Resume Support'
 ---
 
 # ROAD-007: S3 to R2 Migration with Resume Support

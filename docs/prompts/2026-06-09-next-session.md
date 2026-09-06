@@ -1,5 +1,5 @@
 ---
-completed: "2026-06-20"
+completed: "2026-06-20T17:17:13-03:00"
 created: "2026-06-09T00:30:00-03:00"
 goals_completed: 4
 goals_total: 4

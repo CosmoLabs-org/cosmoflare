@@ -1,39 +1,47 @@
 ---
-created: "2026-06-20T17:44:43-03:00"
-updated: "2026-06-20T17:44:43-03:00"
-last_reviewed: "2026-06-20"
-status: PLANNED
-priority: high
-origin: "/brainplan"
-roadmap_ref: ROAD-063
 brainstorm_ref: docs/brainstorming/2026-06-20-cosmoflare-desktop.md
-title: "Cosmoflare Desktop (Tauri) — v1 Implementation Plan"
-tags: [desktop, tauri, daemon, react, notifications]
+created: "2026-06-20T17:44:43-03:00"
 deliverables:
-  - id: P-01
-    title: "internal/server + `cosmoflare serve`: HTTP server, token auth, stdout handshake, /healthz"
-  - id: P-02
-    title: "REST read endpoints (/accounts /zones /r2/buckets /workers /kv) over existing services"
-  - id: P-03
-    title: "SSE /events (metrics/notifications/status) + two-tier health (systems/cloudflare online)"
-  - id: P-04
-    title: "Tauri v2 scaffold in desktop/ + sidecar (externalBin) + build config"
-  - id: P-05
-    title: "Rust daemon lifecycle: spawn, handshake parse, health-poll state machine, kill, watchdog"
-  - id: P-06
-    title: "React+Vite+TS app shell + REST/SSE client hooks + two health indicators"
-  - id: P-07
-    title: "Multi-account read-only dashboard (zones/R2/Workers/KV cards)"
-  - id: P-08
-    title: "Real-time notifications panel (SSE notifications channel)"
-  - id: P-09
-    title: "Cross-platform packaging: per-triple Go sidecar + Tauri bundles"
+    - id: P-01
+      title: 'internal/server + `cosmoflare serve`: HTTP server, token auth, stdout handshake, /healthz'
+    - id: P-02
+      title: REST read endpoints (/accounts /zones /r2/buckets /workers /kv) over existing services
+    - id: P-03
+      title: SSE /events (metrics/notifications/status) + two-tier health (systems/cloudflare online)
+    - id: P-04
+      title: Tauri v2 scaffold in desktop/ + sidecar (externalBin) + build config
+    - id: P-05
+      title: 'Rust daemon lifecycle: spawn, handshake parse, health-poll state machine, kill, watchdog'
+    - id: P-06
+      title: React+Vite+TS app shell + REST/SSE client hooks + two health indicators
+    - id: P-07
+      title: Multi-account read-only dashboard (zones/R2/Workers/KV cards)
+    - id: P-08
+      title: Real-time notifications panel (SSE notifications channel)
+    - id: P-09
+      title: 'Cross-platform packaging: per-triple Go sidecar + Tauri bundles'
+last_review_content_hash: 587c95bb99bf4458f09682149b19338bf4c40adda8523b2eb6386b6d2c1bae8a
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-06-20-cosmoflare-desktop.md
+last_reviewed: "2026-09-06T20:17:20.078057+04:00"
+origin: /brainplan
+priority: high
 requires_reading:
-  - docs/brainstorming/2026-06-20-cosmoflare-desktop.md
-  - internal/tui/datasource.go          # DataSource shape the daemon reuses
-  - cmd/mcp.go                           # existing local-server command pattern
-  - internal/keychain/keychain.go        # COSMOFLARE_NO_KEYCHAIN gate (hard constraint)
-  - cmd/root.go                          # global AccountID/APIToken + printJSON helpers
+    - docs/brainstorming/2026-06-20-cosmoflare-desktop.md
+    - internal/tui/datasource.go
+    - cmd/mcp.go
+    - internal/keychain/keychain.go
+    - cmd/root.go
+roadmap_ref: ROAD-063
+status: PLANNED
+tags:
+    - desktop
+    - tauri
+    - daemon
+    - react
+    - notifications
+title: Cosmoflare Desktop (Tauri) — v1 Implementation Plan
+updated: "2026-06-20T17:44:43-03:00"
 ---
 
 # Cosmoflare Desktop (Tauri) — v1 Implementation Plan

@@ -1,34 +1,40 @@
 ---
 created: "2026-06-14T08:12:48-03:00"
-last_reviewed: "2026-06-14T08:12:48-03:00"
-review: "independent-review (inline) — 5 findings applied: registrar-name overclaim,
-  redirect-source aggregation, CF API phase verification flag, attention-criteria
-  definition, DI-note tightening + duplicate-bullet dedup"
-status: DRAFT
-priority: high
-title: "Domain Management Center — TUI Dashboard, Redirect Visibility, Registrar Overlay"
-origin: "/brainplan"
-plan_ref: docs/planning-mode/2026-06-14-domain-management-center.md
-tags: [domains, tui, redirects, registrar, design]
 deliverables:
-  - id: BR-01
-    title: "RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)"
-  - id: BR-02
-    title: "RegistrarService library — registration overlay (expiry, auto-renew, transfer-lock)"
-  - id: BR-03
-    title: "DomainService enrichment — DomainDetail carries Redirects + Registrar"
-  - id: BR-04
-    title: "domains CLI command tree — get / stats / redirects / ns (backward-compatible)"
-  - id: BR-05
-    title: "redirects CLI command group — modern Redirect Rules CRUD (mirrors pagerules)"
-  - id: BR-06
-    title: "DomainBrowserModel TUI — split-pane browser with per-domain detail"
-  - id: BR-07
-    title: "Quick-add redirect prompt + domainDataSource dashboard wiring"
+    - id: BR-01
+      title: RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)
+    - id: BR-02
+      title: RegistrarService library — registration overlay (expiry, auto-renew, transfer-lock)
+    - id: BR-03
+      title: DomainService enrichment — DomainDetail carries Redirects + Registrar
+    - id: BR-04
+      title: domains CLI command tree — get / stats / redirects / ns (backward-compatible)
+    - id: BR-05
+      title: redirects CLI command group — modern Redirect Rules CRUD (mirrors pagerules)
+    - id: BR-06
+      title: DomainBrowserModel TUI — split-pane browser with per-domain detail
+    - id: BR-07
+      title: Quick-add redirect prompt + domainDataSource dashboard wiring
+last_review_content_hash: 37aaed75809001010b57c9c3313557d113153711aa626d23db77aaaf62d3665e
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-06-14-domain-management-center.md
+last_reviewed: "2026-09-06T20:17:20.255701+04:00"
+origin: /brainplan
+plan_ref: docs/planning-mode/2026-06-14-domain-management-center.md
+priority: high
 related:
-  - docs/brainstorming/2026-05-16-domain-operations.md   # prior (completed) — library + domains/doctor CLI
-  - docs/brainstorming/2026-06-07-road020-dashboard-tui.md # existing dashboard pattern
-  - docs/brainstorming/2026-06-07-road002-tui-object-browser.md # split-pane BrowserModel pattern
+    - docs/brainstorming/2026-05-16-domain-operations.md
+    - docs/brainstorming/2026-06-07-road020-dashboard-tui.md
+    - docs/brainstorming/2026-06-07-road002-tui-object-browser.md
+review: 'independent-review (inline) — 5 findings applied: registrar-name overclaim, redirect-source aggregation, CF API phase verification flag, attention-criteria definition, DI-note tightening + duplicate-bullet dedup'
+status: DRAFT
+tags:
+    - domains
+    - tui
+    - redirects
+    - registrar
+    - design
+title: Domain Management Center — TUI Dashboard, Redirect Visibility, Registrar Overlay
 ---
 
 # Domain Management Center — Design

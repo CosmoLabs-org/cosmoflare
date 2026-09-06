@@ -1,21 +1,22 @@
 ---
-title: "ROAD-020: Dashboard TUI Real Implementation"
 created: 2026-06-07T02:30:00-03:00
-status: approved
-roadmap: ROAD-020
+deliverables:
+    - BR-01: DataSource interface with API and null backends
+    - BR-02: Tiered refresh strategy (auto-poll monitoring, manual elsewhere)
+    - BR-03: Live monitoring panel for R2, Workers, KV with delta indicators
+    - BR-04: Real bucket list with CRUD and sort/filter
+    - BR-05: Basic object list with pagination
+    - BR-06: Graceful credential degradation
+    - BR-07: Metrics command absorption into dashboard
+last_review_content_hash: 6f31cbfc80ec7eb27152cd5682cf829340ef7239cf18fd28d68d37889bb86adc
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-06-07-road020-dashboard-tui.md
+last_reviewed: "2026-09-06T20:17:20.147964+04:00"
 origin: ROAD-020
 plan_ref: docs/planning-mode/2026-06-07-road020-dashboard-tui.md
-last_reviewed: 2026-06-07T03:00:00-03:00
-last_review_ref: docs/independent-reviews/2026-06-07T03-00-00-road020-dashboard-tui.md
-last_review_findings: 6
-deliverables:
-  - BR-01: DataSource interface with API and null backends
-  - BR-02: Tiered refresh strategy (auto-poll monitoring, manual elsewhere)
-  - BR-03: Live monitoring panel for R2, Workers, KV with delta indicators
-  - BR-04: Real bucket list with CRUD and sort/filter
-  - BR-05: Basic object list with pagination
-  - BR-06: Graceful credential degradation
-  - BR-07: Metrics command absorption into dashboard
+roadmap: ROAD-020
+status: approved
+title: 'ROAD-020: Dashboard TUI Real Implementation'
 ---
 
 # ROAD-020: Dashboard TUI Real Implementation

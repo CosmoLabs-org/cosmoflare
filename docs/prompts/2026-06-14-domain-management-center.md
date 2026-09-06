@@ -1,7 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-06-14-domain-management-center.md
 branch: master
-completed: "2026-06-20"
+completed: "2026-06-20T17:12:01-03:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
