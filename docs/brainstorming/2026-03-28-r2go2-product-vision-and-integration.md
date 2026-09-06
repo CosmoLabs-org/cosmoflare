@@ -31,14 +31,14 @@ When this brainstorming session is complete, the following artifacts will be pro
 - [ ] Rewritten `USAGE.md` as agent reference doc (Phase 2)
 
 ### Code Artifacts (Phase 1+)
-- [x] `pkg/r2go2/` — public Go library (client, storage, upload, download, config, types, options, errors)
+- [x] `pkg/cosmoflare/` — public Go library (client, storage, upload, download, config, types, options, errors)
 - [x] `.r2go2.yaml` schema + parser
 - [x] Real S3 API integration (re-enable from `internal/api_disabled/`)
 - [x] Cache policy engine (rule-based Cache-Control header management)
 - [x] Workers management module (Phase 3)
 
 ### Roadmap Items to File
-- [ ] ROAD: Library extraction into `pkg/r2go2/`
+- [ ] ROAD: Library extraction into `pkg/cosmoflare/`
 - [ ] ROAD: Cloudflare Workers support
 - [ ] ROAD: Advanced edge caching strategy engine
 - [ ] ROAD: Project config (`.r2go2.yaml`) implementation
@@ -202,7 +202,7 @@ s3client.PutObject(ctx, &s3.PutObjectInput{...})
 ---
 
 ### Decision 6: Library Structure — Single Repo with pkg/
-**Decided**: `pkg/r2go2/` in this repo, not a separate module.
+**Decided**: `pkg/cosmoflare/` in this repo, not a separate module.
 
 **Rationale**: One repo = one PR = simpler development. CLI and library evolve together. Standard Go pattern (Kubernetes, Docker, Terraform all use `pkg/`). Can split later if adoption warrants it.
 
@@ -241,7 +241,7 @@ import "github.com/CosmoLabs-org/CosmoDev-R2Go2/pkg/r2go2"
 - 6 one-liner fixes from audit (speed calc, PersistentPreRun, keyboard off-by-one, printErrorAndExit, LICENSE, install.sh binary name)
 
 **Phase 1 — Real API + Library extraction (1-2 weeks)**
-- Extract `R2Client` interface into `pkg/r2go2/`
+- Extract `R2Client` interface into `pkg/cosmoflare/`
 - Re-enable S3 implementation from `api_disabled/`
 - Wire up real Cloudflare R2 calls (list, create, delete, upload, download)
 - Three-layer API (high-level / mid-level / low-level S3)
@@ -322,12 +322,12 @@ workers:
 
 | Phase | Service | CLI Commands | Library Package |
 |-------|---------|-------------|-----------------|
-| Phase 1 | **R2** (storage) | `r2go2 bucket`, `r2go2 object`, `r2go2 upload`, `r2go2 download` | `pkg/r2go2/storage.go` |
-| Phase 3 | **Workers** (compute) | `r2go2 worker deploy/list/logs/delete/bind/secret` | `pkg/r2go2/worker.go` |
-| Phase 3 | **KV** (key-value) | `r2go2 kv list/get/put/delete/namespaces` | `pkg/r2go2/kv.go` |
-| Phase 4 | **D1** (SQL database) | `r2go2 d1 create/query/migrate/export/list` | `pkg/r2go2/d1.go` |
-| Phase 4 | **Pages** (static hosting) | `r2go2 pages deploy/list/logs/delete` | `pkg/r2go2/pages.go` |
-| Phase 5 | **Queues** (message queues) | `r2go2 queue create/list/delete/send/consume` | `pkg/r2go2/queue.go` |
+| Phase 1 | **R2** (storage) | `r2go2 bucket`, `r2go2 object`, `r2go2 upload`, `r2go2 download` | `pkg/cosmoflare/storage.go` |
+| Phase 3 | **Workers** (compute) | `r2go2 worker deploy/list/logs/delete/bind/secret` | `pkg/cosmoflare/worker.go` |
+| Phase 3 | **KV** (key-value) | `r2go2 kv list/get/put/delete/namespaces` | `pkg/cosmoflare/kv.go` |
+| Phase 4 | **D1** (SQL database) | `r2go2 d1 create/query/migrate/export/list` | `pkg/cosmoflare/d1.go` |
+| Phase 4 | **Pages** (static hosting) | `r2go2 pages deploy/list/logs/delete` | `pkg/cosmoflare/pages.go` |
+| Phase 5 | **Queues** (message queues) | `r2go2 queue create/list/delete/send/consume` | `pkg/cosmoflare/queue.go` |
 | Future | **R2 Public Buckets** | `r2go2 public enable/disable/url` | — |
 | Future | **Custom Domains** | `r2go2 domain add/remove/list` | — |
 | Future | **Stream** | `r2go2 stream upload/list/capture` | — |
@@ -393,7 +393,7 @@ cfClient := client.Cloudflare()  // *cloudflare.API
 s3Client := client.S3()          // *s3.Client
 ```
 
-**Updated `pkg/r2go2/` structure**:
+**Updated `pkg/cosmoflare/` structure**:
 ```
 pkg/r2go2/
   client.go         — R2Client interface + factory
@@ -532,7 +532,7 @@ cache:
 
 ## Architecture Notes
 
-> **Note**: The canonical file listing is in Decision 6 / Decision 11 above. The library now includes 30+ files covering R2, Workers, KV, D1, DNS, Zones, SSL, Cache, Domains, Doctor, and more. See `pkg/r2go2/` for the current state.
+> **Note**: The canonical file listing is in Decision 6 / Decision 11 above. The library now includes 30+ files covering R2, Workers, KV, D1, DNS, Zones, SSL, Cache, Domains, Doctor, and more. See `pkg/cosmoflare/` for the current state.
 
 ### CLI Layer (cmd/)
 

@@ -164,7 +164,7 @@ For `--json` output, pagination metadata is included:
 
 ## Architecture
 
-### Library Layer (`pkg/r2go2/`)
+### Library Layer (`pkg/cosmoflare/`)
 
 Files (implemented):
 - `domains.go` — `DomainService` wrapping ZoneService + health enrichment
