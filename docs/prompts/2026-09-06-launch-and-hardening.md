@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-09-06T23:10:19+04:00"
-goals_completed: 6
+goals_completed: 7
 goals_total: 11
 priority: high
 related_prompts: []
@@ -41,7 +41,7 @@ The 2026-09-05 continuation executed 5/6 goals: FEAT-008 shipped as the alert→
 
 ## Goals
 
-### [ ] 1. Publish the v0.20.0 GitHub release with binaries
+### [x] 1. Publish the v0.20.0 GitHub release with binaries
 **Model:** main-session operator (needs local goreleaser + gh auth; not delegable)
 **Files:** none (artifacts to dist/)
 The tag `v0.20.0` exists and is pushed; `gh release list` shows only v0.19.0. Run exactly (commands documented in `.goreleaser.yaml` header):
