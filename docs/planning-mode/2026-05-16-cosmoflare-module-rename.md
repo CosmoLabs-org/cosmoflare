@@ -1,21 +1,25 @@
 ---
 branch: master
 created: "2026-05-16T00:00:00-03:00"
+deliverables:
+    - P-01: Module path rename from CosmoDev-R2Go2 to cosmoflare
+    - P-02: GitHub repo redirect setup
+    - P-03: Downstream migration guide
 goals_completed: 0
 goals_total: 3
+last_review_content_hash: 86d1a3267a081fa9b7779ecf13b1b704cf44936a1833533c5543a19e25595e8b
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-05-16-cosmoflare-module-rename.md
+last_reviewed: "2026-09-06T20:14:03.8533+04:00"
 origin: manual
 priority: medium
+schema_version: 1
 status: COMPLETED
 tags:
-  - rebrand
-  - module-path
-  - breaking-change
+    - rebrand
+    - module-path
+    - breaking-change
 title: Cosmoflare Module Path Rename
-schema_version: 1
-deliverables:
-  - P-01: Module path rename from CosmoDev-R2Go2 to cosmoflare
-  - P-02: GitHub repo redirect setup
-  - P-03: Downstream migration guide
 ---
 
 # Cosmoflare Module Path Rename

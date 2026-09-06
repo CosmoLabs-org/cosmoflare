@@ -2,8 +2,14 @@
 branch: consolidate-duplicated-code
 completed: "2026-05-29T00:00:00-03:00"
 created: "2026-03-03T12:00:00-03:00"
+deliverables:
+    - P-01: Consolidate duplicated formatBytes and maskAccountID functions into internal/utils with security fix
 goals_completed: 0
 goals_total: 0
+last_review_content_hash: ed5e5d3960444846cbe534d4a236a0fd3213daac646a7421b8d4a75d3927b799
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-03-03-consolidate-duplicated-code.md
+last_reviewed: "2026-09-06T20:14:03.753229+04:00"
 origin: migrated by ccs prompts migrate
 priority: medium
 related_prompts: []
@@ -12,8 +18,6 @@ schema_version: 1
 status: COMPLETED
 tags: []
 title: 'ROAD-001: Consolidate Duplicated Code'
-deliverables:
-  - P-01: Consolidate duplicated formatBytes and maskAccountID functions into internal/utils with security fix
 ---
 
 # ROAD-001: Consolidate Duplicated Code

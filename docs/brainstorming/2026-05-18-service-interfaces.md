@@ -1,15 +1,19 @@
 ---
-title: Service Interfaces for Testability
-issue: TASK-002
-status: implemented
 created: 2026-05-18T14:30:00-03:00
 deliverables:
-  - id: BR-01
-    title: "pkg/cosmoflare/interfaces.go with 12 service interfaces"
-  - id: BR-02
-    title: "Compile-time satisfaction checks for all 12 services"
-  - id: BR-03
-    title: "Tests verifying interface definitions compile"
+    - id: BR-01
+      title: pkg/cosmoflare/interfaces.go with 12 service interfaces
+    - id: BR-02
+      title: Compile-time satisfaction checks for all 12 services
+    - id: BR-03
+      title: Tests verifying interface definitions compile
+issue: TASK-002
+last_review_content_hash: f957fd7b73ef1fdef93c7176682d7dc078b7fd01c88b251ec0b7cf26c8f57af8
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-05-18-service-interfaces.md
+last_reviewed: "2026-09-06T20:14:03.555851+04:00"
+status: implemented
+title: Service Interfaces for Testability
 ---
 
 # Service Interfaces for Testability (TASK-002)

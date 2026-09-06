@@ -1,27 +1,31 @@
 ---
 branch: master
 created: "2026-05-16T10:00:00-03:00"
-status: APPROVED
-origin: "/brainplan"
-tags:
-  - domains
-  - doctor
-  - health
-  - dns-propagation
-  - ssl
-  - nameservers
-  - monitoring
-title: "Domain Operations Center — domains + doctor commands"
-schema_version: 1
 deliverables:
-  - BR-01: domains command with health-indicator table, pagination, filtering
-  - BR-02: doctor command with 4-probe diagnostic engine
-  - BR-03: DNS propagation checker (multi-resolver)
-  - BR-04: SSL certificate chain validator
-  - BR-05: HTTP response prober with redirect chain tracing
-  - BR-06: Nameserver consistency checker with DNSSEC
-  - BR-07: Fix suggestion engine (actionable cosmoflare commands)
-  - BR-08: Cloudflare Healthcheck API integration
+    - BR-01: domains command with health-indicator table, pagination, filtering
+    - BR-02: doctor command with 4-probe diagnostic engine
+    - BR-03: DNS propagation checker (multi-resolver)
+    - BR-04: SSL certificate chain validator
+    - BR-05: HTTP response prober with redirect chain tracing
+    - BR-06: Nameserver consistency checker with DNSSEC
+    - BR-07: Fix suggestion engine (actionable cosmoflare commands)
+    - BR-08: Cloudflare Healthcheck API integration
+last_review_content_hash: 16488e5b0d0839ffc5fc88b89b41a78e2789c30f1c9e528ac156792fa31c215f
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-05-16-domain-operations.md
+last_reviewed: "2026-09-06T20:14:03.523187+04:00"
+origin: /brainplan
+schema_version: 1
+status: APPROVED
+tags:
+    - domains
+    - doctor
+    - health
+    - dns-propagation
+    - ssl
+    - nameservers
+    - monitoring
+title: Domain Operations Center — domains + doctor commands
 ---
 
 # Domain Operations Center — domains + doctor commands

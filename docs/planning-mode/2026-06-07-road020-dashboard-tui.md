@@ -1,19 +1,23 @@
 ---
-title: "ROAD-020: Dashboard TUI Real Implementation Plan"
-created: 2026-06-07T03:15:00-03:00
-status: READY
 brainstorm_ref: docs/brainstorming/2026-06-07-road020-dashboard-tui.md
-origin: ROAD-020
+created: 2026-06-07T03:15:00-03:00
 deliverables:
-  - P-01: DataSource interface and null backend
-  - P-02: API DataSource backend with credential detection
-  - P-03: Wire DataSource into DashboardModel
-  - P-04: Live monitoring with auto-poll and deltas
-  - P-05: Object list with pagination
-  - P-06: Bucket create/delete with confirmation
-  - P-07: Section-entry refresh and credential banner
-  - P-08: CMD layer — interval flag and metrics absorption
-  - P-09: Documentation and close-out
+    - P-01: DataSource interface and null backend
+    - P-02: API DataSource backend with credential detection
+    - P-03: Wire DataSource into DashboardModel
+    - P-04: Live monitoring with auto-poll and deltas
+    - P-05: Object list with pagination
+    - P-06: Bucket create/delete with confirmation
+    - P-07: Section-entry refresh and credential banner
+    - P-08: CMD layer — interval flag and metrics absorption
+    - P-09: Documentation and close-out
+last_review_content_hash: e46b5cdd447686d07d3b7cc55b0db1bd6142ead59ba1ae4a8e7304a9b41de089
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-06-07-road020-dashboard-tui.md
+last_reviewed: "2026-09-06T20:14:04.025447+04:00"
+origin: ROAD-020
+status: READY
+title: 'ROAD-020: Dashboard TUI Real Implementation Plan'
 ---
 
 # ROAD-020: Dashboard TUI Real Implementation Plan

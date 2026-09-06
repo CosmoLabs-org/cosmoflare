@@ -1,28 +1,39 @@
 ---
-id: BR-2026-07-01-live-metrics-producer
 created: "2026-07-01T16:05:00+04:00"
-updated: "2026-07-01T16:05:00+04:00"
-title: "Live metrics producer for the SSE metrics channel (IDEA-037)"
-status: validated
-tags: [desktop, daemon, sse, metrics, polling]
-related_issues: [IDEA-037, ROAD-080]
-plan_ref: docs/planning-mode/2026-07-01-live-metrics-producer.md
 deliverables:
-  - id: BR-01
-    title: "Decision: hybrid server-side polling with subscriber gating"
-    description: "Daemon goroutine polls CF API and publishes to SSE metrics channel, but only while SSE subscribers are connected."
-  - id: BR-02
-    title: "Decision: extract usage hints from existing list responses"
-    description: "Full response arrays from existing 4 list calls forwarded directly — cache-compatible, no new CF API endpoints."
-  - id: BR-03
-    title: "Decision: configurable interval via --metrics-interval flag"
-    description: "Default 30s, user-tunable. 4 CF API calls per cycle, well within 1200 req/5min rate limit."
-  - id: BR-04
-    title: "Decision: SSE updates React Query cache directly"
-    description: "onEvent metrics handler calls queryClient.setQueryData, existing useQuery hooks re-render. Single source of truth."
-  - id: BR-05
-    title: "Design: MetricsProducer component specification"
-    description: "Full component design with lifecycle, payload shape, edge cases, and file scope."
+    - description: Daemon goroutine polls CF API and publishes to SSE metrics channel, but only while SSE subscribers are connected.
+      id: BR-01
+      title: 'Decision: hybrid server-side polling with subscriber gating'
+    - description: Full response arrays from existing 4 list calls forwarded directly — cache-compatible, no new CF API endpoints.
+      id: BR-02
+      title: 'Decision: extract usage hints from existing list responses'
+    - description: Default 30s, user-tunable. 4 CF API calls per cycle, well within 1200 req/5min rate limit.
+      id: BR-03
+      title: 'Decision: configurable interval via --metrics-interval flag'
+    - description: onEvent metrics handler calls queryClient.setQueryData, existing useQuery hooks re-render. Single source of truth.
+      id: BR-04
+      title: 'Decision: SSE updates React Query cache directly'
+    - description: Full component design with lifecycle, payload shape, edge cases, and file scope.
+      id: BR-05
+      title: 'Design: MetricsProducer component specification'
+id: BR-2026-07-01-live-metrics-producer
+last_review_content_hash: a2a4cda49bb2ca1bbbfb1ed90942b5c646956ee8e23018e404f633934e864c36
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-07-01-live-metrics-producer.md
+last_reviewed: "2026-09-06T20:14:04.16862+04:00"
+plan_ref: docs/planning-mode/2026-07-01-live-metrics-producer.md
+related_issues:
+    - IDEA-037
+    - ROAD-080
+status: validated
+tags:
+    - desktop
+    - daemon
+    - sse
+    - metrics
+    - polling
+title: Live metrics producer for the SSE metrics channel (IDEA-037)
+updated: "2026-07-01T16:05:00+04:00"
 ---
 
 # Live metrics producer for the SSE metrics channel (IDEA-037)

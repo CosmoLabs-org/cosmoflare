@@ -1,31 +1,35 @@
 ---
 branch: master
 created: "2026-05-16T00:00:00-03:00"
-status: implemented
-origin: "/brainstorming"
-tags:
-  - cors
-  - transform-rules
-  - rulesets
-  - response-headers
-  - zone
-title: "CORS Management via Cloudflare Transform Rules (Response Header Modification)"
-schema_version: 1
 deliverables:
-  - id: BR-01
-    title: "CORSService struct with constructor and zone-scoped methods"
-  - id: BR-02
-    title: "GetCORSRules — list CORS rules from http_response_headers_transform entrypoint ruleset"
-  - id: BR-03
-    title: "SetCORSHeaders — upsert a named CORS rule (create or replace) in the entrypoint ruleset"
-  - id: BR-04
-    title: "RemoveCORSRule — delete a CORS rule by description/tag from the entrypoint ruleset"
-  - id: BR-05
-    title: "pkg/cosmoflare/cors.go — library implementation"
-  - id: BR-06
-    title: "cmd/cors.go — Cobra CLI (cors settings, cors set, cors remove)"
-  - id: BR-07
-    title: "cmd/cors_test.go + pkg/cosmoflare/cors_test.go — unit tests (table-driven)"
+    - id: BR-01
+      title: CORSService struct with constructor and zone-scoped methods
+    - id: BR-02
+      title: GetCORSRules — list CORS rules from http_response_headers_transform entrypoint ruleset
+    - id: BR-03
+      title: SetCORSHeaders — upsert a named CORS rule (create or replace) in the entrypoint ruleset
+    - id: BR-04
+      title: RemoveCORSRule — delete a CORS rule by description/tag from the entrypoint ruleset
+    - id: BR-05
+      title: pkg/cosmoflare/cors.go — library implementation
+    - id: BR-06
+      title: cmd/cors.go — Cobra CLI (cors settings, cors set, cors remove)
+    - id: BR-07
+      title: cmd/cors_test.go + pkg/cosmoflare/cors_test.go — unit tests (table-driven)
+last_review_content_hash: f06240586e88c54184d15523baccd2a0a59d801be7087e358b3623280fdb19be
+last_review_findings: 0
+last_review_ref: docs/brainstorming/2026-05-16-cors-transform-rules.md
+last_reviewed: "2026-09-06T20:14:03.493258+04:00"
+origin: /brainstorming
+schema_version: 1
+status: implemented
+tags:
+    - cors
+    - transform-rules
+    - rulesets
+    - response-headers
+    - zone
+title: CORS Management via Cloudflare Transform Rules (Response Header Modification)
 ---
 
 # CORS Management via Cloudflare Transform Rules

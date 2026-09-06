@@ -16,6 +16,10 @@ deliverables:
 goals_completed: 7
 goals_total: 7
 issue: FEAT-001
+last_review_content_hash: 7e3952c7de97423eccc73de8c013aca9cbac059bba80bf3c81f083d47914dedd
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-05-18-tui-command-palette.md
+last_reviewed: "2026-09-06T20:14:03.99216+04:00"
 related_prompts: []
 requires_reading: []
 schema_version: 1

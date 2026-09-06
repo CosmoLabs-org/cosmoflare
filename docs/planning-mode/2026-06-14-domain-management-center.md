@@ -1,34 +1,42 @@
 ---
-created: "2026-06-14T08:12:48-03:00"
-status: PLANNED
-priority: high
-origin: "/brainplan"
-title: "Domain Management Center — Implementation Plan"
-schema_version: 1
 brainstorm_ref: docs/brainstorming/2026-06-14-domain-management-center.md
-tags: [domains, tui, redirects, registrar]
+created: "2026-06-14T08:12:48-03:00"
 deliverables:
-  - id: P-01
-    title: "RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)"
-  - id: P-02
-    title: "RegistrarService library — registration overlay"
-  - id: P-03
-    title: "DomainService enrichment — DomainDetail carries Redirects + Registrar + attention helpers"
-  - id: P-04
-    title: "domains CLI command tree — get / stats / redirects / ns"
-  - id: P-05
-    title: "redirects CLI command group — Redirect Rules CRUD"
-  - id: P-06
-    title: "DomainBrowserModel TUI — split-pane browser with per-domain detail"
-  - id: P-07
-    title: "Quick-add redirect prompt + domainDataSource dashboard wiring"
+    - id: P-01
+      title: RedirectService library — modern CF Redirect Rules CRUD (Rulesets API)
+    - id: P-02
+      title: RegistrarService library — registration overlay
+    - id: P-03
+      title: DomainService enrichment — DomainDetail carries Redirects + Registrar + attention helpers
+    - id: P-04
+      title: domains CLI command tree — get / stats / redirects / ns
+    - id: P-05
+      title: redirects CLI command group — Redirect Rules CRUD
+    - id: P-06
+      title: DomainBrowserModel TUI — split-pane browser with per-domain detail
+    - id: P-07
+      title: Quick-add redirect prompt + domainDataSource dashboard wiring
+last_review_content_hash: 26df023fbfcb4a81c5a45760388b26b56755f4d40f9dab01f8a55b3cbcfdd25e
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-06-14-domain-management-center.md
+last_reviewed: "2026-09-06T20:14:04.129586+04:00"
+origin: /brainplan
+priority: high
 requires_reading:
-  - docs/brainstorming/2026-06-14-domain-management-center.md
-  - pkg/cosmoflare/domains.go
-  - pkg/cosmoflare/zone.go
-  - pkg/cosmoflare/d1.go          # AccountIdentifier pattern
-  - internal/webhook/manager_id_test.go  # httptest service-test pattern
-  - internal/tui/browser.go       # split-pane BrowserModel pattern to mirror
+    - docs/brainstorming/2026-06-14-domain-management-center.md
+    - pkg/cosmoflare/domains.go
+    - pkg/cosmoflare/zone.go
+    - pkg/cosmoflare/d1.go
+    - internal/webhook/manager_id_test.go
+    - internal/tui/browser.go
+schema_version: 1
+status: PLANNED
+tags:
+    - domains
+    - tui
+    - redirects
+    - registrar
+title: Domain Management Center — Implementation Plan
 ---
 
 # Domain Management Center — Implementation Plan

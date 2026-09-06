@@ -1,34 +1,38 @@
 ---
 branch: master
 created: "2026-05-16T00:00:00-03:00"
+deliverables:
+    - P-01: Healthcheck library (pkg/r2go2/healthcheck.go)
+    - P-02: DNS propagation probe (pkg/r2go2/doctor.go)
+    - P-03: SSL certificate probe (pkg/r2go2/doctor.go)
+    - P-04: HTTP response probe (pkg/r2go2/doctor.go)
+    - P-05: Nameserver consistency probe (pkg/r2go2/doctor.go)
+    - P-06: Domain overview service (pkg/r2go2/domains.go)
+    - P-07: CLI — cosmoflare domains command (cmd/domains.go)
+    - P-08: CLI — cosmoflare doctor command (cmd/doctor.go)
 goals_completed: 0
 goals_total: 8
-origin: "/brainplan"
+last_review_content_hash: 790abe07c31f60c8c2f2e66a5418b8743ce0b9f1b1badd13c8de4a20d7bc88f0
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-05-16-domain-operations.md
+last_reviewed: "2026-09-06T20:14:03.888689+04:00"
+origin: /brainplan
 priority: high
+requires_reading:
+    - docs/brainstorming/2026-05-16-domain-operations.md
+    - pkg/r2go2/zone.go
+    - pkg/r2go2/dns.go
+    - pkg/r2go2/ssl.go
+    - cmd/zone.go
+    - cmd/dns.go
+schema_version: 1
 status: PLANNED
 tags:
-  - domains
-  - doctor
-  - health
-  - diagnostics
-title: "Domain Operations Center — Implementation Plan"
-schema_version: 1
-deliverables:
-  - P-01: Healthcheck library (pkg/r2go2/healthcheck.go)
-  - P-02: DNS propagation probe (pkg/r2go2/doctor.go)
-  - P-03: SSL certificate probe (pkg/r2go2/doctor.go)
-  - P-04: HTTP response probe (pkg/r2go2/doctor.go)
-  - P-05: Nameserver consistency probe (pkg/r2go2/doctor.go)
-  - P-06: Domain overview service (pkg/r2go2/domains.go)
-  - P-07: CLI — cosmoflare domains command (cmd/domains.go)
-  - P-08: CLI — cosmoflare doctor command (cmd/doctor.go)
-requires_reading:
-  - docs/brainstorming/2026-05-16-domain-operations.md
-  - pkg/r2go2/zone.go
-  - pkg/r2go2/dns.go
-  - pkg/r2go2/ssl.go
-  - cmd/zone.go
-  - cmd/dns.go
+    - domains
+    - doctor
+    - health
+    - diagnostics
+title: Domain Operations Center — Implementation Plan
 ---
 
 # Domain Operations Center — Implementation Plan

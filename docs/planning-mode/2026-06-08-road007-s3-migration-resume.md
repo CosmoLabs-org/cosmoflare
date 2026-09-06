@@ -1,16 +1,20 @@
 ---
-title: "ROAD-007: S3 to R2 Migration with Resume Support"
-created: 2026-06-08T03:30:00-03:00
-updated: 2026-09-06T00:00:00-03:00
-status: COMPLETED
 brainstorm_ref: docs/brainstorming/2026-06-08-road007-s3-migration-resume.md
-origin: ROAD-007
+created: 2026-06-08T03:30:00-03:00
 deliverables:
-  - P-01: Checkpoint persistence — save/load/delete with atomic writes
-  - P-02: Worker pool — concurrent S3→R2 streaming with retry
-  - P-03: Orchestrator — wire checkpoint + workers into Execute()
-  - P-04: ETag verification mode
-  - P-05: Documentation and close-out
+    - P-01: Checkpoint persistence — save/load/delete with atomic writes
+    - P-02: Worker pool — concurrent S3→R2 streaming with retry
+    - P-03: Orchestrator — wire checkpoint + workers into Execute()
+    - P-04: ETag verification mode
+    - P-05: Documentation and close-out
+last_review_content_hash: e2de010d7627b7981474bc63a1e64d199459ea3958e8080b8b9ab993f8ab6cf6
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-06-08-road007-s3-migration-resume.md
+last_reviewed: "2026-09-06T20:14:04.094279+04:00"
+origin: ROAD-007
+status: COMPLETED
+title: 'ROAD-007: S3 to R2 Migration with Resume Support'
+updated: 2026-09-06T00:00:00-03:00
 ---
 
 # ROAD-007: S3 to R2 Migration with Resume Support

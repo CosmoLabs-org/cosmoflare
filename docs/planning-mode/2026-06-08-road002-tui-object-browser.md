@@ -1,18 +1,22 @@
 ---
-title: "ROAD-002: TUI Object Browser Implementation Plan"
-created: 2026-06-08T01:00:00-03:00
-updated: 2026-09-06T00:00:00-03:00
-status: COMPLETED
 brainstorm_ref: docs/brainstorming/2026-06-07-road002-tui-object-browser.md
-origin: ROAD-002
+created: 2026-06-08T01:00:00-03:00
 deliverables:
-  - P-01: Library extension — ListResult.CommonPrefixes + ContinuationToken
-  - P-02: DataSource interface extension — FetchObjects, HeadObject, DeleteObject
-  - P-03: BrowserModel core — struct, pane focus, bucket list rendering
-  - P-04: Folder navigation with prefix stack
-  - P-05: Bottom detail panel and HeadObject modal
-  - P-06: Object delete with two-keypress confirmation
-  - P-07: Integration — wire BrowserModel into DashboardModel, remove SectionObjectList
+    - P-01: Library extension — ListResult.CommonPrefixes + ContinuationToken
+    - P-02: DataSource interface extension — FetchObjects, HeadObject, DeleteObject
+    - P-03: BrowserModel core — struct, pane focus, bucket list rendering
+    - P-04: Folder navigation with prefix stack
+    - P-05: Bottom detail panel and HeadObject modal
+    - P-06: Object delete with two-keypress confirmation
+    - P-07: Integration — wire BrowserModel into DashboardModel, remove SectionObjectList
+last_review_content_hash: 206e1eaeba1c70ac6c8807ba53b91b81b08cdb76a183caf585124435bc8ecb41
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-06-08-road002-tui-object-browser.md
+last_reviewed: "2026-09-06T20:14:04.059273+04:00"
+origin: ROAD-002
+status: COMPLETED
+title: 'ROAD-002: TUI Object Browser Implementation Plan'
+updated: 2026-09-06T00:00:00-03:00
 ---
 
 # ROAD-002: TUI Object Browser Implementation Plan

@@ -1,14 +1,18 @@
 ---
-title: "R2Go2 / Cosmoflare Feature Ideas & Brainstorming"
 created: "2025-11-24T10:00:00-03:00"
-status: LIVING
 deliverables:
-  - BR-01: Living catalog of feature ideas and brainstorming for Cosmoflare platform expansion
-tags:
-  - feature-ideas
-  - brainstorming
-  - wishlist
+    - BR-01: Living catalog of feature ideas and brainstorming for Cosmoflare platform expansion
+last_review_content_hash: f2c95bca907579fc5cf531fe589249b1673f1c576dd1cbf47ce3845375b26877
+last_review_findings: 0
+last_review_ref: docs/brainstorming/feature-ideas.md
+last_reviewed: "2026-09-06T20:14:03.646502+04:00"
 schema_version: 1
+status: LIVING
+tags:
+    - feature-ideas
+    - brainstorming
+    - wishlist
+title: R2Go2 / Cosmoflare Feature Ideas & Brainstorming
 ---
 
 # R2Go2 / Cosmoflare Feature Ideas & Brainstorming

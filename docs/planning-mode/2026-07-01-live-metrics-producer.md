@@ -1,19 +1,24 @@
 ---
-created: "2026-07-01T16:20:00+04:00"
-updated: "2026-09-06T00:00:00+04:00"
-title: "Live metrics producer implementation plan (IDEA-037)"
-status: COMPLETED
 brainstorm_ref: docs/brainstorming/2026-07-01-live-metrics-producer.md
-related_issues: [IDEA-037]
+created: "2026-07-01T16:20:00+04:00"
 deliverables:
-  - id: P-01
-    title: "MetricsProducer core with subscriber gating and delta detection"
-  - id: P-02
-    title: "MetricsProducer tests with fakeSource"
-  - id: P-03
-    title: "cmd/serve.go wiring with --metrics-interval flag"
-  - id: P-04
-    title: "App.tsx SSE metrics → React Query cache bridge"
+    - id: P-01
+      title: MetricsProducer core with subscriber gating and delta detection
+    - id: P-02
+      title: MetricsProducer tests with fakeSource
+    - id: P-03
+      title: cmd/serve.go wiring with --metrics-interval flag
+    - id: P-04
+      title: App.tsx SSE metrics → React Query cache bridge
+last_review_content_hash: a671a3347c048b13b856707e405094c92fe307a80c85e5df9946a09085862d13
+last_review_findings: 0
+last_review_ref: docs/planning-mode/2026-07-01-live-metrics-producer.md
+last_reviewed: "2026-09-06T20:14:04.21166+04:00"
+related_issues:
+    - IDEA-037
+status: COMPLETED
+title: Live metrics producer implementation plan (IDEA-037)
+updated: "2026-09-06T00:00:00+04:00"
 ---
 
 # Live Metrics Producer Implementation Plan (IDEA-037)
