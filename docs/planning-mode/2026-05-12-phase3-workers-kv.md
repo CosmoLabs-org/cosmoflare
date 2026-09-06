@@ -1,6 +1,6 @@
 ---
 branch: phase3-workers-kv
-completed: "2026-05-29"
+completed: "2026-05-29T00:00:00-03:00"
 created: "2026-05-12T12:00:00-03:00"
 goals_completed: 7
 goals_total: 7

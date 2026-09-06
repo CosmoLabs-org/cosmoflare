@@ -1,6 +1,6 @@
 ---
 branch: master
-created: "2026-05-16"
+created: "2026-05-16T00:00:00-03:00"
 goals_completed: 0
 goals_total: 3
 origin: manual

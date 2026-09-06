@@ -1,7 +1,7 @@
 ---
 branch: r2go2-initial-development
-completed: "2026-03-07"
-created: "2025-11-24"
+completed: "2026-03-07T00:00:00-03:00"
+created: "2025-11-24T00:00:00-03:00"
 goals_completed: 16
 goals_total: 16
 origin: migrated by ccs prompts migrate

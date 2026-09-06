@@ -1,6 +1,6 @@
 ---
 branch: r2go2-phase0-phase1-implementation
-completed: "2026-05-29"
+completed: "2026-05-29T00:00:00-03:00"
 created: "2026-05-07T12:00:00-03:00"
 goals_completed: 15
 goals_total: 15
