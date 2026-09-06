@@ -9,7 +9,10 @@ entries:
           source: manual
           date: 2026-09-07T02:12:47.216132+04:00
     fixed: []
-    changed: []
+    changed:
+        - description: Daemon REST errors map typed R2 errors to stable HTTP statuses (400/401/403/404/429/502) with {error, code} JSON bodies — desktop can distinguish user-fixable from transient failures
+          source: manual
+          date: 2026-09-07T02:18:16.768358+04:00
     deprecated: []
     removed:
         - description: Purged 630 MB of dead blobs from git history (recovery patches, 12 old binaries) via git filter-repo; repo pack 485 MiB → 16.7 MiB
