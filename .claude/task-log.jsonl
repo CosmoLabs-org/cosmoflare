@@ -1312,3 +1312,17 @@
 {"id":"52","subject":"Agent: BUG-035 MCP full-surface generation","status":"pending","created_at":"2026-09-05T17:43:37Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
 {"id":"52","subject":"","status":"in_progress","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
 {"id":"52","subject":"","status":"completed","completed_at":"2026-09-05T18:15:21Z","session":"e6394177-8a4e-4e8d-acfe-7a2647fbf9ed"}
+{"id":"1","subject":"G2: Verify BUG-035 (MCP full-surface) completion","status":"pending","created_at":"2026-09-06T09:39:44Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"2","subject":"G3: Launch readiness (public repo, README, GoReleaser+tap)","status":"pending","created_at":"2026-09-06T09:39:44Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"3","subject":"G4: FEAT-008 — TriggerAlert→sseHub thin bridge","status":"pending","created_at":"2026-09-06T09:39:45Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"4","subject":"G5: Housekeeping — ROAD-085/086 remainders","status":"pending","created_at":"2026-09-06T09:39:46Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"5","subject":"G6: Independent-review backlog (24+6 docs)","status":"pending","created_at":"2026-09-06T09:39:46Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"1","subject":"","status":"in_progress","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-09-06T09:41:02Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"2","subject":"","status":"in_progress","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-09-06T15:41:10Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"3","subject":"","status":"in_progress","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-09-06T15:49:32Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"4","subject":"","status":"in_progress","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-09-06T15:53:58Z","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
+{"id":"5","subject":"","status":"in_progress","session":"d6606927-fb96-4bda-ac25-f6ae9dd48714"}
