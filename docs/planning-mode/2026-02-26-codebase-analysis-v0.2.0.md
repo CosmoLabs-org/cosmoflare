@@ -1,6 +1,6 @@
 ---
 status: COMPLETED
-created: 2026-02-26
+created: 2026-02-26T00:00:00-03:00
 type: analysis
 version: v0.2.0
 deliverables:
