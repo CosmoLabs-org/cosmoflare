@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-09-07T02:49:04+04:00"
-goals_completed: 0
+goals_completed: 1
 goals_total: 3
 priority: high
 related_prompts: []
@@ -48,10 +48,10 @@ The history purge is DONE — the blocker from the previous session's Goal 2 is 
 2. After confirmation: `gh repo edit CosmoLabs-org/cosmoflare --visibility public --accept-visibility-change-consequences`
 3. Create the tap repo: `CosmoLabs-org/homebrew-cosmoflare`
 4. Add the goreleaser `brew` pipe to `.goreleaser.yaml` (homebrew_cask/brews section — see goreleaser v2 docs for `repository.owner`/`repository.name`)
-5. The NEXT release (v0.21.0, Goal 2) publishes the formula automatically.
+5. The NEXT release (v0.22.0+) publishes the formula automatically — v0.21.0 already shipped without the brew pipe (Goal 2 below, done).
 **Acceptance:** `gh repo view CosmoLabs-org/cosmoflare --json visibility --jq .visibility` → `public` (only after user confirms); tap repo exists; `brew pipe` config present in `.goreleaser.yaml`.
 
-### [ ] 2. v0.21.0 minor release
+### [x] 2. v0.21.0 minor release — DONE 2026-09-07 during session-end Phase 4: bump + tag + push landed; GitHub release published with 6 assets (5 binaries + checksums, hashes verified, marked Latest)
 **Model:** main-session operator (needs local goreleaser + gh auth; not delegable)
 **Files:** `docs/changelog/unreleased.yaml` → consumed by `ccs changelog finalize`
 `release-check` suggests a minor bump; 3 changelog entries are staged (release distribution, error contract, history purge). Run the standard release flow (commands documented in the `.goreleaser.yaml` header):
@@ -81,5 +81,5 @@ Distribution completes this cycle: user confirms → public → tap → v0.21.0 
 
 ## Priority Order
 1. Goal 1 (launch gate — user confirmation is the only blocker; everything downstream waits)
-2. Goal 2 (v0.21.0 — publishes the brew formula if Goal 1 lands first)
+2. Goal 2 (v0.21.0 — DONE, see tick)
 3. Goal 3 (CCS watch — verification only, no code here)
