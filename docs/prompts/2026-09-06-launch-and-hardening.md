@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-09-06T23:10:19+04:00"
-goals_completed: 10
+goals_completed: 11
 goals_total: 11
 priority: high
 related_prompts: []
@@ -9,7 +9,9 @@ requires_reading:
     - docs/audit/latest/brief.md
     - docs/audit/latest/action-plan.md
 schema_version: 1
-status: PENDING
+status: SUPERSEDED
+superseded_by: "docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md"
+completed: "2026-09-07T02:49:04+04:00"
 tags: []
 title: Cosmoflare — v0.20.0 publish, launch gate, hardening
 supersedes: "docs/prompts/2026-09-05-next-session.md"
@@ -50,7 +52,7 @@ The tag `v0.20.0` exists and is pushed; `gh release list` shows only v0.19.0. Ru
 3. `gh release create v0.20.0 dist/checksums-sha256.txt $(jq -r '.[] | select(.type=="Binary" and (.name|startswith("cosmoflare-"))) | "\(.path)#\(.name)"' dist/artifacts.json) --notes-from-tag --latest`
 **Acceptance:** `gh release view v0.20.0 --json assets --jq '.assets | length'` → 6.
 
-### [ ] 2. History-purge decision → public flip → Homebrew tap
+### [x] 2. History-purge decision → public flip → Homebrew tap — history purge DONE 2026-09-07 (630 MB purged, force-pushed, SHA map at docs/sessions/sha-map-filter-repo-2026-09-07.txt); public flip + tap carried into docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md Goal 1 (blocked only on user confirmation)
 **Model:** main-session + user decision (irreversible; do NOT execute without explicit user confirmation)
 **Files:** none in-repo
 The attic blobs (234MB, incl. AWS example-key patterns inside recovery.patch files) remain in git history though untracked. Present the user the two options: (a) `git filter-repo --path GOrchestra/sessions --invert-paths` + force-push (rewrites SHAs — coordinate first), or (b) accept history as-is. After the user picks and (a) if chosen is done: `gh repo edit --visibility public --accept-visibility-change-consequences`, then create `CosmoLabs-org/homebrew-cosmoflare` tap and add the `brew` pipe config to `.goreleaser.yaml`.
