@@ -1,7 +1,8 @@
 ---
 title: "ROAD-002: TUI Object Browser Implementation Plan"
 created: 2026-06-08T01:00:00-03:00
-status: READY
+updated: 2026-09-06T00:00:00-03:00
+status: COMPLETED
 brainstorm_ref: docs/brainstorming/2026-06-07-road002-tui-object-browser.md
 origin: ROAD-002
 deliverables:

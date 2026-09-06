@@ -1,8 +1,8 @@
 ---
 created: "2026-07-01T16:20:00+04:00"
-updated: "2026-07-01T16:20:00+04:00"
+updated: "2026-09-06T00:00:00+04:00"
 title: "Live metrics producer implementation plan (IDEA-037)"
-status: ready
+status: COMPLETED
 brainstorm_ref: docs/brainstorming/2026-07-01-live-metrics-producer.md
 related_issues: [IDEA-037]
 deliverables:
