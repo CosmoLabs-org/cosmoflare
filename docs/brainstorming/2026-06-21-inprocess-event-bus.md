@@ -26,6 +26,12 @@ deliverables:
 
 # In-process event bus — real-time notification sourcing (ROAD-080)
 
+> **SUPERSEDED 2026-09-06** — shipped as the thin sseHub bridge (FEAT-008,
+> commit bc18c4c; replacement plan:
+> `docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md`). The standalone
+> bus was never implemented — the daemon's existing SSE hub IS the bus:
+> `webhook.Manager.TriggerAlert` now fans out to the `notifications` channel.
+
 ## Problem
 
 `internal/webhook/manager.go` is **outbound-only**: `TriggerAlert` / `SendWebhook`

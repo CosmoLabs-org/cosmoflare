@@ -32,6 +32,10 @@ updated: "2026-06-21T06:05:00-03:00"
 
 # In-Process Event Bus Implementation Plan
 
+> **SUPERSEDED 2026-09-06** — this plan predates the sseHub and was never
+> executed. Shipped instead as the FEAT-008 thin bridge (commit bc18c4c;
+> replacement plan: `docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md`).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a standalone in-process pub/sub bus so webhook/alert events reach the serve daemon's SSE `notifications` channel in real time.
