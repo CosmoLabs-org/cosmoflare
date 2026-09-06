@@ -1,15 +1,28 @@
 ---
-created: 2026-09-06T00:00:00+02:00
-issue: FEAT-008
-type: implementation-plan
-status: in-progress
+completed: "2026-09-06T19:48:24+04:00"
+created: "2026-09-06T00:00:00+02:00"
 deliverables:
-  - id: P-01
-    title: "webhook.Manager notifier hook with tests (TriggerAlert invokes notifier, nil-safe)"
-  - id: P-02
-    title: "serve daemon wiring Manager → sseHub notifications channel with SSE-level test"
-  - id: P-03
-    title: "FEAT-008 issue closed with re-scope note; changelog entry"
+    - id: P-01
+      title: webhook.Manager notifier hook with tests (TriggerAlert invokes notifier, nil-safe)
+    - id: P-02
+      title: serve daemon wiring Manager → sseHub notifications channel with SSE-level test
+    - id: P-03
+      title: FEAT-008 issue closed with re-scope note; changelog entry
+goals_completed: 0
+goals_total: 0
+implemented_commits:
+    - covers:
+        - P-01
+        - P-02
+      sha: bc18c4c13f7e
+issue: FEAT-008
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: FEAT-008 Re-Scope — TriggerAlert → sseHub Notifications Bridge
+type: implementation-plan
 ---
 
 # FEAT-008 Re-Scope — TriggerAlert → sseHub Notifications Bridge
