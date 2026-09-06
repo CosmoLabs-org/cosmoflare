@@ -1,6 +1,6 @@
 ---
 brainstorm: docs/brainstorming/2026-05-18-tui-command-palette.md
-completed: "2026-05-24"
+completed: "2026-05-24T00:00:00-03:00"
 created: "2026-05-18T15:00:00-03:00"
 deliverables:
     - id: P-01

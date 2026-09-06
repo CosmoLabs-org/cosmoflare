@@ -1,6 +1,6 @@
 ---
 branch: master
-completed: "2026-05-29"
+completed: "2026-05-29T00:00:00-03:00"
 created: "2026-05-16T12:00:00-03:00"
 deliverables:
     - P-01: DNS Records library + CLI
@@ -13,7 +13,7 @@ goals_total: 5
 origin: manual
 priority: high
 related_prompts:
-    - docs/prompts/2026-05-16-phase4-cloudflare-services.md
+    - docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md
 requires_reading:
     - pkg/r2go2/worker.go
     - pkg/r2go2/kv.go
@@ -23,7 +23,7 @@ requires_reading:
     - pkg/r2go2/types.go
     - cmd/root.go
 schema_version: 1
-started: "2026-05-16"
+started: "2026-05-16T00:00:00-03:00"
 status: COMPLETED
 tags:
     - cloudflare
