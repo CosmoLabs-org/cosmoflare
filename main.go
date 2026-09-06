@@ -1,7 +1,7 @@
 /*
 Cosmoflare - CLI for the full Cloudflare developer platform
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT (https://opensource.org/licenses/MIT)
 
 For usage instructions, see: https://github.com/CosmoLabs-org/cosmoflare

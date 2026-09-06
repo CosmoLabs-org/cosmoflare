@@ -1,7 +1,7 @@
 /*
 Package ux provides error handling and recovery mechanisms for R2Go2
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

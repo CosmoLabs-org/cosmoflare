@@ -1,7 +1,7 @@
 /*
 Package http provides rate limiting and retry mechanism testing for R2Go2
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

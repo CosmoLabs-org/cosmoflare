@@ -1,7 +1,7 @@
 /*
 Package edge provides edge case testing for R2 API integration
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

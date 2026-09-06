@@ -1,5 +1,5 @@
 # Multi-stage build for R2Go2 CLI
-# Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+# Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 
 # Build stage
 FROM golang:1.25-alpine AS builder

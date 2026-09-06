@@ -1,7 +1,7 @@
 /*
 Package palette provides a VS Code-style command palette for the TUI dashboard
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

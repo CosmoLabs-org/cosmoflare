@@ -1,7 +1,7 @@
 /*
 Package interactive provides first-run detection and auto-setup functionality
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

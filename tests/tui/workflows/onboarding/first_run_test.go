@@ -1,7 +1,7 @@
 /*
 Package workflows tests TUI user workflows and integration scenarios
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 

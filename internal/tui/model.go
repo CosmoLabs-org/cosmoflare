@@ -1,7 +1,7 @@
 /*
 Package tui provides the interactive terminal dashboard for R2Go2
 
-Copyright © 2025 CosmoLabs (https://cosmolabs.org)
+Copyright © 2025-2026 CosmoLabs (https://cosmolabs.org)
 License: MIT
 */
 
