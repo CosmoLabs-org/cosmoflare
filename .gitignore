@@ -181,3 +181,10 @@ go.work.sum
 # tool runtime state (never commit)
 webfetcher*.db*
 release-context.yaml
+
+# GOrchestra agent-session recovery patches (234MB scan noise — ROAD-085; stay local)
+GOrchestra/sessions/
+
+# stray built binaries at repo root (ROAD-085)
+/simple-setup
+/test-setup
