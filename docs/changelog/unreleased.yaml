@@ -4,10 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: alert triggers now fan out to serve-daemon SSE clients on the notifications channel (desktop live alerts)
-          source: FEAT-008
-          date: 2026-09-06T19:48:39.520521+04:00
+    added: []
     fixed: []
     changed: []
     deprecated: []

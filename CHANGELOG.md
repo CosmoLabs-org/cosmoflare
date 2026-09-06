@@ -28,6 +28,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.20.0] - 2026-09-06
+
+### Added
+- In-process event bus for real-time notifications (ROAD-080) (FEAT-008) (FEAT-008)
+- MCP server now exposes the full CLI surface — 140+ tools auto-generated from the cobra tree, read-only by default, mutations behind an explicit allow switch
+- bridge TriggerAlert to serve SSE notifications (FEAT-008) (commit:bc18c4c1)
+- generate full-surface tools from the cobra tree with mutation gating (commit:164fa88b)
+
+### Changed
+- alert SSE fan-out fires before webhook retries; channel names exported as constants
+- README regenerated from reality; local GoReleaser release config
+- simplify alert bridge — honest lifetime, latency-first fan-out, channel constants (commit:df2fc3ce)
+
 ## [0.19.0] - 2026-09-05
 
 ### Added
