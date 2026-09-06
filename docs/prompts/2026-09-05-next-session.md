@@ -1,15 +1,19 @@
 ---
-status: PENDING
-type: continuation
+created: "2026-09-05T00:00:00+02:00"
+goals_completed: 5
+goals_total: 6
 priority: high
-created: 2026-09-05T00:00:00+02:00
+related_prompts: []
 requires_reading:
     - docs/audit/latest/brief.md
     - docs/audit/latest/action-plan.md
 schema_version: 1
-supersedes: "docs/prompts/2026-08-31-cosmoflare-audit-followup.md"
-goals_total: 6
+status: PENDING
+tags: []
+title: Cosmoflare — Next Session Continuation (2026-09-05)
+type: continuation
 ---
+
 # Cosmoflare — Next Session Continuation (2026-09-05)
 
 ## Context to Load
