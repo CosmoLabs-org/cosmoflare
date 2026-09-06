@@ -1,13 +1,15 @@
 id: ROAD-086
 created_at: 2026-08-31T03:57:04.030537+04:00
-updated_at: 2026-08-31T03:57:19.480035+04:00
+updated_at: 2026-09-06T19:52:57.142967+04:00
 title: Roadmap hygiene — dedupe double-imported items and regenerate index
 description: 'Archive duplicate stubs ROAD-074, ROAD-076, ROAD-077, ROAD-078 (created 15 seconds after their real counterparts ROAD-080..083 in the 2026-06-20 batch import 8d4076c). Regenerate docs/roadmap/index.yaml: ROAD-035 title mismatch (Email Routing vs DNS record management), dropped priorities for ROAD-025..032. Audit the 9 unclosed BASE foundation items for ones already satisfied (BASE-002 tech stack, BASE-010 linting). Audit-hydrated 2026-08-31.'
-status: captured
+status: completed
 tags:
     - audit-hydrated
 linked_issues:
     - IDEA-047
+completed_in: v0.19.0
+completed_at: 2026-09-06T19:52:57.142963+04:00
 origin:
     session: 36
 ulid: 01M1AHNW4ZGGV5WR8RJYBQ1RJK
