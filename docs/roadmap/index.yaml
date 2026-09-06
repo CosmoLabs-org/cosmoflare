@@ -1,13 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-07T02:48:56.203874+04:00
+last_updated: 2026-09-07T02:58:34.193624+04:00
 next_id: 90
 items:
-    - id: ROAD-089
-      title: 'Launch: public flip + Homebrew tap'
-      status: captured
-      priority: 70
-      created_at: 2026-09-07T02:48:56.20365+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -768,3 +763,8 @@ items:
       title: Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)
       status: captured
       created_at: 2026-08-31T03:57:08.584204+04:00
+    - id: ROAD-089
+      title: 'Launch: public flip + Homebrew tap'
+      status: captured
+      priority: 70
+      created_at: 2026-09-07T02:48:56.20365+04:00
