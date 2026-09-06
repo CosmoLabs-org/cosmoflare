@@ -21,11 +21,11 @@ deliverables:
   - id: BR-04
     title: "RemoveCORSRule — delete a CORS rule by description/tag from the entrypoint ruleset"
   - id: BR-05
-    title: "pkg/r2go2/cors.go — library implementation"
+    title: "pkg/cosmoflare/cors.go — library implementation"
   - id: BR-06
     title: "cmd/cors.go — Cobra CLI (cors settings, cors set, cors remove)"
   - id: BR-07
-    title: "cmd/cors_test.go + pkg/r2go2/cors_test.go — unit tests (table-driven)"
+    title: "cmd/cors_test.go + pkg/cosmoflare/cors_test.go — unit tests (table-driven)"
 ---
 
 # CORS Management via Cloudflare Transform Rules
@@ -438,7 +438,7 @@ Error: CORS rule "cosmoflare-cors" not found on zone abc123.
 
 ### Files to Create
 
-#### 1. `pkg/r2go2/cors.go`
+#### 1. `pkg/cosmoflare/cors.go`
 
 Full library implementation. ~200 lines.
 
@@ -501,7 +501,7 @@ Key implementation notes:
 - Header values for multi-value fields (origins, methods, headers) are stored as comma-space-separated strings: `"GET, POST, OPTIONS"` — this is the standard CORS header format.
 - For `AllowOrigins` with a single `*`, store `"*"` directly; for multiple origins, Cloudflare Transform Rules support only one static value per header (the `value` field is a plain string, not an array). If multiple origins are given, the rule should use an expression-based value instead: `http.request.headers["Origin"]` matched against a list. Document this limitation clearly in the CLI help text. For the initial implementation: if `len(origins) > 1` and none is `*`, join with `, ` as a best-effort and warn the user that only browsers sending one of these exact values will match (or suggest using Workers for dynamic origin reflection).
 
-#### 2. `pkg/r2go2/cors_test.go`
+#### 2. `pkg/cosmoflare/cors_test.go`
 
 Unit tests (~150 lines). Table-driven. No network required — mock via `httptest.NewServer` returning pre-canned JSON responses (same pattern as other service tests in this package).
 
@@ -570,7 +570,7 @@ Unit tests for CLI layer (~100 lines). Tests `runCORSSettings`, `runCORSSet`, `r
 
 Check `cmd/root.go` — `corsCmd` must be added to `rootCmd` in `init()` (already done via the `corsCmd.go` init block above, consistent with how ssl, cache, dns are wired).
 
-### No changes needed to `pkg/r2go2/types.go` or `pkg/r2go2/options.go`
+### No changes needed to `pkg/cosmoflare/types.go` or `pkg/cosmoflare/options.go`
 
 CORS types are self-contained in `cors.go`. No shared type additions needed.
 
@@ -663,11 +663,11 @@ Mark with `//go:build integration` (consistent with existing real-API tests). Re
 
 A GLM agent implementing this needs to:
 
-1. Create `pkg/r2go2/cors.go` with `CORSService`, 2 constructors, 3 methods, internal helpers.
-2. Create `pkg/r2go2/cors_test.go` with 9 table-driven test cases using httptest mock.
+1. Create `pkg/cosmoflare/cors.go` with `CORSService`, 2 constructors, 3 methods, internal helpers.
+2. Create `pkg/cosmoflare/cors_test.go` with 9 table-driven test cases using httptest mock.
 3. Create `cmd/cors.go` with `corsCmd`, `corsSettingsCmd`, `corsSetCmd`, `corsRemoveCmd` following `ssl.go` pattern exactly.
 4. Create `cmd/cors_test.go` with CLI-layer tests for all 3 subcommands.
-5. Run `go build -o build/r2go2 .` and `go test ./pkg/r2go2/... ./cmd/...` — both must pass clean.
+5. Run `go build -o build/r2go2 .` and `go test ./pkg/cosmoflare/... ./cmd/...` — both must pass clean.
 
 No changes to any other file are required. The `init()` in `cmd/cors.go` wires the command to `rootCmd` automatically.
 

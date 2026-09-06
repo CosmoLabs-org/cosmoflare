@@ -5,7 +5,7 @@ status: implemented
 created: 2026-05-18T14:30:00-03:00
 deliverables:
   - id: BR-01
-    title: "pkg/r2go2/interfaces.go with 12 service interfaces"
+    title: "pkg/cosmoflare/interfaces.go with 12 service interfaces"
   - id: BR-02
     title: "Compile-time satisfaction checks for all 12 services"
   - id: BR-03
@@ -24,7 +24,7 @@ deliverables:
 
 ## Current State
 
-The pkg/r2go2 package has two patterns:
+The pkg/cosmoflare package has two patterns:
 
 1. **R2Client** (already an interface in `client.go:19-47`) — covers bucket CRUD, object CRUD, upload/download, copy, presign. Implemented by `client` struct. **Already testable via interface.**
 
@@ -34,11 +34,11 @@ The pkg/r2go2 package has two patterns:
 
 ### Q1: Where should interfaces live?
 
-**Decision: In `pkg/r2go2/` alongside implementations**, not `internal/api/`. Rationale:
-- `pkg/r2go2/` is the public importable API surface
+**Decision: In `pkg/cosmoflare/` alongside implementations**, not `internal/api/`. Rationale:
+- `pkg/cosmoflare/` is the public importable API surface
 - Go convention: interfaces live where they're consumed, but for a library, co-location is standard
 - `internal/api/` doesn't exist as a package (the tests that import it are broken)
-- A new file `pkg/r2go2/interfaces.go` keeps all service contracts in one discoverable place
+- A new file `pkg/cosmoflare/interfaces.go` keeps all service contracts in one discoverable place
 
 ### Q2: Interface naming convention?
 
@@ -78,7 +78,7 @@ Not in scope. The `cloudflare.API` and `s3.Client` dependencies inside the struc
 
 ### Phase 1: interfaces.go (one file, zero breaking changes)
 
-1. Create `pkg/r2go2/interfaces.go`
+1. Create `pkg/cosmoflare/interfaces.go`
 2. Define one interface per service, matching the public method signatures of each concrete struct
 3. Add a compile-time check per service: `var _ WorkerServicer = (*WorkerService)(nil)`
 
@@ -94,7 +94,7 @@ Not in scope. The `cloudflare.API` and `s3.Client` dependencies inside the struc
 
 ## Deliverables
 
-- BR-01: `pkg/r2go2/interfaces.go` with 12 service interfaces
+- BR-01: `pkg/cosmoflare/interfaces.go` with 12 service interfaces
 - BR-02: Compile-time satisfaction checks for all 12
 - BR-03: Tests verifying interface definitions compile
 
