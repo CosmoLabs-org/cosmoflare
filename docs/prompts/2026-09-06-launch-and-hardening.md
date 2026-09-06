@@ -1,7 +1,7 @@
 ---
 branch: master
 created: "2026-09-06T23:10:19+04:00"
-goals_completed: 7
+goals_completed: 9
 goals_total: 11
 priority: high
 related_prompts: []
@@ -56,7 +56,7 @@ The tag `v0.20.0` exists and is pushed; `gh release list` shows only v0.19.0. Ru
 The attic blobs (234MB, incl. AWS example-key patterns inside recovery.patch files) remain in git history though untracked. Present the user the two options: (a) `git filter-repo --path GOrchestra/sessions --invert-paths` + force-push (rewrites SHAs — coordinate first), or (b) accept history as-is. After the user picks and (a) if chosen is done: `gh repo edit --visibility public --accept-visibility-change-consequences`, then create `CosmoLabs-org/homebrew-cosmoflare` tap and add the `brew` pipe config to `.goreleaser.yaml`.
 **Acceptance:** `gh repo view --json visibility --jq .visibility` → `public` (only after user confirms).
 
-### [ ] 3. Guardrails enforcement (audit item 13 — the defensible-niche gap)
+### [x] 3. Guardrails enforcement (audit item 13 — the defensible-niche gap)
 **Model:** `sonnet` | **Files:** `pkg/cosmoflare/guardrails.go`, `cmd/sync.go`, `cmd/object.go`
 **Reason:** discovery — enforcement must hook the upload paths (`sync up`, `object put`, watcher) whose call shapes need tracing first.
 `.cosmoflare.yaml` guardrails (blocked_keys, allowed_buckets) parse and test but never run — `sync up . bucket` uploads `.env` and `.git/` by default. Trace the upload call paths, wire guardrail checks at the library boundary, add default excludes, and TDD the enforcement (red test: uploading `.env` with guardrails configured must fail with an actionable error).
@@ -68,7 +68,7 @@ The attic blobs (234MB, incl. AWS example-key patterns inside recovery.patch fil
 Everything currently returns 502 (rest.go:94). Map typed errors → 400/401/404/429/502 with `{error, code}` JSON bodies so the desktop app can distinguish user-fixable from transient. Follow the typed-error hierarchy in `pkg/cosmoflare/errors.go`.
 **Acceptance:** `go test ./internal/server/ -run ErrorContract` passes; a table-driven test covers each status mapping.
 
-### [ ] 5. Desktop `cf-*` stylesheet + a11y pass (audit item 12)
+### [x] 5. Desktop `cf-*` stylesheet + a11y pass (audit item 12)
 **Model:** `sonnet+worktree` | **Files:** `desktop/src/styles.css`, `desktop/src/App.tsx` (verify exact component paths in the worktree)
 30+ `cf-*` classes referenced, 15-line CSS shipped; 3 a11y HIGHs (health state invisible to screen readers). Write the stylesheet, fix the 6 ARIA issues, verify in the Tauri dev shell.
 **Acceptance:** `grep -c "cf-" desktop/src/styles.css` > 30; design-quality audit HIGHs closed.

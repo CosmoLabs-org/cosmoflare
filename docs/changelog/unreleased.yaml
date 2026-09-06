@@ -4,9 +4,15 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: 'Published first release with full binary distribution (v0.20.0: 5 binaries + checksums)'
+          source: manual
+          date: 2026-09-07T02:12:47.216132+04:00
     fixed: []
     changed: []
     deprecated: []
-    removed: []
+    removed:
+        - description: Purged 630 MB of dead blobs from git history (recovery patches, 12 old binaries) via git filter-repo; repo pack 485 MiB → 16.7 MiB
+          source: manual
+          date: 2026-09-07T02:12:47.171587+04:00
     security: []
