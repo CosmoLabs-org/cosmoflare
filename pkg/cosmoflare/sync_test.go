@@ -2,6 +2,8 @@ package cosmoflare
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -36,7 +38,10 @@ func (m *mockStorageBackend) UploadFile(ctx context.Context, bucket, key, localP
 
 func (m *mockStorageBackend) DownloadFile(ctx context.Context, bucket, key, localPath string) error {
 	m.downloaded = append(m.downloaded, key)
-	return nil
+	if err := os.MkdirAll(filepath.Dir(localPath), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(localPath, []byte("data"), 0o644)
 }
 
 func (m *mockStorageBackend) DeleteRemoteObject(ctx context.Context, bucket, key string) error {
@@ -657,5 +662,81 @@ func TestPlanUp_ChecksumModeDifferent(t *testing.T) {
 	}
 	if uploadCount != 1 {
 		t.Errorf("expected 1 upload (different checksum), got %d", uploadCount)
+	}
+}
+
+// --- Multipart ETag fallback + download mtime restore ---
+
+func TestIsUnchangedMultipartETagFallback(t *testing.T) {
+	ts := time.Now().Add(-time.Hour)
+	svc := NewSyncService(&mockStorageBackend{})
+
+	local := LocalFileInfo{Size: 10, ModTime: ts}
+	remote := ObjectInfo{
+		Size:         10,
+		LastModified: ts,
+		ETag:         "\"d41d8cd98f00b204e9800998ecf8427e-4\"",
+	}
+
+	if !svc.isUnchanged(local, remote, true) {
+		t.Error("expected isUnchanged=true for multipart ETag with equal size/mtime")
+	}
+
+	remote.Size = 11
+	if svc.isUnchanged(local, remote, true) {
+		t.Error("expected isUnchanged=false for multipart ETag with size mismatch")
+	}
+}
+
+func TestExecutePlanDownloadRestoresModTime(t *testing.T) {
+	remoteTime := time.Now().Add(-2 * time.Minute).Truncate(time.Second)
+	dir := t.TempDir()
+	localPath := filepath.Join(dir, "k")
+
+	svc := NewSyncService(&mockStorageBackend{})
+	plan := &SyncPlan{
+		Direction: SyncDown,
+		Bucket:    "b",
+		LocalDir:  dir,
+		Operations: []SyncOp{
+			{
+				Action:        SyncOpDownload,
+				Key:           "k",
+				LocalPath:     localPath,
+				RemoteModTime: remoteTime,
+			},
+		},
+	}
+
+	result, err := svc.Execute(context.Background(), plan)
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if result.Failed != 0 {
+		t.Fatalf("expected 0 failed ops, got %d (%v)", result.Failed, result.Errors)
+	}
+
+	info, err := os.Stat(localPath)
+	if err != nil {
+		t.Fatalf("downloaded file missing: %v", err)
+	}
+	if diff := info.ModTime().Sub(remoteTime); diff > time.Second || diff < -time.Second {
+		t.Errorf("expected ModTime ≈ %v, got %v (diff %v)", remoteTime, info.ModTime(), diff)
+	}
+}
+
+func TestIsUnchangedPlainETagChecksum(t *testing.T) {
+	svc := NewSyncService(&mockStorageBackend{})
+
+	local := LocalFileInfo{Checksum: "d41d8cd98f00b204e9800998ecf8427e"}
+	remote := ObjectInfo{ETag: "\"d41d8cd98f00b204e9800998ecf8427e\""}
+
+	if !svc.isUnchanged(local, remote, true) {
+		t.Error("expected isUnchanged=true for matching plain ETag checksum")
+	}
+
+	local.Checksum = "0123456789abcdef0123456789abcdef"
+	if svc.isUnchanged(local, remote, true) {
+		t.Error("expected isUnchanged=false for mismatched plain ETag checksum")
 	}
 }

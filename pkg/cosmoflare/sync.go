@@ -2,6 +2,7 @@ package cosmoflare
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -73,11 +74,12 @@ type LocalFileInfo struct {
 
 // SyncOp represents a single planned sync operation.
 type SyncOp struct {
-	Action    SyncOpAction `json:"action"`
-	Key       string       `json:"key"`
-	LocalPath string       `json:"local_path,omitempty"`
-	Size      int64        `json:"size"`
-	Reason    string       `json:"reason,omitempty"`
+	Action        SyncOpAction `json:"action"`
+	Key           string       `json:"key"`
+	LocalPath     string       `json:"local_path,omitempty"`
+	Size          int64        `json:"size"`
+	Reason        string       `json:"reason,omitempty"`
+	RemoteModTime time.Time    `json:"remote_mod_time,omitempty"`
 }
 
 // SyncPlanSummary holds aggregate counts for a sync plan.
@@ -309,11 +311,12 @@ func (s *SyncService) planDown(input SyncPlanInput, localByRel map[string]LocalF
 		if !exists {
 			// New file — download
 			ops = append(ops, SyncOp{
-				Action:    SyncOpDownload,
-				Key:       remoteKey,
-				LocalPath: localPath,
-				Size:      remote.Size,
-				Reason:    "new file",
+				Action:        SyncOpDownload,
+				Key:           remoteKey,
+				LocalPath:     localPath,
+				Size:          remote.Size,
+				Reason:        "new file",
+				RemoteModTime: remote.LastModified,
 			})
 			continue
 		}
@@ -328,11 +331,12 @@ func (s *SyncService) planDown(input SyncPlanInput, localByRel map[string]LocalF
 			})
 		} else {
 			ops = append(ops, SyncOp{
-				Action:    SyncOpDownload,
-				Key:       remoteKey,
-				LocalPath: localPath,
-				Size:      remote.Size,
-				Reason:    "modified",
+				Action:        SyncOpDownload,
+				Key:           remoteKey,
+				LocalPath:     localPath,
+				Size:          remote.Size,
+				Reason:        "modified",
+				RemoteModTime: remote.LastModified,
 			})
 		}
 	}
@@ -360,9 +364,15 @@ func (s *SyncService) planDown(input SyncPlanInput, localByRel map[string]LocalF
 // size + modification time heuristic.
 func (s *SyncService) isUnchanged(local LocalFileInfo, remote ObjectInfo, checksum bool) bool {
 	if checksum {
-		// Compare checksums: R2 ETags are MD5 wrapped in quotes
+		// Compare checksums: R2 ETags are MD5 wrapped in quotes.
 		remoteHash := strings.Trim(remote.ETag, "\"")
-		return local.Checksum == remoteHash
+		// Multipart uploads append a "-N" part-count suffix, and the digest is
+		// MD5-of-part-MD5s, not the content MD5 — a local checksum can never
+		// match. Fall back to the size/mtime heuristic instead of forcing a
+		// perpetual re-transfer.
+		if !strings.Contains(remoteHash, "-") {
+			return local.Checksum == remoteHash
+		}
 	}
 	// Default: same size and local is not newer than remote
 	return local.Size == remote.Size && !local.ModTime.After(remote.LastModified)
@@ -407,6 +417,11 @@ func (s *SyncService) Execute(ctx context.Context, plan *SyncPlan) (*SyncResult,
 			opErr = s.backend.UploadFile(ctx, plan.Bucket, op.Key, op.LocalPath)
 		case SyncOpDownload:
 			opErr = s.backend.DownloadFile(ctx, plan.Bucket, op.Key, op.LocalPath)
+			if opErr == nil && !op.RemoteModTime.IsZero() {
+				// Restore the remote timestamp so the next plan's mtime compare
+				// treats the file as unchanged instead of perpetually newer.
+				_ = os.Chtimes(op.LocalPath, op.RemoteModTime, op.RemoteModTime)
+			}
 		case SyncOpDelete:
 			opErr = s.backend.DeleteRemoteObject(ctx, plan.Bucket, op.Key)
 		case SyncOpSkip:
