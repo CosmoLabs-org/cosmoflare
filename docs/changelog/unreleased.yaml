@@ -5,7 +5,10 @@
 version: pending
 entries:
     added: []
-    fixed: []
+    fixed:
+        - description: 'sync: --checksum now falls back to size/mtime comparison for multipart-uploaded objects (their -N ETags can never match a content checksum); downloads restore the remote LastModified so files are no longer re-downloaded on every sync'
+          source: manual
+          date: 2026-09-07T18:30:52.003971+04:00
     changed: []
     deprecated: []
     removed: []

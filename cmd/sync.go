@@ -30,6 +30,8 @@ Subcommands:
 Comparison modes:
   Default: compares file size and modification time
   --checksum: compares MD5 checksums (slower but accurate)
+    Multipart-uploaded objects (ETag ending in "-N") always fall back to
+    size/mtime: their ETag digests the part MD5s, not the content MD5
 
 Examples:
   cosmoflare sync up ./dist my-bucket
@@ -116,14 +118,14 @@ func init() {
 	syncUpCmd.Flags().BoolVar(&syncFlagDelete, "delete", false, "Delete destination files not present at source")
 	syncUpCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated; replaces the default excludes .git/, .env, .env.*, .DS_Store)")
 	syncUpCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
-	syncUpCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime")
+	syncUpCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime (multipart-uploaded objects fall back to size/mtime)")
 	syncUpCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
 
 	// Shared flags for sync down
 	syncDownCmd.Flags().BoolVar(&syncFlagDelete, "delete", false, "Delete local files not present in bucket")
 	syncDownCmd.Flags().StringArrayVar(&syncFlagExclude, "exclude", nil, "Exclude files matching glob pattern (can be repeated; replaces the default excludes .git/, .env, .env.*, .DS_Store)")
 	syncDownCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
-	syncDownCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime")
+	syncDownCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime (multipart-uploaded objects fall back to size/mtime)")
 	syncDownCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
 }
 
