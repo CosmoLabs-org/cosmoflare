@@ -118,6 +118,14 @@ type BucketDomainServicer interface {
 
 var _ BucketDomainServicer = (*BucketDomainService)(nil)
 
+// BucketLifecycleServicer manages R2 object lifecycle rules.
+type BucketLifecycleServicer interface {
+	Get(ctx context.Context, bucket string) ([]LifecycleRule, error)
+	Set(ctx context.Context, bucket string, rules []LifecycleRule) error
+}
+
+var _ BucketLifecycleServicer = (*BucketLifecycleService)(nil)
+
 // AnalyticsServicer queries Cloudflare GraphQL Analytics.
 type AnalyticsServicer interface {
 	ZoneHTTP(ctx context.Context, zoneID string, w AnalyticsWindow) (*ZoneHTTPSummary, error)
