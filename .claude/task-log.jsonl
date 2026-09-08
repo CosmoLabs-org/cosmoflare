@@ -1443,3 +1443,8 @@
 {"id":"4","subject":"","status":"deleted","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
 {"id":"6","subject":"Sync correctness: multipart ETag fallback + download mtime restore","status":"pending","created_at":"2026-09-07T14:14:59Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
 {"id":"6","subject":"","status":"in_progress","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-09-07T14:32:03Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"7","subject":"Port R2 bucket custom-domain attach/detach/verify to live architecture","status":"pending","created_at":"2026-09-08T00:21:18Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"8","subject":"Dead-code sweep: remove pre-rename disabled files and packages","status":"pending","created_at":"2026-09-08T00:21:18Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"7","subject":"","status":"in_progress","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-09-08T00:29:26Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
