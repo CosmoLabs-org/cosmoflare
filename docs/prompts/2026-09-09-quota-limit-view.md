@@ -27,6 +27,11 @@ requires_reading:
 schema_version: 1
 status: PENDING
 title: 'Cosmoflare — limits: quota proximity view + alert feed'
+implemented_commits:
+    - {sha: '773de39d45cd', covers: [P-01]}
+    - {sha: '7159245a1d28', covers: [P-03]}
+    - {sha: '1bf625352bb7', covers: [P-06]}
+    - {sha: '5e967efb6026', covers: [P-02]}
 ---
 # Cosmoflare — limits: quota proximity view + alert feed
 
