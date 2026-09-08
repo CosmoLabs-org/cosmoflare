@@ -8,6 +8,9 @@ entries:
         - description: 'bucket domain: new command group (attach/list/get/verify/update/detach) managing R2 bucket custom domains over the REST API, with zone auto-resolution, --json output, ownership/SSL activation polling, jurisdiction support, and optional min-TLS/cipher settings'
           source: manual
           date: 2026-09-08T04:41:20.891927+04:00
+        - description: 'metrics: real usage analytics + reliable daemon snapshots — new AnalyticsService (GraphQL: zone HTTP, R2 storage/operations, Workers invocations, retention-validated windows); daemon publishes partial snapshots with per-source errors and populated profile instead of dropping on any failure; metrics --json gains windowed usage (--window, default 24h) with counts always printing'
+          source: manual
+          date: 2026-09-08T15:37:53.252062+04:00
     fixed:
         - description: 'sync: --checksum now falls back to size/mtime comparison for multipart-uploaded objects (their -N ETags can never match a content checksum); downloads restore the remote LastModified so files are no longer re-downloaded on every sync'
           source: manual
