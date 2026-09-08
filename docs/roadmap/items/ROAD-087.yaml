@@ -1,8 +1,8 @@
 id: ROAD-087
 created_at: 2026-08-31T03:57:06.177224+04:00
-updated_at: 2026-08-31T03:57:19.314971+04:00
-title: Domain Center completion — Waves B–D
-description: Domain Management Center Waves B–D (registrar visibility, redirect governance, dashboard depth per the 2026-06-14 brainplan) are tracked only in project memory; FEAT-006 was closed after Waves 1–2. Create this item to carry the remaining scope with references to FEAT-006 and docs/brainstorming/2026-06-14-domain-management-center.md. Audit-hydrated 2026-08-31.
+updated_at: 2026-09-09T02:09:43.125308+04:00
+title: Domain Center residuals — legacy pagerules merge + redirect-target attention check
+description: 'SCOPE CORRECTED 2026-09-09: the original Waves B-D are ALREADY SHIPPED (verified in code + Session-017; FEAT-006 closed c86a436 2026-06-20 — this item was hydrated from a stale memory line). Remaining genuine gaps from the 2026-06-14 design: (1) legacy merge — ''domains redirects'' must merge modern Redirect Rules with legacy Page-Rule forwarding_url entries for complete cross-domain visibility (design Layer-1 requirement, plan open risk never tasked); (2) redirect-target attention criterion — flag domains whose redirect target resolves >=400 or loops (design Phase-2 best-effort, never implemented).'
 status: captured
 tags:
     - audit-hydrated
