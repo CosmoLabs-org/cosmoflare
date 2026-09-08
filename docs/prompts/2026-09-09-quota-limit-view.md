@@ -66,7 +66,7 @@ Covers P-03. **Model:** glm-turbo. **Files:** same two files (plan Task 3). Reso
 ### [ ] G-04 DNS usage endpoint + ZonePlan.LegacyID extension
 Covers P-04. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/limits.go`, `pkg/cosmoflare/limits_test.go`, `pkg/cosmoflare/zone.go` (plan Task 4).
 
-### [ ] G-05 Snapshot assembly with partial-failure semantics
+### [x] G-05 Snapshot assembly with partial-failure semantics
 Covers P-05. **Model:** glm-turbo. **Files:** same library files (plan Task 5). Zero rows + all sources errored = hard failure; anything less = partial snapshot.
 
 ### [ ] G-06 ProjectConfig workers_plan field
