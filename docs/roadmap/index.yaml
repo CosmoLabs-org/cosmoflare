@@ -1,16 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-08T13:26:17.669786+04:00
+last_updated: 2026-09-08T13:27:05.823064+04:00
 next_id: 92
 items:
-    - id: ROAD-091
-      title: Agentic-surface completeness — Durable Objects, Workflows, Queues depth, Workers AI, MCP parity
-      status: captured
-      created_at: 2026-09-08T13:26:17.669567+04:00
-    - id: ROAD-090
-      title: Local Cloudflare control plane — account overview in CLI + Desktop
-      status: captured
-      created_at: 2026-09-08T13:26:15.156337+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -776,3 +768,11 @@ items:
       status: captured
       priority: 70
       created_at: 2026-09-07T02:48:56.20365+04:00
+    - id: ROAD-090
+      title: Local Cloudflare control plane — account overview in CLI + Desktop
+      status: captured
+      created_at: 2026-09-08T13:26:15.156337+04:00
+    - id: ROAD-091
+      title: Agentic-surface completeness — Durable Objects, Workflows, Queues depth, Workers AI, MCP parity
+      status: captured
+      created_at: 2026-09-08T13:26:17.669567+04:00
