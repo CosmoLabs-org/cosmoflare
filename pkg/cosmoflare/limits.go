@@ -275,7 +275,7 @@ func normalizePlanTier(plan string) string {
 }
 
 // resolveWorkersPlan resolves the Workers plan tier. Order: subscriptions
-// API → config → flag → unknown. A subscriptions failure is silent — the
+// API → flag → config → unknown. A subscriptions failure is silent — the
 // source string records which path decided.
 func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string, err error) {
 	subs, err := s.fetchSubscriptions(ctx)
