@@ -26,7 +26,7 @@ deliverables:
 
 ## Problem
 
-FEAT-006 shipped all four waves of the Domain Management Center (verified 2026-09-09; ROAD-087 was hydrated from a stale memory line and re-scoped to this residual scope). Two requirements from the 2026-06-14 design never landed:
+FEAT-006 shipped the Domain Management Center in full — both waves (library+CLI, then TUI) of the 2026-06-14 design's four layers (verified 2026-09-09; ROAD-087 was hydrated from a stale memory line and re-scoped to this residual scope). Two requirements from the 2026-06-14 design never landed:
 
 1. **Legacy pagerules merge** — the design's Layer 1 requires redirect visibility to MERGE modern Redirect Rules with legacy Page-Rule `forwarding_url` entries so "which domains redirect where" is complete regardless of which system created the rule. Today `domains redirects`, `GetDetail`, and the TUI right pane show modern rules only. CF is deprecating Page Rules, but existing accounts still carry legacy forwarding rules — they are invisible in every Domain Center surface.
 2. **Redirect-target attention check** — "needs attention" criterion #4 (a redirect target that resolves ≥400, or a redirect loop) was Phase-2 best-effort in the design and was never implemented. `domainNeedsAttention` (pkg/cosmoflare/domains.go:290) covers NS/SSL/health only.
@@ -83,6 +83,8 @@ func (s *DomainService) WithPageRules(factory func(zoneID string) PageRuleLister
 
 `GetDetail` appends `legacyForwardingRules(...)` output after the modern rules (stable order: modern first, then legacy by PageRule priority). A factory error or nil lister → skip legacy, never fail the detail.
 
+Cmd wiring: `newDomainService` (cmd/domains.go) gains the `WithPageRules` wiring in its `enrich` branch (per-zone `NewPageRuleServiceFromCreds`). Without it, `domains redirects`, `domains get`, and the TUI construct a `DomainService` with no legacy enrichment and inherit nothing from the merge.
+
 ## Design — Part 2: Redirect-Target Attention Check
 
 ### RedirectProber (pkg/cosmoflare/redirectprobe.go)
@@ -128,7 +130,7 @@ The classification is a pure helper (`classifyRedirectIssue(results []RedirectPr
 
 ### Surfacing
 
-- **`cosmoflare domains stats --check-redirects`** — after listing, collect every domain's `GetDetail` destinations, dedupe, `ProbeAll`, classify per domain, set `RedirectIssue`, then the existing attention list/summary/JSON flow picks it up. `--json` includes the new field. Without the flag, behavior is byte-identical to today.
+- **`cosmoflare domains stats --check-redirects`** — after listing, collect every domain's `GetDetail` destinations, dedupe, `ProbeAll`, classify per domain, set `RedirectIssue`; the existing attention flow then picks it up (`NeedsAttention` count + `Attention` list via the new criterion). The flag path constructs the service with `newDomainService(true)` — today `stats` calls it with `false`, which wires no redirect overlay, so `GetDetail` would return zero destinations to probe. `--json` carries the signal via a new `ByRedirectIssue map[string]int` breakdown on `DomainSummary` (mirroring `ByNSStatus`/`BySSLStatus`) — the summary struct carries no per-domain fields today, so the raw `RedirectIssue` field cannot appear in the stats JSON without this extension. Without the flag, behavior is byte-identical to today.
 - **`cosmoflare doctor`** — gains a redirect-target section that probes CALLER-SUPPLIED destinations. The `doctor` library stays stdlib-only and credential-free (its documented contract); the `cmd/doctor.go` handler fetches the domain's redirect destinations via `DomainService.GetDetail` and hands the destination list to the prober, whose results land in the existing `DiagnosticReport` structure.
 - **TUI** — the detail pane renders an issue badge line (`redirect: loop → https://…`) when `DomainStatus.RedirectIssue` is non-empty. The TUI itself runs no probes in v1; the field is empty in TUI-launched fetches (documented, not hidden).
 
@@ -152,6 +154,8 @@ The classification is a pure helper (`classifyRedirectIssue(results []RedirectPr
 - Probing the redirect SOURCE pattern (synthesizing concrete URLs from CF expressions / pagerule globs) — fuzzy, out of scope.
 - Probe result persistence or cross-run caching — in-process only for v1.
 - WHOIS registrar naming, domain transfers, buying domains (unchanged from the parent design).
+
+**Other parent-design gaps consciously out of scope here** (surfaced by review 2026-09-09, so the residual inventory is honest): attention criterion #3 (registration expiry <30 days) also never landed — it needs `DomainStatus` to carry registrar data on the LIST path, a different enrichment surface than this design's; and the TUI footer "needs attention" count plus the DNS record-type breakdown in the detail pane were descoped when the 2026-06-14 plan coded the reduced criterion set. Both are candidates for a future TUI-depth pass, not this one.
 
 ## Deliverables
 
