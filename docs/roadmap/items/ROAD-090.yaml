@@ -1,9 +1,11 @@
 id: ROAD-090
 created_at: 2026-09-08T13:26:15.156337+04:00
-updated_at: 2026-09-08T13:27:05.73786+04:00
+updated_at: 2026-09-08T17:52:56.673845+04:00
 title: Local Cloudflare control plane — account overview in CLI + Desktop
 description: 'Single local view of the whole Cloudflare account: request volumes, plan-limit proximity (quotas), R2 transfers/egress, workers inventory, domains + health, security-feature posture. Producers: GraphQL Analytics API (usage/requests/bandwidth per zone and per bucket), plan/limits endpoints, per-service posture rollups. Surfaces: CLI (metrics/status/dashboard commands), serve daemon + SSE, Desktop Tauri dashboard. Depends on the metrics-reliability tier (partial snapshots, per-source errors, populated Profile, byte-based deltas) — the same producer layer feeds the alert evaluator via newServeAlertBridge. Known gaps: no GraphQL Analytics integration, no quota/limits surfacing, no posture rollup.'
 status: captured
+notes:
+    - 'Advanced 2026-09-08: producer layer landed (AnalyticsService + partial daemon snapshots + alert evaluator); quota/limits view and Desktop maturation remain. Continuation prompt goal 3 targets quotas next.'
 refs:
     - type: doc
       path: docs/PRODUCT-VISION.md
