@@ -118,8 +118,17 @@ type BucketDomainServicer interface {
 
 var _ BucketDomainServicer = (*BucketDomainService)(nil)
 
+// AnalyticsServicer queries Cloudflare GraphQL Analytics.
+type AnalyticsServicer interface {
+	ZoneHTTP(ctx context.Context, zoneID string, w AnalyticsWindow) (*ZoneHTTPSummary, error)
+	R2Storage(ctx context.Context, w AnalyticsWindow) ([]R2BucketStorage, error)
+	R2Operations(ctx context.Context, w AnalyticsWindow) ([]R2OperationCount, error)
+	Workers(ctx context.Context, w AnalyticsWindow) ([]WorkersSummary, error)
+}
+
 // Compile-time interface satisfaction checks
 var (
+	_ AnalyticsServicer   = (*AnalyticsService)(nil)
 	_ WorkerServicer      = (*WorkerService)(nil)
 	_ KVServicer          = (*KVService)(nil)
 	_ DNSServicer         = (*DNSService)(nil)
