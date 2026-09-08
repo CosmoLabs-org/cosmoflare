@@ -24,6 +24,10 @@ type EvalMetrics struct {
 	CPUP99AvgMS     float64 // average of per-script cpuTimeP99 (0 when no scripts)
 	R2StorageBytes  uint64  // total payloadSize across buckets
 	R2ObjectCount   uint64  // total objectCount across buckets
+
+	WorkersScriptCount uint64  // live script count (LimitsService)
+	R2BucketCount      uint64  // live bucket count (LimitsService)
+	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
 }
 
 // Evaluator evaluates AlertRules against EvalMetrics and fires the manager's
@@ -33,7 +37,7 @@ type Evaluator struct {
 	rules     *cosmoflare.AlertService
 	manager   *Manager
 	cooldown  time.Duration
-	clock     func() time.Time  // injectable for tests
+	clock     func() time.Time     // injectable for tests
 	lastFired map[string]time.Time // rule name → last fire time
 	fires     map[string]int       // rule name → fire count (drives Alert.Count)
 }
@@ -81,6 +85,15 @@ func conditionValue(condition string, m EvalMetrics) (value float64, unit string
 		return m.CPUP99AvgMS, "ms", true
 	case "failure-count":
 		return float64(m.WorkersErrors), "errors", true
+	case "workers-script-count":
+		return float64(m.WorkersScriptCount), "scripts", true
+	case "r2-bucket-count":
+		return float64(m.R2BucketCount), "buckets", true
+	case "dns-record-quota":
+		if m.DNSRecordQuotaPct == 0 {
+			return 0, "%", false // no quota rows → nothing to judge
+		}
+		return m.DNSRecordQuotaPct, "%", true
 	default:
 		return 0, "", false
 	}
@@ -89,11 +102,14 @@ func conditionValue(condition string, m EvalMetrics) (value float64, unit string
 // metricData builds the TriggerAlert data map from the raw metrics.
 func metricData(m EvalMetrics) map[string]interface{} {
 	return map[string]interface{}{
-		"workers_requests": m.WorkersRequests,
-		"workers_errors":   m.WorkersErrors,
-		"r2_storage_bytes": m.R2StorageBytes,
-		"r2_object_count":  m.R2ObjectCount,
-		"cpu_p99_ms":       m.CPUP99AvgMS,
+		"workers_requests":     m.WorkersRequests,
+		"workers_errors":       m.WorkersErrors,
+		"r2_storage_bytes":     m.R2StorageBytes,
+		"r2_object_count":      m.R2ObjectCount,
+		"cpu_p99_ms":           m.CPUP99AvgMS,
+		"workers_script_count": m.WorkersScriptCount,
+		"r2_bucket_count":      m.R2BucketCount,
+		"dns_record_quota_pct": m.DNSRecordQuotaPct,
 	}
 }
 
@@ -192,4 +208,29 @@ func CollectEvalMetrics(ctx context.Context, analytics *cosmoflare.AnalyticsServ
 		m.R2ObjectCount += b.ObjectCount
 	}
 	return m, nil
+}
+
+// CollectLimitMetrics augments m with limit-proximity metrics from the
+// LimitsService. Only a total failure (zero rows collected) is an error —
+// partial snapshots leave the untouched fields at zero and the evaluator
+// skips conditions it cannot judge. DNSRecordQuotaPct is the MAXIMUM percent
+// across per-zone rows so one hot zone fires the rule.
+func CollectLimitMetrics(ctx context.Context, limits *cosmoflare.LimitsService, m *EvalMetrics) error {
+	snap, err := limits.Snapshot(ctx, "")
+	if err != nil {
+		return fmt.Errorf("limits snapshot: %w", err)
+	}
+	for _, row := range snap.Rows {
+		switch row.Resource {
+		case "workers.scripts":
+			m.WorkersScriptCount = row.Used
+		case "r2.buckets":
+			m.R2BucketCount = row.Used
+		case "dns.records":
+			if row.Percent > m.DNSRecordQuotaPct {
+				m.DNSRecordQuotaPct = row.Percent
+			}
+		}
+	}
+	return nil
 }

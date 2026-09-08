@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -280,4 +281,104 @@ func TestCollectEvalMetricsError(t *testing.T) {
 	if _, err := CollectEvalMetrics(context.Background(), analytics, w); err == nil {
 		t.Fatal("CollectEvalMetrics should return an error on analytics failure, got nil")
 	}
+}
+
+func TestConditionValueLimitMetrics(t *testing.T) {
+	m := EvalMetrics{WorkersScriptCount: 90, R2BucketCount: 5, DNSRecordQuotaPct: 95}
+
+	if v, unit, ok := conditionValue("workers-script-count", m); !ok || v != 90 || unit != "scripts" {
+		t.Fatalf("workers-script-count = (%v, %q, %v)", v, unit, ok)
+	}
+	if v, unit, ok := conditionValue("r2-bucket-count", m); !ok || v != 5 || unit != "buckets" {
+		t.Fatalf("r2-bucket-count = (%v, %q, %v)", v, unit, ok)
+	}
+	if v, unit, ok := conditionValue("dns-record-quota", m); !ok || v != 95 || unit != "%" {
+		t.Fatalf("dns-record-quota = (%v, %q, %v)", v, unit, ok)
+	}
+
+	// Zero DNS percent means "no quota rows" — the condition must not fire.
+	if _, _, ok := conditionValue("dns-record-quota", EvalMetrics{}); ok {
+		t.Fatal("dns-record-quota must be !ok with no quota rows")
+	}
+}
+
+func TestCollectLimitMetrics(t *testing.T) {
+	// All sources failing must error; partial success must fill fields.
+	// Fixture: reuse the package's existing fake/httptest patterns. A limits
+	// service with no listers configured returns a snapshot with only
+	// plan-unknown rows when DNS is absent — use a real httptest server for
+	// subscriptions 403 + fake listers via exported options.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	defer srv.Close()
+
+	limits := cosmoflare.NewLimitsService("acct", "tok",
+		cosmoflare.WithLimitsBaseURL(srv.URL),
+		cosmoflare.WithLimitsWorkers(fakeWorkers{n: 42}),
+		cosmoflare.WithLimitsR2(fakeBuckets{n: 3}),
+	)
+
+	var m EvalMetrics
+	if err := CollectLimitMetrics(context.Background(), limits, &m); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if m.WorkersScriptCount != 42 || m.R2BucketCount != 3 {
+		t.Fatalf("metrics = %+v, want 42 scripts / 3 buckets", m)
+	}
+
+	// All sources failing must error — zero rows + all sources errored is the
+	// snapshot's hard-failure condition.
+	failing := cosmoflare.NewLimitsService("acct", "tok",
+		cosmoflare.WithLimitsBaseURL(srv.URL),
+		cosmoflare.WithLimitsWorkers(fakeWorkers{err: errors.New("x")}),
+		cosmoflare.WithLimitsR2(fakeBuckets{err: errors.New("x")}),
+		cosmoflare.WithLimitsZones(fakeZones{err: errors.New("x")}),
+		cosmoflare.WithLimitsAnalytics(fakeAnalytics{err: errors.New("x")}),
+	)
+	if err := CollectLimitMetrics(context.Background(), failing, &m); err == nil {
+		t.Fatal("all limit sources failing must return an error")
+	}
+}
+
+type fakeWorkers struct {
+	n   int
+	err error
+}
+
+func (f fakeWorkers) List(ctx context.Context) ([]*cosmoflare.Worker, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return make([]*cosmoflare.Worker, f.n), nil
+}
+
+type fakeBuckets struct {
+	n   int
+	err error
+}
+
+func (f fakeBuckets) ListBuckets(ctx context.Context) ([]*cosmoflare.Bucket, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return make([]*cosmoflare.Bucket, f.n), nil
+}
+
+type fakeZones struct{ err error }
+
+func (f fakeZones) List(ctx context.Context) ([]*cosmoflare.Zone, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return nil, nil
+}
+
+type fakeAnalytics struct{ err error }
+
+func (f fakeAnalytics) Workers(ctx context.Context, w cosmoflare.AnalyticsWindow) ([]cosmoflare.WorkersSummary, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return nil, nil
 }
