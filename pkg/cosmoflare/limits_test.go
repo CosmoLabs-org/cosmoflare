@@ -1,6 +1,8 @@
 package cosmoflare
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 )
@@ -66,5 +68,31 @@ func TestDNSRecordsStaticLimit(t *testing.T) {
 					tt.plan, created, got, ok, tt.want, tt.wantOK)
 			}
 		})
+	}
+}
+
+func TestNewLimitsServiceDefaults(t *testing.T) {
+	s := NewLimitsService("acct", "tok")
+	if s.accountID != "acct" || s.apiToken != "tok" {
+		t.Fatal("credentials not stored")
+	}
+	if s.httpClient == nil {
+		t.Fatal("default HTTP client missing")
+	}
+	if s.baseURL != "https://api.cloudflare.com/client/v4" {
+		t.Fatalf("baseURL = %q", s.baseURL)
+	}
+}
+
+func TestNewLimitsServiceValidation(t *testing.T) {
+	if _, err := NewLimitsService("", "tok").Snapshot(context.Background(), ""); err == nil {
+		t.Fatal("empty account ID must fail validation")
+	} else if !strings.Contains(err.Error(), "account ID is required") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, err := NewLimitsService("acct", "").Snapshot(context.Background(), ""); err == nil {
+		t.Fatal("empty token must fail validation")
+	} else if !strings.Contains(err.Error(), "API token is required") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
