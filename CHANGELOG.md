@@ -28,6 +28,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.22.0] - 2026-09-08
+
+### Added
+- bucket domain: new command group (attach/list/get/verify/update/detach) managing R2 bucket custom domains over the REST API, with zone auto-resolution, --json output, ownership/SSL activation polling, jurisdiction support, and optional min-TLS/cipher settings
+- metrics: real usage analytics + reliable daemon snapshots — new AnalyticsService (GraphQL: zone HTTP, R2 storage/operations, Workers invocations, retention-validated windows); daemon publishes partial snapshots with per-source errors and populated profile instead of dropping on any failure; metrics --json gains windowed usage (--window, default 24h) with counts always printing
+- alerts: evaluator closes the loop — enabled rules judged against live analytics (error-rate %, storage bytes, CPU-p99 latency, windowed failure counts) fire TriggerAlert through the serve bridge with per-rule cooldown; daemon evaluates every 5m, 'alerts check' runs one-shot from the CLI; cycles with missing data are skipped, never evaluated against zeros
+- bucket lifecycle: get/set/clear R2 object lifecycle rules (expire by age/date, abort stale multipart uploads, transition to InfrequentAccess) with whole-config replace semantics and confirm-before-destruct
+- bucket notifications: manage R2 event notification rules to Cloudflare Queues (list/create/get/delete, five exact action types plus object-create/object-delete groupings, prefix/suffix filters)
+- manage R2 event notification rules to Queues (commit:461370a3)
+- get, set, and clear R2 object lifecycle rules (commit:9e60bb6d)
+- evaluator firing TriggerAlert from rules and live analytics (commit:7fd2d00b)
+- partial snapshots with per-source errors, populated profile, usage analytics (commit:f9dd2b4f)
+- GraphQL Analytics producers for zones, R2, and Workers (commit:ba0a51ea)
+- attach, list, verify, update, and detach R2 bucket custom domains (commit:5291c9ce)
+
+### Removed
+- Removed pre-rename dead code: 4 cmd/*.go.disabled drafts, cmd_disabled/ (policy/restore/upload/webhook), and 4 internal/*_disabled packages (~7,800 lines). All superseded by live implementations or mock scaffolds; recoverable from git history. R2 lifecycle policies (no live equivalent yet) noted as a future roadmap candidate.
+
+### Fixed
+- sync: --checksum now falls back to size/mtime comparison for multipart-uploaded objects (their -N ETags can never match a content checksum); downloads restore the remote LastModified so files are no longer re-downloaded on every sync
+- fall back to size/mtime for multipart ETags; restore remote mtime after download (commit:d1e141da)
+
 ## [0.21.0] - 2026-09-07
 
 ### Added
