@@ -14,6 +14,12 @@ entries:
         - description: 'alerts: evaluator closes the loop — enabled rules judged against live analytics (error-rate %, storage bytes, CPU-p99 latency, windowed failure counts) fire TriggerAlert through the serve bridge with per-rule cooldown; daemon evaluates every 5m, ''alerts check'' runs one-shot from the CLI; cycles with missing data are skipped, never evaluated against zeros'
           source: manual
           date: 2026-09-08T16:08:52.217775+04:00
+        - description: 'bucket lifecycle: get/set/clear R2 object lifecycle rules (expire by age/date, abort stale multipart uploads, transition to InfrequentAccess) with whole-config replace semantics and confirm-before-destruct'
+          source: manual
+          date: 2026-09-08T16:31:29.897958+04:00
+        - description: 'bucket notifications: manage R2 event notification rules to Cloudflare Queues (list/create/get/delete, five exact action types plus object-create/object-delete groupings, prefix/suffix filters)'
+          source: manual
+          date: 2026-09-08T16:31:29.955931+04:00
     fixed:
         - description: 'sync: --checksum now falls back to size/mtime comparison for multipart-uploaded objects (their -N ETags can never match a content checksum); downloads restore the remote LastModified so files are no longer re-downloaded on every sync'
           source: manual

@@ -2,14 +2,20 @@
 ulid: 01M207FPGWWC35YBHF2WND4NX5
 title: R2 lifecycle policies
 created: "2026-09-08T14:02:13.404247+04:00"
-status: seed
+status: withered
 source: human
 origin:
     session: 43
 tags:
     - r2
     - storage
+resolution:
+    reason: implemented
+    date: "2026-09-08T16:31:29.8138+04:00"
+    note: 'Landed 2026-09-08 merge 524039f: BucketLifecycleService + bucket lifecycle get/set/clear (rebuilt fresh from spec after dead-code sweep)'
 ---
+
+# R2 lifecycle policies
 
 # R2 lifecycle policies
 
