@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-09T01:00:30.643303+04:00
+last_updated: 2026-09-09T01:50:47.542982+04:00
 next_bug_id: 39
 next_feat_id: 10
 next_task_id: 5
@@ -279,7 +279,7 @@ issues:
       created_at: 2026-06-21T07:57:56.276869-03:00
     - id: FEAT-009
       type: feature
-      status: open
+      status: done
       title: Quota/plan-limit view — cosmoflare limits
       created_at: 2026-09-09T01:00:30.640794+04:00
     - id: TASK-001

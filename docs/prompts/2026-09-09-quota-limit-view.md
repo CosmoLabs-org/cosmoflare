@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-09-quota-limit-view.md
 branch: master
+completed: "2026-09-09T01:50:54+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -18,25 +19,53 @@ covers_plan_deliverables:
     - P-08
     - P-09
 created: "2026-09-09T00:56:34+04:00"
+goals_completed: 9
+goals_total: 9
 id: P-2026-09-09-quota-limit-view
+implemented_commits:
+    - covers:
+        - P-01
+      sha: 773de39d45cd
+    - covers:
+        - P-03
+      sha: 7159245a1d28
+    - covers:
+        - P-06
+      sha: 1bf625352bb7
+    - covers:
+        - P-02
+      sha: 5e967efb6026
+    - covers:
+        - P-04
+      sha: 58f346648bfe
+    - covers:
+        - P-05
+      sha: 8b619673d329
+    - covers:
+        - P-07
+      sha: c4f41c8a4088
+    - covers:
+        - P-08
+      sha: cef13ad2e6d5
+    - covers:
+        - P-09
+      sha: 25d8c4fbe838
+    - covers:
+        - P-04
+        - P-09
+      sha: d1f5026ffe25
 plan_ref: docs/planning-mode/2026-09-09-quota-limit-view.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-09-quota-limit-view.md
     - docs/planning-mode/2026-09-09-quota-limit-view.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
+tags: []
 title: 'Cosmoflare — limits: quota proximity view + alert feed'
-implemented_commits:
-    - {sha: '773de39d45cd', covers: [P-01]}
-    - {sha: '7159245a1d28', covers: [P-03]}
-    - {sha: '1bf625352bb7', covers: [P-06]}
-    - {sha: '5e967efb6026', covers: [P-02]}
-    - {sha: '58f346648bfe', covers: [P-04]}
-    - {sha: '8b619673d329', covers: [P-05]}
-    - {sha: 'c4f41c8a4088', covers: [P-07]}
-    - {sha: 'cef13ad2e6d5', covers: [P-08]}
 ---
+
 # Cosmoflare — limits: quota proximity view + alert feed
 
 ## BEFORE Starting — Required Reading
@@ -58,31 +87,31 @@ Both documents passed fresh-context independent review on 2026-09-09. The plan's
 
 ## Goals
 
-### [ ] G-01 Static limit tables + limitFor pure function with table tests
+### [x] G-01 Static limit tables + limitFor pure function with table tests
 Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/limits.go`, `pkg/cosmoflare/limits_test.go` (plan Task 1).
 
-### [ ] G-02 LimitsService types, constructor, consumer interfaces
+### [x] G-02 LimitsService types, constructor, consumer interfaces
 Covers P-02. **Model:** glm-turbo. **Files:** same two files (plan Task 2). Depends on G-01 — same file, sequential.
 
-### [ ] G-03 Workers plan resolution — subscriptions API + config/flag fallback
+### [x] G-03 Workers plan resolution — subscriptions API + config/flag fallback
 Covers P-03. **Model:** glm-turbo. **Files:** same two files (plan Task 3). Resolution order: subscriptions → flag → config → unknown.
 
-### [ ] G-04 DNS usage endpoint + ZonePlan.LegacyID extension
+### [x] G-04 DNS usage endpoint + ZonePlan.LegacyID extension
 Covers P-04. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/limits.go`, `pkg/cosmoflare/limits_test.go`, `pkg/cosmoflare/zone.go` (plan Task 4).
 
 ### [x] G-05 Snapshot assembly with partial-failure semantics
 Covers P-05. **Model:** glm-turbo. **Files:** same library files (plan Task 5). Zero rows + all sources errored = hard failure; anything less = partial snapshot.
 
-### [ ] G-06 ProjectConfig workers_plan field
+### [x] G-06 ProjectConfig workers_plan field
 Covers P-06. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/config.go`, `pkg/cosmoflare/config_test.go` (plan Task 6). Independent — can run parallel to G-01..G-05.
 
-### [ ] G-07 cmd/limits.go CLI — table, JSON, flags, exit codes
+### [x] G-07 cmd/limits.go CLI — table, JSON, flags, exit codes
 Covers P-07. **Model:** glm-turbo. **Files:** `cmd/limits.go`, `cmd/limits_test.go` (plan Task 7). Requires G-01..G-06 landed.
 
-### [ ] G-08 Alert-evaluator feed — EvalMetrics fields, conditions, serve wiring
+### [x] G-08 Alert-evaluator feed — EvalMetrics fields, conditions, serve wiring
 Covers P-08. **Model:** glm-turbo. **Files:** `internal/webhook/evaluator.go`, `internal/webhook/evaluator_test.go`, `cmd/serve.go` (plan Task 8). Requires G-05. Limits failure logs and continues — never skips analytics rules.
 
-### [ ] G-09 Documentation — docs/USAGE.md limits section
+### [x] G-09 Documentation — docs/USAGE.md limits section
 Covers P-09. **Model:** glm-turbo. **Files:** `docs/USAGE.md` (plan Task 9). Last — documents final flags and conditions.
 
 ## Execution Strategy
