@@ -423,12 +423,16 @@ func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source st
 }
 
 // dnsUsage fetches one zone's DNS record usage and quota from the live API.
-// Field names are parsed defensively ({used,records_used} × {quota,max_records}).
-// Any failure returns the static fallback by zone plan tier.
+// Endpoint and field names live-pinned 2026-09-09 against the API reference
+// (dns → usage → zone → get): GET /zones/{id}/dns_records/usage returns
+// result {record_usage, record_quota}. record_quota is null when an
+// account-level quota applies — that yields an error so the caller falls
+// back to the static per-plan table instead of treating null as zero.
+// Requires DNS Read (or Zone DNS Settings Read) on the token.
 func (s *LimitsService) dnsUsage(ctx context.Context, zoneID string) (used, limit uint64, source string, err error) {
 	const op = "LimitsDNSUsage"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		s.baseURL+"/zones/"+zoneID+"/dns/usage", nil)
+		s.baseURL+"/zones/"+zoneID+"/dns_records/usage", nil)
 	if err != nil {
 		return 0, 0, "", newError(op, "failed to build request", err)
 	}
@@ -446,30 +450,17 @@ func (s *LimitsService) dnsUsage(ctx context.Context, zoneID string) (used, limi
 	var env struct {
 		Success bool `json:"success"`
 		Result  struct {
-			Used        *uint64 `json:"used"`
-			RecordsUsed *uint64 `json:"records_used"`
-			Quota       *uint64 `json:"quota"`
-			MaxRecords  *uint64 `json:"max_records"`
+			RecordUsage *uint64 `json:"record_usage"`
+			RecordQuota *uint64 `json:"record_quota"`
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(body, &env); err != nil || !env.Success {
 		return 0, 0, "", newError(op, fmt.Sprintf("dns usage unavailable (HTTP %d)", resp.StatusCode), err)
 	}
-	r := env.Result
-	switch {
-	case r.Used != nil && (r.Quota != nil || r.MaxRecords != nil):
-		used = *r.Used
-	case r.RecordsUsed != nil && (r.Quota != nil || r.MaxRecords != nil):
-		used = *r.RecordsUsed
-	default:
+	if env.Result.RecordUsage == nil || env.Result.RecordQuota == nil {
 		return 0, 0, "", newError(op, "dns usage response missing fields", nil)
 	}
-	if r.Quota != nil {
-		limit = *r.Quota
-	} else {
-		limit = *r.MaxRecords
-	}
-	return used, limit, "live-api", nil
+	return *env.Result.RecordUsage, *env.Result.RecordQuota, "live-api", nil
 }
 
 // dnsUsageFallback resolves the static per-plan limit when the live endpoint

@@ -2212,7 +2212,7 @@ cosmoflare limits --plan free --json     # force a Workers plan tier, JSON outpu
 | `workers.daily_requests` | Workers analytics over today (UTC) | 100,000 on the free plan / unlimited on paid (static) |
 | `r2.buckets` | R2 `ListBuckets()` count | 1,000,000 (static, plan-independent) |
 | `r2.custom_domains_per_bucket` | one API call — row appears only with `--bucket` | 100 (static) |
-| `dns.records` (per zone) | live quota API `GET /zones/{zone_id}/dns/usage` | API-reported (authoritative, no static join) |
+| `dns.records` (per zone) | live quota API `GET /zones/{zone_id}/dns_records/usage` (requires DNS Read) | API-reported (authoritative, no static join) |
 | `zones.count` | zone list count | informational — no documented account cap |
 
 `workers.daily_requests` is emitted on every plan — on paid it shows usage against an unlimited limit (no percent). `dns.records` costs one API call per zone.

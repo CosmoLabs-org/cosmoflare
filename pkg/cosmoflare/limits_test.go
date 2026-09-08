@@ -181,11 +181,11 @@ func TestResolveWorkersPlanInvalidValues(t *testing.T) {
 
 func TestDNSUsageLive(t *testing.T) {
 	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/zones/z1/dns/usage" {
+		if r.URL.Path != "/zones/z1/dns_records/usage" {
 			http.NotFound(w, r)
 			return
 		}
-		fmt.Fprint(w, `{"success": true, "result": {"used": 180, "quota": 200}}`)
+		fmt.Fprint(w, `{"success": true, "result": {"record_usage": 180, "record_quota": 200}}`)
 	})
 	used, limit, source, err := s.dnsUsage(context.Background(), "z1")
 	if err != nil {
@@ -196,16 +196,16 @@ func TestDNSUsageLive(t *testing.T) {
 	}
 }
 
-func TestDNSUsageAlternateFieldNames(t *testing.T) {
+// TestDNSUsageNullQuota pins the documented null-record_quota case: an
+// account-level quota applies, so no per-zone limit is reportable and the
+// caller must fall back rather than treat null as zero.
+func TestDNSUsageNullQuota(t *testing.T) {
 	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"success": true, "result": {"records_used": 10, "max_records": 3500}}`)
+		fmt.Fprint(w, `{"success": true, "result": {"record_usage": 5, "record_quota": null}}`)
 	})
-	used, limit, source, err := s.dnsUsage(context.Background(), "z1")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if used != 10 || limit != 3500 || source != "live-api" {
-		t.Fatalf("dnsUsage = (%d, %d, %q), want (10, 3500, live-api)", used, limit, source)
+	_, _, _, err := s.dnsUsage(context.Background(), "z1")
+	if err == nil {
+		t.Fatal("null record_quota must yield an error so the caller falls back")
 	}
 }
 
@@ -317,9 +317,9 @@ func TestSnapshotHappyPath(t *testing.T) {
 		}}),
 		WithLimitsAnalytics(fakeWorkersAnalytics{sum: []WorkersSummary{{Requests: 42000}}}),
 	)
-	// DNS usage live endpoint serves 180/200.
+	// DNS usage live endpoint serves 180/200 (pinned shape).
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"success": true, "result": {"used": 180, "quota": 200}}`)
+		fmt.Fprint(w, `{"success": true, "result": {"record_usage": 180, "record_quota": 200}}`)
 	}))
 	t.Cleanup(srv.Close)
 	s.baseURL = srv.URL
