@@ -1,7 +1,7 @@
 ---
 title: 'Quota / Plan-Limit View — `cosmoflare limits`'
 created: "2026-09-09T00:51:09+04:00"
-status: COMPLETED
+status: planned
 tags: [brainstorm, limits, control-plane, road-090]
 roadmap: ROAD-090
 origin_prompt: docs/prompts/2026-09-08-post-v0.22.0-control-plane.md
@@ -33,7 +33,7 @@ Cloudflare exposes limits in three disjoint ways. The feature joins all three:
    - Workers Free/Paid: https://developers.cloudflare.com/workers/platform/limits/
    - R2 account/bucket/object limits: https://developers.cloudflare.com/r2/platform/limits/
 3. **Live quota APIs** — rare endpoints reporting usage AND quota together:
-   - DNS records per zone: https://developers.cloudflare.com/dns/manage-dns-records/ (see "DNS records quota"; API at `/api/resources/dns/subresources/usage/` — zone and account variants)
+   - DNS records per zone: https://developers.cloudflare.com/dns/manage-dns-records/ (see "DNS records quota"; documented in the API portal under dns → usage, zone and account variants; REST path pinned in the plan as `GET /zones/{zone_id}/dns/usage`)
    - (Out of scope v1: custom hostnames `GET /zones/{id}/custom_hostnames/quota`)
 
 ### Static limit tables (verbatim values, the spec for the join)
@@ -60,7 +60,7 @@ Cloudflare exposes limits in three disjoint ways. The feature joins all three:
 Free zones created before 2024-09-01: 1,000; Free zones created on/after: 200; Pro: 3,500; Business: 3,500; Enterprise: account-level quota (1,000,000 default).
 
 **GraphQL Analytics settings node** (deferred from v1, documented for the follow-up):
-`viewer { accounts(filter: {accountTag: $accountTag}) { settings { <dataset> { enabled availableFields maxDuration maxNumberOfFields maxPageSize notOlderThan } } } }` — returns per-dataset availability, field whitelist, window width, lookback depth, page size. Plan-gated; must be read at runtime, never hardcoded. Source: /analytics/graphql-api/features/discovery/settings/.
+`viewer { accounts(filter: {accountTag: $accountTag}) { settings { <dataset> { enabled availableFields maxDuration maxNumberOfFields maxPageSize notOlderThan } } } }` — returns per-dataset availability, field whitelist, window width, lookback depth, page size. Plan-gated; must be read at runtime, never hardcoded. Source: https://developers.cloudflare.com/analytics/graphql-api/features/discovery/settings/.
 
 ## Decisions (Q&A with user, 2026-09-09)
 
@@ -83,9 +83,9 @@ Free zones created before 2024-09-01: 1,000; Free zones created on/after: 200; P
 | `r2.buckets` | R2 `ListBuckets()` count | 1,000,000 (static, plan-independent) |
 | `r2.custom_domains_per_bucket` | only with `--bucket X` (one API call) | 100 (static) |
 | `dns.records` (per zone) | **live quota API** `GET /zones/{id}/dns/usage` | API-reported (authoritative, no static join) |
+| `zones.count` | zone list count | informational (no documented account cap) |
 
 `dns.records` costs one API call per zone. Acceptable for typical zone counts (≤ 25). Accounts with more zones get every row anyway — the calls are read-only and cheap — but the plan documents this cost and the daemon bridge reuses one snapshot per evaluation cycle rather than re-fetching per rule.
-| `zones.count` | zone list count | informational (no documented account cap) |
 
 Deferred: `workers.cron_triggers` (schedules endpoint is per-script → N+1 calls), GraphQL settings-node section, API rate-limit rows (REST 1200/5min, GraphQL 300/5min — informational only).
 
@@ -138,7 +138,7 @@ Every source runs independently. One failed source → one `SourceError` row; th
 
 ### Alert-evaluator feed
 
-The serve alert bridge (`internal/server`, existing `newServeAlertBridge`) gains a limits provider: rule metrics `workers_script_count`, `r2_bucket_count`, `dns_record_count` (zone-scoped via existing rule scoping) map to snapshot rows. Threshold stays a plain percent fed to the existing `AlertService.Evaluate(name, currentValue)` — no new rule type, no evaluator changes.
+The serve alert bridge (`cmd/serve.go`, existing `newServeAlertBridge`) gains a limits provider: rule metrics `workers_script_count`, `r2_bucket_count`, `dns_record_count` (rows carry `Scope` per zone; `AlertRule` has no zone field today) map to snapshot rows. Threshold stays a plain percent fed to the existing `AlertService.Evaluate(name, currentValue)` — no new rule type, but wiring the new metrics requires new `webhook.EvalMetrics` fields and condition cases (plan P-08).
 
 ### Static join as pure function
 
@@ -159,6 +159,8 @@ The serve alert bridge (`internal/server`, existing `newServeAlertBridge`) gains
 ## Open Risk
 
 DNS usage endpoint exact response field names are not shown in the docs excerpt (convention suggests `{used, quota}`-style, cf. custom_hostnames quota `{allocated, used, exceeded, hard_cap}`). Pin them with ONE live curl during implementation (quality-gate step). Fallback if the endpoint is unavailable to the token: per-zone record count via existing DNS list + static per-plan table, `LimitSource: "static-docs"`.
+
+The static limit tables are documented constants captured 2026-09-09 — Cloudflare can retune them. The implementation session spot-checks the four v1 joined values (100/500 scripts, 100k daily requests, 1M buckets, 100 domains/bucket) against the live docs pages once, during the quality gate.
 
 ## Deliverables
 
