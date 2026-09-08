@@ -1554,3 +1554,4 @@
 {"id":"23","subject":"G-05: snapshot assembly","status":"pending","created_at":"2026-09-08T21:04:59Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
 {"id":"19","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
 {"id":"13","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"13","subject":"","status":"completed","completed_at":"2026-09-08T21:11:45Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
