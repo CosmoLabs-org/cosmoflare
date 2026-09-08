@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"context"
 	"io"
+	"time"
 )
 
 type WorkerServicer interface {
@@ -104,6 +105,18 @@ type DoctorServicer interface {
 	CheckNameservers(ctx context.Context, domain string, expected []string) (*NSProbeResult, error)
 	RunDiagnostics(ctx context.Context, domain string, expectedNS []string) (*DiagnosticReport, error)
 }
+
+// BucketDomainServicer manages R2 bucket custom domains.
+type BucketDomainServicer interface {
+	Attach(ctx context.Context, bucket string, req AttachBucketDomainRequest) (*BucketDomain, error)
+	List(ctx context.Context, bucket string) ([]BucketDomain, error)
+	Get(ctx context.Context, bucket, domain string) (*BucketDomain, error)
+	Update(ctx context.Context, bucket, domain string, req UpdateBucketDomainRequest) (*BucketDomain, error)
+	Detach(ctx context.Context, bucket, domain string) error
+	Verify(ctx context.Context, bucket, domain string, timeout time.Duration) (*BucketDomain, error)
+}
+
+var _ BucketDomainServicer = (*BucketDomainService)(nil)
 
 // Compile-time interface satisfaction checks
 var (
