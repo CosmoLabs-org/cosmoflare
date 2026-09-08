@@ -1,9 +1,8 @@
 ---
 id: IDEA-032
-legacy_id: IDEA-MN5GDX5C
 title: Remove tracked binaries from git history
 created: "2026-03-25T03:57:38.064826+01:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 17
@@ -11,8 +10,13 @@ origin:
 tags:
     - audit
     - hygiene
+resolution:
+    reason: implemented
+    date: "2026-09-08T15:08:11.963911+04:00"
+    note: History purge removed tracked binaries from history
 ---
 
+# Remove tracked binaries from git history
 
 # Remove tracked binaries from git history
 

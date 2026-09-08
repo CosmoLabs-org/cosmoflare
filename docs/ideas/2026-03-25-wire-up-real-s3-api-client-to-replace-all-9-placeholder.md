@@ -1,9 +1,8 @@
 ---
 id: IDEA-029
-legacy_id: IDEA-MN5GDQXL
 title: Wire up real S3 API client to replace all 9 placeholder methods
 created: "2026-03-25T03:57:30.009174+01:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 17
@@ -11,8 +10,13 @@ origin:
 tags:
     - audit
     - critical
+resolution:
+    reason: implemented
+    date: "2026-09-08T15:08:11.678998+04:00"
+    note: AWS SDK v2 S3 client is live (client.go initS3)
 ---
 
+# Wire up real S3 API client to replace all 9 placeholder methods
 
 # Wire up real S3 API client to replace all 9 placeholder methods
 

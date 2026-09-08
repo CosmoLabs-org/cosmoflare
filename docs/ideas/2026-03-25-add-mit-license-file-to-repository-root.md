@@ -1,9 +1,8 @@
 ---
 id: IDEA-031
-legacy_id: IDEA-MN5GDV37
 title: Add MIT LICENSE file to repository root
 created: "2026-03-25T03:57:35.395226+01:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 17
@@ -11,8 +10,13 @@ origin:
 tags:
     - audit
     - legal
+resolution:
+    reason: implemented
+    date: "2026-09-08T15:08:11.597791+04:00"
+    note: LICENSE ships MIT (CLAUDE.md license field)
 ---
 
+# Add MIT LICENSE file to repository root
 
 # Add MIT LICENSE file to repository root
 
