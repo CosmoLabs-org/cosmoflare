@@ -2,6 +2,9 @@ package cosmoflare
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -94,5 +97,83 @@ func TestNewLimitsServiceValidation(t *testing.T) {
 		t.Fatal("empty token must fail validation")
 	} else if !strings.Contains(err.Error(), "API token is required") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func testLimitServer(t *testing.T, handler http.HandlerFunc) (*LimitsService, *httptest.Server) {
+	t.Helper()
+	srv := httptest.NewServer(handler)
+	t.Cleanup(srv.Close)
+	return NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL)), srv
+}
+
+func TestResolveWorkersPlanAuto(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/accounts/acct/subscriptions" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprint(w, `{"success": true, "result": [
+			{"product": {"name": "cdn"}, "rate_plan": {"id": "cdn_pro"}},
+			{"product": {"name": "workers"}, "rate_plan": {"id": "workers_paid", "public_name": "Workers Paid"}}
+		]}`)
+	})
+	plan, source, err := s.resolveWorkersPlan(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if plan != "paid" || source != "auto" {
+		t.Fatalf("resolveWorkersPlan = (%q, %q), want (paid, auto)", plan, source)
+	}
+}
+
+func TestResolveWorkersPlanAutoFree(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"success": true, "result": [
+			{"product": {"name": "workers"}, "rate_plan": {"id": "workers_free"}}
+		]}`)
+	})
+	plan, source, err := s.resolveWorkersPlan(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if plan != "free" || source != "auto" {
+		t.Fatalf("resolveWorkersPlan = (%q, %q), want (free, auto)", plan, source)
+	}
+}
+
+func TestResolveWorkersPlanFallbackChain(t *testing.T) {
+	// Subscriptions endpoint 403s (scoped token) → config → flag ordering.
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"success": false}`)
+	})
+
+	plan, source, err := s.resolveWorkersPlan(context.Background())
+	if err != nil || plan != "unknown" || source != "unknown" {
+		t.Fatalf("no fallbacks: got (%q, %q, %v), want (unknown, unknown, nil)", plan, source, err)
+	}
+
+	s.configPlan = "paid"
+	plan, source, err = s.resolveWorkersPlan(context.Background())
+	if err != nil || plan != "paid" || source != "config" {
+		t.Fatalf("config fallback: got (%q, %q, %v), want (paid, config, nil)", plan, source, err)
+	}
+
+	s.flagPlan = "free"
+	plan, source, err = s.resolveWorkersPlan(context.Background())
+	if err != nil || plan != "free" || source != "flag" {
+		t.Fatalf("flag outranks config: got (%q, %q, %v), want (free, flag, nil)", plan, source, err)
+	}
+}
+
+func TestResolveWorkersPlanInvalidValues(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	})
+	s.configPlan = "enterprise" // not a Workers tier — must be rejected, not trusted
+	plan, source, err := s.resolveWorkersPlan(context.Background())
+	if err != nil || plan != "unknown" || source != "unknown" {
+		t.Fatalf("invalid config plan: got (%q, %q, %v), want (unknown, unknown, nil)", plan, source, err)
 	}
 }

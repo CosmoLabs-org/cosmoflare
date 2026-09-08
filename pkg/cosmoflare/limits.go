@@ -2,7 +2,11 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -60,13 +64,13 @@ func dnsRecordsStaticLimit(zonePlan string, createdOn time.Time) (limit uint64, 
 
 // LimitRow is one usage-vs-limit observation.
 type LimitRow struct {
-	Resource    string  `json:"resource"`              // "workers.scripts", "dns.records", ...
-	Scope       string  `json:"scope,omitempty"`       // "" account-wide, or bucket/zone name
+	Resource    string  `json:"resource"`        // "workers.scripts", "dns.records", ...
+	Scope       string  `json:"scope,omitempty"` // "" account-wide, or bucket/zone name
 	Used        uint64  `json:"used"`
-	Limit       uint64  `json:"limit"`                 // 0 = unlimited
-	Percent     float64 `json:"percent,omitempty"`     // 0 when Limit == 0 or unknown
-	PlanTier    string  `json:"plan_tier,omitempty"`   // "free" | "paid" | "unknown" | "" when not plan-dependent
-	LimitSource string  `json:"limit_source"`          // "static-docs" | "live-api" | "unknown"
+	Limit       uint64  `json:"limit"`               // 0 = unlimited
+	Percent     float64 `json:"percent,omitempty"`   // 0 when Limit == 0 or unknown
+	PlanTier    string  `json:"plan_tier,omitempty"` // "free" | "paid" | "unknown" | "" when not plan-dependent
+	LimitSource string  `json:"limit_source"`        // "static-docs" | "live-api" | "unknown"
 }
 
 // SourceError records one failed producer without failing the snapshot.
@@ -203,4 +207,95 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 		return nil, err
 	}
 	return &LimitsSnapshot{WorkersPlan: "unknown", PlanSource: "unknown"}, nil
+}
+
+// subscription wraps the parts of a /subscriptions result entry we join on.
+type subscription struct {
+	Product struct {
+		Name string `json:"name"`
+	} `json:"product"`
+	RatePlan struct {
+		ID         string `json:"id"`
+		PublicName string `json:"public_name"`
+	} `json:"rate_plan"`
+}
+
+// fetchSubscriptions lists account subscriptions. It requires Billing Read;
+// callers treat any failure as "auto-detection unavailable".
+func (s *LimitsService) fetchSubscriptions(ctx context.Context) ([]subscription, error) {
+	const op = "LimitsSubscriptions"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		s.baseURL+"/accounts/"+s.accountID+"/subscriptions", nil)
+	if err != nil {
+		return nil, newError(op, "failed to build request", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiToken)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return nil, newError(op, "request failed", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, newError(op, "failed to read response body", err)
+	}
+	var env struct {
+		Success bool `json:"success"`
+		Errors  []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+		Result []subscription `json:"result"`
+	}
+	if err := json.Unmarshal(body, &env); err != nil {
+		return nil, newError(op, fmt.Sprintf("unexpected response (HTTP %d)", resp.StatusCode), err)
+	}
+	if !env.Success {
+		msg := "subscriptions unavailable"
+		if len(env.Errors) > 0 {
+			msg = env.Errors[0].Message
+		}
+		return nil, newError(op, msg, nil)
+	}
+	return env.Result, nil
+}
+
+// normalizePlanTier validates a tier string from any source. Only "free" and
+// "paid" are Workers plan tiers; anything else is "unknown".
+func normalizePlanTier(plan string) string {
+	switch strings.ToLower(strings.TrimSpace(plan)) {
+	case "free":
+		return "free"
+	case "paid":
+		return "paid"
+	default:
+		return "unknown"
+	}
+}
+
+// resolveWorkersPlan resolves the Workers plan tier. Order: subscriptions
+// API → config → flag → unknown. A subscriptions failure is silent — the
+// source string records which path decided.
+func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string, err error) {
+	subs, err := s.fetchSubscriptions(ctx)
+	if err == nil {
+		for _, sub := range subs {
+			id := sub.RatePlan.ID
+			if strings.HasPrefix(id, "workers") {
+				if strings.Contains(id, "paid") || strings.Contains(strings.ToLower(sub.RatePlan.PublicName), "paid") {
+					return "paid", "auto", nil
+				}
+				return "free", "auto", nil
+			}
+		}
+		// Subscriptions readable but no workers entry: fall through to config.
+	}
+	if tier := normalizePlanTier(s.flagPlan); tier != "unknown" {
+		return tier, "flag", nil
+	}
+	if tier := normalizePlanTier(s.configPlan); tier != "unknown" {
+		return tier, "config", nil
+	}
+	return "unknown", "unknown", nil
 }
