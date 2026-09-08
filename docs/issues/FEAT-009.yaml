@@ -1,9 +1,11 @@
 id: FEAT-009
 type: feature
 created_at: 2026-09-09T01:00:30.640794+04:00
-updated_at: 2026-09-09T01:00:30.644485+04:00
+updated_at: 2026-09-09T01:00:32.94244+04:00
 source: local
 ulid: 01M21D521MVEESDENGD73284YT
 status: open
+origin:
+    session: 45
 title: Quota/plan-limit view — cosmoflare limits
 description: 'Plan-limit proximity command joining live usage against documented Cloudflare limit tables (Workers scripts/daily requests, R2 buckets + per-bucket domains, per-zone DNS record quotas via live quota API). Partial-failure snapshot semantics; alert-evaluator feed (workers-script-count, r2-bucket-count, dns-record-quota conditions). Design: docs/brainstorming/2026-09-09-quota-limit-view.md. Plan: docs/planning-mode/2026-09-09-quota-limit-view.md. Feeds ROAD-090.'

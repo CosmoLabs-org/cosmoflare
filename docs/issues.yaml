@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-06T19:48:24.149611+04:00
+last_updated: 2026-09-09T01:00:30.643303+04:00
 next_bug_id: 39
-next_feat_id: 9
+next_feat_id: 10
 next_task_id: 5
 next_imp_id: 1
 issues:
@@ -277,6 +277,11 @@ issues:
       status: closed
       title: In-process event bus for real-time notifications (ROAD-080)
       created_at: 2026-06-21T07:57:56.276869-03:00
+    - id: FEAT-009
+      type: feature
+      status: open
+      title: Quota/plan-limit view — cosmoflare limits
+      created_at: 2026-09-09T01:00:30.640794+04:00
     - id: TASK-001
       type: task
       status: closed

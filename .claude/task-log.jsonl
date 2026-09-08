@@ -1503,3 +1503,54 @@
 {"id":"27","subject":"","status":"in_progress","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
 {"id":"27","subject":"","status":"completed","completed_at":"2026-09-08T13:56:21Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
 {"id":"28","subject":"","status":"in_progress","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"29","subject":"","status":"in_progress","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"28","subject":"","status":"completed","completed_at":"2026-09-08T13:58:45Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"29","subject":"","status":"completed","completed_at":"2026-09-08T14:00:04Z","session":"df4230f5-cf4c-4022-b33b-5161f2a4f2e7"}
+{"id":"1","subject":"Triage open FEAT issues in cosmoflare","status":"pending","created_at":"2026-09-08T20:38:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"2","subject":"Brainplan the next important feature","status":"pending","created_at":"2026-09-08T20:38:49Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"1","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"1","subject":"","status":"completed","completed_at":"2026-09-08T20:40:41Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"2","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"3","subject":"Brainstorm: explore project context","status":"pending","created_at":"2026-09-08T20:41:16Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"4","subject":"Brainstorm: clarifying questions","status":"pending","created_at":"2026-09-08T20:41:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"5","subject":"Brainstorm: propose approaches","status":"pending","created_at":"2026-09-08T20:41:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"6","subject":"Brainstorm: present design","status":"pending","created_at":"2026-09-08T20:41:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"7","subject":"Brainstorm: write design doc + self-review","status":"pending","created_at":"2026-09-08T20:41:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"3","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"4","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"3","subject":"","status":"completed","completed_at":"2026-09-08T20:43:50Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"4","subject":"","status":"completed","completed_at":"2026-09-08T20:49:23Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"5","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"7","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"6","subject":"","status":"completed","completed_at":"2026-09-08T20:51:09Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"5","subject":"","status":"completed","completed_at":"2026-09-08T20:51:09Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"7","subject":"","status":"completed","completed_at":"2026-09-08T20:52:06Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"8","subject":"Brainplan Phase 2: implementation plan","status":"pending","created_at":"2026-09-08T20:52:06Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"9","subject":"Brainplan Phase 3-4: prompt, manifest, links","status":"pending","created_at":"2026-09-08T20:52:06Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"8","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"10","subject":"Review brainstorm: quota-limit-view","status":"pending","created_at":"2026-09-08T20:56:41Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"11","subject":"Review plan: quota-limit-view","status":"pending","created_at":"2026-09-08T20:56:42Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"10","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"11","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-09-08T21:01:40Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"9","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"11","subject":"","status":"completed","completed_at":"2026-09-08T21:03:23Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"8","subject":"","status":"completed","completed_at":"2026-09-08T21:03:23Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-09-08T21:04:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"2","subject":"","status":"completed","completed_at":"2026-09-08T21:04:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"12","subject":"G-01..G-03: limits library core (tables, types, resolution)","status":"pending","created_at":"2026-09-08T21:04:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"13","subject":"G-06: config workers_plan field","status":"pending","created_at":"2026-09-08T21:04:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"14","subject":"G-04..G-05: DNS usage + snapshot assembly","status":"pending","created_at":"2026-09-08T21:04:49Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"15","subject":"G-07: cmd/limits.go CLI","status":"pending","created_at":"2026-09-08T21:04:49Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"16","subject":"G-08: alert-evaluator feed","status":"pending","created_at":"2026-09-08T21:04:50Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"17","subject":"G-09: documentation","status":"pending","created_at":"2026-09-08T21:04:50Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"18","subject":"Quality gates, merges, I4/I5 verification","status":"pending","created_at":"2026-09-08T21:04:51Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"12","subject":"","status":"deleted","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"14","subject":"","status":"deleted","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"19","subject":"G-01: static limit tables + limitFor","status":"pending","created_at":"2026-09-08T21:04:57Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"20","subject":"G-02: LimitsService types + constructor","status":"pending","created_at":"2026-09-08T21:04:58Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"21","subject":"G-03: workers plan resolution","status":"pending","created_at":"2026-09-08T21:04:59Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"22","subject":"G-04: DNS usage endpoint + LegacyID","status":"pending","created_at":"2026-09-08T21:04:59Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"23","subject":"G-05: snapshot assembly","status":"pending","created_at":"2026-09-08T21:04:59Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"19","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"13","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
