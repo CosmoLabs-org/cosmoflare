@@ -6,7 +6,10 @@ version: pending
 entries:
     added: []
     fixed: []
-    changed: []
+    changed:
+        - description: 'internal: the three REST services share one transport client (~200 duplicated lines consolidated), metrics --json collects analytics concurrently, zone auto-resolution moved into the library'
+          source: manual
+          date: 2026-09-08T17:51:40.53041+04:00
     deprecated: []
     removed: []
     security: []
