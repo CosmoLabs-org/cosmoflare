@@ -118,8 +118,8 @@ type LimitsSnapshot struct {
 ### Plan-tier resolution order
 
 1. `GET /accounts/{id}/subscriptions` (needs Billing Read; scoped tokens often lack it)
-2. `workers_plan: free|paid` field in `.cosmoflare.yaml`
-3. `--plan free|paid` flag
+2. `--plan free|paid` flag — an explicit one-shot override outranks the file (standard CLI precedence)
+3. `workers_plan: free|paid` field in `.cosmoflare.yaml`
 4. `unknown` → Workers plan-dependent rows show used-only, no percent
 
 R2 and DNS rows never depend on plan resolution.
@@ -138,7 +138,7 @@ Every source runs independently. One failed source → one `SourceError` row; th
 
 ### Alert-evaluator feed
 
-The serve alert bridge (`cmd/serve.go`, existing `newServeAlertBridge`) gains a limits provider: rule metrics `workers_script_count`, `r2_bucket_count`, `dns_record_count` (rows carry `Scope` per zone; `AlertRule` has no zone field today) map to snapshot rows. Threshold stays a plain percent fed to the existing `AlertService.Evaluate(name, currentValue)` — no new rule type, but wiring the new metrics requires new `webhook.EvalMetrics` fields and condition cases (plan P-08).
+The serve alert bridge (`cmd/serve.go`, existing `newServeAlertBridge`) gains a limits provider: rule conditions `workers-script-count`, `r2-bucket-count`, `dns-record-quota` map to snapshot rows — dash-case to match the existing condition vocabulary (`error-rate`, `storage-limit`). `dns-record-quota` carries the maximum percent across per-zone rows (rows carry `Scope` per zone; `AlertRule` has no zone field today). Threshold stays a plain value fed to the existing `AlertService.Evaluate(name, currentValue)` — no new rule type, but wiring the new metrics requires new `webhook.EvalMetrics` fields and condition cases (plan P-08).
 
 ### Static join as pure function
 

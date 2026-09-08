@@ -23,7 +23,7 @@ deliverables:
   - id: P-08
     title: "Alert-evaluator feed — EvalMetrics fields, conditions, serve wiring"
   - id: P-09
-    title: "Documentation — docs/USAGE.md, READMEs/commands"
+    title: "Documentation — docs/USAGE.md limits section"
 ---
 
 # Quota / Plan-Limit View — `cosmoflare limits` Implementation Plan
@@ -40,11 +40,13 @@ deliverables:
 
 **Test commands** (repo root):
 ```bash
-go test ./pkg/cosmoflare/ -run TestLimits -v      # library
-go test ./cmd/ -run TestLimits -v                 # CLI
-go test ./internal/webhook/ -run TestCollectLimit -v
+go test ./pkg/cosmoflare/ -run 'TestLimitFor|TestDNSRecordsStaticLimit|TestNewLimitsService|TestResolveWorkersPlan|TestDNSUsage|TestSnapshot' -v  # library
+go test ./cmd/ -run 'TestLimits|TestSortRows' -v  # CLI
+go test ./internal/webhook/ -run 'TestConditionValueLimit|TestCollectLimit' -v
 go build ./... && go vet ./...
 ```
+
+Note: no library test name contains the substring `TestLimits` — the library tests are `TestLimitFor`, `TestSnapshot`, etc., so `-run TestLimits` would match zero tests and report a false green.
 
 ---
 
@@ -433,7 +435,7 @@ git commit -m "feat(limits): snapshot types, consumer interfaces, service constr
 - Modify: `pkg/cosmoflare/limits.go`
 - Modify: `pkg/cosmoflare/limits_test.go`
 
-Resolution order (design decision 2): subscriptions API → `workers_plan` config → `--plan` flag → unknown. A subscriptions 403/404 (scoped token without Billing Read) is a fallback, never an error surfaced to the user.
+Resolution order: subscriptions API → `--plan` flag → `workers_plan` config → unknown. This inverts brainstorm design decision 2, which listed config before flag — as ordered there, a config file would permanently outrank the flag and `--plan` could never override anything. The code and tests below implement flag-over-config deliberately. A subscriptions 403/404 (scoped token without Billing Read) is a fallback, never an error surfaced to the user.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -640,7 +642,7 @@ git commit -m "feat(limits): workers plan resolution with subscriptions API and 
 ### Task 4: DNS usage endpoint + ZonePlan.LegacyID extension
 
 **Files:**
-- Modify: `pkg/cosmoflare/zone.go:26-29` (ZonePlan struct) and `pkg/cosmoflare/zone.go:188` (cfZoneToZone mapping)
+- Modify: `pkg/cosmoflare/zone.go:26-30` (ZonePlan struct) and `pkg/cosmoflare/zone.go:188` (cfZoneToZone mapping)
 - Modify: `pkg/cosmoflare/limits.go`
 - Modify: `pkg/cosmoflare/limits_test.go`
 
@@ -1182,7 +1184,7 @@ Append to `pkg/cosmoflare/config_test.go` (follow that file's existing temp-dir 
 ```go
 func TestProjectConfigWorkersPlan(t *testing.T) {
 	dir := t.TempDir()
- yamlBody := "workers_plan: paid\n"
+	yamlBody := "workers_plan: paid\n"
 	if err := os.WriteFile(filepath.Join(dir, ".cosmoflare.yaml"), []byte(yamlBody), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
@@ -1234,7 +1236,7 @@ git commit -m "feat(config): workers_plan project config field for limit tier fa
 
 - [ ] **Step 1: Write the failing test**
 
-Create `cmd/limits_test.go` following the patterns in `cmd/analytics_test.go` and `cmd/status_test.go` (root command execution with flag overrides):
+Create `cmd/limits_test.go` following the patterns in `cmd/analytics_test.go` and `cmd/status_test.go` (command registration and metadata assertions):
 
 ```go
 package cmd
@@ -1313,8 +1315,8 @@ plan tables (workers limits, r2 limits) or the live DNS quota API.
 
 Workers plan tier resolution order:
   1. Subscriptions API (auto — needs Billing Read)
-  2. workers_plan in .cosmoflare.yaml (config)
-  3. --plan flag (free|paid)
+  2. --plan flag (free|paid)
+  3. workers_plan in .cosmoflare.yaml (config)
   4. unknown — plan-dependent rows show usage without a percent
 
 Every source is independent: a failing source prints a warning after the
@@ -1484,22 +1486,69 @@ func TestCollectLimitMetrics(t *testing.T) {
 	if m.WorkersScriptCount != 42 || m.R2BucketCount != 3 {
 		t.Fatalf("metrics = %+v, want 42 scripts / 3 buckets", m)
 	}
+
+	// All sources failing must error — zero rows + all sources errored is the
+	// snapshot's hard-failure condition.
+	failing := cosmoflare.NewLimitsService("acct", "tok",
+		cosmoflare.WithLimitsBaseURL(srv.URL),
+		cosmoflare.WithLimitsWorkers(fakeWorkers{err: errors.New("x")}),
+		cosmoflare.WithLimitsR2(fakeBuckets{err: errors.New("x")}),
+		cosmoflare.WithLimitsZones(fakeZones{err: errors.New("x")}),
+		cosmoflare.WithLimitsAnalytics(fakeAnalytics{err: errors.New("x")}),
+	)
+	if err := CollectLimitMetrics(context.Background(), failing, &m); err == nil {
+		t.Fatal("all limit sources failing must return an error")
+	}
 }
 ```
 
 Define the tiny fakes in the same test file (or reuse existing ones if the file already has compatible fakes):
 
 ```go
-type fakeWorkers struct{ n int }
+type fakeWorkers struct {
+	n   int
+	err error
+}
+
 func (f fakeWorkers) List(ctx context.Context) ([]*cosmoflare.Worker, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
 	return make([]*cosmoflare.Worker, f.n), nil
 }
 
-type fakeBuckets struct{ n int }
+type fakeBuckets struct {
+	n   int
+	err error
+}
+
 func (f fakeBuckets) ListBuckets(ctx context.Context) ([]*cosmoflare.Bucket, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
 	return make([]*cosmoflare.Bucket, f.n), nil
 }
+
+type fakeZones struct{ err error }
+
+func (f fakeZones) List(ctx context.Context) ([]*cosmoflare.Zone, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return nil, nil
+}
+
+type fakeAnalytics struct{ err error }
+
+func (f fakeAnalytics) Workers(ctx context.Context, w cosmoflare.AnalyticsWindow) ([]cosmoflare.WorkersSummary, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return nil, nil
+}
 ```
+
+Add `"fmt"` and `"errors"` to `evaluator_test.go` imports — the handler closures use `fmt.Fprint` and the all-fail case uses `errors.New`, and the file currently imports `context`, `net/http`, `net/http/httptest`, and `cosmoflare` but neither.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -1599,7 +1648,8 @@ git commit -m "feat(alerts): limit-proximity metrics feed the evaluator (workers
 
 **Files:**
 - Modify: `docs/USAGE.md` (new `cosmoflare limits` section)
-- Create: `READMEs/commands/limits.md`
+
+cosmoflare has no `READMEs/` tree — `docs/USAGE.md` is the single command reference, so this task extends it only and does not create a new documentation convention.
 
 - [ ] **Step 1: Add the USAGE.md section**
 
@@ -1616,20 +1666,18 @@ Find the existing command sections in `docs/USAGE.md` (agent-reference format: s
 }
 ```
 
-- [ ] **Step 2: Create `READMEs/commands/limits.md`**
+Include the alert-condition names this command feeds (`workers-script-count`, `r2-bucket-count`, `dns-record-quota` with threshold semantics) so agents wiring alert rules find them from the usage doc.
 
-Follow the format of an existing command README in `READMEs/commands/` (check one first — `ls READMEs/commands/`). Content: one-paragraph summary, command examples, alert-condition names this command feeds (`workers-script-count`, `r2-bucket-count`, `dns-record-quota` with threshold semantics).
-
-- [ ] **Step 3: Verify docs integrity**
+- [ ] **Step 2: Verify docs integrity**
 
 Run: `go build ./... && go vet ./...`
 Expected: clean (docs-only change; build guards accidental edits).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add docs/USAGE.md READMEs/commands/limits.md
-git commit -m "docs(limits): usage guide and command README for cosmoflare limits"
+git add docs/USAGE.md
+git commit -m "docs(limits): usage guide for cosmoflare limits"
 ```
 
 ---
