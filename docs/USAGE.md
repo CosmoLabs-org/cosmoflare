@@ -2194,6 +2194,77 @@ cosmoflare alerts history --json
 | `--limit` | Maximum number of entries (most recent first) |
 | `--since` | Show entries after this time (RFC3339 format) |
 
+## cosmoflare limits
+
+Show how close the account is to its Cloudflare plan limits. `cosmoflare limits` joins live usage counts (Workers scripts, R2 buckets, zones, per-zone DNS records) against documented Cloudflare limit tables and the live DNS quota API, and prints one row per resource sorted by proximity to the limit (highest `USED%` first).
+
+```bash
+cosmoflare limits                        # snapshot for the whole account
+cosmoflare limits --bucket=my-bucket     # add per-bucket custom-domain rows
+cosmoflare limits --plan free --json     # force a Workers plan tier, JSON output
+```
+
+### Rows
+
+| Row resource | Used (live source) | Limit (source) |
+|--------------|--------------------|----------------|
+| `workers.scripts` | `WorkerService.List()` count | 100 / 500 — static join by Workers plan tier |
+| `workers.daily_requests` | Workers analytics over today (UTC) | 100,000 on the free plan / unlimited on paid (static) |
+| `r2.buckets` | R2 `ListBuckets()` count | 1,000,000 (static, plan-independent) |
+| `r2.custom_domains_per_bucket` | one API call — row appears only with `--bucket` | 100 (static) |
+| `dns.records` (per zone) | live quota API `GET /zones/{zone_id}/dns/usage` | API-reported (authoritative, no static join) |
+| `zones.count` | zone list count | informational — no documented account cap |
+
+`workers.daily_requests` is emitted only on the free plan (it is unlimited on paid). `dns.records` costs one API call per zone.
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--bucket` | — | Include per-bucket rows for this bucket (custom domains) |
+| `--plan` | auto | Workers plan tier override: `free` \| `paid` |
+| `--json` | `false` | Output the full `LimitsSnapshot` as JSON |
+
+### Workers plan resolution order
+
+Plan-dependent rows (`workers.scripts`, `workers.daily_requests`) need the Workers plan tier, resolved in this order:
+
+1. Subscriptions API (auto — requires Billing Read on the token)
+2. `--plan` flag (`free` \| `paid`)
+3. `workers_plan` in `.cosmoflare.yaml` (config)
+4. `unknown` — plan-dependent rows show usage without a percent
+
+### Partial-failure semantics
+
+Every source is fetched independently: a failing source (bad scope, missing permission, API error) prints a warning after the table and the rest of the snapshot is unaffected — failed sources are never silently dropped or fabricated. The exit code is non-zero only when **every** source fails.
+
+### JSON output (`--json`)
+
+```json
+{
+  "rows": [
+    {"resource": "dns.records", "scope": "example.com", "used": 180, "limit": 200, "percent": 90.0, "limit_source": "live-api"},
+    {"resource": "workers.scripts", "used": 80, "limit": 500, "percent": 16.0, "plan_tier": "paid", "limit_source": "static-docs"}
+  ],
+  "workers_plan": "paid",
+  "plan_source": "auto"
+}
+```
+
+Field notes: `limit` `0` means unlimited, `percent` is omitted when the limit is unknown, `limit_source` is one of `static-docs` / `live-api` / `unknown`, `plan_source` is one of `auto` / `config` / `flag` / `unknown`, and a `sources` array lists per-source errors when any fetch failed.
+
+### Alert conditions fed by this command
+
+The `cosmoflare serve` alert evaluator collects one limits snapshot per evaluation cycle. These alert conditions are fed from it:
+
+| Condition | Metric | Threshold semantics |
+|-----------|--------|---------------------|
+| `workers-script-count` | live Workers script count (`workers.scripts` used) | absolute count of scripts |
+| `r2-bucket-count` | live R2 bucket count (`r2.buckets` used) | absolute count of buckets |
+| `dns-record-quota` | maximum `percent` across per-zone `dns.records` rows | percent of DNS record quota (0–100); skipped when no rows report a percent |
+
+A limits-collection failure logs a warning and never blanks the analytics-based rules.
+
 ## Library Usage (Workers and KV)
 
 ### Workers
