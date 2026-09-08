@@ -32,6 +32,8 @@ implemented_commits:
     - {sha: '7159245a1d28', covers: [P-03]}
     - {sha: '1bf625352bb7', covers: [P-06]}
     - {sha: '5e967efb6026', covers: [P-02]}
+    - {sha: '58f346648bfe', covers: [P-04]}
+    - {sha: '8b619673d329', covers: [P-05]}
 ---
 # Cosmoflare — limits: quota proximity view + alert feed
 
