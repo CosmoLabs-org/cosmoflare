@@ -196,6 +196,16 @@ func (a *serveAdapter) resolveProfile(name string) (*config.Profile, error) {
 	return a.cm.GetProfile(name)
 }
 
+// CurrentProfileName returns the profile the daemon serves by default —
+// the name resolveProfile("") resolves to, or "" when none is configured.
+func (a *serveAdapter) CurrentProfileName() string {
+	p, err := a.cm.GetCurrent()
+	if err != nil || p == nil {
+		return ""
+	}
+	return p.Name
+}
+
 // Accounts returns the local config profiles (NOT a Cloudflare API call).
 func (a *serveAdapter) Accounts(_ context.Context) (any, error) {
 	names := a.cm.ListProfiles()
