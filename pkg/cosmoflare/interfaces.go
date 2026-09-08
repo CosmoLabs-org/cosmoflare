@@ -126,6 +126,16 @@ type BucketLifecycleServicer interface {
 
 var _ BucketLifecycleServicer = (*BucketLifecycleService)(nil)
 
+// BucketNotificationServicer manages R2 event notification rules.
+type BucketNotificationServicer interface {
+	List(ctx context.Context, bucket string) ([]QueueNotification, error)
+	Get(ctx context.Context, bucket, queueID string) (*QueueNotification, error)
+	Set(ctx context.Context, bucket, queueID string, rules []NotificationRule) error
+	Delete(ctx context.Context, bucket, queueID string, ruleIDs []string) error
+}
+
+var _ BucketNotificationServicer = (*BucketNotificationService)(nil)
+
 // AnalyticsServicer queries Cloudflare GraphQL Analytics.
 type AnalyticsServicer interface {
 	ZoneHTTP(ctx context.Context, zoneID string, w AnalyticsWindow) (*ZoneHTTPSummary, error)
