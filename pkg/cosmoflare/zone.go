@@ -25,8 +25,9 @@ type Zone struct {
 
 // ZonePlan contains the plan information for a zone.
 type ZonePlan struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	LegacyID string `json:"legacy_id,omitempty"` // "free" | "pro" | "business" | "enterprise"
+	Name     string `json:"name"`
 }
 
 // ZoneSetting contains a single zone setting entry.
@@ -185,7 +186,7 @@ func cfZoneToZone(z cloudflare.Zone) *Zone {
 		Paused:      z.Paused,
 		NameServers: z.NameServers,
 		OriginalNS:  z.OriginalNS,
-		Plan:        ZonePlan{ID: z.Plan.ID, Name: z.Plan.Name},
+		Plan:        ZonePlan{ID: z.Plan.ID, LegacyID: z.Plan.LegacyID, Name: z.Plan.Name},
 		CreatedOn:   z.CreatedOn,
 		ModifiedOn:  z.ModifiedOn,
 	}

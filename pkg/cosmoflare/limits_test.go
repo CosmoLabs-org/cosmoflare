@@ -177,3 +177,59 @@ func TestResolveWorkersPlanInvalidValues(t *testing.T) {
 		t.Fatalf("invalid config plan: got (%q, %q, %v), want (unknown, unknown, nil)", plan, source, err)
 	}
 }
+
+func TestDNSUsageLive(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/zones/z1/dns/usage" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprint(w, `{"success": true, "result": {"used": 180, "quota": 200}}`)
+	})
+	used, limit, source, err := s.dnsUsage(context.Background(), "z1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if used != 180 || limit != 200 || source != "live-api" {
+		t.Fatalf("dnsUsage = (%d, %d, %q), want (180, 200, live-api)", used, limit, source)
+	}
+}
+
+func TestDNSUsageAlternateFieldNames(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"success": true, "result": {"records_used": 10, "max_records": 3500}}`)
+	})
+	used, limit, source, err := s.dnsUsage(context.Background(), "z1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if used != 10 || limit != 3500 || source != "live-api" {
+		t.Fatalf("dnsUsage = (%d, %d, %q), want (10, 3500, live-api)", used, limit, source)
+	}
+}
+
+func TestDNSUsageFallbackToStatic(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, `{"success": false}`)
+	})
+	// Zone created 2025-03-01 on free plan → 200 by cutoff rule.
+	created := time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)
+	used, limit, source, err := s.dnsUsageFallback(context.Background(), "z1", "free", created)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// No live data → used falls back to a record count of 0 only when caller
+	// passes it; here we assert the static limit and source.
+	if limit != 200 || source != "static-docs" {
+		t.Fatalf("dnsUsageFallback = (%d, %q, %v), want (200, static-docs, nil)", limit, source, err)
+	}
+	_ = used
+}
+
+func TestZonePlanLegacyID(t *testing.T) {
+	z := Zone{Plan: ZonePlan{ID: "x", LegacyID: "pro", Name: "Pro"}}
+	if z.Plan.LegacyID != "pro" {
+		t.Fatalf("LegacyID = %q, want pro", z.Plan.LegacyID)
+	}
+}

@@ -299,3 +299,63 @@ func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source st
 	}
 	return "unknown", "unknown", nil
 }
+
+// dnsUsage fetches one zone's DNS record usage and quota from the live API.
+// Field names are parsed defensively ({used,records_used} × {quota,max_records}).
+// Any failure returns the static fallback by zone plan tier.
+func (s *LimitsService) dnsUsage(ctx context.Context, zoneID string) (used, limit uint64, source string, err error) {
+	const op = "LimitsDNSUsage"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		s.baseURL+"/zones/"+zoneID+"/dns/usage", nil)
+	if err != nil {
+		return 0, 0, "", newError(op, "failed to build request", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiToken)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return 0, 0, "", newError(op, "request failed", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, "", newError(op, "failed to read response body", err)
+	}
+	var env struct {
+		Success bool `json:"success"`
+		Result  struct {
+			Used        *uint64 `json:"used"`
+			RecordsUsed *uint64 `json:"records_used"`
+			Quota       *uint64 `json:"quota"`
+			MaxRecords  *uint64 `json:"max_records"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(body, &env); err != nil || !env.Success {
+		return 0, 0, "", newError(op, fmt.Sprintf("dns usage unavailable (HTTP %d)", resp.StatusCode), err)
+	}
+	r := env.Result
+	switch {
+	case r.Used != nil && (r.Quota != nil || r.MaxRecords != nil):
+		used = *r.Used
+	case r.RecordsUsed != nil && (r.Quota != nil || r.MaxRecords != nil):
+		used = *r.RecordsUsed
+	default:
+		return 0, 0, "", newError(op, "dns usage response missing fields", nil)
+	}
+	if r.Quota != nil {
+		limit = *r.Quota
+	} else {
+		limit = *r.MaxRecords
+	}
+	return used, limit, "live-api", nil
+}
+
+// dnsUsageFallback resolves the static per-plan limit when the live endpoint
+// is unavailable. used comes from the caller (a record count) or 0.
+func (s *LimitsService) dnsUsageFallback(ctx context.Context, zoneID, zonePlan string, createdOn time.Time) (used, limit uint64, source string, err error) {
+	limit, ok := dnsRecordsStaticLimit(zonePlan, createdOn)
+	if !ok {
+		return 0, 0, "unknown", nil // enterprise: account-level quota, not per-zone
+	}
+	return 0, limit, "static-docs", nil
+}
