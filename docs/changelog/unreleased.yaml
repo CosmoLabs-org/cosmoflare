@@ -4,8 +4,14 @@
 
 version: pending
 entries:
-    added: []
-    fixed: []
+    added:
+        - description: cosmoflare limits — plan-limit proximity view with alert feed
+          source: manual
+          date: 2026-09-09T02:52:03.458725+04:00
+    fixed:
+        - description: limits serve wiring, alert condition registry, and renderer labels fixed
+          source: manual
+          date: 2026-09-09T02:52:37.536002+04:00
     changed:
         - description: 'internal: the three REST services share one transport client (~200 duplicated lines consolidated), metrics --json collects analytics concurrently, zone auto-resolution moved into the library'
           source: manual
