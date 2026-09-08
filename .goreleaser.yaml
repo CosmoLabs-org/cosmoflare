@@ -6,12 +6,26 @@
 #   goreleaser release --clean        # builds dist/ + checksums, never uploads
 #   # assert the version stamp (must NOT print "dev"):
 #   ./dist/cosmoflare_darwin_arm64_v8.0/cosmoflare --version
-#   # upload (binary artifacts live in per-target dirs; #name sets asset name):
-#   gh release create vX.Y.Z dist/checksums-sha256.txt \
-#       $(jq -r '.[] | select(.type=="Binary" and (.name|startswith("cosmoflare-"))) | "\(.path)#\(.name)"' dist/artifacts.json) \
-#       --notes "..."
 #
-# Asset surface matches v0.19.0: 5 bare binaries + checksums-sha256.txt.
+#   UPLOAD — v0.22.0 lessons (the old jq '#name' recipe is WRONG for
+#   binary-format archives: artifacts.json .name is plain "cosmoflare" for
+#   every target, so every asset collides and GitHub 404s). The asset name
+#   comes from the FILENAME — copy to named files first. Also: per-target
+#   dirs end in _v8.0 (arm64) or _v1 (amd64) — glob both:
+#
+#   mkdir -p dist/upload
+#   for p in darwin_arm64_v8.0 darwin_amd64_v1 linux_arm64_v8.0 linux_amd64_v1; do
+#       os=${p%%_*}; arch=$(echo $p | cut -d_ -f2)
+#       cp dist/cosmoflare_${p}/cosmoflare dist/upload/cosmoflare-$os-$arch
+#   done
+#   cp dist/cosmoflare_windows_amd64_v1/cosmoflare.exe dist/upload/
+#   gh release create vX.Y.Z dist/checksums-sha256.txt dist/upload/* \
+#       --repo CosmoLabs-org/cosmoflare \
+#       --notes-file docs/release-notes/<notes>.md --latest
+#   # (--repo required since the purge; --notes-file, NOT --notes-from-tag)
+#
+# Asset surface: 5 bare binaries + checksums-sha256.txt (names match the
+# checksums file goreleaser generates from name_template).
 version: 2
 
 project_name: cosmoflare
