@@ -105,11 +105,13 @@ func runLimits(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(w, "RESOURCE\tSCOPE\tUSED\tLIMIT\tUSED%\tSOURCE")
 	for _, row := range sortRowsByPercent(snap.Rows) {
 		limit := "unlimited"
-		if row.Limit > 0 {
+		if row.LimitSource == "unknown" {
+			limit = "unknown" // limit exists but is unresolved (e.g. unknown plan tier)
+		} else if row.Limit > 0 {
 			limit = fmt.Sprintf("%d", row.Limit)
 		}
 		pct := "—"
-		if row.Percent > 0 {
+		if row.Limit > 0 { // 0.0% is a real value whenever a limit is known
 			pct = fmt.Sprintf("%.1f%%", row.Percent)
 		}
 		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\n",

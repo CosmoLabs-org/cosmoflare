@@ -71,7 +71,7 @@ var alertsCreateCmd = &cobra.Command{
 
 Required flags:
   --service     Service to monitor (r2, workers, kv, dns)
-  --condition   Alert condition (error-rate, storage-limit, latency, failure-count)
+  --condition   Alert condition (error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota)
   --threshold   Numeric threshold value that triggers the alert
   --action      Notification action (webhook, email, log)
   --target      Action target (URL for webhook, email address, or log path)
@@ -193,7 +193,7 @@ func init() {
 
 	// Create flags
 	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns)")
-	alertsCreateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition (error-rate, storage-limit, latency, failure-count)")
+	alertsCreateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition (error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota)")
 	alertsCreateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsCreateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsCreateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
@@ -205,7 +205,7 @@ func init() {
 
 	// Update flags (same as create but not required)
 	alertsUpdateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns)")
-	alertsUpdateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition (error-rate, storage-limit, latency, failure-count)")
+	alertsUpdateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition (error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota)")
 	alertsUpdateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsUpdateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsUpdateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")

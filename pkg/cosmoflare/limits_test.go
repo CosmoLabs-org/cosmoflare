@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	cloudflare "github.com/cloudflare/cloudflare-go"
 )
 
 func TestLimitFor(t *testing.T) {
@@ -77,14 +79,14 @@ func TestDNSRecordsStaticLimit(t *testing.T) {
 
 func TestNewLimitsServiceDefaults(t *testing.T) {
 	s := NewLimitsService("acct", "tok")
-	if s.accountID != "acct" || s.apiToken != "tok" {
+	if s.accountID != "acct" || s.rest.apiToken != "tok" {
 		t.Fatal("credentials not stored")
 	}
-	if s.httpClient == nil {
+	if s.rest.httpClient == nil {
 		t.Fatal("default HTTP client missing")
 	}
-	if s.baseURL != "https://api.cloudflare.com/client/v4" {
-		t.Fatalf("baseURL = %q", s.baseURL)
+	if s.rest.baseURL != "https://api.cloudflare.com/client/v4" {
+		t.Fatalf("baseURL = %q", s.rest.baseURL)
 	}
 }
 
@@ -119,10 +121,7 @@ func TestResolveWorkersPlanAuto(t *testing.T) {
 			{"product": {"name": "workers"}, "rate_plan": {"id": "workers_paid", "public_name": "Workers Paid"}}
 		]}`)
 	})
-	plan, source, err := s.resolveWorkersPlan(context.Background())
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	plan, source := s.resolveWorkersPlan(context.Background())
 	if plan != "paid" || source != "auto" {
 		t.Fatalf("resolveWorkersPlan = (%q, %q), want (paid, auto)", plan, source)
 	}
@@ -134,10 +133,7 @@ func TestResolveWorkersPlanAutoFree(t *testing.T) {
 			{"product": {"name": "workers"}, "rate_plan": {"id": "workers_free"}}
 		]}`)
 	})
-	plan, source, err := s.resolveWorkersPlan(context.Background())
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	plan, source := s.resolveWorkersPlan(context.Background())
 	if plan != "free" || source != "auto" {
 		t.Fatalf("resolveWorkersPlan = (%q, %q), want (free, auto)", plan, source)
 	}
@@ -150,21 +146,21 @@ func TestResolveWorkersPlanFallbackChain(t *testing.T) {
 		fmt.Fprint(w, `{"success": false}`)
 	})
 
-	plan, source, err := s.resolveWorkersPlan(context.Background())
-	if err != nil || plan != "unknown" || source != "unknown" {
-		t.Fatalf("no fallbacks: got (%q, %q, %v), want (unknown, unknown, nil)", plan, source, err)
+	plan, source := s.resolveWorkersPlan(context.Background())
+	if plan != "unknown" || source != "unknown" {
+		t.Fatalf("no fallbacks: got (%q, %q), want (unknown, unknown)", plan, source)
 	}
 
 	s.configPlan = "paid"
-	plan, source, err = s.resolveWorkersPlan(context.Background())
-	if err != nil || plan != "paid" || source != "config" {
-		t.Fatalf("config fallback: got (%q, %q, %v), want (paid, config, nil)", plan, source, err)
+	plan, source = s.resolveWorkersPlan(context.Background())
+	if plan != "paid" || source != "config" {
+		t.Fatalf("config fallback: got (%q, %q), want (paid, config)", plan, source)
 	}
 
 	s.flagPlan = "free"
-	plan, source, err = s.resolveWorkersPlan(context.Background())
-	if err != nil || plan != "free" || source != "flag" {
-		t.Fatalf("flag outranks config: got (%q, %q, %v), want (free, flag, nil)", plan, source, err)
+	plan, source = s.resolveWorkersPlan(context.Background())
+	if plan != "free" || source != "flag" {
+		t.Fatalf("flag outranks config: got (%q, %q), want (free, flag)", plan, source)
 	}
 }
 
@@ -173,9 +169,9 @@ func TestResolveWorkersPlanInvalidValues(t *testing.T) {
 		w.WriteHeader(http.StatusForbidden)
 	})
 	s.configPlan = "enterprise" // not a Workers tier — must be rejected, not trusted
-	plan, source, err := s.resolveWorkersPlan(context.Background())
-	if err != nil || plan != "unknown" || source != "unknown" {
-		t.Fatalf("invalid config plan: got (%q, %q, %v), want (unknown, unknown, nil)", plan, source, err)
+	plan, source := s.resolveWorkersPlan(context.Background())
+	if plan != "unknown" || source != "unknown" {
+		t.Fatalf("invalid config plan: got (%q, %q), want (unknown, unknown)", plan, source)
 	}
 }
 
@@ -209,29 +205,40 @@ func TestDNSUsageNullQuota(t *testing.T) {
 	}
 }
 
+// TestDNSUsageFallbackToStatic exercises the fallback path end-to-end: the
+// live endpoint 404s and the Snapshot-level static table answers. (The pure
+// table itself is covered by TestDNSRecordsStaticLimit.)
 func TestDNSUsageFallbackToStatic(t *testing.T) {
-	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, `{"success": false}`)
-	})
-	// Zone created 2025-03-01 on free plan → 200 by cutoff rule.
-	created := time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)
-	used, limit, source, err := s.dnsUsageFallback(context.Background(), "z1", "free", created)
+	s := snapshotFixture(t,
+		WithLimitsZones(fakeZoneLister{zones: []*Zone{
+			{ID: "z1", Name: "fallback.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
+		}}),
+	)
+	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	// No live data → used falls back to a record count of 0 only when caller
-	// passes it; here we assert the static limit and source.
-	if limit != 200 || source != "static-docs" {
-		t.Fatalf("dnsUsageFallback = (%d, %q, %v), want (200, static-docs, nil)", limit, source, err)
+	for _, row := range snap.Rows {
+		if row.Resource == "dns.records" && row.Scope == "fallback.example" {
+			if row.Limit != 200 || row.LimitSource != "static-docs" || row.Used != 0 {
+				t.Fatalf("fallback row = %+v, want limit=200 static-docs used=0", row)
+			}
+			return
+		}
 	}
-	_ = used
+	t.Fatal("dns.records fallback row missing")
 }
 
-func TestZonePlanLegacyID(t *testing.T) {
-	z := Zone{Plan: ZonePlan{ID: "x", LegacyID: "pro", Name: "Pro"}}
-	if z.Plan.LegacyID != "pro" {
-		t.Fatalf("LegacyID = %q, want pro", z.Plan.LegacyID)
+// TestCFZoneToZoneLegacyID pins the real mapping: cloudflare-go's
+// ZonePlan.LegacyID flows through cfZoneToZone into our ZonePlan.
+func TestCFZoneToZoneLegacyID(t *testing.T) {
+	in := cloudflare.Zone{ID: "z1", Name: "example.com"}
+	in.Plan.LegacyID = "pro"
+	in.Plan.Name = "Pro"
+	in.Plan.ID = "plan-id"
+	got := cfZoneToZone(in)
+	if got.Plan.LegacyID != "pro" || got.Plan.Name != "Pro" || got.Plan.ID != "plan-id" {
+		t.Fatalf("cfZoneToZone plan mapping = %+v", got.Plan)
 	}
 }
 
@@ -322,7 +329,7 @@ func TestSnapshotHappyPath(t *testing.T) {
 		fmt.Fprint(w, `{"success": true, "result": {"record_usage": 180, "record_quota": 200}}`)
 	}))
 	t.Cleanup(srv.Close)
-	s.baseURL = srv.URL
+	s.rest.baseURL = srv.URL
 
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {

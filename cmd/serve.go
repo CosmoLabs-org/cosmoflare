@@ -235,7 +235,7 @@ func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval 
 		return
 	}
 
-	limits := cosmoflare.NewLimitsService(p.AccountID, p.APIToken)
+	limits := cosmoflare.NewLimitsServiceFromCreds(p.AccountID, p.APIToken)
 	if err := webhook.CollectLimitMetrics(ctx, limits, &metrics); err != nil {
 		// Limit collection failing must NOT skip the analytics-based rules.
 		log.Printf("[alerts] collect limits: %v", err)

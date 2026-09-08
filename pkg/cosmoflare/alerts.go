@@ -24,7 +24,7 @@ type AlertService struct {
 type AlertRule struct {
 	Name      string    `json:"name" yaml:"name"`
 	Service   string    `json:"service" yaml:"service"`       // r2, workers, kv, dns
-	Condition string    `json:"condition" yaml:"condition"`    // error-rate, storage-limit, latency, failure-count
+	Condition string    `json:"condition" yaml:"condition"`    // error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota
 	Threshold float64   `json:"threshold" yaml:"threshold"`
 	Action    string    `json:"action" yaml:"action"`          // webhook, email, log
 	Target    string    `json:"target" yaml:"target"`          // URL or email address
@@ -61,12 +61,16 @@ var validAlertServices = map[string]bool{
 	"dns":     true,
 }
 
-// Valid conditions for alert rules.
+// Valid conditions for alert rules. The three count/quota conditions are fed
+// by the serve alert cycle's LimitsService snapshot (CollectLimitMetrics).
 var validAlertConditions = map[string]bool{
-	"error-rate":    true,
-	"storage-limit": true,
-	"latency":       true,
-	"failure-count": true,
+	"error-rate":          true,
+	"storage-limit":       true,
+	"latency":             true,
+	"failure-count":       true,
+	"workers-script-count": true,
+	"r2-bucket-count":      true,
+	"dns-record-quota":     true,
 }
 
 // Valid actions for alert rules.
@@ -227,7 +231,7 @@ func (s *AlertService) Update(name string, update *AlertRule) (*AlertRule, error
 	}
 	if update.Condition != "" {
 		if !validAlertConditions[update.Condition] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count", update.Condition))
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota", update.Condition))
 		}
 		found.Condition = update.Condition
 	}
@@ -424,7 +428,7 @@ func validateAlertRule(rule *AlertRule) error {
 		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", rule.Service))
 	}
 	if !validAlertConditions[rule.Condition] {
-		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count", rule.Condition))
+		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota", rule.Condition))
 	}
 	if rule.Threshold <= 0 {
 		return validationError("validateAlertRule", "threshold must be a positive number")

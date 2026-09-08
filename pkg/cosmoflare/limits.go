@@ -2,12 +2,10 @@ package cosmoflare
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -114,9 +112,7 @@ type WorkersAnalytics interface {
 // LimitsService joins live usage counts against documented plan limits.
 type LimitsService struct {
 	accountID  string
-	apiToken   string
-	httpClient *http.Client
-	baseURL    string
+	rest       restClient
 	workers    WorkersLister
 	r2         BucketLister
 	zones      ZoneLister
@@ -131,12 +127,12 @@ type LimitsOption func(*LimitsService)
 
 // WithLimitsHTTPClient sets a custom HTTP client.
 func WithLimitsHTTPClient(c *http.Client) LimitsOption {
-	return func(s *LimitsService) { s.httpClient = c }
+	return func(s *LimitsService) { s.rest.httpClient = c }
 }
 
 // WithLimitsBaseURL overrides the REST API base URL.
 func WithLimitsBaseURL(u string) LimitsOption {
-	return func(s *LimitsService) { s.baseURL = u }
+	return func(s *LimitsService) { s.rest.baseURL = u }
 }
 
 // WithLimitsWorkers sets the Workers script lister.
@@ -175,17 +171,36 @@ func WithLimitsFlagPlan(plan string) LimitsOption {
 	return func(s *LimitsService) { s.flagPlan = plan }
 }
 
-// NewLimitsService creates a limits collector for one account.
+// NewLimitsService creates a limits collector for one account. Sources are
+// injected via options; a source left unset is skipped by Snapshot.
 func NewLimitsService(accountID, apiToken string, opts ...LimitsOption) *LimitsService {
 	s := &LimitsService{
-		accountID:  accountID,
-		apiToken:   apiToken,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
-		baseURL:    "https://api.cloudflare.com/client/v4",
+		accountID: accountID,
+		rest:      newRESTClient(apiToken),
 	}
 	for _, opt := range opts {
 		opt(s)
 	}
+	return s
+}
+
+// NewLimitsServiceFromCreds composes the standard production sources over one
+// credential pair — the constructor call sites should use so the collector
+// cannot be accidentally wired inert. A source whose constructor fails is
+// left unset (Snapshot skips it) rather than failing the whole collector.
+func NewLimitsServiceFromCreds(accountID, apiToken string) *LimitsService {
+	s := NewLimitsService(accountID, apiToken)
+	if client, err := NewClient(WithAccountID(accountID), WithAPIToken(apiToken)); err == nil {
+		s.r2 = client
+	}
+	if w, err := NewWorkerServiceFromCreds(accountID, apiToken); err == nil {
+		s.workers = w
+	}
+	if z, err := NewZoneServiceFromCreds(accountID, apiToken); err == nil {
+		s.zones = z
+	}
+	s.domains = NewBucketDomainService(accountID, apiToken)
+	s.analytics = NewAnalyticsService(accountID, apiToken)
 	return s
 }
 
@@ -194,7 +209,7 @@ func (s *LimitsService) validate(op string) error {
 	if s.accountID == "" {
 		return validationError(op, "account ID is required")
 	}
-	if s.apiToken == "" {
+	if s.rest.apiToken == "" {
 		return validationError(op, "API token is required")
 	}
 	return nil
@@ -212,7 +227,8 @@ func percentOf(used, limit uint64) float64 {
 // Snapshot collects every configured source and joins usage against limits.
 // bucket selects optional per-bucket rows; empty skips them. Every source is
 // independent: a failure records a SourceError and the snapshot continues.
-// Only zero rows + at least one error is a hard failure.
+// Per-zone DNS usage is fetched concurrently (bounded) — the calls are
+// independent reads. Only zero rows + at least one error is a hard failure.
 func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSnapshot, error) {
 	const op = "LimitsSnapshot"
 	if err := s.validate(op); err != nil {
@@ -220,7 +236,13 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 	}
 
 	snap := &LimitsSnapshot{}
-	plan, source, _ := s.resolveWorkersPlan(ctx)
+
+	// The plan tier only influences plan-dependent rows; skip the
+	// subscriptions round-trip entirely when no such source is wired.
+	plan, source := "unknown", "unknown"
+	if s.workers != nil || s.analytics != nil {
+		plan, source = s.resolveWorkersPlan(ctx)
+	}
 	snap.WorkersPlan, snap.PlanSource = plan, source
 
 	// workers.scripts
@@ -228,16 +250,8 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 		scripts, err := s.workers.List(ctx)
 		if err != nil {
 			snap.recordSourceError("workers.list", err)
-		} else if limit, ok := limitFor("workers.scripts", plan); ok {
-			snap.Rows = append(snap.Rows, LimitRow{
-				Resource: "workers.scripts", Used: uint64(len(scripts)), Limit: limit,
-				Percent: percentOf(uint64(len(scripts)), limit), PlanTier: plan, LimitSource: "static-docs",
-			})
 		} else {
-			snap.Rows = append(snap.Rows, LimitRow{
-				Resource: "workers.scripts", Used: uint64(len(scripts)),
-				PlanTier: plan, LimitSource: "unknown",
-			})
+			snap.Rows = append(snap.Rows, countRow("workers.scripts", "", uint64(len(scripts)), plan))
 		}
 	}
 
@@ -253,13 +267,7 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 			for _, sum := range summaries {
 				reqs += sum.Requests
 			}
-			row := LimitRow{Resource: "workers.daily_requests", Used: reqs, PlanTier: plan}
-			if limit, ok := limitFor("workers.daily_requests", plan); ok {
-				row.Limit, row.Percent, row.LimitSource = limit, percentOf(reqs, limit), "static-docs"
-			} else {
-				row.LimitSource = "unknown"
-			}
-			snap.Rows = append(snap.Rows, row)
+			snap.Rows = append(snap.Rows, countRow("workers.daily_requests", "", reqs, plan))
 		}
 	}
 
@@ -269,12 +277,7 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 		if err != nil {
 			snap.recordSourceError("r2.list_buckets", err)
 		} else {
-			limit, _ := limitFor("r2.buckets", "")
-			n := uint64(len(buckets))
-			snap.Rows = append(snap.Rows, LimitRow{
-				Resource: "r2.buckets", Used: n, Limit: limit,
-				Percent: percentOf(n, limit), LimitSource: "static-docs",
-			})
+			snap.Rows = append(snap.Rows, countRow("r2.buckets", "", uint64(len(buckets)), ""))
 		}
 	}
 
@@ -284,12 +287,7 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 		if err != nil {
 			snap.recordSourceError("r2.bucket_domains:"+bucket, err)
 		} else {
-			limit, _ := limitFor("r2.custom_domains_per_bucket", "")
-			n := uint64(len(domains))
-			snap.Rows = append(snap.Rows, LimitRow{
-				Resource: "r2.custom_domains_per_bucket", Scope: bucket, Used: n, Limit: limit,
-				Percent: percentOf(n, limit), LimitSource: "static-docs",
-			})
+			snap.Rows = append(snap.Rows, countRow("r2.custom_domains_per_bucket", bucket, uint64(len(domains)), ""))
 		}
 	}
 
@@ -299,24 +297,10 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 		if err != nil {
 			snap.recordSourceError("zones.list", err)
 		} else {
-			n := uint64(len(zones))
 			snap.Rows = append(snap.Rows, LimitRow{
-				Resource: "zones.count", Used: n, Limit: 0, LimitSource: "unknown", // no documented account cap
+				Resource: "zones.count", Used: uint64(len(zones)), Limit: 0, LimitSource: "unknown", // no documented account cap
 			})
-			for _, z := range zones {
-				used, limit, src, err := s.dnsUsage(ctx, z.ID)
-				if err != nil {
-					_, limit, src, _ = s.dnsUsageFallback(ctx, z.ID, z.Plan.LegacyID, z.CreatedOn)
-					used = 0 // live usage unavailable; percent stays 0 — honest, not fabricated
-				}
-				if src == "unknown" {
-					continue // enterprise: account-level quota, nothing per-zone to report
-				}
-				snap.Rows = append(snap.Rows, LimitRow{
-					Resource: "dns.records", Scope: z.Name, Used: used, Limit: limit,
-					Percent: percentOf(used, limit), LimitSource: src,
-				})
-			}
+			s.appendDNSRows(ctx, snap, zones)
 		}
 	}
 
@@ -326,6 +310,68 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 	return snap, nil
 }
 
+// countRow builds a usage-vs-documented-limit row. limitFor decides the
+// limit and source: a known limit yields Limit/Percent/"static-docs"; an
+// unknown one (unresolved plan or undocumented resource) yields
+// Limit 0 with "unknown" — never fabricated.
+func countRow(resource, scope string, used uint64, plan string) LimitRow {
+	limit, ok := limitFor(resource, plan)
+	src := "static-docs"
+	if !ok {
+		src = "unknown"
+	}
+	return LimitRow{
+		Resource: resource, Scope: scope, Used: used, Limit: limit,
+		Percent: percentOf(used, limit), PlanTier: plan, LimitSource: src,
+	}
+}
+
+// dnsConcurrency bounds the parallel per-zone DNS usage fetches.
+const dnsConcurrency = 8
+
+// appendDNSRows appends one dns.records row per zone. Live usage comes from
+// the DNS quota API (concurrent, bounded); a failed live call falls back to
+// the static per-plan table with used 0 — honest, not fabricated. Enterprise
+// zones (account-level quota) are skipped: no per-zone limit exists.
+func (s *LimitsService) appendDNSRows(ctx context.Context, snap *LimitsSnapshot, zones []*Zone) {
+	type dnsResult struct {
+		row     LimitRow
+		present bool
+	}
+	results := make([]dnsResult, len(zones))
+
+	sem := make(chan struct{}, dnsConcurrency)
+	var wg sync.WaitGroup
+	for i, z := range zones {
+		wg.Add(1)
+		go func(idx int, zone *Zone) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			used, limit, src, err := s.dnsUsage(ctx, zone.ID)
+			if err != nil {
+				staticLimit, ok := dnsRecordsStaticLimit(zone.Plan.LegacyID, zone.CreatedOn)
+				if !ok {
+					return // enterprise: account-level quota, nothing per-zone to report
+				}
+				used, limit, src = 0, staticLimit, "static-docs"
+			}
+			results[idx] = dnsResult{row: LimitRow{
+				Resource: "dns.records", Scope: zone.Name, Used: used, Limit: limit,
+				Percent: percentOf(used, limit), LimitSource: src,
+			}, present: true}
+		}(i, z)
+	}
+	wg.Wait()
+
+	for _, r := range results {
+		if r.present {
+			snap.Rows = append(snap.Rows, r.row)
+		}
+	}
+}
+
 // recordSourceError appends one producer failure.
 func (s *LimitsSnapshot) recordSourceError(source string, err error) {
 	s.Sources = append(s.Sources, SourceError{Source: source, Err: err.Error()})
@@ -333,9 +379,6 @@ func (s *LimitsSnapshot) recordSourceError(source string, err error) {
 
 // subscription wraps the parts of a /subscriptions result entry we join on.
 type subscription struct {
-	Product struct {
-		Name string `json:"name"`
-	} `json:"product"`
 	RatePlan struct {
 		ID         string `json:"id"`
 		PublicName string `json:"public_name"`
@@ -346,41 +389,11 @@ type subscription struct {
 // callers treat any failure as "auto-detection unavailable".
 func (s *LimitsService) fetchSubscriptions(ctx context.Context) ([]subscription, error) {
 	const op = "LimitsSubscriptions"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		s.baseURL+"/accounts/"+s.accountID+"/subscriptions", nil)
-	if err != nil {
-		return nil, newError(op, "failed to build request", err)
+	var subs []subscription
+	if err := s.rest.do(ctx, op, http.MethodGet, "/accounts/"+s.accountID+"/subscriptions", nil, &subs); err != nil {
+		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return nil, newError(op, "request failed", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, newError(op, "failed to read response body", err)
-	}
-	var env struct {
-		Success bool `json:"success"`
-		Errors  []struct {
-			Message string `json:"message"`
-		} `json:"errors"`
-		Result []subscription `json:"result"`
-	}
-	if err := json.Unmarshal(body, &env); err != nil {
-		return nil, newError(op, fmt.Sprintf("unexpected response (HTTP %d)", resp.StatusCode), err)
-	}
-	if !env.Success {
-		msg := "subscriptions unavailable"
-		if len(env.Errors) > 0 {
-			msg = env.Errors[0].Message
-		}
-		return nil, newError(op, msg, nil)
-	}
-	return env.Result, nil
+	return subs, nil
 }
 
 // normalizePlanTier validates a tier string from any source. Only "free" and
@@ -399,27 +412,27 @@ func normalizePlanTier(plan string) string {
 // resolveWorkersPlan resolves the Workers plan tier. Order: subscriptions
 // API → flag → config → unknown. A subscriptions failure is silent — the
 // source string records which path decided.
-func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string, err error) {
+func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string) {
 	subs, err := s.fetchSubscriptions(ctx)
 	if err == nil {
 		for _, sub := range subs {
 			id := sub.RatePlan.ID
 			if strings.HasPrefix(id, "workers") {
 				if strings.Contains(id, "paid") || strings.Contains(strings.ToLower(sub.RatePlan.PublicName), "paid") {
-					return "paid", "auto", nil
+					return "paid", "auto"
 				}
-				return "free", "auto", nil
+				return "free", "auto"
 			}
 		}
 		// Subscriptions readable but no workers entry: fall through to config.
 	}
 	if tier := normalizePlanTier(s.flagPlan); tier != "unknown" {
-		return tier, "flag", nil
+		return tier, "flag"
 	}
 	if tier := normalizePlanTier(s.configPlan); tier != "unknown" {
-		return tier, "config", nil
+		return tier, "config"
 	}
-	return "unknown", "unknown", nil
+	return "unknown", "unknown"
 }
 
 // dnsUsage fetches one zone's DNS record usage and quota from the live API.
@@ -431,44 +444,15 @@ func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source st
 // Requires DNS Read (or Zone DNS Settings Read) on the token.
 func (s *LimitsService) dnsUsage(ctx context.Context, zoneID string) (used, limit uint64, source string, err error) {
 	const op = "LimitsDNSUsage"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		s.baseURL+"/zones/"+zoneID+"/dns_records/usage", nil)
-	if err != nil {
-		return 0, 0, "", newError(op, "failed to build request", err)
+	var out struct {
+		RecordUsage *uint64 `json:"record_usage"`
+		RecordQuota *uint64 `json:"record_quota"`
 	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return 0, 0, "", newError(op, "request failed", err)
+	if err := s.rest.do(ctx, op, http.MethodGet, "/zones/"+zoneID+"/dns_records/usage", nil, &out); err != nil {
+		return 0, 0, "", err
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, 0, "", newError(op, "failed to read response body", err)
-	}
-	var env struct {
-		Success bool `json:"success"`
-		Result  struct {
-			RecordUsage *uint64 `json:"record_usage"`
-			RecordQuota *uint64 `json:"record_quota"`
-		} `json:"result"`
-	}
-	if err := json.Unmarshal(body, &env); err != nil || !env.Success {
-		return 0, 0, "", newError(op, fmt.Sprintf("dns usage unavailable (HTTP %d)", resp.StatusCode), err)
-	}
-	if env.Result.RecordUsage == nil || env.Result.RecordQuota == nil {
+	if out.RecordUsage == nil || out.RecordQuota == nil {
 		return 0, 0, "", newError(op, "dns usage response missing fields", nil)
 	}
-	return *env.Result.RecordUsage, *env.Result.RecordQuota, "live-api", nil
-}
-
-// dnsUsageFallback resolves the static per-plan limit when the live endpoint
-// is unavailable. used comes from the caller (a record count) or 0.
-func (s *LimitsService) dnsUsageFallback(ctx context.Context, zoneID, zonePlan string, createdOn time.Time) (used, limit uint64, source string, err error) {
-	limit, ok := dnsRecordsStaticLimit(zonePlan, createdOn)
-	if !ok {
-		return 0, 0, "unknown", nil // enterprise: account-level quota, not per-zone
-	}
-	return 0, limit, "static-docs", nil
+	return *out.RecordUsage, *out.RecordQuota, "live-api", nil
 }
