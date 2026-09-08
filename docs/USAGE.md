@@ -2215,7 +2215,7 @@ cosmoflare limits --plan free --json     # force a Workers plan tier, JSON outpu
 | `dns.records` (per zone) | live quota API `GET /zones/{zone_id}/dns/usage` | API-reported (authoritative, no static join) |
 | `zones.count` | zone list count | informational — no documented account cap |
 
-`workers.daily_requests` is emitted only on the free plan (it is unlimited on paid). `dns.records` costs one API call per zone.
+`workers.daily_requests` is emitted on every plan — on paid it shows usage against an unlimited limit (no percent). `dns.records` costs one API call per zone.
 
 ### Flags
 
