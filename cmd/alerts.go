@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/tabwriter"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/CosmoLabs-org/cosmoflare/internal/webhook"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
@@ -159,6 +163,23 @@ Examples:
 	RunE: runAlertsHistory,
 }
 
+var alertsCheckCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Evaluate all alert rules once against live metrics and fire triggered alerts",
+	Long: `Run one evaluation cycle: collect 24h usage analytics (Workers
+invocations and R2 storage) from the configured account and evaluate every
+enabled alert rule against them.
+
+Triggered alerts are printed to the terminal (there is no running daemon to
+bridge them to SSE). This is the same evaluation 'cosmoflare serve' runs
+every 5 minutes.
+
+Examples:
+  cosmoflare alerts check
+  cosmoflare alerts check --json`,
+	RunE: runAlertsCheck,
+}
+
 func init() {
 	rootCmd.AddCommand(alertsCmd)
 
@@ -169,6 +190,7 @@ func init() {
 	alertsCmd.AddCommand(alertsDeleteCmd)
 	alertsCmd.AddCommand(alertsTestCmd)
 	alertsCmd.AddCommand(alertsHistoryCmd)
+	alertsCmd.AddCommand(alertsCheckCmd)
 
 	// Create flags
 	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns)")
@@ -195,6 +217,74 @@ func init() {
 	// History flags
 	alertsHistoryCmd.Flags().IntVar(&alertLimit, "limit", 0, "Maximum number of entries to show")
 	alertsHistoryCmd.Flags().StringVar(&alertSince, "since", "", "Show entries after this time (RFC3339)")
+}
+
+// firedAlert is one entry of 'alerts check --json' output.
+type firedAlert struct {
+	Name      string  `json:"name"`
+	Value     float64 `json:"value"`
+	Threshold float64 `json:"threshold"`
+}
+
+// runAlertsCheck evaluates every alert rule once against live metrics.
+// Without a running daemon there is no SSE bridge, so notifications go to
+// stdout via the manager's SetNotifier hook.
+func runAlertsCheck(cmd *cobra.Command, args []string) error {
+	svc, err := getAlertService()
+	if err != nil {
+		return fmt.Errorf("failed to create alert service: %w", err)
+	}
+	rules, err := svc.List()
+	if err != nil {
+		return fmt.Errorf("failed to list alert rules: %w", err)
+	}
+
+	var fired []firedAlert
+	evaluated := 0
+	for _, r := range rules {
+		if r != nil && r.Enabled {
+			evaluated++
+		}
+	}
+
+	var metrics webhook.EvalMetrics
+	if evaluated > 0 {
+		if AccountID == "" || APIToken == "" {
+			return fmt.Errorf("account ID and API token are required for alert evaluation (run 'cosmoflare account' to configure)")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
+		now := time.Now()
+		metrics, err = webhook.CollectEvalMetrics(ctx, analytics, cosmoflare.AnalyticsWindow{
+			Start: now.Add(-24 * time.Hour),
+			End:   now,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to collect metrics: %w", err)
+		}
+	}
+
+	mgr := webhook.NewManager(nil, "")
+	mgr.SetNotifier(func(p *webhook.NotificationPayload) {
+		if p == nil || p.Alert == nil {
+			return
+		}
+		printWarning("[ALERT] %s: %s value=%g threshold=%g", p.Alert.Name, p.Message, p.Value, p.Threshold)
+		fired = append(fired, firedAlert{Name: p.Alert.Name, Value: p.Value, Threshold: p.Threshold})
+	})
+
+	eval := webhook.NewEvaluator(svc, mgr, 0) // one-shot: cooldown irrelevant
+	firedNames := eval.Evaluate(metrics)
+
+	if JSONOutput {
+		if fired == nil {
+			fired = []firedAlert{}
+		}
+		return json.NewEncoder(os.Stdout).Encode(fired)
+	}
+	printInfo("%d rule(s) evaluated, %d fired", evaluated, len(firedNames))
+	return nil
 }
 
 // getAlertServiceFn is the factory for AlertService. Tests override this

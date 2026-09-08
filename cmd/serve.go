@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -26,6 +27,11 @@ var (
 	serveToken           string        // --token, optional; generated if empty
 	serveMetricsInterval time.Duration // --metrics-interval
 )
+
+// alertEvalInterval is how often the daemon re-evaluates alert rules against
+// live analytics. Package-level so tests can shorten it; values below 30s are
+// clamped to 30s in the loop.
+var alertEvalInterval = 5 * time.Minute
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -90,11 +96,12 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	srv := server.New(server.Config{Token: token, Version: AppVersion})
 
-	// FEAT-008: wire the alert→SSE bridge. No alert producer exists yet
-	// (the evaluator needs metric producers that don't ship today) — this
-	// is the seam it will plug into. The bridge itself is covered by
+	// FEAT-008: wire the alert→SSE bridge. The evaluator loop below is the
+	// alert producer: every cycle it judges the stored alert rules against
+	// live analytics and fires TriggerAlert through this bridge onto the SSE
+	// hub. The bridge itself is covered by
 	// TestServeAlertBridge_PublishesAlertToNotificationsChannel.
-	newServeAlertBridge(srv)
+	alertMgr := newServeAlertBridge(srv)
 
 	// Wire the real data source: per-request credential resolution from the
 	// local config profiles, delegating to the existing per-service
@@ -136,6 +143,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 		mp.Start(ctx)
 	}
 
+	// Alert evaluation loop: rules × live analytics → TriggerAlert through
+	// the bridge above. Runs in its own goroutine and respects ctx
+	// cancellation the same way MetricsProducer does.
+	go runServeAlertEvalLoop(ctx, cm, alertMgr)
+
 	errCh := make(chan error, 1)
 	go func() {
 		errCh <- httpServer.Serve(ln)
@@ -163,6 +175,71 @@ func randomToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// runServeAlertEvalLoop periodically evaluates the stored alert rules against
+// live analytics and fires TriggerAlert through the given manager. The rule
+// service and evaluator are built once so the per-rule cooldown state survives
+// across cycles; rule changes are still picked up because AlertService re-reads
+// .cosmoflare-alerts.yaml on every List. Any per-cycle error is logged and the
+// cycle is skipped — the evaluator never fires on missing data.
+func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertMgr *webhook.Manager) {
+	interval := alertEvalInterval
+	if interval < 30*time.Second {
+		interval = 30 * time.Second
+	}
+
+	rules, err := getAlertService()
+	if err != nil {
+		log.Printf("[alerts] rules service unavailable: %v", err)
+		return
+	}
+	cooldown := 15 * time.Minute
+	eval := webhook.NewEvaluator(rules, alertMgr, cooldown)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			runServeAlertEvalCycle(ctx, cm, eval, rules)
+		}
+	}
+}
+
+// runServeAlertEvalCycle runs one evaluation pass: list rules, resolve the
+// current profile's credentials, collect 24h analytics, evaluate. Any failure
+// short-circuits with a log line — no alerts fire on fabricated zeros.
+func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval *webhook.Evaluator, rules *cosmoflare.AlertService) {
+	listed, err := rules.List()
+	if err != nil {
+		log.Printf("[alerts] list rules: %v", err)
+		return
+	}
+	if len(listed) == 0 {
+		return // nothing configured — skip the analytics round-trip entirely
+	}
+
+	p, err := cm.GetCurrent()
+	if err != nil {
+		log.Printf("[alerts] resolve profile: %v", err)
+		return
+	}
+	analytics := cosmoflare.NewAnalyticsService(p.AccountID, p.APIToken)
+
+	now := time.Now()
+	w := cosmoflare.AnalyticsWindow{Start: now.Add(-24 * time.Hour), End: now}
+	metrics, err := webhook.CollectEvalMetrics(ctx, analytics, w)
+	if err != nil {
+		log.Printf("[alerts] collect metrics: %v", err)
+		return
+	}
+
+	for _, name := range eval.Evaluate(metrics) {
+		log.Printf("[alerts] rule %q fired", name)
+	}
 }
 
 // newServeAlertBridge constructs the daemon's alert manager and bridges every
