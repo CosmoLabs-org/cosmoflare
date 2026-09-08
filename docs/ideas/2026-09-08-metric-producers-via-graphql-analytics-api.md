@@ -2,14 +2,20 @@
 ulid: 01M207FRS0T5BZT5HB1RVNQ1RR
 title: Metric producers via GraphQL Analytics API
 created: "2026-09-08T14:02:15.717862+04:00"
-status: seed
+status: withered
 source: human
 origin:
     session: 43
 tags:
     - observability
     - metrics
+resolution:
+    reason: implemented
+    date: "2026-09-08T16:06:33.843211+04:00"
+    note: 'Landed 2026-09-08: AnalyticsService (GraphQL producers) + daemon partial snapshots + alert evaluator over the same layer'
 ---
+
+# Metric producers via GraphQL Analytics API
 
 # Metric producers via GraphQL Analytics API
 
