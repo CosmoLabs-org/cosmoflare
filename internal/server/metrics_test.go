@@ -4,10 +4,18 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
+)
+
+var (
+	errZones   = fmt.Errorf("zones unavailable")
+	errR2      = fmt.Errorf("r2 unavailable")
+	errWorkers = fmt.Errorf("workers unavailable")
+	errKV      = fmt.Errorf("kv unavailable")
 )
 
 func TestMetricsProducer_PublishesOnTick(t *testing.T) {
@@ -101,4 +109,105 @@ func TestMetricsProducer_StopsOnContextCancel(t *testing.T) {
 	p.Start(ctx)
 	cancel()
 	time.Sleep(100 * time.Millisecond)
+}
+
+func TestMetricsPartialSnapshot(t *testing.T) {
+	src := &metricsSource{
+		zones:    []map[string]any{{"name": "example.com"}},
+		r2Err:    errR2,
+		workers:  []map[string]any{{"name": "worker-1"}},
+		kv:       []map[string]any{{"name": "ns-1"}},
+	}
+	s, url := newSourcedServer(t, src)
+
+	ch := subscribeMetrics(t, url)
+	waitForSubscriber(t, s)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	NewMetricsProducer(s, src, 50*time.Millisecond).Start(ctx)
+
+	snap := expectMetricsSnapshot(t, ch, 3*time.Second)
+	if snap.Errors["r2_buckets"] == "" {
+		t.Fatalf("Errors[r2_buckets] not set: %+v", snap.Errors)
+	}
+	zones, ok := snap.Zones.([]any)
+	if !ok || len(zones) != 1 {
+		t.Fatalf("zones = %v, want 1-element array", snap.Zones)
+	}
+	if snap.Workers == nil || snap.KVNamespaces == nil {
+		t.Fatalf("healthy sources dropped: workers=%v kv=%v", snap.Workers, snap.KVNamespaces)
+	}
+}
+
+func TestMetricsProfilePopulated(t *testing.T) {
+	src := &metricsSource{
+		profile: "default",
+		zones:   []map[string]any{{"name": "example.com"}},
+	}
+	s, url := newSourcedServer(t, src)
+
+	ch := subscribeMetrics(t, url)
+	waitForSubscriber(t, s)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	NewMetricsProducer(s, src, 50*time.Millisecond).Start(ctx)
+
+	snap := expectMetricsSnapshot(t, ch, 3*time.Second)
+	if snap.Profile != "default" {
+		t.Fatalf("profile = %q, want default", snap.Profile)
+	}
+}
+
+func TestMetricsDeltaDetection(t *testing.T) {
+	src := &metricsSource{
+		zones: []map[string]any{{"name": "example.com"}},
+	}
+	s, url := newSourcedServer(t, src)
+
+	ch := subscribeMetrics(t, url)
+	waitForSubscriber(t, s)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	NewMetricsProducer(s, src, 40*time.Millisecond).Start(ctx)
+
+	// First poll publishes.
+	expectMetricsSnapshot(t, ch, 3*time.Second)
+	// Identical data on subsequent polls → no re-publish.
+	expectNoMetricsSnapshot(t, ch, 300*time.Millisecond)
+	// Changed data → exactly one more publish.
+	src.setZones([]map[string]any{{"name": "example.com"}, {"name": "example.org"}})
+	snap := expectMetricsSnapshot(t, ch, 3*time.Second)
+	if zones, ok := snap.Zones.([]any); !ok || len(zones) != 2 {
+		t.Fatalf("zones = %v, want 2-element array", snap.Zones)
+	}
+}
+
+func TestMetricsAllSourcesFail(t *testing.T) {
+	src := &metricsSource{
+		zoneErr:   errZones,
+		r2Err:     errR2,
+		workerErr: errWorkers,
+		kvErr:     errKV,
+	}
+	s, url := newSourcedServer(t, src)
+
+	ch := subscribeMetrics(t, url)
+	waitForSubscriber(t, s)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	NewMetricsProducer(s, src, 50*time.Millisecond).Start(ctx)
+
+	snap := expectMetricsSnapshot(t, ch, 3*time.Second)
+	if len(snap.Errors) != 4 {
+		t.Fatalf("Errors = %v, want 4 entries", snap.Errors)
+	}
+	for _, k := range []string{"zones", "r2_buckets", "workers", "kv_namespaces"} {
+		if snap.Errors[k] == "" {
+			t.Fatalf("Errors[%q] not set: %v", k, snap.Errors)
+		}
+	}
 }

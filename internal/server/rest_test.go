@@ -22,6 +22,7 @@ type fakeSource struct {
 }
 
 func (f *fakeSource) Accounts(_ context.Context) (any, error) { return f.accounts, nil }
+func (f *fakeSource) CurrentProfileName() string              { return "" }
 func (f *fakeSource) Zones(_ context.Context, profile string) (any, error) {
 	f.seenProf = profile
 	return f.zones, f.zoneErr

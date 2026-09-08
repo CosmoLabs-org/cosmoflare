@@ -29,6 +29,9 @@ type ServeSource interface {
 	R2Buckets(ctx context.Context, profile string) (any, error)
 	Workers(ctx context.Context, profile string) (any, error)
 	KV(ctx context.Context, profile string) (any, error)
+	// CurrentProfileName returns the profile the daemon serves by default
+	// (the one resolveProfile("") resolves to). Local read, no API call.
+	CurrentProfileName() string
 }
 
 // SetData attaches the data source backing the REST read endpoints. The server
