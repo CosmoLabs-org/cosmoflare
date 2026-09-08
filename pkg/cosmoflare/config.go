@@ -20,6 +20,7 @@ type ProjectConfig struct {
 	AllowedBuckets []string          `mapstructure:"allowed_buckets" json:"allowed_buckets,omitempty"`
 	MaxFileSize    int64             `mapstructure:"max_file_size" json:"max_file_size,omitempty"`
 	Environment    string            `mapstructure:"env" json:"env,omitempty"`
+	WorkersPlan    string            `mapstructure:"workers_plan" json:"workers_plan,omitempty"` // "free" | "paid" — fallback when the subscriptions API is unreadable
 }
 
 // MCPConfig configures the MCP tool server (BUG-035). AllowMutations is

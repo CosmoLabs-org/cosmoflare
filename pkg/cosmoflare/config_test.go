@@ -482,3 +482,18 @@ func TestMachineConfig_Save_FilePermissions(t *testing.T) {
 		t.Error("saved config file is empty")
 	}
 }
+
+func TestProjectConfigWorkersPlan(t *testing.T) {
+	dir := t.TempDir()
+	yamlBody := "workers_plan: paid\n"
+	if err := os.WriteFile(filepath.Join(dir, ".cosmoflare.yaml"), []byte(yamlBody), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	cfg, err := LoadProjectConfig(dir)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if cfg.WorkersPlan != "paid" {
+		t.Fatalf("WorkersPlan = %q, want paid", cfg.WorkersPlan)
+	}
+}
