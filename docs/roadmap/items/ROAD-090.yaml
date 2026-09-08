@@ -1,0 +1,11 @@
+id: ROAD-090
+created_at: 2026-09-08T13:26:15.156337+04:00
+updated_at: 2026-09-08T13:26:15.159053+04:00
+title: Local Cloudflare control plane — account overview in CLI + Desktop
+status: captured
+refs:
+    - type: doc
+      path: docs/PRODUCT-VISION.md
+origin:
+    session: 43
+ulid: 01M205DTVQTT4C5RJAH7ME8PKG
