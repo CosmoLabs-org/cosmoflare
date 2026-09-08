@@ -10,10 +10,12 @@ requires_reading:
     - docs/changelog/unreleased.yaml
     - .goreleaser.yaml
 schema_version: 1
-status: PENDING
+status: SUPERSEDED
 supersedes: "docs/prompts/2026-09-06-launch-and-hardening.md"
 tags: []
 title: Cosmoflare — launch gate, v0.21.0, CCS feedback watch
+superseded_by: "docs/prompts/2026-09-08-post-v0.22.0-control-plane.md"
+completed: "2026-09-08T17:13:07+04:00"
 ---
 
 # Cosmoflare — Launch Gate, v0.21.0, CCS Feedback Watch
