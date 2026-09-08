@@ -91,11 +91,11 @@ func TestLegacyForwardingRules(t *testing.T) {
 	if first.ZoneID != "zone1" || first.When != "*example.com/old/*" || first.Destination != "https://example.com/new" {
 		t.Fatalf("first mapping wrong: %+v", first)
 	}
-	if first.StatusCode != 302 || first.Enabled || first.Source != "pagerules" {
+	if first.StatusCode != 302 || !first.Enabled || first.Source != "pagerules" {
 		t.Fatalf("first flags wrong: %+v", first)
 	}
 	second := got[1]
-	if second.When != "*example.com/gone*" || second.Destination != "https://example.com/" || second.StatusCode != 301 {
+	if second.When != "*example.com/gone" || second.Destination != "https://example.com/" || second.StatusCode != 301 {
 		t.Fatalf("second mapping wrong (status default 301 expected): %+v", second)
 	}
 	if second.Enabled {
@@ -218,13 +218,13 @@ git commit -m "feat(redirects): map legacy forwarding_url page rules into Redire
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `pkg/cosmoflare/domains_test.go`, following that file's existing service-fixture style (httptest-backed `ZoneService` etc. — mirror `TestGetDetail*` if present, else build the minimal zone-only service the file already uses):
+Append to `pkg/cosmoflare/domains_test.go` (note: this file currently has NO httptest fixtures — pure-logic tests with `&ZoneService{}` zero values only, no `TestGetDetail*` exists — so the helpers below must all be defined fresh; see the note after the test code):
 
 ```go
 func TestGetDetailMergesLegacyPageRules(t *testing.T) {
-	// Build a DomainService the same way existing GetDetail tests do
-	// (zones-only; ssl/dns/doctor nil), then wire both redirect sources.
-	svc := newDetailTestService(t) // existing helper in this file; zones serve one zone "z1"/"example.com"
+	// Zones-only service (ssl/dns/doctor nil) serving one zone "z1"/"example.com",
+	// then wire both redirect sources.
+	svc := newDetailTestService(t) // defined per the note below (no existing helper)
 
 	svc = svc.
 		WithRedirects(newFakeRedirectService([]RedirectRule{
@@ -268,7 +268,7 @@ func TestGetDetailPageRuleFactoryFailureSkipsLegacy(t *testing.T) {
 }
 ```
 
-If `newDetailTestService` / `newFakeRedirectService` / `fakePageRuleLister` do not exist yet, define them in this test file following the file's current fakes: `newDetailTestService` wraps whatever existing helper builds a zones-backed `DomainService`; `newFakeRedirectService` is a `*RedirectService` constructed with `cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))` serving one ruleset (copy the pattern from `redirect_test.go`); `fakePageRuleLister` is:
+None of `newDetailTestService` / `newFakeRedirectService` / `fakePageRuleLister` exist yet, and `domains_test.go` has no service fixtures to mirror. Define all three in this file: build the zones-backed base for `newDetailTestService` with the `zoneMockSetup` pattern from `pkg/cosmoflare/zone_test.go` (httptest server answering `GET /zones/z1` with zone name `"example.com"` and its name servers, wrapped via `NewDomainService` — `GetDetail` calls `zones.Get(ctx, zoneID)` first, so this endpoint is mandatory), make `newFakeRedirectService` a `*RedirectService` built on a `cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))` client whose httptest server serves the `/zones/z1/rulesets` list + phase-ruleset GET pair (copy the exact handler shape from `redirect_test.go`'s `TestRedirectService_List`, which uses the `redirectNewClient` helper); `newDetailTestService` must return `*DomainService` for the fluent chaining below. Add the `"context"` and `github.com/cloudflare/cloudflare-go` imports to `domains_test.go` (it currently imports neither). `fakePageRuleLister` is:
 
 ```go
 type fakePageRuleLister struct {
@@ -670,7 +670,7 @@ git commit -m "feat(domains): RedirectProber — bounded destination probes with
 ### Task 4: `RedirectIssue` + classification + attention criterion
 
 **Files:**
-- Modify: `pkg/cosmoflare/domains.go` (`DomainStatus` struct ~line 220 area, `domainNeedsAttention` ~line 290)
+- Modify: `pkg/cosmoflare/domains.go` (`DomainStatus` struct lines 12-19, `domainNeedsAttention` ~line 290)
 - Modify: `pkg/cosmoflare/domains_test.go`
 
 - [ ] **Step 1: Write the failing test**
@@ -835,13 +835,13 @@ In `cmd/domains.go`, extend the enrich branch of the factory (after the registra
 		}
 ```
 
-In `cmd/domains_stats.go`, add the flag and probe pass:
+In `cmd/domains_stats.go`, FIRST change the factory call at the top of `runDomainsStats` — it currently reads `svc, err := newDomainService(false)`; change it to `newDomainService(domainsStatsCheckRedirects)`. Without this, the service is built without `WithRedirects`/`WithPageRules`, `GetDetail` returns no redirects for any zone, and the entire probe pass is a silent no-op. Then add the flag and probe pass:
 
 ```go
 var domainsStatsCheckRedirects bool
 ```
 
-register in the command definition (next to `Use`/`Short` wiring — the file has no Flags yet, add in the same style as other cmd files):
+register in a new `init()` at the bottom of `cmd/domains_stats.go` (the file has no `init()` and no flags yet — a `Flags()` call cannot live inside the `cobra.Command` literal; follow the `init()` pattern in `cmd/domains.go`):
 
 ```go
 	domainsStatsCmd.Flags().BoolVar(&domainsStatsCheckRedirects, "check-redirects", false,
@@ -941,7 +941,7 @@ git commit -m "feat(cmd): domains stats --check-redirects probes destinations in
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `cmd/doctor_test.go` following its existing style — assert the report JSON carries `redirect_targets` when destinations were attached:
+Append to `cmd/doctor_test.go` following its existing style — assert the report JSON carries `redirect_targets` when destinations were attached. NOTE: `cmd/doctor_test.go` currently imports neither `encoding/json` nor `strings` — add both to its import block or this test will not compile:
 
 ```go
 func TestDoctorReportCarriesRedirectTargets(t *testing.T) {
@@ -999,9 +999,11 @@ In `cmd/doctor.go`, inside `runDoctorSingle` (cmd/doctor.go:165 — the target i
 							continue
 						}
 						if detail, err := domSvc.GetDetail(context.Background(), z.ID); err == nil && len(detail.Redirects) > 0 {
+							seen := map[string]bool{}
 							dests := make([]string, 0, len(detail.Redirects))
 							for _, r := range detail.Redirects {
-								if r.Destination != "" {
+								if r.Destination != "" && !seen[r.Destination] {
+									seen[r.Destination] = true
 									dests = append(dests, r.Destination)
 								}
 							}
@@ -1011,7 +1013,7 @@ In `cmd/doctor.go`, inside `runDoctorSingle` (cmd/doctor.go:165 — the target i
 							}
 							if issue := cosmoflare.ClassifyRedirectIssues(report.RedirectTargets); issue != "" {
 								report.Issues = append(report.Issues, cosmoflare.DiagnosticIssue{
-									Probe: "redirect-target", Severity: "warn",
+									Probe: "redirect-target", Severity: "warning",
 									Message: "redirect target problem: " + issue,
 									Fix:     "inspect the redirect destination — it loops, errors, or is unreachable",
 								})
@@ -1077,15 +1079,15 @@ Expected: FAIL — badge not rendered.
 
 - [ ] **Step 3: Write minimal implementation**
 
-In `internal/tui/domain.go`, find the detail-pane rendering (the function that builds the right pane from the selected `DomainStatus`). Add, in the style of the existing detail lines:
+In `internal/tui/domain.go`, the detail pane is `detailPane()` (line ~201); it builds a `lines []string` from `sel := m.Selected()` (the selected `*cosmoflare.DomainStatus`). Add the badge in the base section built from `sel` — NOT inside the `if m.detail != nil` block, or it will not render for a model whose detail was never set (the test below sets `RedirectIssue` on the list `DomainStatus` and calls `View()` without `SetDetail`):
 
 ```go
-	if d.RedirectIssue != "" {
-		rows = append(rows, warningStyle.Render("redirect: "+d.RedirectIssue))
+	if sel.RedirectIssue != "" {
+		lines = append(lines, lipgloss.NewStyle().Foreground(mutedColor).Render("redirect: "+sel.RedirectIssue))
 	}
 ```
 
-Adapt `rows`/`warningStyle` to the actual local variable and the palette the file uses for warnings (mirror an existing attention/error style; if none exists, use the muted/error color helper the file already imports from the shared palette). The TUI runs no probes itself — the badge renders only when the fetched `DomainStatus` carries an issue (documented behavior).
+The shared palette (`internal/tui/model.go`) defines only `primaryColor`/`mutedColor`/`textColor` — there is no warning style and no `warningStyle` helper; `mutedColor` is the established attention-adjacent color in this file, or add a warning color to the theme if preferred. The TUI runs no probes itself — the badge renders only when the fetched `DomainStatus` carries an issue (documented behavior).
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -1108,10 +1110,10 @@ git commit -m "feat(tui): domain detail pane renders redirect-issue badge when p
 
 - [ ] **Step 1: Update USAGE.md**
 
-1. In the `cosmoflare domains redirects` section: note that output MERGES modern Redirect Rules with legacy Page-Rule `forwarding_url` entries, and that legacy rows carry `"source": "pagerules"` in JSON.
-2. In the `cosmoflare domains stats` section: document `--check-redirects` (opt-in live probes; defaults 8 concurrent / 10s per target; sets `redirect_issue` on domains; extends the attention list).
-3. In the `cosmoflare doctor` section: document the `redirect_targets` report field and the redirect-target issue severity.
-4. In the `cosmoflare domains tui` section (if present): note the conditional redirect-issue badge.
+1. In the `### Domain subcommands (Domain Management Center)` block under `## Domains Command` (the `domains redirects` bullet — there is no dedicated H3 for it): note that output MERGES modern Redirect Rules with legacy Page-Rule `forwarding_url` entries, and that legacy rows carry `"source": "pagerules"` in JSON. The merge applies to `domains redirects` and `domains get` (both use the enriched factory).
+2. In the same block (the `domains stats` bullet): document `--check-redirects` (opt-in live probes; defaults 8 concurrent / 10s per target; sets `redirect_issue` on domains; extends the attention list).
+3. In `## Doctor Command`: document the `redirect_targets` report field and the redirect-target issue severity (`warning`).
+4. In the same Domain subcommands block (the `domains tui` bullet): note the conditional redirect-issue badge.
 
 - [ ] **Step 2: Verify docs integrity**
 
@@ -1139,4 +1141,9 @@ Expected: all PASS. No probe touches the live network in tests (httptest only); 
 ## Stop Conditions
 
 - If `PageRuleAction.Value` for `forwarding_url` arrives as a shape other than `map[string]interface{}` in live JSON (e.g. typed struct via cloudflare-go), STOP the Task 1 green step, record the observed shape in this plan, and adjust `forwardingURL`/`forwardingStatusCode` — do not error on unknown shapes, drop them.
-- If `cmd/doctor.go` has no positional domain argument (different invocation shape than assumed), adapt the Task 6 lookup to the real argument source before wiring — do not add a new flag.
+
+## Accepted limitations (review 2026-09-09, deliberate)
+
+- **Doctor score staleness**: the redirect-target `warning` issue is appended after `RunDiagnostics` computed `report.Score`, so the printed score does not reflect it. Accepted — warning-severity issues do not drive doctor's critical exit path by design; recomputing the score from cmd would require exporting scoring logic for one cosmetic case.
+- **Task 5 extra API traffic**: `checkDomainRedirects` runs `GetDetail` per zone under enrich mode, which also invokes the registrar overlay. Harmless extra reads; the flag is opt-in and the run is already probe-bound, not API-bound.
+- Agents dispatching from this plan run `gofmt -w` on every touched `.go` file before committing (plan snippets are not always gofmt-aligned).
