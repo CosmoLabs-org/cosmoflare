@@ -1,11 +1,8 @@
 package cosmoflare
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -39,18 +36,15 @@ type AttachBucketDomainRequest struct {
 
 // UpdateBucketDomainRequest changes settings of an attached domain.
 type UpdateBucketDomainRequest struct {
-	Enabled *bool     `json:"enabled,omitempty"`
-	Ciphers []string  `json:"ciphers,omitempty"`
-	MinTLS  *string   `json:"minTLS,omitempty"`
+	Enabled *bool    `json:"enabled,omitempty"`
+	Ciphers []string `json:"ciphers,omitempty"`
+	MinTLS  *string  `json:"minTLS,omitempty"`
 }
 
 // BucketDomainService manages R2 bucket custom domains over the REST API.
 type BucketDomainService struct {
 	accountID    string
-	apiToken     string
-	httpClient   *http.Client
-	baseURL      string
-	jurisdiction string // optional cf-r2-jurisdiction header: default|eu|us|fedramp
+	rest         restClient
 	pollInterval time.Duration
 	onPoll       func(*BucketDomain) // optional observer invoked after each Verify poll
 }
@@ -59,9 +53,7 @@ type BucketDomainService struct {
 func NewBucketDomainService(accountID, apiToken string, opts ...BucketDomainOption) *BucketDomainService {
 	s := &BucketDomainService{
 		accountID:    accountID,
-		apiToken:     apiToken,
-		httpClient:   &http.Client{Timeout: 30 * time.Second},
-		baseURL:      "https://api.cloudflare.com/client/v4",
+		rest:         newRESTClient(apiToken),
 		pollInterval: 5 * time.Second,
 	}
 	for _, opt := range opts {
@@ -75,17 +67,17 @@ type BucketDomainOption func(*BucketDomainService)
 
 // WithBucketDomainHTTPClient sets a custom HTTP client.
 func WithBucketDomainHTTPClient(c *http.Client) BucketDomainOption {
-	return func(s *BucketDomainService) { s.httpClient = c }
+	return func(s *BucketDomainService) { s.rest.httpClient = c }
 }
 
 // WithBucketDomainBaseURL overrides the REST API base URL.
 func WithBucketDomainBaseURL(u string) BucketDomainOption {
-	return func(s *BucketDomainService) { s.baseURL = u }
+	return func(s *BucketDomainService) { s.rest.baseURL = u }
 }
 
 // WithBucketDomainJurisdiction sets the cf-r2-jurisdiction header value.
 func WithBucketDomainJurisdiction(j string) BucketDomainOption {
-	return func(s *BucketDomainService) { s.jurisdiction = j }
+	return func(s *BucketDomainService) { s.rest.jurisdiction = j }
 }
 
 // WithBucketDomainPollInterval sets the polling interval used by Verify.
@@ -99,72 +91,6 @@ func WithBucketDomainOnPoll(fn func(*BucketDomain)) BucketDomainOption {
 	return func(s *BucketDomainService) { s.onPoll = fn }
 }
 
-// envelope is the standard Cloudflare API response wrapper.
-type bucketDomainEnvelope struct {
-	Success bool              `json:"success"`
-	Errors  []bucketDomainErr `json:"errors"`
-	Result  json.RawMessage   `json:"result"`
-}
-
-type bucketDomainErr struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// do performs an authenticated request against the custom domains API and
-// decodes the standard envelope. When out is non-nil the raw result is
-// unmarshalled into it.
-func (s *BucketDomainService) do(ctx context.Context, op, method, path string, body interface{}, out interface{}) error {
-	var reader io.Reader
-	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
-			return newError(op, "failed to encode request body", err)
-		}
-		reader = bytes.NewReader(data)
-	}
-	req, err := http.NewRequestWithContext(ctx, method, s.baseURL+path, reader)
-	if err != nil {
-		return newError(op, "failed to build request", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
-	if s.jurisdiction != "" {
-		req.Header.Set("cf-r2-jurisdiction", s.jurisdiction)
-	}
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return newError(op, "request failed", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return newError(op, "failed to read response body", err)
-	}
-
-	var env bucketDomainEnvelope
-	if err := json.Unmarshal(data, &env); err != nil {
-		return newError(op, fmt.Sprintf("unexpected response (HTTP %d)", resp.StatusCode), err)
-	}
-	if !env.Success {
-		msg := fmt.Sprintf("API returned errors (HTTP %d)", resp.StatusCode)
-		if len(env.Errors) > 0 {
-			msg = env.Errors[0].Message
-		}
-		return newError(op, msg, nil)
-	}
-	if out != nil && len(env.Result) > 0 {
-		if err := json.Unmarshal(env.Result, out); err != nil {
-			return newError(op, "failed to decode result", err)
-		}
-	}
-	return nil
-}
-
 func (s *BucketDomainService) domainsPath(bucket string) string {
 	return fmt.Sprintf("/accounts/%s/r2/buckets/%s/domains/custom", s.accountID, url.PathEscape(bucket))
 }
@@ -176,13 +102,13 @@ func (s *BucketDomainService) Attach(ctx context.Context, bucket string, req Att
 		return nil, validationError(op, "domain is required")
 	}
 	if req.ZoneID == "" {
-		return nil, validationError(op, "zone ID is required (pass --zone-id or rely on auto-resolution)")
+		return nil, validationError(op, "zone ID is required (resolve it via ZoneService.ResolveIDForDomain or pass it explicitly)")
 	}
 	if req.MinTLS != "" && req.MinTLS != "1.0" && req.MinTLS != "1.1" && req.MinTLS != "1.2" && req.MinTLS != "1.3" {
 		return nil, validationError(op, fmt.Sprintf("invalid minTLS %q: must be one of 1.0, 1.1, 1.2, 1.3", req.MinTLS))
 	}
 	var d BucketDomain
-	if err := s.do(ctx, op, http.MethodPost, s.domainsPath(bucket), req, &d); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodPost, s.domainsPath(bucket), req, &d); err != nil {
 		return nil, err
 	}
 	return &d, nil
@@ -194,7 +120,7 @@ func (s *BucketDomainService) List(ctx context.Context, bucket string) ([]Bucket
 	var result struct {
 		Domains []BucketDomain `json:"domains"`
 	}
-	if err := s.do(ctx, op, http.MethodGet, s.domainsPath(bucket), nil, &result); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodGet, s.domainsPath(bucket), nil, &result); err != nil {
 		return nil, err
 	}
 	if result.Domains == nil {
@@ -208,7 +134,7 @@ func (s *BucketDomainService) Get(ctx context.Context, bucket, domain string) (*
 	const op = "BucketDomainGet"
 	var d BucketDomain
 	path := s.domainsPath(bucket) + "/" + url.PathEscape(domain)
-	if err := s.do(ctx, op, http.MethodGet, path, nil, &d); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodGet, path, nil, &d); err != nil {
 		return nil, err
 	}
 	return &d, nil
@@ -219,7 +145,7 @@ func (s *BucketDomainService) Update(ctx context.Context, bucket, domain string,
 	const op = "BucketDomainUpdate"
 	var d BucketDomain
 	path := s.domainsPath(bucket) + "/" + url.PathEscape(domain)
-	if err := s.do(ctx, op, http.MethodPut, path, req, &d); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodPut, path, req, &d); err != nil {
 		return nil, err
 	}
 	return &d, nil
@@ -229,7 +155,7 @@ func (s *BucketDomainService) Update(ctx context.Context, bucket, domain string,
 func (s *BucketDomainService) Detach(ctx context.Context, bucket, domain string) error {
 	const op = "BucketDomainDetach"
 	path := s.domainsPath(bucket) + "/" + url.PathEscape(domain)
-	return s.do(ctx, op, http.MethodDelete, path, nil, nil)
+	return s.rest.do(ctx, op, http.MethodDelete, path, nil, nil)
 }
 
 // Verify polls Get until both ownership and SSL are active, a terminal state

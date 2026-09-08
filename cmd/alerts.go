@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -281,7 +280,7 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 		if fired == nil {
 			fired = []firedAlert{}
 		}
-		return json.NewEncoder(os.Stdout).Encode(fired)
+		return printJSON(fired)
 	}
 	printInfo("%d rule(s) evaluated, %d fired", evaluated, len(firedNames))
 	return nil

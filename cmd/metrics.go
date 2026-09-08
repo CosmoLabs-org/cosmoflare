@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -102,36 +103,39 @@ func runMetricsJSON(client cosmoflare.R2Client) error {
 		snap.R2TotalObjects += b.ObjectCount
 	}
 
-	recordAnalytics := func(source string, fn func() error) {
-		if err := fn(); err != nil {
-			snap.recordError(source, err)
-		}
-	}
-
 	if AccountID == "" || APIToken == "" {
-		snap.recordError("analytics", fmt.Errorf("account ID and API token are required for usage analytics (run 'cosmoflare account' to configure)"))
+		snap.recordError("analytics", fmt.Errorf("account ID and API token are required for usage analytics (run 'cosmoflare setup' or 'cosmoflare account' to configure)"))
 	} else {
 		analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
 		w := cosmoflare.AnalyticsWindow{Start: time.Now().Add(-metricsWindow), End: time.Now()}
 
-		recordAnalytics("r2_storage", func() error {
-			data, err := analytics.R2Storage(ctx, w)
-			snap.R2Storage = data
-			return err
-		})
-		recordAnalytics("r2_operations", func() error {
-			data, err := analytics.R2Operations(ctx, w)
-			snap.R2Operations = data
-			return err
-		})
-		recordAnalytics("workers_usage", func() error {
-			data, err := analytics.Workers(ctx, w)
-			snap.WorkersUsage = data
-			return err
-		})
-		recordAnalytics("zone_http", func() error {
-			return fetchZoneHTTP(ctx, analytics, w, &snap)
-		})
+		// The analytics sources are independent round trips — run them
+		// concurrently so an N-zone account pays ~1 RTT, not ~N.
+		var mu sync.Mutex
+		collect := func(source string, fn func() error) {
+			if err := fn(); err != nil {
+				mu.Lock()
+				snap.recordError(source, err)
+				mu.Unlock()
+			}
+		}
+		var wg sync.WaitGroup
+		for _, src := range []struct {
+			name string
+			fn   func() error
+		}{
+			{"r2_storage", func() error { data, err := analytics.R2Storage(ctx, w); snap.R2Storage = data; return err }},
+			{"r2_operations", func() error { data, err := analytics.R2Operations(ctx, w); snap.R2Operations = data; return err }},
+			{"workers_usage", func() error { data, err := analytics.Workers(ctx, w); snap.WorkersUsage = data; return err }},
+			{"zone_http", func() error { return fetchZoneHTTP(ctx, analytics, w, &snap, &mu) }},
+		} {
+			wg.Add(1)
+			go func(name string, fn func() error) {
+				defer wg.Done()
+				collect(name, fn)
+			}(src.name, src.fn)
+		}
+		wg.Wait()
 	}
 
 	out, _ := json.MarshalIndent(snap, "", "  ")
@@ -142,7 +146,7 @@ func runMetricsJSON(client cosmoflare.R2Client) error {
 // fetchZoneHTTP fills snap.ZoneHTTP with per-zone traffic over the window,
 // capped at 25 zones to bound query count. Per-zone failures are recorded
 // individually so one bad zone does not hide the rest.
-func fetchZoneHTTP(ctx context.Context, analytics *cosmoflare.AnalyticsService, w cosmoflare.AnalyticsWindow, snap *metricsSnapshot) error {
+func fetchZoneHTTP(ctx context.Context, analytics *cosmoflare.AnalyticsService, w cosmoflare.AnalyticsWindow, snap *metricsSnapshot, mu *sync.Mutex) error {
 	zoneSvc, err := getZoneService()
 	if err != nil {
 		return err
@@ -154,14 +158,30 @@ func fetchZoneHTTP(ctx context.Context, analytics *cosmoflare.AnalyticsService, 
 	if len(zones) > 25 {
 		zones = zones[:25]
 	}
+	mu.Lock()
 	snap.ZoneHTTP = make(map[string]*cosmoflare.ZoneHTTPSummary, len(zones))
+	mu.Unlock()
+
+	// Bounded fan-out: 6 concurrent zone queries (an account with 25 zones
+	// pays ~4 RTTs instead of 25).
+	sem := make(chan struct{}, 6)
+	var wg sync.WaitGroup
 	for _, z := range zones {
-		summary, err := analytics.ZoneHTTP(ctx, z.ID, w)
-		if err != nil {
-			snap.recordError("zone:"+z.Name, err)
-			continue
-		}
-		snap.ZoneHTTP[z.Name] = summary
+		wg.Add(1)
+		go func(id, name string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			summary, err := analytics.ZoneHTTP(ctx, id, w)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				snap.recordError("zone:"+name, err)
+				return
+			}
+			snap.ZoneHTTP[name] = summary
+		}(z.ID, z.Name)
 	}
+	wg.Wait()
 	return nil
 }

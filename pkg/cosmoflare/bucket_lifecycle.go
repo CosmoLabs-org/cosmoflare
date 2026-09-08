@@ -1,11 +1,8 @@
 package cosmoflare
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -51,20 +48,15 @@ const maxLifecycleRules = 1000
 // BucketLifecycleService manages R2 object lifecycle rules over the REST API.
 // There is no per-rule delete endpoint: Set REPLACES the whole configuration.
 type BucketLifecycleService struct {
-	accountID    string
-	apiToken     string
-	httpClient   *http.Client
-	baseURL      string
-	jurisdiction string // optional cf-r2-jurisdiction header: default|eu|us|fedramp
+	accountID string
+	rest      restClient
 }
 
 // NewBucketLifecycleService creates a service for managing R2 lifecycle rules.
 func NewBucketLifecycleService(accountID, apiToken string, opts ...BucketLifecycleOption) *BucketLifecycleService {
 	s := &BucketLifecycleService{
-		accountID:  accountID,
-		apiToken:   apiToken,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
-		baseURL:    "https://api.cloudflare.com/client/v4",
+		accountID: accountID,
+		rest:      newRESTClient(apiToken),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -77,83 +69,17 @@ type BucketLifecycleOption func(*BucketLifecycleService)
 
 // WithBucketLifecycleHTTPClient sets a custom HTTP client.
 func WithBucketLifecycleHTTPClient(c *http.Client) BucketLifecycleOption {
-	return func(s *BucketLifecycleService) { s.httpClient = c }
+	return func(s *BucketLifecycleService) { s.rest.httpClient = c }
 }
 
 // WithBucketLifecycleBaseURL overrides the REST API base URL.
 func WithBucketLifecycleBaseURL(u string) BucketLifecycleOption {
-	return func(s *BucketLifecycleService) { s.baseURL = u }
+	return func(s *BucketLifecycleService) { s.rest.baseURL = u }
 }
 
 // WithBucketLifecycleJurisdiction sets the cf-r2-jurisdiction header value.
 func WithBucketLifecycleJurisdiction(j string) BucketLifecycleOption {
-	return func(s *BucketLifecycleService) { s.jurisdiction = j }
-}
-
-// bucketLifecycleEnvelope is the standard Cloudflare API response wrapper.
-type bucketLifecycleEnvelope struct {
-	Success bool                 `json:"success"`
-	Errors  []bucketLifecycleErr `json:"errors"`
-	Result  json.RawMessage      `json:"result"`
-}
-
-type bucketLifecycleErr struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// do performs an authenticated request against the lifecycle API and decodes
-// the standard envelope. When out is non-nil the raw result is unmarshalled
-// into it.
-func (s *BucketLifecycleService) do(ctx context.Context, op, method, path string, body interface{}, out interface{}) error {
-	var reader io.Reader
-	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
-			return newError(op, "failed to encode request body", err)
-		}
-		reader = bytes.NewReader(data)
-	}
-	req, err := http.NewRequestWithContext(ctx, method, s.baseURL+path, reader)
-	if err != nil {
-		return newError(op, "failed to build request", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
-	if s.jurisdiction != "" {
-		req.Header.Set("cf-r2-jurisdiction", s.jurisdiction)
-	}
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return newError(op, "request failed", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return newError(op, "failed to read response body", err)
-	}
-
-	var env bucketLifecycleEnvelope
-	if err := json.Unmarshal(data, &env); err != nil {
-		return newError(op, fmt.Sprintf("unexpected response (HTTP %d)", resp.StatusCode), err)
-	}
-	if !env.Success {
-		msg := fmt.Sprintf("API returned errors (HTTP %d)", resp.StatusCode)
-		if len(env.Errors) > 0 {
-			msg = env.Errors[0].Message
-		}
-		return newError(op, msg, nil)
-	}
-	if out != nil && len(env.Result) > 0 {
-		if err := json.Unmarshal(env.Result, out); err != nil {
-			return newError(op, "failed to decode result", err)
-		}
-	}
-	return nil
+	return func(s *BucketLifecycleService) { s.rest.jurisdiction = j }
 }
 
 func (s *BucketLifecycleService) lifecyclePath(bucket string) string {
@@ -190,7 +116,7 @@ func (s *BucketLifecycleService) Get(ctx context.Context, bucket string) ([]Life
 	var result struct {
 		Rules []LifecycleRule `json:"rules"`
 	}
-	if err := s.do(ctx, op, http.MethodGet, s.lifecyclePath(bucket), nil, &result); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodGet, s.lifecyclePath(bucket), nil, &result); err != nil {
 		return nil, err
 	}
 	if result.Rules == nil {
@@ -235,5 +161,5 @@ func (s *BucketLifecycleService) Set(ctx context.Context, bucket string, rules [
 	body := struct {
 		Rules []LifecycleRule `json:"rules"`
 	}{Rules: rules}
-	return s.do(ctx, op, http.MethodPut, s.lifecyclePath(bucket), body, nil)
+	return s.rest.do(ctx, op, http.MethodPut, s.lifecyclePath(bucket), body, nil)
 }

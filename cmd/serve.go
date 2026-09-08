@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/rand"
-	"time"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -29,9 +29,8 @@ var (
 )
 
 // alertEvalInterval is how often the daemon re-evaluates alert rules against
-// live analytics. Package-level so tests can shorten it; values below 30s are
-// clamped to 30s in the loop.
-var alertEvalInterval = 5 * time.Minute
+// live analytics. Values below 30s are clamped to 30s in the loop.
+const alertEvalInterval = 5 * time.Minute
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -194,8 +193,7 @@ func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertM
 		log.Printf("[alerts] rules service unavailable: %v", err)
 		return
 	}
-	cooldown := 15 * time.Minute
-	eval := webhook.NewEvaluator(rules, alertMgr, cooldown)
+	eval := webhook.NewEvaluator(rules, alertMgr, 0) // 0 → library default cooldown (15m)
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()

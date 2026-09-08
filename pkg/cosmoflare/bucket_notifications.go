@@ -1,11 +1,8 @@
 package cosmoflare
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -59,21 +56,16 @@ type QueueNotification struct {
 // per-object events (created/deleted/copied/multipart-completed/
 // lifecycle-expired) to Cloudflare Queues over the REST API.
 type BucketNotificationService struct {
-	accountID    string
-	apiToken     string
-	httpClient   *http.Client
-	baseURL      string
-	jurisdiction string
+	accountID string
+	rest      restClient
 }
 
 // NewBucketNotificationService creates a service for managing R2 event
 // notification rules. The target queue must already exist.
 func NewBucketNotificationService(accountID, apiToken string, opts ...BucketNotificationOption) *BucketNotificationService {
 	s := &BucketNotificationService{
-		accountID:  accountID,
-		apiToken:   apiToken,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
-		baseURL:    "https://api.cloudflare.com/client/v4",
+		accountID: accountID,
+		rest:      newRESTClient(apiToken),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -86,86 +78,19 @@ type BucketNotificationOption func(*BucketNotificationService)
 
 // WithBucketNotificationHTTPClient sets a custom HTTP client.
 func WithBucketNotificationHTTPClient(c *http.Client) BucketNotificationOption {
-	return func(s *BucketNotificationService) { s.httpClient = c }
+	return func(s *BucketNotificationService) { s.rest.httpClient = c }
 }
 
 // WithBucketNotificationBaseURL overrides the REST API base URL.
 func WithBucketNotificationBaseURL(u string) BucketNotificationOption {
-	return func(s *BucketNotificationService) { s.baseURL = u }
+	return func(s *BucketNotificationService) { s.rest.baseURL = u }
 }
 
 // WithBucketNotificationJurisdiction sets the cf-r2-jurisdiction header value.
 func WithBucketNotificationJurisdiction(j string) BucketNotificationOption {
-	return func(s *BucketNotificationService) { s.jurisdiction = j }
+	return func(s *BucketNotificationService) { s.rest.jurisdiction = j }
 }
 
-// bucketNotificationEnvelope is the standard Cloudflare API response wrapper.
-type bucketNotificationEnvelope struct {
-	Success bool                      `json:"success"`
-	Errors  []bucketNotificationError `json:"errors"`
-	Result  json.RawMessage           `json:"result"`
-}
-
-type bucketNotificationError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// do performs an authenticated request against the event notifications API
-// and decodes the standard envelope. When out is non-nil the raw result is
-// unmarshalled into it.
-func (s *BucketNotificationService) do(ctx context.Context, op, method, path string, body interface{}, out interface{}) error {
-	var reader io.Reader
-	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
-			return newError(op, "failed to encode request body", err)
-		}
-		reader = bytes.NewReader(data)
-	}
-	req, err := http.NewRequestWithContext(ctx, method, s.baseURL+path, reader)
-	if err != nil {
-		return newError(op, "failed to build request", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
-	if s.jurisdiction != "" {
-		req.Header.Set("cf-r2-jurisdiction", s.jurisdiction)
-	}
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return newError(op, "request failed", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return newError(op, "failed to read response body", err)
-	}
-
-	var env bucketNotificationEnvelope
-	if err := json.Unmarshal(data, &env); err != nil {
-		return newError(op, fmt.Sprintf("unexpected response (HTTP %d)", resp.StatusCode), err)
-	}
-	if !env.Success {
-		msg := fmt.Sprintf("API returned errors (HTTP %d)", resp.StatusCode)
-		if len(env.Errors) > 0 {
-			msg = env.Errors[0].Message
-		}
-		return newError(op, msg, nil)
-	}
-	if out != nil && len(env.Result) > 0 {
-		if err := json.Unmarshal(env.Result, out); err != nil {
-			return newError(op, "failed to decode result", err)
-		}
-	}
-	return nil
-}
-
-// configPath is the bucket-scoped event notifications configuration root.
 func (s *BucketNotificationService) configPath(bucket string) string {
 	return fmt.Sprintf("/accounts/%s/event_notifications/r2/%s/configuration", s.accountID, url.PathEscape(bucket))
 }
@@ -206,7 +131,7 @@ func (s *BucketNotificationService) List(ctx context.Context, bucket string) ([]
 		BucketName string              `json:"bucketName"`
 		Queues     []QueueNotification `json:"queues"`
 	}
-	if err := s.do(ctx, op, http.MethodGet, s.configPath(bucket), nil, &result); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodGet, s.configPath(bucket), nil, &result); err != nil {
 		return nil, err
 	}
 	if result.Queues == nil {
@@ -222,7 +147,7 @@ func (s *BucketNotificationService) Get(ctx context.Context, bucket, queueID str
 		BucketName string              `json:"bucketName"`
 		Queues     []QueueNotification `json:"queues"`
 	}
-	if err := s.do(ctx, op, http.MethodGet, s.queuePath(bucket, queueID), nil, &result); err != nil {
+	if err := s.rest.do(ctx, op, http.MethodGet, s.queuePath(bucket, queueID), nil, &result); err != nil {
 		return nil, err
 	}
 	// The single-queue endpoint wraps the queue in the same queues array.
@@ -248,7 +173,7 @@ func (s *BucketNotificationService) Set(ctx context.Context, bucket, queueID str
 	body := struct {
 		Rules []NotificationRule `json:"rules"`
 	}{Rules: rules}
-	return s.do(ctx, op, http.MethodPut, s.queuePath(bucket, queueID), body, nil)
+	return s.rest.do(ctx, op, http.MethodPut, s.queuePath(bucket, queueID), body, nil)
 }
 
 // Delete removes ruleIds from the queue, or the whole queue config when ids
@@ -261,5 +186,5 @@ func (s *BucketNotificationService) Delete(ctx context.Context, bucket, queueID 
 			RuleIDs []string `json:"ruleIds"`
 		}{RuleIDs: ruleIDs}
 	}
-	return s.do(ctx, op, http.MethodDelete, s.queuePath(bucket, queueID), body, nil)
+	return s.rest.do(ctx, op, http.MethodDelete, s.queuePath(bucket, queueID), body, nil)
 }

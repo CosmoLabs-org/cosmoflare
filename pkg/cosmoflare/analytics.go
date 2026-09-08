@@ -254,10 +254,10 @@ func (s *AnalyticsService) R2Storage(ctx context.Context, w AnalyticsWindow) ([]
 				cur = &acc{}
 				byBucket[name] = cur
 			}
-			cur.objectCount = max64(cur.objectCount, g.Max.ObjectCount)
-			cur.uploadCount = max64(cur.uploadCount, g.Max.UploadCount)
-			cur.payloadSize = max64(cur.payloadSize, g.Max.PayloadSize)
-			cur.metadataSize = max64(cur.metadataSize, g.Max.MetadataSize)
+			cur.objectCount = max(cur.objectCount, g.Max.ObjectCount)
+			cur.uploadCount = max(cur.uploadCount, g.Max.UploadCount)
+			cur.payloadSize = max(cur.payloadSize, g.Max.PayloadSize)
+			cur.metadataSize = max(cur.metadataSize, g.Max.MetadataSize)
 		}
 	}
 	buckets := make([]R2BucketStorage, 0, len(byBucket))
@@ -425,12 +425,4 @@ func (s *AnalyticsService) windowVars(w AnalyticsWindow) map[string]any {
 		"start":      w.Start.Format(time.RFC3339),
 		"end":        w.End.Format(time.RFC3339),
 	}
-}
-
-// max64 returns the larger of two uint64 values.
-func max64(a, b uint64) uint64 {
-	if a > b {
-		return a
-	}
-	return b
 }

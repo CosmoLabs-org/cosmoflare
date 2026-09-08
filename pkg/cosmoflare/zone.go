@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
@@ -99,6 +100,29 @@ func (s *ZoneService) List(ctx context.Context) ([]*Zone, error) {
 		zones = append(zones, cfZoneToZone(z))
 	}
 	return zones, nil
+}
+
+// ResolveIDForDomain finds the zone ID for a domain name: an exact match
+// first, then the parent zone (first label dropped). First match wins.
+// Returns an error naming both attempts when no zone on the account matches.
+func (s *ZoneService) ResolveIDForDomain(ctx context.Context, domain string) (string, error) {
+	zones, err := s.List(ctx)
+	if err != nil {
+		return "", err
+	}
+	candidates := []string{domain}
+	if i := strings.Index(domain, "."); i >= 0 && i < len(domain)-1 {
+		candidates = append(candidates, domain[i+1:])
+	}
+	for _, candidate := range candidates {
+		for _, z := range zones {
+			if z.Name == candidate {
+				return z.ID, nil
+			}
+		}
+	}
+	return "", newError("ZoneService.ResolveIDForDomain",
+		fmt.Sprintf("no Cloudflare zone found for %q (tried %s): add the domain as a zone in your account, or pass the zone ID explicitly", domain, strings.Join(candidates, ", ")), nil)
 }
 
 // Get retrieves a single zone by ID.

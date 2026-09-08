@@ -8,8 +8,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/spf13/cobra"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var bucketDomainCmd = &cobra.Command{
@@ -33,14 +34,6 @@ Examples:
   cosmoflare bucket domain attach my-bucket --domain cdn.example.com
   cosmoflare bucket domain list my-bucket --json`,
 }
-
-var (
-	bucketDomainDomain string
-	bucketDomainZoneID string
-	bucketDomainMinTLS string
-	bucketDomainCipher []string
-	bucketDomainForce  bool
-)
 
 var bucketDomainAttachCmd = &cobra.Command{
 	Use:   "attach [bucket]",
@@ -127,20 +120,20 @@ func init() {
 	bucketDomainCmd.AddCommand(bucketDomainUpdateCmd)
 	bucketDomainCmd.AddCommand(bucketDomainDetachCmd)
 
-	bucketDomainAttachCmd.Flags().StringVar(&bucketDomainDomain, "domain", "", "Domain name to attach (required)")
-	bucketDomainAttachCmd.Flags().StringVar(&bucketDomainZoneID, "zone-id", "", "Cloudflare zone ID (auto-resolved from the domain when omitted)")
-	bucketDomainAttachCmd.Flags().StringVar(&bucketDomainMinTLS, "min-tls", "", "Minimum TLS version: 1.0, 1.1, 1.2 or 1.3")
-	bucketDomainAttachCmd.Flags().StringSliceVar(&bucketDomainCipher, "cipher", []string{}, "TLS cipher suites (repeatable)")
+	bucketDomainAttachCmd.Flags().String("domain", "", "Domain name to attach (required)")
+	bucketDomainAttachCmd.Flags().String("zone-id", "", "Cloudflare zone ID (auto-resolved from the domain when omitted)")
+	bucketDomainAttachCmd.Flags().String("min-tls", "", "Minimum TLS version: 1.0, 1.1, 1.2 or 1.3")
+	bucketDomainAttachCmd.Flags().StringSlice("cipher", []string{}, "TLS cipher suites (repeatable)")
 	bucketDomainAttachCmd.Flags().Bool("disabled", false, "Attach the domain in disabled state")
 
 	bucketDomainVerifyCmd.Flags().String("timeout", "120s", "Maximum time to wait (Go duration, e.g. 120s or 5m)")
 
 	bucketDomainUpdateCmd.Flags().Bool("enabled", false, "Enable the domain")
 	bucketDomainUpdateCmd.Flags().Bool("disabled", false, "Disable the domain")
-	bucketDomainUpdateCmd.Flags().StringVar(&bucketDomainMinTLS, "min-tls", "", "Minimum TLS version: 1.0, 1.1, 1.2 or 1.3")
-	bucketDomainUpdateCmd.Flags().StringSliceVar(&bucketDomainCipher, "cipher", []string{}, "TLS cipher suites (repeatable; replaces existing list)")
+	bucketDomainUpdateCmd.Flags().String("min-tls", "", "Minimum TLS version: 1.0, 1.1, 1.2 or 1.3")
+	bucketDomainUpdateCmd.Flags().StringSlice("cipher", []string{}, "TLS cipher suites (repeatable; replaces existing list)")
 
-	bucketDomainDetachCmd.Flags().BoolVar(&bucketDomainForce, "force", false, "Skip confirmation prompt")
+	bucketDomainDetachCmd.Flags().Bool("force", false, "Skip confirmation prompt")
 }
 
 // getBucketDomainService creates the bucket custom-domain service using the
@@ -149,29 +142,12 @@ func getBucketDomainService(opts ...cosmoflare.BucketDomainOption) *cosmoflare.B
 	return cosmoflare.NewBucketDomainService(AccountID, APIToken, opts...)
 }
 
-// resolveZoneID finds the zone for a domain: the full name first, then the
-// parent zone (first label dropped). First match wins.
 func resolveZoneID(ctx context.Context, domain string) (string, error) {
 	zoneSvc, err := getZoneService()
 	if err != nil {
 		return "", fmt.Errorf("failed to create zone service: %w", err)
 	}
-	zones, err := zoneSvc.List(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to list zones: %w", err)
-	}
-	candidates := []string{domain}
-	if i := strings.Index(domain, "."); i >= 0 && i < len(domain)-1 {
-		candidates = append(candidates, domain[i+1:])
-	}
-	for _, candidate := range candidates {
-		for _, z := range zones {
-			if z.Name == candidate {
-				return z.ID, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("no Cloudflare zone found for %q (tried %s): add the domain as a zone in your account, or pass --zone-id", domain, strings.Join(candidates, ", "))
+	return zoneSvc.ResolveIDForDomain(ctx, domain)
 }
 
 func bucketDomainStatuses(d *cosmoflare.BucketDomain) (ownership, ssl string) {
@@ -412,15 +388,9 @@ func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
 	bucket, domain := args[0], args[1]
 	force, _ := cmd.Flags().GetBool("force")
 
-	if !force && !DryRun {
-		fmt.Printf("Are you sure you want to detach domain '%s' from bucket '%s'? [y/N]: ", domain, bucket)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Domain detach cancelled")
-			return nil
-		}
+	if !force && !DryRun && !ux.Confirm(fmt.Sprintf("Detach domain '%s' from bucket '%s'?", domain, bucket)) {
+		printInfo("Domain detach cancelled")
+		return nil
 	}
 
 	svc := getBucketDomainService()

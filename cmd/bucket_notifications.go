@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
@@ -313,15 +314,9 @@ func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
 		target = "the entire queue configuration"
 	}
 
-	if !force && !DryRun {
-		fmt.Printf("Are you sure you want to delete %s for queue '%s' on bucket '%s'? [y/N]: ", target, queueID, bucket)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Cancelled")
-			return nil
-		}
+	if !force && !DryRun && !ux.Confirm(fmt.Sprintf("Delete %s for queue '%s' on bucket '%s'?", target, queueID, bucket)) {
+		printInfo("Cancelled")
+		return nil
 	}
 
 	ids := ruleIDs

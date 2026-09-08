@@ -7,8 +7,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var bucketLifecycleCmd = &cobra.Command{
@@ -142,11 +143,7 @@ func confirmBucketLifecycleReplace(bucket, action string, force bool) bool {
 	if force || DryRun {
 		return true
 	}
-	fmt.Printf("Are you sure you want to %s on bucket '%s'? This REPLACES all lifecycle rules. [y/N]: ", action, bucket)
-	var response string
-	fmt.Scanln(&response)
-	response = strings.TrimSpace(strings.ToLower(response))
-	if response != "y" && response != "yes" {
+	if !ux.Confirm(fmt.Sprintf("%s on bucket '%s'? This REPLACES all lifecycle rules", action, bucket)) {
 		printInfo("Lifecycle %s cancelled", action)
 		return false
 	}
@@ -200,7 +197,6 @@ func parseLifecycleShorthandFlags(cmd *cobra.Command) (cosmoflare.LifecycleRule,
 	rule := cosmoflare.LifecycleRule{}
 	prefix, _ := cmd.Flags().GetString("prefix")
 	rule.Conditions = cosmoflare.LifecycleConditions{Prefix: prefix}
-	rule.Enabled = true
 
 	expire, _ := cmd.Flags().GetInt64("expire-seconds")
 	abort, _ := cmd.Flags().GetInt64("abort-multipart-seconds")
