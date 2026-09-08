@@ -1566,3 +1566,37 @@
 {"id":"15","subject":"","status":"completed","completed_at":"2026-09-08T21:38:48Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
 {"id":"17","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
 {"id":"16","subject":"","status":"completed","completed_at":"2026-09-08T21:40:52Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"18","subject":"","status":"completed","completed_at":"2026-09-08T21:50:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"17","subject":"","status":"completed","completed_at":"2026-09-08T21:50:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"24","subject":"Brainplan: assess Domain Center Waves B–D scope","status":"pending","created_at":"2026-09-08T22:07:35Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"24","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"24","subject":"","status":"completed","completed_at":"2026-09-08T22:09:49Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"25","subject":"Brainplan residuals: explore code surfaces","status":"pending","created_at":"2026-09-08T22:10:16Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"26","subject":"Brainplan residuals: clarifying questions","status":"pending","created_at":"2026-09-08T22:10:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"27","subject":"Brainplan residuals: design → artifacts","status":"pending","created_at":"2026-09-08T22:10:17Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"25","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"25","subject":"","status":"completed","completed_at":"2026-09-08T22:10:37Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"26","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"26","subject":"","status":"completed","completed_at":"2026-09-08T22:11:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"27","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"27","subject":"","status":"completed","completed_at":"2026-09-08T22:22:35Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"28","subject":"Execute residuals: load gate + waves + verification","status":"pending","created_at":"2026-09-08T22:36:43Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"29","subject":"Phase 0+1: pre-commit hygiene","status":"pending","created_at":"2026-09-08T22:37:42Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"30","subject":"Phase 1.5: simplification","status":"pending","created_at":"2026-09-08T22:37:43Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"31","subject":"Phase 1.75: verification gate","status":"pending","created_at":"2026-09-08T22:37:43Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"32","subject":"Phase 1.8: code review gate","status":"pending","created_at":"2026-09-08T22:37:43Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"33","subject":"Phase 2: commit changes","status":"pending","created_at":"2026-09-08T22:37:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"34","subject":"Phase 2.25-2.75: post-commit","status":"pending","created_at":"2026-09-08T22:37:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"35","subject":"Phase 3: parallel blast + reflections","status":"pending","created_at":"2026-09-08T22:37:45Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"36","subject":"Phase 4: release decision","status":"pending","created_at":"2026-09-08T22:37:45Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"37","subject":"Phase 5.1: prompt lifecycle closure","status":"pending","created_at":"2026-09-08T22:37:45Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"38","subject":"Phase 6-7: finalize + cleanup","status":"pending","created_at":"2026-09-08T22:37:45Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"29","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"29","subject":"","status":"completed","completed_at":"2026-09-08T22:38:12Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"30","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"32","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"30","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"32","subject":"","status":"completed","completed_at":"2026-09-08T22:49:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"30","subject":"","status":"completed","completed_at":"2026-09-08T22:49:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"31","subject":"","status":"completed","completed_at":"2026-09-08T22:49:44Z","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}
+{"id":"33","subject":"","status":"in_progress","session":"2478f353-d2fe-487a-9e76-2d68e6b46d30"}

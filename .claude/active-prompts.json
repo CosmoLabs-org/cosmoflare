@@ -1,12 +1,17 @@
 {
   "schema_version": 1,
   "session": 45,
-  "updated": "2026-09-09T01:04:44.636273+04:00",
+  "updated": "2026-09-09T02:36:46.053061+04:00",
   "prompts": [
     {
       "path": "docs/prompts/2026-09-09-quota-limit-view.md",
       "id": "2026-09-09-quota-limit-view",
       "claimed": "2026-09-09T01:04:44.636128+04:00"
+    },
+    {
+      "path": "docs/prompts/2026-09-09-domain-center-residuals.md",
+      "id": "2026-09-09-domain-center-residuals",
+      "claimed": "2026-09-09T02:36:46.052652+04:00"
     }
   ]
 }
