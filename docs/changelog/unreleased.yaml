@@ -11,5 +11,8 @@ entries:
           date: 2026-09-07T18:30:52.003971+04:00
     changed: []
     deprecated: []
-    removed: []
+    removed:
+        - description: 'Removed pre-rename dead code: 4 cmd/*.go.disabled drafts, cmd_disabled/ (policy/restore/upload/webhook), and 4 internal/*_disabled packages (~7,800 lines). All superseded by live implementations or mock scaffolds; recoverable from git history. R2 lifecycle policies (no live equivalent yet) noted as a future roadmap candidate.'
+          source: manual
+          date: 2026-09-08T04:29:22.084913+04:00
     security: []
