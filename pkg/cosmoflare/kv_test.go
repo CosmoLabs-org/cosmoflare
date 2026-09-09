@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -308,6 +309,84 @@ func TestKVGetNamespaceNotFound(t *testing.T) {
 	_, err := svc.GetNamespace(ctx, "nonexistent")
 	if err == nil {
 		t.Fatal("expected error for not found")
+	}
+}
+
+// directKVService builds a FromCreds KVService whose REST transport points
+// at the given test server (the credential-built path carries the token the
+// direct GET needs).
+func directKVService(t *testing.T, srv *httptest.Server) *KVService {
+	t.Helper()
+	svc, err := NewKVServiceFromCreds("acct-test", "test-token")
+	if err != nil {
+		t.Fatalf("NewKVServiceFromCreds: %v", err)
+	}
+	svc.rest.baseURL = srv.URL
+	return svc
+}
+
+func TestKVGetNamespaceDirectSingleCall(t *testing.T) {
+	var calls []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls = append(calls, r.Method+" "+r.URL.Path)
+		kvWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"id": "ns-target", "title": "target-ns"},
+		})
+	}))
+	defer srv.Close()
+
+	ns, err := directKVService(t, srv).GetNamespace(context.Background(), "ns-target")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ns.ID != "ns-target" || ns.Title != "target-ns" {
+		t.Errorf("mapping wrong: %+v", ns)
+	}
+	if len(calls) != 1 || calls[0] != "GET /accounts/acct-test/storage/kv/namespaces/ns-target" {
+		t.Fatalf("direct GET must issue exactly one namespace fetch, got %v", calls)
+	}
+}
+
+func TestKVGetNamespaceDirectNotFoundKeepsType(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kvWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 10000, "message": "namespace not found"}},
+		})
+	}))
+	defer srv.Close()
+
+	_, err := directKVService(t, srv).GetNamespace(context.Background(), "gone")
+	if err == nil {
+		t.Fatal("expected error for missing namespace")
+	}
+	var nf *R2NotFoundError
+	if !errors.As(err, &nf) {
+		t.Fatalf("not-found must keep the R2NotFoundError type callers see today, got %T: %v", err, err)
+	}
+}
+
+func TestKVGetNamespaceDirectAuthErrorNotMislabeled(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kvWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []map[string]interface{}{{"code": 9109, "message": "Unauthorized to access this resource"}},
+		})
+	}))
+	defer srv.Close()
+
+	_, err := directKVService(t, srv).GetNamespace(context.Background(), "ns-target")
+	if err == nil {
+		t.Fatal("expected error for unauthorized")
+	}
+	var nf *R2NotFoundError
+	if errors.As(err, &nf) {
+		t.Fatalf("auth error must not be mislabeled as not-found: %v", err)
+	}
+	if !strings.Contains(err.Error(), "Unauthorized") {
+		t.Errorf("original message must surface: %v", err)
 	}
 }
 

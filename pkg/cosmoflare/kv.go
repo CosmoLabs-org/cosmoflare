@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/cloudflare/cloudflare-go"
 )
@@ -66,6 +68,7 @@ func WithKVCursor(cursor string) KVListOption {
 type KVService struct {
 	cf        *cloudflare.API
 	accountID string
+	rest      *restClient // credential-built services fetch single namespaces directly (BUG-039)
 }
 
 // NewKVService creates a new KV service client.
@@ -91,7 +94,8 @@ func NewKVServiceFromCreds(accountID, apiToken string) (*KVService, error) {
 	if err != nil {
 		return nil, authError("NewKVService", "failed to create Cloudflare API client", err)
 	}
-	return &KVService{cf: cf, accountID: accountID}, nil
+	rest := newRESTClient(apiToken)
+	return &KVService{cf: cf, accountID: accountID, rest: &rest}, nil
 }
 
 // CreateNamespace creates a new KV namespace.
@@ -126,13 +130,30 @@ func (s *KVService) ListNamespaces(ctx context.Context) ([]*KVNamespace, error) 
 
 // GetNamespace retrieves a single KV namespace by ID.
 //
-// Note: The Cloudflare Go SDK does not expose a direct get-by-ID endpoint
-// for KV namespaces. This method lists all namespaces and filters by ID,
-// which is O(n) in the number of namespaces. For batch lookups, call
-// ListNamespaces once and filter the result yourself.
+// Credential-built services fetch the namespace directly
+// (GET /accounts/{id}/storage/kv/namespaces/{namespace_id} — one API call;
+// BUG-039). Services built via NewKVService carry no token and fall back to
+// a list-then-filter scan, which is O(n) in the number of namespaces. For
+// batch lookups on the fallback path, call ListNamespaces once and filter
+// yourself.
 func (s *KVService) GetNamespace(ctx context.Context, id string) (*KVNamespace, error) {
 	if id == "" {
 		return nil, validationError("KVService.GetNamespace", "namespace ID is required")
+	}
+
+	if s.rest != nil {
+		var out KVNamespace
+		path := fmt.Sprintf("/accounts/%s/storage/kv/namespaces/%s", s.accountID, id)
+		if err := s.rest.do(ctx, "KVService.GetNamespace", http.MethodGet, path, nil, &out); err != nil {
+			if strings.Contains(strings.ToLower(err.Error()), "not found") {
+				return nil, notFound("KVService.GetNamespace", "", id, err)
+			}
+			return nil, err
+		}
+		if out.ID == "" {
+			out.ID = id
+		}
+		return &out, nil
 	}
 
 	namespaces, err := s.ListNamespaces(ctx)
