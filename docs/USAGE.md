@@ -1119,11 +1119,11 @@ cosmoflare domains get example.com --json # Machine-readable detail
 cosmoflare domains stats --json
 ```
 
-- `get <name>` resolves a domain by name and prints its enriched `DomainDetail` (nameservers, record types, SSL mode/expiry, redirect rules, and registrar overlay).
-- `stats` prints totals broken down by nameserver and SSL status plus the list of domains needing attention (external/mismatched NS, expired/expiring/missing SSL, or down health).
+- `get <name>` resolves a domain by name and prints its enriched `DomainDetail` (nameservers, record types, SSL mode/expiry, redirect rules — merged, see `redirects` below — and registrar overlay).
+- `stats` prints totals broken down by nameserver and SSL status plus the list of domains needing attention (external/mismatched NS, expired/expiring/missing SSL, or down health). Pass `--check-redirects` to also probe redirect destinations live (opt-in; 8 concurrent probes, 10s timeout per target) — failing targets set `redirect_issue` on the domain and extend the needs-attention list.
 - `ns` lists each domain's nameserver status (`cloudflare`, `external`, `mismatch`).
-- `redirects` lists, per domain, the active redirect rules and their destinations.
-- `tui` launches a full-screen browser: arrow keys / `j`/`k` to navigate, `a` to quick-add a redirect on the selected domain, `q` to quit.
+- `redirects` lists, per domain, the active redirect rules and their destinations. Output merges modern Redirect Rules with legacy Page-Rule `forwarding_url` entries; legacy rows carry `"source": "pagerules"` in JSON. The same merge applies to `domains get` (both use the enriched factory).
+- `tui` launches a full-screen browser: arrow keys / `j`/`k` to navigate, `a` to quick-add a redirect on the selected domain, `q` to quit. The detail pane shows a `redirect:` badge when a redirect issue is set on the selected domain.
 
 > Note: registrar auto-renew is not displayed — the Cloudflare API read model does not expose it.
 
@@ -1157,6 +1157,8 @@ cosmoflare doctor example.com --json       # Machine-readable output
 cosmoflare doctor --all                    # Run on all domains (slow)
 cosmoflare doctor --all --json             # All domains, JSON output
 ```
+
+When the domain has redirect rules, doctor also probes each redirect destination and includes the results in the `redirect_targets` report field; a destination that loops, errors, or returns ≥400 yields a `redirect-target` issue with `warning` severity.
 
 Fix suggestions are valid cosmoflare commands that can be executed directly:
 ```bash
