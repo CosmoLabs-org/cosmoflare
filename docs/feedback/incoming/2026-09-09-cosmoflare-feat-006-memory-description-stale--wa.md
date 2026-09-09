@@ -3,7 +3,7 @@ ulid: 01M21H38E9H654ECGXGHDHG006
 id: FB-3
 title: FEAT-006 memory description stale — Waves B-D shipped, ROAD-087 hydrated from stale line
 type: bug
-status: pending
+status: in_progress
 priority: medium
 complexity: ""
 from_project: cosmoflare
@@ -11,7 +11,7 @@ from_path: /Users/gabstudio/PROJECTS/cosmoflare
 to_project: cosmoflare
 to_target: self
 created: "2026-09-09T02:09:25.961666+04:00"
-updated: "2026-09-09T18:38:12.474476+04:00"
+updated: "2026-09-09T19:29:40.195845+04:00"
 suggested_conversion: bug
 converted_to: null
 related_issues: []
