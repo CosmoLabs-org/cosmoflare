@@ -28,6 +28,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.23.0] - 2026-09-09
+
+### Added
+- cosmoflare limits — plan-limit proximity view with alert feed
+- cosmoflare limits — plan-limit proximity table and JSON (commit:c4f41c8a)
+- limit-proximity metrics feed the evaluator (commit:cef13ad2)
+- snapshot assembly with partial-failure semantics (commit:8b619673)
+- live DNS usage endpoint with static fallback, zone plan legacy_id (commit:58f34664)
+- workers plan resolution with subscriptions API and fallback chain (commit:7159245a)
+- workers_plan project config field for limit tier fallback (commit:1bf62535)
+- snapshot types, consumer interfaces, service constructor (commit:5e967efb)
+- static limit tables and limitFor join function (commit:773de39d)
+
+### Changed
+- internal: the three REST services share one transport client (~200 duplicated lines consolidated), metrics --json collects analytics concurrently, zone auto-resolution moved into the library
+- adopt shared restClient, fix inert serve wiring and condition registry (commit:ede3069c)
+- shared restClient transport, ux.Confirm, library zone resolution (commit:eca12aa0)
+
+### Fixed
+- limits serve wiring, alert condition registry, and renderer labels fixed
+- pin DNS usage endpoint path and fields to the live API (commit:d1f5026f)
+- correct resolution-order doc comment — flag outranks config (commit:4fc6dff1)
+
 ## [0.22.0] - 2026-09-08
 
 ### Added
