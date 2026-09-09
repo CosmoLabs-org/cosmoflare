@@ -1,0 +1,19 @@
+id: FEAT-017
+type: feature
+created_at: 2026-09-10T02:06:10.691338+04:00
+updated_at: 2026-09-10T02:06:10.696102+04:00
+source: local
+ulid: 01M243A0R8A55YFZNZE2D4XKRG
+status: open
+labels:
+    - onboarding
+    - ux
+title: First-run setup wizard — one token, whole platform
+description: |-
+    # First-run setup wizard — one token, whole platform
+
+    From the MCP discussion: cosmoflare needs zero MCP and zero multi-step config — one API token covers REST + R2 S3 endpoints. Make that frictionless: 'cosmoflare setup' (or extend 'account') runs a wizard — ask/validate token, resolve account ID, verify with TestConnection, write .cosmoflare.yaml, offer doctor check — done in under a minute. Success bar: a new user goes from install to 'cosmoflare status' showing live account state with ONE command and ONE credential. Why: the official cf CLI + MCP stack needs plugin installs, OAuth per server, and restarts; our moat is exactly this simplicity.
+
+    ## Additional context
+
+    One token, whole platform: 'cosmoflare setup' wizard — ask/validate token, resolve account ID, verify with TestConnection, write .cosmoflare.yaml, offer doctor check — under a minute from install to 'cosmoflare status' showing live account state. Zero MCP installs, zero OAuth per server, zero restarts (the official cf CLI + MCP stack needs all three) — this simplicity is the moat. Extends the account command family; onboarding + ux tags.
