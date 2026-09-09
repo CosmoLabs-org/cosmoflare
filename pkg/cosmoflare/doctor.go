@@ -422,14 +422,15 @@ func compareNameservers(expected, actual []string) bool {
 
 // DiagnosticReport aggregates all probe results with issue analysis.
 type DiagnosticReport struct {
-	Domain      string                `json:"domain"`
-	Timestamp   time.Time             `json:"timestamp"`
-	DNS         *DNSPropagationResult `json:"dns"`
-	SSL         *SSLProbeResult       `json:"ssl"`
-	HTTP        *HTTPProbeResult      `json:"http"`
-	Nameservers *NSProbeResult        `json:"nameservers,omitempty"`
-	Issues      []DiagnosticIssue     `json:"issues"`
-	Score       string                `json:"score"`
+	Domain          string                `json:"domain"`
+	Timestamp       time.Time             `json:"timestamp"`
+	DNS             *DNSPropagationResult `json:"dns"`
+	SSL             *SSLProbeResult       `json:"ssl"`
+	HTTP            *HTTPProbeResult      `json:"http"`
+	Nameservers     *NSProbeResult        `json:"nameservers,omitempty"`
+	RedirectTargets []RedirectProbeResult `json:"redirect_targets,omitempty"`
+	Issues          []DiagnosticIssue     `json:"issues"`
+	Score           string                `json:"score"`
 }
 
 // DiagnosticIssue represents a single problem found during diagnostics.

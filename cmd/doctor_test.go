@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -368,5 +370,19 @@ func TestDoctorIssuesSectionSeverityIndicators(t *testing.T) {
 				t.Errorf("severity=%q: output should contain %q, got: %q", tc.severity, tc.indicator, output)
 			}
 		})
+	}
+}
+
+func TestDoctorReportCarriesRedirectTargets(t *testing.T) {
+	report := &cosmoflare.DiagnosticReport{Domain: "example.com"}
+	report.RedirectTargets = []cosmoflare.RedirectProbeResult{
+		{Destination: "https://example.com/new", Status: 200},
+	}
+	data, err := json.Marshal(report)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if !strings.Contains(string(data), "redirect_targets") {
+		t.Fatal("DiagnosticReport JSON must carry redirect_targets when set")
 	}
 }
