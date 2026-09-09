@@ -8,7 +8,10 @@ entries:
         - description: domain Center residuals — legacy pagerules merge + redirect-target attention check
           source: FEAT-010
           date: 2026-09-09T15:19:22.170592+04:00
-    fixed: []
+    fixed:
+        - description: getNamespace does O(n) list scan — direct endpoint exists
+          source: BUG-039
+          date: 2026-09-09T19:52:54.142415+04:00
     changed: []
     deprecated: []
     removed: []
