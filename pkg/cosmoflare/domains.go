@@ -48,6 +48,11 @@ type Pagination struct {
 	TotalPages int `json:"total_pages"`
 }
 
+// PageRuleLister is the consumer-side surface for legacy Page Rules.
+type PageRuleLister interface {
+	List(ctx context.Context) ([]*PageRule, error)
+}
+
 // DomainService provides domain overview and health enrichment.
 type DomainService struct {
 	zones     *ZoneService
@@ -56,6 +61,7 @@ type DomainService struct {
 	doctor    *DoctorService
 	redirects *RedirectService
 	registrar *RegistrarService
+	pageRules func(zoneID string) PageRuleLister
 }
 
 // NewDomainService creates a DomainService from its component services.
@@ -84,6 +90,15 @@ func (s *DomainService) WithRedirects(r *RedirectService) *DomainService {
 // the receiver for fluent chaining and leaves the base constructor untouched.
 func (s *DomainService) WithRegistrar(r *RegistrarService) *DomainService {
 	s.registrar = r
+	return s
+}
+
+// WithPageRules wires legacy forwarding-rule enrichment into GetDetail.
+// The factory is invoked per zone (PageRuleService is zone-scoped at
+// construction); a nil factory, nil lister, or list failure silently skips
+// legacy rows — modern rules still show (partial-failure doctrine).
+func (s *DomainService) WithPageRules(factory func(zoneID string) PageRuleLister) *DomainService {
+	s.pageRules = factory
 	return s
 }
 
@@ -200,6 +215,17 @@ func (s *DomainService) GetDetail(ctx context.Context, zoneID string) (*DomainDe
 	if s.redirects != nil {
 		if rules, err := s.redirects.List(ctx, zoneID); err == nil {
 			detail.Redirects = rules
+		}
+	}
+
+	// Optional legacy enrichment — forwarding_url Page Rules merged after
+	// modern rules so redirect visibility is complete regardless of which
+	// system created the rule. Failures skip legacy rows silently.
+	if s.pageRules != nil {
+		if lister := s.pageRules(zoneID); lister != nil {
+			if legacy, err := lister.List(ctx); err == nil {
+				detail.Redirects = append(detail.Redirects, legacyForwardingRules(zoneID, legacy)...)
+			}
 		}
 	}
 
