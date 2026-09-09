@@ -24,6 +24,7 @@ type RedirectRule struct {
 	StatusCode    int    `json:"status_code"` // 301, 302, 307, 308
 	PreserveQuery bool   `json:"preserve_query"`
 	Enabled       bool   `json:"enabled"`
+	Source        string `json:"source,omitempty"` // "" = modern Rulesets rule; "pagerules" = legacy forwarding_url
 }
 
 // RedirectRuleInput captures the fields required to create a redirect rule.
@@ -223,4 +224,62 @@ func (s *RedirectService) Delete(ctx context.Context, zoneID, ruleID string) err
 		return newError("RedirectService.Delete", "delete rule", err)
 	}
 	return nil
+}
+
+// legacyForwardingRules maps a zone's legacy Page Rules into RedirectRule
+// entries. Only actions with ID "forwarding_url" produce entries; their
+// Value decodes as {url, status_code} (map form after JSON round-trip).
+// Rules without a forwarding action, or whose Value lacks a url, are
+// dropped — not errored. status_code defaults to 301 when absent.
+func legacyForwardingRules(zoneID string, rules []*PageRule) []RedirectRule {
+	out := make([]RedirectRule, 0, len(rules))
+	for _, pr := range rules {
+		if pr == nil {
+			continue
+		}
+		for _, action := range pr.Actions {
+			if action.ID != "forwarding_url" {
+				continue
+			}
+			url, ok := forwardingURL(action.Value)
+			if !ok {
+				continue
+			}
+			entry := RedirectRule{
+				ID:          pr.ID,
+				ZoneID:      zoneID,
+				Destination: url,
+				StatusCode:  forwardingStatusCode(action.Value, 301),
+				Enabled:     pr.Status == "active",
+				Source:      "pagerules",
+			}
+			if len(pr.Targets) > 0 {
+				entry.When = pr.Targets[0].Constraint.Value
+			}
+			out = append(out, entry)
+		}
+	}
+	return out
+}
+
+// forwardingURL extracts the target url from a forwarding_url action value.
+func forwardingURL(value interface{}) (string, bool) {
+	m, ok := value.(map[string]interface{})
+	if !ok {
+		return "", false
+	}
+	url, ok := m["url"].(string)
+	return url, ok && url != ""
+}
+
+// forwardingStatusCode extracts the status code, falling back to def.
+func forwardingStatusCode(value interface{}, def int) int {
+	m, ok := value.(map[string]interface{})
+	if !ok {
+		return def
+	}
+	if code, ok := m["status_code"].(float64); ok && code > 0 {
+		return int(code)
+	}
+	return def
 }
