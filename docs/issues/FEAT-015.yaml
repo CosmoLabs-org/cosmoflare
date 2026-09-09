@@ -1,0 +1,18 @@
+id: FEAT-015
+type: feature
+created_at: 2026-09-10T02:05:44.582212+04:00
+updated_at: 2026-09-10T02:05:44.588059+04:00
+source: local
+ulid: 01M243978CG4MXSRQTME2K5ZN7
+status: open
+title: Alert condition descriptor table — one registry for names, units, help
+description: |-
+    # Alert condition descriptor table — one registry for names, units, help
+
+    The alert condition enum lives in 5+ places: validAlertConditions (pkg/cosmoflare/alerts.go), two error-message lists, the AlertRule comment, cmd/alerts.go help strings (x3), and the evaluator switch (internal/webhook/evaluator.go conditionValue). The limits feature extended exactly one of them and the session-end review caught the CLI rejecting the new conditions. A descriptor table (name -> unit, availability rule, data key, service tag) next to AlertRule would derive the registry, error lists, and help text from one source. Same pattern applies to limits resource names (workers.scripts etc. appear in tables, rows, and the evaluator switch — a rename silently drops the metric).
+
+    ## Additional context
+
+    SSOT refactor: the alert condition enum is duplicated across 5+ sites — validAlertConditions map (alerts.go:66), the hardcoded list inside the Update error message (alerts.go:234), a second error list, the AlertRule comment, cmd/alerts.go help strings (x3), and the evaluator switch (internal/webhook/evaluator.go). Session 45's limits feature extended exactly one site and the CLI rejected the new conditions until review caught it (also fixed in ede3069 'condition registry'). Build one descriptor table (name → unit, availability rule, data key, service tag) next to AlertRule; derive the registry, error lists, help text, and evaluator switch arms from it. Same pattern applies to limits resource names (workers.scripts etc. in tables, rows, evaluator). Article VII violation with a live bug on record.
+
+    Origin: session-end altitude review of limits diff
