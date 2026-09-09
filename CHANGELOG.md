@@ -28,6 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.24.0] - 2026-09-10
+
+### Added
+- Domain Center residuals — legacy pagerules merge + redirect-target attention check (FEAT-010) (FEAT-010)
+- feat(doctor): redirect-target probe section — cmd supplies destinations, report carries results
+- feat(cmd): domains stats --check-redirects probe pass
+- feat(tui): domain detail pane renders redirect-issue badge when present
+- feat(domains): merge legacy forwarding_url page rules via WithPageRules
+- feat(domains): redirect-issue classification feeds needs-attention
+- feat(domains): redirect prober with loop detection
+- feat(redirects): map legacy forwarding_url page rules
+
+### Fixed
+- fix(kv): GetNamespace fetches directly via REST instead of list-scan
+- direct-GET not-found typing for bare 404s; never fabricate from null result (commit:7297d911)
+
 ## [0.23.0] - 2026-09-09
 
 ### Added
