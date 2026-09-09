@@ -3,8 +3,8 @@ package cmd
 import (
 	"testing"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 // TestDomainsSubcommandsRegistered asserts the four domains subcommands exist
@@ -86,3 +86,14 @@ var errStubFactory = stubErr("stub factory invoked")
 type stubErr string
 
 func (e stubErr) Error() string { return string(e) }
+
+// TestDomainsStatsCheckRedirectsFlagRegistered asserts the opt-in
+// --check-redirects flag is registered on the domains stats subcommand.
+// Registration must happen in an init() (a Flags() call cannot live inside
+// the cobra.Command literal), so this guards against the flag silently
+// disappearing during refactors.
+func TestDomainsStatsCheckRedirectsFlagRegistered(t *testing.T) {
+	if domainsStatsCmd.Flags().Lookup("check-redirects") == nil {
+		t.Fatal("--check-redirects flag not registered on domains stats")
+	}
+}

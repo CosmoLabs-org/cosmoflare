@@ -348,6 +348,12 @@ func classifyRedirectIssue(results []RedirectProbeResult) string {
 	return worst
 }
 
+// ClassifyRedirectIssues is the exported form of classifyRedirectIssue for
+// cmd/TUI consumers.
+func ClassifyRedirectIssues(results []RedirectProbeResult) string {
+	return classifyRedirectIssue(results)
+}
+
 // classifyRegistrarStatus returns "cloudflare" if the domain is present in the
 // registrar map as a Cloudflare-registered domain, otherwise "external".
 func classifyRegistrarStatus(name string, reg map[string]RegistrarInfo) string {

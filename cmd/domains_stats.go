@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var domainsStatsCmd = &cobra.Command{
@@ -22,8 +22,14 @@ Examples:
 	RunE: runDomainsStats,
 }
 
+// domainsStatsCheckRedirects enables the opt-in redirect-destination probe
+// pass. It doubles as the enrich argument to newDomainService so the service
+// is built with WithRedirects/WithPageRules wiring — without it GetDetail
+// returns no redirects and the probe pass would be a silent no-op.
+var domainsStatsCheckRedirects bool
+
 func runDomainsStats(cmd *cobra.Command, args []string) error {
-	svc, err := newDomainService(false)
+	svc, err := newDomainService(domainsStatsCheckRedirects)
 	if err != nil {
 		if JSONOutput {
 			return printErrorJSON(fmt.Sprintf("failed to create domain service: %v", err))
@@ -39,6 +45,15 @@ func runDomainsStats(cmd *cobra.Command, args []string) error {
 			return printErrorJSON(fmt.Sprintf("failed to list domains: %v", err))
 		}
 		return fmt.Errorf("failed to list domains: %w", err)
+	}
+
+	if domainsStatsCheckRedirects {
+		if err := checkDomainRedirects(ctx, svc, domains); err != nil {
+			if JSONOutput {
+				return printErrorJSON(fmt.Sprintf("redirect check failed: %v", err))
+			}
+			return fmt.Errorf("redirect check failed: %w", err)
+		}
 	}
 
 	summary := cosmoflare.SummarizeDomains(domains)
@@ -80,4 +95,52 @@ func printCountMap(m map[string]int) {
 	for _, k := range keys {
 		fmt.Printf("  %s: %d\n", k, m[k])
 	}
+}
+
+func init() {
+	domainsStatsCmd.Flags().BoolVar(&domainsStatsCheckRedirects, "check-redirects", false,
+		"Probe redirect destinations (opt-in: live HTTP probes, 8 concurrent, 10s each)")
+}
+
+// checkDomainRedirects probes every domain's redirect destinations and sets
+// RedirectIssue on each DomainStatus. Destinations are deduplicated across
+// domains so each URL is probed once per run.
+func checkDomainRedirects(ctx context.Context, svc *cosmoflare.DomainService, domains []*cosmoflare.DomainStatus) error {
+	byZone := make(map[string]*cosmoflare.DomainStatus, len(domains))
+	var zoneIDs []string
+	for _, d := range domains {
+		if d != nil && d.Zone != nil {
+			byZone[d.Zone.ID] = d
+			zoneIDs = append(zoneIDs, d.Zone.ID)
+		}
+	}
+
+	perDomain := make(map[string][]cosmoflare.RedirectProbeResult, len(zoneIDs))
+	var dests []string
+	for _, zoneID := range zoneIDs {
+		detail, err := svc.GetDetail(ctx, zoneID)
+		if err != nil {
+			continue // partial-failure: domains we cannot detail keep no verdict
+		}
+		for _, r := range detail.Redirects {
+			if r.Destination != "" {
+				dests = append(dests, r.Destination)
+				perDomain[zoneID] = append(perDomain[zoneID], cosmoflare.RedirectProbeResult{Destination: r.Destination})
+			}
+		}
+	}
+
+	results := cosmoflare.NewRedirectProber().ProbeAll(ctx, dests)
+	for zoneID, rs := range perDomain {
+		withStatus := make([]cosmoflare.RedirectProbeResult, 0, len(rs))
+		for _, r := range rs {
+			if res, ok := results[r.Destination]; ok {
+				withStatus = append(withStatus, res)
+			}
+		}
+		if d := byZone[zoneID]; d != nil {
+			d.RedirectIssue = cosmoflare.ClassifyRedirectIssues(withStatus)
+		}
+	}
+	return nil
 }

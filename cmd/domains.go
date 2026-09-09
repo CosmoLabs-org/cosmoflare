@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var domainsCmd = &cobra.Command{
@@ -67,6 +67,13 @@ var newDomainService = func(enrich bool) (*cosmoflare.DomainService, error) {
 		if rg, err := cosmoflare.NewRegistrarServiceFromCreds(AccountID, APIToken); err == nil {
 			svc = svc.WithRegistrar(rg)
 		}
+		svc = svc.WithPageRules(func(zoneID string) cosmoflare.PageRuleLister {
+			prs, err := cosmoflare.NewPageRuleServiceFromCreds(zoneID, APIToken)
+			if err != nil {
+				return nil
+			}
+			return prs
+		})
 	}
 	return svc, nil
 }
