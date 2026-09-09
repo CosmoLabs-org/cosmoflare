@@ -835,3 +835,39 @@ func TestDomainServiceEnrichmentWiring(t *testing.T) {
 
 // Suppress unused import warning
 var _ = time.Now
+
+func TestClassifyRedirectIssue(t *testing.T) {
+	tests := []struct {
+		name    string
+		results []RedirectProbeResult
+		want    string
+	}{
+		{"empty", nil, ""},
+		{"all clean", []RedirectProbeResult{{Status: 200}}, ""},
+		{"skipped only", []RedirectProbeResult{{Skipped: true}}, ""},
+		{"4xx", []RedirectProbeResult{{Status: 200}, {Status: 404}}, "http-4xx"},
+		{"5xx", []RedirectProbeResult{{Status: 503}}, "http-5xx"},
+		{"loop", []RedirectProbeResult{{Status: 404}, {Loop: true}}, "loop"},
+		{"unreachable", []RedirectProbeResult{{Err: "timeout"}}, "unreachable"},
+		{"loop beats 5xx", []RedirectProbeResult{{Status: 500}, {Loop: true}}, "loop"},
+		{"5xx beats 4xx", []RedirectProbeResult{{Status: 404}, {Status: 500}}, "http-5xx"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := classifyRedirectIssue(tt.results); got != tt.want {
+				t.Fatalf("classifyRedirectIssue = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDomainNeedsAttentionRedirectIssue(t *testing.T) {
+	d := &DomainStatus{NSStatus: "cloudflare", SSLStatus: "valid", HealthStatus: "up"}
+	if domainNeedsAttention(d) {
+		t.Fatal("clean domain must not need attention")
+	}
+	d.RedirectIssue = "loop"
+	if !domainNeedsAttention(d) {
+		t.Fatal("RedirectIssue must trigger attention")
+	}
+}

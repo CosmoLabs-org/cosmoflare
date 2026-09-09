@@ -10,33 +10,34 @@ import (
 
 // DomainStatus represents a zone enriched with health indicators.
 type DomainStatus struct {
-	Zone         *Zone  `json:"zone"`
-	DNSStatus    string `json:"dns_status"`    // "ok", "warn", "err"
-	SSLStatus    string `json:"ssl_status"`    // "valid", "expiring", "expired", "none"
-	HealthStatus string `json:"health_status"` // "up", "down", "unknown"
-	RecordCount  int    `json:"record_count"`
-	NSStatus     string `json:"ns_status"` // "cloudflare", "external", "mismatch"
+	Zone          *Zone  `json:"zone"`
+	DNSStatus     string `json:"dns_status"`    // "ok", "warn", "err"
+	SSLStatus     string `json:"ssl_status"`    // "valid", "expiring", "expired", "none"
+	HealthStatus  string `json:"health_status"` // "up", "down", "unknown"
+	RecordCount   int    `json:"record_count"`
+	NSStatus      string `json:"ns_status"`                // "cloudflare", "external", "mismatch"
+	RedirectIssue string `json:"redirect_issue,omitempty"` // "" | "loop" | "http-4xx" | "http-5xx" | "unreachable"
 }
 
 // DomainDetail provides extended information for a single domain.
 type DomainDetail struct {
 	DomainStatus
-	NameServers []string       `json:"name_servers"`
-	RecordTypes map[string]int `json:"record_types"` // "A" -> 12, "CNAME" -> 8, etc.
-	SSLMode     string         `json:"ssl_mode,omitempty"`
-	SSLExpiry   string         `json:"ssl_expiry,omitempty"`
-	ResponseTime string        `json:"response_time,omitempty"`
-	Redirects   []RedirectRule `json:"redirects,omitempty"`
-	Registrar   *RegistrarInfo `json:"registrar,omitempty"`
+	NameServers  []string       `json:"name_servers"`
+	RecordTypes  map[string]int `json:"record_types"` // "A" -> 12, "CNAME" -> 8, etc.
+	SSLMode      string         `json:"ssl_mode,omitempty"`
+	SSLExpiry    string         `json:"ssl_expiry,omitempty"`
+	ResponseTime string         `json:"response_time,omitempty"`
+	Redirects    []RedirectRule `json:"redirects,omitempty"`
+	Registrar    *RegistrarInfo `json:"registrar,omitempty"`
 }
 
 // DomainListOptions configures domain listing behavior.
 type DomainListOptions struct {
 	Page    int    `json:"page"`
 	PerPage int    `json:"per_page"`
-	Filter  string `json:"filter,omitempty"`  // "active", "paused"
-	Name    string `json:"name,omitempty"`    // substring/glob filter
-	Sort    string `json:"sort,omitempty"`    // "name", "status", "records"
+	Filter  string `json:"filter,omitempty"` // "active", "paused"
+	Name    string `json:"name,omitempty"`   // substring/glob filter
+	Sort    string `json:"sort,omitempty"`   // "name", "status", "records"
 }
 
 // Pagination holds pagination metadata for list responses.
@@ -290,7 +291,35 @@ func SummarizeDomains(ds []*DomainStatus) DomainSummary {
 func domainNeedsAttention(d *DomainStatus) bool {
 	return d.NSStatus == "external" || d.NSStatus == "mismatch" ||
 		d.SSLStatus == "expired" || d.SSLStatus == "expiring" || d.SSLStatus == "none" ||
-		d.HealthStatus == "down"
+		d.HealthStatus == "down" ||
+		d.RedirectIssue != ""
+}
+
+// classifyRedirectIssue reduces a domain's probe results to the worst
+// redirect issue: loop > http-5xx > http-4xx > unreachable > none.
+// Skipped destinations contribute nothing.
+func classifyRedirectIssue(results []RedirectProbeResult) string {
+	worst := ""
+	rank := map[string]int{"": 0, "unreachable": 1, "http-4xx": 2, "http-5xx": 3, "loop": 4}
+	for _, r := range results {
+		issue := ""
+		switch {
+		case r.Skipped:
+			continue
+		case r.Loop:
+			issue = "loop"
+		case r.Status >= 500:
+			issue = "http-5xx"
+		case r.Status >= 400:
+			issue = "http-4xx"
+		case r.Err != "":
+			issue = "unreachable"
+		}
+		if rank[issue] > rank[worst] {
+			worst = issue
+		}
+	}
+	return worst
 }
 
 // classifyRegistrarStatus returns "cloudflare" if the domain is present in the
