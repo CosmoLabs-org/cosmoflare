@@ -3,7 +3,7 @@ ulid: 01M230JHX7ZX7M7WKKF10Y9DSQ
 id: FB-7
 title: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees
 type: improvement
-status: pending
+status: converted
 priority: medium
 complexity: ""
 from_project: MyCarGuide
@@ -11,21 +11,21 @@ from_path: /Users/gabstudio/PROJECTS/MyCarGuide
 to_project: cosmoflare
 to_target: project
 created: "2026-09-09T15:59:10.247572+04:00"
-updated: "2026-09-09T15:59:10.247572+04:00"
+updated: "2026-09-09T16:39:40.218991+04:00"
 suggested_conversion: feature
-converted_to: null
+converted_to: FEAT-013
 related_issues: []
 brainstorm_ref: null
 session: 17
 suggested_workflow: []
 response:
-  acknowledged: null
-  acknowledged_by: null
-  started: null
-  implemented: null
-  rejected: null
-  rejection_reason: null
-  notes: ""
+    acknowledged: null
+    acknowledged_by: null
+    started: null
+    implemented: null
+    rejected: null
+    rejection_reason: null
+    notes: ""
 ---
 
 # FB-p0Y9DSQ: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees

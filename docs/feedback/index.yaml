@@ -1,12 +1,12 @@
 version: "1.0"
 next_id: 8
-last_updated: "2026-09-09T16:37:57.684672+04:00"
+last_updated: "2026-09-09T16:39:40.219132+04:00"
 stats:
     total: 7
-    pending: 6
+    pending: 3
     implemented: 1
     rejected: 0
-    converted: 0
+    converted: 3
 entries:
     - id: FB-001
       title: GetNamespace does O(n) list scan
@@ -30,16 +30,16 @@ entries:
       created: "2026-09-09T04:28:50.478829+04:00"
     - id: FB-5
       title: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-09-09T15:35:50.2144+04:00"
     - id: FB-6
       title: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-09-09T15:54:01.602952+04:00"
     - id: FB-7
       title: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-09-09T15:59:10.247572+04:00"

@@ -1,34 +1,23 @@
 ---
-ulid: 01M23094G3N4HZB8HH294RVZ4Y
-id: FB-6
-title: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
+id: FEAT-012
+title: 'CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time'
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-09-09T15:54:01.602952+04:00"
-updated: "2026-09-09T16:39:24.730767+04:00"
-suggested_conversion: feature
-converted_to: FEAT-012
-related_issues: []
-brainstorm_ref: null
-session: 17
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 70
+created: 2026-09-09
+updated: 2026-09-09
+origin:
+  feedback_id: FB-6
+  from_project: MyCarGuide
+  received: 2026-09-09
+  converted: 2026-09-09
 ---
 
-# FB-p4RVZ4Y: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
+# FEAT-012: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
+
+## Origin
+
+Converted from feedback **FB-6** (from MyCarGuide)
 
 Summary: Applying one rate-limit rule to mycar.guide (2026-09-09) took six failed API calls across three distinct failure classes, none of which the Cloudflare API explains at the point of failure: (1) POST to /zones/{id}/rulesets/phases/http_ratelimit/entrypoint/rules — an endpoint that does not exist — returns 10405 'Method not allowed for this authentication scheme', which reads as an auth-scope problem and sent us editing token permissions for 20 minutes when the real problem was the route; (2) the same phase has no entrypoint ruleset on a fresh Free zone, and GET returns an empty result that is indistinguishable from 'exists with 0 rules' until a follow-up call fails 1000 not_found; (3) payload validation is server-side and sequential — 20155 arrives only after auth+route succeed, revealing that characteristics MUST include cf.colo.id ('ratelimiting counting is processed at colocation level only'), a requirement no client could know in advance; (4) Free-plan parameter caps (1 rule/zone, 10s window, 10s mitigation, IP-only counting) are documented in a marketing availability table, not enforced client-side anywhere.
 
@@ -37,4 +26,19 @@ Motivation: Every CosmoLabs project touching Cloudflare (MyCarGuide today, every
 Proposed solution: CosmoFlare ships a Cloudflare API client (TS module + CLI) that encodes the tribal knowledge: (a) endpoint registry — only documented routes exist, client rejects unknown method+route combos with 'this endpoint does not exist' instead of letting CF return 10405; (b) plan-cap validator — knows Free/Pro/Business/Enterprise parameter limits per product (ratelimit: Free=10s/10s/1 rule/IP-only) and validates payloads before sending; (c) mandatory-field preflight — cf.colo.id in characteristics, similar invariants elsewhere; (d) error-decode table — 10405='route not valid for token auth (usually: endpoint does not exist)', 1000 not_found on phase entrypoint='create it with PUT first', 20155='missing cf.colo.id', 10000='missing token scope for this endpoint'; (e) permission catalog from GET /user/tokens/permission_groups (machine-readable SSOT; names are cosmetic and drift) plus the documented-correct Zone WAF Edit finding from the companion feedback sent today. Seed data: this session's transcript of six calls and four error classes against zone e586a1c56dc1020690f9eeea7e46a3bd.
 
 Repro/evidence: MyCarGuide zone e586a1c56dc1020690f9eeea7e46a3bd, 2026-09-09: POST entrypoint/rules -> 10405 (endpoint does not exist); GET entrypoint -> empty; POST rulesets/{id}/rules -> 1000 not_found (no entrypoint); PUT entrypoint without cf.colo.id -> 20155; PUT with ['cf.colo.id','ip.src'] -> success. Companion feedback: CF API token permission names drifted (sent earlier today).
+## Description
+
+Applying one CF rate-limit rule (MyCarGuide 2026-09-09) took six failed calls across four failure classes, none explained at the point of failure: (1) 10405 on a nonexistent route reads as an auth-scope problem; (2) missing phase entrypoint on a fresh Free zone is indistinguishable from '0 rules' until a 1000 not_found; (3) server-side validation reveals cf.colo.id requirements (error 20155) only after auth+route succeed; (4) Free-plan caps (1 rule/zone, 10s window/timeout, IP-only counting) are documented in marketing tables, enforced nowhere client-side. Encode this tribal knowledge in cosmoflare so failures are diagnosed before/at call time.
+
+## Acceptance Criteria
+
+- [ ] Endpoint registry rejects nonexistent routes with a clear client-side error
+- [ ] plan-cap validator blocks Free-plan-violating payloads pre-send
+- [ ] mandatory-field preflight catches missing cf.colo.id before the API does
+- [ ] error-decode table maps 10405/1000/20155/10000 to actionable causes
+- [ ] integration with FEAT-011 permission catalog
+
+## Fix Direction
+
+Build the CF API knowledge layer in cosmoflare (Go library + CLI, per the library-first architecture): (a) endpoint registry — client rejects unknown method+route combos as 'endpoint does not exist' instead of surfacing CF's 10405; (b) plan-cap validator — per-product parameter limits validated before send (ratelimit Free=10s/10s/1 rule/IP-only); (c) mandatory-field preflight — e.g. cf.colo.id in rate-limit characteristics; (d) error-decode table — 10405=route invalid for token auth (usually: does not exist), 1000 on phase entrypoint=create with PUT first, 20155=missing cf.colo.id, 10000=missing token scope; (e) permission catalog from GET /user/tokens/permission_groups (see companion FEAT-011). Seed data: the MyCarGuide transcript of six calls and four error classes against zone e586a1c56dc1020690f9eeea7e46a3bd.
 
