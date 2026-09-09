@@ -73,7 +73,7 @@ Doctrine: **knowledge is advisory when absent, authoritative when present.**
 | Seed pack | `knowledge/packs/ratelimit.json` | MyCarGuide evidence: rulesets endpoints (the nonexistent `entrypoint/rules` registered as absent), decodes for 10405/1000/20155/10000, Free caps (rules_per_zone=1, window_seconds≤10, timeout_seconds≤10, characteristics=IP-only), `cf.colo.id` invariant. |
 | Transport | `knowledge/transport.go` | `KnowledgeTransport{base http.RoundTripper}` — request-side scope/route check; response-side CF error-body decode → `KnowledgeError{Code, Cause, Fix}` wrapping the original body. |
 | Validators | `knowledge/validate.go` | `ValidatePayload(product, plan, payload) []Violation` — pure. Plan sourced from `Zone.Plan` (existing ZoneService data path). |
-| Reference consumer | `pkg/cosmoflare/ratelimit.go` | Minimal `RateLimitService` (list + create) doing the correct flow: ensure entrypoint (PUT) when missing, preflight `cf.colo.id`, then create. Proves the framework end-to-end. |
+| Reference consumer | `pkg/cosmoflare/ratelimit.go` | Minimal `RateLimitService` (list + create) doing the correct flow: ensure entrypoint (PUT) when missing, preflight `cf.colo.id`, then create. Proves the framework end-to-end. Constraint: cloudflare-go v0.116.0 exposes `GetEntrypointRuleset`/`UpdateEntrypointRuleset` but NO per-rule `CreateRulesetRule`/`ListRulesetRules` — create goes through `UpdateEntrypointRuleset` (PUT with the rules array — the call that succeeded in the MyCarGuide evidence) or the repo REST client (`rest_client.go`). |
 | CLI | `cmd/decode.go`, `cmd/knowledge.go`, `cmd/ratelimit.go` | `cosmoflare decode 10405 --context rulesets` (offline table, `--json`); `cosmoflare knowledge list` (loaded packs, registry transparency); `cosmoflare ratelimit list/create`. |
 
 ### Data flow
@@ -97,11 +97,15 @@ error response ⇒ decoded `KnowledgeError` with cause + fix.
 
 ## Wire-in
 
-`cloudflare.NewWithAPIToken` accepts an `http.Client` option — services built in
-`New<Svc>FromCreds` get a client whose `Transport` is `KnowledgeTransport`.
-The plan verifies the exact option against cloudflare-go v0.116.0; if injection
-is unavailable at that seam, fallback: exported `DecodeCFError(err)` called in
-service error paths (same data, one explicit call per site).
+`cloudflare.NewWithAPIToken` accepts an `http.Client` option — verified
+in-repo at cloudflare-go v0.116.0: `pkg/cosmoflare/client.go` already passes
+`cloudflare.HTTPClient(httpClient)` to `NewWithAPIToken`. Services built in
+`New<Svc>FromCreds` get a client whose `Transport` is `KnowledgeTransport` —
+note today's `FromCreds` constructors call `cloudflare.NewWithAPIToken(apiToken)`
+bare (e.g. `zone.go`, `d1.go`), so this is a constructor change, not existing
+behavior. Where a site cannot route through the transport, fallback: exported
+`DecodeCFError(err)` called in service error paths (same data, one explicit
+call per site).
 
 ## Testing Strategy (TDD)
 
@@ -117,6 +121,14 @@ service error paths (same data, one explicit call per site).
 
 ## Non-Goals (deferred)
 
+- **Boundary vs `limits.go` (SSOT decision, 2026-09-09)**: the existing
+  `pkg/cosmoflare/limits.go` (v0.23.0) and the knowledge layer's `PlanCaps` are
+  two mechanisms with two declared domains — NOT candidates for merge. `limits.go`
+  = resource-quota proximity (how close current usage sits to a plan ceiling:
+  workers deployed, KV storage, DNS records). `PlanCaps` = payload parameter
+  validation (what values a rule payload may carry on a given plan: window
+  seconds, timeout seconds, rules per zone). Neither reads the other; a future
+  datum picks its home by that test.
 - **FEAT-011** (permission catalog): separate issue; v1 reserves the pack schema
   field, ships no permission data.
 - **FEAT-013** (traffic-class matrix + trip probe): later extension of
