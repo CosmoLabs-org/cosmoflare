@@ -1644,3 +1644,6 @@
 {"id":"10","subject":"Brainplan FEAT-012 — Phase 2: implementation plan + enrich","status":"pending","created_at":"2026-09-09T13:07:44Z","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
 {"id":"11","subject":"Brainplan FEAT-012 — Phase 3/3.5/4: prompt, manifest, links","status":"pending","created_at":"2026-09-09T13:07:44Z","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
 {"id":"9","subject":"","status":"in_progress","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
+{"id":"10","subject":"","status":"in_progress","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
+{"id":"9","subject":"","status":"completed","completed_at":"2026-09-09T14:44:19Z","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
+{"id":"10","subject":"","status":"completed","completed_at":"2026-09-09T15:07:27Z","session":"7d679cb4-7d36-4784-8d4f-eb485161d032"}
