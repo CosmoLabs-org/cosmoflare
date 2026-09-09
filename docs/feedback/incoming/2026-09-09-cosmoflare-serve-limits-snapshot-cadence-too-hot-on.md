@@ -1,5 +1,6 @@
 ---
 ulid: 01M21S2GXEYA5NQCYE00DS7Z68
+id: FB-4
 title: Serve limits-snapshot cadence too hot once wired
 type: idea
 status: pending

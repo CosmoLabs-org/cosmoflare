@@ -1,5 +1,6 @@
 ---
 ulid: 01M1W1W5VB7HZF4MNVMS6E0QGF
+id: FB-2
 title: Continuation prompt goals are invisible to machine verification (0/0 parsed)
 type: improvement
 status: pending
