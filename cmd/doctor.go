@@ -206,6 +206,47 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 		return fmt.Errorf("diagnostics failed for %s: %w", domain, err)
 	}
 
+	// Redirect-target section (opt-in by having redirects): fetch the
+	// domain's destinations via DomainService (CF API), probe them with the
+	// stdlib RedirectProber, attach to the report. DoctorService itself
+	// stays credential-free — the cmd layer supplies the data.
+	if zoneSvc, err := getZoneService(); err == nil {
+		if domSvc, err := cosmoflare.NewDomainService(zoneSvc, nil, nil, nil); err == nil {
+			if rs, err := cosmoflare.NewRedirectServiceFromCreds(AccountID, APIToken); err == nil {
+				domSvc = domSvc.WithRedirects(rs)
+				if zones, err := zoneSvc.List(ctx); err == nil {
+					for _, z := range zones {
+						if z.Name != domain {
+							continue
+						}
+						if detail, err := domSvc.GetDetail(ctx, z.ID); err == nil && len(detail.Redirects) > 0 {
+							seen := map[string]bool{}
+							dests := make([]string, 0, len(detail.Redirects))
+							for _, r := range detail.Redirects {
+								if r.Destination != "" && !seen[r.Destination] {
+									seen[r.Destination] = true
+									dests = append(dests, r.Destination)
+								}
+							}
+							results := cosmoflare.NewRedirectProber().ProbeAll(ctx, dests)
+							for _, d := range dests {
+								report.RedirectTargets = append(report.RedirectTargets, results[d])
+							}
+							if issue := cosmoflare.ClassifyRedirectIssues(report.RedirectTargets); issue != "" {
+								report.Issues = append(report.Issues, cosmoflare.DiagnosticIssue{
+									Probe: "redirect-target", Severity: "warning",
+									Message: "redirect target problem: " + issue,
+									Fix:     "inspect the redirect destination — it loops, errors, or is unreachable",
+								})
+							}
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+
 	if JSONOutput {
 		return printJSON(report)
 	}
