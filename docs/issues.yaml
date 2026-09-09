@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-09T19:51:33.71858+04:00
+last_updated: 2026-09-10T02:06:10.694589+04:00
 next_bug_id: 40
-next_feat_id: 15
+next_feat_id: 18
 next_task_id: 5
 next_imp_id: 1
 issues:
@@ -313,6 +313,21 @@ issues:
       status: open
       title: Serve limits-snapshot cadence too hot once wired
       created_at: 2026-09-09T18:38:32.694906+04:00
+    - id: FEAT-015
+      type: feature
+      status: open
+      title: Alert condition descriptor table — one registry for names, units, help
+      created_at: 2026-09-10T02:05:44.582212+04:00
+    - id: FEAT-016
+      type: feature
+      status: open
+      title: Makefile release target codifying the local goreleaser + gh publish recipe
+      created_at: 2026-09-10T02:06:04.657233+04:00
+    - id: FEAT-017
+      type: feature
+      status: open
+      title: First-run setup wizard — one token, whole platform
+      created_at: 2026-09-10T02:06:10.691338+04:00
     - id: TASK-001
       type: task
       status: closed

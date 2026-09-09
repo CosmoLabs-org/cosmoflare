@@ -1,10 +1,13 @@
 id: FEAT-016
 type: feature
 created_at: 2026-09-10T02:06:04.657233+04:00
-updated_at: 2026-09-10T02:06:04.659645+04:00
+updated_at: 2026-09-10T02:06:07.004565+04:00
 source: local
 ulid: 01M2439TVKDX30NKWY85ST7P8Z
 status: open
+origin:
+    idea_slug: 2026-09-07-makefile-release-target-codifying-the-local-goreleaser-gh
+    session: 40
 title: Makefile release target codifying the local goreleaser + gh publish recipe
 description: |-
     # Makefile release target codifying the local goreleaser + gh publish recipe

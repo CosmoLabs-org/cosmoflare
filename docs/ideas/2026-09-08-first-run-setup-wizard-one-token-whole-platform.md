@@ -2,14 +2,17 @@
 ulid: 01M207EXMKWTJHWQ2B86MKWADZ
 title: First-run setup wizard — one token, whole platform
 created: "2026-09-08T14:01:47.92376+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 43
 tags:
     - onboarding
     - ux
+promoted_to: FEAT-017
 ---
+
+# First-run setup wizard — one token, whole platform
 
 # First-run setup wizard — one token, whole platform
 

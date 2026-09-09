@@ -3,11 +3,14 @@ ulid: 01M1WERP1JZHNT458FKVF4BF59
 id: IDEA-050
 title: Makefile release target codifying the local goreleaser + gh publish recipe
 created: "2026-09-07T02:52:30.130093+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 40
+promoted_to: FEAT-016
 ---
+
+# Makefile release target codifying the local goreleaser + gh publish recipe
 
 # Makefile release target codifying the local goreleaser + gh publish recipe
 
