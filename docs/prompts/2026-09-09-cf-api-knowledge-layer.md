@@ -49,10 +49,10 @@ Both documents passed fresh-context independent review on 2026-09-09. Where the 
 ## Goals
 
 ### [ ] G-01 Knowledge package — types, embedded loader, matchPath, CheckRoute with tests
-Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/knowledge.go`, `knowledge_test.go`, `packs/.gitkeep` (plan Task 1).
+Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/knowledge.go`, `knowledge_test.go`, `packs/ratelimit.json` (placeholder `{}` — embed glob must match a file; plan Task 1).
 
 ### [ ] G-02 ratelimit.json seed pack + pack-validation test
-Covers P-02. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/packs/ratelimit.json`, `knowledge_test.go` (plan Task 2). Sequential after G-01 (same package).
+Covers P-02. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/packs/ratelimit.json`, `knowledge_test.go` (plan Task 2 — replaces the placeholder). Sequential after G-01 (same package).
 
 ### [ ] G-03 knowledge.Transport (route block) + DecodeCFError + newError hook with tests
 Covers P-03. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/transport.go`, `transport_test.go`, `decode.go`, `pkg/cosmoflare/errors.go` (plan Task 3). After G-02 (pack must exist for transport tests).
@@ -85,7 +85,6 @@ Every merge passes the quality gate: Opus re-reads the diff, re-runs the full af
 files_modified:
   - pkg/cosmoflare/knowledge/knowledge.go      # types, loader, matchPath, CheckRoute
   - pkg/cosmoflare/knowledge/knowledge_test.go
-  - pkg/cosmoflare/knowledge/packs/.gitkeep
   - pkg/cosmoflare/knowledge/packs/ratelimit.json
   - pkg/cosmoflare/knowledge/transport.go      # route-blocking RoundTripper
   - pkg/cosmoflare/knowledge/transport_test.go

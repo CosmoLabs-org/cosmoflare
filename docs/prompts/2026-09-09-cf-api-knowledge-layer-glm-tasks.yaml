@@ -27,11 +27,13 @@
 
     The plan contains the COMPLETE test code and implementation code. Follow
     its TDD order exactly. Create pkg/cosmoflare/knowledge/{knowledge.go,
-    knowledge_test.go} and packs/.gitkeep exactly as the plan shows — types
-    (Pack, Endpoint, ErrorDecode, PlanCap, Invariant), the go:embed loader
-    with sync.Once (malformed JSON fails loud), NormalizePath, matchPath,
-    CheckRoute, LookupDecode. Do not rename — signatures are verified
-    against this repo.
+    knowledge_test.go} and packs/ratelimit.json containing exactly `{}` (a
+    placeholder — go:embed globs matching zero files are COMPILE errors;
+    Task 2 overwrites it with the real pack). Types (Pack, Endpoint,
+    ErrorDecode, PlanCap, Invariant), the go:embed loader with sync.Once
+    (malformed JSON fails loud), NormalizePath, matchPath, CheckRoute
+    (endpoints with non-empty Status block too), LookupDecode. Do not
+    rename — signatures are verified against this repo.
 
     Run gofmt -w on touched files before committing.
 
@@ -41,7 +43,7 @@
   files:
     - pkg/cosmoflare/knowledge/knowledge.go
     - pkg/cosmoflare/knowledge/knowledge_test.go
-    - pkg/cosmoflare/knowledge/packs/.gitkeep
+    - pkg/cosmoflare/knowledge/packs/ratelimit.json
   context_files:
     - docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md
   max_turns: 20
@@ -51,11 +53,12 @@
     Execute plan Task 2 VERBATIM from docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md
     ("Task 2: ratelimit seed pack").
 
-    Prerequisite: Task 1 landed. Create packs/ratelimit.json EXACTLY as the
-    plan shows (scopes, 9 endpoints incl. the absent and deprecated-off
-    entries, 4 error decodes, free plan_caps with the sets map, the
-    cf.colo.id invariant) and append TestRatelimitPackLoadedAndValid to
-    knowledge_test.go. The pack JSON field names must match the Task 1
+    Prerequisite: Task 1 landed. Replace the contents of
+    packs/ratelimit.json (Task 1's `{}` placeholder) with the real pack
+    EXACTLY as the plan shows (scopes, 9 endpoints incl. the absent and
+    deprecated-off entries, 4 error decodes, free plan_caps with the sets
+    map, the cf.colo.id invariant) and append TestRatelimitPackLoadedAndValid
+    to knowledge_test.go. The pack JSON field names must match the Task 1
     struct json tags exactly.
 
     Run gofmt -w before committing.

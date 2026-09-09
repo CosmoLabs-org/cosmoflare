@@ -38,7 +38,7 @@ deliverables:
 - `cloudflare.NewWithAPIToken(token, cloudflare.HTTPClient(httpClient))` — the client-injection seam, already used at `pkg/cosmoflare/client.go:117`.
 - `cloudflare.ZoneIdentifier(zoneID)` builds the rulesets `*ResourceContainer` (see `redirect.go:74`).
 - `GetEntrypointRuleset(ctx, rc, phase)` and `UpdateEntrypointRuleset(ctx, rc, UpdateEntrypointRulesetParams{Phase, Description, Rules})` exist in v0.116.0; **`CreateRulesetRule`/`ListRulesetRules` do NOT** — per-rule create goes through the entrypoint PUT.
-- `cloudflare.Error` is a VALUE type: `{StatusCode int, Errors []ResponseInfo, ErrorCodes []int, ...}`; there is NO `cloudflare.ErrNotFound` sentinel in v0.116.0.
+- `cloudflare.Error` is a VALUE type: `{StatusCode int, Errors []ResponseInfo, ErrorCodes []int, ErrorMessages []string, ...}`; there is NO `cloudflare.ErrNotFound` sentinel in v0.116.0. **Chain shape (verified in module source):** `makeRequestWithAuthTypeAndHeadersComplete` returns 4xx/5xx as typed wrappers around a POINTER — `&NotFoundError{cloudflareError: *Error}` for 404, `&RequestError{...}` for other 4xx, `&ServiceError{...}` for 5xx — each exposing `Unwrap()`. Therefore `errors.As` MUST target `*cloudflare.Error` (`var cfErr *cloudflare.Error; errors.As(err, &cfErr)`); a value target (`var cfErr cloudflare.Error`) never matches a real API error chain.
 - Rate-limit rules live on `RulesetRule.RateLimit` (`*RulesetRuleRateLimit{Characteristics []string, RequestsPerPeriod, Period, MitigationTimeout int}`), with `Action: "block"`.
 - `Zone.Plan.LegacyID` is `"free" | "pro" | "business" | "enterprise"` (zone.go:26).
 - Repo error seam: `newError(op, msg, err) *R2Error` (errors.go:52) — every service wraps through it.
@@ -59,7 +59,7 @@ go build ./... && go vet ./...
 **Files:**
 - Create: `pkg/cosmoflare/knowledge/knowledge.go`
 - Create: `pkg/cosmoflare/knowledge/knowledge_test.go`
-- Create: `pkg/cosmoflare/knowledge/packs/.gitkeep` (Task 2 adds the first real pack)
+- Create: `pkg/cosmoflare/knowledge/packs/ratelimit.json` (placeholder `{}` — Task 2 overwrites with the real pack)
 
 - [ ] **Step 1: Write the failing test**
 
@@ -276,7 +276,12 @@ func CheckRoute(method, path string) RouteVerdict {
 		for i := range p.Endpoints {
 			e := p.Endpoints[i]
 			if e.Method == method && matchPath(e.PathTemplate, path) {
-				return RouteVerdict{InScope: true, Pack: p.Product, Endpoint: &e}
+				if e.Status == "" {
+					return RouteVerdict{InScope: true, Pack: p.Product, Endpoint: &e}
+				}
+				// Registered as known-absent or API-disabled → blocked too
+				// (the Endpoint is kept so callers can surface the note).
+				return RouteVerdict{InScope: true, Blocked: true, Pack: p.Product, Endpoint: &e}
 			}
 		}
 		// In scope, no endpoint match → blocked.
@@ -310,7 +315,15 @@ func LookupDecode(code int, context string) *ErrorDecode {
 }
 ```
 
-Also create `pkg/cosmoflare/knowledge/packs/.gitkeep` (empty file) so the embed glob has a directory.
+Also create `pkg/cosmoflare/knowledge/packs/ratelimit.json` containing exactly
+`{}` (a valid, empty JSON object). `go:embed` globs that match zero files are
+COMPILE errors — `pattern packs/*.json: no matching files found` (verified
+empirically against Go 1.26; a lone `.gitkeep` does not help because embed
+excludes dotfiles, and directory-embed of a dotfile-only dir fails with
+"cannot embed directory packs: contains no embeddable files"). The placeholder
+must exist from Task 1 or Step 4 cannot build. With `{}` the pack parses with
+an empty product, so Task 2's failing-test step still fails with exactly
+"ratelimit pack not loaded". Task 2 overwrites this file with the real pack.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -329,7 +342,7 @@ git commit -m "feat(knowledge): pack types, embedded loader, route matching"
 ### Task 2: ratelimit seed pack
 
 **Files:**
-- Create: `pkg/cosmoflare/knowledge/packs/ratelimit.json`
+- Modify: `pkg/cosmoflare/knowledge/packs/ratelimit.json` (replace the `{}` placeholder created in Task 1)
 - Modify: `pkg/cosmoflare/knowledge/knowledge_test.go` (append)
 
 - [ ] **Step 1: Write the failing test**
@@ -418,7 +431,7 @@ Expected: FAIL — `ratelimit pack not loaded`.
 
 - [ ] **Step 3: Write the pack**
 
-Create `pkg/cosmoflare/knowledge/packs/ratelimit.json`:
+Replace the contents of `pkg/cosmoflare/knowledge/packs/ratelimit.json` (the Task 1 placeholder) with:
 
 ```json
 {
@@ -549,8 +562,13 @@ func TestTransportPassesRegisteredRouteAndOutOfScope(t *testing.T) {
 }
 
 func TestDecodeCFError(t *testing.T) {
-	cfErr := cloudflare.Error{StatusCode: 400, ErrorCodes: []int{20155}}
-	wrapped := fmt_wrap(cfErr)
+	// Build the error the way the SDK really returns 4xx: a typed wrapper
+	// (RequestError) around *cloudflare.Error, then service-layer wrapping.
+	// A bare value-type cloudflare.Error would not match errors.As against
+	// real chains (see the header facts).
+	wrapped := fmt_wrap(cloudflare.NewRequestError(&cloudflare.Error{
+		StatusCode: 400, ErrorCodes: []int{20155},
+	}))
 
 	out := DecodeCFError(wrapped, "")
 	var ke *KnowledgeError
@@ -678,7 +696,7 @@ func DecodeCFError(err error, context string) error {
 	if err == nil {
 		return nil
 	}
-	var cfErr cloudflare.Error
+	var cfErr *cloudflare.Error
 	if !errors.As(err, &cfErr) {
 		return err
 	}
@@ -1304,6 +1322,10 @@ func (s *RateLimitService) Create(ctx context.Context, in RateLimitCreateInput) 
 		}
 	}
 	rules2 := fromCFRules(updated.Rules)
+	if len(rules2) == 0 {
+		return nil, newError("RateLimitService.Create",
+			fmt.Sprintf("zone %q entrypoint returned zero rules after update", in.ZoneID), nil)
+	}
 	return &rules2[len(rules2)-1], nil
 }
 
@@ -1334,7 +1356,7 @@ func isNotFoundCF(err error) bool {
 	if err == nil {
 		return false
 	}
-	var cfErr cloudflare.Error
+	var cfErr *cloudflare.Error
 	if errors.As(err, &cfErr) {
 		if cfErr.StatusCode == http.StatusNotFound {
 			return true
@@ -1473,7 +1495,7 @@ Examples:
 		if JSONOutput {
 			return printJSON(d)
 		}
-		fmt.Printf("code:    %d\ncontext: %s\ncause:   %s\nfix:     %s\n", d.Code, d.Context, d.Cause, d.Fix)
+		cmd.Printf("code:    %d\ncontext: %s\ncause:   %s\nfix:     %s\n", d.Code, d.Context, d.Cause, d.Fix)
 		return nil
 	},
 }
@@ -1572,7 +1594,7 @@ var rateLimitListCmd = &cobra.Command{
 			return err
 		}
 		if JSONOutput {
-			return printSuccessJSON(rules)
+			return printSuccessJSON("rate-limiting rules listed", rules)
 		}
 		if len(rules) == 0 {
 			fmt.Println("no rate-limiting rules (fresh zones have no entrypoint — this counts as zero)")
@@ -1626,7 +1648,7 @@ var rateLimitCreateCmd = &cobra.Command{
 			return err
 		}
 		if JSONOutput {
-			return printSuccessJSON(rule)
+			return printSuccessJSON("rate-limiting rule created", rule)
 		}
 		fmt.Printf("created %s  %s  %d req/%ds block %ds\n",
 			rule.ID, rule.Expression, rule.RequestsPerPeriod, rule.Period, rule.MitigationTimeout)
@@ -1738,6 +1760,13 @@ Expected: all PASS. No live network (httptest only); no fabricated verdicts
 
 ## Accepted limitations (review 2026-09-09, deliberate)
 
+- **Transport fails OPEN on a pack-loader error** — if `Load()` fails (corrupt
+  pack), `CheckRoute` returns a zero verdict and traffic passes. Deliberate:
+  failing closed would block all API traffic on one bad pack file, which is
+  worse than missing knowledge. The loader error still surfaces loudly at the
+  first direct `Load()` call site (`cosmoflare knowledge list`, validators).
+  This narrows the brainstorm's "corrupted knowledge never silently passes"
+  to: never silently passes *where it is consulted directly*.
 - **decode/knowledge commands load packs from the compiled binary** — no
   runtime pack installation in v1 (single-binary promise).
 - **Global newError hook decorates only context-free decode entries** —
