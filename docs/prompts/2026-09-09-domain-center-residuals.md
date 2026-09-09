@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-09-domain-center-residuals.md
 branch: master
+completed: "2026-09-09T15:18:02+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -19,16 +20,46 @@ covers_plan_deliverables:
     - P-07
     - P-08
 created: "2026-09-09T02:14:59+04:00"
+goals_completed: 8
+goals_total: 8
 id: P-2026-09-09-domain-center-residuals
+implemented_commits:
+    - covers:
+        - P-01
+      sha: 3742e1c7b785
+    - covers:
+        - P-03
+      sha: 236abd51e0f9
+    - covers:
+        - P-04
+      sha: c20e2d47e358
+    - covers:
+        - P-02
+      sha: cdbf7ccf2a23
+    - covers:
+        - P-05
+      sha: 6bef9c52c4f3
+    - covers:
+        - P-06
+      sha: 7b6f5985bc94
+    - covers:
+        - P-07
+      sha: 811f5968f4f2
+    - covers:
+        - P-08
+      sha: 1b2f7d71a643
 plan_ref: docs/planning-mode/2026-09-09-domain-center-residuals.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-09-domain-center-residuals.md
     - docs/planning-mode/2026-09-09-domain-center-residuals.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
+tags: []
 title: 'Cosmoflare — domain center residuals: pagerules merge + redirect probes'
 ---
+
 # Cosmoflare — domain center residuals: pagerules merge + redirect probes
 
 ## BEFORE Starting — Required Reading
@@ -50,28 +81,28 @@ Both documents passed fresh-context independent review on 2026-09-09 (3 blockers
 
 ## Goals
 
-### [ ] G-01 RedirectRule.Source + legacyForwardingRules pure helper with table tests
+### [x] G-01 RedirectRule.Source + legacyForwardingRules pure helper with table tests
 Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/redirect.go`, `pkg/cosmoflare/redirect_test.go` (plan Task 1).
 
-### [ ] G-02 PageRuleLister + DomainService.WithPageRules + GetDetail merge with tests
+### [x] G-02 PageRuleLister + DomainService.WithPageRules + GetDetail merge with tests
 Covers P-02. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/domains.go`, `pkg/cosmoflare/domains_test.go` (plan Task 2). Depends on G-01; same wave as G-04 is FORBIDDEN (same file) — sequential.
 
-### [ ] G-03 RedirectProber — bounded probes, loop detection, httptest coverage
+### [x] G-03 RedirectProber — bounded probes, loop detection, httptest coverage
 Covers P-03. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/redirectprobe.go`, `pkg/cosmoflare/redirectprobe_test.go` (plan Task 3, new files). Independent — parallel-safe.
 
-### [ ] G-04 DomainStatus.RedirectIssue + classifyRedirectIssue + attention criterion
+### [x] G-04 DomainStatus.RedirectIssue + classifyRedirectIssue + attention criterion
 Covers P-04. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/domains.go`, `pkg/cosmoflare/domains_test.go` (plan Task 4). Independent — parallel-safe.
 
-### [ ] G-05 domains stats --check-redirects + factory wiring + tests
+### [x] G-05 domains stats --check-redirects + factory wiring + tests
 Covers P-05. **Model:** glm-turbo. **Files:** `cmd/domains.go`, `cmd/domains_stats.go`, `cmd/domains_stats_test.go` (plan Task 5). CRITICAL: the factory call flips to `newDomainService(domainsStatsCheckRedirects)` — without it the flag is a silent no-op. Requires G-01+G-02+G-04.
 
-### [ ] G-06 DiagnosticReport.RedirectTargets + cmd/doctor.go section + tests
+### [x] G-06 DiagnosticReport.RedirectTargets + cmd/doctor.go section + tests
 Covers P-06. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/doctor.go`, `cmd/doctor.go`, `cmd/doctor_test.go` (plan Task 6). Severity string is `"warning"` (codebase convention), score staleness accepted (plan's Accepted limitations). Requires G-03+G-04.
 
-### [ ] G-07 TUI detail-pane redirect-issue badge + view test
+### [x] G-07 TUI detail-pane redirect-issue badge + view test
 Covers P-07. **Model:** glm-turbo. **Files:** `internal/tui/domain.go`, `internal/tui/domain_test.go` (plan Task 7). Badge reads from `sel` (the list DomainStatus), NOT the `m.detail` block — plan encodes the trap. Independent after G-04 compiles.
 
-### [ ] G-08 docs/USAGE.md — merge completeness + --check-redirects + doctor section
+### [x] G-08 docs/USAGE.md — merge completeness + --check-redirects + doctor section
 Covers P-08. **Model:** glm-turbo. **Files:** `docs/USAGE.md` (plan Task 8). Sections live under `## Domains Command` → `### Domain subcommands` — not standalone. Last.
 
 ## Execution Strategy

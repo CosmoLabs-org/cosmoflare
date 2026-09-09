@@ -4,7 +4,10 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: domain Center residuals — legacy pagerules merge + redirect-target attention check
+          source: FEAT-010
+          date: 2026-09-09T15:19:22.170592+04:00
     fixed: []
     changed: []
     deprecated: []

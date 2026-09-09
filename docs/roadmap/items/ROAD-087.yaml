@@ -1,16 +1,20 @@
 id: ROAD-087
 created_at: 2026-08-31T03:57:06.177224+04:00
-updated_at: 2026-09-09T02:15:23.747459+04:00
+updated_at: 2026-09-09T15:19:06.565132+04:00
 title: Domain Center residuals — legacy pagerules merge + redirect-target attention check
 description: 'SCOPE CORRECTED 2026-09-09: the original Waves B-D are ALREADY SHIPPED (verified in code + Session-017; FEAT-006 closed c86a436 2026-06-20 — this item was hydrated from a stale memory line). Remaining genuine gaps from the 2026-06-14 design: (1) legacy merge — ''domains redirects'' must merge modern Redirect Rules with legacy Page-Rule forwarding_url entries for complete cross-domain visibility (design Layer-1 requirement, plan open risk never tasked); (2) redirect-target attention criterion — flag domains whose redirect target resolves >=400 or loops (design Phase-2 best-effort, never implemented).'
-status: captured
+status: completed
 tags:
     - audit-hydrated
+notes:
+    - 'Shipped 2026-09-09: legacy forwarding_url merge (WithPageRules), RedirectProber, RedirectIssue attention criterion, stats --check-redirects, doctor redirect_targets, TUI badge, USAGE.md. FEAT-010 closed. All 8 plan deliverables commit-attributed.'
 refs:
     - type: plan
       path: docs/planning-mode/2026-09-09-domain-center-residuals.md
 linked_issues:
     - FEAT-006
+completed_in: v0.23.0
+completed_at: 2026-09-09T15:19:06.565126+04:00
 origin:
     session: 36
 ulid: 01M1AHNY8287HF81T4V7GCV4NA
