@@ -1,10 +1,15 @@
 package cosmoflare
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudflare/cloudflare-go"
 )
 
 // ---------------------------------------------------------------------------
@@ -869,5 +874,157 @@ func TestDomainNeedsAttentionRedirectIssue(t *testing.T) {
 	d.RedirectIssue = "loop"
 	if !domainNeedsAttention(d) {
 		t.Fatal("RedirectIssue must trigger attention")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// GetDetail redirect enrichment (modern + legacy Page Rules)
+// ---------------------------------------------------------------------------
+
+// newDetailTestService builds a zones-backed DomainService over an httptest
+// server answering GET /zones/z1 with the "example.com" zone. ssl/dns/doctor
+// are nil so GetDetail exercises only the zone + redirect paths.
+func newDetailTestService(t *testing.T) *DomainService {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/zones/z1" {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": true,
+				"errors":  []interface{}{},
+				"result": map[string]interface{}{
+					"id":           "z1",
+					"name":         "example.com",
+					"status":       "active",
+					"paused":       false,
+					"name_servers": []string{"ns1.cloudflare.com", "ns2.cloudflare.com"},
+				},
+			})
+			return
+		}
+		t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	cf, err := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to build cloudflare client: %v", err)
+	}
+	zones, err := NewZoneService(cf, "acct-test-123")
+	if err != nil {
+		t.Fatalf("NewZoneService: %v", err)
+	}
+	svc, err := NewDomainService(zones, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("NewDomainService: %v", err)
+	}
+	return svc
+}
+
+// newFakeRedirectService builds a RedirectService whose httptest server serves
+// the /zones/z1/rulesets list + phase-ruleset GET pair (TestRedirectService_List
+// handler shape), returning the given rules from the redirect phase.
+func newFakeRedirectService(rules []RedirectRule) *RedirectService {
+	encoded := make([]map[string]interface{}, 0, len(rules))
+	for _, r := range rules {
+		encoded = append(encoded, map[string]interface{}{
+			"id":         r.ID,
+			"expression": r.When,
+			"enabled":    r.Enabled,
+			"action":     "redirect",
+			"action_parameters": map[string]interface{}{
+				"from_value": map[string]interface{}{
+					"status_code": r.StatusCode,
+					"target_url":  map[string]interface{}{"value": r.Destination},
+				},
+			},
+		})
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/zones/z1/rulesets":
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success":  true,
+				"errors":   []interface{}{},
+				"messages": []interface{}{},
+				"result": []map[string]interface{}{
+					{"id": "redirect-rs", "phase": "http_request_dynamic_redirect", "name": "Redirect Rules"},
+				},
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/zones/z1/rulesets/redirect-rs":
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success":  true,
+				"errors":   []interface{}{},
+				"messages": []interface{}{},
+				"result": map[string]interface{}{
+					"id":    "redirect-rs",
+					"phase": "http_request_dynamic_redirect",
+					"name":  "Redirect Rules",
+					"rules": encoded,
+				},
+			})
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	return NewRedirectService(cf, "account-test")
+}
+
+// fakePageRuleLister is a static PageRuleLister for tests.
+type fakePageRuleLister struct {
+	rules []*PageRule
+	err   error
+}
+
+func (f fakePageRuleLister) List(ctx context.Context) ([]*PageRule, error) {
+	return f.rules, f.err
+}
+
+func TestGetDetailMergesLegacyPageRules(t *testing.T) {
+	// Zones-only service (ssl/dns/doctor nil) serving one zone "z1"/"example.com",
+	// then wire both redirect sources.
+	svc := newDetailTestService(t)
+
+	svc = svc.
+		WithRedirects(newFakeRedirectService([]RedirectRule{
+			{ID: "r1", ZoneID: "z1", When: "starts_with(\"/a\")", Destination: "https://example.com/b", Enabled: true},
+		})).
+		WithPageRules(func(zoneID string) PageRuleLister {
+			return fakePageRuleLister{rules: []*PageRule{{
+				ID: "pr1", Status: "active",
+				Targets: []PageRuleTarget{{Constraint: PageRuleConstraint{Value: "*example.com/old/*"}}},
+				Actions: []PageRuleAction{{ID: "forwarding_url", Value: map[string]interface{}{"url": "https://example.com/new", "status_code": float64(302)}}},
+			}}}
+		})
+
+	detail, err := svc.GetDetail(context.Background(), "z1")
+	if err != nil {
+		t.Fatalf("GetDetail: %v", err)
+	}
+	if len(detail.Redirects) != 2 {
+		t.Fatalf("merged redirects = %d, want 2 (modern + legacy): %+v", len(detail.Redirects), detail.Redirects)
+	}
+	if detail.Redirects[0].Source != "" || detail.Redirects[0].ID != "r1" {
+		t.Fatalf("modern rule must come first with empty Source: %+v", detail.Redirects[0])
+	}
+	if detail.Redirects[1].Source != "pagerules" || detail.Redirects[1].Destination != "https://example.com/new" {
+		t.Fatalf("legacy rule wrong: %+v", detail.Redirects[1])
+	}
+}
+
+func TestGetDetailPageRuleFactoryFailureSkipsLegacy(t *testing.T) {
+	svc := newDetailTestService(t).
+		WithRedirects(newFakeRedirectService([]RedirectRule{{ID: "r1", ZoneID: "z1"}})).
+		WithPageRules(func(zoneID string) PageRuleLister { return nil }) // nil lister → skip
+
+	detail, err := svc.GetDetail(context.Background(), "z1")
+	if err != nil {
+		t.Fatalf("GetDetail: %v", err)
+	}
+	if len(detail.Redirects) != 1 {
+		t.Fatalf("nil lister must skip legacy, got %d: %+v", len(detail.Redirects), detail.Redirects)
 	}
 }
