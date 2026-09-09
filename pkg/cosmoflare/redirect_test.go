@@ -328,3 +328,53 @@ func TestNewRedirectServiceFromCreds(t *testing.T) {
 		t.Fatalf("expected service, got svc=%v err=%v", svc, err)
 	}
 }
+
+func TestLegacyForwardingRules(t *testing.T) {
+	rules := []*PageRule{
+		{
+			ID: "pr1", Status: "active", Priority: 1,
+			Targets: []PageRuleTarget{{Target: "url", Constraint: PageRuleConstraint{Operator: "matches", Value: "*example.com/old/*"}}},
+			Actions: []PageRuleAction{{ID: "forwarding_url", Value: map[string]interface{}{"url": "https://example.com/new", "status_code": float64(302)}}},
+		},
+		{
+			ID: "pr2", Status: "disabled", Priority: 2,
+			Targets: []PageRuleTarget{{Constraint: PageRuleConstraint{Operator: "matches", Value: "*example.com/gone"}}},
+			Actions: []PageRuleAction{{ID: "forwarding_url", Value: map[string]interface{}{"url": "https://example.com/"}}},
+		},
+		{
+			ID: "pr3", Status: "active", Priority: 3,
+			Targets: []PageRuleTarget{{Constraint: PageRuleConstraint{Operator: "matches", Value: "*example.com/cache"}}},
+			Actions: []PageRuleAction{{ID: "cache_level", Value: map[string]interface{}{"value": "bypass"}}}, // not forwarding → dropped
+		},
+		{
+			ID: "pr4", Status: "active", Priority: 4,
+			Targets: []PageRuleTarget{{Constraint: PageRuleConstraint{Operator: "matches", Value: "*example.com/broken"}}},
+			Actions: []PageRuleAction{{ID: "forwarding_url", Value: map[string]interface{}{"status_code": float64(301)}}}, // no url → dropped
+		},
+	}
+
+	got := legacyForwardingRules("zone1", rules)
+	if len(got) != 2 {
+		t.Fatalf("legacyForwardingRules returned %d rules, want 2: %+v", len(got), got)
+	}
+	first := got[0]
+	if first.ZoneID != "zone1" || first.When != "*example.com/old/*" || first.Destination != "https://example.com/new" {
+		t.Fatalf("first mapping wrong: %+v", first)
+	}
+	if first.StatusCode != 302 || !first.Enabled || first.Source != "pagerules" {
+		t.Fatalf("first flags wrong: %+v", first)
+	}
+	second := got[1]
+	if second.When != "*example.com/gone" || second.Destination != "https://example.com/" || second.StatusCode != 301 {
+		t.Fatalf("second mapping wrong (status default 301 expected): %+v", second)
+	}
+	if second.Enabled {
+		t.Fatal("disabled page rule must map to Enabled=false")
+	}
+}
+
+func TestLegacyForwardingRulesEmpty(t *testing.T) {
+	if got := legacyForwardingRules("z", nil); len(got) != 0 {
+		t.Fatalf("nil input must yield empty, got %+v", got)
+	}
+}
