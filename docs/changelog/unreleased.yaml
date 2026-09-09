@@ -8,10 +8,31 @@ entries:
         - description: domain Center residuals — legacy pagerules merge + redirect-target attention check
           source: FEAT-010
           date: 2026-09-09T15:19:22.170592+04:00
+        - description: 'feat(doctor): redirect-target probe section — cmd supplies destinations, report carries results'
+          source: manual
+          date: 2026-09-10T00:38:23.78752+04:00
+        - description: 'feat(cmd): domains stats --check-redirects probe pass'
+          source: manual
+          date: 2026-09-10T00:38:23.834056+04:00
+        - description: 'feat(tui): domain detail pane renders redirect-issue badge when present'
+          source: manual
+          date: 2026-09-10T00:38:23.889544+04:00
+        - description: 'feat(domains): merge legacy forwarding_url page rules via WithPageRules'
+          source: manual
+          date: 2026-09-10T00:38:23.943961+04:00
+        - description: 'feat(domains): redirect-issue classification feeds needs-attention'
+          source: manual
+          date: 2026-09-10T00:38:23.997493+04:00
+        - description: 'feat(domains): redirect prober with loop detection'
+          source: manual
+          date: 2026-09-10T00:38:24.042381+04:00
+        - description: 'feat(redirects): map legacy forwarding_url page rules'
+          source: manual
+          date: 2026-09-10T00:38:24.089143+04:00
     fixed:
-        - description: getNamespace does O(n) list scan — direct endpoint exists
-          source: BUG-039
-          date: 2026-09-09T19:52:54.142415+04:00
+        - description: 'fix(kv): GetNamespace fetches directly via REST instead of list-scan'
+          source: manual
+          date: 2026-09-10T00:38:23.72833+04:00
     changed: []
     deprecated: []
     removed: []
