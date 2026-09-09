@@ -127,3 +127,20 @@ func TestDomainBrowserModel_QuickAddNoSelectionNoop(t *testing.T) {
 		t.Error("quick-add must not open with no domain selected")
 	}
 }
+
+func TestDomainBrowserDetailShowsRedirectIssueBadge(t *testing.T) {
+	m := NewDomainBrowserModel([]*cosmoflare.DomainStatus{
+		{Zone: &cosmoflare.Zone{ID: "z1", Name: "example.com"}, RedirectIssue: "loop"},
+	})
+	view := m.View()
+	if !strings.Contains(view, "redirect: loop") {
+		t.Fatal("detail pane must render the redirect issue badge when set")
+	}
+
+	m2 := NewDomainBrowserModel([]*cosmoflare.DomainStatus{
+		{Zone: &cosmoflare.Zone{ID: "z1", Name: "example.com"}},
+	})
+	if strings.Contains(m2.View(), "redirect:") {
+		t.Fatal("badge must be absent when RedirectIssue is empty")
+	}
+}

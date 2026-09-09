@@ -209,6 +209,9 @@ func (m DomainBrowserModel) detailPane() []string {
 		"SSL:    " + sel.SSLStatus,
 		"Health: " + sel.HealthStatus,
 	}
+	if sel.RedirectIssue != "" {
+		lines = append(lines, lipgloss.NewStyle().Foreground(mutedColor).Render("redirect: "+sel.RedirectIssue))
+	}
 	if m.detail != nil {
 		if len(m.detail.NameServers) > 0 {
 			lines = append(lines, "Nameservers: "+strings.Join(m.detail.NameServers, ", "))
