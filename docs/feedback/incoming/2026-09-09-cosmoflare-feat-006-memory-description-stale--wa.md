@@ -11,7 +11,7 @@ from_path: /Users/gabstudio/PROJECTS/cosmoflare
 to_project: cosmoflare
 to_target: self
 created: "2026-09-09T02:09:25.961666+04:00"
-updated: "2026-09-09T02:09:25.961666+04:00"
+updated: "2026-09-09T18:38:12.474476+04:00"
 suggested_conversion: bug
 converted_to: null
 related_issues: []
@@ -40,3 +40,9 @@ And append a 'Residual gaps' section to the body: (1) legacy pagerules forwardin
 
 Evidence: docs/sessions/Session-017-domain-management-center-and-desktop-brainplan.md (all four waves completed, FEAT-006 closed); code listing pkg/cosmoflare/{redirect,registrar}.go, cmd/domains_{get,stats,ns,redirects,tui}.go, internal/tui/domain.go; ROAD-087 created 2026-08-31 audit-hydrated.
 
+
+---
+
+**Update (2026-09-09):**
+
+Forwarded to ClaudeCodeSetup 2026-09-09 with CORRECTED replacement text: docs/feedback/incoming/2026-09-09-cosmoflare-memory-description-stale--exact-edit-.md. Correction: this item's own proposed description ('Residual gaps: legacy pagerules merge, redirect-loop attention check') is now stale — both residuals SHIPPED 2026-09-09 via FEAT-010/ROAD-087 (8/8 plan deliverables verified). The memory file is a symlink into ClaudeCodeSetup/memory/projects/cosmoflare, so the edit must land there. Stays open until the CCS side confirms.

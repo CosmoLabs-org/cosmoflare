@@ -1,11 +1,13 @@
 id: BUG-039
 type: bug
 created_at: 2026-09-09T18:39:43.338157+04:00
-updated_at: 2026-09-09T18:39:43.342513+04:00
+updated_at: 2026-09-09T18:39:46.500719+04:00
 source: local
 ulid: 01M239RH7ECG1WGZAD90S65X94
 severity: low
 status: open
+origin:
+    session: 47
 title: GetNamespace does O(n) list scan — direct endpoint exists
 description: Reopened from FB-001 (addressed to pre-rename CosmoDev-R2Go2, hence direct conversion blocked; status was 'implemented' but code shows the pattern). pkg/cosmoflare/kv.go GetNamespace calls ListNamespaces (full paginated list) then scans client-side for the matching ID — O(n) API calls for one namespace. Cloudflare exposes GET /accounts/{account_id}/storage/kv/namespaces/{namespace_id} directly (cloudflare-go v0.116).
 fix_direction: Replace list-scan with the direct namespace GET. Preserve the not-found error shape for existing callers (kv_test.go TestKVGetNamespace*).

@@ -1,12 +1,12 @@
 version: "1.0"
 next_id: 8
-last_updated: "2026-09-09T16:39:40.219132+04:00"
+last_updated: "2026-09-09T18:38:32.698979+04:00"
 stats:
     total: 7
-    pending: 3
+    pending: 2
     implemented: 1
     rejected: 0
-    converted: 3
+    converted: 4
 entries:
     - id: FB-001
       title: GetNamespace does O(n) list scan
@@ -25,7 +25,7 @@ entries:
       created: "2026-09-09T02:09:25.961666+04:00"
     - id: FB-4
       title: Serve limits-snapshot cadence too hot once wired
-      status: pending
+      status: converted
       from_project: cosmoflare
       created: "2026-09-09T04:28:50.478829+04:00"
     - id: FB-5

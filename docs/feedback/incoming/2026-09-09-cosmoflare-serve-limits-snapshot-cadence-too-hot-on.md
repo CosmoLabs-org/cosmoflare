@@ -3,7 +3,7 @@ ulid: 01M21S2GXEYA5NQCYE00DS7Z68
 id: FB-4
 title: Serve limits-snapshot cadence too hot once wired
 type: idea
-status: pending
+status: converted
 priority: medium
 complexity: ""
 from_project: cosmoflare
@@ -11,21 +11,21 @@ from_path: /Users/gabstudio/PROJECTS/cosmoflare
 to_project: cosmoflare
 to_target: self
 created: "2026-09-09T04:28:50.478829+04:00"
-updated: "2026-09-09T04:28:50.478829+04:00"
+updated: "2026-09-09T18:38:32.69862+04:00"
 suggested_conversion: feature
-converted_to: null
+converted_to: FEAT-014
 related_issues: []
 brainstorm_ref: null
 session: 45
 suggested_workflow: []
 response:
-  acknowledged: null
-  acknowledged_by: null
-  started: null
-  implemented: null
-  rejected: null
-  rejection_reason: null
-  notes: ""
+    acknowledged: null
+    acknowledged_by: null
+    started: null
+    implemented: null
+    rejected: null
+    rejection_reason: null
+    notes: ""
 ---
 
 # FB-pDS7Z68: Serve limits-snapshot cadence too hot once wired

@@ -1,0 +1,39 @@
+---
+id: FEAT-014
+title: Serve limits-snapshot cadence too hot once wired
+type: feature
+status: open
+priority: 50
+created: 2026-09-09
+updated: 2026-09-09
+origin:
+  feedback_id: FB-4
+  from_project: cosmoflare
+  received: 2026-09-09
+  converted: 2026-09-09
+---
+
+# FEAT-014: Serve limits-snapshot cadence too hot once wired
+
+## Origin
+
+Converted from feedback **FB-4** (from cosmoflare)
+
+What happened: the session-end efficiency review found the serve alert cycle now collects a full limits snapshot (workers + buckets + zones + subscriptions + N DNS usage calls) every evaluation cycle — metrics that move on an hours timescale polled at the alert interval (~45 calls/cycle, ~13k/day at 5min for a 41-zone account).
+Why it matters: wasted API quota and avoidable latency inline before eval.Evaluate.
+Proposed solution: cache the limits snapshot with a 30-60min TTL keyed by account, or move limits collection to a slower sub-ticker that publishes into the shared metrics. Also add fail-fast for dnsUsage on the first 4xx (a token without DNS Read currently fails all 41 calls one by one) — needs HTTP status plumbed through restClient errors.
+Priority: medium — correctness is fine (v0.23.0 shipped inert-free), this is efficiency headroom.
+## Description
+
+The serve alert cycle collects a full limits snapshot (workers + buckets + zones + subscriptions + N DNS usage calls) every evaluation cycle — metrics that move on an hours timescale polled at the alert interval (~45 calls/cycle, ~13k calls/day at 5min for a 41-zone account). Correctness is fine (v0.23.0); this is API-quota and latency headroom.
+
+## Acceptance Criteria
+
+- [ ] limits snapshot collected at most once per TTL window per account
+- [ ] dnsUsage short-circuits on first 4xx with a single actionable error
+- [ ] alert evaluation latency no longer includes full limits collection
+
+## Fix Direction
+
+Cache the limits snapshot with a 30-60min TTL keyed by account, or move limits collection to a slower sub-ticker publishing into the shared metrics. Additionally: fail fast on dnsUsage when the first call returns 4xx (a token without DNS Read currently fails all 41 zone calls one by one) — requires HTTP status plumbed through restClient errors.
+
