@@ -390,6 +390,43 @@ func TestKVGetNamespaceDirectAuthErrorNotMislabeled(t *testing.T) {
 	}
 }
 
+func TestKVGetNamespaceDirectBare404KeepsType(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("gateway nonsense")) // non-JSON body, no parseable message
+	}))
+	defer srv.Close()
+
+	_, err := directKVService(t, srv).GetNamespace(context.Background(), "gone")
+	if err == nil {
+		t.Fatal("expected error for bare 404")
+	}
+	var nf *R2NotFoundError
+	if !errors.As(err, &nf) {
+		t.Fatalf("bare 404 must keep the R2NotFoundError type, got %T: %v", err, err)
+	}
+}
+
+func TestKVGetNamespaceDirectNullResultNotFabricated(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kvWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  nil, // success envelope, no namespace returned
+		})
+	}))
+	defer srv.Close()
+
+	_, err := directKVService(t, srv).GetNamespace(context.Background(), "ghost")
+	if err == nil {
+		t.Fatal("null result must not fabricate a namespace")
+	}
+	var nf *R2NotFoundError
+	if !errors.As(err, &nf) {
+		t.Fatalf("null result must be R2NotFoundError, got %T: %v", err, err)
+	}
+}
+
 func TestKVDeleteNamespaceWithMock(t *testing.T) {
 	svc, server := kvMockSetup(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {

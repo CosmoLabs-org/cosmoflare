@@ -145,13 +145,18 @@ func (s *KVService) GetNamespace(ctx context.Context, id string) (*KVNamespace, 
 		var out KVNamespace
 		path := fmt.Sprintf("/accounts/%s/storage/kv/namespaces/%s", s.accountID, id)
 		if err := s.rest.do(ctx, "KVService.GetNamespace", http.MethodGet, path, nil, &out); err != nil {
-			if strings.Contains(strings.ToLower(err.Error()), "not found") {
+			msg := strings.ToLower(err.Error())
+			// The API's not-found wording, or a 404 whose body carried no
+			// parseable message (rest.do then reports the bare status).
+			if strings.Contains(msg, "not found") || strings.Contains(msg, "(http 404)") {
 				return nil, notFound("KVService.GetNamespace", "", id, err)
 			}
 			return nil, err
 		}
 		if out.ID == "" {
-			out.ID = id
+			// A success envelope without the namespace means it does not
+			// exist — never fabricate one from the requested ID.
+			return nil, notFound("KVService.GetNamespace", "", id, fmt.Errorf("namespace %q not returned", id))
 		}
 		return &out, nil
 	}
