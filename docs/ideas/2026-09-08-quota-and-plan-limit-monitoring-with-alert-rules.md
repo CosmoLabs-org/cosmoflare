@@ -2,14 +2,19 @@
 ulid: 01M207F075KTAPE32TAPCEZ725
 title: Quota and plan-limit monitoring with alert rules
 created: "2026-09-08T14:01:50.565881+04:00"
-status: seed
+status: withered
 source: human
 origin:
     session: 43
 tags:
     - observability
     - alerts
+resolution:
+    reason: implemented
+    date: "2026-09-10T02:07:09.559365+04:00"
 ---
+
+# Quota and plan-limit monitoring with alert rules
 
 # Quota and plan-limit monitoring with alert rules
 
