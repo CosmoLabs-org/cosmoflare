@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md
 branch: master
+completed: "2026-09-10T17:17:00+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -12,18 +13,44 @@ covers_plan_deliverables:
     - P-03
     - P-04
 created: "2026-09-10T16:31:25+04:00"
+goals_completed: 4
+goals_total: 4
 id: P-2026-09-10-ratelimit-traffic-classes
+implemented_commits:
+    - covers:
+        - P-01
+      sha: 3c728ba2e9a3
+    - covers:
+        - P-02
+      sha: c02effc8ac48
+    - covers:
+        - P-03
+      sha: 2e54014eecb8
+    - covers:
+        - P-04
+        - BR-04
+      sha: a12f9a763b1b
+    - covers:
+        - BR-01
+      sha: 3c728ba2e9a3
+    - covers:
+        - BR-02
+      sha: c02effc8ac48
+    - covers:
+        - BR-03
+      sha: 2e54014eecb8
 plan_ref: docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md
     - docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
+tags: []
 title: 'Cosmoflare — FEAT-013: rate-limit traffic classes + trip probe'
-implemented_commits:
-    - {sha: '3c728ba2e9a3', covers: [P-01]}
 ---
+
 # Cosmoflare — FEAT-013: rate-limit traffic classes + trip probe
 
 ## BEFORE Starting — Required Reading
@@ -46,13 +73,13 @@ FEAT-013 (origin: MyCarGuide feedback FB-7): a rate-limit rule verified `enabled
 ### [x] G-01 TrafficClass schema + SkippedTrafficClasses + evidence-linked seed matrix
 Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/knowledge.go`, `knowledge_test.go`, `packs/ratelimit.json` (plan Task 1).
 
-### [ ] G-02 RateLimitProber — ExpressionPath, classifyProbe, bounded burst
+### [x] G-02 RateLimitProber — ExpressionPath, classifyProbe, bounded burst
 Covers P-02. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/ratelimitprobe.go`, `ratelimitprobe_test.go` (plan Task 2). After G-01 (classifyProbe cites the matrix).
 
-### [ ] G-03 CLI — ratelimit probe command, --probe on create, pack-driven advisory
+### [x] G-03 CLI — ratelimit probe command, --probe on create, pack-driven advisory
 Covers P-03. **Model:** glm-turbo. **Files:** `cmd/ratelimit.go`, `cmd/ratelimit_probe_test.go` (plan Task 3). After G-02. REUSES `ratelimitServiceAndZone` in `cmd/ratelimit.go` — do not add a resolver.
 
-### [ ] G-04 docs/USAGE.md — traffic-class matrix and probe documentation
+### [x] G-04 docs/USAGE.md — traffic-class matrix and probe documentation
 Covers P-04. **Model:** glm-turbo. **Files:** `docs/USAGE.md` (plan Task 4). Last.
 
 ## Execution Strategy
