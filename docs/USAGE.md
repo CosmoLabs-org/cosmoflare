@@ -1138,8 +1138,8 @@ The scoped route-check semantic is **advisory when absent, authoritative when pr
 - Unknown error codes and unknown products pass through undecorated — no fabricated verdicts, ever.
 
 ```bash
-cosmoflare knowledge list                # Show the packs compiled into this binary
-cosmoflare knowledge list --json         # Machine-readable output
+cosmoflare knowledge                # Show the packs compiled into this binary
+cosmoflare knowledge --json         # Machine-readable output
 cosmoflare decode 10405                  # Decode a Cloudflare API error code
 cosmoflare decode 1000 --context phase-entrypoint   # Refine by context
 cosmoflare decode 20155 --json           # Machine-readable decode
@@ -1164,7 +1164,7 @@ fix:     check the route against the registered endpoints; e.g. POST .../entrypo
 
 JSON output:
 ```bash
-cosmoflare knowledge list --json | jq '.[].product'
+cosmoflare knowledge --json | jq '.[].product'
 ```
 ```json
 [{"product":"ratelimit","scopes":["/zones/{zone_id}/rulesets*","/zones/{zone_id}/rate_limits*"],"endpoints":[...],"errors":[...],"plan_caps":[...],"invariants":[...]}]
@@ -1174,7 +1174,7 @@ Unknown codes exit non-zero with a clear message — the knowledge layer never g
 
 | Command | Description |
 |---------|-------------|
-| `knowledge list` | List the embedded packs (product, endpoint/decode/cap/invariant counts, scopes) |
+| `knowledge` | List the embedded packs (product, endpoint/decode/cap/invariant/traffic-class counts, scopes) |
 | `decode <code>` | Print the cause and fix for a Cloudflare error code |
 | `decode <code> --context <ctx>` | Refine the decode by context (e.g. `phase-entrypoint` for entrypoint 1000s) |
 
@@ -1215,6 +1215,44 @@ JSON output:
 | `--timeout` | `10` | Mitigation timeout seconds (Free plan max 10) |
 | `--characteristics` | `cf.colo.id,ip.src` | Comma-separated counting characteristics (must include `cf.colo.id`) |
 | `--description` | | Rule description |
+| `--probe` | `false` | Run a live trip probe against the created rule immediately after creation (see below) |
+
+After every successful `create`, cosmoflare prints a **traffic-class advisory** listing the classes WAF rate limiting does not count (from the embedded knowledge pack — never hardcoded). A rule can be `enabled=true` and still protect nothing if its traffic class is skipped.
+
+### Traffic-class matrix
+
+The embedded knowledge pack documents which traffic classes the `http_ratelimit` phase counts. Every entry carries its evidence source, so drift is auditable:
+
+| Class | Counted | Source |
+|-------|---------|--------|
+| `cache-hit-static-asset` | **no** | [CF rate-limiting docs](https://developers.cloudflare.com/waf/rate-limiting-rules/) (cache is consulted before counting) + FB-7 field evidence |
+| `pages-custom-domain-asset` | **no** | FB-7 field evidence (2026-09-09) |
+| `origin-miss` | yes | [CF rate-limiting docs](https://developers.cloudflare.com/waf/rate-limiting-rules/) |
+| `cache-bypass` | yes | [CF rate-limiting docs](https://developers.cloudflare.com/waf/rate-limiting-rules/) |
+
+`cosmoflare knowledge` shows the traffic-class counts per pack. The matrix is advisory when absent — packs without a `traffic_classes` block print no advisory.
+
+### Rate-limit trip probe
+
+`ratelimit probe` answers the question no Cloudflare surface answers at creation time: **does this rule actually see my traffic?** It sends a bounded burst of live GETs (default: 2× the matching rule's requests-per-period, hard cap 60, `--requests` overrides and clamps) — half plain, half with a unique `cfprobe` query param so the burst is not entirely served from cache — and classifies the outcome.
+
+```bash
+cosmoflare ratelimit probe example.com --path /catalog.json
+cosmoflare ratelimit probe example.com --path /login --requests 20 --json
+```
+
+| Verdict | Meaning | Exit code |
+|---------|---------|-----------|
+| `tripped` | At least one request was blocked (429/403) — the rule sees this traffic | `0` |
+| `not-counted` | All requests passed unblocked — the rule is live but this traffic class is likely skipped | `2` |
+| `inconclusive` | Network errors dominated, partial send, or non-2xx/3xx responses — no verdict fabricated | `3` |
+
+**This command sends live traffic to your origin.** It is strictly opt-in: it never runs on any default path, and `--probe` on `create` is the only automatic trigger — explicit, off by default.
+
+JSON output:
+```json
+{"url":"https://example.com/catalog.json","requests":20,"statuses":{"200":20},"tripped":false,"verdict":"not-counted","explanation":"all 20 requests passed unblocked — the rule is live but this traffic class is likely not counted (documented skipped classes: cache-hit-static-asset, pages-custom-domain-asset); verify with a cache-busted URL or an origin-only path"}
+```
 
 ## Redirects Commands
 

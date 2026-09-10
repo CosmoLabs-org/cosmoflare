@@ -25,8 +25,8 @@ not registered are blocked before send.`,
 			return printJSON(packs)
 		}
 		for _, p := range packs {
-			fmt.Printf("%s: %d endpoints, %d error decodes, %d plan caps, %d invariants (scopes: %v)\n",
-				p.Product, len(p.Endpoints), len(p.Errors), len(p.PlanCaps), len(p.Invariants), p.Scopes)
+			fmt.Printf("%s: %d endpoints, %d error decodes, %d plan caps, %d invariants, %d traffic classes (scopes: %v)\n",
+				p.Product, len(p.Endpoints), len(p.Errors), len(p.PlanCaps), len(p.Invariants), len(p.TrafficClasses), p.Scopes)
 		}
 		return nil
 	},
