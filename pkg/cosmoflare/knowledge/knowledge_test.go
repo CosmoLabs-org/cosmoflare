@@ -111,3 +111,24 @@ func TestRatelimitPackLoadedAndValid(t *testing.T) {
 		t.Fatal("cf.colo.id invariant missing")
 	}
 }
+
+// TestSkippedTrafficClasses verifies the ratelimit pack declares its
+// not-counted traffic classes with evidence sources, and that unknown
+// products return nothing (advisory when absent).
+func TestSkippedTrafficClasses(t *testing.T) {
+	skipped := SkippedTrafficClasses("ratelimit")
+	if len(skipped) != 2 {
+		t.Fatalf("ratelimit pack must declare exactly 2 skipped classes, got %d: %+v", len(skipped), skipped)
+	}
+	for _, tc := range skipped {
+		if tc.Counted {
+			t.Fatalf("skipped classes must have Counted=false: %+v", tc)
+		}
+		if tc.Source == "" {
+			t.Fatalf("every matrix entry must carry a source: %+v", tc)
+		}
+	}
+	if got := SkippedTrafficClasses("nosuch"); len(got) != 0 {
+		t.Fatalf("unknown product must return empty, got %+v", got)
+	}
+}
