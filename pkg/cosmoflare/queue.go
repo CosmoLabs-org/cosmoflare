@@ -227,6 +227,82 @@ func (s *QueueService) DeleteConsumer(ctx context.Context, queueName, consumerNa
 	return nil
 }
 
+// UpdateConsumer updates the settings of an existing consumer for a queue.
+func (s *QueueService) UpdateConsumer(ctx context.Context, queueName, consumerName string, settings QueueConsumerSettings) (*QueueConsumer, error) {
+	if queueName == "" {
+		return nil, validationError("QueueService.UpdateConsumer", "queue name is required")
+	}
+	if consumerName == "" {
+		return nil, validationError("QueueService.UpdateConsumer", "consumer name is required")
+	}
+
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	result, err := s.cf.UpdateQueueConsumer(ctx, rc, cloudflare.UpdateQueueConsumerParams{
+		QueueName: queueName,
+		Consumer: cloudflare.QueueConsumer{
+			Name:     consumerName,
+			Settings: mapQueueConsumerSettingsToSDK(settings),
+		},
+	})
+	if err != nil {
+		return nil, newError("QueueService.UpdateConsumer", fmt.Sprintf("failed to update consumer %q for queue %q", consumerName, queueName), err)
+	}
+
+	return mapQueueConsumer(result), nil
+}
+
+// ConfigureDLQ sets or clears the dead letter queue bindings on a queue's
+// consumer and/or producer settings. consumerDLQ and producerDLQ are
+// optional ("" leaves that binding unchanged); at least one is required
+// unless clear is set. clear=true removes both bindings.
+func (s *QueueService) ConfigureDLQ(ctx context.Context, queueName, consumerDLQ, producerDLQ string, clear bool) (*Queue, error) {
+	if queueName == "" {
+		return nil, validationError("QueueService.ConfigureDLQ", "queue name is required")
+	}
+	if !clear && consumerDLQ == "" && producerDLQ == "" {
+		return nil, validationError("QueueService.ConfigureDLQ", "at least one of consumerDLQ or producerDLQ is required unless clear is set")
+	}
+
+	queueID, err := s.resolveQueueID(ctx, queueName)
+	if err != nil {
+		return nil, err
+	}
+
+	settings := map[string]interface{}{}
+	if clear {
+		settings["consumers"] = map[string]string{"dead_letter_queue": ""}
+		settings["producers"] = map[string]string{"dead_letter_queue": ""}
+	} else {
+		if consumerDLQ != "" {
+			settings["consumers"] = map[string]string{"dead_letter_queue": consumerDLQ}
+		}
+		if producerDLQ != "" {
+			settings["producers"] = map[string]string{"dead_letter_queue": producerDLQ}
+		}
+	}
+
+	payload := struct {
+		Settings map[string]interface{} `json:"settings"`
+	}{Settings: settings}
+
+	uri := fmt.Sprintf("/accounts/%s/queues/%s", s.accountID, queueID)
+	raw, err := s.cf.Raw(ctx, http.MethodPut, uri, payload, nil)
+	if err != nil {
+		return nil, newError("QueueService.ConfigureDLQ", fmt.Sprintf("failed to configure DLQ for queue %q", queueName), err)
+	}
+	if !raw.Success {
+		return nil, newError("QueueService.ConfigureDLQ", fmt.Sprintf("failed to configure DLQ for queue %q", queueName), nil)
+	}
+
+	if len(raw.Result) > 0 {
+		var sdkQueue cloudflare.Queue
+		if err := json.Unmarshal(raw.Result, &sdkQueue); err == nil && sdkQueue.ID != "" {
+			return mapQueue(sdkQueue), nil
+		}
+	}
+	return s.Get(ctx, queueName)
+}
+
 // mapQueue converts a cloudflare.Queue to our Queue type.
 func mapQueue(q cloudflare.Queue) *Queue {
 	producers := make([]QueueProducer, 0, len(q.Producers))

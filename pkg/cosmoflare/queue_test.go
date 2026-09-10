@@ -163,6 +163,36 @@ func TestQueueDeleteConsumerValidation(t *testing.T) {
 	}
 }
 
+func TestQueueUpdateConsumerValidation(t *testing.T) {
+	svc, server := queueMockSetup(func(w http.ResponseWriter, r *http.Request) {})
+	defer server.Close()
+
+	_, err := svc.UpdateConsumer(context.Background(), "", "consumer", QueueConsumerSettings{})
+	if err == nil {
+		t.Error("expected error when queue name is empty")
+	}
+
+	_, err = svc.UpdateConsumer(context.Background(), "my-queue", "", QueueConsumerSettings{})
+	if err == nil {
+		t.Error("expected error when consumer name is empty")
+	}
+}
+
+func TestQueueConfigureDLQValidation(t *testing.T) {
+	svc, server := queueMockSetup(func(w http.ResponseWriter, r *http.Request) {})
+	defer server.Close()
+
+	_, err := svc.ConfigureDLQ(context.Background(), "", "dlq", "", false)
+	if err == nil {
+		t.Error("expected error when queue name is empty")
+	}
+
+	_, err = svc.ConfigureDLQ(context.Background(), "my-queue", "", "", false)
+	if err == nil {
+		t.Error("expected error when no DLQ name and clear=false")
+	}
+}
+
 // --- API success tests ---
 
 func TestQueueCreateSuccess(t *testing.T) {
@@ -746,6 +776,189 @@ func TestQueueServiceSendBatchOversizedWarning(t *testing.T) {
 	}
 	if out := stderr.output(); !strings.Contains(out, "128,000") {
 		t.Errorf("warning should name the 128,000-byte limit, got: %q", out)
+	}
+}
+
+// --- UpdateConsumer ---
+
+func TestQueueUpdateConsumerSuccess(t *testing.T) {
+	svc, server := queueMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut || r.URL.Path != "/accounts/account-test-123/workers/queues/my-queue/consumers/my-consumer" {
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		queueWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"script_name": "my-worker",
+				"settings":    map[string]interface{}{"batch_size": 20, "max_retries": 5, "max_wait_time_ms": 1000},
+			},
+		})
+	})
+	defer server.Close()
+
+	c, err := svc.UpdateConsumer(context.Background(), "my-queue", "my-consumer", QueueConsumerSettings{
+		BatchSize: 20, MaxRetries: 5, MaxWaitTime: 1000,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if c.Settings.BatchSize != 20 || c.Settings.MaxRetries != 5 || c.Settings.MaxWaitTime != 1000 {
+		t.Errorf("settings mismatch: %+v", c.Settings)
+	}
+}
+
+func TestQueueUpdateConsumerError(t *testing.T) {
+	svc, server := queueMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "internal error"}},
+		})
+	})
+	defer server.Close()
+
+	_, err := svc.UpdateConsumer(context.Background(), "my-queue", "my-consumer", QueueConsumerSettings{})
+	if err == nil {
+		t.Error("expected error on server failure")
+	}
+}
+
+// --- ConfigureDLQ ---
+
+// queueDLQMockSetup returns a service backed by a mock server that resolves
+// queue "my-queue" to ID "q-dlq-123" and records PUTs to the queue config API.
+func queueDLQMockSetup(t *testing.T, configHandler func(w http.ResponseWriter, r *http.Request)) (*QueueService, *[]byte, *httptest.Server) {
+	t.Helper()
+	var capturedBody []byte
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/accounts/account-test-123/workers/queues/my-queue":
+			queueWriteJSON(w, map[string]interface{}{
+				"success": true,
+				"errors":  []interface{}{},
+				"result": map[string]interface{}{
+					"queue_id":   "q-dlq-123",
+					"queue_name": "my-queue",
+				},
+			})
+		case r.Method == http.MethodPut && r.URL.Path == "/accounts/account-test-123/queues/q-dlq-123":
+			data, _ := io.ReadAll(r.Body)
+			capturedBody = data
+			configHandler(w, r)
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			queueWriteJSON(w, map[string]interface{}{"success": false, "errors": []interface{}{}})
+		}
+	}))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewQueueService(cf, "account-test-123")
+	return svc, &capturedBody, server
+}
+
+func TestQueueConfigureDLQSuccess(t *testing.T) {
+	svc, body, server := queueDLQMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"queue_id":   "q-dlq-123",
+				"queue_name": "my-queue",
+			},
+		})
+	})
+	defer server.Close()
+
+	q, err := svc.ConfigureDLQ(context.Background(), "my-queue", "my-dlq", "", false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if q.ID != "q-dlq-123" {
+		t.Errorf("expected ID=q-dlq-123, got %s", q.ID)
+	}
+
+	var sent struct {
+		Settings struct {
+			Consumers struct {
+				DeadLetterQueue string `json:"dead_letter_queue"`
+			} `json:"consumers"`
+		} `json:"settings"`
+	}
+	if err := json.Unmarshal(*body, &sent); err != nil {
+		t.Fatalf("failed to decode sent body: %v", err)
+	}
+	if sent.Settings.Consumers.DeadLetterQueue != "my-dlq" {
+		t.Errorf("consumer dead_letter_queue mismatch: %+v", sent)
+	}
+}
+
+func TestQueueConfigureDLQClear(t *testing.T) {
+	svc, body, server := queueDLQMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"queue_id":   "q-dlq-123",
+				"queue_name": "my-queue",
+			},
+		})
+	})
+	defer server.Close()
+
+	if _, err := svc.ConfigureDLQ(context.Background(), "my-queue", "", "", true); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var sent struct {
+		Settings struct {
+			Consumers struct {
+				DeadLetterQueue string `json:"dead_letter_queue"`
+			} `json:"consumers"`
+			Producers struct {
+				DeadLetterQueue string `json:"dead_letter_queue"`
+			} `json:"producers"`
+		} `json:"settings"`
+	}
+	if err := json.Unmarshal(*body, &sent); err != nil {
+		t.Fatalf("failed to decode sent body: %v", err)
+	}
+	if sent.Settings.Consumers.DeadLetterQueue != "" || sent.Settings.Producers.DeadLetterQueue != "" {
+		t.Errorf("expected empty dead_letter_queue values on clear, got: %+v", sent)
+	}
+}
+
+func TestQueueConfigureDLQError(t *testing.T) {
+	svc, _, server := queueDLQMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "bad request"}},
+		})
+	})
+	defer server.Close()
+
+	_, err := svc.ConfigureDLQ(context.Background(), "my-queue", "my-dlq", "", false)
+	if err == nil {
+		t.Error("expected error on bad request")
+	}
+}
+
+func TestQueueConfigureDLQUnknownQueue(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "queue not found"}},
+		})
+	}))
+	defer server.Close()
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewQueueService(cf, "account-test-123")
+
+	_, err := svc.ConfigureDLQ(context.Background(), "missing-queue", "my-dlq", "", false)
+	if err == nil {
+		t.Error("expected error when queue does not exist")
 	}
 }
 
