@@ -28,6 +28,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.25.0] - 2026-09-10
+
+### Added
+- decode, knowledge, ratelimit list/create commands
+- ratelimit probe command + create --probe + traffic-class advisory
+- knowledge layer: endpoint registry, plan caps, error decoding
+- rate-limit traffic-class matrix with evidence sources
+- RateLimitService with preflight validation and entrypoint PUT flow
+- rate-limit trip prober with tripped/not-counted/inconclusive verdicts
+- bounded trip prober with classify verdict engine (commit:fda50bd6)
+- decode, knowledge list, ratelimit list/create (commit:23c9e0b6)
+- add RateLimitService with preflight + entrypoint PUT flow (commit:3371e96c)
+- route-blocking transport + central CF error decoding (commit:b9477f4c)
+- ratelimit seed pack from MyCarGuide evidence (commit:de1ca108)
+- pack types, embedded loader, route matching (commit:67814ce9)
+
+### Changed
+- consolidate review findings from /simplify pass (commit:c3f466ab)
+
+### Fixed
+- config delete now honors --dry-run (previously deleted the profile)
+- webhook retries now send a full request body (previously empty on retry)
+- honor dry-run in config delete + add config/cache tests (commit:de460543)
+- rebuild request per retry attempt (commit:e76f3325)
+
 ## [0.24.0] - 2026-09-10
 
 ### Added

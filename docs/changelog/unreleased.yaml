@@ -4,32 +4,8 @@
 
 version: pending
 entries:
-    added:
-        - description: decode, knowledge, ratelimit list/create commands
-          source: manual
-          date: 2026-09-10T18:23:20.914674+04:00
-        - description: ratelimit probe command + create --probe + traffic-class advisory
-          source: manual
-          date: 2026-09-10T18:23:20.967623+04:00
-        - description: 'knowledge layer: endpoint registry, plan caps, error decoding'
-          source: manual
-          date: 2026-09-10T18:23:21.010695+04:00
-        - description: rate-limit traffic-class matrix with evidence sources
-          source: manual
-          date: 2026-09-10T18:23:21.051876+04:00
-        - description: RateLimitService with preflight validation and entrypoint PUT flow
-          source: manual
-          date: 2026-09-10T18:23:21.092603+04:00
-        - description: rate-limit trip prober with tripped/not-counted/inconclusive verdicts
-          source: manual
-          date: 2026-09-10T18:23:21.135028+04:00
-    fixed:
-        - description: config delete now honors --dry-run (previously deleted the profile)
-          source: manual
-          date: 2026-09-10T18:23:21.180884+04:00
-        - description: webhook retries now send a full request body (previously empty on retry)
-          source: manual
-          date: 2026-09-10T18:23:21.229354+04:00
+    added: []
+    fixed: []
     changed: []
     deprecated: []
     removed: []
