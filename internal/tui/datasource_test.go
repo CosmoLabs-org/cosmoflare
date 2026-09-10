@@ -7,14 +7,20 @@ import (
 	"time"
 )
 
+// TestNullDataSourceAvailable verifies that the no-credentials fallback data
+// source always reports itself as unavailable.
 func TestNullDataSourceAvailable(t *testing.T) {
+	t.Parallel()
 	ds := &nullDataSource{}
 	if ds.Available() {
 		t.Fatal("nullDataSource.Available() should return false")
 	}
 }
 
+// TestNullDataSourceFetchBuckets verifies that the null data source succeeds
+// with empty bucket and usage results instead of erroring.
 func TestNullDataSourceFetchBuckets(t *testing.T) {
+	t.Parallel()
 	ds := &nullDataSource{}
 	buckets, stats, err := ds.FetchBuckets(context.Background())
 	if err != nil {
@@ -28,7 +34,10 @@ func TestNullDataSourceFetchBuckets(t *testing.T) {
 	}
 }
 
+// TestNullDataSourceFetchObjects verifies that object listings come back
+// successful but empty from the null data source.
 func TestNullDataSourceFetchObjects(t *testing.T) {
+	t.Parallel()
 	ds := &nullDataSource{}
 	listing, err := ds.FetchObjects(context.Background(), "test", "", "")
 	if err != nil {
