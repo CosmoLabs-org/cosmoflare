@@ -211,3 +211,4 @@ GOrchestra/intel/
 GOrchestra/glm-agents/*/diff.patch
 GOrchestra/worktrees/**/recovery.patch
 GOrchestra/worktrees/**/recovery_*.patch
+.version-registry.json
