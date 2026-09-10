@@ -2,9 +2,9 @@
 id: FEAT-013
 type: feature
 created: "2026-09-09"
-updated: "2026-09-10T16:52:06.307208+04:00"
+updated: "2026-09-10T17:17:00.748454+04:00"
 priority: 50
-status: open
+status: implemented
 origin:
     feedback_id: FB-7
     from_project: MyCarGuide
@@ -23,6 +23,9 @@ acceptance_criteria:
     - criterion: Probe is opt-in and never runs on default paths
       met: false
 brainstorm_ref: docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md
+revisions:
+    - date: "2026-09-10"
+      action: closed
 
 ---
 

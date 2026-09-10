@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-09T19:09:41.561178+04:00
+last_updated: 2026-09-10T16:19:45.493367+04:00
 next_id: 93
 items:
     - id: BASE-001
@@ -781,10 +781,11 @@ items:
       created_at: 2026-09-08T13:26:17.669567+04:00
     - id: ROAD-092
       title: CF API knowledge layer — endpoint registry, plan caps, error decoding (FEAT-012)
-      status: captured
+      status: completed
       category: integration
       effort: medium
       has_plan: true
       linked_issues:
         - FEAT-012
+      completed_in: v0.24.0
       created_at: 2026-09-09T19:09:39.101728+04:00

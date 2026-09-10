@@ -1,16 +1,20 @@
 ---
 id: FEAT-012
-title: 'CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time'
 type: feature
-status: open
+created: "2026-09-09"
+updated: "2026-09-10T16:19:36.379438+04:00"
 priority: 70
-created: 2026-09-09
-updated: 2026-09-09
+status: closed
 origin:
-  feedback_id: FB-6
-  from_project: MyCarGuide
-  received: 2026-09-09
-  converted: 2026-09-09
+    feedback_id: FB-6
+    from_project: MyCarGuide
+    received: "2026-09-09"
+    converted: "2026-09-09"
+title: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
+revisions:
+    - date: "2026-09-10"
+      action: closed
+
 ---
 
 # FEAT-012: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time

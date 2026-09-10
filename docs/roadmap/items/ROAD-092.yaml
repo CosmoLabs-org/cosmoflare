@@ -1,8 +1,8 @@
 id: ROAD-092
 created_at: 2026-09-09T19:09:39.101728+04:00
-updated_at: 2026-09-09T19:09:41.555151+04:00
+updated_at: 2026-09-10T16:19:45.470819+04:00
 title: CF API knowledge layer — endpoint registry, plan caps, error decoding (FEAT-012)
-status: captured
+status: completed
 category: integration
 effort: medium
 refs:
@@ -10,6 +10,8 @@ refs:
       path: docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md
 linked_issues:
     - FEAT-012
+completed_in: v0.24.0
+completed_at: 2026-09-10T16:19:45.470811+04:00
 origin:
     session: 47
 ulid: 01M23BFAWZPMNBQ68KJC1QWSV7
