@@ -1387,6 +1387,25 @@ cosmoflare auth logout
 ```
 Clears in-memory credentials. Profile configurations in `~/.cosmoflare/config.yaml` are preserved.
 
+### Permissions manifest
+```bash
+cosmoflare auth permissions list                          # All families (account, zone, user)
+cosmoflare auth permissions list --scope account           # Filter to one scope
+cosmoflare auth permissions list --group deploy             # Least-privilege set for a command group
+cosmoflare auth permissions list --scope zone --json        # JSON output
+```
+
+| Flag | Description |
+|------|-------------|
+| `--scope` | Filter families by scope: `account`, `zone`, or `user` |
+| `--group` | Print the least-privilege permission set for a command group instead of the family table |
+| `--json` | JSON output |
+
+Reads the embedded Cloudflare API token permission manifest
+(`pkg/cosmoflare/permdata`) — every account, zone, and user permission
+family, and the recommended minimum permission set per command group.
+No API calls; read-only reference data.
+
 ## Setup Command
 
 Interactive setup wizard for first-time configuration.
