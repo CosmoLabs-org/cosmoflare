@@ -3,8 +3,11 @@ package cosmoflare
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/cloudflare/cloudflare-go"
 )
 
 // --- newError ---
@@ -344,5 +347,32 @@ func TestErrorChain_DeepUnwrap(t *testing.T) {
 	}
 	if !errors.Is(top, mid) {
 		t.Error("errors.Is should find the intermediate error")
+	}
+}
+
+// --- isNotFound ---
+
+func TestIsNotFound(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"cf error 404", &cloudflare.Error{StatusCode: http.StatusNotFound}, true},
+		{"cf error code 1000", &cloudflare.Error{StatusCode: http.StatusInternalServerError, ErrorCodes: []int{1000}}, true},
+		{"cf error 500 no codes", &cloudflare.Error{StatusCode: http.StatusInternalServerError}, false},
+		{"bucket not found", errors.New("bucket not found"), true},
+		{"could not find resource", errors.New("could not find resource"), true},
+		{"HTTP 404 string", errors.New("HTTP 404"), true},
+		{"something else", errors.New("something else entirely"), false},
+		{"wrapped cf 404", fmt.Errorf("wrap: %w", &cloudflare.Error{StatusCode: http.StatusNotFound}), true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isNotFound(tc.err); got != tc.want {
+				t.Errorf("isNotFound(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
 	}
 }

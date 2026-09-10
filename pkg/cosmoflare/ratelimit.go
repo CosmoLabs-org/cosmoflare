@@ -2,7 +2,6 @@ package cosmoflare
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -87,7 +86,7 @@ func (s *RateLimitService) List(ctx context.Context, zoneID string) ([]RateLimit
 	}
 	rs, err := s.cf.GetEntrypointRuleset(ctx, cloudflare.ZoneIdentifier(zoneID), cfRatelimitPhase)
 	if err != nil {
-		if isNotFoundCF(err) {
+		if isNotFound(err) {
 			return []RateLimitRule{}, nil
 		}
 		return nil, newError("RateLimitService.List",
@@ -139,7 +138,7 @@ func (s *RateLimitService) Create(ctx context.Context, in RateLimitCreateInput) 
 	rules := make([]cloudflare.RulesetRule, 0, len(existing)+1)
 	if err == nil {
 		rules = append(rules, rs.Rules...)
-	} else if !isNotFoundCF(err) {
+	} else if !isNotFound(err) {
 		return nil, newError("RateLimitService.Create",
 			fmt.Sprintf("failed to read entrypoint for zone %q", in.ZoneID),
 			knowledge.DecodeCFError(err, "phase-entrypoint"))
@@ -202,24 +201,4 @@ func fromCFRules(in []cloudflare.RulesetRule) []RateLimitRule {
 		out = append(out, rr)
 	}
 	return out
-}
-
-// isNotFoundCF reports CF not-found shapes: HTTP 404 or code 1000
-// (cloudflare-go v0.116.0 has no ErrNotFound sentinel).
-func isNotFoundCF(err error) bool {
-	if err == nil {
-		return false
-	}
-	var cfErr *cloudflare.Error
-	if errors.As(err, &cfErr) {
-		if cfErr.StatusCode == http.StatusNotFound {
-			return true
-		}
-		for _, c := range cfErr.ErrorCodes {
-			if c == 1000 {
-				return true
-			}
-		}
-	}
-	return false
 }

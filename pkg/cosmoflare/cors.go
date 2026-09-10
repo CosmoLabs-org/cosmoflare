@@ -130,7 +130,7 @@ func (s *CORSService) GetCORSRules(ctx context.Context) ([]*CORSRule, error) {
 	rc := cloudflare.ZoneIdentifier(s.zoneID)
 	ruleset, err := s.cf.GetEntrypointRuleset(ctx, rc, corsPhase)
 	if err != nil {
-		if isNotFoundError(err) {
+		if isNotFound(err) {
 			return []*CORSRule{}, nil
 		}
 		return nil, newError("CORSService.GetCORSRules", "failed to get entrypoint ruleset", err)
@@ -177,7 +177,7 @@ func (s *CORSService) SetCORSHeaders(ctx context.Context, opts ...CORSOption) (*
 	existing, err := s.cf.GetEntrypointRuleset(ctx, rc, corsPhase)
 	var existingRules []cloudflare.RulesetRule
 	if err != nil {
-		if !isNotFoundError(err) {
+		if !isNotFound(err) {
 			return nil, newError("CORSService.SetCORSHeaders", "failed to read entrypoint ruleset", err)
 		}
 		// 404 — start with empty rule list
@@ -223,7 +223,7 @@ func (s *CORSService) RemoveCORSRule(ctx context.Context, name string) error {
 	rc := cloudflare.ZoneIdentifier(s.zoneID)
 	ruleset, err := s.cf.GetEntrypointRuleset(ctx, rc, corsPhase)
 	if err != nil {
-		if isNotFoundError(err) {
+		if isNotFound(err) {
 			return ErrCORSRuleNotFound
 		}
 		return newError("CORSService.RemoveCORSRule", "failed to read entrypoint ruleset", err)
@@ -412,15 +412,4 @@ func splitTrimmed(s string) []string {
 		}
 	}
 	return result
-}
-
-// isNotFoundError checks whether an error indicates a 404 / not-found response.
-func isNotFoundError(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "not found") ||
-		strings.Contains(msg, "could not find") ||
-		strings.Contains(msg, "404")
 }
