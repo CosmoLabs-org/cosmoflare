@@ -1,24 +1,38 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
-func TestConfigManagerCreateAndGetProfile(t *testing.T) {
-	dir := t.TempDir()
-	cm := &ConfigManager{
-		configPath: filepath.Join(dir, "config.yaml"),
+// newTestConfigManagerAt returns a ConfigManager that persists its config file
+// at path and uses a no-op secret store, so tests never touch the user's real
+// config file or OS keychain.
+func newTestConfigManagerAt(t *testing.T, path string) *ConfigManager {
+	t.Helper()
+	return &ConfigManager{
+		configPath: path,
 		config: &Config{
 			Profiles: make(map[string]*Profile),
 			Current:  "default",
 		},
-		secrets: nil,
+		secrets: newTestSecretStore(),
 	}
-	// Use a nil-safe approach: create a ConfigManager via constructor-like setup
-	// but with a temp dir so we don't affect real config
-	cm.secrets = newTestSecretStore()
+}
+
+// newTestConfigManager returns a ConfigManager rooted in a per-test temp dir,
+// ensuring each test writes to its own isolated config file.
+func newTestConfigManager(t *testing.T) *ConfigManager {
+	t.Helper()
+	return newTestConfigManagerAt(t, filepath.Join(t.TempDir(), "config.yaml"))
+}
+
+// TestConfigManagerCreateAndGetProfile verifies that a profile added via
+// SetProfile round-trips through GetProfile with its credentials intact.
+func TestConfigManagerCreateAndGetProfile(t *testing.T) {
+	t.Parallel()
+	cm := newTestConfigManager(t)
 
 	profile := &Profile{
 		Name:      "test",
@@ -42,19 +56,20 @@ func TestConfigManagerCreateAndGetProfile(t *testing.T) {
 	}
 }
 
+// TestConfigManagerDeleteProfile verifies that DeleteProfile removes a
+// non-current profile from the config.
 func TestConfigManagerDeleteProfile(t *testing.T) {
-	dir := t.TempDir()
-	cm := &ConfigManager{
-		configPath: filepath.Join(dir, "config.yaml"),
-		config: &Config{
-			Profiles: make(map[string]*Profile),
-			Current:  "default",
-		},
-		secrets: newTestSecretStore(),
-	}
+	t.Parallel()
+	cm := newTestConfigManager(t)
 
-	cm.config.Profiles["other"] = &Profile{Name: "other", AccountID: "12345678901234567890123456789012", APIToken: "tok"}
-	cm.config.Profiles["default"] = &Profile{Name: "default", AccountID: "12345678901234567890123456789012", APIToken: "tok"}
+	// Seed two profiles: "default" remains current, "other" is deletable.
+	for _, name := range []string{"default", "other"} {
+		cm.config.Profiles[name] = &Profile{
+			Name:      name,
+			AccountID: "12345678901234567890123456789012",
+			APIToken:  "tok",
+		}
+	}
 
 	if err := cm.DeleteProfile("other"); err != nil {
 		t.Fatalf("DeleteProfile failed: %v", err)
@@ -64,17 +79,14 @@ func TestConfigManagerDeleteProfile(t *testing.T) {
 	}
 }
 
+// TestConfigManagerDeleteCurrentProfileFails verifies that DeleteProfile
+// refuses to remove the profile currently selected as Current, since removing
+// it would leave the config pointing at a missing profile.
 func TestConfigManagerDeleteCurrentProfileFails(t *testing.T) {
-	cm := &ConfigManager{
-		configPath: filepath.Join(t.TempDir(), "config.yaml"),
-		config: &Config{
-			Profiles: map[string]*Profile{
-				"active": {Name: "active"},
-			},
-			Current: "active",
-		},
-		secrets: newTestSecretStore(),
-	}
+	t.Parallel()
+	cm := newTestConfigManager(t)
+	cm.config.Profiles["active"] = &Profile{Name: "active"}
+	cm.config.Current = "active"
 
 	err := cm.DeleteProfile("active")
 	if err == nil {
@@ -82,71 +94,98 @@ func TestConfigManagerDeleteCurrentProfileFails(t *testing.T) {
 	}
 }
 
+// TestGetSecretField verifies the field-name-to-Profile-attribute mapping
+// used by the keychain layer, including that unknown field names yield an
+// empty value rather than an error.
 func TestGetSecretField(t *testing.T) {
+	t.Parallel()
 	p := &Profile{
 		APIToken:  "tok",
 		AccessKey: "ak",
 		SecretKey: "sk",
 	}
 	tests := []struct {
+		name  string
 		field string
 		want  string
 	}{
-		{"api_token", "tok"},
-		{"access_key", "ak"},
-		{"secret_key", "sk"},
-		{"unknown", ""},
+		{"api token", "api_token", "tok"},
+		{"access key", "access_key", "ak"},
+		{"secret key", "secret_key", "sk"},
+		{"unknown field yields empty string", "unknown", ""},
 	}
 	for _, tt := range tests {
-		got := getSecretField(p, tt.field)
-		if got != tt.want {
-			t.Errorf("getSecretField(%q) = %q, want %q", tt.field, got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := getSecretField(p, tt.field)
+			if got != tt.want {
+				t.Errorf("getSecretField(%q) = %q, want %q", tt.field, got, tt.want)
+			}
+		})
 	}
 }
 
+// TestSetSecretField verifies that each supported field name writes to the
+// correct Profile attribute.
 func TestSetSecretField(t *testing.T) {
+	t.Parallel()
 	p := &Profile{}
 	setSecretField(p, "api_token", "new-tok")
 	setSecretField(p, "access_key", "new-ak")
 	setSecretField(p, "secret_key", "new-sk")
 
-	if p.APIToken != "new-tok" {
-		t.Errorf("APIToken = %q, want %q", p.APIToken, "new-tok")
+	fields := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{"api token", p.APIToken, "new-tok"},
+		{"access key", p.AccessKey, "new-ak"},
+		{"secret key", p.SecretKey, "new-sk"},
 	}
-	if p.AccessKey != "new-ak" {
-		t.Errorf("AccessKey = %q, want %q", p.AccessKey, "new-ak")
-	}
-	if p.SecretKey != "new-sk" {
-		t.Errorf("SecretKey = %q, want %q", p.SecretKey, "new-sk")
+	for _, f := range fields {
+		t.Run(f.name, func(t *testing.T) {
+			t.Parallel()
+			if f.got != f.want {
+				t.Errorf("%s = %q, want %q", f.name, f.got, f.want)
+			}
+		})
 	}
 }
 
+// TestMaskKey verifies secret masking for display: empty keys stay empty,
+// keys of four characters or fewer are fully redacted, and longer keys expose
+// only their first two and last two characters.
 func TestMaskKey(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
+		name  string
 		input string
 		want  string
 	}{
-		{"", ""},
-		{"ab", "**"},
-		{"abcd", "****"},
-		{"abcdef", "ab**ef"},
-		{"1234567890", "12******90"},
+		{"empty key stays empty", "", ""},
+		{"two char key fully masked", "ab", "**"},
+		{"four char key fully masked", "abcd", "****"},
+		{"six char key keeps first and last two", "abcdef", "ab**ef"},
+		{"ten char key keeps first and last two", "1234567890", "12******90"},
 	}
 	for _, tt := range tests {
-		got := maskKey(tt.input)
-		if got != tt.want {
-			t.Errorf("maskKey(%q) = %q, want %q", tt.input, got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := maskKey(tt.input)
+			if got != tt.want {
+				t.Errorf("maskKey(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
 	}
 }
 
+// TestValidateProfile verifies that profile validation rejects missing or
+// malformed credentials (name, account ID length, token length) and accepts a
+// fully valid profile.
 func TestValidateProfile(t *testing.T) {
-	cm := &ConfigManager{
-		configPath: filepath.Join(t.TempDir(), "config.yaml"),
-		config:     &Config{Profiles: make(map[string]*Profile)},
-		secrets:    newTestSecretStore(),
-	}
+	t.Parallel()
+	cm := newTestConfigManager(t)
 
 	tests := []struct {
 		name    string
@@ -162,42 +201,54 @@ func TestValidateProfile(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		err := cm.ValidateProfile(tt.profile)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("%s: ValidateProfile() error = %v, wantErr %v", tt.name, err, tt.wantErr)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := cm.ValidateProfile(tt.profile)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateProfile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 
+// TestAutoDetectProfile verifies environment-based profile detection: with no
+// environment credentials set no profile is returned, and once both the
+// account ID and API token are present a profile populated from the
+// environment is returned.
 func TestAutoDetectProfile(t *testing.T) {
-	cm := &ConfigManager{
-		configPath: filepath.Join(t.TempDir(), "config.yaml"),
-		config:     &Config{Profiles: make(map[string]*Profile)},
-		secrets:    newTestSecretStore(),
-	}
+	// Not parallel: t.Setenv mutates the process-wide environment.
+	cm := newTestConfigManager(t)
 
-	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
-	t.Setenv("CLOUDFLARE_API_TOKEN", "")
+	t.Run("no env vars returns nil", func(t *testing.T) {
+		t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
+		t.Setenv("CLOUDFLARE_API_TOKEN", "")
 
-	if cm.AutoDetectProfile() != nil {
-		t.Error("expected nil profile with no env vars")
-	}
+		if cm.AutoDetectProfile() != nil {
+			t.Error("expected nil profile with no env vars")
+		}
+	})
 
-	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "test-id")
-	t.Setenv("CLOUDFLARE_API_TOKEN", "test-token")
+	t.Run("account and token set returns profile", func(t *testing.T) {
+		t.Setenv("CLOUDFLARE_ACCOUNT_ID", "test-id")
+		t.Setenv("CLOUDFLARE_API_TOKEN", "test-token")
 
-	p := cm.AutoDetectProfile()
-	if p == nil {
-		t.Fatal("expected auto-detected profile")
-	}
-	if p.AccountID != "test-id" {
-		t.Errorf("AccountID = %q, want %q", p.AccountID, "test-id")
-	}
+		p := cm.AutoDetectProfile()
+		if p == nil {
+			t.Fatal("expected auto-detected profile")
+		}
+		if p.AccountID != "test-id" {
+			t.Errorf("AccountID = %q, want %q", p.AccountID, "test-id")
+		}
+	})
 }
 
+// TestLoadFromEnvironment verifies that LoadFromEnvironment copies the
+// essential Cloudflare credentials from the process environment onto a Profile.
 func TestLoadFromEnvironment(t *testing.T) {
+	// Not parallel: t.Setenv mutates the process-wide environment.
 	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "env-id")
 	t.Setenv("CLOUDFLARE_API_TOKEN", "env-token")
+	// Optional fields are cleared so they do not leak from the host env.
 	t.Setenv("R2_ENDPOINT", "")
 	t.Setenv("AWS_ACCESS_KEY_ID", "")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "")
@@ -212,31 +263,28 @@ func TestLoadFromEnvironment(t *testing.T) {
 	}
 }
 
+// TestSaveAndLoad verifies that a config persisted with Save can be reloaded
+// by a fresh ConfigManager via load, and that Save creates the config file's
+// parent directory when it does not yet exist.
 func TestSaveAndLoad(t *testing.T) {
-	dir := t.TempDir()
-	configPath := filepath.Join(dir, ".cosmoflare", "config.yaml")
-	os.MkdirAll(filepath.Dir(configPath), 0755)
+	t.Parallel()
+	// Nested path: the ".cosmoflare" parent directory does not exist yet, so
+	// Save must create it itself.
+	configPath := filepath.Join(t.TempDir(), ".cosmoflare", "config.yaml")
 
-	cm := &ConfigManager{
-		configPath: configPath,
-		config: &Config{
-			Profiles: map[string]*Profile{
-				"test": {Name: "test", AccountID: "12345678901234567890123456789012", APIToken: "my-token"},
-			},
-			Current: "test",
-		},
-		secrets: newTestSecretStore(),
+	cm := newTestConfigManagerAt(t, configPath)
+	cm.config.Profiles["test"] = &Profile{
+		Name:      "test",
+		AccountID: "12345678901234567890123456789012",
+		APIToken:  "my-token",
 	}
+	cm.config.Current = "test"
 
 	if err := cm.Save(); err != nil {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	cm2 := &ConfigManager{
-		configPath: configPath,
-		config:     &Config{Profiles: make(map[string]*Profile)},
-		secrets:    newTestSecretStore(),
-	}
+	cm2 := newTestConfigManagerAt(t, configPath)
 	if err := cm2.load(); err != nil {
 		t.Fatalf("load failed: %v", err)
 	}
@@ -245,61 +293,48 @@ func TestSaveAndLoad(t *testing.T) {
 	}
 }
 
+// TestExportProfile verifies that ExportProfile renders the required
+// Cloudflare variables plus the optional R2 endpoint variable when one is
+// configured on the profile.
 func TestExportProfile(t *testing.T) {
-	cm := &ConfigManager{
-		configPath: filepath.Join(t.TempDir(), "config.yaml"),
-		config: &Config{
-			Profiles: map[string]*Profile{
-				"test": {Name: "test", AccountID: "id123", APIToken: "tok456", Endpoint: "https://ep"},
-			},
-		},
-		secrets: newTestSecretStore(),
+	t.Parallel()
+	cm := newTestConfigManager(t)
+	cm.config.Profiles["test"] = &Profile{
+		Name:      "test",
+		AccountID: "id123",
+		APIToken:  "tok456",
+		Endpoint:  "https://ep",
 	}
 
 	out, err := cm.ExportProfile("test")
 	if err != nil {
 		t.Fatalf("ExportProfile failed: %v", err)
 	}
-	if !contains(out, "CLOUDFLARE_API_TOKEN") {
-		t.Error("export should contain CLOUDFLARE_API_TOKEN")
-	}
-	if !contains(out, "R2_ENDPOINT") {
-		t.Error("export should contain R2_ENDPOINT")
+	for _, varName := range []string{"CLOUDFLARE_API_TOKEN", "R2_ENDPOINT"} {
+		t.Run("exports "+varName, func(t *testing.T) {
+			t.Parallel()
+			if !strings.Contains(out, varName) {
+				t.Errorf("export should contain %s", varName)
+			}
+		})
 	}
 }
 
+// TestJSON verifies that JSON serialization of the config includes the
+// current-profile marker field.
 func TestJSON(t *testing.T) {
-	cm := &ConfigManager{
-		configPath: filepath.Join(t.TempDir(), "config.yaml"),
-		config: &Config{
-			Profiles: map[string]*Profile{
-				"p": {Name: "p", AccountID: "abc"},
-			},
-			Current: "p",
-		},
-		secrets: newTestSecretStore(),
-	}
+	t.Parallel()
+	cm := newTestConfigManager(t)
+	cm.config.Profiles["p"] = &Profile{Name: "p", AccountID: "abc"}
+	cm.config.Current = "p"
 
 	out, err := cm.JSON()
 	if err != nil {
 		t.Fatalf("JSON failed: %v", err)
 	}
-	if !contains(out, `"current"`) {
-		t.Error("JSON should contain current field")
+	if !strings.Contains(out, `"current"`) {
+		t.Error(`JSON should contain "current" field`)
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStr(s, substr))
-}
-
-func containsStr(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
 }
 
 // newTestSecretStore returns a Secrets implementation that won't touch the real keychain.
@@ -309,7 +344,7 @@ func newTestSecretStore() Secrets {
 
 type noopSecrets struct{}
 
-func (n *noopSecrets) Available() bool                     { return false }
-func (n *noopSecrets) Get(_, _ string) (string, error)     { return "", nil }
-func (n *noopSecrets) Set(_, _, _ string) error            { return nil }
-func (n *noopSecrets) Delete(_, _ string) error            { return nil }
+func (n *noopSecrets) Available() bool                 { return false }
+func (n *noopSecrets) Get(_, _ string) (string, error) { return "", nil }
+func (n *noopSecrets) Set(_, _, _ string) error        { return nil }
+func (n *noopSecrets) Delete(_, _ string) error        { return nil }
