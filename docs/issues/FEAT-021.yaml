@@ -1,0 +1,12 @@
+id: FEAT-021
+type: feature
+created_at: 2026-09-11T01:07:46.817918+04:00
+updated_at: 2026-09-11T01:07:46.82188+04:00
+source: local
+ulid: 01M26JBT054B7C5PRF4D2FS8YS
+status: open
+title: 'Workers command depth: versions, cron, secrets, routes, domains, subdomain, bindings, tail, types'
+description: 'Close the Workers surface gap vs wrangler: versioned deployments (versions upload/list/view/deploy/delete/rollback, deployments list/view, rollback), secrets (put/delete/list/bulk), routes CRUD, custom domains attach/detach/list, workers.dev subdomain get/set, cron triggers CRUD, bindings list, tail (live logs), types generate. Full checklist: corpus section 9 workers block (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). This IS the concrete enumeration behind ROAD-091 (agentic-surface completeness). Today cmd/worker.go ships 14 commands; none of the above verbs exist (verified by grep).'
+acceptance_criteria:
+    - criterion: All 38 workers-block checklist commands from corpus section 9 exist with --json output;versions rollback restores a prior deployment;tail streams live logs;cron CRUD round-trips
+      met: false
