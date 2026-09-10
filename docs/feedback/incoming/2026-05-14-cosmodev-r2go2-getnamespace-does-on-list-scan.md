@@ -1,4 +1,5 @@
 ---
+ulid: 01KRJSKEW26VAN5DFS6ZVSA34C
 id: FB-001
 title: GetNamespace does O(n) list scan
 type: idea
