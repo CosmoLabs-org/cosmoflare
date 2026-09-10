@@ -23,6 +23,8 @@ Commands:
   update     Rename a queue
   delete     Delete a queue
   consumers  List consumers for a queue
+  consumer   Manage queue consumers (update, remove)
+  dlq        Show or configure dead letter queue settings
   send       Send a message to a queue
   send-batch Send up to 100 messages to a queue
 
@@ -33,6 +35,9 @@ Examples:
   cosmoflare queue update my-queue --name new-name
   cosmoflare queue delete my-queue --force
   cosmoflare queue consumers my-queue
+  cosmoflare queue consumer update my-queue my-consumer --settings-file settings.json
+  cosmoflare queue consumer remove my-queue my-consumer
+  cosmoflare queue dlq my-queue --consumer-dlq my-dlq
   cosmoflare queue send my-queue --body 'hello'
   cosmoflare queue send-batch my-queue --file messages.json`,
 }
