@@ -1,5 +1,7 @@
 ---
 ulid: 01M21S2EKEEB8F1B0PDAKME0R5
+id: IDEA-056
+id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: Alert condition descriptor table — one registry for names, units, help
 created: "2026-09-09T04:28:48.110506+04:00"
 status: harvested

@@ -1,5 +1,7 @@
 ---
 ulid: 01M207F075KTAPE32TAPCEZ725
+id: IDEA-052
+id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: Quota and plan-limit monitoring with alert rules
 created: "2026-09-08T14:01:50.565881+04:00"
 status: withered

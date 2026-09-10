@@ -1,3 +1,17 @@
+---
+created: "2026-06-09T07:12:53-03:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: 'Session: TUI Dashboard, Object Browser, S3 Migration & Keychain Sprint'
+---
+
 # Session: TUI Dashboard, Object Browser, S3 Migration & Keychain Sprint
 
 **Date**: 2026-06-07

@@ -1,12 +1,15 @@
 ---
-session: 2026-09-09-limits
-date: 2026-09-09
-type: feature-delivery
-release: v0.23.0
-issues: [FEAT-009, FEAT-010]
-roadmap: [ROAD-090, ROAD-087]
-prompts: [docs/prompts/2026-09-09-quota-limit-view.md, docs/prompts/2026-09-09-domain-center-residuals.md]
-created: "2026-09-09T02:55:00+04:00"
+created: "2026-09-09T04:29:36+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: Session 2026-09-09 — Limits Feature, Scope Correction, Residuals Brainplan, v0.23.0
 ---
 
 # Session 2026-09-09 — Limits Feature, Scope Correction, Residuals Brainplan, v0.23.0

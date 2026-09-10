@@ -1,5 +1,7 @@
 ---
 ulid: 01M207FPGWWC35YBHF2WND4NX5
+id: IDEA-054
+id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: R2 lifecycle policies
 created: "2026-09-08T14:02:13.404247+04:00"
 status: withered

@@ -1,11 +1,15 @@
 ---
-session: 2026-09-10-domain-center
-date: 2026-09-10
-type: feature-delivery
-issues: [FEAT-010, FEAT-011, FEAT-012, FEAT-013, FEAT-014, BUG-039]
-roadmap: [ROAD-087, ROAD-092]
-prompts: [docs/prompts/2026-09-09-domain-center-residuals.md, docs/prompts/2026-09-09-cf-api-knowledge-layer.md]
-created: "2026-09-10"
+created: "2026-09-10T00:42:42+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: Session 2026-09-10 — Domain Center Residuals Shipped, CF API Knowledge Layer Staged
 ---
 
 # Session 2026-09-10 — Domain Center Residuals Shipped, CF API Knowledge Layer Staged

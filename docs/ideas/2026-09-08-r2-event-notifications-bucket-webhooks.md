@@ -1,5 +1,7 @@
 ---
 ulid: 01M207FKQ0G5X7FWMP023KCR92
+id: IDEA-053
+id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: R2 event notifications — bucket webhooks
 created: "2026-09-08T14:02:10.528613+04:00"
 status: withered

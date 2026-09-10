@@ -1,5 +1,7 @@
 ---
 ulid: 01M207FRS0T5BZT5HB1RVNQ1RR
+id: IDEA-055
+id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: Metric producers via GraphQL Analytics API
 created: "2026-09-08T14:02:15.717862+04:00"
 status: withered

@@ -188,3 +188,26 @@ GOrchestra/sessions/
 # stray built binaries at repo root (ROAD-085)
 /simple-setup
 /test-setup
+
+# CCS standard — machine/session state (project-upgrade 2026-09-10)
+.venv
+.claude/session-id
+.claude/session-start
+.claude/session-end-state.json
+.claude/expected-head.sha
+.claude/task-log.jsonl
+.claude/active-prompts.json
+.ccsession.json
+.glm-prompts/
+.gorchestra/
+.glm-agent-counter
+.glm-agent-history.yaml
+.review.json
+.ccs/counters.json
+.ccs/counters.json.lock
+.ccs/security-audit.json
+.version-tracking/*.lock
+GOrchestra/intel/
+GOrchestra/glm-agents/*/diff.patch
+GOrchestra/worktrees/**/recovery.patch
+GOrchestra/worktrees/**/recovery_*.patch

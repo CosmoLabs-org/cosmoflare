@@ -1,3 +1,17 @@
+---
+created: "2026-06-21T08:10:21-03:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: Session 018 — Cosmoflare Desktop v1 Merge & Event Bus Brainplan
+---
+
 # Session 018 — Cosmoflare Desktop v1 Merge & Event Bus Brainplan
 
 ## Date
