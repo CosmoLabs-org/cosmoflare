@@ -1,0 +1,65 @@
+schema_version: 1
+last_analyzed: "2026-09-10T15:34:41+04:00"
+analyzed_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+project_type: go
+packages:
+    cmd:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    cmd/installer_tui:
+        risk_tier: low
+        risk_signals:
+            - name:tui
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    internal/config:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    internal/interactive:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    internal/migration:
+        risk_tier: high
+        risk_signals:
+            - name:migration
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    internal/tui:
+        risk_tier: low
+        risk_signals:
+            - name:tui
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    internal/webhook:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    pkg/cosmoflare:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    pkg/cosmoflare/knowledge:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    tests/fixtures:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    tests/helpers:
+        risk_tier: medium
+        risk_signals:
+            - default
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+    tests/tui:
+        risk_tier: low
+        risk_signals:
+            - name:tui
+        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
