@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-10T18:12:53.120236+04:00
+last_updated: 2026-09-11T01:24:38.75838+04:00
 next_bug_id: 40
-next_feat_id: 18
-next_task_id: 5
+next_feat_id: 26
+next_task_id: 6
 next_imp_id: 1
 issues:
     - id: BUG-001
@@ -328,6 +328,46 @@ issues:
       status: open
       title: First-run setup wizard — one token, whole platform
       created_at: 2026-09-10T02:06:10.691338+04:00
+    - id: FEAT-018
+      type: feature
+      status: open
+      title: 'MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit'
+      created_at: 2026-09-11T00:30:41.653724+04:00
+    - id: FEAT-019
+      type: feature
+      status: open
+      title: Permission manifest + least-privilege token doctor
+      created_at: 2026-09-11T01:07:35.397669+04:00
+    - id: FEAT-020
+      type: feature
+      status: open
+      title: Command registry manifest — per-command metadata spine
+      created_at: 2026-09-11T01:07:41.139745+04:00
+    - id: FEAT-021
+      type: feature
+      status: open
+      title: 'Workers command depth: versions, cron, secrets, routes, domains, subdomain, bindings, tail, types'
+      created_at: 2026-09-11T01:07:46.817918+04:00
+    - id: FEAT-022
+      type: feature
+      status: open
+      title: 'D1 depth: migrations, time-travel restore, backups, export/import'
+      created_at: 2026-09-11T01:08:11.631673+04:00
+    - id: FEAT-023
+      type: feature
+      status: open
+      title: 'Pages depth: env, secrets, domains, deployment ops'
+      created_at: 2026-09-11T01:08:17.192945+04:00
+    - id: FEAT-024
+      type: feature
+      status: open
+      title: 'Queues producer surface: send, send-batch, DLQ, consumer management'
+      created_at: 2026-09-11T01:08:23.392209+04:00
+    - id: FEAT-025
+      type: feature
+      status: open
+      title: 'Rate-limit-aware shared client: Retry-After, backoff, retry flags'
+      created_at: 2026-09-11T01:08:29.344245+04:00
     - id: TASK-001
       type: task
       status: closed
@@ -348,3 +388,8 @@ issues:
       status: done
       title: Create project-level .claude/CLAUDE.md with R2Go2-specific instructions
       created_at: 2026-03-02T12:31:54.567993+01:00
+    - id: TASK-005
+      type: task
+      status: done
+      title: Consolidate isNotFoundCF and isNotFoundError into one structured detector
+      created_at: 2026-09-11T00:59:15.045112+04:00

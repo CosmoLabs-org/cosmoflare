@@ -1,10 +1,13 @@
 id: TASK-005
 type: task
 created_at: 2026-09-11T00:59:15.045112+04:00
-updated_at: 2026-09-11T00:59:15.056507+04:00
+updated_at: 2026-09-11T01:24:38.754961+04:00
 source: local
 ulid: 01M26HW67G02139HC1P6C88GN5
-status: open
+status: done
+origin:
+    idea_slug: 2026-09-10-consolidate-isnotfoundcf-and-isnotfounderror-into-one
+    session: 49
 title: Consolidate isNotFoundCF and isNotFoundError into one structured detector
 description: |-
     # Consolidate isNotFoundCF and isNotFoundError into one structured detector
@@ -16,3 +19,6 @@ description: |-
     Two near-duplicate not-found detectors exist in pkg/cosmoflare: isNotFoundError (cors.go:418) and isNotFoundCF (ratelimit.go:209). Consolidate into one structured detector (single function, clear name, one error-code table) and migrate both call sites. Bounded refactor: no behavior change beyond identical semantics being enforced in one place. Verify with existing package tests after migration.
 
     Origin: session-end simplify review (reuse finding 3)
+revisions:
+    - date: "2026-09-11"
+      action: closed
