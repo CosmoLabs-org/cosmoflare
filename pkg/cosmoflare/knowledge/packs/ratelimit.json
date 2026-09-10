@@ -33,5 +33,11 @@
   ],
   "invariants": [
     {"field": "characteristics", "op": "must_include", "value": "cf.colo.id"}
+  ],
+  "traffic_classes": [
+    {"class": "cache-hit-static-asset", "counted": false, "note": "requests served from cache never reach the rate-limiting counter", "source": "https://developers.cloudflare.com/waf/rate-limiting-rules/ + FB-7 evidence rule d65876b4 (2026-09-09)"},
+    {"class": "pages-custom-domain-asset", "counted": false, "note": "Pages asset serving on custom domains observed uncounted", "source": "FB-7 evidence zone e586a1c5 (2026-09-09)"},
+    {"class": "origin-miss", "counted": true, "note": "requests that reach origin are counted", "source": "https://developers.cloudflare.com/waf/rate-limiting-rules/"},
+    {"class": "cache-bypass", "counted": true, "note": "cache-bypassed requests are counted", "source": "https://developers.cloudflare.com/waf/rate-limiting-rules/"}
   ]
 }

@@ -50,6 +50,16 @@ type Invariant struct {
 	Value string `json:"value"`
 }
 
+// TrafficClass documents whether WAF rate limiting counts one traffic class.
+// Source carries the evidence link (CF docs or field evidence) so drift is
+// auditable.
+type TrafficClass struct {
+	Class   string `json:"class"`
+	Counted bool   `json:"counted"`
+	Note    string `json:"note,omitempty"`
+	Source  string `json:"source,omitempty"`
+}
+
 // Pack is one product's knowledge.
 type Pack struct {
 	Product    string        `json:"product"`
@@ -58,6 +68,8 @@ type Pack struct {
 	Errors     []ErrorDecode `json:"errors"`
 	PlanCaps   []PlanCap     `json:"plan_caps"`
 	Invariants []Invariant   `json:"invariants"`
+
+	TrafficClasses []TrafficClass `json:"traffic_classes,omitempty"`
 }
 
 var (
@@ -192,4 +204,26 @@ func LookupDecode(code int, context string) *ErrorDecode {
 		}
 	}
 	return generic
+}
+
+// SkippedTrafficClasses returns the pack's documented not-counted classes
+// for one product. Advisory when absent: unknown products and absent blocks
+// return nil.
+func SkippedTrafficClasses(product string) []TrafficClass {
+	loaded, err := Load()
+	if err != nil {
+		return nil
+	}
+	var out []TrafficClass
+	for _, p := range loaded {
+		if p.Product != product {
+			continue
+		}
+		for _, tc := range p.TrafficClasses {
+			if !tc.Counted {
+				out = append(out, tc)
+			}
+		}
+	}
+	return out
 }
