@@ -729,6 +729,39 @@ cosmoflare queue send-batch my-queue --file messages.json --json
 Batches are capped at 100 messages per call; larger batches must be split into multiple
 send-batch calls.
 
+### Update a consumer
+```bash
+cosmoflare queue consumer update my-queue my-consumer --settings-file settings.json
+cosmoflare queue consumer update my-queue my-consumer --settings-file settings.json --json
+```
+`--settings-file` must point to a JSON object with `batch_size`, `max_retries`, and/or
+`max_wait_time_ms` (all optional). Example `settings.json`:
+```json
+{"batch_size": 10, "max_retries": 3, "max_wait_time_ms": 5000}
+```
+
+### Remove a consumer
+```bash
+cosmoflare queue consumer remove my-queue my-consumer
+cosmoflare queue consumer remove my-queue my-consumer --json
+```
+
+### Show or configure the dead letter queue (DLQ)
+```bash
+# Show current DLQ bindings
+cosmoflare queue dlq my-queue
+
+# Configure DLQ bindings
+cosmoflare queue dlq my-queue --consumer-dlq my-dlq
+cosmoflare queue dlq my-queue --producer-dlq my-dlq --json
+
+# Clear DLQ bindings
+cosmoflare queue dlq my-queue --clear
+```
+`--consumer-dlq` and `--producer-dlq` are independently optional; set either or both to
+configure that binding. `--clear` removes both bindings and cannot be combined with
+`--consumer-dlq` or `--producer-dlq`.
+
 ## D1 Commands
 
 D1 database management for Cloudflare's serverless SQL databases.
