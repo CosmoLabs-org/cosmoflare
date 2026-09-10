@@ -1,0 +1,3 @@
+Make a list of all of the CLI commands we need to cover and respect and support in our Cloudflare wrapper program to ensure that we can handle all the interactions with D1, KV, Objects, Pages, Workers etc....
+
+Make the full list of commands that wrangler covers and beyond that everything that the access API can set to give permissions, we need our project to be aware of all of them 
