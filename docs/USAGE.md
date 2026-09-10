@@ -1127,6 +1127,95 @@ cosmoflare domains stats --json
 
 > Note: registrar auto-renew is not displayed — the Cloudflare API read model does not expose it.
 
+## Knowledge Layer
+
+Cosmoflare embeds Cloudflare API tribal knowledge as **knowledge packs** — JSON data files compiled into the binary (`go:embed`, no runtime installation). Each pack carries one product's endpoint registry, error decodes, plan caps, and field invariants.
+
+The scoped route-check semantic is **advisory when absent, authoritative when present**:
+
+- Routes outside every pack scope pass through untouched — knowledge never blocks unknown territory.
+- Routes inside a pack scope that match no registered endpoint are blocked **before** the request is sent, with the reason — instead of a confusing Cloudflare auth-scope error.
+- Unknown error codes and unknown products pass through undecorated — no fabricated verdicts, ever.
+
+```bash
+cosmoflare knowledge list                # Show the packs compiled into this binary
+cosmoflare knowledge list --json         # Machine-readable output
+cosmoflare decode 10405                  # Decode a Cloudflare API error code
+cosmoflare decode 1000 --context phase-entrypoint   # Refine by context
+cosmoflare decode 20155 --json           # Machine-readable decode
+```
+
+The four codes the current pack decodes:
+
+| Code | Context | Cause | Fix |
+|------|---------|-------|-----|
+| `10405` | | Route not valid for this authentication scheme — usually the endpoint does not exist | Check the route against registered endpoints; e.g. `POST .../entrypoint/rules` does not exist — use `PUT` on the phase entrypoint |
+| `1000` | `phase-entrypoint` | Phase entrypoint ruleset missing on this zone | Create it with `PUT /zones/{id}/rulesets/phases/{phase}/entrypoint` |
+| `20155` | | Missing `cf.colo.id` in rate-limit characteristics | Add `cf.colo.id` to characteristics — ratelimit counting is processed at colocation level only |
+| `10000` | | Token missing the required scope for this endpoint | For rate-limit rule writes the token needs Zone > Zone WAF > Edit (the permission *named* "Rate Limiting" covers the dead classic API) |
+
+`decode` output (text):
+```
+code:    10405
+context:
+cause:   route not valid for this authentication scheme — usually: the endpoint does not exist
+fix:     check the route against the registered endpoints; e.g. POST .../entrypoint/rules does not exist — use PUT on the phase entrypoint
+```
+
+JSON output:
+```bash
+cosmoflare knowledge list --json | jq '.[].product'
+```
+```json
+[{"product":"ratelimit","scopes":["/zones/{zone_id}/rulesets*","/zones/{zone_id}/rate_limits*"],"endpoints":[...],"errors":[...],"plan_caps":[...],"invariants":[...]}]
+```
+
+Unknown codes exit non-zero with a clear message — the knowledge layer never guesses.
+
+| Command | Description |
+|---------|-------------|
+| `knowledge list` | List the embedded packs (product, endpoint/decode/cap/invariant counts, scopes) |
+| `decode <code>` | Print the cause and fix for a Cloudflare error code |
+| `decode <code> --context <ctx>` | Refine the decode by context (e.g. `phase-entrypoint` for entrypoint 1000s) |
+
+## Rate Limiting Command
+
+Manage zone rate-limiting rules via the Rulesets `http_ratelimit` phase. All commands accept a zone ID **or** zone name.
+
+```bash
+cosmoflare ratelimit list example.com    # List a zone's rate-limiting rules
+cosmoflare ratelimit list example.com --json
+cosmoflare ratelimit create example.com --expression 'path eq "/catalog.json"'   # Defaults: 10 req/10s, block 10s
+cosmoflare ratelimit create example.com \
+  --expression 'http.request.uri.path eq "/login"' \
+  --requests 10 --period 10 --timeout 10 \
+  --characteristics "cf.colo.id,ip.src" \
+  --description "brute-force guard"
+```
+
+`create` runs client-side preflight **before any API call**:
+
+- **Free plan caps**: max 1 rule per zone, max 10s period, max 10s mitigation timeout.
+- **`cf.colo.id` invariant**: characteristics must include `cf.colo.id` — ratelimit counting is processed at colocation level only, so Cloudflare rejects rules without it (with the cryptic `20155`).
+
+A violation stops the command with the field, the rule, and the fix — no API call is wasted.
+
+Fresh zones have no `http_ratelimit` entrypoint ruleset; `list` on such a zone returns an empty list, not an error. `create` provisions the missing entrypoint automatically (`PUT /zones/{id}/rulesets/phases/http_ratelimit/entrypoint`).
+
+JSON output:
+```json
+{"success":true,"message":"rate-limiting rules listed","data":[]}
+```
+
+| Flag (create) | Default | Description |
+|------|---------|-------------|
+| `--expression` | | Traffic expression, e.g. `'path eq "/catalog.json"'` — required |
+| `--requests` | `10` | Requests per period |
+| `--period` | `10` | Period seconds (Free plan max 10) |
+| `--timeout` | `10` | Mitigation timeout seconds (Free plan max 10) |
+| `--characteristics` | `cf.colo.id,ip.src` | Comma-separated counting characteristics (must include `cf.colo.id`) |
+| `--description` | | Rule description |
+
 ## Redirects Commands
 
 Manage modern Cloudflare Redirect Rules (Rulesets API, `http_request_dynamic_redirect` phase).
@@ -1159,6 +1248,8 @@ cosmoflare doctor --all --json             # All domains, JSON output
 ```
 
 When the domain has redirect rules, doctor also probes each redirect destination and includes the results in the `redirect_targets` report field; a destination that loops, errors, or returns ≥400 yields a `redirect-target` issue with `warning` severity.
+
+Cloudflare error decoding is centralized in the knowledge layer: `cosmoflare decode <code>` explains any wrapped error code — see [Knowledge Layer](#knowledge-layer).
 
 Fix suggestions are valid cosmoflare commands that can be executed directly:
 ```bash
