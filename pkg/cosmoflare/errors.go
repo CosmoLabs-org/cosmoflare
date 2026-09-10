@@ -1,7 +1,12 @@
 package cosmoflare
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/cloudflare/cloudflare-go"
 
 	knowledge "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
 )
@@ -86,4 +91,29 @@ func accessDenied(op, bucket, msg string, err error) *R2AccessDeniedError {
 // validationError creates an R2ValidationError.
 func validationError(op, msg string) *R2ValidationError {
 	return &R2ValidationError{R2Error{Op: op, Message: msg}}
+}
+
+// isNotFound reports whether err is a Cloudflare not-found error: a
+// *cloudflare.Error with HTTP 404 or error code 1000 (cloudflare-go has
+// no ErrNotFound sentinel), or — for non-cloudflare errors (transport,
+// wrapped strings) — a message matching not-found shapes.
+func isNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	var cfErr *cloudflare.Error
+	if errors.As(err, &cfErr) {
+		if cfErr.StatusCode == http.StatusNotFound {
+			return true
+		}
+		for _, c := range cfErr.ErrorCodes {
+			if c == 1000 {
+				return true
+			}
+		}
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "not found") ||
+		strings.Contains(msg, "could not find") ||
+		strings.Contains(msg, "404")
 }

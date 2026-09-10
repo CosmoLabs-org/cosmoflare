@@ -967,15 +967,15 @@ func TestCORSRuleFromConfig_ID_Empty(t *testing.T) {
 	}
 }
 
-// --- isNotFoundError tests ---
+// --- isNotFound string-shape tests (message matching via corsTestError) ---
 
-func TestIsNotFoundError_Nil(t *testing.T) {
-	if isNotFoundError(nil) {
-		t.Error("isNotFoundError(nil) should return false")
+func TestIsNotFound_StringShape_Nil(t *testing.T) {
+	if isNotFound(nil) {
+		t.Error("isNotFound(nil) should return false")
 	}
 }
 
-func TestIsNotFoundError_NotFoundMessage(t *testing.T) {
+func TestIsNotFound_StringShape_Messages(t *testing.T) {
 	cases := []struct {
 		msg  string
 		want bool
@@ -990,14 +990,14 @@ func TestIsNotFoundError_NotFoundMessage(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := &corsTestError{tc.msg}
-		got := isNotFoundError(err)
+		got := isNotFound(err)
 		if got != tc.want {
-			t.Errorf("isNotFoundError(%q) = %v, want %v", tc.msg, got, tc.want)
+			t.Errorf("isNotFound(%q) = %v, want %v", tc.msg, got, tc.want)
 		}
 	}
 }
 
-// corsTestError is a minimal error type for isNotFoundError tests.
+// corsTestError is a minimal error type for isNotFound string-shape tests.
 type corsTestError struct{ msg string }
 
 func (e *corsTestError) Error() string { return e.msg }
