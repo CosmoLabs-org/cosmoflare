@@ -1,0 +1,908 @@
+{
+  "schema_version": 1,
+  "manifest_version": "2026-09-11",
+  "source_url": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+  "verified_on": "2026-09-11T00:00:00Z",
+  "families": [
+    {
+      "id": "account.account_settings",
+      "scope": "account",
+      "name": "Account Settings",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "account settings",
+        "org settings"
+      ]
+    },
+    {
+      "id": "account.api_tokens",
+      "scope": "account",
+      "name": "API Tokens",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "token management",
+        "auth diagnostics"
+      ]
+    },
+    {
+      "id": "account.members_and_roles",
+      "scope": "account",
+      "name": "Members and Roles",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "account member/role management"
+      ]
+    },
+    {
+      "id": "account.audit_logs",
+      "scope": "account",
+      "name": "Audit Logs",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "audit log export"
+      ]
+    },
+    {
+      "id": "account.billing",
+      "scope": "account",
+      "name": "Billing",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "plan/subscription/usage"
+      ]
+    },
+    {
+      "id": "account.analytics",
+      "scope": "account",
+      "name": "Analytics",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "usage metrics"
+      ]
+    },
+    {
+      "id": "account.alerts",
+      "scope": "account",
+      "name": "Alerts",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "alert policies"
+      ]
+    },
+    {
+      "id": "account.notifications",
+      "scope": "account",
+      "name": "Notifications",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "notification policies"
+      ]
+    },
+    {
+      "id": "account.logpush",
+      "scope": "account",
+      "name": "Logpush",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "log export jobs"
+      ]
+    },
+    {
+      "id": "account.d1",
+      "scope": "account",
+      "name": "D1",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "D1 CRUD/query"
+      ]
+    },
+    {
+      "id": "account.kv_storage",
+      "scope": "account",
+      "name": "KV Storage",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Workers KV namespaces/keys"
+      ]
+    },
+    {
+      "id": "account.queues",
+      "scope": "account",
+      "name": "Queues",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "queue CRUD/messages/consumers"
+      ]
+    },
+    {
+      "id": "account.r2_storage",
+      "scope": "account",
+      "name": "R2 Storage",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "bucket/object management"
+      ]
+    },
+    {
+      "id": "account.r2_admin",
+      "scope": "account",
+      "name": "R2 Admin",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "advanced bucket/admin operations",
+        "where modeled separately"
+      ]
+    },
+    {
+      "id": "account.workers_scripts",
+      "scope": "account",
+      "name": "Workers Scripts",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Worker script CRUD"
+      ]
+    },
+    {
+      "id": "account.workers_routes",
+      "scope": "account",
+      "name": "Workers Routes",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "route attachment"
+      ]
+    },
+    {
+      "id": "account.workers_tail",
+      "scope": "account",
+      "name": "Workers Tail",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "live Worker logs"
+      ]
+    },
+    {
+      "id": "account.workers_tracing",
+      "scope": "account",
+      "name": "Workers Tracing",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "tracing where available"
+      ]
+    },
+    {
+      "id": "account.workers_ai",
+      "scope": "account",
+      "name": "Workers AI",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "AI inference/catalog where applicable"
+      ]
+    },
+    {
+      "id": "account.ai_gateway",
+      "scope": "account",
+      "name": "AI Gateway",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "gateway configuration/logs"
+      ]
+    },
+    {
+      "id": "account.vectorize",
+      "scope": "account",
+      "name": "Vectorize",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "vector indexes/queries"
+      ]
+    },
+    {
+      "id": "account.hyperdrive",
+      "scope": "account",
+      "name": "Hyperdrive",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Hyperdrive configs"
+      ]
+    },
+    {
+      "id": "account.images",
+      "scope": "account",
+      "name": "Images",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Images storage/transformations"
+      ]
+    },
+    {
+      "id": "account.stream",
+      "scope": "account",
+      "name": "Stream",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Stream video management"
+      ]
+    },
+    {
+      "id": "account.registrar",
+      "scope": "account",
+      "name": "Registrar",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "domain registration/transfer"
+      ]
+    },
+    {
+      "id": "account.ssl_and_certificates",
+      "scope": "account",
+      "name": "SSL and Certificates",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "cert management"
+      ]
+    },
+    {
+      "id": "account.rulesets",
+      "scope": "account",
+      "name": "Rulesets",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "WAF/ruleset APIs"
+      ]
+    },
+    {
+      "id": "account.access",
+      "scope": "account",
+      "name": "Access",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Zero Trust Access objects"
+      ]
+    },
+    {
+      "id": "account.teams_zero_trust",
+      "scope": "account",
+      "name": "Teams / Zero Trust",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "broader Zero Trust settings"
+      ]
+    },
+    {
+      "id": "account.turnstile",
+      "scope": "account",
+      "name": "Turnstile",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Turnstile widgets"
+      ]
+    },
+    {
+      "id": "account.dns_firewall_dns_settings",
+      "scope": "account",
+      "name": "DNS Firewall / DNS settings",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "account DNS features where applicable"
+      ]
+    },
+    {
+      "id": "account.cache_purge",
+      "scope": "account",
+      "name": "Cache Purge",
+      "read": false,
+      "edit": true,
+      "used_by": [
+        "cache purge operations"
+      ]
+    },
+    {
+      "id": "account.organizations",
+      "scope": "account",
+      "name": "Organizations",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "organization-level management"
+      ]
+    },
+    {
+      "id": "zone.zone",
+      "scope": "zone",
+      "name": "Zone",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone CRUD/settings"
+      ]
+    },
+    {
+      "id": "zone.zone_settings",
+      "scope": "zone",
+      "name": "Zone Settings",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone settings updates"
+      ]
+    },
+    {
+      "id": "zone.dns",
+      "scope": "zone",
+      "name": "DNS",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "DNS records"
+      ]
+    },
+    {
+      "id": "zone.ssl_and_certificates",
+      "scope": "zone",
+      "name": "SSL and Certificates",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone certificates"
+      ]
+    },
+    {
+      "id": "zone.custom_hostnames",
+      "scope": "zone",
+      "name": "Custom Hostnames",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "custom hostname management"
+      ]
+    },
+    {
+      "id": "zone.cache_purge",
+      "scope": "zone",
+      "name": "Cache Purge",
+      "read": false,
+      "edit": true,
+      "used_by": [
+        "purge operations"
+      ]
+    },
+    {
+      "id": "zone.page_rules",
+      "scope": "zone",
+      "name": "Page Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "legacy page rules"
+      ]
+    },
+    {
+      "id": "zone.redirect_rules",
+      "scope": "zone",
+      "name": "Redirect Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Single/Bulk Redirects"
+      ]
+    },
+    {
+      "id": "zone.transform_rules",
+      "scope": "zone",
+      "name": "Transform Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "request/response transforms"
+      ]
+    },
+    {
+      "id": "zone.configuration_rules",
+      "scope": "zone",
+      "name": "Configuration Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone setting overrides"
+      ]
+    },
+    {
+      "id": "zone.cache_rules",
+      "scope": "zone",
+      "name": "Cache Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "cache behavior"
+      ]
+    },
+    {
+      "id": "zone.origin_rules",
+      "scope": "zone",
+      "name": "Origin Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "origin routing/header overrides"
+      ]
+    },
+    {
+      "id": "zone.custom_errors",
+      "scope": "zone",
+      "name": "Custom Errors",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "custom error pages"
+      ]
+    },
+    {
+      "id": "zone.waf",
+      "scope": "zone",
+      "name": "WAF",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "custom rules",
+        "managed rules"
+      ]
+    },
+    {
+      "id": "zone.rate_limiting",
+      "scope": "zone",
+      "name": "Rate Limiting",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "rate limiting rules"
+      ]
+    },
+    {
+      "id": "zone.ip_access_rules",
+      "scope": "zone",
+      "name": "IP Access Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "IP access rules"
+      ]
+    },
+    {
+      "id": "zone.zone_lockdown",
+      "scope": "zone",
+      "name": "Zone Lockdown",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone lockdown"
+      ]
+    },
+    {
+      "id": "zone.workers_routes",
+      "scope": "zone",
+      "name": "Workers Routes",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "route management"
+      ]
+    },
+    {
+      "id": "zone.workers_scripts",
+      "scope": "zone",
+      "name": "Workers Scripts",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone-scoped script operations"
+      ]
+    },
+    {
+      "id": "zone.workers_tail",
+      "scope": "zone",
+      "name": "Workers Tail",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "tail logs"
+      ]
+    },
+    {
+      "id": "zone.kv_storage",
+      "scope": "zone",
+      "name": "KV Storage",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "KV operations when zone-scoped"
+      ]
+    },
+    {
+      "id": "zone.d1",
+      "scope": "zone",
+      "name": "D1",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "D1 operations where applicable"
+      ]
+    },
+    {
+      "id": "zone.r2",
+      "scope": "zone",
+      "name": "R2",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "R2 where applicable"
+      ]
+    },
+    {
+      "id": "zone.queues",
+      "scope": "zone",
+      "name": "Queues",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "queues where applicable"
+      ]
+    },
+    {
+      "id": "zone.email_routing",
+      "scope": "zone",
+      "name": "Email Routing",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "routing rules/destinations"
+      ]
+    },
+    {
+      "id": "zone.email_security",
+      "scope": "zone",
+      "name": "Email Security",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "email security features"
+      ]
+    },
+    {
+      "id": "zone.analytics",
+      "scope": "zone",
+      "name": "Analytics",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "zone analytics"
+      ]
+    },
+    {
+      "id": "zone.logs",
+      "scope": "zone",
+      "name": "Logs",
+      "read": true,
+      "edit": false,
+      "used_by": [
+        "zone logs"
+      ]
+    },
+    {
+      "id": "zone.load_balancing",
+      "scope": "zone",
+      "name": "Load Balancing",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "LB pools/monitors"
+      ]
+    },
+    {
+      "id": "zone.health_checks",
+      "scope": "zone",
+      "name": "Health Checks",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "health checks"
+      ]
+    },
+    {
+      "id": "zone.page_shield",
+      "scope": "zone",
+      "name": "Page Shield",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Page Shield"
+      ]
+    },
+    {
+      "id": "zone.spectrum",
+      "scope": "zone",
+      "name": "Spectrum",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "Spectrum apps"
+      ]
+    },
+    {
+      "id": "zone.bot_management",
+      "scope": "zone",
+      "name": "Bot Management",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "bot settings"
+      ]
+    },
+    {
+      "id": "zone.waiting_room",
+      "scope": "zone",
+      "name": "Waiting Room",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "waiting rooms"
+      ]
+    },
+    {
+      "id": "zone.web_analytics",
+      "scope": "zone",
+      "name": "Web Analytics",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "web analytics"
+      ]
+    },
+    {
+      "id": "zone.image_resizing",
+      "scope": "zone",
+      "name": "Image Resizing",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "image resizing settings"
+      ]
+    },
+    {
+      "id": "zone.stream",
+      "scope": "zone",
+      "name": "Stream",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone Stream settings where applicable"
+      ]
+    },
+    {
+      "id": "zone.access",
+      "scope": "zone",
+      "name": "Access",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "zone-scoped Access apps/policies"
+      ]
+    },
+    {
+      "id": "user.user_details",
+      "scope": "user",
+      "name": "User Details",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "profile info"
+      ]
+    },
+    {
+      "id": "user.user_api_tokens",
+      "scope": "user",
+      "name": "User API Tokens",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "personal token management"
+      ]
+    },
+    {
+      "id": "user.memberships",
+      "scope": "user",
+      "name": "Memberships",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "account memberships"
+      ]
+    },
+    {
+      "id": "user.sessions",
+      "scope": "user",
+      "name": "Sessions",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "session management where available"
+      ]
+    },
+    {
+      "id": "user.notifications",
+      "scope": "user",
+      "name": "Notifications",
+      "read": true,
+      "edit": true,
+      "used_by": [
+        "user notification settings"
+      ]
+    }
+  ],
+  "least_privilege": [
+    {
+      "command_group": "login, whoami",
+      "permissions": [
+        "User Details Read"
+      ]
+    },
+    {
+      "command_group": "deploy",
+      "permissions": [
+        "Workers Scripts Edit/Upload",
+        "Workers Routes Edit if routes",
+        "Account Settings Read maybe"
+      ]
+    },
+    {
+      "command_group": "delete worker",
+      "permissions": [
+        "Workers Scripts Edit/Delete"
+      ]
+    },
+    {
+      "command_group": "tail",
+      "permissions": [
+        "Workers Tail Read"
+      ]
+    },
+    {
+      "command_group": "secret put/delete/list",
+      "permissions": [
+        "Workers Scripts Edit or Secrets Edit depending on API model"
+      ]
+    },
+    {
+      "command_group": "kv namespace/key/bulk",
+      "permissions": [
+        "Workers KV Storage Edit"
+      ]
+    },
+    {
+      "command_group": "r2 bucket create/delete/list",
+      "permissions": [
+        "R2 Storage Edit/Admin"
+      ]
+    },
+    {
+      "command_group": "r2 object put/get/list/delete",
+      "permissions": [
+        "R2 Storage Edit"
+      ]
+    },
+    {
+      "command_group": "d1 create/delete/execute",
+      "permissions": [
+        "D1 Edit"
+      ]
+    },
+    {
+      "command_group": "queues create/delete/send/consumer",
+      "permissions": [
+        "Queues Edit"
+      ]
+    },
+    {
+      "command_group": "pages project/deployment",
+      "permissions": [
+        "Pages Edit / Account Pages Edit depending on API model"
+      ]
+    },
+    {
+      "command_group": "dns records",
+      "permissions": [
+        "Zone DNS Edit"
+      ]
+    },
+    {
+      "command_group": "cache purge",
+      "permissions": [
+        "Zone Cache Purge Edit"
+      ]
+    },
+    {
+      "command_group": "rules",
+      "permissions": [
+        "Zone Rules Edit"
+      ]
+    },
+    {
+      "command_group": "waf",
+      "permissions": [
+        "Zone WAF Edit / Rulesets Edit"
+      ]
+    },
+    {
+      "command_group": "ssl/custom hostnames",
+      "permissions": [
+        "Zone SSL Edit / Custom Hostnames Edit"
+      ]
+    },
+    {
+      "command_group": "email routing",
+      "permissions": [
+        "Zone Email Routing Edit"
+      ]
+    },
+    {
+      "command_group": "health checks",
+      "permissions": [
+        "Zone Health Checks Edit"
+      ]
+    },
+    {
+      "command_group": "registrar",
+      "permissions": [
+        "Account Registrar Edit"
+      ]
+    },
+    {
+      "command_group": "analytics/logs",
+      "permissions": [
+        "Analytics Read / Logs Read"
+      ]
+    },
+    {
+      "command_group": "API token management",
+      "permissions": [
+        "API Tokens Edit"
+      ]
+    },
+    {
+      "command_group": "Access apps/policies",
+      "permissions": [
+        "Access Apps and Policies Edit"
+      ]
+    }
+  ]
+}
