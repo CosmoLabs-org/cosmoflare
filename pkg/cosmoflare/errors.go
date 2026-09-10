@@ -1,14 +1,18 @@
 package cosmoflare
 
-import "fmt"
+import (
+	"fmt"
+
+	knowledge "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
+)
 
 // R2Error is the base error type for all R2Go2 errors.
 type R2Error struct {
-	Op       string // Operation that failed
-	Bucket   string // Bucket involved (if any)
-	Key      string // Object key involved (if any)
-	Err      error  // Underlying error
-	Message  string // Human-readable message
+	Op      string // Operation that failed
+	Bucket  string // Bucket involved (if any)
+	Key     string // Object key involved (if any)
+	Err     error  // Underlying error
+	Message string // Human-readable message
 }
 
 func (e *R2Error) Error() string {
@@ -50,7 +54,13 @@ type R2ValidationError struct {
 
 // newError creates a base R2Error.
 func newError(op, msg string, err error) *R2Error {
-	return &R2Error{Op: op, Message: msg, Err: err}
+	e := &R2Error{Op: op, Message: msg, Err: err}
+	// Knowledge layer: decorate globally-decoded CF errors for every
+	// service without call-site changes (context-free entries only).
+	if ke, ok := knowledge.DecodeCFError(err, "").(*knowledge.KnowledgeError); ok {
+		e.Message = msg + " — " + ke.Cause + " (fix: " + ke.Fix + ")"
+	}
+	return e
 }
 
 // notFound creates an R2NotFoundError.
