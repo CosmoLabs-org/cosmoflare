@@ -74,7 +74,12 @@ func newRatelimitService(t *testing.T, cf *cloudflare.API) *RateLimitService {
 	return svc
 }
 
+// TestRateLimitListEmptyOnMissingEntrypoint
+// TestRateLimitListEmptyOnMissingEntrypoint verifies that List treats a zone
+// with no http_ratelimit entrypoint ruleset (404) as "zero rules" rather than
+// an error, so freshly created zones work.
 func TestRateLimitListEmptyOnMissingEntrypoint(t *testing.T) {
+	t.Parallel()
 	_, cf := ratelimitTestServer(t, nil)
 	got, err := newRatelimitService(t, cf).List(context.Background(), "z1")
 	if err != nil {
@@ -85,7 +90,11 @@ func TestRateLimitListEmptyOnMissingEntrypoint(t *testing.T) {
 	}
 }
 
+// TestRateLimitListReturnsRules TestRateLimitListReturnsRules verifies that
+// List maps entrypoint ruleset rules onto the rate-limit view model,
+// preserving rule ID, requests-per-period, and traffic characteristics.
 func TestRateLimitListReturnsRules(t *testing.T) {
+	t.Parallel()
 	enabled := true
 	_, cf := ratelimitTestServer(t, []cloudflare.RulesetRule{{
 		ID: "r1", Action: "block", Expression: `path eq "/a"`, Enabled: &enabled,
@@ -106,7 +115,12 @@ func TestRateLimitListReturnsRules(t *testing.T) {
 	}
 }
 
+// TestRateLimitCreatePreflightBlocksMissingColo
+// TestRateLimitCreatePreflightBlocksMissingColo verifies that Create refuses
+// a rule whose characteristics omit cf.colo.id (required by Cloudflare) and
+// that the error names the missing field.
 func TestRateLimitCreatePreflightBlocksMissingColo(t *testing.T) {
+	t.Parallel()
 	_, cf := ratelimitTestServer(t, nil)
 	_, err := newRatelimitService(t, cf).Create(context.Background(), RateLimitCreateInput{
 		ZoneID: "z1", Expression: `path eq "/a"`,
@@ -121,7 +135,12 @@ func TestRateLimitCreatePreflightBlocksMissingColo(t *testing.T) {
 	}
 }
 
+// TestRateLimitCreatePreflightBlocksFreeCap
+// TestRateLimitCreatePreflightBlocksFreeCap verifies that Create enforces the
+// free-plan cap of one rate-limit rule: adding a second rule to a zone that
+// already has one is rejected with an error naming the cap.
 func TestRateLimitCreatePreflightBlocksFreeCap(t *testing.T) {
+	t.Parallel()
 	enabled := true
 	_, cf := ratelimitTestServer(t, []cloudflare.RulesetRule{{
 		ID: "existing", Action: "block", Expression: `path eq "/old"`, Enabled: &enabled,
@@ -139,7 +158,11 @@ func TestRateLimitCreatePreflightBlocksFreeCap(t *testing.T) {
 	}
 }
 
+// TestRateLimitCreatePutsEntrypoint TestRateLimitCreatePutsEntrypoint
+// verifies that Create PUTs a complete rule to the entrypoint ruleset and
+// returns the persisted rule with its server-assigned ID and period.
 func TestRateLimitCreatePutsEntrypoint(t *testing.T) {
+	t.Parallel()
 	_, cf := ratelimitTestServer(t, nil)
 	rule, err := newRatelimitService(t, cf).Create(context.Background(), RateLimitCreateInput{
 		ZoneID: "z1", Expression: `path eq "/catalog.json"`,

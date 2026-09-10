@@ -16,7 +16,10 @@ const testEpsilon = 0.001
 // NewCostService
 // ---------------------------------------------------------------------------
 
+// TestCostService_New TestCostService_New verifies that NewCostService
+// accepts valid credentials and stores the account ID on the service.
 func TestCostService_New(t *testing.T) {
+	t.Parallel()
 	svc, err := NewCostService("acc123", "tok456")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -29,7 +32,10 @@ func TestCostService_New(t *testing.T) {
 	}
 }
 
+// TestCostService_NewEmptyAccountID TestCostService_NewEmptyAccountID
+// verifies that an empty account ID is rejected with an *R2ValidationError.
 func TestCostService_NewEmptyAccountID(t *testing.T) {
+	t.Parallel()
 	_, err := NewCostService("", "tok456")
 	if err == nil {
 		t.Fatal("expected error for empty accountID")
@@ -39,7 +45,10 @@ func TestCostService_NewEmptyAccountID(t *testing.T) {
 	}
 }
 
+// TestCostService_NewEmptyAPIToken TestCostService_NewEmptyAPIToken verifies
+// that an empty API token is rejected with an *R2ValidationError.
 func TestCostService_NewEmptyAPIToken(t *testing.T) {
+	t.Parallel()
 	_, err := NewCostService("acc123", "")
 	if err == nil {
 		t.Fatal("expected error for empty apiToken")
@@ -53,7 +62,11 @@ func TestCostService_NewEmptyAPIToken(t *testing.T) {
 // Pricing constants
 // ---------------------------------------------------------------------------
 
+// TestCostPricingConstants TestCostPricingConstants pins the pricing
+// constants to Cloudflare's published rates so accidental edits to billing
+// math are caught in review.
 func TestCostPricingConstants(t *testing.T) {
+	t.Parallel()
 	// Verify pricing constants match Cloudflare published rates
 	if R2StoragePerGB != 0.015 {
 		t.Errorf("R2StoragePerGB = %f, want 0.015", R2StoragePerGB)
@@ -85,13 +98,17 @@ func TestCostPricingConstants(t *testing.T) {
 // EstimateR2Cost
 // ---------------------------------------------------------------------------
 
+// TestCostService_EstimateR2Cost TestCostService_EstimateR2Cost verifies the
+// R2 estimate math (storage, class A, class B, and their sum) for a usage
+// fixture with non-trivial values.
 func TestCostService_EstimateR2Cost(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	usage := R2Usage{
-		StorageGB:    100.0,
-		ClassAOps:    2000000,
-		ClassBOps:    10000000,
+		StorageGB: 100.0,
+		ClassAOps: 2000000,
+		ClassBOps: 10000000,
 	}
 
 	est := svc.EstimateR2Cost(usage)
@@ -117,7 +134,10 @@ func TestCostService_EstimateR2Cost(t *testing.T) {
 	}
 }
 
+// TestCostService_EstimateR2Cost_Zero TestCostService_EstimateR2Cost_Zero
+// verifies that zero R2 usage costs nothing.
 func TestCostService_EstimateR2Cost_Zero(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	est := svc.EstimateR2Cost(R2Usage{})
@@ -131,12 +151,16 @@ func TestCostService_EstimateR2Cost_Zero(t *testing.T) {
 // EstimateWorkersCost
 // ---------------------------------------------------------------------------
 
+// TestCostService_EstimateWorkersCost TestCostService_EstimateWorkersCost
+// verifies that requests above the 100k free tier are billed at the
+// per-million rate.
 func TestCostService_EstimateWorkersCost(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	usage := WorkersUsage{
-		Requests:     1100000, // 1.1M requests
-		CPUTimeMs:    50000,
+		Requests:  1100000, // 1.1M requests
+		CPUTimeMs: 50000,
 	}
 
 	est := svc.EstimateWorkersCost(usage)
@@ -151,7 +175,11 @@ func TestCostService_EstimateWorkersCost(t *testing.T) {
 	}
 }
 
+// TestCostService_EstimateWorkersCost_UnderFreeTier
+// TestCostService_EstimateWorkersCost_UnderFreeTier verifies that usage below
+// the free-tier threshold is not billed.
 func TestCostService_EstimateWorkersCost_UnderFreeTier(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	usage := WorkersUsage{
@@ -173,12 +201,15 @@ func TestCostService_EstimateWorkersCost_UnderFreeTier(t *testing.T) {
 // EstimateKVCost
 // ---------------------------------------------------------------------------
 
+// TestCostService_EstimateKVCost TestCostService_EstimateKVCost verifies the
+// KV estimate math for reads, writes, storage, and their sum.
 func TestCostService_EstimateKVCost(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	usage := KVUsage{
-		Reads:     5000000,  // 5M reads
-		Writes:    1000000,  // 1M writes
+		Reads:     5000000, // 5M reads
+		Writes:    1000000, // 1M writes
 		StorageGB: 2.0,
 	}
 
@@ -205,7 +236,10 @@ func TestCostService_EstimateKVCost(t *testing.T) {
 	}
 }
 
+// TestCostService_EstimateKVCost_Zero TestCostService_EstimateKVCost_Zero
+// verifies that zero KV usage costs nothing.
 func TestCostService_EstimateKVCost_Zero(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	est := svc.EstimateKVCost(KVUsage{})
@@ -219,7 +253,11 @@ func TestCostService_EstimateKVCost_Zero(t *testing.T) {
 // EstimateTotal
 // ---------------------------------------------------------------------------
 
+// TestCostService_EstimateTotal TestCostService_EstimateTotal verifies that
+// EstimateTotal populates all three per-service estimates, sums them into
+// TotalMonthlyCost, and sets disclaimer and period metadata.
 func TestCostService_EstimateTotal(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	r2Usage := R2Usage{StorageGB: 100, ClassAOps: 1000000, ClassBOps: 5000000}
@@ -253,7 +291,10 @@ func TestCostService_EstimateTotal(t *testing.T) {
 	}
 }
 
+// TestCostService_EstimateTotal_AllZero TestCostService_EstimateTotal_AllZero
+// verifies that all-zero usage produces a zero total.
 func TestCostService_EstimateTotal_AllZero(t *testing.T) {
+	t.Parallel()
 	svc, _ := NewCostService("acc123", "tok456")
 
 	total := svc.EstimateTotal(R2Usage{}, WorkersUsage{}, KVUsage{})

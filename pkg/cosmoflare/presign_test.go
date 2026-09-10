@@ -1,167 +1,106 @@
 package cosmoflare
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
 
-func TestPresignValidationEmptyBucket(t *testing.T) {
+// newPresignTestClient builds a client with fixed test credentials for
+// exercising PresignGetObject input validation. No HTTP traffic occurs
+// because every case below is expected to fail validation.
+func newPresignTestClient() *client {
+	return &client{cfg: &clientConfig{accountID: "test", apiToken: "test", region: "auto"}}
+}
+
+// TestPresignValidationClientInit verifies that a client can be constructed
+// from account/token options alone; the test skips if config validation of
+// the synthetic credentials is rejected.
+func TestPresignValidationClientInit(t *testing.T) {
+	t.Parallel()
 	_, err := NewClient(WithAccountID("test"), WithAPIToken("test"))
 	if err != nil {
 		t.Skip("client init requires valid config")
 	}
 }
 
-func TestPresignValidationEmptyKey(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
+// TestPresignGetObjectValidation verifies that PresignGetObject rejects
+// malformed bucket names, empty object keys, and non-positive expiration
+// durations before any request is signed. Each case is a distinct invalid
+// input scenario; wantSubstr (when set) pins the validator error message.
+func TestPresignGetObjectValidation(t *testing.T) {
+	t.Parallel()
+	c := newPresignTestClient()
 
-	_, err := c.PresignGetObject(nil, "bucket", "", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for empty key")
+	tests := []struct {
+		name       string
+		bucket     string
+		key        string
+		expires    time.Duration
+		wantSubstr string // optional substring expected in the error message
+	}{
+		{name: "empty bucket", bucket: "", key: "key", expires: time.Hour},
+		{name: "uppercase bucket", bucket: "UPPERCASE", key: "key", expires: time.Hour},
+		{name: "mixed-case bucket", bucket: "My-Bucket", key: "key", expires: time.Hour},
+		{name: "bucket with space", bucket: "my bucket", key: "key", expires: time.Hour},
+		{name: "empty key", bucket: "bucket", key: "", expires: time.Hour, wantSubstr: "object key is required"},
+		{name: "zero expiry", bucket: "bucket", key: "key", expires: 0},
+		{name: "explicit zero duration", bucket: "bucket", key: "key", expires: time.Duration(0)},
+		{name: "negative hour expiry", bucket: "bucket", key: "key", expires: -time.Hour},
+		{name: "negative millisecond expiry", bucket: "bucket", key: "key", expires: -time.Millisecond},
+		{name: "negative day expiry", bucket: "bucket", key: "key", expires: -24 * time.Hour},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := c.PresignGetObject(nil, tt.bucket, tt.key, tt.expires)
+			if err == nil {
+				t.Fatalf("PresignGetObject(bucket=%q, key=%q, expires=%v) = nil error, want validation error", tt.bucket, tt.key, tt.expires)
+			}
+			if tt.wantSubstr != "" && !strings.Contains(err.Error(), tt.wantSubstr) {
+				t.Errorf("error %q does not contain %q", err.Error(), tt.wantSubstr)
+			}
+		})
 	}
 }
 
-func TestPresignValidationZeroExpires(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
+// TestPresignGetObjectValidationOrder verifies that when several inputs are
+// invalid at once the validators fire in a deterministic order — bucket
+// first, then object key, then expiry — so error messages are predictable.
+func TestPresignGetObjectValidationOrder(t *testing.T) {
+	t.Parallel()
+	c := newPresignTestClient()
 
-	_, err := c.PresignGetObject(nil, "bucket", "key", 0)
-	if err == nil {
-		t.Fatal("expected error for zero expires")
+	tests := []struct {
+		name       string
+		bucket     string
+		key        string
+		expires    time.Duration
+		wantSubstr string // error text identifying which validator fired
+	}{
+		{
+			name: "all invalid reports bucket first", bucket: "INVALID", key: "", expires: -time.Hour,
+			wantSubstr: "bucket", // bucket validation must precede key/expiry checks
+		},
+		{
+			name: "valid bucket empty key reports key", bucket: "valid-bucket", key: "", expires: time.Hour,
+			wantSubstr: "object key is required",
+		},
+		{
+			name: "valid bucket and key report expiry", bucket: "valid-bucket", key: "some-key", expires: -5 * time.Second,
+			wantSubstr: "must be positive",
+		},
 	}
-}
-
-func TestPresignValidationNegativeExpires(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	_, err := c.PresignGetObject(nil, "bucket", "key", -1*time.Hour)
-	if err == nil {
-		t.Fatal("expected error for negative expires")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := c.PresignGetObject(nil, tt.bucket, tt.key, tt.expires)
+			if err == nil {
+				t.Fatal("expected error for all-invalid params")
+			}
+			if !strings.Contains(err.Error(), tt.wantSubstr) {
+				t.Errorf("error %q does not contain %q", err.Error(), tt.wantSubstr)
+			}
+		})
 	}
-}
-
-func TestPresignValidationInvalidBucketName(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	_, err := c.PresignGetObject(nil, "UPPERCASE", "key", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for invalid bucket name")
-	}
-}
-
-func TestPresignValidationExpiredDuration(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	// Very small negative duration
-	_, err := c.PresignGetObject(nil, "bucket", "key", -1*time.Millisecond)
-	if err == nil {
-		t.Fatal("expected error for negative millisecond duration")
-	}
-
-	// Large negative duration
-	_, err = c.PresignGetObject(nil, "bucket", "key", -24*time.Hour)
-	if err == nil {
-		t.Fatal("expected error for -24h duration")
-	}
-}
-
-func TestPresignValidationZeroDurationExplicit(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	_, err := c.PresignGetObject(nil, "bucket", "key", time.Duration(0))
-	if err == nil {
-		t.Fatal("expected error for explicit zero duration")
-	}
-}
-
-func TestPresignValidationEmptyBucketRejectsEmpty(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	_, err := c.PresignGetObject(nil, "", "key", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for empty bucket name")
-	}
-}
-
-func TestPresignValidationBucketWithSpecialChars(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	// Buckets with uppercase should fail validation
-	_, err := c.PresignGetObject(nil, "My-Bucket", "key", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for bucket name with uppercase chars")
-	}
-
-	// Buckets with spaces should fail
-	_, err = c.PresignGetObject(nil, "my bucket", "key", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for bucket name with spaces")
-	}
-}
-
-func TestPresignValidationKeyVariants(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	// Empty key must be rejected
-	_, err := c.PresignGetObject(nil, "bucket", "", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for empty key")
-	}
-	if !containsSubstr(err.Error(), "object key is required") {
-		t.Errorf("expected 'object key is required' error, got: %s", err.Error())
-	}
-
-	// Multiple empty-string variants: all should fail key validation
-	for _, key := range []string{"", ""} {
-		_, err := c.PresignGetObject(nil, "bucket", key, time.Hour)
-		if err == nil {
-			t.Fatalf("expected error for key %q", key)
-		}
-	}
-}
-
-func TestPresignValidationCombinations(t *testing.T) {
-	cfg := &clientConfig{accountID: "test", apiToken: "test", region: "auto"}
-	c := &client{cfg: cfg}
-
-	// All invalid params: bucket validation runs first
-	_, err := c.PresignGetObject(nil, "INVALID", "", -time.Hour)
-	if err == nil {
-		t.Fatal("expected error for all-invalid params")
-	}
-
-	// Valid bucket, empty key: key validation should trigger
-	_, err = c.PresignGetObject(nil, "valid-bucket", "", time.Hour)
-	if err == nil {
-		t.Fatal("expected error for empty key with valid bucket")
-	}
-	if !containsSubstr(err.Error(), "object key is required") {
-		t.Errorf("expected key validation error, got: %s", err.Error())
-	}
-
-	// Valid bucket, valid key, negative duration: duration validation should trigger
-	_, err = c.PresignGetObject(nil, "valid-bucket", "some-key", -5*time.Second)
-	if err == nil {
-		t.Fatal("expected error for negative duration with valid bucket and key")
-	}
-	if !containsSubstr(err.Error(), "must be positive") {
-		t.Errorf("expected duration validation error, got: %s", err.Error())
-	}
-}
-
-func containsSubstr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
