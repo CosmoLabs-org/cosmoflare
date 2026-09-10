@@ -1,0 +1,12 @@
+id: FEAT-019
+type: feature
+created_at: 2026-09-11T01:07:35.397669+04:00
+updated_at: 2026-09-11T01:07:35.40823+04:00
+source: local
+ulid: 01M26JBEVGZZVYBDNN16Z2DFKC
+status: open
+title: Permission manifest + least-privilege token doctor
+description: 'Model Cloudflare API token permissions as data: account-level families (29), zone-level (39), user-level (5), each with Read/Edit split, plus a per-command-group least-privilege matrix. Full tables in docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md sections 3A.1-3A.4. Commands this enables: auth token create/list/verify/revoke, api permissions list/check, api roles list/assign/revoke (corpus section 5.21). Killer UX: ''token doctor'' — given a workflow (e.g. deploy+kv+r2), emit the minimal token scopes for it; given a token, verify scopes before first API call fails. Extends open FEAT-011 (permission names drift) — that issue tracks names, this tracks the manifest and tooling.'
+acceptance_criteria:
+    - criterion: Permission manifest exists as versioned data with source provenance;api permissions check <token> reports missing scopes for a given command group;token doctor emits minimal scope set for a named workflow;FEAT-011 names derive from the same manifest
+      met: false
