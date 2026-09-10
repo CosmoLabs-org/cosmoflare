@@ -3,11 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	knowledge "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
 )
 
 var rateLimitCmd = &cobra.Command{
@@ -91,10 +93,45 @@ var rateLimitCreateCmd = &cobra.Command{
 			return err
 		}
 		if JSONOutput {
-			return printSuccessJSON("rate-limiting rule created", rule)
+			if err := printSuccessJSON("rate-limiting rule created", rule); err != nil {
+				return err
+			}
+		} else {
+			fmt.Printf("created %s  %s  %d req/%ds block %ds\n",
+				rule.ID, rule.Expression, rule.RequestsPerPeriod, rule.Period, rule.MitigationTimeout)
+			if adv := probeAdvisory(); adv != "" {
+				fmt.Println(adv)
+			}
 		}
-		fmt.Printf("created %s  %s  %d req/%ds block %ds\n",
-			rule.ID, rule.Expression, rule.RequestsPerPeriod, rule.Period, rule.MitigationTimeout)
+		if probeOnCreate {
+			path := cosmoflare.ExpressionPath(rule.Expression)
+			if path == "" {
+				fmt.Fprintln(os.Stderr, "probe skipped: expression has no literal path — run `cosmoflare ratelimit probe <zone> --path <p>`")
+				return nil
+			}
+			host, err := zoneHostname(cmd.Context(), args[0], zoneID)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "probe skipped: %v\n", err)
+				return nil
+			}
+			burst := rule.RequestsPerPeriod * 2
+			if burst < 2 {
+				burst = 2
+			}
+			if burst > cosmoflare.MaxProbeRequests {
+				burst = cosmoflare.MaxProbeRequests
+			}
+			res := cosmoflare.NewRateLimitProber().Probe(cmd.Context(), "https://"+host+path, burst)
+			if JSONOutput {
+				if err := printJSON(res); err != nil {
+					return err
+				}
+			} else {
+				fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
+					res.URL, res.Requests, res.Verdict, res.Explanation)
+			}
+			os.Exit(probeExitCode(res.Verdict))
+		}
 		return nil
 	},
 }
@@ -121,6 +158,7 @@ func init() {
 	rootCmd.AddCommand(rateLimitCmd)
 	rateLimitCmd.AddCommand(rateLimitListCmd)
 	rateLimitCmd.AddCommand(rateLimitCreateCmd)
+	rateLimitCmd.AddCommand(rateLimitProbeCmd)
 
 	rateLimitCreateCmd.Flags().StringVar(&ratelimitExpression, "expression", "",
 		"traffic expression, e.g. 'path eq \"/catalog.json\"' (required)")
@@ -131,4 +169,129 @@ func init() {
 		"comma-separated counting characteristics (must include cf.colo.id)")
 	rateLimitCreateCmd.Flags().StringVar(&rateLimitDesc, "description", "", "rule description")
 	_ = rateLimitCreateCmd.MarkFlagRequired("expression")
+
+	rateLimitProbeCmd.Flags().StringVar(&probePath, "path", "", "URL path the rule matches (required)")
+	rateLimitProbeCmd.Flags().IntVar(&probeRequests, "requests", 0, "burst size (default: 2x the matching rule's requests per period, capped at 60)")
+	rateLimitCreateCmd.Flags().BoolVar(&probeOnCreate, "probe", false, "run a live trip probe against the created rule immediately after creation")
+}
+
+// probeExitCode maps a probe verdict to a scriptable exit code:
+// 0 tripped, 2 not-counted, 3 inconclusive.
+func probeExitCode(verdict string) int {
+	switch verdict {
+	case cosmoflare.VerdictTripped:
+		return 0
+	case cosmoflare.VerdictNotCounted:
+		return 2
+	default:
+		return 3
+	}
+}
+
+// probeAdvisory renders the post-create advisory from pack data — never
+// hardcoded. Empty when the pack declares no skipped classes.
+func probeAdvisory() string {
+	skipped := knowledge.SkippedTrafficClasses("ratelimit")
+	if len(skipped) == 0 {
+		return ""
+	}
+	classes := make([]string, 0, len(skipped))
+	for _, tc := range skipped {
+		classes = append(classes, tc.Class)
+	}
+	return "note: WAF rate limiting does not count: " + strings.Join(classes, ", ") +
+		" — run `cosmoflare ratelimit probe` to verify this rule sees its traffic"
+}
+
+// zoneHostname resolves the probe target host: the argument itself when it
+// looks like a hostname, else the zone's registered name.
+func zoneHostname(ctx context.Context, target, zoneID string) (string, error) {
+	if strings.Contains(target, ".") {
+		return target, nil
+	}
+	zones, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		return "", err
+	}
+	zone, err := zones.Get(ctx, zoneID)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch zone name for probe target: %w", err)
+	}
+	return zone.Name, nil
+}
+
+// probeBurstDefault derives the burst size from the live rule matching the
+// path: 2x its requests_per_period (at least 2). When multiple rules match
+// the path substring, the FIRST match wins (Free plan caps at one rule
+// anyway); zero matches is an error.
+func probeBurstDefault(ctx context.Context, svc *cosmoflare.RateLimitService, zoneID, path string) (int, error) {
+	rules, err := svc.List(ctx, zoneID)
+	if err != nil {
+		return 0, err
+	}
+	for _, r := range rules {
+		if strings.Contains(r.Expression, path) {
+			n := r.RequestsPerPeriod * 2
+			if n < 2 {
+				n = 2
+			}
+			return n, nil
+		}
+	}
+	return 0, fmt.Errorf("no rate-limiting rule matches path %q on this zone — create one first or pass --requests", path)
+}
+
+var (
+	probePath     string
+	probeRequests int
+	probeOnCreate bool
+)
+
+var rateLimitProbeCmd = &cobra.Command{
+	Use:   "probe <zone-id-or-name>",
+	Short: "Burst-probe whether a rate-limiting rule actually sees the zone's traffic",
+	Long: `Send a bounded burst of live GETs (opt-in, cap 60, half cache-busted) at the
+zone and report whether the rule trips.
+
+Verdicts and exit codes:
+  tripped        exit 0 — the rule sees this traffic
+  not-counted    exit 2 — rule live but the traffic class is likely skipped
+  inconclusive   exit 3 — network errors dominated
+
+This command sends live traffic to the target origin. It never runs unless
+explicitly invoked.`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if probePath == "" {
+			return fmt.Errorf("--path is required (the URL path the rule matches)")
+		}
+		svc, zoneID, err := ratelimitServiceAndZone(cmd.Context(), args[0])
+		if err != nil {
+			return err
+		}
+		burst := probeRequests
+		if burst == 0 {
+			burst, err = probeBurstDefault(cmd.Context(), svc, zoneID, probePath)
+			if err != nil {
+				return err
+			}
+		}
+		if burst > cosmoflare.MaxProbeRequests {
+			fmt.Fprintf(os.Stderr, "note: --requests clamped to %d\n", cosmoflare.MaxProbeRequests)
+			burst = cosmoflare.MaxProbeRequests
+		}
+		host, err := zoneHostname(cmd.Context(), args[0], zoneID)
+		if err != nil {
+			return err
+		}
+		res := cosmoflare.NewRateLimitProber().Probe(cmd.Context(), "https://"+host+probePath, burst)
+		if JSONOutput {
+			printJSON(res)
+		} else {
+			fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
+				res.URL, res.Requests, res.Verdict, res.Explanation)
+		}
+		os.Exit(probeExitCode(res.Verdict))
+		return nil
+	},
 }
