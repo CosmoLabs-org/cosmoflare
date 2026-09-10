@@ -1,0 +1,12 @@
+id: FEAT-024
+type: feature
+created_at: 2026-09-11T01:08:23.392209+04:00
+updated_at: 2026-09-11T01:08:23.395946+04:00
+source: local
+ulid: 01M26JCXQ3S18KR2H6XF0X2A3J
+status: open
+title: 'Queues producer surface: send, send-batch, DLQ, consumer management'
+description: 'cmd/queue.go ships queue CRUD + consumers list. Missing the producer side: queues send (single message), send-batch (respects max batch size + 128 KB base-10 message limit minus ~100 bytes internal metadata — corpus qwen-results EDGE CASES item 7), DLQ configure, consumer update/remove. Checklist: corpus section 9 queues block (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md).'
+acceptance_criteria:
+    - criterion: send round-trips a message to a consumer;send-batch rejects oversized messages locally before the API does;DLQ configure attaches a dead-letter queue;consumer update/remove work
+      met: false
