@@ -41,7 +41,12 @@ func newBucketNotificationTestServer(t *testing.T, h *bucketNotificationHandler)
 	return NewBucketNotificationService("ACC", "tok-secret", WithBucketNotificationBaseURL(srv.URL))
 }
 
+// TestBucketNotificationList TestBucketNotificationList verifies that List
+// issues a GET to the per-bucket event-notification configuration endpoint
+// with bearer auth and decodes queues and their rules, including rule
+// timestamps and action enums.
 func TestBucketNotificationList(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -93,7 +98,11 @@ func TestBucketNotificationList(t *testing.T) {
 	}
 }
 
+// TestBucketNotificationSet TestBucketNotificationSet verifies that Set
+// issues a PUT whose JSON body contains only the rules array, and that an
+// empty rule set is rejected before any HTTP call is made.
 func TestBucketNotificationSet(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -142,7 +151,11 @@ func TestBucketNotificationSet(t *testing.T) {
 	}
 }
 
+// TestBucketNotificationDeleteWithIds TestBucketNotificationDeleteWithIds
+// verifies that Delete with explicit rule IDs issues a DELETE whose body
+// carries the ruleIds array.
 func TestBucketNotificationDeleteWithIds(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -173,7 +186,11 @@ func TestBucketNotificationDeleteWithIds(t *testing.T) {
 	}
 }
 
+// TestBucketNotificationDeleteAll TestBucketNotificationDeleteAll verifies
+// that Delete without rule IDs issues a DELETE with an empty body, containing
+// no ruleIds key.
 func TestBucketNotificationDeleteAll(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -201,7 +218,11 @@ func TestBucketNotificationDeleteAll(t *testing.T) {
 	}
 }
 
+// TestBucketNotificationValidation TestBucketNotificationValidation verifies
+// that Set rejects unknown action strings, empty action lists, and duplicate
+// actions within one rule, all client-side without contacting the server.
 func TestBucketNotificationValidation(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{}
 	svc := newBucketNotificationTestServer(t, h)
 
@@ -239,7 +260,11 @@ func TestBucketNotificationValidation(t *testing.T) {
 	}
 }
 
+// TestBucketNotificationAPIError TestBucketNotificationAPIError verifies that
+// an API error payload (success=false) surfaces as a Go error containing the
+// server message.
 func TestBucketNotificationAPIError(t *testing.T) {
+	t.Parallel()
 	h := &bucketNotificationHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")

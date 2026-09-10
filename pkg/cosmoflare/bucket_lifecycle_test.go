@@ -44,7 +44,11 @@ func lifecycleAge(maxAge int64) *LifecycleTransition {
 	return &LifecycleTransition{Condition: LifecycleCondition{Type: "Age", MaxAge: &maxAge}}
 }
 
+// TestBucketLifecycleGet TestBucketLifecycleGet verifies that Get issues a
+// GET to the per-bucket lifecycle endpoint with bearer auth and decodes rules
+// including delete-object, abort-MPU, and storage-class transitions.
 func TestBucketLifecycleGet(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -94,7 +98,11 @@ func TestBucketLifecycleGet(t *testing.T) {
 	}
 }
 
+// TestBucketLifecycleGetEmpty TestBucketLifecycleGetEmpty verifies that a
+// bucket with no lifecycle rules decodes to an empty, non-nil slice rather
+// than nil.
 func TestBucketLifecycleGetEmpty(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -114,7 +122,12 @@ func TestBucketLifecycleGetEmpty(t *testing.T) {
 	}
 }
 
+// TestBucketLifecycleSetReplaces TestBucketLifecycleSetReplaces verifies that
+// Set issues a PUT whose rules array is semantically equal (ignoring key
+// order) to the submitted rules, i.e. the configuration is replaced
+// wholesale.
 func TestBucketLifecycleSetReplaces(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -175,7 +188,11 @@ func jsonEqual(a, b interface{}) bool {
 	return string(ab) == string(bb)
 }
 
+// TestBucketLifecycleSetClear TestBucketLifecycleSetClear verifies that
+// passing nil rules issues a PUT with an empty rules array, clearing all
+// lifecycle configuration.
 func TestBucketLifecycleSetClear(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -195,7 +212,11 @@ func TestBucketLifecycleSetClear(t *testing.T) {
 	}
 }
 
+// TestBucketLifecycleValidation TestBucketLifecycleValidation verifies
+// client-side rejection of: a Date condition on abort-MPU transitions, MaxAge
+// 0, unsupported storage classes, empty rule IDs, and more than 1000 rules.
 func TestBucketLifecycleValidation(t *testing.T) {
+	t.Parallel()
 	svc := newBucketLifecycleTestServer(t, &bucketLifecycleHandler{})
 
 	dateStr := "2026-01-01T00:00:00Z"
@@ -262,7 +283,11 @@ func TestBucketLifecycleValidation(t *testing.T) {
 	}
 }
 
+// TestBucketLifecycleValidationSkipsHTTP
+// TestBucketLifecycleValidationSkipsHTTP verifies that invalid rules are
+// rejected before any HTTP request leaves the client.
 func TestBucketLifecycleValidationSkipsHTTP(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{}
 	svc := newBucketLifecycleTestServer(t, h)
 	dateStr := "2026-01-01T00:00:00Z"
@@ -281,7 +306,11 @@ func TestBucketLifecycleValidationSkipsHTTP(t *testing.T) {
 	}
 }
 
+// TestBucketLifecycleAPIError TestBucketLifecycleAPIError verifies that API
+// error payloads surface as errors containing the server message for both Get
+// and Set.
 func TestBucketLifecycleAPIError(t *testing.T) {
+	t.Parallel()
 	h := &bucketLifecycleHandler{
 		inner: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")

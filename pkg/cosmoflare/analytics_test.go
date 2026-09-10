@@ -43,7 +43,12 @@ func analyticsWindow() AnalyticsWindow {
 	}
 }
 
+// TestAnalyticsZoneHTTP TestAnalyticsZoneHTTP verifies that ZoneHTTP POSTs a
+// GraphQL query to /graphql with bearer auth, bounds the query with the
+// window's RFC3339 timestamps, and sums per-hour rows into a single
+// ZoneHTTPSummary.
 func TestAnalyticsZoneHTTP(t *testing.T) {
+	t.Parallel()
 	var cap analyticsCapture
 	resp := `{"data":{"viewer":{"zones":[{"httpRequestsAdaptiveGroups":[` +
 		`{"sum":{"count":10,"edgeResponseBytes":2048,"visits":3},"dimensions":{"datetimeHour":"2026-08-01T00:00:00Z"}},` +
@@ -87,7 +92,11 @@ func TestAnalyticsZoneHTTP(t *testing.T) {
 	}
 }
 
+// TestAnalyticsR2StorageGroups TestAnalyticsR2StorageGroups verifies that
+// R2Storage collapses multiple daily rows per bucket, keeping the maximum
+// object, upload, payload, and metadata values.
 func TestAnalyticsR2StorageGroups(t *testing.T) {
+	t.Parallel()
 	resp := `{"data":{"viewer":{"accounts":[{"r2StorageAdaptiveGroups":[` +
 		`{"max":{"objectCount":100,"uploadCount":2,"payloadSize":1000,"metadataSize":10},"dimensions":{"bucketName":"media"}},` +
 		`{"max":{"objectCount":200,"uploadCount":1,"payloadSize":900,"metadataSize":20},"dimensions":{"bucketName":"media"}},` +
@@ -118,7 +127,11 @@ func TestAnalyticsR2StorageGroups(t *testing.T) {
 	}
 }
 
+// TestAnalyticsR2OperationsAggregates TestAnalyticsR2OperationsAggregates
+// verifies that R2Operations returns one row per bucket/action/status
+// combination and sums request counts across duplicate dimension rows.
 func TestAnalyticsR2OperationsAggregates(t *testing.T) {
+	t.Parallel()
 	resp := `{"data":{"viewer":{"accounts":[{"r2OperationsAdaptiveGroups":[` +
 		`{"sum":{"requests":10},"dimensions":{"actionType":"GetObject","actionStatus":"success","bucketName":"media"}},` +
 		`{"sum":{"requests":5},"dimensions":{"actionType":"GetObject","actionStatus":"success","bucketName":"media"}},` +
@@ -152,7 +165,11 @@ func TestAnalyticsR2OperationsAggregates(t *testing.T) {
 	}
 }
 
+// TestAnalyticsWorkers TestAnalyticsWorkers verifies that Workers maps
+// workersInvocationsAdaptive rows per script, carrying
+// request/error/subrequest sums and CPU-time quantiles.
 func TestAnalyticsWorkers(t *testing.T) {
+	t.Parallel()
 	resp := `{"data":{"viewer":{"accounts":[{"workersInvocationsAdaptive":[` +
 		`{"sum":{"requests":100,"errors":3,"subrequests":40},"quantiles":{"cpuTimeP50":1.5,"cpuTimeP99":9.25},"dimensions":{"scriptName":"api"}},` +
 		`{"sum":{"requests":50,"errors":0,"subrequests":10},"quantiles":{"cpuTimeP50":0.5,"cpuTimeP99":2.0},"dimensions":{"scriptName":"cron"}}` +
@@ -184,7 +201,11 @@ func TestAnalyticsWorkers(t *testing.T) {
 	}
 }
 
+// TestAnalyticsGraphQLErrors TestAnalyticsGraphQLErrors verifies that a
+// GraphQL-level error payload is surfaced as a Go error containing the
+// server's message.
 func TestAnalyticsGraphQLErrors(t *testing.T) {
+	t.Parallel()
 	srv := analyticsServer(t, `{"errors":[{"message":"boom"}]}`, &analyticsCapture{})
 	defer srv.Close()
 
@@ -198,7 +219,12 @@ func TestAnalyticsGraphQLErrors(t *testing.T) {
 	}
 }
 
+// TestAnalyticsWindowValidation TestAnalyticsWindowValidation verifies that
+// windows exceeding the 31-day R2 retention (as *R2ValidationError) and
+// windows with Start >= End are rejected client-side without any HTTP
+// request.
 func TestAnalyticsWindowValidation(t *testing.T) {
+	t.Parallel()
 	hit := false
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hit = true

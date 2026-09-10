@@ -11,7 +11,12 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 )
 
+// TestRegistrarService_List TestRegistrarService_List verifies that List
+// issues a GET to the account's registrar domains endpoint and maps each
+// response entry by domain name, decoding registrar name, transfer-lock
+// state, and expiry into the returned info struct.
 func TestRegistrarService_List(t *testing.T) {
+	t.Parallel()
 	const accountID = "account-test-123"
 	// A clearly-future expiry so the assertion below is meaningful.
 	futureExpiry := time.Now().UTC().Add(365 * 24 * time.Hour).Truncate(time.Second)
@@ -96,7 +101,11 @@ func TestRegistrarService_List(t *testing.T) {
 	}
 }
 
+// TestRegistrarService_ListValidation TestRegistrarService_ListValidation
+// verifies that List rejects an empty account ID instead of issuing a request
+// with a malformed URL.
 func TestRegistrarService_ListValidation(t *testing.T) {
+	t.Parallel()
 	cf, _ := cloudflare.NewWithAPIToken("test-token")
 	svc := NewRegistrarService(cf, "")
 	_, err := svc.List(context.Background())
@@ -105,7 +114,11 @@ func TestRegistrarService_ListValidation(t *testing.T) {
 	}
 }
 
+// TestRegistrarService_ListEmpty TestRegistrarService_ListEmpty verifies that
+// an empty result set from the API decodes to an empty collection without
+// error.
 func TestRegistrarService_ListEmpty(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -129,7 +142,11 @@ func TestRegistrarService_ListEmpty(t *testing.T) {
 	}
 }
 
+// TestNewRegistrarServiceFromCreds TestNewRegistrarServiceFromCreds verifies
+// constructor credential validation: an empty account ID or API token is
+// rejected, while valid credentials yield a non-nil service.
 func TestNewRegistrarServiceFromCreds(t *testing.T) {
+	t.Parallel()
 	if _, err := NewRegistrarServiceFromCreds("", "tok"); err == nil {
 		t.Error("expected error for empty account ID")
 	}
