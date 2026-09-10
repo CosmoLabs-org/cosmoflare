@@ -16,11 +16,15 @@ import (
 // Helpers
 // ---------------------------------------------------------------------------
 
+// newTestBrowser returns a BrowserModel backed by the null (no-credentials)
+// data source, so tests never touch the network.
 func newTestBrowser() BrowserModel {
 	ds := &nullDataSource{}
 	return NewBrowserModel(ds)
 }
 
+// sampleBuckets returns a deterministic three-bucket fixture used by tests
+// that need a populated left pane.
 func sampleBuckets() []Bucket {
 	return []Bucket{
 		{Name: "assets", Size: 1024, ObjectCount: 10, Status: "active", CreatedAt: time.Now()},
@@ -33,36 +37,40 @@ func sampleBuckets() []Bucket {
 // Tests
 // ---------------------------------------------------------------------------
 
+// TestBrowserModelInitialState verifies every field of a freshly constructed
+// BrowserModel: focus starts on the bucket pane, both navigation stacks hold
+// only the root entry, no listing is loaded, and the modal is closed.
 func TestBrowserModelInitialState(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
-	if !b.focusLeft {
-		t.Error("expected focusLeft=true on init")
+	checks := []struct {
+		name string
+		ok   bool
+		msg  string
+	}{
+		{"focus starts on left pane", b.focusLeft, "expected focusLeft=true on init"},
+		{"prefix stack holds only the root", len(b.prefixStack) == 1 && b.prefixStack[0] == "", `expected prefixStack=[""]`},
+		{"token stack holds only the root", len(b.tokenStack) == 1 && b.tokenStack[0] == "", `expected tokenStack=[""]`},
+		{"no listing loaded", b.listing == nil, "expected listing=nil on init"},
+		{"object cursor at zero", b.objectIdx == 0, "expected objectIdx=0 on init"},
+		{"bucket cursor at zero", b.bucketIdx == 0, "expected bucketIdx=0 on init"},
+		{"modal hidden", !b.showModal, "expected showModal=false on init"},
+		{"no pending confirmation", b.confirmAction == "", `expected confirmAction="" on init`},
 	}
-	if len(b.prefixStack) != 1 || b.prefixStack[0] != "" {
-		t.Errorf("expected prefixStack=[\"\"], got %v", b.prefixStack)
-	}
-	if len(b.tokenStack) != 1 || b.tokenStack[0] != "" {
-		t.Errorf("expected tokenStack=[\"\"], got %v", b.tokenStack)
-	}
-	if b.listing != nil {
-		t.Error("expected listing=nil on init")
-	}
-	if b.objectIdx != 0 {
-		t.Error("expected objectIdx=0 on init")
-	}
-	if b.bucketIdx != 0 {
-		t.Error("expected bucketIdx=0 on init")
-	}
-	if b.showModal {
-		t.Error("expected showModal=false on init")
-	}
-	if b.confirmAction != "" {
-		t.Error("expected confirmAction=\"\" on init")
+	for _, c := range checks {
+		t.Run(c.name, func(t *testing.T) {
+			if !c.ok {
+				t.Error(c.msg)
+			}
+		})
 	}
 }
 
+// TestBrowserModelSetBuckets verifies that SetBuckets stores the provided
+// buckets verbatim, preserving both order and names.
 func TestBrowserModelSetBuckets(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	buckets := sampleBuckets()
 	b.SetBuckets(buckets)
@@ -81,7 +89,10 @@ func TestBrowserModelSetBuckets(t *testing.T) {
 	}
 }
 
+// TestBrowserModelPaneFocus verifies that toggleFocus alternates keyboard
+// focus between the left (buckets) and right (objects) panes.
 func TestBrowserModelPaneFocus(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
 	if !b.focusLeft {
@@ -99,7 +110,10 @@ func TestBrowserModelPaneFocus(t *testing.T) {
 	}
 }
 
+// TestBrowserModelSetSize verifies that SetSize records the terminal
+// dimensions used for layout decisions.
 func TestBrowserModelSetSize(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.SetSize(120, 40)
 
@@ -111,31 +125,37 @@ func TestBrowserModelSetSize(t *testing.T) {
 	}
 }
 
+// TestBrowserModelIsWide verifies the wide-layout threshold: terminal widths
+// of 100 columns or more render both panes side by side, narrower widths
+// stack them vertically.
 func TestBrowserModelIsWide(t *testing.T) {
-	b := newTestBrowser()
-
-	b.SetSize(120, 40)
-	if !b.isWide() {
-		t.Error("expected isWide()=true for width=120")
+	t.Parallel()
+	tests := []struct {
+		name  string
+		width int
+		want  bool
+	}{
+		{"width 120 is wide", 120, true},
+		{"width 100 is the inclusive threshold", 100, true},
+		{"width 99 is the largest narrow width", 99, false},
+		{"width 80 is narrow", 80, false},
 	}
-
-	b.SetSize(100, 40)
-	if !b.isWide() {
-		t.Error("expected isWide()=true for width=100")
-	}
-
-	b.SetSize(80, 40)
-	if b.isWide() {
-		t.Error("expected isWide()=false for width=80")
-	}
-
-	b.SetSize(99, 40)
-	if b.isWide() {
-		t.Error("expected isWide()=false for width=99")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := newTestBrowser()
+			b.SetSize(tt.width, 40)
+			if got := b.isWide(); got != tt.want {
+				t.Errorf("isWide() with width=%d = %v, want %v", tt.width, got, tt.want)
+			}
+		})
 	}
 }
 
+// TestBrowserModelSelectedBucket verifies cursor-to-bucket resolution across
+// the empty list, the default cursor, an explicit index, and an out-of-range
+// index (which must yield nil rather than panic).
 func TestBrowserModelSelectedBucket(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
 	// Empty buckets → nil.
@@ -171,7 +191,11 @@ func TestBrowserModelSelectedBucket(t *testing.T) {
 	}
 }
 
+// TestBrowserPrefixPush verifies that entering a directory pushes its prefix
+// onto the navigation stack, updates the current prefix, and resets the
+// object cursor and cached listing so stale rows cannot leak through.
 func TestBrowserPrefixPush(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
 	if b.currentPrefix() != "" {
@@ -203,7 +227,10 @@ func TestBrowserPrefixPush(t *testing.T) {
 	}
 }
 
+// TestBrowserPrefixPop verifies that leaving a directory unwinds the prefix
+// stack one level at a time back to the root.
 func TestBrowserPrefixPop(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.pushPrefix("images/")
 	b.pushPrefix("images/thumbnails/")
@@ -222,7 +249,11 @@ func TestBrowserPrefixPop(t *testing.T) {
 	}
 }
 
+// TestBrowserPrefixPopAtRoot verifies the special case of popping at the
+// root: instead of underflowing the stack, focus switches to the bucket pane
+// and the stack keeps its single root entry.
 func TestBrowserPrefixPopAtRoot(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.focusLeft = false // start on right pane
 
@@ -238,7 +269,10 @@ func TestBrowserPrefixPopAtRoot(t *testing.T) {
 	}
 }
 
+// TestBrowserTokenStack verifies the pagination-token stack starts with a
+// single empty token representing the first page.
 func TestBrowserTokenStack(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
 	if len(b.tokenStack) != 1 {
@@ -249,7 +283,11 @@ func TestBrowserTokenStack(t *testing.T) {
 	}
 }
 
+// TestBrowserBreadcrumb verifies the breadcrumb trail: at the root it shows
+// only the bucket name, and after entering a prefix the path is appended
+// after the bucket joined with " > ".
 func TestBrowserBreadcrumb(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.SetBuckets(sampleBuckets())
 
@@ -267,7 +305,11 @@ func TestBrowserBreadcrumb(t *testing.T) {
 	}
 }
 
+// TestBrowserTotalRightItems verifies the right-pane item count sums the
+// directories and objects of the current listing and is zero when no listing
+// is loaded.
 func TestBrowserTotalRightItems(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 
 	// No listing.
@@ -289,7 +331,11 @@ func TestBrowserTotalRightItems(t *testing.T) {
 	}
 }
 
+// TestBrowserSelectedIsDir verifies that directory entries sort ahead of
+// objects in the right pane, so cursor indices 0..len(Dirs)-1 resolve to
+// directories and later indices to objects.
 func TestBrowserSelectedIsDir(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.listing = &ObjectListing{
 		Dirs:    []string{"images/", "docs/"},
@@ -312,7 +358,11 @@ func TestBrowserSelectedIsDir(t *testing.T) {
 	}
 }
 
+// TestBrowserSelectedObject verifies that selectedObject returns nil while
+// the cursor is on a directory and the actual ObjectItem when it is on an
+// object row.
 func TestBrowserSelectedObject(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.listing = &ObjectListing{
 		Dirs:    []string{"images/"},
@@ -336,7 +386,11 @@ func TestBrowserSelectedObject(t *testing.T) {
 	}
 }
 
+// TestBrowserSelectedDirName verifies directory-name resolution by cursor
+// index, including the empty-string result when the cursor points at an
+// object row instead of a directory.
 func TestBrowserSelectedDirName(t *testing.T) {
+	t.Parallel()
 	b := newTestBrowser()
 	b.listing = &ObjectListing{
 		Dirs:    []string{"images/", "docs/"},
@@ -360,6 +414,9 @@ func TestBrowserSelectedDirName(t *testing.T) {
 	}
 }
 
+// TestBrowserViewNarrowLeftPane verifies the stacked (narrow) layout still
+// renders the bucket pane with its title and bucket names. Kept sequential:
+// InitializeStyles mutates package-level style state.
 func TestBrowserViewNarrowLeftPane(t *testing.T) {
 	b := newTestBrowser()
 	b.SetSize(80, 24)
@@ -381,6 +438,9 @@ func TestBrowserViewNarrowLeftPane(t *testing.T) {
 	}
 }
 
+// TestBrowserViewWide verifies the side-by-side (wide) layout renders the
+// bucket list. Kept sequential: InitializeStyles mutates package-level
+// style state.
 func TestBrowserViewWide(t *testing.T) {
 	b := newTestBrowser()
 	b.SetSize(120, 40)
@@ -403,6 +463,8 @@ func containsStr(haystack, needle string) bool {
 	return len(haystack) > 0 && len(needle) > 0 && contains(haystack, needle)
 }
 
+// contains reports whether sub appears anywhere in s without using the
+// strings package, keeping browser view assertions dependency-free.
 func contains(s, sub string) bool {
 	for i := 0; i <= len(s)-len(sub); i++ {
 		if s[i:i+len(sub)] == sub {
