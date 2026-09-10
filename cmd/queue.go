@@ -23,6 +23,8 @@ Commands:
   update     Rename a queue
   delete     Delete a queue
   consumers  List consumers for a queue
+  send       Send a message to a queue
+  send-batch Send up to 100 messages to a queue
 
 Examples:
   cosmoflare queue create my-queue
@@ -30,7 +32,9 @@ Examples:
   cosmoflare queue get my-queue
   cosmoflare queue update my-queue --name new-name
   cosmoflare queue delete my-queue --force
-  cosmoflare queue consumers my-queue`,
+  cosmoflare queue consumers my-queue
+  cosmoflare queue send my-queue --body 'hello'
+  cosmoflare queue send-batch my-queue --file messages.json`,
 }
 
 var (

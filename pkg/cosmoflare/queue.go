@@ -2,7 +2,10 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
@@ -275,5 +278,139 @@ func mapQueueConsumerSettingsToSDK(s QueueConsumerSettings) cloudflare.QueueCons
 		BatchSize:   s.BatchSize,
 		MaxRetires:  s.MaxRetries,
 		MaxWaitTime: s.MaxWaitTime,
+	}
+}
+
+// maxQueueMessageBytes is the documented Cloudflare Queues per-message
+// size cap, expressed in base-10 units (128 KB = 128,000 bytes, not
+// 128 * 1024). The cap is measured on the wire payload *including*
+// ~100 bytes of internal Queues metadata, so an application body must
+// stay below this even though the guard below only warns.
+// Source: docs/research/2026-09-10-cf-limits-corpus/qwen-results.md
+// EDGE CASES item 7.
+const maxQueueMessageBytes = 128_000
+
+// queueMessageMetadataBytes approximates the internal Queues metadata
+// overhead counted against the per-message size cap.
+const queueMessageMetadataBytes = 100
+
+// maxQueueBatchMessages is the hard cap on messages per batch request
+// enforced by the Cloudflare Queues messages API.
+const maxQueueBatchMessages = 100
+
+// QueueMessage is a message to produce onto a queue.
+type QueueMessage struct {
+	Body         string `json:"body"`
+	ContentType  string `json:"content_type,omitempty"`
+	DelaySeconds int    `json:"delay_seconds,omitempty"`
+}
+
+// SendMessageResult reports the outcome of a single Send call.
+type SendMessageResult struct {
+	Success   bool   `json:"success"`
+	MessageID string `json:"message_id,omitempty"`
+}
+
+// SendBatchResult reports the outcome of a SendBatch call.
+type SendBatchResult struct {
+	Success bool `json:"success"`
+	Sent    int  `json:"sent"`
+}
+
+// Send produces a single message onto the named queue.
+func (s *QueueService) Send(ctx context.Context, queueName string, msg QueueMessage) (*SendMessageResult, error) {
+	if queueName == "" {
+		return nil, validationError("QueueService.Send", "queue name is required")
+	}
+
+	queueID, err := s.resolveQueueID(ctx, queueName)
+	if err != nil {
+		return nil, err
+	}
+
+	warnQueueMessageSize(len(msg.Body))
+
+	uri := fmt.Sprintf("/accounts/%s/queues/%s/messages", s.accountID, queueID)
+	raw, err := s.cf.Raw(ctx, http.MethodPost, uri, msg, nil)
+	if err != nil {
+		return nil, newError("QueueService.Send", fmt.Sprintf("failed to send message to queue %q", queueName), err)
+	}
+	if !raw.Success {
+		return nil, newError("QueueService.Send", fmt.Sprintf("failed to send message to queue %q", queueName), nil)
+	}
+
+	result := &SendMessageResult{Success: true}
+	if len(raw.Result) > 0 {
+		var decoded struct {
+			MessageID string `json:"message_id"`
+		}
+		if json.Unmarshal(raw.Result, &decoded) == nil {
+			result.MessageID = decoded.MessageID
+		}
+	}
+	return result, nil
+}
+
+// SendBatch produces up to maxQueueBatchMessages messages onto the named
+// queue in a single API call.
+func (s *QueueService) SendBatch(ctx context.Context, queueName string, msgs []QueueMessage) (*SendBatchResult, error) {
+	if queueName == "" {
+		return nil, validationError("QueueService.SendBatch", "queue name is required")
+	}
+	if len(msgs) == 0 {
+		return nil, validationError("QueueService.SendBatch", "at least one message is required")
+	}
+	if len(msgs) > maxQueueBatchMessages {
+		return nil, validationError("QueueService.SendBatch", fmt.Sprintf(
+			"batch of %d messages exceeds the maximum of %d messages per call; split it into multiple send-batch calls of up to %d messages",
+			len(msgs), maxQueueBatchMessages, maxQueueBatchMessages))
+	}
+
+	queueID, err := s.resolveQueueID(ctx, queueName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range msgs {
+		warnQueueMessageSize(len(m.Body))
+	}
+
+	uri := fmt.Sprintf("/accounts/%s/queues/%s/messages/batch", s.accountID, queueID)
+	payload := struct {
+		Messages []QueueMessage `json:"messages"`
+	}{Messages: msgs}
+	raw, err := s.cf.Raw(ctx, http.MethodPost, uri, payload, nil)
+	if err != nil {
+		return nil, newError("QueueService.SendBatch", fmt.Sprintf("failed to send batch to queue %q", queueName), err)
+	}
+	if !raw.Success {
+		return nil, newError("QueueService.SendBatch", fmt.Sprintf("failed to send batch to queue %q", queueName), nil)
+	}
+
+	return &SendBatchResult{Success: true, Sent: len(msgs)}, nil
+}
+
+// resolveQueueID resolves a queue name to its queue ID, which the
+// messages API requires (Get accepts names, messages endpoints do not).
+func (s *QueueService) resolveQueueID(ctx context.Context, queueName string) (string, error) {
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	q, err := s.cf.GetQueue(ctx, rc, queueName)
+	if err != nil {
+		return "", newError("QueueService.resolveQueueID", fmt.Sprintf("failed to resolve queue %q", queueName), err)
+	}
+	if q.ID == "" {
+		return "", validationError("QueueService.resolveQueueID", fmt.Sprintf("queue %q returned no ID", queueName))
+	}
+	return q.ID, nil
+}
+
+// warnQueueMessageSize prints a soft warning when a message body would
+// exceed the documented 128 KB (base-10, including ~100 bytes of Queues
+// metadata) limit. The message is still sent; the API makes the final call.
+func warnQueueMessageSize(bodyLen int) {
+	if bodyLen+queueMessageMetadataBytes > maxQueueMessageBytes {
+		fmt.Fprintf(os.Stderr,
+			"WARNING: message size %d bytes (body %d + ~%d bytes internal Queues metadata) exceeds the %s-byte (128 KB, base-10) Cloudflare Queues limit; the API may reject it\n",
+			bodyLen+queueMessageMetadataBytes, bodyLen, queueMessageMetadataBytes, "128,000")
 	}
 }

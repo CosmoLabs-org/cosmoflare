@@ -1,10 +1,15 @@
 package cosmoflare
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -347,8 +352,8 @@ func TestQueueListConsumersSuccess(t *testing.T) {
 					"environment": "production",
 					"queue_name":  "my-queue",
 					"settings": map[string]interface{}{
-						"batch_size":      10,
-						"max_retries":     3,
+						"batch_size":       10,
+						"max_retries":      3,
 						"max_wait_time_ms": 5000,
 					},
 				},
@@ -416,12 +421,12 @@ func TestMapQueue(t *testing.T) {
 func TestMapQueueConsumer(t *testing.T) {
 	now := time.Now().UTC()
 	c := mapQueueConsumer(cloudflare.QueueConsumer{
-		Name:        "consumer-1",
-		Service:     "svc",
-		ScriptName:  "my-worker",
-		Environment: "production",
-		QueueName:   "my-queue",
-		CreatedOn:   &now,
+		Name:            "consumer-1",
+		Service:         "svc",
+		ScriptName:      "my-worker",
+		Environment:     "production",
+		QueueName:       "my-queue",
+		CreatedOn:       &now,
 		DeadLetterQueue: "dlq",
 		Settings: cloudflare.QueueConsumerSettings{
 			BatchSize:   5,
@@ -466,4 +471,306 @@ func TestMapQueueConsumerSettingsToSDK(t *testing.T) {
 	if s.MaxWaitTime != 5000 {
 		t.Errorf("expected MaxWaitTime=5000, got %d", s.MaxWaitTime)
 	}
+}
+
+// --- Send / SendBatch (producer surface) ---
+
+// queueProducerMockSetup returns a service backed by a mock server that
+// resolves queue "my-queue" to ID "q-send-123" and records POSTs to the
+// messages API.
+func queueProducerMockSetup(t *testing.T, messagesHandler func(w http.ResponseWriter, r *http.Request)) (*QueueService, *[]byte, *httptest.Server) {
+	t.Helper()
+	var capturedBody []byte
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/accounts/account-test-123/workers/queues/my-queue":
+			queueWriteJSON(w, map[string]interface{}{
+				"success": true,
+				"errors":  []interface{}{},
+				"result": map[string]interface{}{
+					"queue_id":   "q-send-123",
+					"queue_name": "my-queue",
+				},
+			})
+		case r.Method == http.MethodPost && (r.URL.Path == "/accounts/account-test-123/queues/q-send-123/messages" || r.URL.Path == "/accounts/account-test-123/queues/q-send-123/messages/batch"):
+			data, _ := io.ReadAll(r.Body)
+			capturedBody = data
+			messagesHandler(w, r)
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			queueWriteJSON(w, map[string]interface{}{"success": false, "errors": []interface{}{}})
+		}
+	}))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewQueueService(cf, "account-test-123")
+	return svc, &capturedBody, server
+}
+
+func TestQueueServiceSendValidation(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {})
+	defer server.Close()
+
+	_, err := svc.Send(context.Background(), "", QueueMessage{Body: "hi"})
+	if err == nil {
+		t.Error("expected error when queue name is empty")
+	}
+}
+
+func TestQueueServiceSendSuccess(t *testing.T) {
+	svc, body, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result":  map[string]interface{}{"message_id": "m-123"},
+		})
+	})
+	defer server.Close()
+
+	res, err := svc.Send(context.Background(), "my-queue", QueueMessage{
+		Body:         `{"hello":"world"}`,
+		ContentType:  "application/json",
+		DelaySeconds: 5,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !res.Success {
+		t.Error("expected Success=true")
+	}
+	if res.MessageID != "m-123" {
+		t.Errorf("expected MessageID=m-123, got %q", res.MessageID)
+	}
+
+	var sent struct {
+		Body         string `json:"body"`
+		ContentType  string `json:"content_type"`
+		DelaySeconds int    `json:"delay_seconds"`
+	}
+	if err := json.Unmarshal(*body, &sent); err != nil {
+		t.Fatalf("failed to decode sent body: %v", err)
+	}
+	if sent.Body != `{"hello":"world"}` {
+		t.Errorf("body mismatch: %+v", sent)
+	}
+	if sent.ContentType != "application/json" {
+		t.Errorf("content_type mismatch: %+v", sent)
+	}
+	if sent.DelaySeconds != 5 {
+		t.Errorf("delay_seconds mismatch: %+v", sent)
+	}
+}
+
+func TestQueueServiceSendOmitOptionalFields(t *testing.T) {
+	svc, body, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{"success": true, "errors": []interface{}{}})
+	})
+	defer server.Close()
+
+	if _, err := svc.Send(context.Background(), "my-queue", QueueMessage{Body: "plain"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(*body, &raw); err != nil {
+		t.Fatalf("failed to decode sent body: %v", err)
+	}
+	if _, ok := raw["content_type"]; ok {
+		t.Error("content_type should be omitted when empty")
+	}
+	if _, ok := raw["delay_seconds"]; ok {
+		t.Error("delay_seconds should be omitted when zero")
+	}
+}
+
+func TestQueueServiceSendError(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "internal error"}},
+		})
+	})
+	defer server.Close()
+
+	_, err := svc.Send(context.Background(), "my-queue", QueueMessage{Body: "hi"})
+	if err == nil {
+		t.Error("expected error on server failure")
+	}
+}
+
+func TestQueueServiceSendUnknownQueue(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "queue not found"}},
+		})
+	}))
+	defer server.Close()
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	svc, _ := NewQueueService(cf, "account-test-123")
+
+	_, err := svc.Send(context.Background(), "missing-queue", QueueMessage{Body: "hi"})
+	if err == nil {
+		t.Error("expected error when queue does not exist")
+	}
+}
+
+func TestQueueServiceSendOversizedWarning(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{"success": true, "errors": []interface{}{}})
+	})
+	defer server.Close()
+
+	big := strings.Repeat("a", maxQueueMessageBytes)
+	stderr := captureStderr(t)
+	defer stderr.restore()
+
+	res, err := svc.Send(context.Background(), "my-queue", QueueMessage{Body: big})
+	if err != nil {
+		t.Fatalf("oversized message should still be sent (soft warning), got error: %v", err)
+	}
+	if !res.Success {
+		t.Error("expected Success=true despite warning")
+	}
+	out := stderr.output()
+	if !strings.Contains(out, "128,000") {
+		t.Errorf("warning should name the 128,000-byte limit, got: %q", out)
+	}
+	if !strings.Contains(out, fmt.Sprintf("%d", maxQueueMessageBytes+100)) {
+		t.Errorf("warning should name the actual size, got: %q", out)
+	}
+}
+
+func TestQueueServiceSendBatchValidation(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {})
+	defer server.Close()
+
+	_, err := svc.SendBatch(context.Background(), "", []QueueMessage{{Body: "hi"}})
+	if err == nil {
+		t.Error("expected error when queue name is empty")
+	}
+
+	_, err = svc.SendBatch(context.Background(), "my-queue", nil)
+	if err == nil {
+		t.Error("expected error when message list is empty")
+	}
+
+	tooMany := make([]QueueMessage, 101)
+	for i := range tooMany {
+		tooMany[i] = QueueMessage{Body: "m"}
+	}
+	_, err = svc.SendBatch(context.Background(), "my-queue", tooMany)
+	if err == nil {
+		t.Fatal("expected error when batch exceeds 100 messages")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "100") {
+		t.Errorf("error should state the cap: %q", msg)
+	}
+	if !strings.Contains(msg, "split") {
+		t.Errorf("error should explain how to split: %q", msg)
+	}
+}
+
+func TestQueueServiceSendBatchSuccess(t *testing.T) {
+	svc, body, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{"success": true, "errors": []interface{}{}})
+	})
+	defer server.Close()
+
+	msgs := []QueueMessage{
+		{Body: "one"},
+		{Body: "two", ContentType: "text/plain", DelaySeconds: 3},
+	}
+	res, err := svc.SendBatch(context.Background(), "my-queue", msgs)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !res.Success {
+		t.Error("expected Success=true")
+	}
+	if res.Sent != 2 {
+		t.Errorf("expected Sent=2, got %d", res.Sent)
+	}
+
+	var sent struct {
+		Messages []map[string]interface{} `json:"messages"`
+	}
+	if err := json.Unmarshal(*body, &sent); err != nil {
+		t.Fatalf("failed to decode sent body: %v", err)
+	}
+	if len(sent.Messages) != 2 {
+		t.Fatalf("expected 2 messages in payload, got %d", len(sent.Messages))
+	}
+	if sent.Messages[0]["body"] != "one" {
+		t.Errorf("first message mismatch: %+v", sent.Messages[0])
+	}
+	if sent.Messages[1]["content_type"] != "text/plain" {
+		t.Errorf("second message content_type mismatch: %+v", sent.Messages[1])
+	}
+}
+
+func TestQueueServiceSendBatchError(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		queueWriteJSON(w, map[string]interface{}{
+			"success": false,
+			"errors":  []interface{}{map[string]interface{}{"message": "bad request"}},
+		})
+	})
+	defer server.Close()
+
+	_, err := svc.SendBatch(context.Background(), "my-queue", []QueueMessage{{Body: "hi"}})
+	if err == nil {
+		t.Error("expected error on bad request")
+	}
+}
+
+func TestQueueServiceSendBatchOversizedWarning(t *testing.T) {
+	svc, _, server := queueProducerMockSetup(t, func(w http.ResponseWriter, r *http.Request) {
+		queueWriteJSON(w, map[string]interface{}{"success": true, "errors": []interface{}{}})
+	})
+	defer server.Close()
+
+	msgs := []QueueMessage{
+		{Body: "small"},
+		{Body: strings.Repeat("b", maxQueueMessageBytes)},
+	}
+	stderr := captureStderr(t)
+	defer stderr.restore()
+
+	if _, err := svc.SendBatch(context.Background(), "my-queue", msgs); err != nil {
+		t.Fatalf("oversized message should still be sent (soft warning), got error: %v", err)
+	}
+	if out := stderr.output(); !strings.Contains(out, "128,000") {
+		t.Errorf("warning should name the 128,000-byte limit, got: %q", out)
+	}
+}
+
+// captureStderr redirects os.Stderr to a pipe for the duration of a test.
+type stderrCapture struct {
+	old   *os.File
+	read  *os.File
+	write *os.File
+}
+
+func captureStderr(t *testing.T) *stderrCapture {
+	t.Helper()
+	old := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+	return &stderrCapture{old: old, read: r, write: w}
+}
+
+func (c *stderrCapture) restore() {
+	os.Stderr = c.old
+}
+
+func (c *stderrCapture) output() string {
+	c.write.Close()
+	var buf bytes.Buffer
+	buf.ReadFrom(c.read)
+	return buf.String()
 }
