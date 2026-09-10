@@ -1,0 +1,12 @@
+id: FEAT-022
+type: feature
+created_at: 2026-09-11T01:08:11.631673+04:00
+updated_at: 2026-09-11T01:08:11.635297+04:00
+source: local
+ulid: 01M26JCJ7KHRZVFACTCA0FAEC9
+status: open
+title: 'D1 depth: migrations, time-travel restore, backups, export/import'
+description: 'Beyond FEAT-018''s push-sql batcher: d1 migrations create/list/apply (wrangler-parity migration state tracking), d1 time-travel restore (with the 10-restores-per-10-minutes-per-DB quota respected — corpus qwen-results EDGE CASES item 6), d1 backups list/restore, d1 export/import (DB-level, distinct from account-config export). Checklist: corpus section 9 d1 block (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). Today cmd/d1.go ships create/list/get/delete/query only.'
+acceptance_criteria:
+    - criterion: migrations apply tracks applied state and is idempotent;time-travel restore respects the 10/10min quota and reports remaining;export produces a restorable DB dump;import round-trips it
+      met: false
