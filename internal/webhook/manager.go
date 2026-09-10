@@ -313,34 +313,37 @@ func (m *Manager) sendNotification(webhook *Webhook, payload *NotificationPayloa
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	// Create HTTP request
-	req, err := http.NewRequest("POST", webhook.URL, bytes.NewBuffer(data))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "R2Go2-Webhook/1.0")
-	req.Header.Set("X-R2Go2-Event", payload.Event)
-	req.Header.Set("X-R2Go2-Timestamp", payload.Timestamp.Format(time.RFC3339))
-
-	// Add custom headers
-	for key, value := range webhook.Headers {
-		req.Header.Set(key, value)
-	}
-
-	// Add signature if secret is configured
-	if webhook.Secret != "" {
-		signature := m.signPayload(data, webhook.Secret)
-		req.Header.Set("X-R2Go2-Signature", "sha256="+signature)
-	}
-
-	// Send request with retries
+	// Send request with retries. A fresh request is built per attempt:
+	// an http.Request body is single-use, so reusing one request across
+	// retries would send a drained (empty) body on every attempt after
+	// the first.
 	var lastErr error
 	for attempt := 0; attempt <= webhook.RetryCount; attempt++ {
 		if attempt > 0 {
 			time.Sleep(time.Duration(attempt) * time.Second) // Exponential backoff
+		}
+
+		// Create HTTP request
+		req, err := http.NewRequest("POST", webhook.URL, bytes.NewBuffer(data))
+		if err != nil {
+			return fmt.Errorf("failed to create request: %w", err)
+		}
+
+		// Set headers
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", "R2Go2-Webhook/1.0")
+		req.Header.Set("X-R2Go2-Event", payload.Event)
+		req.Header.Set("X-R2Go2-Timestamp", payload.Timestamp.Format(time.RFC3339))
+
+		// Add custom headers
+		for key, value := range webhook.Headers {
+			req.Header.Set(key, value)
+		}
+
+		// Add signature if secret is configured
+		if webhook.Secret != "" {
+			signature := m.signPayload(data, webhook.Secret)
+			req.Header.Set("X-R2Go2-Signature", "sha256="+signature)
 		}
 
 		resp, err := m.httpClient.Do(req)

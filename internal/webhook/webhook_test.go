@@ -17,15 +17,107 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
 
 // ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+// newWebhookTestManager builds a Manager that is private to a single test.
+// Every test constructs its own manager (and its own httptest server) so no
+// case depends on another one's state and the suite is parallel-safe.
+func newWebhookTestManager() *Manager {
+	return NewManager(nil, "acct-123")
+}
+
+// newTestEvent returns a minimal, self-consistent event for the given type.
+func newTestEvent(eventType string) *Event {
+	return &Event{Type: eventType, Timestamp: time.Now().UTC(), Source: "cosmoflare"}
+}
+
+// newTestPayload returns a minimal notification payload used by delivery tests.
+func newTestPayload(event, message string) *NotificationPayload {
+	return &NotificationPayload{
+		Event:     event,
+		Timestamp: time.Now().UTC(),
+		Source:    "cosmoflare",
+		Message:   message,
+	}
+}
+
+// capturedRequest records everything a test server observed. It is safe for
+// concurrent handler goroutines, which matters for fan-out tests.
+type capturedRequest struct {
+	mu     sync.Mutex
+	hits   int
+	method string
+	header http.Header
+	body   []byte
+}
+
+// record stores one incoming request. The body is drained and closed so the
+// connection can be reused for the next attempt.
+func (c *capturedRequest) record(r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	r.Body.Close()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.hits++
+	c.method = r.Method
+	c.header = r.Header
+	c.body = body
+}
+
+// header returns the recorded value of a request header ("" when absent).
+func (c *capturedRequest) headerValue(key string) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.header == nil {
+		return ""
+	}
+	return c.header.Get(key)
+}
+
+// snapshot returns the number of hits plus the last request seen.
+func (c *capturedRequest) snapshot() (hits int, method string, body []byte) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.hits, c.method, c.body
+}
+
+// newCaptureServer starts an httptest server that always replies with status
+// and records every request. The server is closed via t.Cleanup.
+func newCaptureServer(t *testing.T, status int) (*httptest.Server, *capturedRequest) {
+	t.Helper()
+	capt := &capturedRequest{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capt.record(r)
+		w.WriteHeader(status)
+	}))
+	t.Cleanup(srv.Close)
+	return srv, capt
+}
+
+// computeHMAC returns the hex HMAC-SHA256 of payload using secret — the same
+// digest scheme signPayload/ParseWebhookSignature use.
+func computeHMAC(payload []byte, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write(payload)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// ---------------------------------------------------------------------------
 // NewManager
 // ---------------------------------------------------------------------------
 
+// TestNewManager verifies that a freshly constructed Manager is immediately
+// usable: it must ship a default HTTP client and initialized (empty) secret
+// and webhook stores rather than nil maps that would panic on first write.
 func TestNewManager(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil, "acct-123")
 	if m == nil {
 		t.Fatal("NewManager returned nil")
@@ -45,25 +137,44 @@ func TestNewManager(t *testing.T) {
 // CreateWebhook - validation
 // ---------------------------------------------------------------------------
 
-func TestCreateWebhook_EmptyName(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{Name: "", URL: "https://example.com/hook"})
-	if err == nil {
-		t.Fatal("expected error for empty name")
+// TestCreateWebhook_Validation covers every CreateWebhook rejection path in a
+// single table: each case feeds an invalid webhook and asserts creation fails
+// with an error that names the offending field (or URL problem).
+func TestCreateWebhook_Validation(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name     string
+		webhook  *Webhook
+		wantText string // substring the error must contain
+	}{
+		{
+			name:     "empty name",
+			webhook:  &Webhook{Name: "", URL: "https://example.com/hook"},
+			wantText: "name",
+		},
+		{
+			name:     "empty URL",
+			webhook:  &Webhook{Name: "my-hook", URL: ""},
+			wantText: "URL",
+		},
+		{
+			name:     "unparseable URL",
+			webhook:  &Webhook{Name: "bad-url", URL: "://not-a-url"},
+			wantText: "invalid webhook URL",
+		},
 	}
-	if !strings.Contains(err.Error(), "name") {
-		t.Errorf("error should mention 'name', got: %v", err)
-	}
-}
-
-func TestCreateWebhook_EmptyURL(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{Name: "my-hook", URL: ""})
-	if err == nil {
-		t.Fatal("expected error for empty URL")
-	}
-	if !strings.Contains(err.Error(), "URL") {
-		t.Errorf("error should mention 'URL', got: %v", err)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			m := newWebhookTestManager()
+			_, err := m.CreateWebhook(tc.webhook)
+			if err == nil {
+				t.Fatalf("expected error for %s, got nil", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.wantText) {
+				t.Errorf("error should mention %q, got: %v", tc.wantText, err)
+			}
+		})
 	}
 }
 
@@ -71,8 +182,12 @@ func TestCreateWebhook_EmptyURL(t *testing.T) {
 // CreateWebhook - defaults
 // ---------------------------------------------------------------------------
 
+// TestCreateWebhook_SetsDefaults verifies that CreateWebhook fills in every
+// field a caller may omit: server-side ID, audit timestamps, a 30s timeout,
+// 3 retries and a catch-all ["all"] event subscription.
 func TestCreateWebhook_SetsDefaults(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	wh := &Webhook{Name: "test-hook", URL: "https://example.com/hook"}
 	result, err := m.CreateWebhook(wh)
 	if err != nil {
@@ -102,8 +217,11 @@ func TestCreateWebhook_SetsDefaults(t *testing.T) {
 	}
 }
 
+// TestCreateWebhook_PreservesProvided verifies that caller-supplied timeout,
+// retry count and event list are NOT overwritten by the defaults logic.
 func TestCreateWebhook_PreservesProvided(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		Name:       "custom-hook",
 		URL:        "https://example.com/hook",
@@ -131,10 +249,13 @@ func TestCreateWebhook_PreservesProvided(t *testing.T) {
 // SendWebhook - no registered webhooks
 // ---------------------------------------------------------------------------
 
+// TestSendWebhook_NoWebhooks verifies that dispatching an event to a manager
+// with no stored webhooks is a silent no-op (nil error) instead of a failure.
 func TestSendWebhook_NoWebhooks(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	// getWebhooksForEvent returns empty slice, so SendWebhook should return nil
+	t.Parallel()
+	m := newWebhookTestManager()
+	event := newTestEvent("object.created")
+	// getWebhooksForEvent returns an empty slice, so SendWebhook must return nil
 	err := m.SendWebhook("object.created", event)
 	if err != nil {
 		t.Fatalf("expected nil error when no webhooks registered, got: %v", err)
@@ -145,36 +266,44 @@ func TestSendWebhook_NoWebhooks(t *testing.T) {
 // CreateAlert - validation
 // ---------------------------------------------------------------------------
 
-func TestCreateAlert_EmptyName(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateAlert(&Alert{Name: "", Type: AlertTypeThreshold, Metric: "requests"})
-	if err == nil {
-		t.Fatal("expected error for empty name")
+// TestCreateAlert_Validation covers every CreateAlert rejection path in a
+// single table: name, type and metric are all mandatory and the returned error
+// must name the missing field so callers can act on it.
+func TestCreateAlert_Validation(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		alert   *Alert
+		wantErr string // substring the error must contain
+	}{
+		{
+			name:    "empty name",
+			alert:   &Alert{Name: "", Type: AlertTypeThreshold, Metric: "requests"},
+			wantErr: "name",
+		},
+		{
+			name:    "empty type",
+			alert:   &Alert{Name: "my-alert", Type: "", Metric: "requests"},
+			wantErr: "type",
+		},
+		{
+			name:    "empty metric",
+			alert:   &Alert{Name: "my-alert", Type: AlertTypeThreshold, Metric: ""},
+			wantErr: "metric",
+		},
 	}
-	if !strings.Contains(err.Error(), "name") {
-		t.Errorf("error should mention 'name', got: %v", err)
-	}
-}
-
-func TestCreateAlert_EmptyType(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateAlert(&Alert{Name: "my-alert", Type: "", Metric: "requests"})
-	if err == nil {
-		t.Fatal("expected error for empty type")
-	}
-	if !strings.Contains(err.Error(), "type") {
-		t.Errorf("error should mention 'type', got: %v", err)
-	}
-}
-
-func TestCreateAlert_EmptyMetric(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateAlert(&Alert{Name: "my-alert", Type: AlertTypeThreshold, Metric: ""})
-	if err == nil {
-		t.Fatal("expected error for empty metric")
-	}
-	if !strings.Contains(err.Error(), "metric") {
-		t.Errorf("error should mention 'metric', got: %v", err)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			m := newWebhookTestManager()
+			_, err := m.CreateAlert(tc.alert)
+			if err == nil {
+				t.Fatalf("expected error for %s, got nil", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("error should mention %q, got: %v", tc.wantErr, err)
+			}
+		})
 	}
 }
 
@@ -182,8 +311,11 @@ func TestCreateAlert_EmptyMetric(t *testing.T) {
 // CreateAlert - defaults
 // ---------------------------------------------------------------------------
 
+// TestCreateAlert_SetsDefaults verifies that CreateAlert stamps an ID, audit
+// timestamps and a default "1h" evaluation window on a minimal alert.
 func TestCreateAlert_SetsDefaults(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{Name: "cpu-alert", Type: AlertTypeThreshold, Metric: "cpu_usage"}
 	result, err := m.CreateAlert(alert)
 	if err != nil {
@@ -204,8 +336,11 @@ func TestCreateAlert_SetsDefaults(t *testing.T) {
 	}
 }
 
+// TestCreateAlert_PreservesWindow verifies that an explicitly configured
+// window (here "24h") is not replaced by the "1h" default.
 func TestCreateAlert_PreservesWindow(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		Name:   "cpu-alert",
 		Type:   AlertTypeThreshold,
@@ -225,7 +360,12 @@ func TestCreateAlert_PreservesWindow(t *testing.T) {
 // CreateBucketEvent
 // ---------------------------------------------------------------------------
 
+// TestCreateBucketEvent_NilData verifies that CreateBucketEvent builds a
+// usable event from scratch: nil caller data becomes an initialized map, the
+// bucket name lands in both the field and Data, and the event is timestamped
+// and attributed to the cosmoflare source.
 func TestCreateBucketEvent_NilData(t *testing.T) {
+	t.Parallel()
 	event := CreateBucketEvent(EventTypeBucketCreated, "my-bucket", nil)
 	if event.Data == nil {
 		t.Fatal("expected data map to be initialized")
@@ -234,7 +374,7 @@ func TestCreateBucketEvent_NilData(t *testing.T) {
 		t.Errorf("expected bucket 'my-bucket', got: %s", event.Bucket)
 	}
 	if event.Source != "cosmoflare" {
-		t.Errorf("expected source 'r2go2', got: %s", event.Source)
+		t.Errorf("expected source 'cosmoflare', got: %s", event.Source)
 	}
 	if event.Timestamp.IsZero() {
 		t.Error("expected timestamp to be set")
@@ -244,7 +384,10 @@ func TestCreateBucketEvent_NilData(t *testing.T) {
 	}
 }
 
+// TestCreateBucketEvent_ExistingData verifies that caller-supplied Data is
+// preserved (not clobbered) while the bucket key is still injected.
 func TestCreateBucketEvent_ExistingData(t *testing.T) {
+	t.Parallel()
 	existing := map[string]interface{}{"region": "us-east-1", "owner": "team-a"}
 	event := CreateBucketEvent(EventTypeBucketCreated, "my-bucket", existing)
 
@@ -265,7 +408,11 @@ func TestCreateBucketEvent_ExistingData(t *testing.T) {
 // CreateObjectEvent
 // ---------------------------------------------------------------------------
 
+// TestCreateObjectEvent_NilData verifies the from-scratch path of
+// CreateObjectEvent: nil data is initialized, bucket/object fields and Data
+// entries agree, the size is stored as int64 and the event is timestamped.
 func TestCreateObjectEvent_NilData(t *testing.T) {
+	t.Parallel()
 	event := CreateObjectEvent(EventTypeObjectCreated, "my-bucket", "file.txt", 1024, nil)
 	if event.Data == nil {
 		t.Fatal("expected data map to be initialized")
@@ -277,7 +424,7 @@ func TestCreateObjectEvent_NilData(t *testing.T) {
 		t.Errorf("expected object 'file.txt', got: %s", event.Object)
 	}
 	if event.Source != "cosmoflare" {
-		t.Errorf("expected source 'r2go2', got: %s", event.Source)
+		t.Errorf("expected source 'cosmoflare', got: %s", event.Source)
 	}
 	if event.Data["size"] != int64(1024) {
 		t.Errorf("expected data[size]=1024, got: %v", event.Data["size"])
@@ -287,7 +434,10 @@ func TestCreateObjectEvent_NilData(t *testing.T) {
 	}
 }
 
+// TestCreateObjectEvent_WithData verifies that caller-supplied Data survives
+// object-event construction while bucket, object and size are injected.
 func TestCreateObjectEvent_WithData(t *testing.T) {
+	t.Parallel()
 	existing := map[string]interface{}{"content_type": "text/plain"}
 	event := CreateObjectEvent(EventTypeObjectUploaded, "my-bucket", "file.txt", 2048, existing)
 
@@ -309,7 +459,11 @@ func TestCreateObjectEvent_WithData(t *testing.T) {
 // CreateAlertEvent
 // ---------------------------------------------------------------------------
 
+// TestCreateAlertEvent verifies that CreateAlertEvent projects every alert
+// attribute plus the observed value and message into the event payload —
+// receivers must be able to reconstruct the alert from Data alone.
 func TestCreateAlertEvent(t *testing.T) {
+	t.Parallel()
 	alert := &Alert{
 		ID:        "alert-001",
 		Name:      "CPU Alert",
@@ -323,28 +477,27 @@ func TestCreateAlertEvent(t *testing.T) {
 		t.Errorf("expected type %s, got: %s", EventTypeAlertTriggered, event.Type)
 	}
 	if event.Source != "cosmoflare" {
-		t.Errorf("expected source 'r2go2', got: %s", event.Source)
+		t.Errorf("expected source 'cosmoflare', got: %s", event.Source)
 	}
-	if event.Data["alert_id"] != "alert-001" {
-		t.Errorf("expected data[alert_id]='alert-001', got: %v", event.Data["alert_id"])
+
+	// Every projected field is asserted as its own subtest so a regression
+	// names the exact key that was dropped or corrupted.
+	wantData := map[string]interface{}{
+		"alert_id":   "alert-001",
+		"alert_name": "CPU Alert",
+		"alert_type": AlertTypeThreshold,
+		"metric":     "cpu_usage",
+		"threshold":  90.0,
+		"value":      95.5,
+		"message":    "CPU exceeded threshold",
 	}
-	if event.Data["alert_name"] != "CPU Alert" {
-		t.Errorf("expected data[alert_name]='CPU Alert', got: %v", event.Data["alert_name"])
-	}
-	if event.Data["alert_type"] != AlertTypeThreshold {
-		t.Errorf("expected data[alert_type]='threshold', got: %v", event.Data["alert_type"])
-	}
-	if event.Data["metric"] != "cpu_usage" {
-		t.Errorf("expected data[metric]='cpu_usage', got: %v", event.Data["metric"])
-	}
-	if event.Data["threshold"] != 90.0 {
-		t.Errorf("expected data[threshold]=90.0, got: %v", event.Data["threshold"])
-	}
-	if event.Data["value"] != 95.5 {
-		t.Errorf("expected data[value]=95.5, got: %v", event.Data["value"])
-	}
-	if event.Data["message"] != "CPU exceeded threshold" {
-		t.Errorf("expected data[message]='CPU exceeded threshold', got: %v", event.Data["message"])
+	for key, want := range wantData {
+		t.Run("data["+key+"]", func(t *testing.T) {
+			t.Parallel()
+			if got := event.Data[key]; got != want {
+				t.Errorf("expected data[%s]=%v, got: %v", key, want, got)
+			}
+		})
 	}
 }
 
@@ -352,61 +505,116 @@ func TestCreateAlertEvent(t *testing.T) {
 // ParseWebhookSignature
 // ---------------------------------------------------------------------------
 
-func computeHMAC(payload []byte, secret string) string {
-	h := hmac.New(sha256.New, []byte(secret))
-	h.Write(payload)
-	return hex.EncodeToString(h.Sum(nil))
-}
+// TestParseWebhookSignature is the parameterized surface for signature
+// verification. It covers the happy path plus every tampering/replay edge
+// case that a receiver must reject, each as a named subtest.
+func TestParseWebhookSignature(t *testing.T) {
+	t.Parallel()
+	standardPayload := []byte(`{"event":"test","timestamp":"2025-01-01T00:00:00Z"}`)
 
-func TestParseWebhookSignature_InvalidFormat(t *testing.T) {
-	_, err := ParseWebhookSignature([]byte("data"), "invalid-no-prefix", "secret")
-	if err == nil {
-		t.Fatal("expected error for invalid signature format")
+	cases := []struct {
+		name      string
+		payload   []byte
+		signature string
+		secret    string
+		wantOK    bool   // expected verification result when err == nil
+		wantErr   string // non-empty => an error containing this text is required
+	}{
+		{
+			name:      "correct signature verifies",
+			payload:   standardPayload,
+			signature: "sha256=" + computeHMAC(standardPayload, "my-secret-key"),
+			secret:    "my-secret-key",
+			wantOK:    true,
+		},
+		{
+			name:      "signature without sha256 prefix is rejected",
+			payload:   []byte("data"),
+			signature: "invalid-no-prefix",
+			secret:    "secret",
+			wantErr:   "invalid signature format",
+		},
+		{
+			name:      "wrong algorithm prefix is rejected",
+			payload:   []byte("data"),
+			signature: "md5=abc123",
+			secret:    "secret",
+			wantErr:   "invalid signature format",
+		},
+		{
+			name:      "empty signature is rejected",
+			payload:   []byte("data"),
+			signature: "",
+			secret:    "secret",
+			wantOK:    false,
+			wantErr:   "invalid signature format",
+		},
+		{
+			name:      "wrong secret fails verification",
+			payload:   []byte(`{"event":"test"}`),
+			signature: "sha256=" + computeHMAC([]byte(`{"event":"test"}`), "correct-secret"),
+			secret:    "wrong-secret",
+			wantOK:    false,
+		},
+		{
+			name:      "tampered payload fails verification",
+			payload:   []byte(`{"event":"test","value":999}`),
+			signature: "sha256=" + computeHMAC([]byte(`{"event":"test","value":100}`), "my-secret"),
+			secret:    "my-secret",
+			wantOK:    false,
+		},
+		{
+			name:      "replayed signature on modified payload fails",
+			payload:   []byte(`{"event":"payment","amount":10000}`),
+			signature: "sha256=" + computeHMAC([]byte(`{"event":"payment","amount":100}`), "webhook-secret"),
+			secret:    "webhook-secret",
+			wantOK:    false,
+		},
+		{
+			name:      "valid signature with garbage suffix fails",
+			payload:   []byte("data"),
+			signature: "sha256=" + computeHMAC([]byte("data"), "secret") + "abcdef",
+			secret:    "secret",
+			wantOK:    false,
+		},
+		{
+			name:      "empty payload verifies against its own signature",
+			payload:   []byte{},
+			signature: "sha256=" + computeHMAC([]byte{}, "secret"),
+			secret:    "secret",
+			wantOK:    true,
+		},
+		{
+			name:      "empty secret still produces a verifiable signature",
+			payload:   []byte("data"),
+			signature: "sha256=" + computeHMAC([]byte("data"), ""),
+			secret:    "",
+			wantOK:    true,
+		},
 	}
-	if !strings.Contains(err.Error(), "invalid signature format") {
-		t.Errorf("unexpected error message: %v", err)
-	}
-}
-
-func TestParseWebhookSignature_Correct(t *testing.T) {
-	payload := []byte(`{"event":"test","timestamp":"2025-01-01T00:00:00Z"}`)
-	secret := "my-secret-key"
-	sig := "sha256=" + computeHMAC(payload, secret)
-
-	ok, err := ParseWebhookSignature(payload, sig, secret)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Error("expected signature to be valid")
-	}
-}
-
-func TestParseWebhookSignature_WrongSecret(t *testing.T) {
-	payload := []byte(`{"event":"test"}`)
-	sig := "sha256=" + computeHMAC(payload, "correct-secret")
-
-	ok, err := ParseWebhookSignature(payload, sig, "wrong-secret")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("expected signature to be invalid with wrong secret")
-	}
-}
-
-func TestParseWebhookSignature_TamperedPayload(t *testing.T) {
-	original := []byte(`{"event":"test","value":100}`)
-	tampered := []byte(`{"event":"test","value":999}`)
-	secret := "my-secret"
-	sig := "sha256=" + computeHMAC(original, secret)
-
-	ok, err := ParseWebhookSignature(tampered, sig, secret)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("expected signature to be invalid for tampered payload")
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ok, err := ParseWebhookSignature(tc.payload, tc.signature, tc.secret)
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q, got nil", tc.wantErr)
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("unexpected error message: %v", err)
+				}
+				if ok {
+					t.Error("expected ok=false alongside the error")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if ok != tc.wantOK {
+				t.Errorf("verification = %v, want %v", ok, tc.wantOK)
+			}
+		})
 	}
 }
 
@@ -414,22 +622,14 @@ func TestParseWebhookSignature_TamperedPayload(t *testing.T) {
 // TestWebhook - HTTP integration
 // ---------------------------------------------------------------------------
 
+// TestWebhook_SendsPostWithCorrectHeadersAndBody verifies the wire format of
+// the TestWebhook probe: POST, JSON content type, the R2Go2 user agent and
+// event header, and a JSON body carrying event, source and message.
 func TestWebhook_SendsPostWithCorrectHeadersAndBody(t *testing.T) {
-	var receivedMethod, receivedContentType, receivedUserAgent, receivedEvent string
-	var receivedBody []byte
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedMethod = r.Method
-		receivedContentType = r.Header.Get("Content-Type")
-		receivedUserAgent = r.Header.Get("User-Agent")
-		receivedEvent = r.Header.Get("X-R2Go2-Event")
-		receivedBody, _ = io.ReadAll(r.Body)
-		r.Body.Close()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		Name:   "test-hook",
 		URL:    server.URL,
@@ -441,50 +641,53 @@ func TestWebhook_SendsPostWithCorrectHeadersAndBody(t *testing.T) {
 		t.Fatalf("TestWebhook failed: %v", err)
 	}
 
-	if receivedMethod != "POST" {
-		t.Errorf("expected POST, got: %s", receivedMethod)
+	_, method, body := capt.snapshot()
+
+	headers := map[string]string{
+		"Content-Type":  "application/json",
+		"User-Agent":    "R2Go2-Webhook/1.0",
+		"X-R2Go2-Event": "webhook_test",
 	}
-	if receivedContentType != "application/json" {
-		t.Errorf("expected Content-Type application/json, got: %s", receivedContentType)
+	for header, want := range headers {
+		t.Run("header "+header, func(t *testing.T) {
+			t.Parallel()
+			if got := capt.headerValue(header); got != want {
+				t.Errorf("expected %s %q, got: %q", header, want, got)
+			}
+		})
 	}
-	if receivedUserAgent != "R2Go2-Webhook/1.0" {
-		t.Errorf("expected User-Agent R2Go2-Webhook/1.0, got: %s", receivedUserAgent)
-	}
-	if receivedEvent != "webhook_test" {
-		t.Errorf("expected X-R2Go2-Event webhook_test, got: %s", receivedEvent)
+
+	if method != "POST" {
+		t.Errorf("expected POST, got: %s", method)
 	}
 
 	// Verify body is valid JSON with expected fields
 	var payload NotificationPayload
-	if err := json.Unmarshal(receivedBody, &payload); err != nil {
+	if err := json.Unmarshal(body, &payload); err != nil {
 		t.Fatalf("failed to unmarshal body: %v", err)
 	}
 	if payload.Event != "webhook_test" {
 		t.Errorf("expected payload event 'webhook_test', got: %s", payload.Event)
 	}
 	if payload.Source != "cosmoflare" {
-		t.Errorf("expected payload source 'r2go2', got: %s", payload.Source)
+		t.Errorf("expected payload source 'cosmoflare', got: %s", payload.Source)
 	}
 	if payload.Message == "" {
 		t.Error("expected payload message to be set")
 	}
 }
 
+// TestWebhook_SecretAddsSignature verifies that configuring a secret makes
+// the delivery carry an X-R2Go2-Signature header with the sha256= prefix.
 func TestWebhook_SecretAddsSignature(t *testing.T) {
-	var receivedSignature string
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedSignature = r.Header.Get("X-R2Go2-Signature")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	secret := "test-webhook-secret"
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		Name:   "signed-hook",
 		URL:    server.URL,
-		Secret: secret,
+		Secret: "test-webhook-secret",
 	}
 
 	err := m.TestWebhook(wh)
@@ -492,31 +695,24 @@ func TestWebhook_SecretAddsSignature(t *testing.T) {
 		t.Fatalf("TestWebhook failed: %v", err)
 	}
 
+	receivedSignature := capt.headerValue("X-R2Go2-Signature")
 	if receivedSignature == "" {
 		t.Fatal("expected X-R2Go2-Signature header to be set")
 	}
 	if !strings.HasPrefix(receivedSignature, "sha256=") {
 		t.Errorf("expected sha256= prefix, got: %s", receivedSignature)
 	}
-
-	// Verify the signature is correct by parsing it
-	// We need the raw request body to verify, so let's capture it
 }
 
+// TestWebhook_SecretSignatureVerifiable closes the loop: the signature that
+// arrives alongside a signed body must verify with ParseWebhookSignature, so
+// receivers implementing the same scheme accept our deliveries.
 func TestWebhook_SecretSignatureVerifiable(t *testing.T) {
-	var receivedSignature string
-	var receivedBody []byte
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedSignature = r.Header.Get("X-R2Go2-Signature")
-		receivedBody, _ = io.ReadAll(r.Body)
-		r.Body.Close()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
 	secret := "verifiable-secret"
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		Name:   "verify-hook",
 		URL:    server.URL,
@@ -529,7 +725,8 @@ func TestWebhook_SecretSignatureVerifiable(t *testing.T) {
 	}
 
 	// Verify the signature matches the body using ParseWebhookSignature
-	ok, err := ParseWebhookSignature(receivedBody, receivedSignature, secret)
+	_, _, body := capt.snapshot()
+	ok, err := ParseWebhookSignature(body, capt.headerValue("X-R2Go2-Signature"), secret)
 	if err != nil {
 		t.Fatalf("signature parse error: %v", err)
 	}
@@ -542,8 +739,12 @@ func TestWebhook_SecretSignatureVerifiable(t *testing.T) {
 // TriggerAlert
 // ---------------------------------------------------------------------------
 
+// TestTriggerAlert_IncrementsCount verifies the state side of TriggerAlert:
+// the alert's fire counter is incremented and LastTrigger is stamped, even
+// though no webhook is configured.
 func TestTriggerAlert_IncrementsCount(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:        "alert-001",
 		Name:      "CPU Alert",
@@ -567,8 +768,11 @@ func TestTriggerAlert_IncrementsCount(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_MultipleTriggers verifies that repeated triggers keep
+// accumulating the fire counter instead of resetting it.
 func TestTriggerAlert_MultipleTriggers(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:        "alert-002",
 		Name:      "Memory Alert",
@@ -589,8 +793,12 @@ func TestTriggerAlert_MultipleTriggers(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_MissingWebhookIDs_Graceful verifies that referencing
+// webhook IDs that do not exist neither fails nor panics — the alert state
+// must still be updated after the skips.
 func TestTriggerAlert_MissingWebhookIDs_Graceful(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:        "alert-003",
 		Name:      "Disk Alert",
@@ -600,7 +808,7 @@ func TestTriggerAlert_MissingWebhookIDs_Graceful(t *testing.T) {
 		Webhooks:  []string{"wh_nonexistent_1", "wh_nonexistent_2"},
 	}
 
-	// getWebhook always returns error, so this should not panic
+	// getWebhook always returns an error, so this must not panic
 	err := m.TriggerAlert(alert, 97.0, "disk full", map[string]interface{}{"path": "/var"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -619,31 +827,40 @@ func TestTriggerAlert_MissingWebhookIDs_Graceful(t *testing.T) {
 // Event type constants
 // ---------------------------------------------------------------------------
 
+// TestEventTypeConstants pins the wire values of every exported event type.
+// Receivers switch on these strings, so a silent rename would be a breaking
+// protocol change — each constant is asserted as its own subtest.
 func TestEventTypeConstants(t *testing.T) {
-	constants := map[string]string{
-		"BucketCreated":    EventTypeBucketCreated,
-		"BucketDeleted":    EventTypeBucketDeleted,
-		"ObjectCreated":    EventTypeObjectCreated,
-		"ObjectDeleted":    EventTypeObjectDeleted,
-		"ObjectUploaded":   EventTypeObjectUploaded,
-		"ObjectDownloaded": EventTypeObjectDownloaded,
-		"MigrationStart":   EventTypeMigrationStart,
-		"MigrationComplete": EventTypeMigrationComplete,
-		"MigrationFailed":  EventTypeMigrationFailed,
-		"AlertTriggered":   EventTypeAlertTriggered,
-		"HealthCheckFailed": EventTypeHealthCheckFailed,
-		"DomainAttached":   EventTypeDomainAttached,
-		"DomainDetached":   EventTypeDomainDetached,
+	t.Parallel()
+	constants := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{"BucketCreated", EventTypeBucketCreated, "bucket.created"},
+		{"BucketDeleted", EventTypeBucketDeleted, "bucket.deleted"},
+		{"ObjectCreated", EventTypeObjectCreated, "object.created"},
+		{"ObjectDeleted", EventTypeObjectDeleted, "object.deleted"},
+		{"ObjectUploaded", EventTypeObjectUploaded, "object.uploaded"},
+		{"ObjectDownloaded", EventTypeObjectDownloaded, "object.downloaded"},
+		{"MigrationStart", EventTypeMigrationStart, "migration.started"},
+		{"MigrationComplete", EventTypeMigrationComplete, "migration.completed"},
+		{"MigrationFailed", EventTypeMigrationFailed, "migration.failed"},
+		{"AlertTriggered", EventTypeAlertTriggered, "alert.triggered"},
+		{"HealthCheckFailed", EventTypeHealthCheckFailed, "health_check.failed"},
+		{"DomainAttached", EventTypeDomainAttached, "domain.attached"},
+		{"DomainDetached", EventTypeDomainDetached, "domain.detached"},
 	}
-
 	if len(constants) != 13 {
-		t.Errorf("expected 13 event type constants, got %d", len(constants))
+		t.Fatalf("expected 13 event type constants, got %d", len(constants))
 	}
-
-	for name, val := range constants {
-		if val == "" {
-			t.Errorf("constant %s is empty", name)
-		}
+	for _, c := range constants {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.got != c.want {
+				t.Errorf("%s = %q, want %q (wire value changed — this is a breaking change for receivers)", c.name, c.got, c.want)
+			}
+		})
 	}
 }
 
@@ -651,141 +868,117 @@ func TestEventTypeConstants(t *testing.T) {
 // AlertType constants
 // ---------------------------------------------------------------------------
 
+// TestAlertTypeConstants pins the string values of every AlertType so the
+// serialized alert type vocabulary stays stable across releases.
 func TestAlertTypeConstants(t *testing.T) {
-	types := []AlertType{
-		AlertTypeThreshold,
-		AlertTypeTrend,
-		AlertTypeBudget,
-		AlertTypeHealth,
-		AlertTypeCustom,
+	t.Parallel()
+	cases := []struct {
+		got  AlertType
+		want string
+	}{
+		{AlertTypeThreshold, "threshold"},
+		{AlertTypeTrend, "trend"},
+		{AlertTypeBudget, "budget"},
+		{AlertTypeHealth, "health"},
+		{AlertTypeCustom, "custom"},
 	}
-
-	if len(types) != 5 {
-		t.Errorf("expected 5 alert types, got %d", len(types))
-	}
-
-	expected := []string{"threshold", "trend", "budget", "health", "custom"}
-	for i, at := range types {
-		if string(at) != expected[i] {
-			t.Errorf("expected alert type %s, got %s", expected[i], at)
-		}
+	for _, tc := range cases {
+		t.Run(tc.want, func(t *testing.T) {
+			t.Parallel()
+			if string(tc.got) != tc.want {
+				t.Errorf("expected alert type %s, got %s", tc.want, tc.got)
+			}
+		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// SendWebhook - with registered webhooks (tested via sendToWebhook directly)
+// sendToWebhook - direct delivery
 // ---------------------------------------------------------------------------
 
-func TestSendToWebhook_EnabledWebhook(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	wh := &Webhook{
-		ID:         "wh_001",
-		Name:       "test-hook",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
+// TestSendToWebhook is the parameterized surface for the single-webhook
+// delivery path. It documents the contract that sendToWebhook delivers
+// regardless of the Enabled flag (filtering is SendWebhook's job) and that
+// transport/HTTP failures surface as errors.
+func TestSendToWebhook(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name     string
+		url      string // non-empty overrides the test server URL
+		status   int    // HTTP status the test server replies with
+		enabled  bool
+		wantErr  bool
+		wantSent bool
+	}{
+		{
+			name:     "enabled webhook is delivered",
+			status:   http.StatusOK,
+			enabled:  true,
+			wantSent: true,
+		},
+		{
+			// sendToWebhook does not consult Enabled — SendWebhook does.
+			name:     "disabled webhook is still delivered",
+			status:   http.StatusOK,
+			enabled:  false,
+			wantSent: true,
+		},
+		{
+			name:     "plain http URL is accepted",
+			status:   http.StatusOK,
+			enabled:  true,
+			wantSent: true,
+		},
+		{
+			name:     "server error is reported",
+			status:   http.StatusInternalServerError,
+			enabled:  true,
+			wantSent: true,
+			wantErr:  true,
+		},
+		{
+			name:     "malformed URL is reported",
+			url:      "http://[::1]:namedport", // unparseable URL
+			enabled:  true,
+			wantSent: false,
+			wantErr:  true,
+		},
 	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err := m.sendToWebhook(wh, event)
-	if err != nil {
-		t.Fatalf("expected nil error, got: %v", err)
-	}
-}
+			var serverURL string
+			var capt *capturedRequest
+			if tc.url == "" {
+				server, c := newCaptureServer(t, tc.status)
+				serverURL, capt = server.URL, c
+			} else {
+				serverURL = tc.url
+			}
 
-func TestSendToWebhook_DisabledWebhookStillSends(t *testing.T) {
-	// sendToWebhook doesn't check Enabled - that's SendWebhook's job
-	called := false
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+			m := newWebhookTestManager()
+			wh := &Webhook{
+				ID:         "wh_case",
+				Name:       tc.name,
+				URL:        serverURL,
+				Enabled:    tc.enabled,
+				RetryCount: 0,
+				Timeout:    5,
+			}
 
-	m := NewManager(nil, "acct-123")
-	wh := &Webhook{
-		ID:         "wh_disabled",
-		Name:       "disabled-hook",
-		URL:        server.URL,
-		Enabled:    false,
-		RetryCount: 0,
-		Timeout:    5,
-	}
-
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err := m.sendToWebhook(wh, event)
-	if err != nil {
-		t.Fatalf("expected nil error, got: %v", err)
-	}
-	if !called {
-		t.Error("sendToWebhook should send regardless of Enabled flag")
-	}
-}
-
-func TestSendToWebhook_ServerError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	wh := &Webhook{
-		ID:         "wh_err",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	}
-
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err := m.sendToWebhook(wh, event)
-	if err == nil {
-		t.Fatal("expected error for 500 response")
-	}
-}
-
-func TestSendToWebhook_MalformedURL(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	wh := &Webhook{
-		ID:         "wh_bad",
-		URL:        "http://[::1]:namedport", // invalid URL
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    1,
-	}
-
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err := m.sendToWebhook(wh, event)
-	if err == nil {
-		t.Fatal("expected error for malformed URL")
-	}
-}
-
-func TestSendToWebhook_HTTPURLAccepted(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	wh := &Webhook{
-		ID:         "wh_http",
-		URL:        server.URL, // httptest uses http
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	}
-
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err := m.sendToWebhook(wh, event)
-	if err != nil {
-		t.Fatalf("expected nil, got: %v", err)
+			err := m.sendToWebhook(wh, newTestEvent("object.created"))
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("sendToWebhook error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if capt == nil {
+				return // no server: nothing else to observe
+			}
+			hits, _, _ := capt.snapshot()
+			if sent := hits > 0; sent != tc.wantSent {
+				t.Errorf("delivered = %v (hits=%d), want %v", sent, hits, tc.wantSent)
+			}
+		})
 	}
 }
 
@@ -793,21 +986,14 @@ func TestSendToWebhook_HTTPURLAccepted(t *testing.T) {
 // TriggerAlert - notification via sendNotification directly
 // ---------------------------------------------------------------------------
 
+// TestTriggerAlert_WithNotificationDelivery verifies the full wire contract
+// of an alert notification: event header, HMAC signature that verifies
+// against the delivered body, and round-tripped payload fields.
 func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
-	var receivedBody []byte
-	var receivedSignature string
-	var receivedEventHeader string
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedEventHeader = r.Header.Get("X-R2Go2-Event")
-		receivedSignature = r.Header.Get("X-R2Go2-Signature")
-		receivedBody, _ = io.ReadAll(r.Body)
-		r.Body.Close()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:        "alert-100",
 		Name:      "CPU Alert",
@@ -844,18 +1030,20 @@ func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if receivedEventHeader != "alert_triggered" {
-		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", receivedEventHeader)
+	if got := capt.headerValue("X-R2Go2-Event"); got != "alert_triggered" {
+		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", got)
 	}
+	receivedSignature := capt.headerValue("X-R2Go2-Signature")
 	if receivedSignature == "" {
-		t.Error("expected signature header to be set")
+		t.Fatal("expected signature header to be set")
 	}
 	if !strings.HasPrefix(receivedSignature, "sha256=") {
 		t.Errorf("expected sha256= prefix, got: %s", receivedSignature)
 	}
 
 	// Verify signature is valid
-	ok, err := ParseWebhookSignature(receivedBody, receivedSignature, "alert-secret")
+	_, _, body := capt.snapshot()
+	ok, err := ParseWebhookSignature(body, receivedSignature, "alert-secret")
 	if err != nil {
 		t.Fatalf("signature verification error: %v", err)
 	}
@@ -865,7 +1053,7 @@ func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
 
 	// Verify payload contains alert data
 	var decoded NotificationPayload
-	if err := json.Unmarshal(receivedBody, &decoded); err != nil {
+	if err := json.Unmarshal(body, &decoded); err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 	if decoded.Value != 95.0 {
@@ -882,8 +1070,11 @@ func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_DisabledWebhookSkipped verifies that an alert with no
+// reachable webhooks still records its own trigger state.
 func TestTriggerAlert_DisabledWebhookSkipped(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:       "alert-dis",
 		Name:     "Disk Alert",
@@ -902,14 +1093,14 @@ func TestTriggerAlert_DisabledWebhookSkipped(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_ServerFailure verifies that TriggerAlert itself succeeds
+// (and still counts the fire) while a direct delivery to a failing endpoint
+// returns an error — delivery failures must never block alert bookkeeping.
 func TestTriggerAlert_ServerFailure(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte("gateway error"))
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusBadGateway)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:       "alert-fail",
 		Name:     "Net Alert",
@@ -919,13 +1110,8 @@ func TestTriggerAlert_ServerFailure(t *testing.T) {
 	}
 
 	// Manually send failing notification
-	payload := &NotificationPayload{
-		Event:     "alert_triggered",
-		Alert:     alert,
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "high latency",
-	}
+	payload := newTestPayload("alert_triggered", "high latency")
+	payload.Alert = alert
 
 	wh := &Webhook{
 		ID:         "wh_fail",
@@ -949,13 +1135,20 @@ func TestTriggerAlert_ServerFailure(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for failing webhook")
 	}
+	if hits, _, _ := capt.snapshot(); hits != 1 {
+		t.Errorf("expected the failing endpoint to be hit once, got %d hits", hits)
+	}
 }
 
 // ---------------------------------------------------------------------------
 // TriggerAlert - all alert types
 // ---------------------------------------------------------------------------
 
+// TestTriggerAlert_AllAlertTypes verifies that every AlertType can be
+// triggered end-to-end: unknown types must not be special-cased anywhere in
+// the trigger path.
 func TestTriggerAlert_AllAlertTypes(t *testing.T) {
+	t.Parallel()
 	alertTypes := []AlertType{
 		AlertTypeThreshold,
 		AlertTypeTrend,
@@ -966,7 +1159,8 @@ func TestTriggerAlert_AllAlertTypes(t *testing.T) {
 
 	for _, at := range alertTypes {
 		t.Run(string(at), func(t *testing.T) {
-			m := NewManager(nil, "acct-123")
+			t.Parallel()
+			m := newWebhookTestManager()
 			alert := &Alert{
 				ID:        "alert-" + string(at),
 				Name:      string(at) + " alert",
@@ -993,155 +1187,99 @@ func TestTriggerAlert_AllAlertTypes(t *testing.T) {
 // SendWebhook - with webhooks in the store
 // ---------------------------------------------------------------------------
 
-func TestSendWebhook_WithStoreEnabledWebhook(t *testing.T) {
-	var receivedEventHeader string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedEventHeader = r.Header.Get("X-R2Go2-Event")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	// Create and store a webhook that listens for "object.created"
-	wh, err := m.CreateWebhook(&Webhook{
-		Name:       "store-hook",
-		URL:        server.URL,
-		Events:     []string{"object.created"},
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	if err != nil {
-		t.Fatalf("create webhook: %v", err)
+// TestSendWebhook_WithStore is the parameterized fan-out surface for
+// SendWebhook: each subtest stores one webhook, dispatches one event and
+// asserts how many deliveries happened, covering enablement, event matching
+// (including the "all" catch-all) and endpoint failures.
+func TestSendWebhook_WithStore(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name      string
+		status    int      // test server response status
+		events    []string // webhook subscription (nil => default ["all"])
+		enabled   bool
+		sendEvent string // event type passed to SendWebhook
+		wantCalls int
+	}{
+		{
+			name:      "enabled webhook subscribed to the event is called",
+			status:    http.StatusOK,
+			events:    []string{"object.created"},
+			enabled:   true,
+			sendEvent: "object.created",
+			wantCalls: 1,
+		},
+		{
+			name:      "disabled webhook is skipped",
+			status:    http.StatusOK,
+			events:    []string{"object.deleted"},
+			enabled:   false, // disabled
+			sendEvent: "object.deleted",
+			wantCalls: 0,
+		},
+		{
+			// Default events is ["all"] which matches any event type.
+			name:      "default catch-all subscription matches any event",
+			status:    http.StatusOK,
+			events:    nil,
+			enabled:   true,
+			sendEvent: "migration.started",
+			wantCalls: 1,
+		},
+		{
+			name:      "webhook subscribed to another event is skipped",
+			status:    http.StatusOK,
+			events:    []string{"object.created"}, // only matches object.created
+			enabled:   true,
+			sendEvent: "bucket.created",
+			wantCalls: 0,
+		},
+		{
+			// SendWebhook logs delivery errors but still returns nil.
+			// RetryCount 0 is normalized to 3 by CreateWebhook, so a
+			// failing endpoint is attempted 4 times (1 + 3 retries).
+			name:      "endpoint failure still returns nil",
+			status:    http.StatusInternalServerError,
+			events:    []string{"test"},
+			enabled:   true,
+			sendEvent: "test",
+			wantCalls: 4,
+		},
 	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			server, capt := newCaptureServer(t, tc.status)
 
-	event := &Event{Type: "object.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err = m.SendWebhook("object.created", event)
-	if err != nil {
-		t.Fatalf("expected nil, got: %v", err)
-	}
-	if receivedEventHeader != "object.created" {
-		t.Errorf("expected event header 'object.created', got %s", receivedEventHeader)
-	}
-	_ = wh
-}
+			m := newWebhookTestManager()
+			// Create and store a webhook using the scenario's subscription.
+			_, err := m.CreateWebhook(&Webhook{
+				Name:       "store-hook",
+				URL:        server.URL,
+				Events:     tc.events,
+				Enabled:    tc.enabled,
+				RetryCount: 0,
+				Timeout:    5,
+			})
+			if err != nil {
+				t.Fatalf("create webhook: %v", err)
+			}
 
-func TestSendWebhook_WithStoreDisabledWebhook(t *testing.T) {
-	called := false
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{
-		Name:    "disabled-store-hook",
-		URL:     server.URL,
-		Events:  []string{"object.deleted"},
-		Enabled: false, // disabled
-	})
-	if err != nil {
-		t.Fatalf("create webhook: %v", err)
-	}
-
-	event := &Event{Type: "object.deleted", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err = m.SendWebhook("object.deleted", event)
-	if err != nil {
-		t.Fatalf("expected nil, got: %v", err)
-	}
-	if called {
-		t.Error("disabled webhook should not be called")
-	}
-}
-
-func TestSendWebhook_WithStoreAllEvents(t *testing.T) {
-	callCount := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	// Default events is ["all"] which matches any event type
-	_, err := m.CreateWebhook(&Webhook{
-		Name:       "catch-all-hook",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	if err != nil {
-		t.Fatalf("create webhook: %v", err)
-	}
-
-	event := &Event{Type: "migration.started", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err = m.SendWebhook("migration.started", event)
-	if err != nil {
-		t.Fatalf("expected nil, got: %v", err)
-	}
-	if callCount != 1 {
-		t.Errorf("expected catch-all webhook to be called once, got %d", callCount)
-	}
-}
-
-func TestSendWebhook_WithStoreNoMatchingEvent(t *testing.T) {
-	called := false
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{
-		Name:       "specific-hook",
-		URL:        server.URL,
-		Events:     []string{"object.created"}, // only matches object.created
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	if err != nil {
-		t.Fatalf("create webhook: %v", err)
-	}
-
-	// Send a different event type
-	event := &Event{Type: "bucket.created", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	err = m.SendWebhook("bucket.created", event)
-	if err != nil {
-		t.Fatalf("expected nil, got: %v", err)
-	}
-	if called {
-		t.Error("webhook with specific event should not match different event type")
-	}
-}
-
-func TestSendWebhook_WithStoreServerErrorStillReturnsNil(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{
-		Name:       "error-hook",
-		URL:        server.URL,
-		Events:     []string{"test"},
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	if err != nil {
-		t.Fatalf("create webhook: %v", err)
-	}
-
-	event := &Event{Type: "test", Timestamp: time.Now().UTC(), Source: "cosmoflare"}
-	// SendWebhook prints errors but returns nil
-	err = m.SendWebhook("test", event)
-	if err != nil {
-		t.Fatalf("expected nil error even on server failure, got: %v", err)
+			err = m.SendWebhook(tc.sendEvent, newTestEvent(tc.sendEvent))
+			if err != nil {
+				t.Fatalf("expected nil, got: %v", err)
+			}
+			hits, _, _ := capt.snapshot()
+			if hits != tc.wantCalls {
+				t.Errorf("deliveries = %d, want %d", hits, tc.wantCalls)
+			}
+			if tc.wantCalls > 0 {
+				// A delivered notification must carry the event type on the wire.
+				if got := capt.headerValue("X-R2Go2-Event"); got != tc.sendEvent {
+					t.Errorf("expected event header %q, got %q", tc.sendEvent, got)
+				}
+			}
+		})
 	}
 }
 
@@ -1149,21 +1287,14 @@ func TestSendWebhook_WithStoreServerErrorStillReturnsNil(t *testing.T) {
 // TriggerAlert - with webhooks in the store
 // ---------------------------------------------------------------------------
 
+// TestTriggerAlert_WithStoreWorkingWebhook verifies the integrated alert
+// path against a real endpoint: the stored webhook receives a signed,
+// parseable alert_triggered payload carrying value, threshold and message.
 func TestTriggerAlert_WithStoreWorkingWebhook(t *testing.T) {
-	var receivedBody []byte
-	var receivedSignature string
-	var receivedEventHeader string
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedEventHeader = r.Header.Get("X-R2Go2-Event")
-		receivedSignature = r.Header.Get("X-R2Go2-Signature")
-		receivedBody, _ = io.ReadAll(r.Body)
-		r.Body.Close()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh, _ := m.CreateWebhook(&Webhook{
 		Name:       "alert-webhook",
 		URL:        server.URL,
@@ -1187,15 +1318,17 @@ func TestTriggerAlert_WithStoreWorkingWebhook(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if receivedEventHeader != "alert_triggered" {
-		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", receivedEventHeader)
+	if got := capt.headerValue("X-R2Go2-Event"); got != "alert_triggered" {
+		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", got)
 	}
+	receivedSignature := capt.headerValue("X-R2Go2-Signature")
 	if !strings.HasPrefix(receivedSignature, "sha256=") {
 		t.Errorf("expected sha256= prefix, got: %s", receivedSignature)
 	}
 
 	// Verify signature
-	ok, err := ParseWebhookSignature(receivedBody, receivedSignature, "store-secret")
+	_, _, body := capt.snapshot()
+	ok, err := ParseWebhookSignature(body, receivedSignature, "store-secret")
 	if err != nil {
 		t.Fatalf("signature verification error: %v", err)
 	}
@@ -1204,7 +1337,7 @@ func TestTriggerAlert_WithStoreWorkingWebhook(t *testing.T) {
 	}
 
 	var payload NotificationPayload
-	if err := json.Unmarshal(receivedBody, &payload); err != nil {
+	if err := json.Unmarshal(body, &payload); err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 	if payload.Value != 95.0 {
@@ -1218,15 +1351,13 @@ func TestTriggerAlert_WithStoreWorkingWebhook(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_WithStoreDisabledWebhook verifies that a stored but
+// disabled webhook receives nothing while the alert still counts the fire.
 func TestTriggerAlert_WithStoreDisabledWebhook(t *testing.T) {
-	called := false
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh, _ := m.CreateWebhook(&Webhook{
 		Name:    "disabled-alert-hook",
 		URL:     server.URL,
@@ -1247,7 +1378,7 @@ func TestTriggerAlert_WithStoreDisabledWebhook(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if called {
+	if hits, _, _ := capt.snapshot(); hits != 0 {
 		t.Error("disabled webhook should not have been called")
 	}
 	if alert.Count != 1 {
@@ -1255,8 +1386,11 @@ func TestTriggerAlert_WithStoreDisabledWebhook(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_WithStoreNonexistentWebhook verifies that alert fan-out
+// silently skips unknown webhook IDs instead of failing the trigger.
 func TestTriggerAlert_WithStoreNonexistentWebhook(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	alert := &Alert{
 		ID:       "alert-missing",
 		Name:     "Missing Webhook Alert",
@@ -1275,13 +1409,13 @@ func TestTriggerAlert_WithStoreNonexistentWebhook(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_WithStoreServerError verifies that an endpoint returning
+// 5xx does not fail TriggerAlert and does not lose the fire count.
 func TestTriggerAlert_WithStoreServerError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadGateway)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, _ := newCaptureServer(t, http.StatusBadGateway)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh, _ := m.CreateWebhook(&Webhook{
 		Name:       "failing-alert-hook",
 		URL:        server.URL,
@@ -1308,36 +1442,30 @@ func TestTriggerAlert_WithStoreServerError(t *testing.T) {
 	}
 }
 
+// TestTriggerAlert_WithStoreMultipleWebhooks verifies fan-out across a mixed
+// set of targets: only the enabled, existing webhooks are called, missing IDs
+// are skipped, and the alert counts exactly one fire.
 func TestTriggerAlert_WithStoreMultipleWebhooks(t *testing.T) {
-	var callCount int
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	m := NewManager(nil, "acct-123")
-	wh1, _ := m.CreateWebhook(&Webhook{
-		Name:       "multi-hook-1",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	wh2, _ := m.CreateWebhook(&Webhook{
-		Name:       "multi-hook-2",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-	wh3, _ := m.CreateWebhook(&Webhook{
-		Name:       "multi-hook-disabled",
-		URL:        server.URL,
-		Enabled:    false,
-		RetryCount: 0,
-		Timeout:    5,
-	})
+	m := newWebhookTestManager()
+	newHook := func(name string, enabled bool) *Webhook {
+		wh, err := m.CreateWebhook(&Webhook{
+			Name:       name,
+			URL:        server.URL,
+			Enabled:    enabled,
+			RetryCount: 0,
+			Timeout:    5,
+		})
+		if err != nil {
+			t.Fatalf("create webhook %s: %v", name, err)
+		}
+		return wh
+	}
+	wh1 := newHook("multi-hook-1", true)
+	wh2 := newHook("multi-hook-2", true)
+	wh3 := newHook("multi-hook-disabled", false)
 
 	alert := &Alert{
 		ID:       "alert-multi",
@@ -1351,8 +1479,9 @@ func TestTriggerAlert_WithStoreMultipleWebhooks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if callCount != 2 { // only enabled webhooks should be called
-		t.Errorf("expected 2 calls (2 enabled + 1 disabled + 1 missing), got %d", callCount)
+	hits, _, _ := capt.snapshot()
+	if hits != 2 { // only enabled webhooks should be called
+		t.Errorf("expected 2 calls (2 enabled + 1 disabled + 1 missing), got %d", hits)
 	}
 	if alert.Count != 1 {
 		t.Errorf("expected Count=1, got: %d", alert.Count)
@@ -1363,11 +1492,19 @@ func TestTriggerAlert_WithStoreMultipleWebhooks(t *testing.T) {
 // sendNotification - retry behavior
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_RetryOnFailure verifies transient failures are
+// retried: an endpoint that fails twice then succeeds yields success after
+// exactly three attempts.
 func TestSendNotification_RetryOnFailure(t *testing.T) {
+	t.Parallel()
 	attempts := 0
+	var mu sync.Mutex
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
 		attempts++
-		if attempts < 3 {
+		n := attempts
+		mu.Unlock()
+		if n < 3 {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
@@ -1375,7 +1512,7 @@ func TestSendNotification_RetryOnFailure(t *testing.T) {
 	}))
 	defer server.Close()
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_retry",
 		URL:        server.URL,
@@ -1383,29 +1520,26 @@ func TestSendNotification_RetryOnFailure(t *testing.T) {
 		Timeout:    5,
 	}
 
-	payload := &NotificationPayload{
-		Event:     "test.event",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "retry test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("test.event", "retry test"))
 	if err != nil {
 		t.Fatalf("expected success after retries, got: %v", err)
 	}
-	if attempts != 3 {
-		t.Errorf("expected 3 attempts, got: %d", attempts)
+	mu.Lock()
+	got := attempts
+	mu.Unlock()
+	if got != 3 {
+		t.Errorf("expected 3 attempts, got: %d", got)
 	}
 }
 
+// TestSendNotification_ExhaustsRetries verifies that a permanently failing
+// endpoint produces an error that reports the total attempt count
+// (initial attempt + RetryCount).
 func TestSendNotification_ExhaustsRetries(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, _ := newCaptureServer(t, http.StatusInternalServerError)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_exhaust",
 		URL:        server.URL,
@@ -1413,14 +1547,7 @@ func TestSendNotification_ExhaustsRetries(t *testing.T) {
 		Timeout:    5,
 	}
 
-	payload := &NotificationPayload{
-		Event:     "test.fail",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "exhaust test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("test.fail", "exhaust test"))
 	if err == nil {
 		t.Fatal("expected error after exhausting retries")
 	}
@@ -1436,20 +1563,16 @@ func TestSendNotification_ExhaustsRetries(t *testing.T) {
 // sendNotification - custom headers
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_CustomHeaders verifies that per-webhook header
+// configuration is applied verbatim to the outgoing request.
 func TestSendNotification_CustomHeaders(t *testing.T) {
-	var receivedAuth, receivedCustom string
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedAuth = r.Header.Get("Authorization")
-		receivedCustom = r.Header.Get("X-Custom-Header")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
-		ID:    "wh_headers",
-		URL:   server.URL,
+		ID:         "wh_headers",
+		URL:        server.URL,
 		RetryCount: 0,
 		Timeout:    5,
 		Headers: map[string]string{
@@ -1458,22 +1581,17 @@ func TestSendNotification_CustomHeaders(t *testing.T) {
 		},
 	}
 
-	payload := &NotificationPayload{
-		Event:     "headers.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "header test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("headers.test", "header test"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if receivedAuth != "Bearer test-token" {
-		t.Errorf("expected Authorization header, got: %s", receivedAuth)
-	}
-	if receivedCustom != "custom-value" {
-		t.Errorf("expected X-Custom-Header, got: %s", receivedCustom)
+	for header, want := range wh.Headers {
+		t.Run("header "+header, func(t *testing.T) {
+			t.Parallel()
+			if got := capt.headerValue(header); got != want {
+				t.Errorf("expected %s %q, got: %q", header, want, got)
+			}
+		})
 	}
 }
 
@@ -1481,10 +1599,12 @@ func TestSendNotification_CustomHeaders(t *testing.T) {
 // sendNotification - malicious header injection
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_HeaderInjectionSanitization verifies that a header
+// value containing CRLF (a header-splitting injection attempt) never reaches
+// the wire: Go's net/http rejects it and the delivery fails instead.
 func TestSendNotification_HeaderInjectionSanitization(t *testing.T) {
-	// Go's http.Client rejects headers with newlines, causing the request to fail.
-	// This verifies that malformed headers cause an error rather than being sent.
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_inject",
 		URL:        "http://127.0.0.1:1", // any URL - request won't be sent
@@ -1495,14 +1615,7 @@ func TestSendNotification_HeaderInjectionSanitization(t *testing.T) {
 		},
 	}
 
-	payload := &NotificationPayload{
-		Event:     "inject.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "injection test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("inject.test", "injection test"))
 	// Go's http.Client will reject the header with newline - error expected
 	if err == nil {
 		t.Fatal("expected error for header with newline injection")
@@ -1513,16 +1626,21 @@ func TestSendNotification_HeaderInjectionSanitization(t *testing.T) {
 // sendNotification - rate limiting (429 response)
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_RateLimited verifies that a 429 response is treated
+// as a retryable failure and, once retries run out, surfaces as an error
+// after exactly initial + retry attempts.
 func TestSendNotification_RateLimited(t *testing.T) {
-	attempts := 0
+	t.Parallel()
+	var capt capturedRequest
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		attempts++
+		capt.record(r)
+		// A real rate limiter advertises when to retry.
 		w.Header().Set("Retry-After", "1")
 		w.WriteHeader(http.StatusTooManyRequests)
 	}))
-	defer server.Close()
+	t.Cleanup(server.Close)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_429",
 		URL:        server.URL,
@@ -1530,19 +1648,13 @@ func TestSendNotification_RateLimited(t *testing.T) {
 		Timeout:    5,
 	}
 
-	payload := &NotificationPayload{
-		Event:     "rate.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "rate limit test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("rate.test", "rate limit test"))
 	if err == nil {
 		t.Fatal("expected error after rate limiting exhausts retries")
 	}
-	if attempts != 2 { // initial + 1 retry
-		t.Errorf("expected 2 attempts, got: %d", attempts)
+	hits, _, _ := capt.snapshot()
+	if hits != 2 { // initial + 1 retry
+		t.Errorf("expected 2 attempts, got: %d", hits)
 	}
 }
 
@@ -1550,8 +1662,12 @@ func TestSendNotification_RateLimited(t *testing.T) {
 // sendNotification - connection refused (network error)
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_ConnectionRefused verifies that transport-level
+// failures (unreachable endpoint) are retried and eventually reported with
+// the retry-exhaustion error, not a raw net error.
 func TestSendNotification_ConnectionRefused(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_refused",
 		URL:        "http://127.0.0.1:1", // port 1 should refuse
@@ -1559,14 +1675,7 @@ func TestSendNotification_ConnectionRefused(t *testing.T) {
 		Timeout:    1,
 	}
 
-	payload := &NotificationPayload{
-		Event:     "conn.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "connection refused test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("conn.test", "connection refused test"))
 	if err == nil {
 		t.Fatal("expected error for connection refused")
 	}
@@ -1579,146 +1688,59 @@ func TestSendNotification_ConnectionRefused(t *testing.T) {
 // signPayload
 // ---------------------------------------------------------------------------
 
+// TestSignPayload_Consistency verifies the cryptographic contract of
+// signPayload: determinism for identical input, and distinct output whenever
+// the payload or the secret changes.
 func TestSignPayload_Consistency(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	data := []byte(`{"test": "data"}`)
 	secret := "sign-secret"
 
 	sig1 := m.signPayload(data, secret)
-	sig2 := m.signPayload(data, secret)
 
-	if sig1 != sig2 {
-		t.Error("signatures should be deterministic")
-	}
-	if !strings.HasPrefix(sig1, computeHMAC(data, secret)[:10]) {
-		t.Error("signature should match HMAC computation")
-	}
-
-	// Different data should produce different signature
-	sig3 := m.signPayload([]byte(`{"test": "different"}`), secret)
-	if sig1 == sig3 {
-		t.Error("different data should produce different signature")
-	}
-
-	// Different secret should produce different signature
-	sig4 := m.signPayload(data, "different-secret")
-	if sig1 == sig4 {
-		t.Error("different secret should produce different signature")
-	}
-}
-
-// ---------------------------------------------------------------------------
-// ParseWebhookSignature - edge cases
-// ---------------------------------------------------------------------------
-
-func TestParseWebhookSignature_EmptySignature(t *testing.T) {
-	ok, err := ParseWebhookSignature([]byte("data"), "", "secret")
-	if err == nil {
-		t.Fatal("expected error for empty signature")
-	}
-	if ok {
-		t.Error("expected false for empty signature")
-	}
-}
-
-func TestParseWebhookSignature_EmptyPayload(t *testing.T) {
-	secret := "secret"
-	sig := "sha256=" + computeHMAC([]byte{}, secret)
-	ok, err := ParseWebhookSignature([]byte{}, sig, secret)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Error("expected valid signature for empty payload")
-	}
-}
-
-func TestParseWebhookSignature_EmptySecret(t *testing.T) {
-	payload := []byte("data")
-	sig := "sha256=" + computeHMAC(payload, "")
-	ok, err := ParseWebhookSignature(payload, sig, "")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Error("expected valid signature with empty secret")
-	}
-}
-
-func TestParseWebhookSignature_ReplayAttackDifferentPayload(t *testing.T) {
-	original := []byte(`{"event":"payment","amount":100}`)
-	replay := []byte(`{"event":"payment","amount":10000}`)
-	secret := "webhook-secret"
-
-	// Attacker captures valid signature for $100
-	sig := "sha256=" + computeHMAC(original, secret)
-
-	// Attacker replays with modified amount ($10000)
-	ok, err := ParseWebhookSignature(replay, sig, secret)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("replay with tampered payload should be detected")
-	}
-}
-
-func TestParseWebhookSignature_RandomSuffix(t *testing.T) {
-	payload := []byte("data")
-	secret := "secret"
-	validSig := "sha256=" + computeHMAC(payload, secret)
-
-	// Append garbage to valid signature
-	tamperedSig := validSig + "abcdef"
-	ok, err := ParseWebhookSignature(payload, tamperedSig, secret)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("signature with extra suffix should be invalid")
-	}
-}
-
-func TestParseWebhookSignature_WrongPrefix(t *testing.T) {
-	ok, err := ParseWebhookSignature([]byte("data"), "md5=abc123", "secret")
-	if err == nil {
-		t.Fatal("expected error for wrong prefix")
-	}
-	if ok {
-		t.Error("expected false for wrong prefix")
-	}
-}
-
-// ---------------------------------------------------------------------------
-// CreateWebhook - invalid URL
-// ---------------------------------------------------------------------------
-
-func TestCreateWebhook_InvalidURL(t *testing.T) {
-	m := NewManager(nil, "acct-123")
-	_, err := m.CreateWebhook(&Webhook{Name: "bad-url", URL: "://not-a-url"})
-	if err == nil {
-		t.Fatal("expected error for invalid URL")
-	}
-	if !strings.Contains(err.Error(), "invalid webhook URL") {
-		t.Errorf("expected 'invalid webhook URL' error, got: %v", err)
-	}
+	t.Run("deterministic and matches raw HMAC", func(t *testing.T) {
+		t.Parallel()
+		sig2 := m.signPayload(data, secret)
+		if sig1 != sig2 {
+			t.Error("signatures should be deterministic")
+		}
+		if !strings.HasPrefix(sig1, computeHMAC(data, secret)[:10]) {
+			t.Error("signature should match HMAC computation")
+		}
+	})
+	t.Run("different data yields a different signature", func(t *testing.T) {
+		t.Parallel()
+		if sig3 := m.signPayload([]byte(`{"test": "different"}`), secret); sig1 == sig3 {
+			t.Error("different data should produce different signature")
+		}
+	})
+	t.Run("different secret yields a different signature", func(t *testing.T) {
+		t.Parallel()
+		if sig4 := m.signPayload(data, "different-secret"); sig1 == sig4 {
+			t.Error("different secret should produce different signature")
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
 // Webhook struct - JSON serialization
 // ---------------------------------------------------------------------------
 
+// TestWebhook_JSONRoundTrip verifies that every Webhook field survives a
+// marshal/unmarshal cycle, so persisted configurations reload losslessly.
 func TestWebhook_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	wh := &Webhook{
-		ID:        "wh_json",
-		Name:      "json-hook",
-		URL:       "https://example.com/hook",
-		Events:    []string{"object.created", "object.deleted"},
-		Enabled:   true,
-		Secret:    "json-secret",
-		Headers:   map[string]string{"Auth": "Bearer xyz"},
-		CreatedAt: time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC),
-		UpdatedAt: time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC),
+		ID:         "wh_json",
+		Name:       "json-hook",
+		URL:        "https://example.com/hook",
+		Events:     []string{"object.created", "object.deleted"},
+		Enabled:    true,
+		Secret:     "json-secret",
+		Headers:    map[string]string{"Auth": "Bearer xyz"},
+		CreatedAt:  time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC),
+		UpdatedAt:  time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC),
 		RetryCount: 5,
 		Timeout:    60,
 	}
@@ -1750,7 +1772,10 @@ func TestWebhook_JSONRoundTrip(t *testing.T) {
 	}
 }
 
+// TestWebhook_SecretOmittedWhenEmpty verifies the `secret,omitempty` tag: an
+// unset secret must not be serialized into stored/shared JSON documents.
 func TestWebhook_SecretOmittedWhenEmpty(t *testing.T) {
+	t.Parallel()
 	wh := &Webhook{ID: "wh_1", Name: "no-secret", URL: "https://example.com"}
 	data, err := json.Marshal(wh)
 	if err != nil {
@@ -1765,7 +1790,11 @@ func TestWebhook_SecretOmittedWhenEmpty(t *testing.T) {
 // NotificationPayload - JSON serialization
 // ---------------------------------------------------------------------------
 
+// TestNotificationPayload_JSONRoundTrip verifies that a fully populated
+// NotificationPayload (alert, metrics, message, signature) round-trips
+// through JSON without dropping fields.
 func TestNotificationPayload_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	now := time.Now().UTC()
 	payload := &NotificationPayload{
 		Event:     "object.uploaded",
@@ -1809,17 +1838,13 @@ func TestNotificationPayload_JSONRoundTrip(t *testing.T) {
 // sendToWebhook - bucket/object fields in payload
 // ---------------------------------------------------------------------------
 
+// TestSendToWebhook_IncludesBucketAndObject verifies that the event's bucket,
+// object and data map are projected into the delivered JSON payload.
 func TestSendToWebhook_IncludesBucketAndObject(t *testing.T) {
-	var receivedBody []byte
+	t.Parallel()
+	server, capt := newCaptureServer(t, http.StatusOK)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedBody, _ = io.ReadAll(r.Body)
-		r.Body.Close()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_bo",
 		URL:        server.URL,
@@ -1841,8 +1866,9 @@ func TestSendToWebhook_IncludesBucketAndObject(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	_, _, body := capt.snapshot()
 	var payload NotificationPayload
-	if err := json.Unmarshal(receivedBody, &payload); err != nil {
+	if err := json.Unmarshal(body, &payload); err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 	if payload.Bucket != "photos-bucket" {
@@ -1865,13 +1891,14 @@ func TestSendToWebhook_IncludesBucketAndObject(t *testing.T) {
 // sendNotification - error message does not leak credentials
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_ErrorDoesNotLeakCredentials verifies that a delivery
+// error never echoes back the webhook secret or header credentials, which
+// would leak them into logs.
 func TestSendNotification_ErrorDoesNotLeakCredentials(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-	}))
-	defer server.Close()
+	t.Parallel()
+	server, _ := newCaptureServer(t, http.StatusUnauthorized)
 
-	m := NewManager(nil, "acct-123")
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_leak",
 		URL:        server.URL,
@@ -1883,25 +1910,16 @@ func TestSendNotification_ErrorDoesNotLeakCredentials(t *testing.T) {
 		},
 	}
 
-	payload := &NotificationPayload{
-		Event:     "security.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "credential leak test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("security.test", "credential leak test"))
 	if err == nil {
 		t.Fatal("expected error")
 	}
 
 	errMsg := err.Error()
-	// Secret should not appear in error message
-	if strings.Contains(errMsg, "super-secret-token-do-not-leak") {
-		t.Error("error message leaks webhook secret")
-	}
-	if strings.Contains(errMsg, "secret-api-key-12345") {
-		t.Error("error message leaks API key from headers")
+	for _, secret := range []string{wh.Secret, wh.Headers["Authorization"]} {
+		if strings.Contains(errMsg, secret) {
+			t.Errorf("error message leaks credential %q", secret)
+		}
 	}
 }
 
@@ -1909,8 +1927,12 @@ func TestSendNotification_ErrorDoesNotLeakCredentials(t *testing.T) {
 // sendNotification - marshal error (unmarshallable data)
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_MarshalError verifies that an unserializable payload
+// (a channel in Data) fails fast with a marshal error before any HTTP
+// attempt is made.
 func TestSendNotification_MarshalError(t *testing.T) {
-	m := NewManager(nil, "acct-123")
+	t.Parallel()
+	m := newWebhookTestManager()
 	wh := &Webhook{
 		ID:         "wh_marshal",
 		URL:        "http://127.0.0.1:1",
@@ -1919,13 +1941,8 @@ func TestSendNotification_MarshalError(t *testing.T) {
 	}
 
 	// Create payload with unmarshallable data (channel causes JSON marshal error)
-	payload := &NotificationPayload{
-		Event:     "marshal.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "marshal test",
-		Data:      map[string]interface{}{"bad": make(chan int)},
-	}
+	payload := newTestPayload("marshal.test", "marshal test")
+	payload.Data = map[string]interface{}{"bad": make(chan int)}
 
 	err := m.sendNotification(wh, payload)
 	if err == nil {
@@ -1940,7 +1957,10 @@ func TestSendNotification_MarshalError(t *testing.T) {
 // sendNotification - timeout
 // ---------------------------------------------------------------------------
 
+// TestSendNotification_Timeout verifies that a client-side timeout aborts a
+// hanging endpoint instead of blocking until the server responds.
 func TestSendNotification_Timeout(t *testing.T) {
+	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second) // longer than client timeout
 		w.WriteHeader(http.StatusOK)
@@ -1959,14 +1979,7 @@ func TestSendNotification_Timeout(t *testing.T) {
 		Timeout:    1,
 	}
 
-	payload := &NotificationPayload{
-		Event:     "timeout.test",
-		Timestamp: time.Now().UTC(),
-		Source:    "cosmoflare",
-		Message:   "timeout test",
-	}
-
-	err := m.sendNotification(wh, payload)
+	err := m.sendNotification(wh, newTestPayload("timeout.test", "timeout test"))
 	if err == nil {
 		t.Fatal("expected timeout error")
 	}
