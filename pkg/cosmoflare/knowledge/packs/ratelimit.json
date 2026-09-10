@@ -1,1 +1,37 @@
-{}
+{
+  "product": "ratelimit",
+  "scopes": ["/zones/{zone_id}/rulesets*", "/zones/{zone_id}/rate_limits*"],
+  "endpoints": [
+    {"method": "GET", "path": "/zones/{zone_id}/rulesets"},
+    {"method": "GET", "path": "/zones/{zone_id}/rulesets/phases/{phase}/entrypoint"},
+    {"method": "PUT", "path": "/zones/{zone_id}/rulesets/phases/{phase}/entrypoint"},
+    {"method": "GET", "path": "/zones/{zone_id}/rulesets/{ruleset_id}/rules"},
+    {"method": "POST", "path": "/zones/{zone_id}/rulesets/{ruleset_id}/rules"},
+    {"method": "DELETE", "path": "/zones/{zone_id}/rulesets/{ruleset_id}/rules/{rule_id}"},
+    {"method": "POST", "path": "/zones/{zone_id}/rulesets/phases/{phase}/entrypoint/rules", "status": "absent", "note": "returns 10405 'method not allowed for this authentication scheme' — the route does not exist"},
+    {"method": "GET", "path": "/zones/{zone_id}/rate_limits", "status": "deprecated-off", "note": "classic Rate Limiting API is deprecated and disabled"},
+    {"method": "POST", "path": "/zones/{zone_id}/rate_limits", "status": "deprecated-off", "note": "classic Rate Limiting API is deprecated and disabled"}
+  ],
+  "errors": [
+    {"code": 10405, "cause": "route not valid for this authentication scheme — usually: the endpoint does not exist", "fix": "check the route against the registered endpoints; e.g. POST .../entrypoint/rules does not exist — use PUT on the phase entrypoint"},
+    {"code": 1000, "context": "phase-entrypoint", "cause": "phase entrypoint ruleset missing on this zone", "fix": "create it with PUT /zones/{id}/rulesets/phases/{phase}/entrypoint"},
+    {"code": 20155, "cause": "missing cf.colo.id in rate-limit characteristics", "fix": "add 'cf.colo.id' to characteristics — ratelimit counting is processed at colocation level only"},
+    {"code": 10000, "cause": "token missing the required scope for this endpoint", "fix": "for rate-limit rule writes the token needs Zone > Zone WAF > Edit (the permission NAMED 'Rate Limiting' covers the dead classic API)"}
+  ],
+ "plan_caps": [
+    {
+      "plan": "free",
+      "caps": {
+        "max:rules_count": 1,
+        "max:period_seconds": 10,
+        "max:mitigation_timeout_seconds": 10
+      },
+      "sets": {
+        "allow_set:characteristics": ["ip.src", "cf.colo.id"]
+      }
+    }
+  ],
+  "invariants": [
+    {"field": "characteristics", "op": "must_include", "value": "cf.colo.id"}
+  ]
+}

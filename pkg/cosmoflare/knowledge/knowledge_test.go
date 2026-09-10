@@ -38,3 +38,76 @@ func TestNormalizePath(t *testing.T) {
 		}
 	}
 }
+
+func TestRatelimitPackLoadedAndValid(t *testing.T) {
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	var pack *Pack
+	for _, p := range loaded {
+		if p.Product == "ratelimit" {
+			pack = p
+		}
+	}
+	if pack == nil {
+		t.Fatal("ratelimit pack not loaded")
+	}
+	if len(pack.Scopes) == 0 || len(pack.Endpoints) == 0 {
+		t.Fatalf("ratelimit pack must declare scopes and endpoints: %+v", pack)
+	}
+
+	// Scope check: rulesets paths are in scope, everything else is not.
+	if !CheckRoute("GET", "/zones/z1/rulesets").InScope {
+		t.Fatal("rulesets path must be in scope")
+	}
+	if CheckRoute("GET", "/zones/z1/dns_records").InScope {
+		t.Fatal("dns_records path must be out of scope")
+	}
+
+	// The known-nonexistent route blocks pre-send.
+	v := CheckRoute("POST", "/zones/z1/rulesets/phases/http_ratelimit/entrypoint/rules")
+	if !v.Blocked {
+		t.Fatal("POST entrypoint/rules must be blocked (endpoint does not exist)")
+	}
+
+	// The documented routes pass.
+	if v2 := CheckRoute("PUT", "/zones/z1/rulesets/phases/http_ratelimit/entrypoint"); v2.Blocked || v2.Endpoint == nil {
+		t.Fatalf("PUT entrypoint must be registered: %+v", v2)
+	}
+
+	// All four evidence codes decode.
+	for _, code := range []int{10405, 20155, 10000} {
+		if LookupDecode(code, "") == nil {
+			t.Fatalf("code %d must have a global decode", code)
+		}
+	}
+	if LookupDecode(1000, "phase-entrypoint") == nil {
+		t.Fatal("code 1000 must decode under context phase-entrypoint")
+	}
+
+	// Free caps present.
+	found := false
+	for _, c := range pack.PlanCaps {
+		if c.Plan == "free" {
+			found = true
+			if c.Caps["max:period_seconds"] != 10 || c.Caps["max:mitigation_timeout_seconds"] != 10 || c.Caps["max:rules_count"] != 1 {
+				t.Fatalf("free caps wrong: %+v", c)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("free plan caps missing")
+	}
+
+	// The cf.colo.id invariant is present.
+	hasInvariant := false
+	for _, inv := range pack.Invariants {
+		if inv.Field == "characteristics" && inv.Value == "cf.colo.id" {
+			hasInvariant = true
+		}
+	}
+	if !hasInvariant {
+		t.Fatal("cf.colo.id invariant missing")
+	}
+}
