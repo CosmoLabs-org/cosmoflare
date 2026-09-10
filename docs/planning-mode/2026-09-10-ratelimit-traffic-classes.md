@@ -169,7 +169,7 @@ git commit -m "feat(knowledge): traffic-class matrix with evidence sources"
 
 **Interfaces:**
 - Consumes: `knowledge.SkippedTrafficClasses(product string) []TrafficClass` (Task 1).
-- Produces: `func ExpressionPath(expr string) string`; `const VerdictTripped/VerdictNotCounted/VerdictInconclusive`; `type RateLimitProbeResult struct { URL string; Requests int; Statuses map[int]int; Tripped bool; Verdict string; Explanation string }`; `type RateLimitProber struct`; `func NewRateLimitProber(opts ...RateLimitProbeOption) *RateLimitProber`; options `WithProbeHTTPClient(*http.Client)`, `WithProbeTimeout(time.Duration)`, `WithProbeConcurrency(int)`; `func (p *RateLimitProber) Probe(ctx context.Context, rawURL string, requests int) RateLimitProbeResult`; `const MaxProbeRequests = 60`. Unexported pure helpers `classifyProbe(statuses map[int]int, sent, requests int) (verdict, explanation string)` — tests call it directly.
+- Produces: `func ExpressionPath(expr string) string`; `const VerdictTripped/VerdictNotCounted/VerdictInconclusive`; `type RateLimitProbeResult struct { URL string; Requests int; Statuses map[int]int; Tripped bool; Verdict string; Explanation string }`; `type RateLimitProber struct`; `func NewRateLimitProber(opts ...RateLimitProbeOption) *RateLimitProber`; options `WithRateLimitProbeHTTPClient(*http.Client)`, `WithRateLimitProbeTimeout(time.Duration)`, `WithRateLimitProbeConcurrency(int)` — the `WithProbe*` names are already taken by `RedirectProber` in the SAME package (`pkg/cosmoflare/redirectprobe.go`), so the ratelimit prober must use `WithRateLimitProbe*` names; `func (p *RateLimitProber) Probe(ctx context.Context, rawURL string, requests int) RateLimitProbeResult`; `const MaxProbeRequests = 60`. Unexported pure helpers `classifyProbe(statuses map[int]int, sent, requests int) (verdict, explanation string)` — tests call it directly.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -241,6 +241,12 @@ func TestClassifyProbe(t *testing.T) {
 			t.Fatalf("verdict = %q, want tripped", v)
 		}
 	})
+	t.Run("all 404 is inconclusive, not not-counted", func(t *testing.T) {
+		v, _ := classifyProbe(map[int]int{404: 10}, 10, 10)
+		if v != VerdictInconclusive {
+			t.Fatalf("verdict = %q, want inconclusive", v)
+		}
+	})
 }
 
 // TestRateLimitProbeBurst exercises the live prober against httptest
@@ -252,7 +258,7 @@ func TestRateLimitProbeBurst(t *testing.T) {
 			w.WriteHeader(http.StatusTooManyRequests)
 		}))
 		defer srv.Close()
-		res := NewRateLimitProber(WithProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL, 6)
+		res := NewRateLimitProber(WithRateLimitProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL, 6)
 		if !res.Tripped || res.Verdict != VerdictTripped {
 			t.Fatalf("want tripped, got %+v", res)
 		}
@@ -267,7 +273,7 @@ func TestRateLimitProbeBurst(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
-		res := NewRateLimitProber(WithProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL+"/catalog.json", 6)
+		res := NewRateLimitProber(WithRateLimitProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL+"/catalog.json", 6)
 		if res.Verdict != VerdictNotCounted {
 			t.Fatalf("want not-counted, got %+v", res)
 		}
@@ -279,7 +285,7 @@ func TestRateLimitProbeBurst(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 		url := srv.URL
 		srv.Close()
-		res := NewRateLimitProber(WithProbeTimeout(2 * time.Second)).Probe(context.Background(), url, 4)
+		res := NewRateLimitProber(WithRateLimitProbeTimeout(2 * time.Second)).Probe(context.Background(), url, 4)
 		if res.Verdict != VerdictInconclusive {
 			t.Fatalf("want inconclusive, got %+v", res)
 		}
@@ -290,7 +296,7 @@ func TestRateLimitProbeBurst(t *testing.T) {
 			atomic.AddInt64(&n, 1)
 		}))
 		defer srv.Close()
-		res := NewRateLimitProber(WithProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL, 500)
+		res := NewRateLimitProber(WithRateLimitProbeTimeout(5 * time.Second)).Probe(context.Background(), srv.URL, 500)
 		if res.Requests != MaxProbeRequests {
 			t.Fatalf("requests must clamp to %d, got %d", MaxProbeRequests, res.Requests)
 		}
@@ -310,7 +316,7 @@ func TestRateLimitProberDefaults(t *testing.T) {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `go test ./pkg/cosmoflare/ -run 'TestExpressionPath|TestClassifyProbe|TestRateLimitProbe' -v`
-Expected: FAIL — `undefined: ExpressionPath`, `undefined: NewRateLimitProber`.
+Expected: FAIL — `undefined: ExpressionPath`, `undefined: NewRateLimitProber`, `undefined: WithRateLimitProbeTimeout`.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -363,8 +369,14 @@ func classifyProbe(statuses map[int]int, sent, requests int) (verdict, explanati
 		return VerdictTripped, fmt.Sprintf("%d of %d requests were blocked (429/403) — the rule sees this traffic class", blocked, sent)
 	}
 	errs := statuses[-1]
-	if sent+errs < requests || errs > sent {
-		return VerdictInconclusive, fmt.Sprintf("%d of %d requests errored, %d completed — cannot judge; re-run when the target is reachable", errs, requests, sent)
+	ok := 0
+	for status, n := range statuses {
+		if status >= 200 && status < 400 {
+			ok += n
+		}
+	}
+	if sent+errs < requests || errs > sent || ok < sent {
+		return VerdictInconclusive, fmt.Sprintf("%d of %d requests errored, %d completed (non-2xx/3xx responses present) — cannot judge; re-run when the target is reachable", errs, requests, sent)
 	}
 	var skipped []string
 	for _, tc := range knowledge.SkippedTrafficClasses(cfKnowledgeProduct) {
@@ -406,8 +418,8 @@ type RateLimitProber struct {
 // RateLimitProbeOption configures a RateLimitProber.
 type RateLimitProbeOption func(*RateLimitProber)
 
-// WithProbeHTTPClient overrides the probe HTTP client.
-func WithProbeHTTPClient(c *http.Client) RateLimitProbeOption {
+// WithRateLimitProbeHTTPClient overrides the probe HTTP client.
+func WithRateLimitProbeHTTPClient(c *http.Client) RateLimitProbeOption {
 	return func(p *RateLimitProber) {
 		if c != nil {
 			p.httpClient = c
@@ -415,8 +427,8 @@ func WithProbeHTTPClient(c *http.Client) RateLimitProbeOption {
 	}
 }
 
-// WithProbeTimeout sets the per-request budget.
-func WithProbeTimeout(d time.Duration) RateLimitProbeOption {
+// WithRateLimitProbeTimeout sets the per-request budget.
+func WithRateLimitProbeTimeout(d time.Duration) RateLimitProbeOption {
 	return func(p *RateLimitProber) {
 		if d > 0 {
 			p.timeout = d
@@ -424,8 +436,8 @@ func WithProbeTimeout(d time.Duration) RateLimitProbeOption {
 	}
 }
 
-// WithProbeConcurrency caps parallel requests inside one burst.
-func WithProbeConcurrency(n int) RateLimitProbeOption {
+// WithRateLimitProbeConcurrency caps parallel requests inside one burst.
+func WithRateLimitProbeConcurrency(n int) RateLimitProbeOption {
 	return func(p *RateLimitProber) {
 		if n > 0 {
 			p.concurrency = n
@@ -548,7 +560,6 @@ Create `cmd/ratelimit_probe_test.go`:
 package cmd
 
 import (
-	"context"
 	"strings"
 	"testing"
 
@@ -649,7 +660,9 @@ func zoneHostname(ctx context.Context, target, zoneID string) (string, error) {
 }
 
 // probeBurstDefault derives the burst size from the live rule matching the
-// path: 2x its requests_per_period (at least 2).
+// path: 2x its requests_per_period (at least 2). When multiple rules match
+// the path substring, the FIRST match wins (Free plan caps at one rule
+// anyway); zero matches is an error.
 func probeBurstDefault(ctx context.Context, svc *cosmoflare.RateLimitService, zoneID, path string) (int, error) {
 	rules, err := svc.List(ctx, zoneID)
 	if err != nil {
@@ -730,21 +743,29 @@ func init() {
 }
 ```
 
-Then wire the advisory + optional probe into `rateLimitCreateCmd`'s RunE success path (after the existing `fmt.Printf("created ...")` line, before `return nil`):
+Then REPLACE the tail of `rateLimitCreateCmd`'s RunE success path — the existing `if JSONOutput { return printSuccessJSON(...) }` guard, the text `fmt.Printf("created ...")`, and the final `return nil` — with the structure below. **Why a full-tail replacement (review fix, BLOCKER-class):** the current code returns early under `--json`, so anything appended after it is dead in JSON mode (`--probe --json` would silently skip the probe); and a probe-side `os.Exit` before the create output would swallow the create confirmation. Order: create output first (advisory in text mode), probe last, then exit on the probe verdict:
 
 ```go
-		if adv := probeAdvisory(); adv != "" {
-			fmt.Println(adv)
+		if JSONOutput {
+			if err := printSuccessJSON("rate-limiting rule created", rule); err != nil {
+				return err
+			}
+		} else {
+			fmt.Printf("created %s  %s  %d req/%ds block %ds\n",
+				rule.ID, rule.Expression, rule.RequestsPerPeriod, rule.Period, rule.MitigationTimeout)
+			if adv := probeAdvisory(); adv != "" {
+				fmt.Println(adv)
+			}
 		}
 		if probeOnCreate {
 			path := cosmoflare.ExpressionPath(rule.Expression)
 			if path == "" {
-				fmt.Println("probe skipped: expression has no literal path — run `cosmoflare ratelimit probe <zone> --path <p>`")
+				fmt.Fprintln(os.Stderr, "probe skipped: expression has no literal path — run `cosmoflare ratelimit probe <zone> --path <p>`")
 				return nil
 			}
 			host, err := zoneHostname(cmd.Context(), args[0], zoneID)
 			if err != nil {
-				fmt.Printf("probe skipped: %v\n", err)
+				fmt.Fprintf(os.Stderr, "probe skipped: %v\n", err)
 				return nil
 			}
 			burst := rule.RequestsPerPeriod * 2
@@ -756,12 +777,16 @@ Then wire the advisory + optional probe into `rateLimitCreateCmd`'s RunE success
 			}
 			res := cosmoflare.NewRateLimitProber().Probe(cmd.Context(), "https://"+host+path, burst)
 			if JSONOutput {
-				return printJSON(res)
+				if err := printJSON(res); err != nil {
+					return err
+				}
+			} else {
+				fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
+					res.URL, res.Requests, res.Verdict, res.Explanation)
 			}
-			fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
-				res.URL, res.Requests, res.Verdict, res.Explanation)
 			os.Exit(probeExitCode(res.Verdict))
 		}
+		return nil
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -790,6 +815,7 @@ Extend the `## Rate Limiting Command` section (added by FEAT-012) with:
 1. A **Traffic-class matrix** subsection: the four v1 classes with counted/skipped and their evidence sources, and the advisory-when-absent rule.
 2. A `cosmoflare ratelimit probe` subsection: what it sends (burst, cap 60, half cache-busted), the three verdicts with their exit codes (0/2/3), the opt-in safety statement, and `--json` examples.
 3. A note on `ratelimit create --probe` and the always-on pack-driven advisory.
+4. **Pre-existing error fix:** the FEAT-012 Knowledge Layer section documents `cosmoflare knowledge list` — the command is bare `cosmoflare knowledge` (no subcommands). Correct all occurrences in that section while editing.
 
 Match the surrounding heading/bullet style.
 

@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-10T02:06:10.694589+04:00
+last_updated: 2026-09-10T16:52:06.309927+04:00
 next_bug_id: 40
 next_feat_id: 18
 next_task_id: 5
@@ -300,13 +300,15 @@ issues:
       created_at: 2026-09-09T16:39:09.20403+04:00
     - id: FEAT-012
       type: feature
-      status: open
+      status: closed
       title: CosmoFlare should own all Cloudflare API operations — endpoint registry, plan caps, and error decoding so failures are diagnosed before/at call time
+      priority: 70
       created_at: 2026-09-09T16:39:24.727951+04:00
     - id: FEAT-013
       type: feature
       status: open
       title: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees
+      priority: 50
       created_at: 2026-09-09T16:39:40.215741+04:00
     - id: FEAT-014
       type: feature

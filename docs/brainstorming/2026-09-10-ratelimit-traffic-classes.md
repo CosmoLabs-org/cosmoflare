@@ -35,7 +35,7 @@ answers "does this rule see my traffic" at creation time.
 | 1 | Matrix source of truth — docs, probe, or both? | **Docs-derived matrix with evidence links** — the pack encodes CF-documented counted/skipped classes, each entry carries a source URL; probe verdicts reference the matrix as explanation. CF behavior can drift; sources make drift auditable. |
 | 2 | Probe surface? | **Command + flag** — new `cosmoflare ratelimit probe` (standalone, works on existing rules) AND `--probe` on `ratelimit create` (runs immediately after creation). Create without `--probe` prints a one-line suggestion. |
 | 3 | Live-traffic safety? | **Flag = opt-in, capped burst** — explicit invocation is the consent; no extra y/N (agents script this). Burst defaults 2× the rule's `requests_per_period`, hard cap 60, `--requests` clamps to the cap. Half the requests carry a unique `cfprobe` query param (cache-buster) so cached vs origin classes are distinguishable. Never runs on default paths. |
-| 4 | Where the static matrix surfaces? | **Pack-driven create advisory** — `ratelimit create` prints an advisory listing the pack's skipped traffic classes + the probe suggestion, sourced from pack data (new packs get it free); `knowledge list` shows traffic-class counts. |
+| 4 | Where the static matrix surfaces? | **Pack-driven create advisory** — `ratelimit create` prints an advisory listing the pack's skipped traffic classes + the probe suggestion, sourced from pack data (new packs get it free); `cosmoflare knowledge` shows traffic-class counts. |
 
 ## Design
 
@@ -59,10 +59,10 @@ Seed matrix in `packs/ratelimit.json` (v1 entries, each source-linked):
 
 | Class | Counted | Source |
 |-------|---------|--------|
-| `cache-hit-static-asset` | no | CF rate-limiting docs (counting happens pre-cache) + FB-7 evidence |
-| `pages-custom-domain-asset` | no | FB-7 evidence (rule d65876b4…) |
-| `origin-miss` | yes | CF rate-limiting docs |
-| `cache-bypass` | yes | CF rate-limiting docs |
+| `cache-hit-static-asset` | no | https://developers.cloudflare.com/waf/rate-limiting-rules/ (cache is consulted before counting) + FB-7 evidence (rule d65876b4…) |
+| `pages-custom-domain-asset` | no | FB-7 evidence zone e586a1c5 (2026-09-09) |
+| `origin-miss` | yes | https://developers.cloudflare.com/waf/rate-limiting-rules/ |
+| `cache-bypass` | yes | https://developers.cloudflare.com/waf/rate-limiting-rules/ |
 
 ### RateLimitProber (RedirectProber pattern)
 
@@ -79,9 +79,14 @@ type RateLimitProbeResult struct {
 }
 ```
 
-Options: `WithProbeHTTPClient`, `WithProbeTimeout`, `WithProbeConcurrency`.
+Options: `WithRateLimitProbeHTTPClient`, `WithRateLimitProbeTimeout`,
+`WithRateLimitProbeConcurrency` (the `WithProbe*` names are taken by
+`RedirectProber` in the same package).
 `Probe(ctx, url, requests)` sends GETs — even indices plain, odd indices with
-`?cfprobe=<unique>` — records the histogram, classifies. Verdict logic is a
+`?cfprobe=<unique>` — records the status histogram, classifies. The
+cache-buster's purpose: half the burst bypasses cache, so a rule that counts
+only non-cached traffic can still trip — the v1 result records the combined
+status histogram, not a per-class split. Verdict logic is a
 pure extracted function:
 
 ```go
@@ -91,7 +96,9 @@ func classifyProbe(statuses map[int]int, sent int) (verdict, explanation string)
 - any 429 (or block-status) → `tripped`
 - all 2xx/3xx with sent == requested → `not-counted`, explanation composed
   from `SkippedTrafficClasses("ratelimit")`
-- transport errors dominate (or sent == 0) → `inconclusive`
+- anything else — transport errors dominate, partial send, or non-2xx/3xx
+  responses present (e.g. all-404) → `inconclusive` (catch-all: the probe
+  never fabricates a verdict it did not observe)
 
 `expressionPath(expr string) string` — pure helper extracting the path from a
 `path eq "/x"` expression (`""` when it cannot).
@@ -100,15 +107,19 @@ func classifyProbe(statuses map[int]int, sent int) (verdict, explanation string)
 
 - `cosmoflare ratelimit probe <zone-id-or-name> --path <p> [--requests N]` —
   resolves the zone (existing `resolveZoneID`), reads the live rule's
-  `requests_per_period` for the burst default, probes
-  `https://<zone-name><path>`.
+  `requests_per_period` for the burst default (first rule matching the path
+  substring wins; zero matches errors), probes
+  `https://<zone-name><path>`. **This is the feature's "apply path"** —
+  `cosmoflare apply` itself manages workers/dns/kv/r2 only and has no
+  ratelimit surface; `ratelimit create`/`--probe` is where rule application
+  happens.
 - `cosmoflare ratelimit create ... --probe` — after a successful create,
   probes the created rule's expression path.
 - Every successful `create` prints the pack-driven advisory (skipped classes
   + probe suggestion) — data from `SkippedTrafficClasses`, never hardcoded.
 - Exit codes: `0` tripped, `2` not-counted, `3` inconclusive (scriptable,
   agent-readable; documented in --help and USAGE.md).
-- `knowledge list` gains traffic-class counts in its line.
+- `cosmoflare knowledge` gains traffic-class counts in its per-pack line.
 
 ## Error Handling
 
@@ -136,9 +147,10 @@ func classifyProbe(statuses map[int]int, sent int) (verdict, explanation string)
 ## Non-Goals (deferred)
 
 - No automatic probing on any default path (issue constraint: opt-in only).
-- No new traffic-class research beyond the four v1 entries — the Qwen
-  coverage pass (FEAT-011 companion research) may extend the matrix later as
-  pack data.
+- No new traffic-class research beyond the four v1 entries — the pending
+  endpoint-coverage research pack
+  (`docs/research/delegation/2026-09-08-cf-gap-qwen-pack.md`, results not yet
+  arrived) may extend the matrix later as pack data.
 - No probe result persistence/history — results print (and `--json`) only.
 - No changes to `limits.go` (SSOT boundary decision, FEAT-012 brainstorm).
 

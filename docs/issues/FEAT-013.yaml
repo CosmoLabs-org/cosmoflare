@@ -1,16 +1,29 @@
 ---
 id: FEAT-013
-title: 'Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees'
 type: feature
-status: open
+created: "2026-09-09"
+updated: "2026-09-10T16:52:06.307208+04:00"
 priority: 50
-created: 2026-09-09
-updated: 2026-09-09
+status: open
 origin:
-  feedback_id: FB-7
-  from_project: MyCarGuide
-  received: 2026-09-09
-  converted: 2026-09-09
+    feedback_id: FB-7
+    from_project: MyCarGuide
+    received: "2026-09-09"
+    converted: "2026-09-09"
+title: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees
+acceptance_criteria:
+    - criterion: Traffic-class matrix documented (counted vs skipped classes)
+      met: false
+    - criterion: Apply path offers an active trip probe (ratelimit create --probe)
+      met: false
+    - criterion: Burst probe distinguishes 'rule live
+      met: false
+    - criterion: traffic not counted' from 'rule working'
+      met: false
+    - criterion: Probe is opt-in and never runs on default paths
+      met: false
+brainstorm_ref: docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md
+
 ---
 
 # FEAT-013: Zone rate-limiting rules do not appear to count cached static-asset requests (Pages custom domain) — CosmoFlare should encode which traffic classes WAF rate limiting actually sees

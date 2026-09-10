@@ -21,6 +21,8 @@ requires_reading:
 schema_version: 1
 status: PENDING
 title: 'Cosmoflare — FEAT-013: rate-limit traffic classes + trip probe'
+implemented_commits:
+    - {sha: '3c728ba2e9a3', covers: [P-01]}
 ---
 # Cosmoflare — FEAT-013: rate-limit traffic classes + trip probe
 
@@ -41,7 +43,7 @@ FEAT-013 (origin: MyCarGuide feedback FB-7): a rate-limit rule verified `enabled
 
 ## Goals
 
-### [ ] G-01 TrafficClass schema + SkippedTrafficClasses + evidence-linked seed matrix
+### [x] G-01 TrafficClass schema + SkippedTrafficClasses + evidence-linked seed matrix
 Covers P-01. **Model:** glm-turbo. **Files:** `pkg/cosmoflare/knowledge/knowledge.go`, `knowledge_test.go`, `packs/ratelimit.json` (plan Task 1).
 
 ### [ ] G-02 RateLimitProber — ExpressionPath, classifyProbe, bounded burst
