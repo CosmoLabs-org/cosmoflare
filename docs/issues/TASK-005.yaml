@@ -1,0 +1,18 @@
+id: TASK-005
+type: task
+created_at: 2026-09-11T00:59:15.045112+04:00
+updated_at: 2026-09-11T00:59:15.056507+04:00
+source: local
+ulid: 01M26HW67G02139HC1P6C88GN5
+status: open
+title: Consolidate isNotFoundCF and isNotFoundError into one structured detector
+description: |-
+    # Consolidate isNotFoundCF and isNotFoundError into one structured detector
+
+    pkg/cosmoflare now has two not-found detectors: isNotFoundCF (ratelimit.go:209, structured errors.As) and isNotFoundError (cors.go:418, lowercase-message matching that can false-positive). Upgrade cors.go to the structured check and keep one symbol. surfaced by /simplify pass 2026-09-10.
+
+    ## Additional context
+
+    Two near-duplicate not-found detectors exist in pkg/cosmoflare: isNotFoundError (cors.go:418) and isNotFoundCF (ratelimit.go:209). Consolidate into one structured detector (single function, clear name, one error-code table) and migrate both call sites. Bounded refactor: no behavior change beyond identical semantics being enforced in one place. Verify with existing package tests after migration.
+
+    Origin: session-end simplify review (reuse finding 3)
