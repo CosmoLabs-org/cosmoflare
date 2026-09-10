@@ -114,26 +114,26 @@ var rateLimitCreateCmd = &cobra.Command{
 				fmt.Fprintf(os.Stderr, "probe skipped: %v\n", err)
 				return nil
 			}
-			burst := rule.RequestsPerPeriod * 2
-			if burst < 2 {
-				burst = 2
-			}
-			if burst > cosmoflare.MaxProbeRequests {
-				burst = cosmoflare.MaxProbeRequests
-			}
+			burst := cosmoflare.DefaultBurst(*rule)
 			res := cosmoflare.NewRateLimitProber().Probe(cmd.Context(), "https://"+host+path, burst)
-			if JSONOutput {
-				if err := printJSON(res); err != nil {
-					return err
-				}
-			} else {
-				fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
-					res.URL, res.Requests, res.Verdict, res.Explanation)
+			if err := reportProbe(res); err != nil {
+				return err
 			}
 			os.Exit(probeExitCode(res.Verdict))
 		}
 		return nil
 	},
+}
+
+// reportProbe prints one probe result in the active output mode — the
+// single rendering shared by `ratelimit probe` and `create --probe`.
+func reportProbe(res cosmoflare.RateLimitProbeResult) error {
+	if JSONOutput {
+		return printJSON(res)
+	}
+	fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
+		res.URL, res.Requests, res.Verdict, res.Explanation)
+	return nil
 }
 
 var ratelimitExpression string
@@ -191,15 +191,11 @@ func probeExitCode(verdict string) int {
 // probeAdvisory renders the post-create advisory from pack data — never
 // hardcoded. Empty when the pack declares no skipped classes.
 func probeAdvisory() string {
-	skipped := knowledge.SkippedTrafficClasses("ratelimit")
-	if len(skipped) == 0 {
+	classes := knowledge.SkippedClassesSummary(cosmoflare.KnowledgeProductRateLimit)
+	if classes == "" {
 		return ""
 	}
-	classes := make([]string, 0, len(skipped))
-	for _, tc := range skipped {
-		classes = append(classes, tc.Class)
-	}
-	return "note: WAF rate limiting does not count: " + strings.Join(classes, ", ") +
+	return "note: WAF rate limiting does not count: " + classes +
 		" — run `cosmoflare ratelimit probe` to verify this rule sees its traffic"
 }
 
@@ -209,7 +205,7 @@ func zoneHostname(ctx context.Context, target, zoneID string) (string, error) {
 	if strings.Contains(target, ".") {
 		return target, nil
 	}
-	zones, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
+	zones, err := getZoneService()
 	if err != nil {
 		return "", err
 	}
@@ -221,21 +217,17 @@ func zoneHostname(ctx context.Context, target, zoneID string) (string, error) {
 }
 
 // probeBurstDefault derives the burst size from the live rule matching the
-// path: 2x its requests_per_period (at least 2). When multiple rules match
-// the path substring, the FIRST match wins (Free plan caps at one rule
-// anyway); zero matches is an error.
+// path (RuleMatchesPath: literal-path equality first, substring fallback;
+// first match wins — the Free plan caps at one rule anyway). Zero matches
+// is an error.
 func probeBurstDefault(ctx context.Context, svc *cosmoflare.RateLimitService, zoneID, path string) (int, error) {
 	rules, err := svc.List(ctx, zoneID)
 	if err != nil {
 		return 0, err
 	}
 	for _, r := range rules {
-		if strings.Contains(r.Expression, path) {
-			n := r.RequestsPerPeriod * 2
-			if n < 2 {
-				n = 2
-			}
-			return n, nil
+		if cosmoflare.RuleMatchesPath(r, path) {
+			return cosmoflare.DefaultBurst(r), nil
 		}
 	}
 	return 0, fmt.Errorf("no rate-limiting rule matches path %q on this zone — create one first or pass --requests", path)
@@ -285,11 +277,8 @@ explicitly invoked.`,
 			return err
 		}
 		res := cosmoflare.NewRateLimitProber().Probe(cmd.Context(), "https://"+host+probePath, burst)
-		if JSONOutput {
-			printJSON(res)
-		} else {
-			fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
-				res.URL, res.Requests, res.Verdict, res.Explanation)
+		if err := reportProbe(res); err != nil {
+			return err
 		}
 		os.Exit(probeExitCode(res.Verdict))
 		return nil

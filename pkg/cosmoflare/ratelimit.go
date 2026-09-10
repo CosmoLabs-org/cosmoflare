@@ -125,7 +125,7 @@ func (s *RateLimitService) Create(ctx context.Context, in RateLimitCreateInput) 
 		"mitigation_timeout_seconds": in.MitigationTimeout,
 		"characteristics":            in.Characteristics,
 	}
-	if violations := knowledge.ValidatePayload("ratelimit", plan, payload); len(violations) > 0 {
+	if violations := knowledge.ValidatePayload(cfKnowledgeProduct, plan, payload); len(violations) > 0 {
 		msgs := make([]string, 0, len(violations))
 		for _, v := range violations {
 			msgs = append(msgs, v.String())

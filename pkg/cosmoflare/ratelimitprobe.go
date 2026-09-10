@@ -22,8 +22,34 @@ const (
 // caller input (issue constraint: capped, opt-in live traffic).
 const MaxProbeRequests = 60
 
+// KnowledgeProductRateLimit is the knowledge-pack product name for
+// rate-limiting. Single source for every lookup — a pack rename must
+// orphan NO caller silently (advisory-when-absent would hide the break).
+const KnowledgeProductRateLimit = "ratelimit"
+
 // cfKnowledgeProduct is the knowledge pack the prober explains verdicts with.
-const cfKnowledgeProduct = "ratelimit"
+const cfKnowledgeProduct = KnowledgeProductRateLimit
+
+// DefaultBurst derives the probe burst size for one rule: 2x its
+// requests-per-period, at least 2. The hard cap lives inside Probe — this
+// derivation never needs to re-clamp.
+func DefaultBurst(rule RateLimitRule) int {
+	n := rule.RequestsPerPeriod * 2
+	if n < 2 {
+		n = 2
+	}
+	return n
+}
+
+// RuleMatchesPath reports whether a rule targets the given URL path.
+// Literal-path equality (via ExpressionPath) is authoritative; substring
+// containment is the documented fallback for composite expressions.
+func RuleMatchesPath(rule RateLimitRule, path string) bool {
+	if ExpressionPath(rule.Expression) == path {
+		return true
+	}
+	return strings.Contains(rule.Expression, path)
+}
 
 // RateLimitProbeResult is one trip-probe outcome. Statuses maps HTTP status
 // to count; -1 accumulates transport errors.
@@ -53,13 +79,9 @@ func classifyProbe(statuses map[int]int, sent, requests int) (verdict, explanati
 	if sent+errs < requests || errs > sent || ok < sent {
 		return VerdictInconclusive, fmt.Sprintf("%d of %d requests errored, %d completed (non-2xx/3xx responses present) — cannot judge; re-run when the target is reachable", errs, requests, sent)
 	}
-	var skipped []string
-	for _, tc := range knowledge.SkippedTrafficClasses(cfKnowledgeProduct) {
-		skipped = append(skipped, tc.Class)
-	}
 	return VerdictNotCounted, fmt.Sprintf(
 		"all %d requests passed unblocked — the rule is live but this traffic class is likely not counted (documented skipped classes: %s); verify with a cache-busted URL or an origin-only path",
-		sent, strings.Join(skipped, ", "))
+		sent, knowledge.SkippedClassesSummary(cfKnowledgeProduct))
 }
 
 // ExpressionPath extracts the literal path from a `path eq "/x"` or

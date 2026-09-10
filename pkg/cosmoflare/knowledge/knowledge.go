@@ -227,3 +227,19 @@ func SkippedTrafficClasses(product string) []TrafficClass {
 	}
 	return out
 }
+
+// SkippedClassesSummary renders the product's skipped traffic-class names
+// as a comma-separated list — the single canonical rendering consumed by
+// both the probe verdict explanation and the CLI create advisory.
+// Empty string when the product declares no skipped classes.
+func SkippedClassesSummary(product string) string {
+	classes := SkippedTrafficClasses(product)
+	if len(classes) == 0 {
+		return ""
+	}
+	names := make([]string, 0, len(classes))
+	for _, tc := range classes {
+		names = append(names, tc.Class)
+	}
+	return strings.Join(names, ", ")
+}

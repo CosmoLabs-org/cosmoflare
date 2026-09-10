@@ -1,6 +1,10 @@
 package knowledge
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 // Violation is one preflight failure: the field, the rule, and the fix.
 type Violation struct {
@@ -39,7 +43,7 @@ func ValidatePayload(product, plan string, payload map[string]any) []Violation {
 				continue
 			}
 			for key, limit := range cap.Caps {
-				field, ok := strings_CutPrefix(key, "max:")
+				field, ok := strings.CutPrefix(key, "max:")
 				if !ok {
 					continue
 				}
@@ -52,7 +56,7 @@ func ValidatePayload(product, plan string, payload map[string]any) []Violation {
 				}
 			}
 			for key, allowed := range cap.Sets {
-				field, ok := strings_CutPrefix(key, "allow_set:")
+				field, ok := strings.CutPrefix(key, "allow_set:")
 				if !ok {
 					continue
 				}
@@ -61,7 +65,7 @@ func ValidatePayload(product, plan string, payload map[string]any) []Violation {
 					continue
 				}
 				for _, v := range vals {
-					if !contains(allowed, v) {
+					if !slices.Contains(allowed, v) {
 						out = append(out, Violation{
 							Field: field,
 							Rule:  fmt.Sprintf("plan %q allows only %v (got %q)", plan, allowed, v),
@@ -78,7 +82,7 @@ func ValidatePayload(product, plan string, payload map[string]any) []Violation {
 			continue
 		}
 		vals, ok := payload[inv.Field].([]string)
-		if !ok || !contains(vals, inv.Value) {
+		if !ok || !slices.Contains(vals, inv.Value) {
 			out = append(out, Violation{
 				Field: inv.Field,
 				Rule:  fmt.Sprintf("must include %q", inv.Value),
@@ -87,21 +91,4 @@ func ValidatePayload(product, plan string, payload map[string]any) []Violation {
 		}
 	}
 	return out
-}
-
-// strings_CutPrefix avoids importing strings for one helper.
-func strings_CutPrefix(s, prefix string) (string, bool) {
-	if len(s) > len(prefix) && s[:len(prefix)] == prefix {
-		return s[len(prefix):], true
-	}
-	return s, false
-}
-
-func contains(haystack []string, needle string) bool {
-	for _, h := range haystack {
-		if h == needle {
-			return true
-		}
-	}
-	return false
 }

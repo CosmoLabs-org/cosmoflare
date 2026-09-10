@@ -30,6 +30,14 @@ func DecodeCFError(err error, context string) error {
 	if err == nil {
 		return nil
 	}
+	// Idempotent: an already-decoded error passes through unchanged. The
+	// global newError hook decodes context-free; service call sites decode
+	// with context — without this guard a code that has both entries would
+	// double-wrap with two different causes.
+	var existing *KnowledgeError
+	if errors.As(err, &existing) {
+		return err
+	}
 	var cfErr *cloudflare.Error
 	if !errors.As(err, &cfErr) {
 		return err
