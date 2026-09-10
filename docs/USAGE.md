@@ -700,6 +700,35 @@ cosmoflare queue consumers my-queue
 cosmoflare queue consumers my-queue --json
 ```
 
+### Send a message
+```bash
+cosmoflare queue send my-queue --body 'hello world'
+cosmoflare queue send my-queue --body 'hello' --content-type text/plain
+cosmoflare queue send my-queue --body 'hello' --delay-seconds 60
+cosmoflare queue send my-queue --file message.json --content-type application/json
+cosmoflare queue send my-queue --file message.json --json
+```
+`--body` and `--file` are mutually exclusive; exactly one is required. Messages larger than
+128,000 bytes (base-10, including ~100 bytes of internal Queues metadata) print a warning but
+are still sent — the API makes the final call.
+
+### Send a batch of messages
+```bash
+cosmoflare queue send-batch my-queue --file messages.json
+cosmoflare queue send-batch my-queue --file messages.json --json
+```
+`--file` must point to a JSON array of message objects, each with `body` (required),
+`content_type` (optional), and `delay_seconds` (optional, up to 43200). Example `messages.json`:
+```json
+[
+  {"body": "first message"},
+  {"body": "{\"event\":\"signup\"}", "content_type": "application/json"},
+  {"body": "delayed", "delay_seconds": 300}
+]
+```
+Batches are capped at 100 messages per call; larger batches must be split into multiple
+send-batch calls.
+
 ## D1 Commands
 
 D1 database management for Cloudflare's serverless SQL databases.
