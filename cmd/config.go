@@ -493,15 +493,17 @@ func runConfigDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Dry-run stops before the destructive call — it must never delete.
+	if DryRun {
+		printInfo("DRY RUN: Would delete profile '%s'", profileName)
+		return nil
+	}
+
 	if err := configMgr.DeleteProfile(profileName); err != nil {
 		return fmt.Errorf("failed to delete profile: %w", err)
 	}
 
-	if DryRun {
-		printInfo("DRY RUN: Would delete profile '%s'", profileName)
-	} else {
-		printSuccess("Profile '%s' deleted successfully!", profileName)
-	}
+	printSuccess("Profile '%s' deleted successfully!", profileName)
 
 	return nil
 }
