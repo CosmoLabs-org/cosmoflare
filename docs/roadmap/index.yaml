@@ -1,8 +1,15 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-10T16:19:45.493367+04:00
-next_id: 93
+last_updated: 2026-09-11T01:08:56.07756+04:00
+next_id: 94
 items:
+    - id: ROAD-093
+      title: Access / Zero Trust service surface
+      status: captured
+      priority: 58
+      category: security
+      effort: large
+      created_at: 2026-09-11T01:08:56.077121+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed

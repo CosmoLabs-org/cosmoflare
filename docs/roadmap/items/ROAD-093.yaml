@@ -1,0 +1,15 @@
+id: ROAD-093
+created_at: 2026-09-11T01:08:56.077121+04:00
+updated_at: 2026-09-11T01:08:56.080593+04:00
+title: Access / Zero Trust service surface
+description: 'Full Zero Trust coverage: organizations, identity providers (OAuth/SAML/OIDC/SCIM/OTP), groups, applications (self-hosted/SaaS/SSH/RDP), policies (allow/block/bypass/service-auth/MFA/device-posture), service tokens + renew, mTLS certificates, seats, audit logs. Object inventory: corpus section 3B (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). Note: cmd/waf.go ''access'' verb is WAF access rules — Zero Trust Access is entirely uncovered today (verified).'
+status: captured
+priority: 58
+category: security
+effort: large
+refs:
+    - type: doc
+      path: docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md
+origin:
+    session: 51
+ulid: 01M26JDXMGQ3CC1BNVM710TKPP
