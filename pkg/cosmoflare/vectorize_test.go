@@ -3,8 +3,10 @@ package cosmoflare
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/cloudflare/cloudflare-go"
@@ -373,4 +375,215 @@ func jsonContains(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestVectorizeUpsertVectorsValidation(t *testing.T) {
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	svc, _ := NewVectorizeService(cf, "account123")
+
+	t.Run("empty index name", func(t *testing.T) {
+		vectors := []VectorizeVector{{ID: "v1", Values: []float64{0.1, 0.2}}}
+		_, err := svc.UpsertVectors(context.Background(), "", vectors)
+		if err == nil {
+			t.Error("expected error when index name is empty")
+		}
+	})
+
+	t.Run("empty vectors slice", func(t *testing.T) {
+		_, err := svc.UpsertVectors(context.Background(), "test-index", []VectorizeVector{})
+		if err == nil {
+			t.Error("expected error when vectors slice is empty")
+		}
+	})
+
+	t.Run("nil vectors slice", func(t *testing.T) {
+		_, err := svc.UpsertVectors(context.Background(), "test-index", nil)
+		if err == nil {
+			t.Error("expected error when vectors slice is nil")
+		}
+	})
+
+	t.Run("over batch cap", func(t *testing.T) {
+		vectors := make([]VectorizeVector, maxUpsertVectorsBatch+1)
+		for i := range vectors {
+			vectors[i] = VectorizeVector{ID: fmt.Sprintf("v%d", i), Values: []float64{0.1}}
+		}
+		_, err := svc.UpsertVectors(context.Background(), "test-index", vectors)
+		if err == nil {
+			t.Error("expected error when vectors exceed batch cap")
+		}
+	})
+}
+
+func TestVectorizeUpsertVectorsSuccess(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/upsert") {
+			t.Errorf("expected path ending in /upsert, got %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result":  map[string]interface{}{"mutationId": "mut-1", "count": 1},
+		})
+	})
+	defer server.Close()
+
+	result, err := svc.UpsertVectors(context.Background(), "test-index", []VectorizeVector{{ID: "v1", Values: []float64{0.1}}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.MutationID != "mut-1" {
+		t.Errorf("expected mutationId=mut-1, got %s", result.MutationID)
+	}
+}
+
+func TestVectorizeGetVectorValidation(t *testing.T) {
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	svc, _ := NewVectorizeService(cf, "account123")
+
+	t.Run("empty index name", func(t *testing.T) {
+		_, err := svc.GetVector(context.Background(), "", "v1")
+		if err == nil {
+			t.Error("expected error when index name is empty")
+		}
+	})
+
+	t.Run("empty id", func(t *testing.T) {
+		_, err := svc.GetVector(context.Background(), "test-index", "")
+		if err == nil {
+			t.Error("expected error when id is empty")
+		}
+	})
+}
+
+func TestVectorizeGetVectorNotFound(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result":  []map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	_, err := svc.GetVector(context.Background(), "test-index", "missing")
+	if err == nil {
+		t.Fatal("expected error for missing vector")
+	}
+	if !isNotFound(err) {
+		t.Errorf("expected a not-found error, got: %v", err)
+	}
+}
+
+func TestVectorizeGetVectorSuccess(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result": []map[string]interface{}{
+				{"id": "v1", "values": []float64{0.1, 0.2}},
+			},
+		})
+	})
+	defer server.Close()
+
+	v, err := svc.GetVector(context.Background(), "test-index", "v1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v.ID != "v1" {
+		t.Errorf("expected ID=v1, got %s", v.ID)
+	}
+}
+
+func TestVectorizeDeleteVectorsValidation(t *testing.T) {
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	svc, _ := NewVectorizeService(cf, "account123")
+
+	t.Run("empty index name", func(t *testing.T) {
+		_, err := svc.DeleteVectors(context.Background(), "", []string{"v1"})
+		if err == nil {
+			t.Error("expected error when index name is empty")
+		}
+	})
+
+	t.Run("empty ids", func(t *testing.T) {
+		_, err := svc.DeleteVectors(context.Background(), "test-index", nil)
+		if err == nil {
+			t.Error("expected error when ids slice is empty")
+		}
+	})
+}
+
+func TestVectorizeDeleteVectorsSuccess(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/delete_by_ids") {
+			t.Errorf("expected path ending in /delete_by_ids, got %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result":  map[string]interface{}{"mutationId": "mut-2", "count": 2},
+		})
+	})
+	defer server.Close()
+
+	result, err := svc.DeleteVectors(context.Background(), "test-index", []string{"v1", "v2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Count != 2 {
+		t.Errorf("expected count=2, got %d", result.Count)
+	}
+}
+
+func TestVectorizeListNamespacesValidation(t *testing.T) {
+	cf, _ := cloudflare.NewWithAPIToken("test-token")
+	svc, _ := NewVectorizeService(cf, "account123")
+
+	_, err := svc.ListNamespaces(context.Background(), "")
+	if err == nil {
+		t.Error("expected error when index name is empty")
+	}
+}
+
+func TestVectorizeListNamespacesSuccess(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/info") {
+			t.Errorf("expected path ending in /info, got %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result":  map[string]interface{}{"namespaces": []string{"ns-a", "ns-b"}},
+		})
+	})
+	defer server.Close()
+
+	namespaces, err := svc.ListNamespaces(context.Background(), "test-index")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(namespaces) != 2 {
+		t.Fatalf("expected 2 namespaces, got %d", len(namespaces))
+	}
+}
+
+func TestVectorizeListNamespacesEmptyResultIsNonNil(t *testing.T) {
+	svc, server := vectorizeMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"result":  map[string]interface{}{},
+		})
+	})
+	defer server.Close()
+
+	namespaces, err := svc.ListNamespaces(context.Background(), "test-index")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if namespaces == nil {
+		t.Error("expected non-nil empty slice")
+	}
 }

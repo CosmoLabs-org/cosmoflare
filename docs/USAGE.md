@@ -224,6 +224,20 @@ JSON output:
 {"success":true,"message":"Import complete","data":{"successful":3,"failed":0,"total":3}}
 ```
 
+### Get bucket policy
+```bash
+cosmoflare bucket policy get my-bucket
+cosmoflare bucket policy get my-bucket --json
+```
+
+### Set bucket policy
+```bash
+cosmoflare bucket policy set my-bucket --file policy.json
+cosmoflare bucket policy set my-bucket --file policy.json --json
+```
+
+The policy file is validated as well-formed JSON locally before any API call.
+
 ## Object Commands
 
 ### List objects
@@ -1050,6 +1064,37 @@ cosmoflare vectorize query my-index --values=0.1,0.2,0.3 --top-k=10 --json
 ```
 
 Supported metrics: `cosine` (default), `euclidean`, `dot-product`.
+
+### Upsert vectors
+```bash
+cosmoflare vectorize upsert my-index --file vectors.json
+cosmoflare vectorize upsert my-index --file vectors.json --json
+```
+
+JSON array format (not NDJSON): `[{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"label":"example"}}]`.
+Unlike `insert`, `upsert` overwrites vectors that already exist by ID. Batches are capped at 50 vectors per call.
+
+### Get a single vector
+```bash
+cosmoflare vectorize get-vector my-index --id vec-1
+cosmoflare vectorize get-vector my-index --id vec-1 --json
+```
+
+Named `get-vector` (not `get`) to avoid colliding with the existing `vectorize get` command, which fetches index details.
+
+### Delete vectors by ID
+```bash
+cosmoflare vectorize delete-vectors my-index --ids vec-1,vec-2
+cosmoflare vectorize delete-vectors my-index --ids vec-1 --json
+```
+
+Named `delete-vectors` (not `delete`) to avoid colliding with the existing `vectorize delete` command, which deletes the whole index.
+
+### List namespaces
+```bash
+cosmoflare vectorize namespaces my-index
+cosmoflare vectorize namespaces my-index --json
+```
 
 ## CORS Commands
 

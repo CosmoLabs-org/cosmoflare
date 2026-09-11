@@ -221,6 +221,123 @@ func (s *VectorizeService) QueryVectors(ctx context.Context, indexName string, v
 	return result.Matches, nil
 }
 
+// UpsertResult is the response from an UpsertVectors call.
+type UpsertResult struct {
+	MutationID string `json:"mutationId"`
+	Count      int    `json:"count,omitempty"`
+}
+
+// DeleteResult is the response from a DeleteVectors call.
+type DeleteResult struct {
+	MutationID string `json:"mutationId"`
+	Count      int    `json:"count,omitempty"`
+}
+
+// maxUpsertVectorsBatch caps vectors per UpsertVectors call. Cloudflare does
+// not document an explicit upsert batch limit; 50 mirrors the NDJSON insert
+// convention used elsewhere in this service until confirmed otherwise.
+const maxUpsertVectorsBatch = 50
+
+// UpsertVectors inserts or updates vectors in an index, overwriting any
+// vector that already exists with a matching ID.
+func (s *VectorizeService) UpsertVectors(ctx context.Context, indexName string, vectors []VectorizeVector) (*UpsertResult, error) {
+	if indexName == "" {
+		return nil, validationError("VectorizeService.UpsertVectors", "index name is required")
+	}
+	if len(vectors) == 0 {
+		return nil, validationError("VectorizeService.UpsertVectors", "at least one vector is required")
+	}
+	if len(vectors) > maxUpsertVectorsBatch {
+		return nil, validationError("VectorizeService.UpsertVectors", fmt.Sprintf("too many vectors: %d (maximum %d per call)", len(vectors), maxUpsertVectorsBatch))
+	}
+
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	for _, v := range vectors {
+		if err := enc.Encode(v); err != nil {
+			return nil, newError("VectorizeService.UpsertVectors", "failed to encode vector", err)
+		}
+	}
+
+	url := fmt.Sprintf("%s/upsert", s.indexURL(indexName))
+	var result UpsertResult
+	err := s.doRaw(ctx, "POST", url, "application/x-ndjson", &buf, &result)
+	if err != nil {
+		return nil, newError("VectorizeService.UpsertVectors", "failed to upsert vectors", err)
+	}
+	return &result, nil
+}
+
+// GetVector fetches a single vector by ID. A missing vector returns an
+// error satisfying isNotFound.
+func (s *VectorizeService) GetVector(ctx context.Context, indexName, id string) (*VectorizeVector, error) {
+	if indexName == "" {
+		return nil, validationError("VectorizeService.GetVector", "index name is required")
+	}
+	if id == "" {
+		return nil, validationError("VectorizeService.GetVector", "vector id is required")
+	}
+
+	body := map[string]interface{}{"ids": []string{id}}
+	url := fmt.Sprintf("%s/get_by_ids", s.indexURL(indexName))
+	var results []VectorizeVector
+	err := s.doJSON(ctx, "POST", url, body, &results)
+	if err != nil {
+		if isNotFound(err) {
+			return nil, notFound("VectorizeService.GetVector", indexName, id, err)
+		}
+		return nil, newError("VectorizeService.GetVector", fmt.Sprintf("failed to get vector %q", id), err)
+	}
+	if len(results) == 0 {
+		return nil, notFound("VectorizeService.GetVector", indexName, id, nil)
+	}
+	return &results[0], nil
+}
+
+// DeleteVectors deletes vectors from an index by ID.
+func (s *VectorizeService) DeleteVectors(ctx context.Context, indexName string, ids []string) (*DeleteResult, error) {
+	if indexName == "" {
+		return nil, validationError("VectorizeService.DeleteVectors", "index name is required")
+	}
+	if len(ids) == 0 {
+		return nil, validationError("VectorizeService.DeleteVectors", "at least one id is required")
+	}
+
+	body := map[string]interface{}{"ids": ids}
+	url := fmt.Sprintf("%s/delete_by_ids", s.indexURL(indexName))
+	var result DeleteResult
+	err := s.doJSON(ctx, "POST", url, body, &result)
+	if err != nil {
+		return nil, newError("VectorizeService.DeleteVectors", "failed to delete vectors", err)
+	}
+	return &result, nil
+}
+
+// ListNamespaces lists the distinct vector namespaces present in an index.
+// NOTE: Cloudflare's public docs do not enumerate a dedicated namespaces
+// endpoint at the time of writing; this follows the index-info endpoint
+// convention (GET .../indexes/{name}/info) and reads a "namespaces" field
+// from the result. Verify against live docs before relying on this in
+// production; adjust the path/shape if the API differs.
+func (s *VectorizeService) ListNamespaces(ctx context.Context, indexName string) ([]string, error) {
+	if indexName == "" {
+		return nil, validationError("VectorizeService.ListNamespaces", "index name is required")
+	}
+
+	url := fmt.Sprintf("%s/info", s.indexURL(indexName))
+	var result struct {
+		Namespaces []string `json:"namespaces"`
+	}
+	err := s.doJSON(ctx, "GET", url, nil, &result)
+	if err != nil {
+		return nil, newError("VectorizeService.ListNamespaces", fmt.Sprintf("failed to list namespaces for index %q", indexName), err)
+	}
+	if result.Namespaces == nil {
+		result.Namespaces = []string{}
+	}
+	return result.Namespaces, nil
+}
+
 func (s *VectorizeService) indexesURL() string {
 	return fmt.Sprintf("%s/accounts/%s/vectorize/v2/indexes", s.baseURL, s.accountID)
 }
