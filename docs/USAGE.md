@@ -24,6 +24,30 @@ Or pass via flags: `--account-id` and `--api-token`.
 | `--json` | Output in JSON format |
 | `-v, --verbose` | Enable verbose output |
 
+### Rate-limit behavior
+
+Hand-rolled REST services (bucket domains, lifecycle, notifications, and
+similar `pkg/cosmoflare` code paths that go through the shared REST
+client) automatically retry Cloudflare API rate-limit and transient server
+errors:
+
+- **HTTP 429**: always retried — the request was never processed. When the
+  response carries a `Retry-After` header, that exact value is honored
+  (integer seconds or an HTTP-date); otherwise the client falls back to
+  exponential backoff.
+- **HTTP 502/503/504**: retried only for idempotent methods (`GET`, `HEAD`,
+  `PUT`, `DELETE`). `POST` is never retried on a 5xx, since the request may
+  already have been processed.
+- **Backoff**: base 1s, doubling per retry, capped at 30s, with ±25%
+  jitter.
+- **Retries**: up to 3 attempts by default; disable retries entirely by
+  configuring the REST client with zero max retries.
+
+This behavior is internal to the REST transport and applies transparently
+to every service built on it — no flag changes it, and `--json` output is
+unaffected (retries happen silently before a command returns its result or
+final error).
+
 ## Dev Server
 
 Start a local development proxy that routes requests to Cloudflare services through your configured credentials.
