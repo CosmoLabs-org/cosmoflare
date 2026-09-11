@@ -2,12 +2,18 @@
 ulid: 01M26TFKXVCZ40ZJVYC61FFH2H
 title: 'Auth modernization: token retrieval command + device-flow login'
 created: "2026-09-11T03:29:40.283637+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 51
     trigger: 'Qwen docs-references corpus: two 2025-2026 wrangler auth changelogs'
+resolution:
+    reason: superseded
+    date: "2026-09-12T03:01:50.256336+04:00"
+    ref: FEAT-029
 ---
+
+# Auth modernization: token retrieval command + device-flow login
 
 # Auth modernization: token retrieval command + device-flow login
 
