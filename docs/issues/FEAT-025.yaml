@@ -1,7 +1,7 @@
 id: FEAT-025
 type: feature
 created_at: 2026-09-11T01:08:29.344245+04:00
-updated_at: 2026-09-11T01:08:31.41569+04:00
+updated_at: 2026-09-11T18:17:42.388903+04:00
 source: local
 ulid: 01M26JD3H52VY5Z9FFGBNV4YQ6
 status: open
@@ -14,3 +14,7 @@ acceptance_criteria:
       met: false
     - criterion: not N times;--max-retries=0 disables retries deterministically;per-service buckets documented in help;backoff has jitter
       met: false
+delegation:
+    delegated_to: "0126"
+    delegated_at: 2026-09-11T18:17:42.385837+04:00
+    delegated_engine: glm-agent

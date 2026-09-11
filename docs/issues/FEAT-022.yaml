@@ -1,10 +1,10 @@
 id: FEAT-022
 type: feature
 created_at: 2026-09-11T01:08:11.631673+04:00
-updated_at: 2026-09-11T03:29:49.242727+04:00
+updated_at: 2026-09-11T19:08:07.426157+04:00
 source: local
 ulid: 01M26JCJ7KHRZVFACTCA0FAEC9
-status: open
+status: done
 origin:
     roadmap_items:
         - ROAD-091
@@ -14,3 +14,10 @@ description: 'Beyond FEAT-018''s push-sql batcher: d1 migrations create/list/app
 acceptance_criteria:
     - criterion: migrations apply tracks applied state and is idempotent;time-travel restore respects the 10/10min quota and reports remaining;export produces a restorable DB dump;import round-trips it
       met: false
+delegation:
+    delegated_to: "0129"
+    delegated_at: 2026-09-11T18:59:44.292661+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-11"
+      action: closed
