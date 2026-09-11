@@ -134,8 +134,8 @@ func TestVectorizeCmd_LongDescription(t *testing.T) {
 
 func TestVectorizeCmd_SubcommandCount(t *testing.T) {
 	subs := vectorizeCmd.Commands()
-	if len(subs) != 6 {
-		t.Errorf("vectorizeCmd has %d subcommands, want 6 (create, list, get, delete, insert, query)", len(subs))
+	if len(subs) != 10 {
+		t.Errorf("vectorizeCmd has %d subcommands, want 10 (create, list, get, delete, insert, query, upsert, get-vector, delete-vectors, namespaces)", len(subs))
 	}
 }
 
