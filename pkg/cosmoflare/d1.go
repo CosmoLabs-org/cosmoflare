@@ -2,7 +2,10 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -30,10 +33,10 @@ type D1Database struct {
 
 // D1QueryResult represents the result of a D1 SQL query.
 type D1QueryResult struct {
-	Columns []string          `json:"columns"`
-	Rows    []map[string]any  `json:"rows"`
-	Meta    D1QueryMeta       `json:"meta"`
-	Success bool              `json:"success"`
+	Columns []string         `json:"columns"`
+	Rows    []map[string]any `json:"rows"`
+	Meta    D1QueryMeta      `json:"meta"`
+	Success bool             `json:"success"`
 }
 
 // D1QueryMeta contains metadata about a query execution.
@@ -318,6 +321,266 @@ func ContainsDestructiveSQL(sql string) bool {
 	}
 
 	return false
+}
+
+// D1TimeTravelResult represents the outcome of a time-travel restore.
+type D1TimeTravelResult struct {
+	DatabaseID string    `json:"database_id"`
+	Timestamp  time.Time `json:"timestamp"`
+	Success    bool      `json:"success"`
+}
+
+// D1TimeTravelQuota represents the current time-travel restore quota usage
+// for a database within the rolling window.
+type D1TimeTravelQuota struct {
+	Used           int       `json:"used"`
+	Limit          int       `json:"limit"`
+	WindowResetsAt time.Time `json:"window_resets_at"`
+}
+
+// timeTravelCacheFile is the path (relative to the current working
+// directory) of the local time-travel restore quota cache. It is never
+// written under $HOME.
+const timeTravelCacheFile = ".cosmoflare-time-travel-cache.json"
+
+// timeTravelWindow is the rolling window Cloudflare enforces for D1
+// time-travel restores.
+const timeTravelWindow = 10 * time.Minute
+
+// timeTravelLimit is the maximum number of restores allowed per database
+// within timeTravelWindow.
+const timeTravelLimit = 10
+
+// timeTravelCacheEntry records a single restore for quota tracking.
+type timeTravelCacheEntry struct {
+	Timestamp  time.Time `json:"timestamp"`
+	RestoredAt time.Time `json:"restored_at"`
+}
+
+// timeTravelCache maps a database ID to its recorded restores.
+type timeTravelCache map[string][]timeTravelCacheEntry
+
+// loadTimeTravelCache reads the local quota cache file. A missing file is
+// treated as an empty cache, not an error.
+func loadTimeTravelCache() (timeTravelCache, error) {
+	data, err := os.ReadFile(timeTravelCacheFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return timeTravelCache{}, nil
+		}
+		return nil, err
+	}
+	cache := timeTravelCache{}
+	if len(data) == 0 {
+		return cache, nil
+	}
+	if err := json.Unmarshal(data, &cache); err != nil {
+		return nil, err
+	}
+	if cache == nil {
+		cache = timeTravelCache{}
+	}
+	return cache, nil
+}
+
+// saveTimeTravelCache writes the quota cache file to the current working
+// directory.
+func saveTimeTravelCache(cache timeTravelCache) error {
+	data, err := json.MarshalIndent(cache, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(timeTravelCacheFile, data, 0o644)
+}
+
+// timeTravelWindowEntries returns the entries from entries that fall
+// within timeTravelWindow of now.
+func timeTravelWindowEntries(entries []timeTravelCacheEntry, now time.Time) []timeTravelCacheEntry {
+	var kept []timeTravelCacheEntry
+	for _, e := range entries {
+		if now.Sub(e.RestoredAt) < timeTravelWindow {
+			kept = append(kept, e)
+		}
+	}
+	return kept
+}
+
+// TimeTravelQuotaCheck reports the current time-travel restore quota usage
+// for databaseID within the rolling 10-minute window.
+func (s *D1Service) TimeTravelQuotaCheck(databaseID string) (*D1TimeTravelQuota, error) {
+	if databaseID == "" {
+		return nil, validationError("D1Service.TimeTravelQuotaCheck", "database ID is required")
+	}
+
+	cache, err := loadTimeTravelCache()
+	if err != nil {
+		return nil, newError("D1Service.TimeTravelQuotaCheck", "failed to read time-travel quota cache", err)
+	}
+
+	now := time.Now().UTC()
+	entries := timeTravelWindowEntries(cache[databaseID], now)
+
+	quota := &D1TimeTravelQuota{
+		Used:           len(entries),
+		Limit:          timeTravelLimit,
+		WindowResetsAt: now,
+	}
+	if len(entries) > 0 {
+		oldest := entries[0].RestoredAt
+		for _, e := range entries[1:] {
+			if e.RestoredAt.Before(oldest) {
+				oldest = e.RestoredAt
+			}
+		}
+		quota.WindowResetsAt = oldest.Add(timeTravelWindow)
+	}
+	return quota, nil
+}
+
+// recordTimeTravelRestore appends a restore entry to the local quota
+// cache for databaseID.
+func (s *D1Service) recordTimeTravelRestore(databaseID string, timestamp, restoredAt time.Time) error {
+	cache, err := loadTimeTravelCache()
+	if err != nil {
+		return newError("D1Service.TimeTravelRestore", "failed to read time-travel quota cache", err)
+	}
+
+	entries := timeTravelWindowEntries(cache[databaseID], restoredAt)
+	entries = append(entries, timeTravelCacheEntry{Timestamp: timestamp, RestoredAt: restoredAt})
+	cache[databaseID] = entries
+
+	if err := saveTimeTravelCache(cache); err != nil {
+		return newError("D1Service.TimeTravelRestore", "failed to write time-travel quota cache", err)
+	}
+	return nil
+}
+
+// TimeTravelRestore restores databaseID to the state it had at timestamp.
+// It performs a quota pre-flight check and refuses to call the API when
+// the rolling 10-restore/10-minute window is exhausted.
+//
+// The restore is a two-step Cloudflare flow: resolve timestamp to a
+// bookmark via the time_travel/bookmark endpoint, then restore the
+// database to that bookmark.
+func (s *D1Service) TimeTravelRestore(ctx context.Context, databaseID string, timestamp time.Time) (*D1TimeTravelResult, error) {
+	if databaseID == "" {
+		return nil, validationError("D1Service.TimeTravelRestore", "database ID is required")
+	}
+	if timestamp.IsZero() {
+		return nil, validationError("D1Service.TimeTravelRestore", "timestamp is required")
+	}
+
+	quota, err := s.TimeTravelQuotaCheck(databaseID)
+	if err != nil {
+		return nil, err
+	}
+	if quota.Used >= quota.Limit {
+		return nil, quotaError("D1Service.TimeTravelRestore", fmt.Sprintf("time-travel restore quota exceeded (%d/%d), resets at %s", quota.Used, quota.Limit, quota.WindowResetsAt.Format(time.RFC3339)), nil)
+	}
+
+	bookmarkURI := fmt.Sprintf("/accounts/%s/d1/database/%s/time_travel/bookmark?timestamp=%s", s.accountID, databaseID, timestamp.UTC().Format(time.RFC3339))
+	bookmarkResp, err := s.cf.Raw(ctx, http.MethodGet, bookmarkURI, nil, nil)
+	if err != nil {
+		return nil, newError("D1Service.TimeTravelRestore", "failed to resolve time-travel bookmark", err)
+	}
+
+	var bookmarkResult struct {
+		Bookmark string `json:"bookmark"`
+	}
+	if err := json.Unmarshal(bookmarkResp.Result, &bookmarkResult); err != nil {
+		return nil, newError("D1Service.TimeTravelRestore", "failed to parse time-travel bookmark response", err)
+	}
+	if bookmarkResult.Bookmark == "" {
+		return nil, newError("D1Service.TimeTravelRestore", "time-travel bookmark response did not include a bookmark", nil)
+	}
+
+	restoreURI := fmt.Sprintf("/accounts/%s/d1/database/%s/restore", s.accountID, databaseID)
+	if _, err := s.cf.Raw(ctx, http.MethodPost, restoreURI, map[string]string{"bookmark": bookmarkResult.Bookmark}, nil); err != nil {
+		return nil, newError("D1Service.TimeTravelRestore", fmt.Sprintf("failed to restore database %q", databaseID), err)
+	}
+
+	restoredAt := time.Now().UTC()
+	if err := s.recordTimeTravelRestore(databaseID, timestamp.UTC(), restoredAt); err != nil {
+		return nil, err
+	}
+
+	return &D1TimeTravelResult{
+		DatabaseID: databaseID,
+		Timestamp:  timestamp.UTC(),
+		Success:    true,
+	}, nil
+}
+
+// d1ExportPollInterval controls the delay between export status polls.
+// It is a var so tests can shrink it.
+var d1ExportPollInterval = 500 * time.Millisecond
+
+// d1ExportMaxPolls bounds the number of export status polls before giving
+// up, so a stuck job cannot hang the caller forever.
+const d1ExportMaxPolls = 60
+
+// Export streams a SQL dump of databaseID. Cloudflare's export endpoint is
+// bookmark-based: an initial call kicks off the export job, and subsequent
+// polls (each echoing back the last bookmark) return either the next
+// bookmark or, once ready, a signed URL to download the dump from. Export
+// streams that download's body back to the caller, who is responsible for
+// closing it.
+func (s *D1Service) Export(ctx context.Context, databaseID string) (io.ReadCloser, error) {
+	if databaseID == "" {
+		return nil, validationError("D1Service.Export", "database ID is required")
+	}
+
+	exportURI := fmt.Sprintf("/accounts/%s/d1/database/%s/export", s.accountID, databaseID)
+
+	var bookmark string
+	for attempt := 0; attempt < d1ExportMaxPolls; attempt++ {
+		body := map[string]any{"output_format": "polling"}
+		if bookmark != "" {
+			body["current_bookmark"] = bookmark
+		}
+
+		resp, err := s.cf.Raw(ctx, http.MethodPost, exportURI, body, nil)
+		if err != nil {
+			return nil, newError("D1Service.Export", fmt.Sprintf("failed to export database %q", databaseID), err)
+		}
+
+		var result struct {
+			Status     string `json:"status"`
+			AtBookmark string `json:"at_bookmark"`
+			SignedURL  string `json:"signed_url"`
+		}
+		if err := json.Unmarshal(resp.Result, &result); err != nil {
+			return nil, newError("D1Service.Export", "failed to parse export response", err)
+		}
+
+		if result.SignedURL != "" {
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, result.SignedURL, nil)
+			if err != nil {
+				return nil, newError("D1Service.Export", "failed to build export download request", err)
+			}
+			httpResp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return nil, newError("D1Service.Export", "failed to download export dump", err)
+			}
+			if httpResp.StatusCode != http.StatusOK {
+				httpResp.Body.Close()
+				return nil, newError("D1Service.Export", fmt.Sprintf("export download returned status %d", httpResp.StatusCode), nil)
+			}
+			return httpResp.Body, nil
+		}
+
+		if result.AtBookmark != "" {
+			bookmark = result.AtBookmark
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(d1ExportPollInterval):
+		}
+	}
+
+	return nil, newError("D1Service.Export", fmt.Sprintf("export of database %q did not complete after %d polls", databaseID, d1ExportMaxPolls), nil)
 }
 
 // ensureMigrationsTable creates the d1_migrations tracking table if it
