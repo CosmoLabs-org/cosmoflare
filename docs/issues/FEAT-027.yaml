@@ -1,0 +1,12 @@
+id: FEAT-027
+type: feature
+created_at: 2026-09-11T15:39:22.137369+04:00
+updated_at: 2026-09-11T15:39:22.14356+04:00
+source: local
+ulid: 01M2847QMZVM783YAK0JJVE630
+status: open
+title: 'Vectorize vector CRUD: upsert, get, delete, list vectors, namespaces'
+description: 'cmd/vectorize + pkg/cosmoflare/vectorize.go ship index CRUD and insert/query only. Add the vector-level surface: vectors upsert (id+values+metadata), get by id, delete by ids, list vectors, namespaces list. REST endpoints under /accounts/{account_id}/vectorize/v1/indexes/{index}/ (upsert/get-by-id/delete/namespaces) — verify exact paths against the existing service''s insert/query implementation and follow its patterns. From Qwen command-surface corpus section 9 vectorize block.'
+acceptance_criteria:
+    - criterion: upsert round-trips vectors then get-by-id returns them;delete removes and subsequent get errors as not-found;namespaces list returns --json;all verbs have --json and rich help;USAGE.md updated
+      met: false
