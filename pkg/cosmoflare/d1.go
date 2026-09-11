@@ -3,10 +3,20 @@ package cosmoflare
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 )
+
+// migrationFileRe matches migration file names in the NNNN_<name>.sql
+// convention used by MigrationsCreate/MigrationsList/MigrationsApply.
+var migrationFileRe = regexp.MustCompile(`^(\d{4})_.+\.sql$`)
 
 // D1Database represents a Cloudflare D1 database.
 type D1Database struct {
@@ -152,6 +162,267 @@ func (s *D1Service) Query(ctx context.Context, databaseID, sql string, params ..
 		queryResults = append(queryResults, mapD1Result(r))
 	}
 	return queryResults, nil
+}
+
+// D1Migration represents a single migration file and its applied state.
+type D1Migration struct {
+	Name      string     `json:"name"`
+	AppliedAt *time.Time `json:"applied_at"`
+	FilePath  string     `json:"file_path"`
+}
+
+// D1MigrationResult represents the outcome of attempting to apply one migration.
+type D1MigrationResult struct {
+	Name   string `json:"name"`
+	Status string `json:"status"` // "applied", "skipped", "would_apply", "failed"
+	Error  string `json:"error,omitempty"`
+}
+
+// MigrationsCreate creates a new migration file in migrationsDir named
+// NNNN_<name>.sql, where NNNN is the next sequence number. It does not
+// touch the remote database.
+func (s *D1Service) MigrationsCreate(name string, migrationsDir string) (string, error) {
+	if name == "" {
+		return "", validationError("D1Service.MigrationsCreate", "migration name is required")
+	}
+	if migrationsDir == "" {
+		migrationsDir = "migrations"
+	}
+
+	if err := os.MkdirAll(migrationsDir, 0o755); err != nil {
+		return "", newError("D1Service.MigrationsCreate", fmt.Sprintf("failed to create migrations directory %q", migrationsDir), err)
+	}
+
+	next, err := nextMigrationSequence(migrationsDir)
+	if err != nil {
+		return "", newError("D1Service.MigrationsCreate", "failed to scan existing migrations", err)
+	}
+
+	fileName := fmt.Sprintf("%04d_%s.sql", next, slugifyMigrationName(name))
+	filePath := filepath.Join(migrationsDir, fileName)
+
+	content := fmt.Sprintf("-- Migration: %s\n-- Created: %s\n\n", name, time.Now().UTC().Format(time.RFC3339))
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		return "", newError("D1Service.MigrationsCreate", fmt.Sprintf("failed to write migration file %q", filePath), err)
+	}
+
+	return filePath, nil
+}
+
+// MigrationsList scans migrationsDir for migration files and cross-references
+// them against the applied state recorded in the database's d1_migrations
+// table. Pending migrations have a nil AppliedAt.
+func (s *D1Service) MigrationsList(ctx context.Context, databaseID string, migrationsDir string) ([]D1Migration, error) {
+	if databaseID == "" {
+		return nil, validationError("D1Service.MigrationsList", "database ID is required")
+	}
+	if migrationsDir == "" {
+		migrationsDir = "migrations"
+	}
+
+	files, err := listMigrationFiles(migrationsDir)
+	if err != nil {
+		return nil, newError("D1Service.MigrationsList", fmt.Sprintf("failed to read migrations directory %q", migrationsDir), err)
+	}
+	if len(files) == 0 {
+		return []D1Migration{}, nil
+	}
+
+	if err := s.ensureMigrationsTable(ctx, databaseID); err != nil {
+		return nil, err
+	}
+
+	applied, err := s.appliedMigrations(ctx, databaseID)
+	if err != nil {
+		return nil, err
+	}
+
+	migrations := make([]D1Migration, 0, len(files))
+	for _, name := range files {
+		var appliedAt *time.Time
+		if t, ok := applied[name]; ok {
+			t := t
+			appliedAt = &t
+		}
+		migrations = append(migrations, D1Migration{
+			Name:      name,
+			AppliedAt: appliedAt,
+			FilePath:  filepath.Join(migrationsDir, name),
+		})
+	}
+	return migrations, nil
+}
+
+// MigrationsApply applies pending migrations in order, recording each
+// success in the d1_migrations table. Already-applied migrations are
+// skipped. When dryRun is true, no SQL is executed.
+func (s *D1Service) MigrationsApply(ctx context.Context, databaseID string, migrationsDir string, dryRun bool) ([]D1MigrationResult, error) {
+	migrations, err := s.MigrationsList(ctx, databaseID, migrationsDir)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]D1MigrationResult, 0, len(migrations))
+	for _, m := range migrations {
+		if m.AppliedAt != nil {
+			results = append(results, D1MigrationResult{Name: m.Name, Status: "skipped"})
+			continue
+		}
+
+		if dryRun {
+			results = append(results, D1MigrationResult{Name: m.Name, Status: "would_apply"})
+			continue
+		}
+
+		sqlBytes, err := os.ReadFile(m.FilePath)
+		if err != nil {
+			results = append(results, D1MigrationResult{Name: m.Name, Status: "failed", Error: err.Error()})
+			continue
+		}
+
+		if _, err := s.Query(ctx, databaseID, string(sqlBytes)); err != nil {
+			results = append(results, D1MigrationResult{Name: m.Name, Status: "failed", Error: err.Error()})
+			continue
+		}
+
+		appliedAt := time.Now().UTC().Format(time.RFC3339)
+		if _, err := s.Query(ctx, databaseID, "INSERT INTO d1_migrations (name, applied_at) VALUES (?1, ?2)", m.Name, appliedAt); err != nil {
+			results = append(results, D1MigrationResult{Name: m.Name, Status: "failed", Error: err.Error()})
+			continue
+		}
+
+		results = append(results, D1MigrationResult{Name: m.Name, Status: "applied"})
+	}
+
+	return results, nil
+}
+
+// ContainsDestructiveSQL reports whether sql contains a statement that
+// could cause irreversible data loss: DROP TABLE, DROP INDEX,
+// DROP DATABASE, TRUNCATE, or DELETE without a WHERE clause. Matching is
+// case-insensitive.
+func ContainsDestructiveSQL(sql string) bool {
+	upper := strings.ToUpper(sql)
+
+	for _, pattern := range []string{"DROP TABLE", "DROP INDEX", "DROP DATABASE", "TRUNCATE"} {
+		if strings.Contains(upper, pattern) {
+			return true
+		}
+	}
+
+	for _, stmt := range strings.Split(upper, ";") {
+		stmt = strings.TrimSpace(stmt)
+		if strings.HasPrefix(stmt, "DELETE") && !strings.Contains(stmt, "WHERE") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ensureMigrationsTable creates the d1_migrations tracking table if it
+// does not already exist.
+func (s *D1Service) ensureMigrationsTable(ctx context.Context, databaseID string) error {
+	const createTableSQL = "CREATE TABLE IF NOT EXISTS d1_migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, applied_at TEXT NOT NULL)"
+	if _, err := s.Query(ctx, databaseID, createTableSQL); err != nil {
+		return newError("D1Service.MigrationsList", "failed to ensure d1_migrations table exists", err)
+	}
+	return nil
+}
+
+// appliedMigrations returns the set of migration names already recorded
+// in the d1_migrations table, keyed by name.
+func (s *D1Service) appliedMigrations(ctx context.Context, databaseID string) (map[string]time.Time, error) {
+	results, err := s.Query(ctx, databaseID, "SELECT name, applied_at FROM d1_migrations ORDER BY id")
+	if err != nil {
+		return nil, newError("D1Service.MigrationsList", "failed to query applied migrations", err)
+	}
+
+	applied := make(map[string]time.Time)
+	for _, r := range results {
+		for _, row := range r.Rows {
+			name, _ := row["name"].(string)
+			if name == "" {
+				continue
+			}
+			appliedAtStr, _ := row["applied_at"].(string)
+			t, err := time.Parse(time.RFC3339, appliedAtStr)
+			if err != nil {
+				t = time.Time{}
+			}
+			applied[name] = t
+		}
+	}
+	return applied, nil
+}
+
+// listMigrationFiles returns the sorted names of files in migrationsDir
+// matching the NNNN_<name>.sql convention. A missing directory yields an
+// empty (nil error) result.
+func listMigrationFiles(migrationsDir string) ([]string, error) {
+	entries, err := os.ReadDir(migrationsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var files []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if migrationFileRe.MatchString(e.Name()) {
+			files = append(files, e.Name())
+		}
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+// nextMigrationSequence scans migrationsDir for existing migration files
+// and returns the next sequence number to use.
+func nextMigrationSequence(migrationsDir string) (int, error) {
+	files, err := listMigrationFiles(migrationsDir)
+	if err != nil {
+		return 0, err
+	}
+
+	max := 0
+	for _, name := range files {
+		m := migrationFileRe.FindStringSubmatch(name)
+		if m == nil {
+			continue
+		}
+		n, err := strconv.Atoi(m[1])
+		if err != nil {
+			continue
+		}
+		if n > max {
+			max = n
+		}
+	}
+	return max + 1, nil
+}
+
+// slugifyMigrationName normalizes a migration name into a filesystem-safe,
+// lowercase, underscore-separated slug.
+func slugifyMigrationName(name string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(strings.TrimSpace(name)) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == ' ', r == '-', r == '_':
+			b.WriteRune('_')
+		}
+	}
+	slug := b.String()
+	if slug == "" {
+		slug = "migration"
+	}
+	return slug
 }
 
 // mapD1Database converts a cloudflare.D1Database to our D1Database type.
