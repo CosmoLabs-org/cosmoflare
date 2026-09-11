@@ -885,6 +885,44 @@ JSON output:
 | `--dry-run` | Preview without executing (apply only; global flag) |
 | `--force` | Skip confirmation prompt (apply only) |
 
+### Restore to a point in time (time-travel)
+```bash
+cosmoflare d1 time-travel restore <database-id> --timestamp 2026-01-01T00:00:00Z
+cosmoflare d1 time-travel restore <database-id> --timestamp 2026-01-01T00:00:00Z --dry-run
+cosmoflare d1 time-travel restore <database-id> --timestamp 2026-01-01T00:00:00Z --force
+```
+Restores the database to the state it had at `--timestamp` (ISO8601/RFC3339). Cloudflare limits time-travel restores to 10 per database within any rolling 10-minute window; the command checks this quota locally before calling the API and refuses the restore if it is exhausted. Without `--force`, you must type the database ID to confirm. After a successful restore, the command prints the number of restores remaining in the current window.
+
+JSON output:
+```json
+{"success":true,"message":"Database restored","data":{"result":{"database_id":"...","timestamp":"2026-01-01T00:00:00Z","success":true},"remaining_restores":9,"window_resets_at":"2026-01-01T00:10:00Z"}}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--timestamp` | Point in time to restore to, ISO8601 (required) |
+| `--force` | Skip confirmation prompt |
+| `--dry-run` | Preview without calling the API (global flag) |
+
+### Export a database
+```bash
+cosmoflare d1 export <database-id> > dump.sql
+cosmoflare d1 export <database-id> --output dump.sql
+cosmoflare d1 export <database-id> --output dump.sql --json
+```
+Streams a SQL dump of the database. By default the dump is written to stdout; use `--output` to write it to a file instead. `--json` requires `--output` — it prints export metadata (database ID, output path, bytes written) rather than the dump itself, since JSON metadata and a streamed SQL dump can't share stdout.
+
+JSON output:
+```json
+{"success":true,"message":"Database exported","data":{"database_id":"...","output_path":"dump.sql","bytes":2048}}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--output` | Write the SQL dump to this file instead of stdout |
+| `--local` | Export the local D1 database (not yet supported) |
+| `--remote` | Export the remote D1 database (default) |
+
 ## Email Routing Commands
 
 Email routing configuration for domains. Route incoming emails to destinations based on rules. All email commands are zone-scoped.
