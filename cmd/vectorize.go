@@ -37,13 +37,16 @@ Examples:
 }
 
 var (
-	vectorizeDimensions int
-	vectorizeMetric     string
-	vectorizeForce      bool
-	vectorizeFile       string
-	vectorizeID         string
-	vectorizeValues     string
-	vectorizeTopK       int
+	vectorizeDimensions   int
+	vectorizeMetric       string
+	vectorizeForce        bool
+	vectorizeFile         string
+	vectorizeID           string
+	vectorizeValues       string
+	vectorizeTopK         int
+	vectorizeUpsertFile   string
+	vectorizeGetVectorID  string
+	vectorizeDeleteIDsCSV string
 )
 
 var vectorizeCreateCmd = &cobra.Command{
@@ -130,6 +133,66 @@ Examples:
 	RunE: runVectorizeQuery,
 }
 
+var vectorizeUpsertCmd = &cobra.Command{
+	Use:   "upsert [index-name]",
+	Short: "Upsert vectors into an index",
+	Long: `Upsert (insert or update) vectors in a Vectorize index from a JSON file.
+
+Unlike insert, upsert overwrites vectors that already exist by ID. The file
+must be a JSON array (not NDJSON):
+  [{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"label":"example"}}]
+
+Batches are capped at 50 vectors per call.
+
+Examples:
+  cosmoflare vectorize upsert my-index --file vectors.json
+  cosmoflare vectorize upsert my-index --file vectors.json --json`,
+	Args: cobra.ExactArgs(1),
+	RunE: runVectorizeUpsert,
+}
+
+var vectorizeGetVectorCmd = &cobra.Command{
+	Use:   "get-vector [index-name]",
+	Short: "Get a single vector by ID",
+	Long: `Get a single vector's values and metadata from a Vectorize index.
+
+Named "get-vector" (not "get") to avoid colliding with the existing
+"vectorize get" command, which fetches index details.
+
+Examples:
+  cosmoflare vectorize get-vector my-index --id vec-1
+  cosmoflare vectorize get-vector my-index --id vec-1 --json`,
+	Args: cobra.ExactArgs(1),
+	RunE: runVectorizeGetVector,
+}
+
+var vectorizeDeleteVectorsCmd = &cobra.Command{
+	Use:   "delete-vectors [index-name]",
+	Short: "Delete vectors by ID",
+	Long: `Delete one or more vectors from a Vectorize index by ID.
+
+Named "delete-vectors" (not "delete") to avoid colliding with the existing
+"vectorize delete" command, which deletes the whole index.
+
+Examples:
+  cosmoflare vectorize delete-vectors my-index --ids vec-1,vec-2
+  cosmoflare vectorize delete-vectors my-index --ids vec-1 --json`,
+	Args: cobra.ExactArgs(1),
+	RunE: runVectorizeDeleteVectors,
+}
+
+var vectorizeNamespacesCmd = &cobra.Command{
+	Use:   "namespaces [index-name]",
+	Short: "List namespaces in an index",
+	Long: `List the distinct vector namespaces present in a Vectorize index.
+
+Examples:
+  cosmoflare vectorize namespaces my-index
+  cosmoflare vectorize namespaces my-index --json`,
+	Args: cobra.ExactArgs(1),
+	RunE: runVectorizeNamespaces,
+}
+
 func init() {
 	rootCmd.AddCommand(vectorizeCmd)
 
@@ -139,6 +202,10 @@ func init() {
 	vectorizeCmd.AddCommand(vectorizeDeleteCmd)
 	vectorizeCmd.AddCommand(vectorizeInsertCmd)
 	vectorizeCmd.AddCommand(vectorizeQueryCmd)
+	vectorizeCmd.AddCommand(vectorizeUpsertCmd)
+	vectorizeCmd.AddCommand(vectorizeGetVectorCmd)
+	vectorizeCmd.AddCommand(vectorizeDeleteVectorsCmd)
+	vectorizeCmd.AddCommand(vectorizeNamespacesCmd)
 
 	vectorizeCreateCmd.Flags().IntVar(&vectorizeDimensions, "dimensions", 0, "Number of dimensions for vectors")
 	vectorizeCreateCmd.Flags().StringVar(&vectorizeMetric, "metric", "cosine", "Distance metric: cosine|euclidean|dot-product")
@@ -151,6 +218,12 @@ func init() {
 
 	vectorizeQueryCmd.Flags().StringVar(&vectorizeValues, "values", "", "Comma-separated float values for query vector")
 	vectorizeQueryCmd.Flags().IntVar(&vectorizeTopK, "top-k", 10, "Number of nearest neighbors to return")
+
+	vectorizeUpsertCmd.Flags().StringVar(&vectorizeUpsertFile, "file", "", "JSON file containing an array of vectors")
+
+	vectorizeGetVectorCmd.Flags().StringVar(&vectorizeGetVectorID, "id", "", "Vector ID to fetch")
+
+	vectorizeDeleteVectorsCmd.Flags().StringVar(&vectorizeDeleteIDsCSV, "ids", "", "Comma-separated vector IDs to delete")
 }
 
 func getVectorizeService() (*cosmoflare.VectorizeService, error) {
@@ -362,6 +435,137 @@ func runVectorizeQuery(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(w, "%s\t%.4f\n", r.ID, r.Score)
 	}
 	w.Flush()
+	return nil
+}
+
+func runVectorizeUpsert(cmd *cobra.Command, args []string) error {
+	indexName := args[0]
+
+	if vectorizeUpsertFile == "" {
+		return fmt.Errorf("--file is required")
+	}
+	data, err := os.ReadFile(vectorizeUpsertFile)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+	var vectors []cosmoflare.VectorizeVector
+	if err := json.Unmarshal(data, &vectors); err != nil {
+		return fmt.Errorf("failed to parse vectors file: %w", err)
+	}
+
+	if DryRun {
+		if JSONOutput {
+			return printJSON(map[string]interface{}{"dry_run": true, "action": "upsert", "index": indexName, "count": len(vectors)})
+		}
+		printInfo("DRY RUN: Would upsert %d vectors into '%s'", len(vectors), indexName)
+		return nil
+	}
+
+	svc, err := getVectorizeService()
+	if err != nil {
+		return fmt.Errorf("failed to create vectorize service: %w", err)
+	}
+
+	result, err := svc.UpsertVectors(context.Background(), indexName, vectors)
+	if err != nil {
+		return fmt.Errorf("failed to upsert vectors: %w", err)
+	}
+
+	if JSONOutput {
+		return printJSON(map[string]interface{}{"success": true, "data": result})
+	}
+	printSuccess("Upserted %d vectors into '%s' (mutation: %s)", len(vectors), indexName, result.MutationID)
+	return nil
+}
+
+func runVectorizeGetVector(cmd *cobra.Command, args []string) error {
+	indexName := args[0]
+
+	if vectorizeGetVectorID == "" {
+		return fmt.Errorf("--id is required")
+	}
+
+	svc, err := getVectorizeService()
+	if err != nil {
+		return fmt.Errorf("failed to create vectorize service: %w", err)
+	}
+
+	v, err := svc.GetVector(context.Background(), indexName, vectorizeGetVectorID)
+	if err != nil {
+		return fmt.Errorf("failed to get vector: %w", err)
+	}
+
+	if JSONOutput {
+		return printJSON(v)
+	}
+	fmt.Printf("ID:     %s\n", v.ID)
+	fmt.Printf("Values: %v\n", v.Values)
+	if len(v.Metadata) > 0 {
+		fmt.Printf("Metadata: %v\n", v.Metadata)
+	}
+	return nil
+}
+
+func runVectorizeDeleteVectors(cmd *cobra.Command, args []string) error {
+	indexName := args[0]
+
+	if vectorizeDeleteIDsCSV == "" {
+		return fmt.Errorf("--ids is required")
+	}
+	parts := strings.Split(vectorizeDeleteIDsCSV, ",")
+	ids := make([]string, 0, len(parts))
+	for _, p := range parts {
+		ids = append(ids, strings.TrimSpace(p))
+	}
+
+	if DryRun {
+		if JSONOutput {
+			return printJSON(map[string]interface{}{"dry_run": true, "action": "delete_vectors", "index": indexName, "ids": ids})
+		}
+		printInfo("DRY RUN: Would delete %d vectors from '%s'", len(ids), indexName)
+		return nil
+	}
+
+	svc, err := getVectorizeService()
+	if err != nil {
+		return fmt.Errorf("failed to create vectorize service: %w", err)
+	}
+
+	result, err := svc.DeleteVectors(context.Background(), indexName, ids)
+	if err != nil {
+		return fmt.Errorf("failed to delete vectors: %w", err)
+	}
+
+	if JSONOutput {
+		return printJSON(map[string]interface{}{"success": true, "data": result})
+	}
+	printSuccess("Deleted %d vector(s) from '%s'", len(ids), indexName)
+	return nil
+}
+
+func runVectorizeNamespaces(cmd *cobra.Command, args []string) error {
+	indexName := args[0]
+
+	svc, err := getVectorizeService()
+	if err != nil {
+		return fmt.Errorf("failed to create vectorize service: %w", err)
+	}
+
+	namespaces, err := svc.ListNamespaces(context.Background(), indexName)
+	if err != nil {
+		return fmt.Errorf("failed to list namespaces: %w", err)
+	}
+
+	if JSONOutput {
+		return printJSON(namespaces)
+	}
+	if len(namespaces) == 0 {
+		printInfo("No namespaces found in '%s'", indexName)
+		return nil
+	}
+	for _, ns := range namespaces {
+		fmt.Println(ns)
+	}
 	return nil
 }
 
