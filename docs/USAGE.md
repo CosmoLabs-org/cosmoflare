@@ -826,6 +826,41 @@ JSON output:
 | `--param` | Positional query parameter (repeatable for ?1, ?2, ...) |
 | `--force` | Skip confirmation prompt (delete only) |
 
+### Create a migration
+```bash
+cosmoflare d1 migrations create <database-id> add_users_table
+cosmoflare d1 migrations create <database-id> add_users_table --migrations-dir db/migrations
+```
+Creates `migrations/0001_add_users_table.sql` (sequence number auto-incremented from existing files). Filesystem-only, no API call.
+
+### List migrations
+```bash
+cosmoflare d1 migrations list <database-id>
+cosmoflare d1 migrations list <database-id> --json
+```
+Prints a NAME | STATUS | APPLIED AT table. Creates the `d1_migrations` tracking table on the database if it does not already exist.
+
+### Apply pending migrations
+```bash
+cosmoflare d1 migrations apply <database-id>
+cosmoflare d1 migrations apply <database-id> --dry-run
+cosmoflare d1 migrations apply <database-id> --force
+```
+Applies pending migrations in sequence order and records each in the `d1_migrations` table. Already-applied migrations are skipped (idempotent). Migrations containing destructive SQL (`DROP TABLE`, `DROP INDEX`, `DROP DATABASE`, `TRUNCATE`, or `DELETE` without `WHERE`) print a warning before execution. Without `--force`, you must type the database ID to confirm.
+
+JSON output:
+```json
+[{"name":"0001_add_users_table.sql","status":"applied","error":""}]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--migrations-dir` | Directory containing migration files (default `migrations`) |
+| `--local` | Operate on the local D1 database (not yet supported) |
+| `--remote` | Operate on the remote D1 database (default) |
+| `--dry-run` | Preview without executing (apply only; global flag) |
+| `--force` | Skip confirmation prompt (apply only) |
+
 ## Email Routing Commands
 
 Email routing configuration for domains. Route incoming emails to destinations based on rules. All email commands are zone-scoped.
