@@ -1,12 +1,17 @@
 id: FEAT-028
 type: feature
 created_at: 2026-09-11T15:39:28.024737+04:00
-updated_at: 2026-09-11T15:39:28.028155+04:00
+updated_at: 2026-09-11T15:57:28.238674+04:00
 source: local
 ulid: 01M2847XCWN8SDM0008RRY9SEC
-status: open
+status: done
+origin:
+    session: 51
 title: R2 bucket policy get/set
 description: 'No policy surface exists in pkg/cosmoflare (verified — no policy file). Add bucket policy read/write: GET/PUT the bucket policy document (IAM-style JSON), following the existing bucket-management patterns in pkg/cosmoflare. CLI: bucket policy get <bucket> (prints JSON), bucket policy set <bucket> --file policy.json (validates JSON parse before the PUT; rejects malformed locally). From Qwen command-surface corpus section 9 r2 block.'
 acceptance_criteria:
     - criterion: policy get prints the live policy as JSON with --json support;policy set with malformed JSON fails locally with a clear error before any API call;policy set then get round-trips a simple allow-policy;USAGE.md updated
       met: false
+revisions:
+    - date: "2026-09-11"
+      action: closed
