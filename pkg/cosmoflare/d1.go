@@ -54,6 +54,11 @@ type D1QueryMeta struct {
 type D1Service struct {
 	cf        *cloudflare.API
 	accountID string
+
+	// sleepFn is a test-only seam for the Import backoff retry loop
+	// (error 7500). Defaults to time.Sleep; set directly by tests in this
+	// package, mirroring restClient.sleepFn in rest_client.go.
+	sleepFn func(time.Duration)
 }
 
 // NewD1Service creates a new D1 service client.
