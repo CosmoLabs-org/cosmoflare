@@ -1,10 +1,14 @@
 id: FEAT-023
 type: feature
 created_at: 2026-09-11T01:08:17.192945+04:00
-updated_at: 2026-09-11T01:08:17.196672+04:00
+updated_at: 2026-09-11T03:29:49.292998+04:00
 source: local
 ulid: 01M26JCQNC1E0RV4C0F43SF938
 status: open
+origin:
+    roadmap_items:
+        - ROAD-091
+    session: 51
 title: 'Pages depth: env, secrets, domains, deployment ops'
 description: 'Beyond FEAT-018''s deploy --verify: pages env list/set/delete, pages secret put/delete/list/bulk, pages domain attach/detach/list, deployment view/delete/retry/logs/tail/upload, pages dev. Checklist: corpus section 9 pages block (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). Today cmd/pages.go ships create/list/get/delete/deployments only.'
 acceptance_criteria:

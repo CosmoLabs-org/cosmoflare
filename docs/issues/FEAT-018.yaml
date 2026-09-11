@@ -1,0 +1,86 @@
+---
+id: FEAT-018
+title: 'MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit'
+type: feature
+status: open
+priority: 70
+complexity: complex
+area: reliability
+labels:
+  - d1
+  - pages
+  - waf
+  - agent-ux
+  - production-evidence
+created: 2026-09-11
+updated: 2026-09-11
+origin:
+  feedback_id: ''
+  from_project: MyCarGuide
+  received: 2026-09-10
+  converted: 2026-09-11
+---
+
+# FEAT-018: MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit
+
+## Origin
+
+Converted from feedback **** (from MyCarGuide)
+
+WHAT HAPPENED (evidence, all today):
+1. Remote D1 apply of a 35MB seed (84,437 INSERT...SELECT statements): `wrangler d1 execute --remote --file` cannot handle it. I hand-wrote a byte-capped batcher (infra/scripts/d1-push-epa-specs.mjs, ~110 lines, cloning the d1-push-all-tables.mjs pattern — this pattern now exists in TWO MyCarGuide scripts): 40KB multi-value INSERT OR IGNORE batches via --command, concurrency 2, SQLITE_TOOBIG split-retry. One batch died with "internal error code: 7500" — no auto-retry existed, needed a clean second pass.
+2. DB size discovery: `wrangler d1 info mycarguide-db --remote` rejects --remote and dumps the ENTIRE help text (token burn for an agent); size only extractable via `--json` parsing.
+3. Usage-vs-limits blindness (URGENT): since 2026-09-01 Cloudflare ENFORCES free-tier D1 daily limits by failing queries (changelog). There is no CLI way to see today's rows read/written vs the budget. Today's EPA push alone wrote ~100K rows — at the free-tier daily write cap. We cannot check from the terminal whether the next write will fail.
+4. Deploy+verify loop (done 3× today): build with PUBLIC_BUILD_ID=$(git rev-parse --short HEAD) → wrangler pages deploy → 6+ manual curls to verify routes/islands live. No single command.
+5. Local-vs-remote parity checks: manual sqlite3 counts + wrangler --json counts per table, done twice by hand (TASK-009 pattern).
+6. WAF rate-limit rule for /catalog.json: deferred 5 sessions running — needs dashboard interaction and threshold design.
+7. wrangler --json quirks: rows_written parsing needs fallbacks (error JSON rides inside exit-0 stdout).
+
+WHY IT MATTERS: items 1-6 each cost 10-45 min of agent session time; the batch-push pattern has been re-implemented per-project at least twice; item 3 is production-outage class after the 2026-09-01 enforcement change.
+
+PROPOSED FEATURES (prioritized):
+P0 —
+- `cosmoflare d1 push-sql FILE --db X [--remote] [--concurrency N]`: statement-aware SQL splitter (quote/comment/semicolon-aware — never the naive ';' split), ~40KB byte-capped batches, TOOBIG split-retry, retry-with-backoff on internal error 7500, progress lines, kill-safe resume (INSERT OR IGNORE idempotency).
+- `cosmoflare d1 usage --db X --days 7` + `cosmoflare d1 status`: rows read/written per day vs plan budget (GraphQL analytics API), DB size vs storage limit, per-table row counts, warning threshold. This is the outage-prevention command.
+- `cosmoflare pages deploy --verify /garage,/api/recalls?...`: stamp PUBLIC_BUILD_ID from git, deploy, poll until live, run the verify URL list, print a pass/fail table, non-zero exit on any failure.
+P1 —
+- `cosmoflare d1 parity --tables a,b,c`: local-vs-remote row-count diff in one shot.
+- `cosmoflare waf ratelimit PATH --requests N --period SECONDS [--dry-run]`: close the deferred-decision loop entirely from the terminal.
+- JSON-first, agent-friendly output everywhere: `--json` default, terse errors, no flag-trap help dumps (wrangler d1 info --remote).
+P2 —
+- `cosmoflare r2 du / put-bulk` (wrap the r2-bulk-put pattern with concurrency+retries), `cosmoflare env diff` (named-env binding/route inheritance gotchas), `cosmoflare pages deployments / rollback`.
+
+DESIGN PRINCIPLES: idempotent-by-default; kill-safe resumability (our long jobs get OOM-killed — everything must survive re-run); cost-aware (print estimated rows read/written per command — D1 bills per row); machine-readable output for AI agents first, human pretty second.
+
+PRIORITY JUSTIFICATION: every P0 item blocked or slowed concrete production work in this single session; usage-vs-limits became outage-risk nine days ago.
+
+## Suggested Workflow
+
+1. brainstorming
+2. plan-mode
+3. implementation
+## Description
+
+Real production session evidence (2026-09-10, MyCarGuide: Pages + D1 1.41M-row/0.94GB + R2 + KV, agent-driven). The feedback body carries the full evidence log — all 7 friction items and design principles are binding context, not examples.
+
+P0 (blocked or slowed concrete production work that day):
+1. cosmoflare d1 push-sql FILE --db X [--remote] [--concurrency N] — statement-aware SQL splitter (quote/comment/semicolon-aware, never naive ';'), ~40KB byte-capped multi-value INSERT batches, SQLITE_TOOBIG split-retry, retry-with-backoff on internal error 7500, progress lines, kill-safe resume via INSERT OR IGNORE idempotency. Pattern already hand-written twice (d1-push-epa-specs.mjs, d1-push-all-tables.mjs).
+2. cosmoflare d1 usage --db X --days 7 + cosmoflare d1 status — rows read/written per day vs plan budget via GraphQL analytics, DB size vs storage limit, per-table row counts, warning threshold. Cloudflare ENFORCES free-tier D1 daily limits by failing queries since 2026-09-01 — outage-prevention command. Overlaps the limits-awareness layer brainstorm (docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md, BR-03/BR-04) — implement together.
+3. cosmoflare pages deploy --verify /garage,/api/recalls — stamp PUBLIC_BUILD_ID from git, deploy, poll until live, run verify URL list, pass/fail table, non-zero exit on failure. Done manually 3x in one day.
+
+P1: d1 parity --tables (local-vs-remote row-count diff); waf ratelimit PATH --requests N --period S [--dry-run] (deferred 5 sessions running); JSON-first agent output everywhere, no flag-trap help dumps (wrangler d1 info --remote rejects flag then dumps full help).
+
+P2: r2 du / put-bulk (concurrency+retries); env diff (named-env binding/route inheritance gotchas); pages deployments / rollback.
+
+Design principles: idempotent-by-default; kill-safe resumability (long jobs get OOM-killed); cost-aware (print estimated rows read/written — D1 bills per row); machine-readable output for AI agents first, human pretty second.
+
+## Acceptance Criteria
+
+- [ ] d1 push-sql applies a 35MB multi-statement seed remotely without manual batching
+- [ ] survives a mid-run kill and resumes
+- [ ] retries error 7500 and SQLITE_TOOBIG automatically;d1 usage/status shows today's rows read/written vs free-tier daily budget and DB size vs limit
+- [ ] with warning threshold;pages deploy --verify deploys
+- [ ] polls
+- [ ] verifies a URL list
+- [ ] exits non-zero on failure;parity command diffs local-vs-remote row counts in one shot;waf ratelimit creates a rate-limit rule from the terminal with --dry-run
+

@@ -1,10 +1,12 @@
 id: FEAT-020
 type: feature
 created_at: 2026-09-11T01:07:41.139745+04:00
-updated_at: 2026-09-11T01:07:41.144405+04:00
+updated_at: 2026-09-11T01:07:43.251076+04:00
 source: local
 ulid: 01M26JBMER3RW3Y4TA13DV4MNE
 status: open
+origin:
+    session: 51
 title: Command registry manifest — per-command metadata spine
 description: 'Every CLI command described by a manifest entry: cli_path, wrangler_equivalent, service, verb, api_ops, required permissions (account/zone/user), limit catalog ids, local_checks, api_checks, rate_limit_behavior (429/Retry-After), danger_level, destructive, trackable. Schema in corpus section 4.1 (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). This is the unifying spine: limits-layer guards (brainstorm D4) resolve limit ids per command, permission checks (FEAT-011 successor) resolve scopes per command, audit logs danger_level, dry-run defaults derive from destructive flag, and MCP tool generation (withered idea, ROAD-091 adjacent) derives descriptions. Declared once, consumed everywhere.'
 acceptance_criteria:

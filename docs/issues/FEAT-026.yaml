@@ -1,10 +1,12 @@
 id: FEAT-026
 type: feature
 created_at: 2026-09-11T03:29:37.578741+04:00
-updated_at: 2026-09-11T03:29:37.590116+04:00
+updated_at: 2026-09-11T03:29:40.236419+04:00
 source: local
 ulid: 01M26TFH9P3ZWWBRPCRWTTK0CQ
 status: open
+origin:
+    session: 51
 title: Named environment profiles (dev/staging/prod) across all commands
 description: 'Wrangler''s environments pattern, generalized: named profiles in .cosmoflare.yaml (staging/prod/dev) that scope every command — resource suffixing, separate D1/KV/R2 bindings, local-vs-remote execution context (D1 execute --local|--remote, Workers dev vs deploy). Justification: Qwen command-surface corpus section 10 item 8 (environment awareness) + D1 security corpus section 3 (explicit dev/staging/prod DB separation as a security practice). Today every command is environment-blind; MyCarGuide''s parity checks (FEAT-018) are manual partly because of this. Design: --env <name> flag convention, profiles section in config, per-profile plan tier for the limits layer (ties to brainstorm D2 per-service plan resolution).'
 acceptance_criteria:
