@@ -1,0 +1,12 @@
+id: FEAT-034
+type: feature
+created_at: 2026-09-12T06:11:23.043029+04:00
+updated_at: 2026-09-12T06:11:23.046973+04:00
+source: local
+ulid: 01M29P4E96EYF7RJA4T59SKAYE
+status: open
+title: Durable Objects live-state CLI
+description: 'Zero CLI coverage exists anywhere for DO live state (research verdict: wrangler covers only class migrations via deploy). Implement the 5 researched management operations: GET/POST /accounts/{id}/workers/durable_objects/namespaces (list/create), GET .../namespaces/{ns}/objects (list objects), and object state inspection per the coverage entry. Library service + CLI verbs + tests + USAGE. Endpoints and notes: docs/research/2026-09-10-cf-limits-corpus/coverage-catalog-draft.json entry ''Durable Objects''. Named in ROAD-091.'
+acceptance_criteria:
+    - criterion: namespaces list/create round-trip;object list per namespace with --json;object state inspectable by id;USAGE updated
+      met: false
