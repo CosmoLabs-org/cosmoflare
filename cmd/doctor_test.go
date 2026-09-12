@@ -373,6 +373,65 @@ func TestDoctorIssuesSectionSeverityIndicators(t *testing.T) {
 	}
 }
 
+func TestFormatCertExpiry(t *testing.T) {
+	unknown := formatCertExpiry(nil)
+	if unknown != "—" {
+		t.Errorf("formatCertExpiry(nil) = %q, want —", unknown)
+	}
+
+	expired := -1
+	if got := formatCertExpiry(&expired); got != "expired" {
+		t.Errorf("formatCertExpiry(-1) = %q, want expired", got)
+	}
+
+	days := 42
+	if got := formatCertExpiry(&days); got != "42d" {
+		t.Errorf("formatCertExpiry(42) = %q, want 42d", got)
+	}
+}
+
+func TestPrintFleetTableNoPanic(t *testing.T) {
+	days := 42
+	snap := &cosmoflare.FleetStatus{
+		Zones: []cosmoflare.ZoneStatus{
+			{
+				Zone: "healthy.example", ZoneActive: true, DNSSECStatus: "active",
+				UniversalSSL: true, CertExpiresIn: &days, MinTLS: "1.2", SecurityLevel: "medium",
+			},
+			{
+				Zone: "broken.example", ZoneActive: false, DNSSECStatus: "disabled",
+				UniversalSSL: false, CertExpiresIn: nil, MinTLS: "1.0", SecurityLevel: "low",
+				Issues: []string{"zone not active", "DNSSEC disabled"},
+			},
+		},
+		HealthyCount:  1,
+		DegradedCount: 1,
+		CollectedAt:   "2026-09-12T00:00:00Z",
+	}
+
+	old := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	os.Stdout = w
+
+	printFleetTable(snap)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+
+	for _, want := range []string{"healthy.example", "broken.example", "1 healthy, 1 degraded", "zone not active"} {
+		if !strings.Contains(output, want) {
+			t.Errorf("printFleetTable output missing %q, got: %q", want, output)
+		}
+	}
+}
+
 func TestDoctorReportCarriesRedirectTargets(t *testing.T) {
 	report := &cosmoflare.DiagnosticReport{Domain: "example.com"}
 	report.RedirectTargets = []cosmoflare.RedirectProbeResult{

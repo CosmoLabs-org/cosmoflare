@@ -16,9 +16,10 @@ import (
 var doctorCmd = &cobra.Command{
 	Use:   "doctor [domain]",
 	Short: "Run diagnostic health checks on a domain",
-	Long: `Deep diagnostic probes for domain health analysis.
+	Long: `Deep diagnostic probes for domain health analysis, and a fleet-wide
+protection matrix across every zone.
 
-Runs 4 probes against a domain or zone:
+Single-domain mode runs 4 network probes against a domain or zone:
   1. DNS Propagation — queries 6 public resolvers for record consistency
   2. SSL Certificate — inspects TLS certificate chain, expiry, and HSTS
   3. HTTP Response — checks status code, response time, redirect chain, cf-ray
@@ -27,21 +28,28 @@ Runs 4 probes against a domain or zone:
 Results are presented with pass/warn/fail indicators and an overall health score.
 Use --fix to see actionable cosmoflare commands for each issue found.
 
+Fleet mode (--all) skips the network probes and instead reads Cloudflare's
+own API-reported state for every zone on the account in one pass: zone
+active status, DNSSEC, Universal SSL, certificate expiry, minimum TLS
+version, security level, and development mode. It stays fast across
+hundreds of zones because it never leaves the Cloudflare API.
+
 This command is designed for both human operators and AI agents:
   - Human-readable output with colored status indicators by default
   - --json provides structured diagnostic data for automated pipelines
   - --fix suggestions are valid cosmoflare commands that can be executed directly
-  - Exit code reflects health: 0=healthy/warning, 1=critical
+  - Exit code reflects health: 0=healthy/warning, 1=critical (or degraded, in fleet mode)
 
 Examples:
   cosmoflare doctor example.com              # Full diagnostics for a domain
   cosmoflare doctor example.com --fix        # Include fix suggestions
   cosmoflare doctor example.com --json       # Machine-readable output
-  cosmoflare doctor --all                    # Run on all domains (slow)
-  cosmoflare doctor --all --json             # All domains, JSON output
+  cosmoflare doctor --all                    # Fleet-wide protection matrix (fast, API-state)
+  cosmoflare doctor --all --json             # Fleet matrix, machine-readable output
 
   # Use with other cosmoflare commands:
   cosmoflare doctor example.com --fix --json | jq '.issues[].fix'
+  cosmoflare doctor --all --json | jq '.zones[] | select(.issues != [])'
   cosmoflare domains --json | jq -r '.domains[].zone.name' | xargs -I{} cosmoflare doctor {}`,
 	RunE: runDoctor,
 }
@@ -67,30 +75,39 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	doctor := cosmoflare.NewDoctorService(10 * time.Second)
 
 	if doctorAll {
-		return runDoctorAll(ctx, doctor)
+		return runDoctorAll(ctx)
 	}
 
+	doctor := cosmoflare.NewDoctorService(10 * time.Second)
 	return runDoctorSingle(ctx, doctor, args[0])
 }
 
-func runDoctorAll(ctx context.Context, doctor *cosmoflare.DoctorService) error {
-	zoneSvc, err := getZoneService()
-	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
-	}
-
-	zones, err := zoneSvc.List(ctx)
+// runDoctorAll runs the fleet-wide protection matrix: Cloudflare's own
+// API-reported state (DNSSEC, Universal SSL, certificate expiry, zone
+// settings) for every zone in one bounded-concurrency pass. This is
+// distinct from single-domain doctor, which network-probes a domain from
+// the outside — --all reads account-side state instead, so it stays fast
+// even across hundreds of zones.
+func runDoctorAll(ctx context.Context) error {
+	fleet, err := cosmoflare.NewFleetStatusServiceFromCreds(AccountID, APIToken)
 	if err != nil {
 		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list zones: %v", err))
+			return printErrorJSON(fmt.Sprintf("failed to create fleet status service: %v", err))
 		}
-		return fmt.Errorf("failed to list zones: %w", err)
+		return fmt.Errorf("failed to create fleet status service: %w", err)
 	}
 
-	if len(zones) == 0 {
+	snap, err := fleet.Snapshot(ctx)
+	if err != nil {
+		if JSONOutput {
+			return printErrorJSON(fmt.Sprintf("failed to collect fleet status: %v", err))
+		}
+		return fmt.Errorf("failed to collect fleet status: %w", err)
+	}
+
+	if len(snap.Zones) == 0 {
 		if JSONOutput {
 			return printSuccessJSON("No zones found", nil)
 		}
@@ -98,68 +115,56 @@ func runDoctorAll(ctx context.Context, doctor *cosmoflare.DoctorService) error {
 		return nil
 	}
 
-	// For JSON output, collect all reports into a slice.
-	type allDomainsReport struct {
-		Reports []*cosmoflare.DiagnosticReport `json:"reports"`
-		Summary string                    `json:"summary"`
-	}
-	var reports []*cosmoflare.DiagnosticReport
-	var hasWarning, hasCritical bool
-
-	for i, zone := range zones {
-		if !JSONOutput && i > 0 {
-			fmt.Fprintln(os.Stdout)
-		}
-
-		report, err := doctor.RunDiagnostics(ctx, zone.Name, zone.NameServers)
-		if err != nil {
-			if JSONOutput {
-				// Continue collecting; include error in reports.
-				reports = append(reports, &cosmoflare.DiagnosticReport{
-					Domain:    zone.Name,
-					Timestamp: time.Now(),
-					Score:     "critical",
-					Issues: []cosmoflare.DiagnosticIssue{{
-						Probe:    "system",
-						Severity: "critical",
-						Message:  fmt.Sprintf("Failed to run diagnostics: %v", err),
-					}},
-				})
-				hasCritical = true
-				continue
-			}
-			printWarning("Failed to diagnose %s: %v", zone.Name, err)
-			continue
-		}
-
-		reports = append(reports, report)
-		switch report.Score {
-		case "critical":
-			hasCritical = true
-		case "warning":
-			hasWarning = true
-		}
-
-		if !JSONOutput {
-			printDoctorReport(report)
-		}
-	}
-
 	if JSONOutput {
-		summary := fmt.Sprintf("Diagnosed %d domain(s)", len(reports))
-		return printJSON(allDomainsReport{
-			Reports: reports,
-			Summary: summary,
-		})
+		if err := printJSON(snap); err != nil {
+			return err
+		}
+	} else {
+		printFleetTable(snap)
 	}
 
-	if hasCritical {
-		return fmt.Errorf("one or more domains have critical health issues")
-	}
-	if hasWarning {
-		printWarning("One or more domains have warnings — review output above")
+	if snap.DegradedCount > 0 {
+		return fmt.Errorf("%d of %d zone(s) degraded", snap.DegradedCount, len(snap.Zones))
 	}
 	return nil
+}
+
+// printFleetTable renders the fleet-wide protection matrix as a table:
+// ZONE | STATUS | DNSSEC | SSL | CERT | TLS | WAF | ISSUES, followed by a
+// one-line summary.
+func printFleetTable(snap *cosmoflare.FleetStatus) {
+	fmt.Fprintf(os.Stdout, "%-32s %-9s %-9s %-6s %-9s %-5s %-8s %s\n",
+		"ZONE", "STATUS", "DNSSEC", "SSL", "CERT", "TLS", "WAF", "ISSUES")
+
+	for _, z := range snap.Zones {
+		status := "active"
+		if !z.ZoneActive {
+			status = "inactive"
+		}
+		ssl := "off"
+		if z.UniversalSSL {
+			ssl = "on"
+		}
+		fmt.Fprintf(os.Stdout, "%-32s %-9s %-9s %-6s %-9s %-5s %-8s %s\n",
+			z.Zone, status, z.DNSSECStatus, ssl, formatCertExpiry(z.CertExpiresIn),
+			z.MinTLS, z.SecurityLevel, strings.Join(z.Issues, "; "))
+	}
+
+	fmt.Fprintln(os.Stdout)
+	fmt.Fprintf(os.Stdout, "%d zones: %d healthy, %d degraded\n",
+		len(snap.Zones), snap.HealthyCount, snap.DegradedCount)
+}
+
+// formatCertExpiry renders a certificate expiry field for the fleet table:
+// "—" when unknown, "expired" when past due, else "<n>d".
+func formatCertExpiry(days *int) string {
+	if days == nil {
+		return "—"
+	}
+	if *days < 0 {
+		return "expired"
+	}
+	return fmt.Sprintf("%dd", *days)
 }
 
 func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, target string) error {
