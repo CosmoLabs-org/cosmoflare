@@ -699,6 +699,47 @@ cosmoflare pages deployments my-site
 cosmoflare pages deployments my-site --json
 ```
 
+### Environment variables and secrets
+```bash
+cosmoflare pages env list my-site --env production
+cosmoflare pages env list my-site --env preview --json
+cosmoflare pages env set my-site API_URL=https://example.com --env production
+cosmoflare pages env set my-site TOKEN=abc123 --env production --secret
+cosmoflare pages env delete my-site API_URL --env production
+```
+
+`--env` accepts `production` or `preview` (default `production`); any
+other value is rejected. `env set` accepts one or more `KEY=VALUE`
+pairs and merges them into the existing variables for that
+environment — variables not listed are left unchanged. `--secret`
+stores the value(s) as secrets. Secret values are write-only: the
+Cloudflare API never returns them, so `env list` always shows an empty
+value for secret-typed variables.
+
+### Custom domains
+```bash
+cosmoflare pages domain list my-site
+cosmoflare pages domain attach my-site example.com
+cosmoflare pages domain detach my-site example.com
+```
+
+`domain attach` reports the domain's validation status returned by
+Cloudflare; the domain will not serve traffic until validation
+completes.
+
+### Deployment operations
+```bash
+cosmoflare pages deployment view my-site dep-abc123
+cosmoflare pages deployment retry my-site dep-abc123
+cosmoflare pages deployment logs my-site dep-abc123
+cosmoflare pages deployment logs my-site dep-abc123 --json
+```
+
+`deployment retry` re-runs a deployment's build from the same source;
+it does not modify or delete the original deployment. `deployment
+logs` prints the build log; with `--json` it returns the structured
+log lines as returned by the Cloudflare API.
+
 ## Queue Commands
 
 Manage Cloudflare Queues for message-based communication between Workers.
