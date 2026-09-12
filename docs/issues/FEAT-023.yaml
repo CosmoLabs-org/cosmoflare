@@ -1,10 +1,10 @@
 id: FEAT-023
 type: feature
 created_at: 2026-09-11T01:08:17.192945+04:00
-updated_at: 2026-09-11T03:29:49.292998+04:00
+updated_at: 2026-09-12T07:08:55.119709+04:00
 source: local
 ulid: 01M26JCQNC1E0RV4C0F43SF938
-status: open
+status: done
 origin:
     roadmap_items:
         - ROAD-091
@@ -14,3 +14,10 @@ description: 'Beyond FEAT-018''s deploy --verify: pages env list/set/delete, pag
 acceptance_criteria:
     - criterion: env and secret CRUD round-trips;deployment retry re-triggers a failed build;deployment logs retrievable via --json;domain attach validates ownership
       met: false
+delegation:
+    delegated_to: "0132"
+    delegated_at: 2026-09-12T06:45:31.670197+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-12"
+      action: closed

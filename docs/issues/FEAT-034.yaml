@@ -1,10 +1,10 @@
 id: FEAT-034
 type: feature
 created_at: 2026-09-12T06:11:23.043029+04:00
-updated_at: 2026-09-12T06:11:25.414426+04:00
+updated_at: 2026-09-12T07:08:54.900462+04:00
 source: local
 ulid: 01M29P4E96EYF7RJA4T59SKAYE
-status: open
+status: done
 origin:
     session: 51
 title: Durable Objects live-state CLI
@@ -12,3 +12,10 @@ description: 'Zero CLI coverage exists anywhere for DO live state (research verd
 acceptance_criteria:
     - criterion: namespaces list/create round-trip;object list per namespace with --json;object state inspectable by id;USAGE updated
       met: false
+delegation:
+    delegated_to: "0131"
+    delegated_at: 2026-09-12T06:45:20.137575+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-12"
+      action: closed
