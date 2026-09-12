@@ -22,12 +22,18 @@ Commands:
   get           Get Pages project details
   delete        Delete a Pages project
   deployments   List deployments for a project
+  env           Manage environment variables and secrets
+  domain        Manage custom domains
+  deployment    View, retry, and inspect logs for deployments
 
 Examples:
   cosmoflare pages create my-site --branch main
   cosmoflare pages list --json
   cosmoflare pages get my-site
-  cosmoflare pages deployments my-site --json`,
+  cosmoflare pages deployments my-site --json
+  cosmoflare pages env list my-site --env production
+  cosmoflare pages domain attach my-site example.com
+  cosmoflare pages deployment logs my-site dep-abc123`,
 }
 
 var (
