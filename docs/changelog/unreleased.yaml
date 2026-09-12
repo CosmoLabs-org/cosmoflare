@@ -4,25 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: 'd1 depth: migrations, time-travel restore, backups, export/import'
-          source: FEAT-022
-          date: 2026-09-12T06:43:14.946284+04:00
-        - description: 'queues producer surface: send, send-batch, DLQ, consumer management'
-          source: FEAT-024
-          date: 2026-09-12T06:43:15.022921+04:00
-        - description: 'rate-limit-aware shared client: Retry-After, backoff, retry flags'
-          source: FEAT-025
-          date: 2026-09-12T06:43:15.128+04:00
-        - description: 'vectorize vector CRUD: upsert, get, delete, list vectors, namespaces'
-          source: FEAT-027
-          date: 2026-09-12T06:43:15.254996+04:00
-        - description: r2 bucket policy get/set
-          source: FEAT-028
-          date: 2026-09-12T06:43:15.313395+04:00
-        - description: domain fleet status matrix — all domains, all protection statuses, one view
-          source: FEAT-033
-          date: 2026-09-12T06:43:15.356025+04:00
+    added: []
     fixed: []
     changed: []
     deprecated: []
