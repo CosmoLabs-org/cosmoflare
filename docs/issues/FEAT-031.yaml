@@ -1,10 +1,13 @@
 id: FEAT-031
 type: feature
 created_at: 2026-09-12T04:09:58.051122+04:00
-updated_at: 2026-09-12T04:09:58.056914+04:00
+updated_at: 2026-09-12T04:10:00.359578+04:00
 source: local
 ulid: 01M29F6418GTFWN7SPTNQ75SMK
 status: open
+origin:
+    idea_slug: 2026-09-11-ssl-custom-hostnames-saas-crud-verification-status
+    session: 51
 title: SSL custom hostnames (SaaS) CRUD + verification status
 description: |-
     # SSL custom hostnames (SaaS) CRUD + verification status

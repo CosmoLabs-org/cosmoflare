@@ -1,11 +1,13 @@
 id: FEAT-033
 type: feature
 created_at: 2026-09-12T04:10:45.337428+04:00
-updated_at: 2026-09-12T04:10:45.341461+04:00
+updated_at: 2026-09-12T04:10:47.465684+04:00
 source: local
 ulid: 01M29F7J6XGMRXMPFC1D7K83XG
 priority: 90
 status: open
+origin:
+    session: 51
 title: Domain fleet status matrix — all domains, all protection statuses, one view
 description: 'One command answering ''is everything healthy across every domain'': iterate ALL zones in the account and collect per-domain status rows — SSL (universal SSL state, certificate expiry, full/cf mode), DNSSEC status, nameserver correctness, WAF/protection level, proxy status, custom hostname verification states (joins FEAT-031). Today ''doctor [domain]'' is single-domain and network-probe based (TLS chain, etc. — keep those as the deep-dive path); the matrix is the FLEET view over the API state, sorted worst-first, --json for desktop/mobile tiers. Directly requested by the owner as critical (2026-09-12): ''check all your domains for SSL status, DNS protection, and all the proper statuses''. Library: FleetStatusService or extend the doctor service; each status is an existing single-zone API read (zone settings, ssl, dnssec, healthcheck-adjacent). Interlocks: alerts layer (phase 3 limit conditions get a status-condition sibling), limits layer plan-resolution reads the same zone inventory.'
 acceptance_criteria:

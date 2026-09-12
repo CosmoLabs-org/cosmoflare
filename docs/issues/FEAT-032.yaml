@@ -1,10 +1,13 @@
 id: FEAT-032
 type: feature
 created_at: 2026-09-12T04:10:03.927446+04:00
-updated_at: 2026-09-12T04:10:03.931275+04:00
+updated_at: 2026-09-12T04:10:05.905274+04:00
 source: local
 ulid: 01M29F69RV9TPQNG1MMEX8QSN4
 status: open
+origin:
+    idea_slug: 2026-09-11-waf-lists-crud-managed-rulesets-update
+    session: 51
 title: WAF lists CRUD + managed-rulesets update
 description: |-
     # WAF lists CRUD + managed-rulesets update
