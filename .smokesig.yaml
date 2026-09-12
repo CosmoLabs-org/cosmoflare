@@ -19,6 +19,7 @@ tests:
         exit_code: 0
     - name: Tests pass
       run: go test ./...
+      timeout: 300s
       expect:
         exit_code: 0
     - name: Docker build
