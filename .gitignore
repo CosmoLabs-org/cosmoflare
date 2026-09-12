@@ -212,3 +212,5 @@ GOrchestra/glm-agents/*/diff.patch
 GOrchestra/worktrees/**/recovery.patch
 GOrchestra/worktrees/**/recovery_*.patch
 .version-registry.json
+.cosmoflare-d1-import-progress.json
+.cosmoflare-time-travel-cache.json
