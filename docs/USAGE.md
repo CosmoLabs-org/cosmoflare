@@ -923,6 +923,28 @@ JSON output:
 | `--local` | Export the local D1 database (not yet supported) |
 | `--remote` | Export the remote D1 database (default) |
 
+### Import a database
+```bash
+cosmoflare d1 import <database-id> --file seed.sql
+cosmoflare d1 import <database-id> --file seed.sql --dry-run
+cosmoflare d1 import <database-id> --file seed.sql --remote --force --batch-size 40960
+```
+Imports a SQL file into the database. Statements are split with a quote- and comment-aware splitter (never a naive `;` split), batched into ~40KB chunks, and retried on `SQLITE_TOOBIG` (batch halved) and internal error 7500 (exponential backoff). `--remote` without `--force` prompts you to type the database name; mismatched input aborts. If a previous run was interrupted, the progress-file byte offset is printed as a resume hint.
+
+JSON output:
+```json
+{"success":true,"message":"Import complete","data":{"statements_executed":84437,"batches_executed":47,"bytes_processed":36700160,"rows_written":84437,"duration_ms":41230}}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--file` | SQL file to import (required) |
+| `--batch-size` | Batch size in bytes (default 40960) |
+| `--local` | Import into the local D1 database (not yet supported) |
+| `--remote` | Import into the remote D1 database (default) |
+| `--dry-run` | Parse and report statement/batch counts without executing (global flag) |
+| `--force` | Skip the remote-import confirmation prompt |
+
 ## Email Routing Commands
 
 Email routing configuration for domains. Route incoming emails to destinations based on rules. All email commands are zone-scoped.
