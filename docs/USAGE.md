@@ -945,6 +945,53 @@ JSON output:
 | `--dry-run` | Parse and report statement/batch counts without executing (global flag) |
 | `--force` | Skip the remote-import confirmation prompt |
 
+## Durable Objects Commands
+
+Durable Objects live-state inspection. wrangler manages class deployments
+and bindings; this group covers what wrangler doesn't: namespace
+discovery, object listing, and single-object lookup. There is no CLI
+coverage for this anywhere else.
+
+### List namespaces
+```bash
+cosmoflare do namespaces
+cosmoflare do namespaces --json
+```
+
+### List objects in a namespace
+```bash
+cosmoflare do objects <namespace-id>
+cosmoflare do objects <namespace-id> --limit 50
+cosmoflare do objects <namespace-id> --cursor abc123 --json
+```
+Paginated via the API's cursor. When more objects remain, the next
+cursor is printed (or included as `next_cursor` in `--json` output) —
+pass it back via `--cursor` to fetch the next page.
+
+JSON output:
+```json
+{"objects":[{"id":"3b2e9d1c4a5f","has_stored_data":true}],"next_cursor":"abc123"}
+```
+
+| Flag | Description |
+|------|-------------|
+| `--limit` | Maximum number of objects to return (API default when unset) |
+| `--cursor` | Pagination cursor from a previous response |
+
+### Inspect a single object
+```bash
+cosmoflare do inspect <namespace-id> <object-id>
+cosmoflare do inspect <namespace-id> <object-id> --json
+```
+The Durable Objects API has no dedicated per-object detail endpoint, so
+this pages through the objects listing until it finds a match. Returns
+a not-found error if the object ID does not exist in the namespace.
+
+JSON output:
+```json
+{"id":"3b2e9d1c4a5f","has_stored_data":true,"namespace_id":"480f4f69-..."}
+```
+
 ## Email Routing Commands
 
 Email routing configuration for domains. Route incoming emails to destinations based on rules. All email commands are zone-scoped.
