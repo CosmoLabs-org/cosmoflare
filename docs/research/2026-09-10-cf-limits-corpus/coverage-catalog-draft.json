@@ -1,0 +1,154 @@
+[
+  {
+    "service": "Durable Objects",
+    "management_ops_count": 5,
+    "wrangler_coverage": "Partial (Class migrations and binding deployment via `wrangler deploy`; zero CLI commands for live object state inspection or data-plane manipulation)",
+    "rest_endpoints_documented": [
+      "GET /accounts/{account_id}/workers/durable_objects/namespaces",
+      "POST /accounts/{account_id}/workers/durable_objects/namespaces",
+      "GET /accounts/{account_id}/workers/durable_objects/namespaces/{namespace_id}/objects",
+      "PUT /accounts/{account_id}/workers/scripts/{script_name}",
+      "POST /client/v4/graphql"
+    ],
+    "permission_scopes": [
+      "account: Workers Scripts: Read",
+      "account: Workers Scripts: Edit",
+      "account: Analytics: Read"
+    ],
+    "automatable_pct_estimate": 65,
+    "source_url": "https://developers.cloudflare.com/durable-objects/api/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Workflows",
+    "management_ops_count": 5,
+    "wrangler_coverage": "Full (Native support for list, trigger, status inspect, pause, resume, terminate, send-event, and local dev simulation via `wrangler workflows`)",
+    "rest_endpoints_documented": [
+      "GET /accounts/{account_id}/workflows",
+      "POST /accounts/{account_id}/workflows/{workflow_name}/instances",
+      "POST /accounts/{account_id}/workflows/{workflow_name}/instances/batch",
+      "GET /accounts/{account_id}/workflows/{workflow_name}/instances/{instance_id}",
+      "PATCH /accounts/{account_id}/workflows/{workflow_name}/instances/{instance_id}/status"
+    ],
+    "permission_scopes": [
+      "account: Workers Scripts: Read",
+      "account: Workers Scripts: Edit"
+    ],
+    "automatable_pct_estimate": 100,
+    "source_url": "https://developers.cloudflare.com/api/resources/workflows/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Cloudflare Tunnels",
+    "management_ops_count": 5,
+    "wrangler_coverage": "None (Managed exclusively via `cloudflared` CLI binary or direct REST API / Terraform provider)",
+    "rest_endpoints_documented": [
+      "POST /accounts/{account_id}/cfd_tunnel",
+      "GET /accounts/{account_id}/cfd_tunnel/{tunnel_id}/token",
+      "PUT /accounts/{account_id}/cfd_tunnel/{tunnel_id}/configurations",
+      "POST /accounts/{account_id}/teamnet/virtual_networks",
+      "POST /accounts/{account_id}/teamnet/routes",
+      "GET /accounts/{account_id}/warp_connector"
+    ],
+    "permission_scopes": [
+      "account: Cloudflare Tunnel: Edit",
+      "account: Cloudflare Tunnel: Read",
+      "zone: DNS: Edit"
+    ],
+    "automatable_pct_estimate": 95,
+    "source_url": "https://developers.cloudflare.com/api/resources/zero_trust/subresources/tunnels/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Zero Trust Gateway + WARP",
+    "management_ops_count": 5,
+    "wrangler_coverage": "None (Managed via REST API, Zero Trust dashboard, or Terraform provider; client uses local `warp-cli`)",
+    "rest_endpoints_documented": [
+      "POST /accounts/{account_id}/gateway/rules",
+      "PUT /accounts/{account_id}/devices/policy/{policy_id}/exclude",
+      "POST /accounts/{account_id}/devices/posture",
+      "POST /accounts/{account_id}/devices/posture/integration",
+      "DELETE /accounts/{account_id}/devices/{device_id}",
+      "GET /accounts/{account_id}/devices"
+    ],
+    "permission_scopes": [
+      "account: Zero Trust: Edit",
+      "account: Zero Trust: Read",
+      "account: Access: Apps and Policies: Edit"
+    ],
+    "automatable_pct_estimate": 90,
+    "source_url": "https://developers.cloudflare.com/api/resources/zero_trust/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Long-tail Zone Services",
+    "management_ops_count": 5,
+    "wrangler_coverage": "None (All edge performance, security, and observability features managed via REST API or Terraform)",
+    "rest_endpoints_documented": [
+      "POST /accounts/{account_id}/load_balancers/pools",
+      "PUT /zones/{zone_id}/bot_management",
+      "POST /zones/{zone_id}/page_shield/policies",
+      "POST /accounts/{account_id}/challenges/widgets",
+      "POST /accounts/{account_id}/logpush/jobs",
+      "POST /zones/{zone_id}/waiting_rooms",
+      "POST /zones/{zone_id}/spectrum/apps",
+      "POST /accounts/{account_id}/rum/site_info"
+    ],
+    "permission_scopes": [
+      "account: Load Balancing: Edit",
+      "zone: Load Balancing: Edit",
+      "zone: Bot Management: Edit",
+      "zone: Page Shield: Edit",
+      "account: Turnstile: Edit",
+      "account: Logs: Edit",
+      "zone: Logs: Edit",
+      "zone: Waiting Room: Edit",
+      "zone: Spectrum: Edit",
+      "account: Analytics: Edit"
+    ],
+    "automatable_pct_estimate": 95,
+    "source_url": "https://developers.cloudflare.com/api/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Account/Org Management & Audit Logs",
+    "management_ops_count": 5,
+    "wrangler_coverage": "None (Managed via REST API, Dashboard, or Terraform)",
+    "rest_endpoints_documented": [
+      "POST /accounts/{account_id}/members",
+      "POST /accounts/{account_id}/iam/resource_groups",
+      "GET /accounts/{account_id}/logs/audit",
+      "GET /accounts/{account_id}/logs/audit/{id}/history",
+      "DELETE /accounts/{account_id}/members/{member_id}",
+      "GET /accounts/{account_id}/iam/permission_groups"
+    ],
+    "permission_scopes": [
+      "account: Account Settings: Edit",
+      "account: Account Settings: Read",
+      "account: Audit Logs: Read"
+    ],
+    "automatable_pct_estimate": 95,
+    "source_url": "https://developers.cloudflare.com/api/resources/accounts/subresources/logs/subresources/audit/",
+    "as_of": "2025-02-15"
+  },
+  {
+    "service": "Billing API",
+    "management_ops_count": 5,
+    "wrangler_coverage": "None (Managed via REST API for read/subscription operations; manual dashboard required for payment methods)",
+    "rest_endpoints_documented": [
+      "GET /accounts/{account_id}/billing/profile",
+      "GET /accounts/{account_id}/billing/invoices",
+      "POST /accounts/{account_id}/subscriptions",
+      "PUT /accounts/{account_id}/billing/topup/config",
+      "PUT /accounts/{account_id}/subscriptions/{subscription_id}",
+      "GET /accounts/{account_id}/billing/usage"
+    ],
+    "permission_scopes": [
+      "account: Billing: Read",
+      "account: Billing: Edit"
+    ],
+    "automatable_pct_estimate": 45,
+    "source_url": "https://developers.cloudflare.com/api/resources/billing/",
+    "as_of": "2025-02-15"
+  }
+]
