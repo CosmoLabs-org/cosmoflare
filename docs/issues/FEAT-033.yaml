@@ -1,11 +1,11 @@
 id: FEAT-033
 type: feature
 created_at: 2026-09-12T04:10:45.337428+04:00
-updated_at: 2026-09-12T04:10:47.465684+04:00
+updated_at: 2026-09-12T04:34:59.324022+04:00
 source: local
 ulid: 01M29F7J6XGMRXMPFC1D7K83XG
 priority: 90
-status: open
+status: done
 origin:
     session: 51
 title: Domain fleet status matrix — all domains, all protection statuses, one view
@@ -25,3 +25,10 @@ acceptance_criteria:
       met: false
     - criterion: 'any degraded domain exits non-zero (scriptable);deep-dive path preserved: single-domain doctor unchanged'
       met: false
+delegation:
+    delegated_to: "0130"
+    delegated_at: 2026-09-12T04:14:08.976471+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-12"
+      action: closed
