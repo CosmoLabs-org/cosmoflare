@@ -1,0 +1,14 @@
+id: FEAT-036
+type: feature
+created_at: 2026-09-12T06:11:33.843356+04:00
+updated_at: 2026-09-12T06:11:33.847557+04:00
+source: local
+ulid: 01M29P4RTQ4ABY880KRDR7NC96
+status: open
+title: Account management + audit logs
+description: 'Research verdict: no CLI. Implement: account members list/invite/remove, roles list/assign, and the audit-log query surface (list with filters actor/action/zone/since, export NDJSON/CSV, retention note). Security-layer cornerstone: every cosmoflare mutation should eventually be auditable from the CLI itself (feeds the audit trail our guards write to). Endpoints: coverage-catalog-draft.json entry ''Account/Org Management & Audit Logs''. Feeds FEAT-033 fleet view and desktop tiers.'
+acceptance_criteria:
+    - criterion: members list/invite/remove round-trip;roles assignable;audit logs filterable by actor and window
+      met: false
+    - criterion: --json and CSV export;retention documented in help
+      met: false
