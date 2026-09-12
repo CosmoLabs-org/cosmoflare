@@ -1,10 +1,12 @@
 id: FEAT-037
 type: feature
 created_at: 2026-09-12T06:11:39.033572+04:00
-updated_at: 2026-09-12T06:11:39.037604+04:00
+updated_at: 2026-09-12T06:11:41.03535+04:00
 source: local
 ulid: 01M29P4XWXXYJ8P261MWBV8P1Y
 status: open
+origin:
+    session: 51
 title: 'Zone long-tail services batch: Waiting Room, Spectrum, LB, Page Shield, Turnstile, Web Analytics, Logpush'
 description: 'Research verdict: all REST-only, no CLI coverage. One breadth feature, built in per-service waves: Waiting Room rules, Spectrum apps, Load Balancer pools/monitors, Page Shield status, Turnstile widget CRUD, Web Analytics site stats, Logpush job CRUD (destination ownership validation). Endpoints: coverage-catalog-draft.json entry ''Long-tail Zone Services''. Wave order suggestion: Logpush (feeds observability) then LB (fleet-critical) then the rest.'
 acceptance_criteria:
