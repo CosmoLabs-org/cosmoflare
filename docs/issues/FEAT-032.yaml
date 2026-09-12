@@ -1,0 +1,18 @@
+id: FEAT-032
+type: feature
+created_at: 2026-09-12T04:10:03.927446+04:00
+updated_at: 2026-09-12T04:10:03.931275+04:00
+source: local
+ulid: 01M29F69RV9TPQNG1MMEX8QSN4
+status: open
+title: WAF lists CRUD + managed-rulesets update
+description: |-
+    # WAF lists CRUD + managed-rulesets update
+
+    waf lists list/create/update/delete + items add/remove; managed-rulesets update. Corpus section 9 waf block.
+
+    ## Additional context
+
+    WAF lists (account rules/lists): list/create/update/delete + items add/remove; managed-rulesets update. Library + CLI verbs + tests + USAGE. Anchor: cmd/waf.go (lists surface absent today — verified). Uniform CRUD over the rules/lists API. Corpus ref: qwen-results-commands.md sections 2.16/5.12 + checklist waf block.
+
+    Origin: Qwen corpus section 9 coverage diff
