@@ -1,0 +1,12 @@
+id: FEAT-035
+type: feature
+created_at: 2026-09-12T06:11:28.663632+04:00
+updated_at: 2026-09-12T06:11:28.668441+04:00
+source: local
+ulid: 01M29P4KRWH35CJ19CVG5J4A21
+status: open
+title: Cloudflare Tunnels management CLI
+description: 'Research verdict: wrangler coverage None — Tunnels are managed exclusively via cloudflared config files. Implement REST management: tunnel CRUD (create/list/get/delete + token/cleanup), public hostname routing (DNS + ingress config), private network routes. Endpoints and notes: coverage-catalog-draft.json entry ''Cloudflare Tunnels''. High differentiation: first CLI to manage tunnels declaratively alongside the rest of the account. Pairs with the Access/Zero Trust roadmap item (WARP/Gateway side).'
+acceptance_criteria:
+    - criterion: tunnel create/list/delete round-trips with token output;public hostname attach configures ingress+DNS;route add/remove for private networks;config export renders cloudflared-compatible YAML
+      met: false
