@@ -1,0 +1,18 @@
+id: FEAT-031
+type: feature
+created_at: 2026-09-12T04:09:58.051122+04:00
+updated_at: 2026-09-12T04:09:58.056914+04:00
+source: local
+ulid: 01M29F6418GTFWN7SPTNQ75SMK
+status: open
+title: SSL custom hostnames (SaaS) CRUD + verification status
+description: |-
+    # SSL custom hostnames (SaaS) CRUD + verification status
+
+    ssl custom-hostnames list/create/update/delete + verification status. Corpus section 9 ssl block.
+
+    ## Additional context
+
+    Cloudflare for SaaS custom hostnames: list/create/update/delete + verification status polling. Types carry the verification lifecycle (pending/active/renewal states). Library service + CLI verbs + tests + USAGE. Anchor: pkg/cosmoflare/ssl.go (no custom-hostname surface exists today — verified). Feeds the FEAT-006 Domain Center remaining waves (domain onboarding engine). Corpus ref: docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md sections 2.13/5.13 + checklist ssl block.
+
+    Origin: Qwen corpus section 9 coverage diff
