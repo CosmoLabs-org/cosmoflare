@@ -6,6 +6,19 @@ deep-research-prompts.md (Prompt: pricing corpus; original draft on clipboard
 Mechanics.md' from Downloads. Feeds D5 budget projections, BR-06 alert
 thresholds, cost command upgrade, FEAT-018 cost-awareness.
 
+ACCOUNT CONTEXT (owner, 2026-09-12): CosmoLabs accounts run Workers Paid
+($5/mo) — monthly auto-bill semantics, no daily hard-fails on the umbrella
+services. Set workers_plan: paid as the config default for our own
+accounts. NOTE: MyCarGuide production evidence (FEAT-018 item 3) describes
+free-tier daily-cap behavior — client accounts may differ; never assume
+the umbrella.
+
+GAPS: (1) the Vectorize queried/stored-dimension formulas exported as
+image placeholders (![][imageN]) — unrecoverable here; re-fetch from the
+Vectorize pricing page before implementing cost math for it. (2) entry
+as_of dates say 2026-04-21 (Gemini's research corpus date, not today) —
+re-verify at synthesis. (3) superscript footnote refs dangle.
+
 ---
 
 # **Cloudflare Platform Billing Mechanics and Unit Economics Specification**
@@ -245,106 +258,636 @@ Discrepancies between Cloudflare's commercial marketing pages and developer tech
 
 ## **PRICING JSON**
 
-&nbsp;
+(Editorial note: the export mangled this block — escaped brackets, no fence.
+Recovered programmatically into the 52 objects below and mirrored to
+pricing-catalog-draft.json. Values are Gemini-reported and carry as_of
+2026-04-21 — re-verify at catalog synthesis before embedding.)
 
-&nbsp;
-
-&nbsp;
-
-JSON
-
-\[  
-  {"id": "workers.inbound\_requests", "service": "workers", "metric": "Inbound Requests", "unit": "million requests", "free\_included": 0.1, "paid\_price\_usd": 0.3, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers.cpu\_time", "service": "workers", "metric": "CPU Time", "unit": "million CPU-ms", "free\_included": null, "paid\_price\_usd": 0.02, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers.base\_subscription", "service": "workers", "metric": "Base Subscription", "unit": "month", "free\_included": 0.0, "paid\_price\_usd": 5.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers.data\_egress", "service": "workers", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers.build\_minutes", "service": "workers", "metric": "Build Minutes", "unit": "minutes", "free\_included": 3000.0, "paid\_price\_usd": 0.005, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers.concurrent\_builds", "service": "workers", "metric": "Concurrent Builds", "unit": "concurrent slots", "free\_included": 1.0, "paid\_price\_usd": null, "billing\_window": "none", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.standard\_storage", "service": "r2", "metric": "Standard Storage", "unit": "GB-month", "free\_included": 10.0, "paid\_price\_usd": 0.015, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.standard\_class\_a\_operations", "service": "r2", "metric": "Standard Class A Operations", "unit": "million requests", "free\_included": 1.0, "paid\_price\_usd": 4.5, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.standard\_class\_b\_operations", "service": "r2", "metric": "Standard Class B Operations", "unit": "million requests", "free\_included": 10.0, "paid\_price\_usd": 0.36, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.standard\_data\_egress", "service": "r2", "metric": "Standard Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.infrequent\_access\_storage", "service": "r2", "metric": "Infrequent Access Storage", "unit": "GB-month", "free\_included": null, "paid\_price\_usd": 0.01, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.infrequent\_access\_class\_a", "service": "r2", "metric": "Infrequent Access Class A", "unit": "million requests", "free\_included": null, "paid\_price\_usd": 9.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.infrequent\_access\_class\_b", "service": "r2", "metric": "Infrequent Access Class B", "unit": "million requests", "free\_included": null, "paid\_price\_usd": 0.9, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "r2.infrequent\_access\_retrieval", "service": "r2", "metric": "Infrequent Access Retrieval", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.01, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/r2/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.keys\_read", "service": "kv", "metric": "Keys Read", "unit": "million keys", "free\_included": 0.1, "paid\_price\_usd": 0.5, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.keys\_written", "service": "kv", "metric": "Keys Written", "unit": "million keys", "free\_included": 0.001, "paid\_price\_usd": 5.0, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.keys\_deleted", "service": "kv", "metric": "Keys Deleted", "unit": "million keys", "free\_included": 0.001, "paid\_price\_usd": 5.0, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.list\_requests", "service": "kv", "metric": "List Requests", "unit": "million requests", "free\_included": 0.001, "paid\_price\_usd": 5.0, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.stored\_data", "service": "kv", "metric": "Stored Data", "unit": "GB-month", "free\_included": 1.0, "paid\_price\_usd": 0.5, "billing\_window": "calendar\_month", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "kv.data\_egress", "service": "kv", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/kv/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "d1.rows\_read", "service": "d1", "metric": "Rows Read", "unit": "million rows", "free\_included": 5.0, "paid\_price\_usd": 0.001, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/d1/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "d1.rows\_written", "service": "d1", "metric": "Rows Written", "unit": "million rows", "free\_included": 0.1, "paid\_price\_usd": 1.0, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/d1/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "d1.storage", "service": "d1", "metric": "Storage", "unit": "GB-month", "free\_included": 5.0, "paid\_price\_usd": 0.75, "billing\_window": "calendar\_month", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/d1/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "d1.data\_egress", "service": "d1", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/d1/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "queues.operations", "service": "queues", "metric": "Operations", "unit": "million operations", "free\_included": null, "paid\_price\_usd": 0.4, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/queues/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "queues.data\_egress", "service": "queues", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/queues/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "pages.static\_asset\_requests", "service": "pages", "metric": "Static Asset Requests", "unit": "requests", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "pages.static\_bandwidth\_egress", "service": "pages", "metric": "Static Bandwidth / Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "pages.build\_minutes", "service": "pages", "metric": "Build Minutes", "unit": "minutes", "free\_included": 3000.0, "paid\_price\_usd": 0.005, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/", "as\_of": "2026-04-21"},  
-  {"id": "pages.concurrent\_builds", "service": "pages", "metric": "Concurrent Builds", "unit": "concurrent slots", "free\_included": 1.0, "paid\_price\_usd": null, "billing\_window": "none", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/", "as\_of": "2026-04-21"},  
-  {"id": "pages.functions\_invocations", "service": "pages", "metric": "Functions Invocations", "unit": "million requests", "free\_included": 0.1, "paid\_price\_usd": 0.3, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "images.unique\_transformations", "service": "images", "metric": "Unique Transformations", "unit": "thousand transformations", "free\_included": 5.0, "paid\_price\_usd": 0.5, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/images/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "images.hosted\_image\_storage", "service": "images", "metric": "Hosted Image Storage", "unit": "hundred thousand images", "free\_included": null, "paid\_price\_usd": 5.0, "billing\_window": "calendar\_month", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/images/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "images.image\_delivery\_egress", "service": "images", "metric": "Image Delivery / Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/images/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "stream.stored\_video", "service": "stream", "metric": "Stored Video", "unit": "thousand minutes", "free\_included": null, "paid\_price\_usd": 5.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/stream/", "as\_of": "2026-04-21"},  
-  {"id": "stream.viewed\_video", "service": "stream", "metric": "Viewed Video", "unit": "thousand minutes", "free\_included": null, "paid\_price\_usd": 1.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/stream/", "as\_of": "2026-04-21"},  
-  {"id": "stream.video\_delivery\_egress", "service": "stream", "metric": "Video Delivery / Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/stream/", "as\_of": "2026-04-21"},  
-  {"id": "vectorize.queried\_dimensions", "service": "vectorize", "metric": "Queried Dimensions", "unit": "million dimensions", "free\_included": 30.0, "paid\_price\_usd": 0.01, "billing\_window": "calendar\_month", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/vectorize/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "vectorize.stored\_dimensions", "service": "vectorize", "metric": "Stored Dimensions", "unit": "million dimensions", "free\_included": 5.0, "paid\_price\_usd": 0.0005, "billing\_window": "calendar\_month", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/vectorize/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "vectorize.data\_egress", "service": "vectorize", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/vectorize/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers\_ai.compute\_neurons", "service": "workers\_ai", "metric": "Compute Neurons", "unit": "thousand neurons", "free\_included": 10.0, "paid\_price\_usd": 0.011, "billing\_window": "daily\_utc", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers-ai/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "workers\_ai.data\_egress", "service": "workers\_ai", "metric": "Data Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers-ai/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "hyperdrive.database\_configurations", "service": "hyperdrive", "metric": "Database Configurations", "unit": "configuration", "free\_included": 1.0, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "hyperdrive.query\_pooling\_caching", "service": "hyperdrive", "metric": "Query Pooling / Caching", "unit": "million queries", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "hyperdrive.data\_transfer\_egress", "service": "hyperdrive", "metric": "Data Transfer / Egress", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/workers/platform/pricing/", "as\_of": "2026-04-21"},  
-  {"id": "zones.free\_plan", "service": "zones", "metric": "Free Plan", "unit": "zone-month", "free\_included": 1.0, "paid\_price\_usd": 0.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://www.cloudflare.com/plans/", "as\_of": "2026-04-21"},  
-  {"id": "zones.pro\_plan", "service": "zones", "metric": "Pro Plan", "unit": "zone-month", "free\_included": null, "paid\_price\_usd": 20.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://www.cloudflare.com/plans/", "as\_of": "2026-04-21"},  
-  {"id": "zones.business\_plan", "service": "zones", "metric": "Business Plan", "unit": "zone-month", "free\_included": null, "paid\_price\_usd": 200.0, "billing\_window": "calendar\_month", "overflow\_behavior": "auto\_bill", "source\_url": "https://www.cloudflare.com/plans/", "as\_of": "2026-04-21"},  
-  {"id": "zones.enterprise\_plan", "service": "zones", "metric": "Enterprise Plan", "unit": "zone-month", "free\_included": null, "paid\_price\_usd": null, "billing\_window": "calendar\_month", "overflow\_behavior": "unknown", "source\_url": "https://www.cloudflare.com/plans/", "as\_of": "2026-04-21"},  
-  {"id": "zones.zone\_egress\_traffic", "service": "zones", "metric": "Zone Egress Traffic", "unit": "GB", "free\_included": null, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://www.cloudflare.com/plans/", "as\_of": "2026-04-21"},  
-  {"id": "rest\_api.api\_invocations", "service": "rest\_api", "metric": "API Invocations", "unit": "requests per 5 min", "free\_included": 1200.0, "paid\_price\_usd": 0.0, "billing\_window": "rolling", "overflow\_behavior": "hard\_fail", "source\_url": "https://developers.cloudflare.com/fundamentals/api/reference/limits/", "as\_of": "2026-04-21"},  
-  {"id": "rest\_api.api\_platform\_access", "service": "rest\_api", "metric": "API Platform Access", "unit": "month", "free\_included": 1.0, "paid\_price\_usd": 0.0, "billing\_window": "none", "overflow\_behavior": "auto\_bill", "source\_url": "https://developers.cloudflare.com/fundamentals/api/reference/limits/", "as\_of": "2026-04-21"}  
-\]
-
-Cloudflare’s platform architecture eliminates standard network transit costs while establishing operational state mutations, storage footprint, and execution CPU time as the primary levers of platform spend. The structural absence of egress fees across edge compute, object storage, and databases enables cost-effective data access patterns, but it places the burden of cost management on operational access rhythms. Systems engineers designing distributed applications on this platform must manage the discrete operational ratios of asynchronous message lifecycles, database row scanning, vector dimensional scaling, and storage unit rounding to maintain predictable operating costs across both serverless edge workloads and centralized persistence systems.
-
-#### **Works cited**
-
-> 1. Pricing · Cloudflare Workers docs, [https://developers.cloudflare.com/workers/platform/pricing/](https://developers.cloudflare.com/workers/platform/pricing/)  
-> 2. Cloudflare Pricing | Wener Live & Life, [https://wener.me/notes/platform/cloudflare/pricing](https://wener.me/notes/platform/cloudflare/pricing)  
-> 3. Cloudflare Workers Pricing Calculator (2026) — Estimate Your, [https://makerkit.dev/pricing-calculator/cloudflare](https://makerkit.dev/pricing-calculator/cloudflare)  
-> 4. Cloudflare R2 Pricing 2026: $0 Egress Fees, Storage & Operations, [https://egresscost.com/cloudflare/](https://egresscost.com/cloudflare/)  
-> 5. Pricing · Cloudflare Workers KV docs, [https://developers.cloudflare.com/kv/platform/pricing/](https://developers.cloudflare.com/kv/platform/pricing/)  
-> 6. Pricing · Cloudflare D1 docs, [https://developers.cloudflare.com/d1/platform/pricing/](https://developers.cloudflare.com/d1/platform/pricing/)  
-> 7. Pages pricing \- Cloudflare Developers \- Answer Overflow, [https://www.answeroverflow.com/m/1129717959154212936](https://www.answeroverflow.com/m/1129717959154212936)  
-> 8. FAQs · Cloudflare D1 docs, [https://developers.cloudflare.com/d1/reference/faq/](https://developers.cloudflare.com/d1/reference/faq/)  
-> 9. Pricing · Cloudflare for Platforms docs, [https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/reference/pricing/](https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/reference/pricing/)  
-> 10. R2 pricing \- Cloudflare Developer Docs, [https://developers.cloudflare.com/r2/pricing/](https://developers.cloudflare.com/r2/pricing/)  
-> 11. Cloudflare Queues Plans Pricing \- APIs.io, [https://apis.io/plans/cloudflare-queues/cloudflare-queues-plans-pricing/](https://apis.io/plans/cloudflare-queues/cloudflare-queues-plans-pricing/)  
-> 12. R2 Pricing \- Wrong calculation example for Infrequent Access Storage, [https://github.com/cloudflare/cloudflare-docs/issues/24658](https://github.com/cloudflare/cloudflare-docs/issues/24658)  
-> 13. Does CloudFlare really charge $9.00 for a single R2 request \- Reddit, [https://www.reddit.com/r/CloudFlare/comments/1ntgz53/does\_cloudflare\_really\_charge\_900\_for\_a\_single\_r2/](https://www.reddit.com/r/CloudFlare/comments/1ntgz53/does_cloudflare_really_charge_900_for_a_single_r2/)  
-> 14. Limits & pricing · Cloudflare Workers docs, [https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/](https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/)  
-> 15. Cloudflare R2 | APIs.io Providers, [https://apis.io/providers/cloudflare-r2/](https://apis.io/providers/cloudflare-r2/)  
-> 16. How does Cloudflare R2 storage work on the free plan \- ? Specifically, [https://www.answeroverflow.com/m/1459235662199787664](https://www.answeroverflow.com/m/1459235662199787664)  
-> 17. Billing: double-charge on R2 \#01697806 \- Cloudflare Community, [https://community.cloudflare.com/t/billing-double-charge-on-r2-01697806/832295](https://community.cloudflare.com/t/billing-double-charge-on-r2-01697806/832295)  
-> 18. Cloudflare D1 2026: 5 GB Free Database Storage | FreeTier.co, [https://freetier.co/directory/products/cloudflare-d1](https://freetier.co/directory/products/cloudflare-d1)  
-> 19. Cloudflare D1 Plans Pricing \- APIs.io, [https://apis.io/plans/cloudflare-d1/cloudflare-d1-plans-pricing/](https://apis.io/plans/cloudflare-d1/cloudflare-d1-plans-pricing/)  
-> 20. Cloudflare D1 Database Cost Calculator \- TheServerless.Dev, [https://theserverless.dev/calculators/d1/](https://theserverless.dev/calculators/d1/)  
-> 21. Serverless SQL Database \- Cloudflare D1, [https://www.cloudflare.com/products/d1/](https://www.cloudflare.com/products/d1/)  
-> 22. Cloudflare Queues Alternatives for Webhooks: Hookdeck Event, [https://hookdeck.com/webhooks/platforms/cloudflare-queues-alternatives-for-webhooks](https://hookdeck.com/webhooks/platforms/cloudflare-queues-alternatives-for-webhooks)  
-> 23. Pricing · Cloudflare Queues docs, [https://developers.cloudflare.com/queues/platform/pricing/](https://developers.cloudflare.com/queues/platform/pricing/)  
-> 24. Pricing · Cloudflare Images docs, [https://developers.cloudflare.com/images/pricing/](https://developers.cloudflare.com/images/pricing/)  
-> 25. Overview · Cloudflare Images docs, [https://developers.cloudflare.com/images/](https://developers.cloudflare.com/images/)  
-> 26. Optimize with Workers · Cloudflare Images docs, [https://developers.cloudflare.com/images/optimization/binding/](https://developers.cloudflare.com/images/optimization/binding/)  
-> 27. Pricing · Cloudflare Vectorize docs, [https://developers.cloudflare.com/vectorize/platform/pricing/](https://developers.cloudflare.com/vectorize/platform/pricing/)  
-> 28. Vector databases \- Cloudflare Developer Docs, [https://developers.cloudflare.com/vectorize/reference/what-is-a-vector-database/](https://developers.cloudflare.com/vectorize/reference/what-is-a-vector-database/)  
-> 29. Limits · Cloudflare Vectorize docs, [https://developers.cloudflare.com/vectorize/platform/limits/](https://developers.cloudflare.com/vectorize/platform/limits/)  
-> 30. Changelog · Cloudflare Vectorize docs, [https://developers.cloudflare.com/vectorize/platform/changelog/](https://developers.cloudflare.com/vectorize/platform/changelog/)  
-> 31. Pricing · Cloudflare Workers AI docs, [https://developers.cloudflare.com/workers-ai/platform/pricing/](https://developers.cloudflare.com/workers-ai/platform/pricing/)  
-> 32. Overview · Cloudflare Workers AI docs, [https://developers.cloudflare.com/workers-ai/](https://developers.cloudflare.com/workers-ai/)
-
-[image1]: <data:image/png;base64,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>
-
-[image2]: <data:image/png;base64,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e9/oSPE2ZH7yAtek80ecrR9tlHFe5/bjX9IEBlz2xLDpHW/ATcZzlhMGf96fpR++Fc+cHgZg2YhvyTFAR+JxeO8QvhsTAY+XLMuzgpd0Y7RBHWELDLSULd6VU6N9O77lwr6d+T82SCgXNmDj9aIOJuuiCR4G/ir0GCS5b4qUHaMNskfGRJAhsvJb5PeDk6O9/4dj9v8aO743RPsRQ10O2xS47y69cYR2ST3CK5zltnu0MqJN5TIjHBFt2RRPVJL19cyY7KsiT9a9u4+2CkIv2x33yfJBQFTyGghmJkLkIyCcqB9Z3w8vx6gfcEK0PuXEaN6og8bjnMPyZ55P2CHat8WjzndmggR5TcQgHBfNm00df9poo97nc+BxrW0V8UubQ9DzLOnN6knBBmxroJ+hrWwb7ZeceU3aPbA3kHpWBST1lXy8R4pwJg21T0w4P8s/A3U3OSPaMmuPgk1ERFY7i2nAylLyiiz533qcVyjYREREZKtFwSYiIiKyymHv4K69cZXB0r+CTURERLZWXEIXEZHNxKFERFYC+xYRERERERERERERERERERERERERERERERERKfiTIxERERERERERERERERERERERERERERERERERERERERERERFZbvzfNiIiIiIiIiIiIiIiIiIiIiIiIiIiaxP3iYqIiIiIiIiIiMgWR8ekiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMja479mCS9rzNbX7QAAAABJRU5ErkJggg==>
+```json
+[
+  {
+    "id": "workers.inbound_requests",
+    "service": "workers",
+    "metric": "Inbound Requests",
+    "unit": "million requests",
+    "free_included": 0.1,
+    "paid_price_usd": 0.3,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers.cpu_time",
+    "service": "workers",
+    "metric": "CPU Time",
+    "unit": "million CPU-ms",
+    "free_included": null,
+    "paid_price_usd": 0.02,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers.base_subscription",
+    "service": "workers",
+    "metric": "Base Subscription",
+    "unit": "month",
+    "free_included": 0.0,
+    "paid_price_usd": 5.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers.data_egress",
+    "service": "workers",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers.build_minutes",
+    "service": "workers",
+    "metric": "Build Minutes",
+    "unit": "minutes",
+    "free_included": 3000.0,
+    "paid_price_usd": 0.005,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers.concurrent_builds",
+    "service": "workers",
+    "metric": "Concurrent Builds",
+    "unit": "concurrent slots",
+    "free_included": 1.0,
+    "paid_price_usd": null,
+    "billing_window": "none",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.standard_storage",
+    "service": "r2",
+    "metric": "Standard Storage",
+    "unit": "GB-month",
+    "free_included": 10.0,
+    "paid_price_usd": 0.015,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.standard_class_a_operations",
+    "service": "r2",
+    "metric": "Standard Class A Operations",
+    "unit": "million requests",
+    "free_included": 1.0,
+    "paid_price_usd": 4.5,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.standard_class_b_operations",
+    "service": "r2",
+    "metric": "Standard Class B Operations",
+    "unit": "million requests",
+    "free_included": 10.0,
+    "paid_price_usd": 0.36,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.standard_data_egress",
+    "service": "r2",
+    "metric": "Standard Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.infrequent_access_storage",
+    "service": "r2",
+    "metric": "Infrequent Access Storage",
+    "unit": "GB-month",
+    "free_included": null,
+    "paid_price_usd": 0.01,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.infrequent_access_class_a",
+    "service": "r2",
+    "metric": "Infrequent Access Class A",
+    "unit": "million requests",
+    "free_included": null,
+    "paid_price_usd": 9.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.infrequent_access_class_b",
+    "service": "r2",
+    "metric": "Infrequent Access Class B",
+    "unit": "million requests",
+    "free_included": null,
+    "paid_price_usd": 0.9,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "r2.infrequent_access_retrieval",
+    "service": "r2",
+    "metric": "Infrequent Access Retrieval",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.01,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/r2/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.keys_read",
+    "service": "kv",
+    "metric": "Keys Read",
+    "unit": "million keys",
+    "free_included": 0.1,
+    "paid_price_usd": 0.5,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.keys_written",
+    "service": "kv",
+    "metric": "Keys Written",
+    "unit": "million keys",
+    "free_included": 0.001,
+    "paid_price_usd": 5.0,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.keys_deleted",
+    "service": "kv",
+    "metric": "Keys Deleted",
+    "unit": "million keys",
+    "free_included": 0.001,
+    "paid_price_usd": 5.0,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.list_requests",
+    "service": "kv",
+    "metric": "List Requests",
+    "unit": "million requests",
+    "free_included": 0.001,
+    "paid_price_usd": 5.0,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.stored_data",
+    "service": "kv",
+    "metric": "Stored Data",
+    "unit": "GB-month",
+    "free_included": 1.0,
+    "paid_price_usd": 0.5,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "kv.data_egress",
+    "service": "kv",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "d1.rows_read",
+    "service": "d1",
+    "metric": "Rows Read",
+    "unit": "million rows",
+    "free_included": 5.0,
+    "paid_price_usd": 0.001,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "d1.rows_written",
+    "service": "d1",
+    "metric": "Rows Written",
+    "unit": "million rows",
+    "free_included": 0.1,
+    "paid_price_usd": 1.0,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "d1.storage",
+    "service": "d1",
+    "metric": "Storage",
+    "unit": "GB-month",
+    "free_included": 5.0,
+    "paid_price_usd": 0.75,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "d1.data_egress",
+    "service": "d1",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "queues.operations",
+    "service": "queues",
+    "metric": "Operations",
+    "unit": "million operations",
+    "free_included": null,
+    "paid_price_usd": 0.4,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/queues/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "queues.data_egress",
+    "service": "queues",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/queues/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "pages.static_asset_requests",
+    "service": "pages",
+    "metric": "Static Asset Requests",
+    "unit": "requests",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "pages.static_bandwidth_egress",
+    "service": "pages",
+    "metric": "Static Bandwidth / Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "pages.build_minutes",
+    "service": "pages",
+    "metric": "Build Minutes",
+    "unit": "minutes",
+    "free_included": 3000.0,
+    "paid_price_usd": 0.005,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "pages.concurrent_builds",
+    "service": "pages",
+    "metric": "Concurrent Builds",
+    "unit": "concurrent slots",
+    "free_included": 1.0,
+    "paid_price_usd": null,
+    "billing_window": "none",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "pages.functions_invocations",
+    "service": "pages",
+    "metric": "Functions Invocations",
+    "unit": "million requests",
+    "free_included": 0.1,
+    "paid_price_usd": 0.3,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "images.unique_transformations",
+    "service": "images",
+    "metric": "Unique Transformations",
+    "unit": "thousand transformations",
+    "free_included": 5.0,
+    "paid_price_usd": 0.5,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/images/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "images.hosted_image_storage",
+    "service": "images",
+    "metric": "Hosted Image Storage",
+    "unit": "hundred thousand images",
+    "free_included": null,
+    "paid_price_usd": 5.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/images/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "images.image_delivery_egress",
+    "service": "images",
+    "metric": "Image Delivery / Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/images/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "stream.stored_video",
+    "service": "stream",
+    "metric": "Stored Video",
+    "unit": "thousand minutes",
+    "free_included": null,
+    "paid_price_usd": 5.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/stream/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "stream.viewed_video",
+    "service": "stream",
+    "metric": "Viewed Video",
+    "unit": "thousand minutes",
+    "free_included": null,
+    "paid_price_usd": 1.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/stream/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "stream.video_delivery_egress",
+    "service": "stream",
+    "metric": "Video Delivery / Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/stream/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "vectorize.queried_dimensions",
+    "service": "vectorize",
+    "metric": "Queried Dimensions",
+    "unit": "million dimensions",
+    "free_included": 30.0,
+    "paid_price_usd": 0.01,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/vectorize/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "vectorize.stored_dimensions",
+    "service": "vectorize",
+    "metric": "Stored Dimensions",
+    "unit": "million dimensions",
+    "free_included": 5.0,
+    "paid_price_usd": 0.0005,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/vectorize/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "vectorize.data_egress",
+    "service": "vectorize",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/vectorize/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers_ai.compute_neurons",
+    "service": "workers_ai",
+    "metric": "Compute Neurons",
+    "unit": "thousand neurons",
+    "free_included": 10.0,
+    "paid_price_usd": 0.011,
+    "billing_window": "daily_utc",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "workers_ai.data_egress",
+    "service": "workers_ai",
+    "metric": "Data Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "hyperdrive.database_configurations",
+    "service": "hyperdrive",
+    "metric": "Database Configurations",
+    "unit": "configuration",
+    "free_included": 1.0,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "hyperdrive.query_pooling_caching",
+    "service": "hyperdrive",
+    "metric": "Query Pooling / Caching",
+    "unit": "million queries",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "hyperdrive.data_transfer_egress",
+    "service": "hyperdrive",
+    "metric": "Data Transfer / Egress",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "zones.free_plan",
+    "service": "zones",
+    "metric": "Free Plan",
+    "unit": "zone-month",
+    "free_included": 1.0,
+    "paid_price_usd": 0.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://www.cloudflare.com/plans/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "zones.pro_plan",
+    "service": "zones",
+    "metric": "Pro Plan",
+    "unit": "zone-month",
+    "free_included": null,
+    "paid_price_usd": 20.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://www.cloudflare.com/plans/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "zones.business_plan",
+    "service": "zones",
+    "metric": "Business Plan",
+    "unit": "zone-month",
+    "free_included": null,
+    "paid_price_usd": 200.0,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://www.cloudflare.com/plans/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "zones.enterprise_plan",
+    "service": "zones",
+    "metric": "Enterprise Plan",
+    "unit": "zone-month",
+    "free_included": null,
+    "paid_price_usd": null,
+    "billing_window": "calendar_month",
+    "overflow_behavior": "unknown",
+    "source_url": "https://www.cloudflare.com/plans/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "zones.zone_egress_traffic",
+    "service": "zones",
+    "metric": "Zone Egress Traffic",
+    "unit": "GB",
+    "free_included": null,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://www.cloudflare.com/plans/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "rest_api.api_invocations",
+    "service": "rest_api",
+    "metric": "API Invocations",
+    "unit": "requests per 5 min",
+    "free_included": 1200.0,
+    "paid_price_usd": 0.0,
+    "billing_window": "rolling",
+    "overflow_behavior": "hard_fail",
+    "source_url": "https://developers.cloudflare.com/fundamentals/api/reference/limits/",
+    "as_of": "2026-04-21"
+  },
+  {
+    "id": "rest_api.api_platform_access",
+    "service": "rest_api",
+    "metric": "API Platform Access",
+    "unit": "month",
+    "free_included": 1.0,
+    "paid_price_usd": 0.0,
+    "billing_window": "none",
+    "overflow_behavior": "auto_bill",
+    "source_url": "https://developers.cloudflare.com/fundamentals/api/reference/limits/",
+    "as_of": "2026-04-21"
+  }
+]
+```
