@@ -1,0 +1,13 @@
+id: BUG-044
+type: bug
+created_at: 2026-09-13T15:36:28.484956+04:00
+updated_at: 2026-09-13T15:36:28.491866+04:00
+source: local
+ulid: 01M2D8VW2BE5KG6SGED3EN9R93
+severity: high
+status: open
+title: auth rotate --revoke-old would revoke the NEW token; rotate always errors
+description: 'cmd/auth.go:479-491 is a shipped placeholder that always errors; worse, --revoke-old reads profile.APIToken AFTER overwrite (audit 2026-09-13, agent-9): it would revoke the NEW token instead of the old.'
+fix_direction: Implement rotation via Cloudflare API Token endpoints in cmd/auth.go, capturing oldToken before the profile.APIToken overwrite at cmd/auth.go:227-239; or remove the rotate subcommand
+affected_files:
+    - cmd/auth.go
