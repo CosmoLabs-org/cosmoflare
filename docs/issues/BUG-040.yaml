@@ -1,0 +1,13 @@
+id: BUG-040
+type: bug
+created_at: 2026-09-13T15:35:54.828855+04:00
+updated_at: 2026-09-13T15:35:54.841123+04:00
+source: local
+ulid: 01M2D8TV6S4EXQVX1ZFKQSFNCR
+severity: critical
+status: open
+title: sync down --delete never deletes local files; deletes wrong remote object
+description: SyncService.Execute always calls DeleteRemoteObject with an unprefixed key regardless of plan.Direction (audit 2026-09-13, agent-2). A down-sync with --delete can delete an unrelated object at the bucket root outside the synced prefix, and still reports Succeeded.
+fix_direction: Branch Execute in pkg/cosmoflare/sync.go on plan.Direction; for SyncDown delete ops call os.Remove(op.LocalPath) never DeleteRemoteObject; add regression test in sync_test.go asserting down-sync emits zero remote deletes
+affected_files:
+    - pkg/cosmoflare/sync.go
