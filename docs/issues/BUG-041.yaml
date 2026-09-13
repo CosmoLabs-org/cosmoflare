@@ -1,0 +1,13 @@
+id: BUG-041
+type: bug
+created_at: 2026-09-13T15:36:12.506144+04:00
+updated_at: 2026-09-13T15:36:12.510277+04:00
+source: local
+ulid: 01M2D8VCEYJN8JHS0DQ549PZME
+severity: critical
+status: open
+title: sync up --delete deletes remote objects matching exclude patterns
+description: 'The planUp/planDown delete loops in pkg/cosmoflare/sync.go skip exclude checks (audit 2026-09-13, agent-2): sync up --delete deletes remote objects matching .env/.git/.DS_Store exclude patterns.'
+fix_direction: Add isExcluded(relKey, input.Exclude) guard in the planUp and planDown delete loops of pkg/cosmoflare/sync.go (~line 275); unit-test that excluded remote keys are never delete-eligible
+affected_files:
+    - pkg/cosmoflare/sync.go
