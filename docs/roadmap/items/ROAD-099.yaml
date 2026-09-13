@@ -1,0 +1,11 @@
+id: ROAD-099
+created_at: 2026-09-13T15:38:34.286655+04:00
+updated_at: 2026-09-13T15:38:34.287662+04:00
+title: Production-evidence reliability loop
+description: 'Convert production friction into tracked reliability work: MyCarGuide D1 batch-push/deploy-verify/parity (FEAT-018), token permission-name drift (FEAT-011), serve limits-snapshot cadence caching (FEAT-014 — premise updated, snapshot wired at cmd/serve.go:238). Source: audit 2026-09-13 agent-12-roadmap-health.md'
+status: captured
+tags:
+    - audit-hydrated
+origin:
+    session: 53
+ulid: 01M2D8ZPXFS12H1R1XGXWVATXS
