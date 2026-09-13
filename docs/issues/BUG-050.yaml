@@ -1,0 +1,13 @@
+id: BUG-050
+type: bug
+created_at: 2026-09-13T15:38:07.319385+04:00
+updated_at: 2026-09-13T15:38:07.325836+04:00
+source: local
+ulid: 01M2D8YWJXQJ3H506JQ9GGBN7C
+severity: high
+status: open
+title: 'Docker builder toolchain drift: golang:1.25-alpine vs go.mod go 1.26'
+description: 'Dockerfile builds with golang:1.25-alpine while go.mod declares go 1.26 (audit 2026-09-13, agent-9): silent toolchain download or build failure; the runtime alpine base is unpinned; the image is vestigial (never in the goreleaser release flow defined by .goreleaser.yaml).'
+fix_direction: Pin the builder stage FROM line in the Dockerfile to golang:1.26-alpine to match the go directive in go.mod; pin the runtime alpine to a tagged 3.x release; build with -o cosmoflare; extend .dockerignore to exclude desktop/, GOrchestra/, stale r2go2 binaries and cmd.test per .goreleaser.yaml asset vocabulary
+affected_files:
+    - Dockerfile
