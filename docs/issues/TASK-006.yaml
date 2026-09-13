@@ -1,0 +1,18 @@
+id: TASK-006
+type: task
+created_at: 2026-09-13T17:05:35.099172+04:00
+updated_at: 2026-09-13T17:05:35.104913+04:00
+source: local
+ulid: 01M2DDZ1C0N5JX7BGWXSKMWNNC
+status: open
+labels:
+    - audit
+    - infrastructure
+title: govulncheck gate in release-prepare
+description: |-
+    # govulncheck gate in release-prepare
+
+    No security scanning anywhere in the live (local) release pipeline. Add govulncheck (optionally gosec) to make release-prepare — the only pipeline that runs. Evidence: agent-9-infrastructure.md
+
+    Origin: audit-agent-9-infrastructure
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-9-infrastructure.md
