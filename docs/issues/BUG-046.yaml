@@ -1,0 +1,14 @@
+id: BUG-046
+type: bug
+created_at: 2026-09-13T15:36:57.196992+04:00
+updated_at: 2026-09-13T15:36:57.201028+04:00
+source: local
+ulid: 01M2D8WR3HKTG5PFM3Y4XBFGKA
+severity: high
+status: open
+title: cosmoflare dev proxy is a 502 stub while USAGE.md documents a working proxy
+description: pkg/cosmoflare/dev.go:161 returns 502 for every request (audit 2026-09-13, agent-7) while docs/USAGE.md documents a working per-service reverse proxy with config hot-reload — a documented-but-fake command that poisons agent trust in help text.
+fix_direction: Implement the per-service reverse proxy with profile-resolved credentials and fsnotify config watch in pkg/cosmoflare/dev.go, or deprecate the command and correct docs/USAGE.md to match actual behavior
+affected_files:
+    - pkg/cosmoflare/dev.go
+    - docs/USAGE.md
