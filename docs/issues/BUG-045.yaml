@@ -1,11 +1,11 @@
 id: BUG-045
 type: bug
 created_at: 2026-09-13T15:36:51.344451+04:00
-updated_at: 2026-09-13T15:36:53.619162+04:00
+updated_at: 2026-09-13T16:13:43.162083+04:00
 source: local
 ulid: 01M2D8WJCNA7NW83M4JS4HP2AB
 severity: high
-status: open
+status: closed
 origin:
     session: 53
 title: make dist tars docs/ (transcripts with AWS-key patterns) into release archives
@@ -13,3 +13,6 @@ description: 'Makefile:97 includes ../docs/ in the dist tar target (audit 2026-0
 fix_direction: Remove the ../docs/ path from the dist target in Makefile (line ~97); retire the duplicate r2go2-branded Makefile release path in favor of the goreleaser pipeline in .goreleaser.yaml
 affected_files:
     - Makefile
+revisions:
+    - date: "2026-09-13"
+      action: closed
