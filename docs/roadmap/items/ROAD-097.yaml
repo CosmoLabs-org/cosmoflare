@@ -1,0 +1,11 @@
+id: ROAD-097
+created_at: 2026-09-13T15:38:29.916228+04:00
+updated_at: 2026-09-13T15:38:29.918318+04:00
+title: Remote MCP transport (HTTP, token-authed) + tools/list pagination
+description: 'Streamable HTTP transport reusing the serve daemon (token-authed) + tools/list cursor pagination; neutralizes official cloudflare/mcp zero-install advantage while marketing fail-closed mutation gating. Source: audit 2026-09-13 agent-4-competitive.md'
+status: captured
+tags:
+    - audit-hydrated
+origin:
+    session: 53
+ulid: 01M2D8ZJMYYGEVP2KE27TK5JX9

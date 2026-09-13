@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T15:38:27.827391+04:00
-next_id: 97
+last_updated: 2026-09-13T15:38:29.916463+04:00
+next_id: 98
 items:
+    - id: ROAD-097
+      title: Remote MCP transport (HTTP, token-authed) + tools/list pagination
+      status: captured
+      created_at: 2026-09-13T15:38:29.916228+04:00
     - id: ROAD-096
       title: Launch and distribution program (0 to 1,000 stars)
       status: captured
