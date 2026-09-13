@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T15:38:09.456754+04:00
-next_id: 95
+last_updated: 2026-09-13T15:38:25.424782+04:00
+next_id: 96
 items:
+    - id: ROAD-095
+      title: Agent-first onboarding — first-run wizard + least-privilege token doctor
+      status: captured
+      created_at: 2026-09-13T15:38:25.424438+04:00
     - id: ROAD-094
       title: 'Roadmap hygiene sweep #2 — linkage, dedupe, drift fixes'
       status: captured
