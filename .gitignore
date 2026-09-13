@@ -214,3 +214,8 @@ GOrchestra/worktrees/**/recovery_*.patch
 .version-registry.json
 .cosmoflare-d1-import-progress.json
 .cosmoflare-time-travel-cache.json
+
+# Internal session artifacts (audit 2026-09-13, action-plan #8) — never ship in the public tree
+docs/conversation-transcripts/
+docs/sessions/transcripts/*.jsonl
+GOrchestra/

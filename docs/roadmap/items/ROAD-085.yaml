@@ -1,11 +1,13 @@
 id: ROAD-085
 created_at: 2026-08-31T03:57:01.988278+04:00
-updated_at: 2026-08-31T03:57:19.411903+04:00
+updated_at: 2026-09-13T17:42:15.883709+04:00
 title: Secrets hygiene — purge scan findings from committed GOrchestra artifacts
 description: ccs security flags critical AWS-access-key patterns in GOrchestra/sessions/agent-a1cdb2ac246339700/recovery.patch (lines 104, 157, 432+) and hardcoded IPs across .glm-agent-history.yaml. 234MB of tracked recovery patches (some 665K lines) bloat clones and mask real findings. Also covers tracked binaries (cmd.test, r2go2, build/). Links IDEA-046. Audit-hydrated 2026-08-31.
 status: captured
 tags:
     - audit-hydrated
+notes:
+    - '2026-09-13 audit (agent-12): GOrchestra purge LANDED — tracked size 234MB → 7.3MB across 70+ commits. Scanner''s 13 ''critical'' AWS-key hits re-verified as AKIAIOSFODNN7EXAMPLE documentation placeholders (false positives, agent-9). Remaining scope: docs/conversation-transcripts/ (93 files), docs/sessions/transcripts/*.jsonl, tracked binaries (cmd.test, r2go2*), scanner allowlist — overlaps task #37 untrack pass + ROAD-096 launch gate.'
 linked_issues:
     - IDEA-046
 origin:

@@ -346,8 +346,16 @@ docker-run:
 	docker run --rm -it $(DOCKER_IMAGE):latest
 
 # Release preparation
+# Security scan (TASK-006): gate releases on known-vulnerability scan.
+# Auto-installs govulncheck on first use; fails the release on any finding.
+.PHONY: vulncheck
+vulncheck:
+	@echo "🔎 Running govulncheck (release security gate)..."
+	@command -v govulncheck >/dev/null 2>&1 || go install golang.org/x/vuln/cmd/govulncheck@latest
+	@govulncheck ./...
+
 .PHONY: release-prepare
-release-prepare: clean deps test build-all dist checksums sbom
+release-prepare: clean deps test vulncheck build-all dist checksums sbom
 	@echo "🚀 Release preparation complete!"
 	@echo "📦 Distribution files:"
 	@ls -la $(DIST_DIR)/*.{tar.gz,zip,deb,rpm} 2>/dev/null || echo "No distribution files found"

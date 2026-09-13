@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T15:38:36.944642+04:00
+last_updated: 2026-09-13T17:42:32.144314+04:00
 next_id: 100
 items:
     - id: BASE-001
@@ -737,8 +737,6 @@ items:
     - id: ROAD-084
       title: Desktop v1.1 reliability & live data (metrics + daemon watchdog)
       status: captured
-      linked_issues:
-        - FEAT-008
       created_at: 2026-08-31T03:57:00.037174+04:00
     - id: ROAD-085
       title: Secrets hygiene — purge scan findings from committed GOrchestra artifacts
