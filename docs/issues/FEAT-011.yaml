@@ -1,16 +1,19 @@
 ---
 id: FEAT-011
-title: 'CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off'
 type: feature
-status: open
+created: "2026-09-09"
+updated: "2026-09-13T15:38:36.906739+04:00"
 priority: 50
-created: 2026-09-09
-updated: 2026-09-09
+status: open
 origin:
-  feedback_id: FB-5
-  from_project: MyCarGuide
-  received: 2026-09-09
-  converted: 2026-09-09
+    feedback_id: FB-5
+    roadmap_items:
+        - ROAD-099
+    from_project: MyCarGuide
+    received: "2026-09-09"
+    converted: "2026-09-09"
+title: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off
+
 ---
 
 # FEAT-011: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off

@@ -206,6 +206,10 @@ func runAuthRotate(cmd *cobra.Command, args []string) error {
 
 	printInfo("Current token (masked): %s", config.MaskKey(profile.APIToken))
 
+	// BUG-044: capture the pre-rotation token BEFORE the profile is
+	// overwritten — --revoke-old must revoke this token, never the new one.
+	oldToken := profile.APIToken
+
 	// Generate new token
 	printInfo("Generating new API token...")
 	newToken, err := generateNewToken(profile)
@@ -236,7 +240,7 @@ func runAuthRotate(cmd *cobra.Command, args []string) error {
 	revokeOld, _ := cmd.Flags().GetBool("revoke-old")
 	if revokeOld {
 		printInfo("Revoking old token...")
-		if err := revokeOldToken(profile.APIToken); err != nil {
+		if err := revokeOldToken(oldToken); err != nil {
 			printWarning("Failed to revoke old token: %v", err)
 		} else {
 			printSuccess("Old token revoked successfully")
@@ -435,7 +439,9 @@ func promptForEmail() string {
 	return strings.TrimSpace(email)
 }
 
-func testCredentials(credentials *AuthCredentials) error {
+// Test seams (BUG-044): these are package-level so tests can stub token
+// generation/revocation/validation without network access.
+var testCredentials = func(credentials *AuthCredentials) error {
 	client, err := cosmoflare.NewClient(
 		cosmoflare.WithAccountID(credentials.AccountID),
 		cosmoflare.WithAPIToken(credentials.APIToken),
@@ -476,14 +482,14 @@ func saveCredentialsToProfile(profileName string, credentials *AuthCredentials) 
 	return configMgr.SetProfile(profile)
 }
 
-func generateNewToken(profile *config.Profile) (string, error) {
+var generateNewToken = func(profile *config.Profile) (string, error) {
 	// This is a placeholder implementation
 	// In practice, you would use the Cloudflare API to generate new tokens
 	// For now, return an error indicating manual token generation is required
 	return "", fmt.Errorf("automatic token generation not implemented. Please generate a new token manually in the Cloudflare dashboard")
 }
 
-func revokeOldToken(token string) error {
+var revokeOldToken = func(token string) error {
 	// This is a placeholder implementation
 	// In practice, you would use the Cloudflare API to revoke tokens
 	// For now, return an error indicating manual revocation is required

@@ -1,0 +1,308 @@
+{
+  "issues": [
+    {
+      "id": "FEAT-011",
+      "source": "local",
+      "title": "CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off",
+      "status": "open",
+      "age_days": 0,
+      "score": 47,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 50,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-014",
+      "source": "local",
+      "title": "Serve limits-snapshot cadence too hot once wired",
+      "status": "open",
+      "age_days": 0,
+      "score": 47,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 50,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-018",
+      "source": "local",
+      "title": "MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit",
+      "status": "open",
+      "area": "reliability",
+      "age_days": 0,
+      "score": 47,
+      "has_reproduction": false,
+      "labels": [
+        "d1",
+        "pages",
+        "waf",
+        "agent-ux",
+        "production-evidence"
+      ],
+      "score_breakdown": {
+        "severity": 50,
+        "age": 50,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-016",
+      "source": "local",
+      "title": "Makefile release target codifying the local goreleaser + gh publish recipe",
+      "status": "open",
+      "age_days": 3,
+      "score": 37,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 10,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-017",
+      "source": "local",
+      "title": "First-run setup wizard — one token, whole platform",
+      "status": "open",
+      "age_days": 3,
+      "score": 37,
+      "has_reproduction": false,
+      "labels": [
+        "onboarding",
+        "ux"
+      ],
+      "score_breakdown": {
+        "severity": 50,
+        "age": 10,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-015",
+      "source": "local",
+      "title": "Alert condition descriptor table — one registry for names, units, help",
+      "status": "open",
+      "age_days": 3,
+      "score": 37,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 10,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-019",
+      "source": "local",
+      "title": "Permission manifest + least-privilege token doctor",
+      "status": "open",
+      "age_days": 2,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 7,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-020",
+      "source": "local",
+      "title": "Command registry manifest — per-command metadata spine",
+      "status": "open",
+      "age_days": 2,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 7,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-021",
+      "source": "local",
+      "title": "Workers command depth: versions, cron, secrets, routes, domains, subdomain, bindings, tail, types",
+      "status": "open",
+      "age_days": 2,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 7,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-025",
+      "source": "local",
+      "title": "Rate-limit-aware shared client: Retry-After, backoff, retry flags",
+      "status": "open",
+      "age_days": 2,
+      "score": 36,
+      "has_reproduction": false,
+      "delegated_to": "0126",
+      "delegated_engine": "glm-agent",
+      "score_breakdown": {
+        "severity": 50,
+        "age": 7,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-026",
+      "source": "local",
+      "title": "Named environment profiles (dev/staging/prod) across all commands",
+      "status": "open",
+      "age_days": 2,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 7,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-029",
+      "source": "local",
+      "title": "Auth modernization: token retrieval command + device-flow login",
+      "status": "open",
+      "age_days": 1,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 5,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-030",
+      "source": "local",
+      "title": "Registrar operations depth: register, transfer, renew, lock/unlock, contacts, DNSSEC",
+      "status": "open",
+      "age_days": 1,
+      "score": 36,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 5,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-031",
+      "source": "local",
+      "title": "SSL custom hostnames (SaaS) CRUD + verification status",
+      "status": "open",
+      "age_days": 1,
+      "score": 35,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 3,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-032",
+      "source": "local",
+      "title": "WAF lists CRUD + managed-rulesets update",
+      "status": "open",
+      "age_days": 1,
+      "score": 35,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 3,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-035",
+      "source": "local",
+      "title": "Cloudflare Tunnels management CLI",
+      "status": "open",
+      "age_days": 1,
+      "score": 35,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 3,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-036",
+      "source": "local",
+      "title": "Account management + audit logs",
+      "status": "open",
+      "age_days": 1,
+      "score": 35,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 3,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    },
+    {
+      "id": "FEAT-037",
+      "source": "local",
+      "title": "Zone long-tail services batch: Waiting Room, Spectrum, LB, Page Shield, Turnstile, Web Analytics, Logpush",
+      "status": "open",
+      "age_days": 1,
+      "score": 35,
+      "has_reproduction": false,
+      "score_breakdown": {
+        "severity": 50,
+        "age": 3,
+        "complexity": 50,
+        "reproduction": 30,
+        "labels": 50
+      }
+    }
+  ],
+  "total": 18,
+  "triaged_at": "2026-09-13T06:21:48.418819+04:00"
+}

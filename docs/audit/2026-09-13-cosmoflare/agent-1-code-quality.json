@@ -1,0 +1,144 @@
+{
+  "agent": "code-quality",
+  "overall_score": 7,
+  "sub_scores": {
+    "architecture": 7,
+    "code_patterns": 7,
+    "tech_debt": 7,
+    "test_coverage": 7,
+    "maintainability": 7
+  },
+  "critical_findings": [
+    {
+      "title": "618 inline JSON-output branches across cmd/",
+      "severity": "medium",
+      "file": "cmd/object.go:483",
+      "fix": "Introduce an output presenter interface (JSON/table implementations built once per run) and call it unconditionally from handlers",
+      "effort": "large"
+    },
+    {
+      "title": "45 god functions over 80 lines (worst 238)",
+      "severity": "medium",
+      "file": "internal/tui/update.go:handleKeyMsg",
+      "fix": "Split runObjectPut/handleKeyMsg/loadBuiltinThemes into per-path helpers; enforce golangci-lint funlen=80",
+      "effort": "medium"
+    },
+    {
+      "title": "Two coexisting command error-flow idioms (Run+printErrorAndExit with os.Exit vs RunE)",
+      "severity": "medium",
+      "file": "cmd/create.go:30",
+      "fix": "Migrate legacy create/list/delete commands to RunE returning errors; delete printErrorAndExit",
+      "effort": "medium"
+    },
+    {
+      "title": "cmd package coverage 44.6% with no CI executing the suites",
+      "severity": "medium",
+      "file": "cmd/",
+      "fix": "Add output-mode table tests for the 10 highest-traffic commands; add a mandatory pre-release local test gate",
+      "effort": "medium"
+    },
+    {
+      "title": "Committed transcripts and GOrchestra logs contain secret-pattern text and 570K+ lines of non-code",
+      "severity": "medium",
+      "file": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12110",
+      "fix": "Redact/purge transcript and log history to an out-of-repo archive; gitignore GOrchestra/**/*.log",
+      "effort": "small"
+    },
+    {
+      "title": "Shared getAPIClient factory defined inside domain file object.go",
+      "severity": "low",
+      "file": "cmd/object.go:1102",
+      "fix": "Move to cmd/client.go or cmd/root.go",
+      "effort": "small"
+    },
+    {
+      "title": "Duplicate defer obj.Content.Close()",
+      "severity": "low",
+      "file": "cmd/object.go:407",
+      "fix": "Delete the second defer",
+      "effort": "small"
+    },
+    {
+      "title": "Raw cmd.Start() violates project's own process-spawning rule (ROAD-525)",
+      "severity": "low",
+      "file": "cmd/installer_tui/main.go:1280",
+      "fix": "Use daemon.SpawnAsync() or a tracked spawn wrapper",
+      "effort": "small"
+    },
+    {
+      "title": "Legacy r2go2: error prefix leaks into cosmoflare UX",
+      "severity": "low",
+      "file": "pkg/cosmoflare/errors.go:25",
+      "fix": "Change prefix to cosmoflare:; keep ~/.r2go2 config path for compat",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Extract an output presenter abstraction to collapse the 618 JSONOutput branches",
+      "effort": "large",
+      "priority": "high"
+    },
+    {
+      "action": "Split the three worst god functions and enable golangci-lint funlen=80",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Migrate legacy Run+printErrorAndExit commands to RunE",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add cmd-layer tests for the 10 highest-traffic commands covering JSON+table+error outputs",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Purge/redact GOrchestra logs and transcripts; gitignore GOrchestra/**/*.log",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Move getAPIClient to a cmd helpers file; delete duplicate defer at object.go:409",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Replace raw cmd.Start() at installer_tui/main.go:1280 with daemon.SpawnAsync",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Rebrand r2go2: error prefix to cosmoflare: and adopt zerolog or document the stack deviation",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Output rendering layer unification",
+      "description": "Single presenter interface for JSON/table/text output across all 40+ command groups, eliminating the 618-branch duplication class",
+      "priority": "high",
+      "effort": "large"
+    },
+    {
+      "title": "Command-layer test hardening",
+      "description": "Lift cmd/ coverage from 44.6% to 60%+ with output-mode assertions on top commands",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Repository hygiene pass",
+      "description": "Move agent logs and conversation transcripts out of git; keep the repo code+docs only",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Legacy command modernization",
+      "description": "Finish the Run-to-RunE migration and r2go2-to-cosmoflare error-prefix cleanup",
+      "priority": "low",
+      "effort": "medium"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -307,5 +308,40 @@ func TestApplyServiceContainsDiffService(t *testing.T) {
 	}
 	if svc.diff == nil {
 		t.Error("expected ApplyService to contain a DiffService")
+	}
+}
+
+// --- BUG-049: apply must not delete resources it did not create by omission ---
+
+func TestGateUnmanagedDeletes_DefaultSkipsDeletes(t *testing.T) {
+	a := &ApplyService{} // deleteUnmanaged defaults false — NOT opted in
+	ops := []ApplyOperation{
+		{Action: ApplyDelete, Resource: "stray-bucket"},
+		{Action: ApplyCreate, Resource: "new-bucket"},
+	}
+
+	gated := a.gateUnmanagedDeletes(ops)
+
+	if gated[0].Status != ApplyStatusSkipped {
+		t.Errorf("unmanaged delete must be skipped without --delete-unmanaged, got status %q", gated[0].Status)
+	}
+	if !strings.Contains(gated[0].Detail, "--delete-unmanaged") {
+		t.Errorf("skip detail must tell the user how to opt in, got: %q", gated[0].Detail)
+	}
+	if gated[1].Status == ApplyStatusSkipped {
+		t.Error("create ops must not be gated")
+	}
+}
+
+func TestGateUnmanagedDeletes_OptInPreservesDeletes(t *testing.T) {
+	a := &ApplyService{deleteUnmanaged: true}
+	ops := []ApplyOperation{
+		{Action: ApplyDelete, Resource: "stray-bucket"},
+	}
+
+	gated := a.gateUnmanagedDeletes(ops)
+
+	if gated[0].Status == ApplyStatusSkipped {
+		t.Error("opted-in deletes must be preserved")
 	}
 }

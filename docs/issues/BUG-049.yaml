@@ -1,11 +1,13 @@
 id: BUG-049
 type: bug
 created_at: 2026-09-13T15:37:13.346037+04:00
-updated_at: 2026-09-13T15:37:13.350115+04:00
+updated_at: 2026-09-13T15:37:15.464054+04:00
 source: local
 ulid: 01M2D8X7W6EZ75CT00GG4D2411
 severity: medium
 status: open
+origin:
+    session: 53
 title: apply deletes any account resource not declared in config (delete-by-omission)
 description: 'pkg/cosmoflare/apply.go:423 deletes resources absent from the config (audit 2026-09-13, agent-2): any account resource cosmoflare did not create is destroyable by omission — whole-account blast radius.'
 fix_direction: Only delete resources cosmoflare created (state-tracked or tagged) in pkg/cosmoflare/apply.go, or require an explicit --delete-unmanaged opt-in flag wired through cmd/apply.go; document the managed-resource model

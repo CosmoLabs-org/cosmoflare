@@ -1,0 +1,15 @@
+{
+  "frontend": {
+    "detected": true,
+    "component_files": 10,
+    "dirs": [
+      "desktop/src/",
+      "desktop/src/__tests__/",
+      "desktop/src/components/",
+      "desktop/src/views/"
+    ],
+    "animation_instances": 0,
+    "motion_evidence": false
+  },
+  "skipped_paths": 0
+}

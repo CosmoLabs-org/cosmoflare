@@ -1,11 +1,13 @@
 id: BUG-042
 type: bug
 created_at: 2026-09-13T15:36:17.812027+04:00
-updated_at: 2026-09-13T15:36:17.817895+04:00
+updated_at: 2026-09-13T15:36:19.841285+04:00
 source: local
 ulid: 01M2D8VHMSAC20R0PFACC1RNM0
 severity: high
 status: open
+origin:
+    session: 53
 title: Shared 30s http.Client.Timeout kills large S3 transfers mid-body
 description: 'pkg/cosmoflare/client.go:113 hands the 30s-timeout client to the S3 SDK transport (audit 2026-09-13, agent-2): any transfer slower than 30s (large sync downs, ~100MB PUTs) fails mid-body.'
 fix_direction: 'Split control-plane vs data-plane clients in pkg/cosmoflare/client.go: keep 30s client for API calls, dedicated timeout-free http.Client for the S3 transport in client.go (ctx + SDK retries govern); add slow-body integration test'

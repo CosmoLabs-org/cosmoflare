@@ -1,32 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T15:38:34.28681+04:00
+last_updated: 2026-09-13T15:38:36.944642+04:00
 next_id: 100
 items:
-    - id: ROAD-099
-      title: Production-evidence reliability loop
-      status: captured
-      created_at: 2026-09-13T15:38:34.286655+04:00
-    - id: ROAD-098
-      title: Rate-limit-aware shared client — tracked home for remainder
-      status: captured
-      created_at: 2026-09-13T15:38:32.008627+04:00
-    - id: ROAD-097
-      title: Remote MCP transport (HTTP, token-authed) + tools/list pagination
-      status: captured
-      created_at: 2026-09-13T15:38:29.916228+04:00
-    - id: ROAD-096
-      title: Launch and distribution program (0 to 1,000 stars)
-      status: captured
-      created_at: 2026-09-13T15:38:27.827191+04:00
-    - id: ROAD-095
-      title: Agent-first onboarding — first-run wizard + least-privilege token doctor
-      status: captured
-      created_at: 2026-09-13T15:38:25.424438+04:00
-    - id: ROAD-094
-      title: 'Roadmap hygiene sweep #2 — linkage, dedupe, drift fixes'
-      status: captured
-      created_at: 2026-09-13T15:38:09.456555+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -824,3 +800,36 @@ items:
       category: security
       effort: large
       created_at: 2026-09-11T01:08:56.077121+04:00
+    - id: ROAD-094
+      title: 'Roadmap hygiene sweep #2 — linkage, dedupe, drift fixes'
+      status: captured
+      created_at: 2026-09-13T15:38:09.456555+04:00
+    - id: ROAD-095
+      title: Agent-first onboarding — first-run wizard + least-privilege token doctor
+      status: captured
+      linked_issues:
+        - FEAT-017
+        - FEAT-019
+      created_at: 2026-09-13T15:38:25.424438+04:00
+    - id: ROAD-096
+      title: Launch and distribution program (0 to 1,000 stars)
+      status: captured
+      created_at: 2026-09-13T15:38:27.827191+04:00
+    - id: ROAD-097
+      title: Remote MCP transport (HTTP, token-authed) + tools/list pagination
+      status: captured
+      created_at: 2026-09-13T15:38:29.916228+04:00
+    - id: ROAD-098
+      title: Rate-limit-aware shared client — tracked home for remainder
+      status: captured
+      linked_issues:
+        - FEAT-025
+      created_at: 2026-09-13T15:38:32.008627+04:00
+    - id: ROAD-099
+      title: Production-evidence reliability loop
+      status: captured
+      linked_issues:
+        - FEAT-018
+        - FEAT-011
+        - FEAT-014
+      created_at: 2026-09-13T15:38:34.286655+04:00

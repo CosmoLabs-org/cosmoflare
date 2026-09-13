@@ -231,6 +231,9 @@ func (s *SyncService) planUp(input SyncPlanInput, localByRel map[string]LocalFil
 		if isExcluded(relPath, input.Exclude) {
 			continue
 		}
+		if !isIncluded(relPath, input.Include) {
+			continue
+		}
 
 		remoteKey := relPath
 		if input.Prefix != "" {
@@ -273,6 +276,16 @@ func (s *SyncService) planUp(input SyncPlanInput, localByRel map[string]LocalFil
 	// Check for remote objects that don't exist locally (delete if --delete)
 	if input.Delete {
 		for relKey, remote := range remoteByKey {
+			// Excluded paths are outside the sync universe: never delete-eligible
+			// (BUG-041 — .env/.git/ patterns must survive --delete).
+			if isExcluded(relKey, input.Exclude) {
+				continue
+			}
+			// Outside the include universe: not managed, never delete-eligible
+			// (BUG-051).
+			if !isIncluded(relKey, input.Include) {
+				continue
+			}
 			if _, exists := localByRel[relKey]; !exists {
 				remoteKey := relKey
 				if input.Prefix != "" {
@@ -298,6 +311,9 @@ func (s *SyncService) planDown(input SyncPlanInput, localByRel map[string]LocalF
 	// Check each remote object
 	for relKey, remote := range remoteByKey {
 		if isExcluded(relKey, input.Exclude) {
+			continue
+		}
+		if !isIncluded(relKey, input.Include) {
 			continue
 		}
 
@@ -344,6 +360,16 @@ func (s *SyncService) planDown(input SyncPlanInput, localByRel map[string]LocalF
 	// Check for local files that don't exist remotely (delete if --delete)
 	if input.Delete {
 		for relPath, local := range localByRel {
+			// Excluded paths are outside the sync universe: never delete-eligible
+			// (BUG-041 — a down-sync --delete must not remove excluded files).
+			if isExcluded(relPath, input.Exclude) {
+				continue
+			}
+			// Outside the include universe: not managed, never delete-eligible
+			// (BUG-051).
+			if !isIncluded(relPath, input.Include) {
+				continue
+			}
 			if _, exists := remoteByKey[relPath]; !exists {
 				ops = append(ops, SyncOp{
 					Action:    SyncOpDelete,
@@ -382,6 +408,31 @@ func (s *SyncService) isUnchanged(local LocalFileInfo, remote ObjectInfo, checks
 // A pattern ending in "/" is a directory prefix: it excludes every path
 // nested under that directory, at any depth (e.g. ".git/" matches
 // ".git/objects/ab/cdef").
+// isIncluded reports whether a relative path falls inside the include
+// filter's sync universe (BUG-051: SyncPlanInput.Include was previously
+// never read — --include was a silent no-op). An empty filter includes
+// everything. Pattern semantics mirror isExcluded: a trailing "/" is a
+// directory prefix; otherwise a glob matched against the full relative path
+// and the basename. Paths outside the universe are neither synced nor
+// delete-eligible.
+func isIncluded(relPath string, includes []string) bool {
+	if len(includes) == 0 {
+		return true
+	}
+	for _, pattern := range includes {
+		if strings.HasSuffix(pattern, "/") && strings.HasPrefix(relPath, pattern) {
+			return true
+		}
+		if matched, _ := filepath.Match(pattern, relPath); matched {
+			return true
+		}
+		if matched, _ := filepath.Match(pattern, filepath.Base(relPath)); matched {
+			return true
+		}
+	}
+	return false
+}
+
 func isExcluded(relPath string, excludes []string) bool {
 	for _, pattern := range excludes {
 		// Directory prefix match (pattern ends with "/")
@@ -423,7 +474,15 @@ func (s *SyncService) Execute(ctx context.Context, plan *SyncPlan) (*SyncResult,
 				_ = os.Chtimes(op.LocalPath, op.RemoteModTime, op.RemoteModTime)
 			}
 		case SyncOpDelete:
-			opErr = s.backend.DeleteRemoteObject(ctx, plan.Bucket, op.Key)
+			// Delete is direction-aware: a down-sync delete removes the stale
+			// LOCAL file; an up-sync delete removes the remote object. Calling
+			// DeleteRemoteObject for a down-sync op would target an unprefixed
+			// key and could destroy an unrelated bucket-root object (BUG-040).
+			if plan.Direction == SyncDown {
+				opErr = os.Remove(op.LocalPath)
+			} else {
+				opErr = s.backend.DeleteRemoteObject(ctx, plan.Bucket, op.Key)
+			}
 		case SyncOpSkip:
 			result.Skipped++
 			s.reportProgress(SyncProgress{

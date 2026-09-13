@@ -1,0 +1,62 @@
+{
+  "total_files": 2497,
+  "total_lines": 738525,
+  "lines_by_language": {
+    "go": 165497,
+    "javascript": 28,
+    "rust": 445,
+    "typescript": 1166
+  },
+  "files_by_type": {
+    "code": 237,
+    "other": 2021,
+    "test": 239
+  },
+  "todo_count": 2,
+  "fixme_count": 0,
+  "hack_count": 0,
+  "console_log_count": 1,
+  "any_type_count": 0,
+  "largest_files": [
+    {
+      "path": "cmd.test",
+      "lines": 32297
+    },
+    {
+      "path": "r2go2",
+      "lines": 24548
+    },
+    {
+      "path": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md",
+      "lines": 22844
+    },
+    {
+      "path": "r2go2-enhanced",
+      "lines": 15843
+    },
+    {
+      "path": "GOrchestra/glm-agents/0011-serve-server-root-keychain-tes/session.log",
+      "lines": 11687
+    },
+    {
+      "path": "GOrchestra/glm-agents/0011-serve-server-root-keychain-tes/output.log",
+      "lines": 11687
+    },
+    {
+      "path": "r2go2-tui-installer",
+      "lines": 11534
+    },
+    {
+      "path": "GOrchestra/glm-agents/0009-rest-server-tests/output.log",
+      "lines": 11277
+    },
+    {
+      "path": "GOrchestra/glm-agents/0009-rest-server-tests/session.log",
+      "lines": 11277
+    },
+    {
+      "path": "GOrchestra/glm-agents/0010-sse-tests/output.log",
+      "lines": 10883
+    }
+  ]
+}

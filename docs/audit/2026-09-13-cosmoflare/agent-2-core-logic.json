@@ -1,0 +1,208 @@
+{
+  "agent": "core-logic",
+  "overall_score": 5,
+  "sub_scores": {
+    "bug_detection": 5,
+    "performance": 5,
+    "edge_cases": 6,
+    "security": 6,
+    "data_integrity": 4
+  },
+  "critical_findings": [
+    {
+      "title": "sync down --delete never deletes local files and can delete wrong remote object",
+      "severity": "high",
+      "file": "pkg/cosmoflare/sync.go:425",
+      "fix": "Branch Execute on plan.Direction: for SyncDown delete ops call os.Remove(op.LocalPath), never DeleteRemoteObject; regression-test that down-sync emits zero remote deletes",
+      "effort": "small"
+    },
+    {
+      "title": "Shared 30s http.Client.Timeout kills large S3 transfers mid-body",
+      "severity": "high",
+      "file": "pkg/cosmoflare/client.go:113",
+      "fix": "Dedicated timeout-free HTTP client for the S3 transport (ctx + SDK retries govern); keep 30s client for API calls",
+      "effort": "small"
+    },
+    {
+      "title": "Multipart abort uses canceled request context, orphaning billed uploads",
+      "severity": "high",
+      "file": "pkg/cosmoflare/upload.go:181",
+      "fix": "Abort with context.WithoutCancel(ctx) + timeout; log abort failures (also multipart.go:467)",
+      "effort": "small"
+    },
+    {
+      "title": "sync up --delete deletes remote objects matching exclude patterns",
+      "severity": "high",
+      "file": "pkg/cosmoflare/sync.go:275",
+      "fix": "Add isExcluded(relKey, input.Exclude) check in the planUp/planDown delete loops to protect excluded remote files",
+      "effort": "small"
+    },
+    {
+      "title": "--include flag is a silent no-op (SyncPlanInput.Include never read)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/sync.go:113",
+      "fix": "Implement include filtering in planUp/planDown or remove the flag from cmd/sync.go",
+      "effort": "medium"
+    },
+    {
+      "title": "apply deletes any account resource not declared in config (delete-by-omission)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/apply.go:423",
+      "fix": "Only delete resources cosmoflare created (state-tracked/tagged) or require explicit --delete-unmanaged opt-in",
+      "effort": "large"
+    },
+    {
+      "title": "KV namespaces assumed unique by title; duplicate titles delete wrong namespace",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/diff.go:280",
+      "fix": "Match namespaces by ID where available; refuse ambiguous duplicate-title operations",
+      "effort": "medium"
+    },
+    {
+      "title": "Machine config tokens written 0644 before chmod 0600 (TOCTOU/crash window)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/config.go:169",
+      "fix": "Write via os.OpenFile with 0600 perms instead of viper.WriteConfigAs + chmod",
+      "effort": "small"
+    },
+    {
+      "title": "CopySource not URL-encoded; keys with spaces/+/ %/? break CopyObject",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/storage.go:249",
+      "fix": "copySource := srcBucket + \"/\" + url.PathEscape(srcKey)",
+      "effort": "small"
+    },
+    {
+      "title": "Interrupted downloads truncate pre-existing local files (no atomic write)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/download.go:94",
+      "fix": "Stream to temp file in target dir, sync+close with error check, then os.Rename (also cmd/sync.go:534)",
+      "effort": "small"
+    },
+    {
+      "title": "Guardrails enforce uploads only; deletes and copies bypass them",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/storage.go:227",
+      "fix": "Add enforceDeleteGuardrails/enforceCopyGuardrails mirroring the upload chokepoint",
+      "effort": "medium"
+    },
+    {
+      "title": "Sync executor is strictly sequential (no worker pool)",
+      "severity": "low",
+      "file": "pkg/cosmoflare/sync.go:408",
+      "fix": "Bounded concurrent workers over plan.Operations with ordered error collection; est. 4-8x faster large syncs",
+      "effort": "medium"
+    },
+    {
+      "title": "restClient retry sleep ignores ctx; Retry-After unbounded",
+      "severity": "low",
+      "file": "pkg/cosmoflare/rest_client.go:263",
+      "fix": "Select on ctx.Done during delay; cap parseRetryAfter result at maxRetryBackoff",
+      "effort": "small"
+    },
+    {
+      "title": "Diff skips drift for services absent from config (under-reporting)",
+      "severity": "low",
+      "file": "pkg/cosmoflare/diff.go:414",
+      "fix": "Run comparisons for explicitly-enabled services and report skipped services as unmanaged",
+      "effort": "medium"
+    },
+    {
+      "title": "Raw cmd.Start() fire-and-forget violates project spawn policy (ROAD-525)",
+      "severity": "low",
+      "file": "cmd/installer_tui/main.go:1280",
+      "fix": "Use daemon.SpawnAsync or Start+Wait in a goroutine",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Direction-aware delete handling in SyncService.Execute with regression tests",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Split control-plane vs data-plane HTTP clients (30s API, timeout-free S3)",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Cancellation-safe multipart abort with context.WithoutCancel",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Exclude-protected --delete loops plus implemented --include in sync planner",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Atomic temp-file+rename downloads with Close() error checking",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Extend guardrail enforcement to delete/copy paths",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "url.PathEscape CopySource key segment",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "0600-first write for machine config credentials",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Bounded concurrency in SyncService.Execute",
+      "effort": "medium",
+      "priority": "low"
+    },
+    {
+      "action": "Managed-resource ownership model before apply deletions",
+      "effort": "large",
+      "priority": "medium"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Sync engine correctness hardening",
+      "description": "Direction-aware deletes, exclude-protected deletions, working --include, atomic download writes \u2014 two data-loss-class bugs live in the flagship workflow",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Large-transfer timeout architecture",
+      "description": "Separate 30s control-plane client from context-driven data-plane client; slow-body integration test",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Multipart upload lifecycle hygiene",
+      "description": "Cancellation-safe aborts plus a doctor check that reaps orphaned incomplete multipart uploads",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Guardrails v2: mutation-wide enforcement",
+      "description": "Single guardrail chokepoint covering upload, delete, copy, and apply mutations",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Apply safety model",
+      "description": "State/tag-tracked managed resources so apply never deletes resources cosmoflare did not create",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Parallel sync executor",
+      "description": "Bounded worker pool with ordered error reporting; est. 4-8x wall-clock improvement on large syncs",
+      "priority": "low",
+      "effort": "medium"
+    }
+  ]
+}

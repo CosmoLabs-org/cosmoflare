@@ -1,0 +1,12 @@
+{
+  "working_tree": {
+    "warn": [],
+    "error": []
+  },
+  "summary": {
+    "tree_warnings": 0,
+    "tree_errors": 0,
+    "history_errors": 0,
+    "clean": true
+  }
+}

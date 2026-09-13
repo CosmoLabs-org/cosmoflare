@@ -1,16 +1,19 @@
 ---
 id: FEAT-014
-title: Serve limits-snapshot cadence too hot once wired
 type: feature
-status: open
+created: "2026-09-09"
+updated: "2026-09-13T15:38:36.946082+04:00"
 priority: 50
-created: 2026-09-09
-updated: 2026-09-09
+status: open
 origin:
-  feedback_id: FB-4
-  from_project: cosmoflare
-  received: 2026-09-09
-  converted: 2026-09-09
+    feedback_id: FB-4
+    roadmap_items:
+        - ROAD-099
+    from_project: cosmoflare
+    received: "2026-09-09"
+    converted: "2026-09-09"
+title: Serve limits-snapshot cadence too hot once wired
+
 ---
 
 # FEAT-014: Serve limits-snapshot cadence too hot once wired

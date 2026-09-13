@@ -1,0 +1,39 @@
+{
+  "project_type": "structured",
+  "languages": [
+    "go",
+    "javascript",
+    "rust",
+    "typescript"
+  ],
+  "frameworks": [
+    "cobra-cli"
+  ],
+  "build_systems": [
+    "go",
+    "make"
+  ],
+  "has_git": true,
+  "capabilities": [
+    "issues",
+    "ideas",
+    "roadmap",
+    "feedback",
+    "changelog"
+  ],
+  "conditional_agents": [
+    "accessibility",
+    "api-design",
+    "cosmokit-synergy",
+    "design-taste",
+    "documentation",
+    "infrastructure"
+  ],
+  "file_stats": {
+    "code_files": 476,
+    "doc_files": 804,
+    "config_files": 1000,
+    "total_files": 2493
+  },
+  "skipped_paths": 0
+}

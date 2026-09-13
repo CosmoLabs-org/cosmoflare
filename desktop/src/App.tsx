@@ -136,6 +136,11 @@ export default function App() {
                 key={item}
                 className={`cf-nav-item ${view === item ? "is-active" : ""}`}
                 aria-current={view === item ? "page" : undefined}
+                aria-label={
+                  item === "Notifications" && unread > 0
+                    ? `Notifications, ${unread} unread`
+                    : undefined
+                }
                 onClick={() => setView(item)}
               >
                 {item}
@@ -153,6 +158,14 @@ export default function App() {
               <Notifications items={notifications} unread={unread} onSeen={markSeen} />
             )}
           </main>
+        </div>
+        {/* BUG-047 (WCAG 4.1.3): always-mounted, visually-hidden live region.
+            Per-view live regions unmount on tab switch, silencing incoming
+            notifications on every non-Notifications view. This region lives
+            at the app level so announcements survive view switches; it
+            renders only the newest message so each arrival is announced. */}
+        <div className="cf-live-region" aria-live="polite">
+          {notifications[0]?.message ?? ""}
         </div>
       </div>
     </QueryClientProvider>

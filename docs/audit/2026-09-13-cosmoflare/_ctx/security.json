@@ -1,0 +1,5393 @@
+security: scan error in ../../../../docs/audit/latest: read ../../../../docs/audit/latest: is a directory
+security: scan error in ../../../../plugins/internal: read ../../../../plugins/internal: is a directory
+{
+  "scanned_files": 7197,
+  "scanned_lines": 1380714,
+  "findings": [
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": ".glm-agent-history.yaml",
+      "line": 126,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": ".glm-agent-history.yaml",
+      "line": 127,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": ".glm-agent-history.yaml",
+      "line": 239,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": ".glm-agent-history.yaml",
+      "line": 240,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "GOrchestra/glm-agents/0011-serve-server-root-keychain-tes/manifest.yaml",
+      "line": 2,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/ai.go",
+      "line": 483,
+      "match": "fmt.Sprintf(\"Gateway '%s' delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/alerts.go",
+      "line": 442,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/alerts.go",
+      "line": 476,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket.go",
+      "line": 375,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket.go",
+      "line": 403,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket_domain.go",
+      "line": 372,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket_notifications.go",
+      "line": 317,
+      "match": "fmt.Sprintf(\"Delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket_notifications.go",
+      "line": 330,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/bucket_notifications.go",
+      "line": 336,
+      "match": "fmt.Sprintf(\"delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/cache.go",
+      "line": 292,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/config.go",
+      "line": 485,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/copy.go",
+      "line": 355,
+      "match": "..\\",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/d1.go",
+      "line": 229,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/d1.go",
+      "line": 254,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/delete.go",
+      "line": 78,
+      "match": "fmt.Sprintf(\"Bucket '%s' delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/delete.go",
+      "line": 96,
+      "match": "fmt.Printf(\"⚠️  ... to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/delete.go",
+      "line": 103,
+      "match": "fmt.Printf(\"Type 'DELETE",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 29,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 32,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 58,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 63,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 76,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 100,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns.go",
+      "line": 103,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/dns.go",
+      "line": 374,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/dns.go",
+      "line": 395,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/dns.go",
+      "line": 423,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns_test.go",
+      "line": 231,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/dns_test.go",
+      "line": 255,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 618,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 641,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 669,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 825,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 853,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/email.go",
+      "line": 940,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 23,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 42,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 88,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 89,
+      "match": "1.2.3.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 96,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 110,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall.go",
+      "line": 138,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/firewall.go",
+      "line": 331,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/firewall.go",
+      "line": 352,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/firewall.go",
+      "line": 380,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall_test.go",
+      "line": 209,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall_test.go",
+      "line": 234,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall_test.go",
+      "line": 484,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/firewall_test.go",
+      "line": 548,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/hyperdrive.go",
+      "line": 319,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/hyperdrive.go",
+      "line": 337,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/hyperdrive.go",
+      "line": 364,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/images.go",
+      "line": 415,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/images.go",
+      "line": 442,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/images.go",
+      "line": 549,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/images.go",
+      "line": 576,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/kv.go",
+      "line": 243,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/kv.go",
+      "line": 268,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/kv.go",
+      "line": 389,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/object.go",
+      "line": 736,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pagerules.go",
+      "line": 383,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pagerules.go",
+      "line": 406,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pagerules.go",
+      "line": 434,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pages.go",
+      "line": 231,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pages.go",
+      "line": 256,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/pages_env.go",
+      "line": 237,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/queue.go",
+      "line": 269,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/queue.go",
+      "line": 285,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/queue.go",
+      "line": 310,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/queue_dlq.go",
+      "line": 135,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/redirects.go",
+      "line": 226,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/serve.go",
+      "line": 26,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/serve.go",
+      "line": 40,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/serve.go",
+      "line": 44,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/serve.go",
+      "line": 60,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/serve.go",
+      "line": 66,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/ssl.go",
+      "line": 209,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/ssl.go",
+      "line": 234,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/stream.go",
+      "line": 481,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/stream.go",
+      "line": 508,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/stream.go",
+      "line": 683,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/stream.go",
+      "line": 710,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/sync.go",
+      "line": 413,
+      "match": "fmt.Printf(\"\\nSummar... %d delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/sync_guardrails_test.go",
+      "line": 149,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/sync_guardrails_test.go",
+      "line": 178,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/validate_test.go",
+      "line": 202,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/vectorize.go",
+      "line": 341,
+      "match": "fmt.Sprintf(\"Index '%s' delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/waf.go",
+      "line": 34,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/waf.go",
+      "line": 105,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "cmd/waf.go",
+      "line": 106,
+      "match": "192.168.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/waf.go",
+      "line": 236,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/waf.go",
+      "line": 340,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/waf.go",
+      "line": 362,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/watch.go",
+      "line": 240,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/watch.go",
+      "line": 247,
+      "match": "fmt.Printf(\"[-] delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/worker.go",
+      "line": 313,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/worker.go",
+      "line": 338,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/worker.go",
+      "line": 484,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/zone.go",
+      "line": 300,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "cmd/zone.go",
+      "line": 325,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "desktop/bun.lock",
+      "line": 45,
+      "match": "ACE1kQz82E2lqWmHBgjzbNlsC22nuQTfah",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "desktop/bun.lock",
+      "line": 145,
+      "match": "ACHoH1LguOU56UItGfUWjujlO65kS9LAod",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "desktop/bun.lock",
+      "line": 491,
+      "match": "ACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2a",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src/__tests__/App.test.tsx",
+      "line": 14,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src/__tests__/Notifications.test.tsx",
+      "line": 111,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src/__tests__/a11y.test.tsx",
+      "line": 47,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 24,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 187,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 242,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 244,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 250,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 251,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/src/daemon.rs",
+      "line": 271,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "todo-auth",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "desktop/src-tauri/target/debug/deps/libbrotli_decompressor-11a3f09c754db988.rmeta",
+      "line": 6544,
+      "match": "todospuedeañosestá...layoutauth",
+      "message": "TODO related to authentication",
+      "suggestion": "Ensure authentication is properly implemented"
+    },
+    {
+      "rule": "todo-auth",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "desktop/src-tauri/target/debug/deps/libbrotli_decompressor-6623d14fe3aa56c2.rmeta",
+      "line": 4384,
+      "match": "todospuedeañosestá...layoutauth",
+      "message": "TODO related to authentication",
+      "suggestion": "Ensure authentication is properly implemented"
+    },
+    {
+      "rule": "todo-auth",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "desktop/src-tauri/target/debug/deps/libbrotli_decompressor-cb8e08dd5438da53.rmeta",
+      "line": 6544,
+      "match": "todospuedeañosestá...layoutauth",
+      "message": "TODO related to authentication",
+      "suggestion": "Ensure authentication is properly implemented"
+    },
+    {
+      "rule": "todo-auth",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "desktop/src-tauri/target/debug/deps/libbrotli_decompressor-cebb548e0a0b107c.rmeta",
+      "line": 4390,
+      "match": "todospuedeañosestá...layoutauth",
+      "message": "TODO related to authentication",
+      "suggestion": "Ensure authentication is properly implemented"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-889b7a831a30b23d.rmeta",
+      "line": 166,
+      "match": "4.1.3.2",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-889b7a831a30b23d.rmeta",
+      "line": 167,
+      "match": "4.1.3.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-889b7a831a30b23d.rmeta",
+      "line": 228,
+      "match": "4.1.3.2",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-889b7a831a30b23d.rmeta",
+      "line": 230,
+      "match": "4.1.3.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-bb09604e83487ee3.rmeta",
+      "line": 167,
+      "match": "4.1.3.2",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-bb09604e83487ee3.rmeta",
+      "line": 168,
+      "match": "4.1.3.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-bb09604e83487ee3.rmeta",
+      "line": 225,
+      "match": "4.1.3.2",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcookie-bb09604e83487ee3.rmeta",
+      "line": 228,
+      "match": "4.1.3.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcosmoflare_desktop_lib-27798a9f2d6189c5.rmeta",
+      "line": 166,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcosmoflare_desktop_lib-27798a9f2d6189c5.rmeta",
+      "line": 202,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcosmoflare_desktop_lib-4033e4a92789959f.rmeta",
+      "line": 173,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libcosmoflare_desktop_lib-4033e4a92789959f.rmeta",
+      "line": 207,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libfind_msvc_tools-1011a01e76a02525.rlib",
+      "line": 507,
+      "match": "017.016.015.014",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libfind_msvc_tools-aed72faef1320c58.rlib",
+      "line": 515,
+      "match": "017.016.015.014",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libonce_cell-0e6db1e32eb1dba2.rmeta",
+      "line": 81,
+      "match": "spawn(|| {�\u0000\u0014\u0000\u0000\u0000���\u0001...\u0000\u0000���\u0001'\u0000\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libonce_cell-ee514b4ac6106b5b.rmeta",
+      "line": 130,
+      "match": "spawn(|| {�\u0000\u0014\u0000\u0000\u0000���\u0001...\u0000\u0000���\u0001'\u0000\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libparking_lot-3ab53cf3134cf2cc.rlib",
+      "line": 394,
+      "match": "spawn(move || {�\u0000\u0014\u0000\u0000...\u0000\u0000\u0000��\u0016'\u0001\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libparking_lot-3ab53cf3134cf2cc.rmeta",
+      "line": 385,
+      "match": "spawn(move || {�\u0000\u0014\u0000\u0000...\u0000\u0000\u0000��\u0016'\u0001\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libparking_lot-da3f5bb68dd2552e.rlib",
+      "line": 399,
+      "match": "spawn(move || {�\u0000\u0014\u0000\u0000...\u0000\u0000\u0000��\u0016'\u0001\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libparking_lot-da3f5bb68dd2552e.rmeta",
+      "line": 389,
+      "match": "spawn(move || {�\u0000\u0014\u0000\u0000...\u0000\u0000\u0000��\u0016'\u0001\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-19a02bda6620e87b.rmeta",
+      "line": 923,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-19a02bda6620e87b.rmeta",
+      "line": 1557,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-70a9fb3973ef0362.rmeta",
+      "line": 3882,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-70a9fb3973ef0362.rmeta",
+      "line": 4537,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-71d55df17eb01e00.rmeta",
+      "line": 922,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-71d55df17eb01e00.rmeta",
+      "line": 1564,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-9d50b105166a77ce.rmeta",
+      "line": 3774,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libpng-9d50b105166a77ce.rmeta",
+      "line": 4426,
+      "match": "11.3.2.5",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libserde_json-260194a730577358.rmeta",
+      "line": 481,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libshared_child-60ab762e1f5f88c5.rmeta",
+      "line": 23,
+      "match": "spawn(move || {�\u0000\u0014\u0001\u0000\u0000��\u0012'\u0002\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "desktop/src-tauri/target/debug/deps/libshared_child-695dd3d517237a22.rmeta",
+      "line": 24,
+      "match": "spawn(move || {�\u0000\u0014\u0001\u0000\u0000��\u0012'\u0002\u0000$",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_build-d90a61d997114895.rmeta",
+      "line": 108,
+      "match": "6.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_build-d90a61d997114895.rmeta",
+      "line": 116,
+      "match": "6.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_build-ea402706e79d7fdc.rmeta",
+      "line": 100,
+      "match": "6.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_build-ea402706e79d7fdc.rmeta",
+      "line": 108,
+      "match": "6.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_winres-330e140dc885e07d.rlib",
+      "line": 78,
+      "match": "1.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_winres-330e140dc885e07d.rmeta",
+      "line": 69,
+      "match": "1.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_winres-445c8c7e9e0a8627.rlib",
+      "line": 78,
+      "match": "1.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtauri_winres-445c8c7e9e0a8627.rmeta",
+      "line": 69,
+      "match": "1.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtoml-2a735588a8890a26.rmeta",
+      "line": 452,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtoml-2a735588a8890a26.rmeta",
+      "line": 1312,
+      "match": "192.168.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtoml-fa7c93d3d4f0ace1.rmeta",
+      "line": 453,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libtoml-fa7c93d3d4f0ace1.rmeta",
+      "line": 1301,
+      "match": "192.168.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-03ea78c5213ca168.rmeta",
+      "line": 186,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-03ea78c5213ca168.rmeta",
+      "line": 189,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-03ea78c5213ca168.rmeta",
+      "line": 225,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-44b4338ae8fad1f4.rmeta",
+      "line": 185,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-44b4338ae8fad1f4.rmeta",
+      "line": 189,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libureq-44b4338ae8fad1f4.rmeta",
+      "line": 224,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-45375ea03a3a8530.rlib",
+      "line": 652,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-45375ea03a3a8530.rlib",
+      "line": 671,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-45375ea03a3a8530.rmeta",
+      "line": 566,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-45375ea03a3a8530.rmeta",
+      "line": 585,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ae1bee5abccf44d4.rlib",
+      "line": 655,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ae1bee5abccf44d4.rlib",
+      "line": 674,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ae1bee5abccf44d4.rmeta",
+      "line": 567,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ae1bee5abccf44d4.rmeta",
+      "line": 586,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ba40658faf40fadd.rmeta",
+      "line": 295,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-ba40658faf40fadd.rmeta",
+      "line": 300,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-c5a5484e57fe36f1.rmeta",
+      "line": 294,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/liburl-c5a5484e57fe36f1.rmeta",
+      "line": 297,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libversion_check-303a7773534424cb.rlib",
+      "line": 42,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libversion_check-303a7773534424cb.rmeta",
+      "line": 37,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libversion_check-52f5895269ac753a.rlib",
+      "line": 45,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libversion_check-52f5895269ac753a.rmeta",
+      "line": 38,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libwry-33807e605e8f7245.rmeta",
+      "line": 395,
+      "match": "Access-Control-Allow...ux (X11)**",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libwry-33807e605e8f7245.rmeta",
+      "line": 425,
+      "match": "192.168.0.100",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libwry-84c1dd2145c9c8bb.rmeta",
+      "line": 402,
+      "match": "Access-Control-Allow...ux (X11)**",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/deps/libwry-84c1dd2145c9c8bb.rmeta",
+      "line": 422,
+      "match": "192.168.0.100",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-00ljajfchr7y1/s-hjod72ev7q-0nbef4p-7qhud3xeny1l2k69szneyhxlg/metadata.rmeta",
+      "line": 166,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-00ljajfchr7y1/s-hjod72ev7q-0nbef4p-7qhud3xeny1l2k69szneyhxlg/metadata.rmeta",
+      "line": 202,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-00ljajfchr7y1/s-hjod7czurv-1sak8gr-7qhud3xeny1l2k69szneyhxlg/metadata.rmeta",
+      "line": 166,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-00ljajfchr7y1/s-hjod7czurv-1sak8gr-7qhud3xeny1l2k69szneyhxlg/metadata.rmeta",
+      "line": 202,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-1sjrq3l6r5cym/s-hjzjs9a40o-1xdz642-2n5cj9hpx2iv1bc2d0pxlydbd/metadata.rmeta",
+      "line": 179,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-1sjrq3l6r5cym/s-hjzjs9a40o-1xdz642-2n5cj9hpx2iv1bc2d0pxlydbd/metadata.rmeta",
+      "line": 213,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-1sjrq3l6r5cym/s-hjzjt12dwq-0dwbzde-78xluldjt9a0lig3os8arh0ug/metadata.rmeta",
+      "line": 173,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/target/debug/incremental/cosmoflare_desktop_lib-1sjrq3l6r5cym/s-hjzjt12dwq-0dwbzde-78xluldjt9a0lig3os8arh0ug/metadata.rmeta",
+      "line": 207,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/tests/lifecycle.rs",
+      "line": 47,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/tests/lifecycle.rs",
+      "line": 77,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "desktop/src-tauri/tests/lifecycle.rs",
+      "line": 79,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/audit/2026-05-19-r2go2/agent-2-core-logic.md",
+      "line": 77,
+      "match": "Access-Control-Allow...gin (or `*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/audit/2026-08-31-cosmoflare/agent-1-code-quality.md",
+      "line": 52,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/audit/2026-08-31-cosmoflare/risk-map.md",
+      "line": 31,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/brainstorming/2026-05-16-cors-transform-rules.md",
+      "line": 605,
+      "match": "Access-Control-Allow...origins \"*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/brainstorming/2026-05-16-cors-transform-rules.md",
+      "line": 647,
+      "match": "Access-Control-Allow...value\": \"*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md",
+      "line": 1848,
+      "match": "Verify:    false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md",
+      "line": 12110,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md",
+      "line": 12163,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/conversation-transcripts/2026-05-16_024358_2cffd242.md",
+      "line": 12438,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-16_034911_6c5ab699.md",
+      "line": 418,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-16_035210_3858a8ed.md",
+      "line": 426,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-16_035432_01b89ab6.md",
+      "line": 426,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-16_035718_2abe446e.md",
+      "line": 392,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/conversation-transcripts/2026-05-18_052433_d0fc64f9.md",
+      "line": 1698,
+      "match": "Access-Control-Allow-Origin` must be either `*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/conversation-transcripts/2026-08-31_023804_e6394177.md",
+      "line": 1339,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/conversation-transcripts/2026-09-06_201854_d6606927.md",
+      "line": 1068,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "docs/feedback/outgoing/2026-09-06-claudecodesetup-gorchestra-recovery-patches-never-pruned.md",
+      "line": 58,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml",
+      "line": 35,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/prompts/2026-06-20-cosmoflare-desktop-glm-tasks.yaml",
+      "line": 36,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "command-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "docs/roadmap/GUI-INTEGRATION-STRATEGY.md",
+      "line": 207,
+      "match": "exec(`${this.r2go2Path} $",
+      "message": "Shell command execution with user input",
+      "suggestion": "Validate and sanitize inputs, avoid shell when possible"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 1,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 1,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 5,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 5,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 9,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 26,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/01b89ab6_auto_2026-05-16_01b89ab6-5d7b-4502-b5a4-9de96cac8e8a.jsonl",
+      "line": 39,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/12634c30_auto_2026-05-16_12634c30-48f0-437d-a88e-c92e54814cd7.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/12634c30_auto_2026-05-16_12634c30-48f0-437d-a88e-c92e54814cd7.jsonl",
+      "line": 9,
+      "match": "ACpDjaXJ55i2wvfsUs1AQaeU9JwrUEdnJz",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/19a96db2_auto_2026-05-16_19a96db2-4724-44e2-b17e-045b42978efd.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/19a96db2_auto_2026-05-16_19a96db2-4724-44e2-b17e-045b42978efd.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/19a96db2_auto_2026-05-16_19a96db2-4724-44e2-b17e-045b42978efd.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/19a96db2_auto_2026-05-16_19a96db2-4724-44e2-b17e-045b42978efd.jsonl",
+      "line": 9,
+      "match": "ACFnJFj8WOzfbLWRmQEEcALUnuLbtE75Tk",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/25d7b6e6_auto_2026-05-16_25d7b6e6-8a2b-41a9-8910-65206081d9d4.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2656eab4_auto_2026-05-16_2656eab4-0e93-49c2-a17f-771037bc6ff5.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/2656eab4_auto_2026-05-16_2656eab4-0e93-49c2-a17f-771037bc6ff5.jsonl",
+      "line": 9,
+      "match": "ACxy6FYIkP9L1TbKeMJnAXM9AnLPIZ4rgn",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/279c1455_auto_2026-05-16_279c1455-14b6-4347-8514-3f8933ff34bd.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/279c1455_auto_2026-05-16_279c1455-14b6-4347-8514-3f8933ff34bd.jsonl",
+      "line": 8,
+      "match": "ACeMvYnwQqRpgkQud6TJRo25ebWyzZsJqU",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 1,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 1,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 5,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 5,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 32,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/2abe446e_auto_2026-05-16_2abe446e-c644-4781-85fd-c0af40e75be2.jsonl",
+      "line": 32,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3363e6d2_auto_2026-05-16_3363e6d2-bdbb-44f0-aff9-6c25b012c915.jsonl",
+      "line": 1,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3363e6d2_auto_2026-05-16_3363e6d2-bdbb-44f0-aff9-6c25b012c915.jsonl",
+      "line": 5,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3363e6d2_auto_2026-05-16_3363e6d2-bdbb-44f0-aff9-6c25b012c915.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/33af8188_auto_2026-05-16_33af8188-9ec3-498a-a3dc-95ce433f7a18.jsonl",
+      "line": 1,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/33af8188_auto_2026-05-16_33af8188-9ec3-498a-a3dc-95ce433f7a18.jsonl",
+      "line": 5,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/33af8188_auto_2026-05-16_33af8188-9ec3-498a-a3dc-95ce433f7a18.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/33af8188_auto_2026-05-16_33af8188-9ec3-498a-a3dc-95ce433f7a18.jsonl",
+      "line": 29,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3412d96c_auto_2026-05-16_3412d96c-3b98-4eda-9d67-5203af5f6849.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/3412d96c_auto_2026-05-16_3412d96c-3b98-4eda-9d67-5203af5f6849.jsonl",
+      "line": 8,
+      "match": "ACX5JKO881bZA8AYZFNv82pKgEurhlm2Ni",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/34351739_auto_2026-06-14_34351739-82d9-41f4-a7c9-9e3f5b220439.jsonl",
+      "line": 4,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 1,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 1,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 5,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 5,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 9,
+      "match": "ACIvDZCaRUpv2D9VoA1Ex3hCFOKwxpdc0I",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3858a8ed_auto_2026-05-16_3858a8ed-402d-47e7-925a-a01e7fab654f.jsonl",
+      "line": 9,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/3ed4bf4c_auto_2026-05-16_3ed4bf4c-1bcb-4cec-b1f0-7fdd29929d79.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/5bceacc7_auto_2026-05-16_5bceacc7-477c-4040-908c-04b1b6bebaf5.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/5bceacc7_auto_2026-05-16_5bceacc7-477c-4040-908c-04b1b6bebaf5.jsonl",
+      "line": 9,
+      "match": "AC4gDBJiClXSYaNWAvqu5EHin9ff83HEnl",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/5d69df89_auto_2026-05-16_5d69df89-ee7c-47a3-b36f-2c82bc474b3e.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/5e35ebd1_auto_2026-05-16_5e35ebd1-95fe-4a2f-b157-75b4b2c75c84.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6196d13e_auto_2026-05-16_6196d13e-cd01-4a61-a9a7-c0c4a8dfdfb0.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/63a8b941_auto_2026-05-16_63a8b941-b76c-45c7-b4b4-0ab035eb707f.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/63f58def_auto_2026-05-16_63f58def-cef0-4913-8f5e-ebd27f872dbb.jsonl",
+      "line": 1,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/63f58def_auto_2026-05-16_63f58def-cef0-4913-8f5e-ebd27f872dbb.jsonl",
+      "line": 5,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/63f58def_auto_2026-05-16_63f58def-cef0-4913-8f5e-ebd27f872dbb.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/674385dc_auto_2026-05-16_674385dc-7860-4c0a-89f4-023736d3c00d.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/674385dc_auto_2026-05-16_674385dc-7860-4c0a-89f4-023736d3c00d.jsonl",
+      "line": 9,
+      "match": "ACX8Qe7JNfPQQd6NcGQbtxiNt9Hq78nJtz",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 1,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 1,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 5,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 5,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 9,
+      "match": "ACh5xkUiDAS0gM9lhXIzos6JRI05Y4Jlmz",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6c5ab699_auto_2026-05-16_6c5ab699-2cc9-426b-ab3c-043a77232242.jsonl",
+      "line": 43,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6e47ce75_auto_2026-05-16_6e47ce75-69b1-4a57-af59-e6c3bfabb88c.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6e47ce75_auto_2026-05-16_6e47ce75-69b1-4a57-af59-e6c3bfabb88c.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6e47ce75_auto_2026-05-16_6e47ce75-69b1-4a57-af59-e6c3bfabb88c.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6ec06a34_auto_2026-05-16_6ec06a34-47af-41ae-9c72-7beead1a107b.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6ec06a34_auto_2026-05-16_6ec06a34-47af-41ae-9c72-7beead1a107b.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/6ec06a34_auto_2026-05-16_6ec06a34-47af-41ae-9c72-7beead1a107b.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/6ec06a34_auto_2026-05-16_6ec06a34-47af-41ae-9c72-7beead1a107b.jsonl",
+      "line": 9,
+      "match": "ACEG4iLRXQSnztngfpPoxVIsKjhlaGsbUU",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/7148a3a4_auto_2026-05-16_7148a3a4-c05b-45f9-8332-65a9cc6d3ead.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/7148a3a4_auto_2026-05-16_7148a3a4-c05b-45f9-8332-65a9cc6d3ead.jsonl",
+      "line": 31,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/7590ba2f_auto_2026-05-16_7590ba2f-8c69-478e-846f-7fcfb99643f7.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/7590ba2f_auto_2026-05-16_7590ba2f-8c69-478e-846f-7fcfb99643f7.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/7590ba2f_auto_2026-05-16_7590ba2f-8c69-478e-846f-7fcfb99643f7.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/7590ba2f_auto_2026-05-16_7590ba2f-8c69-478e-846f-7fcfb99643f7.jsonl",
+      "line": 8,
+      "match": "ACsLLgu3kZGiB9W2OJmGEyco4wmrw4ordC",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/816c93fd_auto_2026-05-16_816c93fd-0468-4ddf-bc36-8d2fc805a379.jsonl",
+      "line": 1,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/816c93fd_auto_2026-05-16_816c93fd-0468-4ddf-bc36-8d2fc805a379.jsonl",
+      "line": 5,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/816c93fd_auto_2026-05-16_816c93fd-0468-4ddf-bc36-8d2fc805a379.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/86368ee5_auto_2026-05-16_86368ee5-42f6-4bf9-8221-e6d1d13546a8.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/86368ee5_auto_2026-05-16_86368ee5-42f6-4bf9-8221-e6d1d13546a8.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/86368ee5_auto_2026-05-16_86368ee5-42f6-4bf9-8221-e6d1d13546a8.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/876803f3_auto_2026-05-16_876803f3-033e-4c0e-946b-ea03b37c80be.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/876803f3_auto_2026-05-16_876803f3-033e-4c0e-946b-ea03b37c80be.jsonl",
+      "line": 9,
+      "match": "ACYbZLeD2B6JE4uaxkX4Q8mbOuKggRlwG6",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "todo-security",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "docs/sessions/transcripts/8b6b24a7_auto_2026-03-25_8b6b24a7-7dac-4804-8555-11ac9fc001de.jsonl",
+      "line": 169,
+      "match": "xxx item relates to ...r security",
+      "message": "TODO/FIXME related to security",
+      "suggestion": "Address security TODOs before deployment"
+    },
+    {
+      "rule": "todo-security",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "docs/sessions/transcripts/8b6b24a7_auto_2026-03-25_8b6b24a7-7dac-4804-8555-11ac9fc001de.jsonl",
+      "line": 406,
+      "match": "TODOs/FIXMEs | 0 |\\n...**Security",
+      "message": "TODO/FIXME related to security",
+      "suggestion": "Address security TODOs before deployment"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/8f220ff3_auto_2026-05-16_8f220ff3-4451-443f-89f6-bd868d6a0c2a.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/8f220ff3_auto_2026-05-16_8f220ff3-4451-443f-89f6-bd868d6a0c2a.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/8f220ff3_auto_2026-05-16_8f220ff3-4451-443f-89f6-bd868d6a0c2a.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/a1085e79_auto_2026-09-10_a1085e79-1e3f-4a4d-b808-e04bb3664012.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "exposed-error-details",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/a1085e79_auto_2026-09-10_a1085e79-1e3f-4a4d-b808-e04bb3664012.jsonl",
+      "line": 24,
+      "match": "Traceback|Error|FAIL...r response",
+      "message": "Stack traces or detailed errors exposed to users",
+      "suggestion": "Log errors server-side, show generic messages to users"
+    },
+    {
+      "rule": "todo-security",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "docs/sessions/transcripts/a1085e79_auto_2026-09-10_a1085e79-1e3f-4a4d-b808-e04bb3664012.jsonl",
+      "line": 24,
+      "match": "TODOs for testing th...\\nSECURITY",
+      "message": "TODO/FIXME related to security",
+      "suggestion": "Address security TODOs before deployment"
+    },
+    {
+      "rule": "todo-auth",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "docs/sessions/transcripts/a1085e79_auto_2026-09-10_a1085e79-1e3f-4a4d-b808-e04bb3664012.jsonl",
+      "line": 24,
+      "match": "TODOs for testing th...kflow auth",
+      "message": "TODO related to authentication",
+      "suggestion": "Ensure authentication is properly implemented"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/b2635005_auto_2026-05-16_b2635005-4ce1-4e29-80e5-fa120be63a4b.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/bc119c8a_auto_2026-05-16_bc119c8a-2b3e-4948-aca1-0c981ee4f5a0.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/bc119c8a_auto_2026-05-16_bc119c8a-2b3e-4948-aca1-0c981ee4f5a0.jsonl",
+      "line": 9,
+      "match": "ACwcBRaWSBv5Vj6wf5bz1UA3dNpsYwilZe",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c146a69a_auto_2026-05-16_c146a69a-3823-47bf-a1bd-86251d133875.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/c146a69a_auto_2026-05-16_c146a69a-3823-47bf-a1bd-86251d133875.jsonl",
+      "line": 9,
+      "match": "ACsGz2vAUnWFWoJCEVM07yIpxSMaLqV7qZ",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c3851215_auto_2026-05-16_c3851215-9843-4935-b4d4-a413197f35bd.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c3851215_auto_2026-05-16_c3851215-9843-4935-b4d4-a413197f35bd.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c3851215_auto_2026-05-16_c3851215-9843-4935-b4d4-a413197f35bd.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/c3851215_auto_2026-05-16_c3851215-9843-4935-b4d4-a413197f35bd.jsonl",
+      "line": 8,
+      "match": "ACd50UwEAGDGkdPJZKMVR6XDuB8D9DSiKM",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c4d8c9e0_auto_2026-05-16_c4d8c9e0-8aed-4bd3-81c4-995fedfe0743.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c4d8c9e0_auto_2026-05-16_c4d8c9e0-8aed-4bd3-81c4-995fedfe0743.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c4d8c9e0_auto_2026-05-16_c4d8c9e0-8aed-4bd3-81c4-995fedfe0743.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c4d8c9e0_auto_2026-05-16_c4d8c9e0-8aed-4bd3-81c4-995fedfe0743.jsonl",
+      "line": 46,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c4d8c9e0_auto_2026-05-16_c4d8c9e0-8aed-4bd3-81c4-995fedfe0743.jsonl",
+      "line": 48,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c69dde12_auto_2026-05-16_c69dde12-f882-4548-82d2-a62ea15694ae.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c69dde12_auto_2026-05-16_c69dde12-f882-4548-82d2-a62ea15694ae.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/c69dde12_auto_2026-05-16_c69dde12-f882-4548-82d2-a62ea15694ae.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d1eb0d79_auto_2026-05-16_d1eb0d79-cb5c-4d25-9e60-2eeda0249054.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/d1eb0d79_auto_2026-05-16_d1eb0d79-cb5c-4d25-9e60-2eeda0249054.jsonl",
+      "line": 9,
+      "match": "ACMnuO1Z7wLWk7GqGlewLuSMpv7Fb72uXq",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d1eb0d79_auto_2026-05-16_d1eb0d79-cb5c-4d25-9e60-2eeda0249054.jsonl",
+      "line": 27,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d1eb0d79_auto_2026-05-16_d1eb0d79-cb5c-4d25-9e60-2eeda0249054.jsonl",
+      "line": 32,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d2c0146f_auto_2026-05-16_d2c0146f-69ec-488d-958c-e803fbd7d7bf.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d7a37045_auto_2026-05-16_d7a37045-7b7e-4709-952a-3e8973840f26.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/d7a37045_auto_2026-05-16_d7a37045-7b7e-4709-952a-3e8973840f26.jsonl",
+      "line": 9,
+      "match": "ACnMHvk8Kp2ePPCklYKwHRbfwQL7tJwXKe",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d9648285_auto_2026-09-07_d9648285-ae12-407d-a26d-37cbba3b0328.jsonl",
+      "line": 5,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d9648285_auto_2026-09-07_d9648285-ae12-407d-a26d-37cbba3b0328.jsonl",
+      "line": 8,
+      "match": "0.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d9648285_auto_2026-09-07_d9648285-ae12-407d-a26d-37cbba3b0328.jsonl",
+      "line": 19,
+      "match": "0.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d9648285_auto_2026-09-07_d9648285-ae12-407d-a26d-37cbba3b0328.jsonl",
+      "line": 38,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/d9648285_auto_2026-09-07_d9648285-ae12-407d-a26d-37cbba3b0328.jsonl",
+      "line": 44,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/daa6d801_auto_2026-05-16_daa6d801-9580-4aab-a819-222453b642e3.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/daa6d801_auto_2026-05-16_daa6d801-9580-4aab-a819-222453b642e3.jsonl",
+      "line": 9,
+      "match": "AC7Bn8G5gmLNx0ADa2LbyJdi0rAnXES9jr",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/dcd9b770_auto_2026-05-16_dcd9b770-2a25-4a72-85f3-425a595f7a6b.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/ddd9e7c5_auto_2026-05-16_ddd9e7c5-492f-4a05-9a47-9824cd74dfa4.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e1bcf42f_auto_2026-05-16_e1bcf42f-47e4-4c64-9787-f81af6ca3b3d.jsonl",
+      "line": 1,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e1bcf42f_auto_2026-05-16_e1bcf42f-47e4-4c64-9787-f81af6ca3b3d.jsonl",
+      "line": 5,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e1bcf42f_auto_2026-05-16_e1bcf42f-47e4-4c64-9787-f81af6ca3b3d.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e2af1b3c_auto_2026-05-16_e2af1b3c-2739-4375-bea0-501b1cc8e4f1.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e2af1b3c_auto_2026-05-16_e2af1b3c-2739-4375-bea0-501b1cc8e4f1.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/e2af1b3c_auto_2026-05-16_e2af1b3c-2739-4375-bea0-501b1cc8e4f1.jsonl",
+      "line": 6,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "todo-security",
+      "severity": "info",
+      "category": "anti-pattern",
+      "file": "docs/sessions/transcripts/e2af1b3c_auto_2026-05-16_e2af1b3c-2739-4375-bea0-501b1cc8e4f1.jsonl",
+      "line": 8,
+      "match": "XXX()` helper functi...e security",
+      "message": "TODO/FIXME related to security",
+      "suggestion": "Address security TODOs before deployment"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/ecba2068_auto_2026-05-16_ecba2068-d186-40a8-b3c8-8a92f99a1edd.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/ecba2068_auto_2026-05-16_ecba2068-d186-40a8-b3c8-8a92f99a1edd.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/ecba2068_auto_2026-05-16_ecba2068-d186-40a8-b3c8-8a92f99a1edd.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/f3ceb21a_auto_2026-05-16_f3ceb21a-fcf2-4f8e-8b0f-c42ba77cbfc0.jsonl",
+      "line": 1,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/f3ceb21a_auto_2026-05-16_f3ceb21a-fcf2-4f8e-8b0f-c42ba77cbfc0.jsonl",
+      "line": 5,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/f3ceb21a_auto_2026-05-16_f3ceb21a-fcf2-4f8e-8b0f-c42ba77cbfc0.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "docs/sessions/transcripts/f3ceb21a_auto_2026-05-16_f3ceb21a-fcf2-4f8e-8b0f-c42ba77cbfc0.jsonl",
+      "line": 9,
+      "match": "ACEBEDYgKWVjttIbnTfbOzAVLzlvqA1gWO",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "docs/sessions/transcripts/fd173ed1_auto_2026-05-16_fd173ed1-59ea-47b3-9b6e-e644077b2bac.jsonl",
+      "line": 7,
+      "match": "DEBUG=true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "docs/sessions/transcripts/fd173ed1_auto_2026-05-16_fd173ed1-59ea-47b3-9b6e-e644077b2bac.jsonl",
+      "line": 30,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "docs/sessions/transcripts/fd173ed1_auto_2026-05-16_fd173ed1-59ea-47b3-9b6e-e644077b2bac.jsonl",
+      "line": 35,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "twilio-account-sid",
+      "severity": "high",
+      "category": "secrets",
+      "file": "go.sum",
+      "line": 15,
+      "match": "ACxYb8mYgms4RZbhZG0a7dPW06xOjmaH0E",
+      "message": "Twilio Account SID",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "internal/cli/batch/manager_test.go",
+      "line": 143,
+      "match": "Verify:    false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/cli/batch/worker.go",
+      "line": 212,
+      "match": "fmt.Printf(\"Worker %d: DRY RUN - Would delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/cli/operations/copy.go",
+      "line": 211,
+      "match": "..\\",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "internal/cli/operations/copy_test.go",
+      "line": 74,
+      "match": "Verify:    false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "internal/cli/operations/copy_test.go",
+      "line": 117,
+      "match": "Verify:      false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "internal/cli/operations/copy_test.go",
+      "line": 290,
+      "match": "Verify = false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/cli/ux/confirmation_test.go",
+      "line": 892,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/cli/ux/confirmation_test.go",
+      "line": 901,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/accessibility.go",
+      "line": 122,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/accessibility.go",
+      "line": 350,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/accessibility.go",
+      "line": 381,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/advanced_config.go",
+      "line": 140,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/advanced_config.go",
+      "line": 240,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/advanced_config.go",
+      "line": 283,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/backup_restore.go",
+      "line": 81,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "internal/interactive/backup_restore_test.go",
+      "line": 47,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "internal/interactive/backup_restore_test.go",
+      "line": 106,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "internal/interactive/backup_restore_test.go",
+      "line": 378,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/input.go",
+      "line": 65,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/profile_manager.go",
+      "line": 76,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/profile_manager.go",
+      "line": 173,
+      "match": "fmt.Printf(\"Select profile to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/profile_manager.go",
+      "line": 198,
+      "match": "fmt.Printf(\"Are you sure you want to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/profile_manager.go",
+      "line": 200,
+      "match": "fmt.Printf(\"Type 'DELETE",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/test.go",
+      "line": 64,
+      "match": "fmt.Printf(\"User sel...ons[select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/interactive/themes.go",
+      "line": 413,
+      "match": "fmt.Printf(\"Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "internal/interactive/validation_test.go",
+      "line": 276,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "internal/interactive/validation_test.go",
+      "line": 370,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/tui/browser.go",
+      "line": 734,
+      "match": "fmt.Sprintf(\"Delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/tui/domain.go",
+      "line": 191,
+      "match": "fmt.Sprintf(\"Add red...e(m.Select",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "internal/tui/render_test.go",
+      "line": 713,
+      "match": "Debug:   true",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/tui/view.go",
+      "line": 99,
+      "match": "fmt.Sprintf(\"Delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "internal/tui/view.go",
+      "line": 111,
+      "match": "fmt.Sprintf(\"📍 %s | Last Update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 527,
+      "match": "secret:    \"my-secret-key\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 556,
+      "match": "secret:    \"wrong-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 563,
+      "match": "secret:    \"my-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 570,
+      "match": "secret:    \"webhook-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 690,
+      "match": "Secret: \"test-webhook-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1023,
+      "match": "Secret:     \"alert-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1302,
+      "match": "Secret:     \"store-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1610,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1673,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1740,
+      "match": "Secret:     \"json-secret\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "generic-secret",
+      "severity": "high",
+      "category": "secrets",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1907,
+      "match": "Secret:     \"super-secret-token-do-not-leak\"",
+      "message": "Secret or API key assignment",
+      "suggestion": "Use environment variables"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "internal/webhook/webhook_test.go",
+      "line": 1938,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/ai.go",
+      "line": 366,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/alerts.go",
+      "line": 228,
+      "match": "fmt.Sprintf(\"invalid...s\", update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/alerts.go",
+      "line": 234,
+      "match": "fmt.Sprintf(\"invalid...a\", update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/alerts.go",
+      "line": 243,
+      "match": "fmt.Sprintf(\"invalid...g\", update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 343,
+      "match": "fmt.Sprintf(\"delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 351,
+      "match": "fmt.Sprintf(\"worker ...for update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 376,
+      "match": "fmt.Sprintf(\"update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 428,
+      "match": "fmt.Sprintf(\"delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 433,
+      "match": "fmt.Sprintf(\"bucket %q: update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 499,
+      "match": "fmt.Sprintf(\"delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 504,
+      "match": "fmt.Sprintf(\"namespace %q: update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 589,
+      "match": "fmt.Sprintf(\"delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 596,
+      "match": "fmt.Sprintf(\"record ...for update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 603,
+      "match": "fmt.Sprintf(\"record ...for update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/apply.go",
+      "line": 619,
+      "match": "fmt.Sprintf(\"update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/audit_test.go",
+      "line": 205,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/audit_test.go",
+      "line": 417,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/bucket_notifications.go",
+      "line": 116,
+      "match": "fmt.Sprintf(\"rule %d...ct, Delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/cloudflare_cache.go",
+      "line": 216,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "pkg/cosmoflare/cors_test.go",
+      "line": 1085,
+      "match": "Access-Control-Allow... Value: \"*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/d1.go",
+      "line": 144,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dev.go",
+      "line": 105,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dev.go",
+      "line": 194,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/diff_test.go",
+      "line": 237,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/diff_test.go",
+      "line": 287,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/diff_test.go",
+      "line": 288,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/dns.go",
+      "line": 218,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/dns.go",
+      "line": 233,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 193,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 194,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 195,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 377,
+      "match": "93.184.216.34",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 437,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 449,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 464,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 465,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 482,
+      "match": "1.1.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 575,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/dns_test.go",
+      "line": 624,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 20,
+      "match": "8.8.8.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 21,
+      "match": "8.8.4.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 22,
+      "match": "1.1.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 23,
+      "match": "1.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 24,
+      "match": "208.67.222.222",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 25,
+      "match": "9.9.9.9",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "disabled-ssl-verify",
+      "severity": "high",
+      "category": "config",
+      "file": "pkg/cosmoflare/doctor.go",
+      "line": 230,
+      "match": "Verify: false",
+      "message": "Disabling SSL certificate verification",
+      "suggestion": "Enable SSL verification in production"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/email.go",
+      "line": 216,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/email.go",
+      "line": 231,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/email.go",
+      "line": 298,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 432,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 868,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 914,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 1007,
+      "match": "1.1.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 1116,
+      "match": "9.9.9.9",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/export_test.go",
+      "line": 1157,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/firewall.go",
+      "line": 156,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/firewall.go",
+      "line": 171,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 149,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 163,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 180,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 216,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 229,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 300,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/firewall_test.go",
+      "line": 408,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/guardrails_enforce_test.go",
+      "line": 20,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/healthcheck.go",
+      "line": 241,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/healthcheck.go",
+      "line": 255,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/healthcheck_test.go",
+      "line": 327,
+      "match": "10.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/hyperdrive.go",
+      "line": 180,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/hyperdrive.go",
+      "line": 195,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/images.go",
+      "line": 154,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/images.go",
+      "line": 207,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/kv.go",
+      "line": 186,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/kv.go",
+      "line": 280,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/pagerules.go",
+      "line": 203,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/pagerules.go",
+      "line": 216,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/pages.go",
+      "line": 125,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/pages.go",
+      "line": 184,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/pages_env.go",
+      "line": 164,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/queue.go",
+      "line": 143,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/queue.go",
+      "line": 158,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/queue.go",
+      "line": 225,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/queue.go",
+      "line": 248,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/ratelimit.go",
+      "line": 180,
+      "match": "fmt.Sprintf(\"zone %q...ter update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/redirectprobe_test.go",
+      "line": 99,
+      "match": "127.0.0.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/ssl.go",
+      "line": 118,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/stream.go",
+      "line": 231,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/stream.go",
+      "line": 343,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "cors-wildcard",
+      "severity": "medium",
+      "category": "config",
+      "file": "pkg/cosmoflare/templates.go",
+      "line": 268,
+      "match": "Access-Control-Allow-Origin': '*",
+      "message": "Allowing all origins can be a security risk",
+      "suggestion": "Specify allowed origins explicitly"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 268,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 292,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 312,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 313,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 375,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 395,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 501,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/validate_test.go",
+      "line": 549,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/vectorize.go",
+      "line": 166,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/vectorize.go",
+      "line": 188,
+      "match": "fmt.Sprintf(\"%s/insert",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/vectorize.go",
+      "line": 307,
+      "match": "fmt.Sprintf(\"%s/delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/vectorize.go",
+      "line": 319,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/waf.go",
+      "line": 178,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/waf.go",
+      "line": 240,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 285,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 286,
+      "match": "10.0.0.0",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 300,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 309,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 319,
+      "match": "1.2.3.4",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 332,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 338,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 345,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "pkg/cosmoflare/waf_test.go",
+      "line": 346,
+      "match": "5.6.7.8",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/worker.go",
+      "line": 222,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/worker.go",
+      "line": 348,
+      "match": "fmt.Sprintf(\"failed to update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "debug-true",
+      "severity": "medium",
+      "category": "config",
+      "file": "pkg/cosmoflare/wrangler_test.go",
+      "line": 53,
+      "match": "DEBUG = \"true\"",
+      "message": "Debug mode should be disabled in production",
+      "suggestion": "Ensure DEBUG=false in production"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "pkg/cosmoflare/zone.go",
+      "line": 151,
+      "match": "fmt.Sprintf(\"failed to delete",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "tests/fixtures/testdata.go",
+      "line": 17,
+      "match": "AKIAIOSFODNN7EXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "aws-access-key",
+      "severity": "critical",
+      "category": "secrets",
+      "file": "tests/fixtures/testdata.go",
+      "line": 27,
+      "match": "AKIAI44QH8DHBEXAMPLE",
+      "message": "AWS Access Key ID - never commit these",
+      "suggestion": "Use environment variables or AWS Secrets Manager"
+    },
+    {
+      "rule": "jwt-token",
+      "severity": "high",
+      "category": "secrets",
+      "file": "tests/security/authentication_test.go",
+      "line": 583,
+      "match": "eyJhbGciOiJIUzI1NiIs...V_adQssw5c",
+      "message": "JSON Web Token (may contain sensitive claims)",
+      "suggestion": "JWTs should be generated at runtime, not stored in code"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 173,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "hardcoded-ip",
+      "severity": "low",
+      "category": "config",
+      "file": "tests/security/input_validation_test.go",
+      "line": 371,
+      "match": "192.168.1.1",
+      "message": "IP addresses should be configurable",
+      "suggestion": "Use environment variables or config files"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 415,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 416,
+      "match": "..\\",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 536,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 594,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 688,
+      "match": "../",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "path-traversal",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/security/input_validation_test.go",
+      "line": 689,
+      "match": "..\\",
+      "message": "Potential directory traversal vulnerability",
+      "suggestion": "Use path.resolve() and validate against allowed directories"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/tui/performance/rendering/performance_test.go",
+      "line": 259,
+      "match": "fmt.Sprintf(\"Update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    },
+    {
+      "rule": "go-sql-injection",
+      "severity": "high",
+      "category": "vulnerability",
+      "file": "tests/tui/performance/rendering/performance_test.go",
+      "line": 268,
+      "match": "fmt.Sprintf(\"Update",
+      "message": "String formatting in SQL queries",
+      "suggestion": "Use parameterized queries with database/sql"
+    }
+  ],
+  "critical_count": 13,
+  "high_count": 221,
+  "medium_count": 59,
+  "low_count": 236,
+  "duration": "3m5.9s"
+}

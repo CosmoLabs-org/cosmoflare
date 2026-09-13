@@ -1,0 +1,156 @@
+{
+  "agent": "distribution",
+  "overall_score": 5,
+  "sub_scores": {
+    "ci_cd": 4,
+    "packaging": 5,
+    "deployment": 4,
+    "multi_platform": 6,
+    "developer_experience": 6
+  },
+  "critical_findings": [
+    {
+      "title": "Four consecutive tagged releases never published to GitHub",
+      "severity": "high",
+      "file": ".goreleaser.yaml:22",
+      "fix": "Publish staged v0.26.0 assets via gh release create; backfill or document v0.23-v0.25; add a post-release guard asserting gh release view <tag> succeeds",
+      "effort": "small"
+    },
+    {
+      "title": "make dist tars docs/ (containing transcripts with AWS keys) into release archives",
+      "severity": "high",
+      "file": "Makefile:97",
+      "fix": "Remove ../docs/ from the dist target; retire the duplicate Makefile release path in favor of goreleaser",
+      "effort": "small"
+    },
+    {
+      "title": "GETTING_STARTED.md install one-liner points at dead CosmoDev-R2Go2 repo",
+      "severity": "high",
+      "file": "GETTING_STARTED.md:15",
+      "fix": "Repoint to CosmoLabs-org/cosmoflare/main/install.sh and surface the one-liner in README.md",
+      "effort": "small"
+    },
+    {
+      "title": "Dead CI workflows remain armed and contradict the local release flow (version string diverges: v0.26.0 vs 0.26.0)",
+      "severity": "medium",
+      "file": ".github/workflows/release.yml:37",
+      "fix": "Delete or stub the three workflow files per the permanent no-CI policy",
+      "effort": "small"
+    },
+    {
+      "title": "Divergent r2go2-branded Makefile release pipeline (different binary name, asset names, platforms)",
+      "severity": "medium",
+      "file": "Makefile:14",
+      "fix": "Rebase Makefile on BINARY_NAME=cosmoflare with r2go2 symlink; align PLATFORMS with .goreleaser.yaml",
+      "effort": "medium"
+    },
+    {
+      "title": "No package-manager distribution (no Homebrew/Scoop/winget; broken install-brew target; Docker never pushed)",
+      "severity": "medium",
+      "file": "Makefile:119",
+      "fix": "Create CosmoLabs-org/homebrew-tap with a formula driven by release assets; remove install-brew; add Scoop/winget manifests",
+      "effort": "medium"
+    },
+    {
+      "title": "install.sh accepts linux/armv7 which no build pipeline produces (download 404)",
+      "severity": "medium",
+      "file": "install.sh:95",
+      "fix": "Drop armv7l from detection with an unsupported message, or add goarm 7 to the goreleaser matrix",
+      "effort": "small"
+    },
+    {
+      "title": "Desktop tier: version skew (0.16.0 vs CLI 0.26.0), unsigned, no updater, sidecar lacks linux/arm64",
+      "severity": "medium",
+      "file": "desktop/src-tauri/tauri.conf.json:4",
+      "fix": "Add linux/arm64 sidecar triple; write desktop release SOP with version mapping, notarization, and updater artifacts before paid tier",
+      "effort": "large"
+    },
+    {
+      "title": "Stale R2Go2 branding across distribution metadata (registry description, install.sh, CHANGELOG Unreleased; r2go2 alias not shipped)",
+      "severity": "low",
+      "file": ".version-registry.json:5",
+      "fix": "Update description/branding, migrate config dir, have install.sh symlink r2go2, and reconcile the stale Unreleased changelog",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Publish staged v0.26.0 assets and add tag-to-release consistency smoke",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Remove ../docs/ from Makefile dist archives and retire the duplicate release path",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Fix GETTING_STARTED.md install URLs and add one-liners to README",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Delete or stub disabled GitHub workflow files",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Create Homebrew tap formula; add Scoop/winget manifests",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "cosign-sign checksums and attach SBOM to each release",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Rebrand Makefile to cosmoflare-primary with r2go2 symlink; align platform matrix",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Desktop: add linux/arm64 sidecar and release SOP before paid tier",
+      "effort": "large",
+      "priority": "medium"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Release publication guard",
+      "description": "Smoke check that fails when a pushed tag has no GitHub release; prevents silent four-release gaps",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Package-manager coverage wave",
+      "description": "Homebrew tap + Scoop + winget + ghcr.io image driven from the checksums-sha256.txt asset contract",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Signed, attested releases",
+      "description": "cosign-sign the checksums file and attach an SBOM so the fail-closed installer chain ends at a trusted root",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Single-pipeline cleanup",
+      "description": "Retire r2go2-branded Makefile release path and dead workflows; one name, one asset vocabulary, one runbook",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Desktop distribution v2",
+      "description": "Signing, notarization, updater artifacts, linux/arm64 sidecar, and desktop release SOP with CLI version mapping",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Mobile distribution groundwork",
+      "description": "Expo/EAS build profiles and store metadata skeleton per the 3-tier product vision",
+      "priority": "low",
+      "effort": "large"
+    }
+  ]
+}

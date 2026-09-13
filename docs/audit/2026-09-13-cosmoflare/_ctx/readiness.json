@@ -1,0 +1,10 @@
+{
+  "context": "Readiness:\n  PR: ✓ No conflicts",
+  "pr_ready": true,
+  "deploy_ready": true,
+  "tests_passing": true,
+  "ci_passing": false,
+  "has_conflicts": false,
+  "needs_rebase": false,
+  "analysis_ms": 0
+}

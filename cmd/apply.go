@@ -11,6 +11,7 @@ import (
 )
 
 var applyYes bool
+var applyDeleteUnmanaged bool
 
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -124,10 +125,13 @@ func init() {
 	applyCmd.AddCommand(applyR2Cmd)
 
 	applyCmd.PersistentFlags().BoolVarP(&applyYes, "yes", "y", false, "Skip confirmation prompt")
+	applyCmd.PersistentFlags().BoolVar(&applyDeleteUnmanaged, "delete-unmanaged", false,
+		"Delete live resources that are NOT declared in the config (unmanaged). Without this flag, such resources are skipped (BUG-049).")
 }
 
 func getApplyService() (*cosmoflare.ApplyService, error) {
-	return cosmoflare.NewApplyService(AccountID, APIToken)
+	return cosmoflare.NewApplyService(AccountID, APIToken,
+		cosmoflare.WithDeleteUnmanaged(applyDeleteUnmanaged))
 }
 
 func runApplyAll(cmd *cobra.Command, args []string) error {

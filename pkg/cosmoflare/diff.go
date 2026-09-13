@@ -262,6 +262,24 @@ func (d *DiffService) CompareR2(ctx context.Context, local R2Config) (*DiffResul
 	return result, nil
 }
 
+// indexKVByTitle builds a title→ID index over live KV namespaces and REFUSES
+// ambiguous duplicate titles (BUG-048): with two namespaces sharing a title,
+// every title-based match — including apply's delete resolution — is a coin
+// flip that can destroy the wrong namespace. The error names both IDs so the
+// user can delete one or match by ID instead.
+func indexKVByTitle(namespaces []*KVNamespace) (map[string]string, error) {
+	idx := make(map[string]string, len(namespaces))
+	for _, ns := range namespaces {
+		if prev, dup := idx[ns.Title]; dup {
+			return nil, fmt.Errorf(
+				"duplicate KV namespace title %q: namespaces %s and %s share it — delete one (or match by id) before diffing/applying",
+				ns.Title, prev, ns.ID)
+		}
+		idx[ns.Title] = ns.ID
+	}
+	return idx, nil
+}
+
 // CompareKV compares local KV namespace config against live state.
 func (d *DiffService) CompareKV(ctx context.Context, local KVConfig) (*DiffResult, error) {
 	result := &DiffResult{Service: "kv"}
@@ -276,9 +294,16 @@ func (d *DiffService) CompareKV(ctx context.Context, local KVConfig) (*DiffResul
 		return nil, fmt.Errorf("failed to list live KV namespaces: %w", err)
 	}
 
-	liveMap := make(map[string]bool, len(liveNamespaces))
-	for _, ns := range liveNamespaces {
-		liveMap[ns.Title] = true
+	// BUG-048: refuse to diff against ambiguous duplicate titles — a title
+	// collision makes downstream deletes destroy the wrong namespace.
+	liveIdx, err := indexKVByTitle(liveNamespaces)
+	if err != nil {
+		return nil, validationError("DiffService.CompareKV", err.Error())
+	}
+
+	liveMap := make(map[string]bool, len(liveIdx))
+	for title := range liveIdx {
+		liveMap[title] = true
 	}
 
 	// Find additions (in local, not live)

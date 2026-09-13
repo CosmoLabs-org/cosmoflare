@@ -92,9 +92,9 @@ dist: build-all
 		output_name=$(BINARY_NAME)-$$os-$$arch; \
 		if [ $$os = "windows" ]; then output_name=$$output_name.exe; fi; \
 		if [ $$os = "windows" ]; then \
-			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$output_name ../README.md ../LICENSE ../docs/; \
+			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$output_name ../README.md ../LICENSE; \
 		else \
-			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$output_name ../README.md ../LICENSE ../docs/; \
+			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$output_name ../README.md ../LICENSE; \
 		fi; \
 	done
 	@echo "✅ Distribution archives created in $(DIST_DIR)/"

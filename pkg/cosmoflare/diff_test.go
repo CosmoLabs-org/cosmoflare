@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -404,5 +405,35 @@ func TestCosmoflareConfig_DNSRecordConfig(t *testing.T) {
 	}
 	if !rc.Proxied {
 		t.Error("expected Proxied to be true")
+	}
+}
+
+// --- BUG-048: duplicate KV namespace titles must be refused, not guessed ---
+
+func TestIndexKVByTitle_RefusesDuplicateTitles(t *testing.T) {
+	namespaces := []*KVNamespace{
+		{ID: "ns-aaa", Title: "prod-cache"},
+		{ID: "ns-bbb", Title: "prod-cache"},
+	}
+	idx, err := indexKVByTitle(namespaces)
+	if err == nil {
+		t.Fatalf("expected ambiguity error for duplicate titles, got index %v", idx)
+	}
+	if !strings.Contains(err.Error(), "ns-aaa") || !strings.Contains(err.Error(), "ns-bbb") {
+		t.Errorf("error must name both conflicting IDs so the user can disambiguate, got: %v", err)
+	}
+}
+
+func TestIndexKVByTitle_UniqueTitles(t *testing.T) {
+	namespaces := []*KVNamespace{
+		{ID: "ns-aaa", Title: "prod-cache"},
+		{ID: "ns-bbb", Title: "staging-cache"},
+	}
+	idx, err := indexKVByTitle(namespaces)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if idx["prod-cache"] != "ns-aaa" || idx["staging-cache"] != "ns-bbb" {
+		t.Errorf("index = %v, want title->ID mapping", idx)
 	}
 }

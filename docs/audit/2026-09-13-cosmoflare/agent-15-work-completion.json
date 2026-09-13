@@ -1,0 +1,70 @@
+{
+  "agent": "work-completion",
+  "overall_score": 96,
+  "score_scale": "deterministic /100 (ccs audit completion-score, pre-computed, reported verbatim; recompute with 2 possibly-done findings = 86)",
+  "sub_scores": {
+    "issue_closure": 7,
+    "roadmap_sync": 5,
+    "plan_freshness": 10
+  },
+  "critical_findings": [
+    {
+      "title": "FEAT-025 merged but never closed",
+      "severity": "high",
+      "file": "pkg/cosmoflare/rest_client.go (merge 562a602)",
+      "fix": "Human-verify scope then ccs issues update FEAT-025 --status closed with commit ref 562a602",
+      "effort": "small"
+    },
+    {
+      "title": "FEAT-019 merged but never closed",
+      "severity": "high",
+      "file": "pkg/cosmoflare/permdata/permissions.json (merge 4f512ef)",
+      "fix": "Human-verify scope then ccs issues update FEAT-019 --status closed with commit ref 4f512ef",
+      "effort": "small"
+    },
+    {
+      "title": "ROAD-084 orphaned (all linked issues closed, item active)",
+      "severity": "medium",
+      "file": "docs/roadmap/ ROAD-084",
+      "fix": "ccs roadmap health --fix after human confirms FEAT-008 scope shipped",
+      "effort": "small"
+    },
+    {
+      "title": "ROAD-085 drifted with 133 matching commits while 13 critical secrets findings remain live",
+      "severity": "medium",
+      "file": "docs/roadmap/ ROAD-085",
+      "fix": "Human review of drift commits; rescope item around remaining findings",
+      "effort": "medium"
+    },
+    {
+      "title": "FEAT-014 premise outdated — limits snapshot already wired at serve.go:238",
+      "severity": "low",
+      "file": "cmd/serve.go:68,238-239",
+      "fix": "Retitle/raise urgency; add limits cadence caching",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    { "action": "Close FEAT-025 (ref 562a602) after human verification", "effort": "small", "priority": "high" },
+    { "action": "Close FEAT-019 (ref 4f512ef) after human verification", "effort": "small", "priority": "high" },
+    { "action": "Run ccs roadmap health --fix for orphaned ROAD-084", "effort": "small", "priority": "medium" },
+    { "action": "Rescope ROAD-085 around the 13 live critical secrets findings", "effort": "medium", "priority": "medium" },
+    { "action": "Update FEAT-014 — limits snapshot is wired, cadence concern is live", "effort": "small", "priority": "low" },
+    { "action": "Add post-merge issue-closure check for _glm-agent-* merges (branch-name issue ID → closure prompt)", "effort": "medium", "priority": "high" }
+  ],
+  "roadmap_suggestions": [
+    { "title": "Agent-merge closure hook", "description": "Automate issue-closure verification when a _glm-agent-* branch carrying an issue ID merges — kills the close-the-loop failure class", "priority": "high", "effort": "small" },
+    { "title": "Limits-snapshot cadence guard", "description": "Cache/back off limits polling in serve (wired at cmd/serve.go:238, 30s default)", "priority": "medium", "effort": "medium" },
+    { "title": "Thin-item grooming pass", "description": "Link or activate the 17 thin roadmap items during /triage, or archive satisfied BASE-xxx checklist items", "priority": "low", "effort": "small" }
+  ],
+  "possibly_done_issues": [
+    { "id": "FEAT-025", "title": "Rate-limit-aware shared client: Retry-After, backoff, retry flags", "evidence": "Merge 562a602 on master: pkg/cosmoflare/rest_client.go +244 lines with Retry-After/backoff, rest_client_test.go +272 lines, USAGE.md +24; issue still open with delegated_to 0126" },
+    { "id": "FEAT-019", "title": "Permission manifest + least-privilege token doctor", "evidence": "Merge 4f512ef on master: pkg/cosmoflare/permdata/ package with 908-line permissions.json + permdata.go + tests, cmd/auth_permissions.go +112 and _test.go +166, USAGE.md +19; issue still open" }
+  ],
+  "roadmap_reconciliation": [
+    { "id": "ROAD-084", "category": "orphaned", "fix": "ccs roadmap health --fix (auto-fixable) — all linked issues closed via FEAT-008 commit 554a63c" },
+    { "id": "ROAD-084", "category": "drifted", "fix": "Human review of 14 matching commits; update status/notes" },
+    { "id": "ROAD-085", "category": "drifted", "fix": "Human review of 133 matching commits; keep active — 13 critical secrets findings remain live per 2026-09-13 scan" }
+  ],
+  "stalled_plans": []
+}

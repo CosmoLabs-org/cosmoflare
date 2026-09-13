@@ -1,0 +1,132 @@
+{
+  "agent": "competitive",
+  "overall_score": 5,
+  "sub_scores": {
+    "feature_parity": 7,
+    "differentiation": 8,
+    "market_position": 3,
+    "technical_moat": 6,
+    "growth_potential": 2
+  },
+  "critical_findings": [
+    {
+      "title": "Zero adoption after 10 months — no distribution motion exists",
+      "severity": "high",
+      "file": "README.md",
+      "fix": "Execute launch program (Show HN, r/Cloudflare, Cloudflare Community/Discord, awesome-list PRs) plus a product landing page; the abandoned-flarectl niche is open but unexploited",
+      "effort": "small"
+    },
+    {
+      "title": "4 consecutive releases never published to GitHub (local 0.26.0 vs published v0.22.0)",
+      "severity": "high",
+      "file": ".version-registry.json:3",
+      "fix": "Publish v0.26.0 now and make GitHub release publishing a blocking step in the release SOP; go install @latest currently serves a 4-release-old binary",
+      "effort": "small"
+    },
+    {
+      "title": "MCP differentiator under attack by official cloudflare/mcp; stdio-only and no tools/list pagination",
+      "severity": "high",
+      "file": "pkg/cosmoflare/mcp.go:112",
+      "fix": "Add streamable HTTP transport (reuse serve daemon, token-authed) and tools/list cursor pagination; market fail-closed mutation gating which the official server lacks",
+      "effort": "medium"
+    },
+    {
+      "title": "No Workers dev runtime, secrets, versions, or rollback",
+      "severity": "medium",
+      "file": "cmd/worker.go:54",
+      "fix": "Add worker secret put/get/delete and versions list/rollback; long-term bundle workerd or position explicitly as wrangler-dev + cosmoflare-manage",
+      "effort": "medium"
+    },
+    {
+      "title": "Zero growth instrumentation (no update check, no opt-in analytics, no growth loops)",
+      "severity": "medium",
+      "file": "cmd/root.go",
+      "fix": "Add env-gated opt-in update check against GitHub Releases (default off, constitution-compliant); no instrument exists to measure adoption or paid-tier conversion",
+      "effort": "small"
+    },
+    {
+      "title": "Cost-estimator pricing hardcoded in help text and logic",
+      "severity": "low",
+      "file": "cmd/cost.go:57",
+      "fix": "Move pricing table into a knowledge pack JSON so rates update as data, not code",
+      "effort": "small"
+    },
+    {
+      "title": "Stale product identity in version registry (still 'R2Go2 R2-only CLI')",
+      "severity": "low",
+      "file": ".version-registry.json:4",
+      "fix": "Update description to full-platform one-liner at next registry sync",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Publish v0.26.0 release and enforce release-publishing SOP step; verify homebrew tap updates",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Run 2-week launch program targeting abandoned-flarectl and wrangler-fatigue audiences",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Add streamable HTTP transport plus tools/list cursor pagination to MCP server",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Implement worker secret and versions/rollback commands with TDD",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Add opt-in, env-gated update check against GitHub Releases",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Externalize cost pricing into a knowledge pack",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Remote MCP transport (HTTP, token-authed)",
+      "description": "Streamable HTTP + OAuth so agents connect by URL instead of stdio config; neutralizes official cloudflare/mcp zero-install advantage",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Launch & distribution program (0 to 1,000 stars)",
+      "description": "Coordinated launch posts, awesome-list presence, comparison page vs wrangler/flarectl/terraform",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Workers lifecycle parity",
+      "description": "Secrets management, versions, rollback, gradual deployments — required for Workers developers to daily-drive the CLI",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "workerd dev runtime integration",
+      "description": "True local Workers dev parity via bundled workerd",
+      "priority": "medium",
+      "effort": "large"
+    },
+    {
+      "title": "Opt-in update notification system",
+      "description": "Env-gated GitHub Releases check, privacy-by-default compliant",
+      "priority": "medium",
+      "effort": "small"
+    },
+    {
+      "title": "Pricing knowledge pack",
+      "description": "Dynamic cost tables shared by cost command and future desktop tier",
+      "priority": "low",
+      "effort": "small"
+    }
+  ]
+}

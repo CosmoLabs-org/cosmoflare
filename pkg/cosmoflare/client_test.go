@@ -193,8 +193,30 @@ func TestNewClientWiresTimeoutToBothTransports(t *testing.T) {
 	if !ok {
 		t.Fatalf("S3 client HTTP client is %T, want *http.Client", c.s3.Options().HTTPClient)
 	}
-	if s3HC != c.httpClient {
-		t.Error("S3 client does not use the timeout-configured HTTP client; WithTimeout is a silent no-op for R2 object operations")
+	// BUG-042: WithTimeout bounds the CONTROL plane (Cloudflare API) only.
+	// A whole-request timeout on the S3 data plane kills large transfers
+	// mid-body; transfer limits come from context deadlines instead.
+	if s3HC.Timeout != 0 {
+		t.Errorf("S3 data-plane client carries whole-request timeout %v; WithTimeout must not bound whole transfers (BUG-042)", s3HC.Timeout)
+	}
+}
+
+// BUG-042: the default S3 data-plane transport must not inherit the shared
+// 30s whole-request timeout — any transfer slower than 30s dies mid-body.
+// Context deadlines and SDK retries govern transfers instead.
+func TestNewClientDefaultS3TransportHasNoRequestTimeout(t *testing.T) {
+	c := newTestClient(t)
+
+	if c.httpClient.Timeout != 30*time.Second {
+		t.Fatalf("control-plane timeout = %v, want default 30s", c.httpClient.Timeout)
+	}
+
+	s3HC, ok := c.s3.Options().HTTPClient.(*http.Client)
+	if !ok {
+		t.Fatalf("S3 client HTTP client is %T, want *http.Client", c.s3.Options().HTTPClient)
+	}
+	if s3HC.Timeout != 0 {
+		t.Errorf("default S3 data-plane client carries whole-request timeout %v — large transfers die mid-body (BUG-042)", s3HC.Timeout)
 	}
 }
 

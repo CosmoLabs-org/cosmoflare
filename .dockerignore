@@ -11,8 +11,26 @@ build/
 dist/
 *.exe
 
-# Test files
+# Stale committed binaries (BUG-050: ~105MB never needed in a build context)
+r2go2
+r2go2-enhanced
+r2go2-tui-installer
+r2go2-*-setup
+cmd.test
+cosmoflare
+
+# Desktop tier + agent workspaces (BUG-050: desktop/node_modules alone is >1GB)
+desktop/
+GOrchestra/
+ClaudeDesktop/
+ClaudeDesign/
+plugins/
+.deepsec/
+node_modules/
+
+# Tests + fixtures
 *_test.go
+tests/
 coverage.out
 coverage.html
 
@@ -28,7 +46,6 @@ coverage.html
 vendor/
 
 # OS
-.DS_Store
 Thumbs.db
 
 # Logs
@@ -37,10 +54,6 @@ Thumbs.db
 # Environment
 .env
 .env.*
-
-# IDE
-.vscode/
-.idea/
 
 # Temporary files
 tmp/

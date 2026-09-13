@@ -67,10 +67,12 @@ type client struct {
 // ID or API token is still missing — the named profile from
 // ~/.r2go2/config.yaml selected via WithProfile.
 //
-// Both transports (the Cloudflare API client and the R2 S3 client) issue
-// requests through a single HTTP client: the one given via WithHTTPClient,
-// or one carrying the WithTimeout timeout (default 30s) when no explicit
-// client was provided.
+// Transport policy: an explicit WithHTTPClient is used by both transports
+// (the Cloudflare API client and the R2 S3 client). Otherwise the Cloudflare
+// API control plane uses a client carrying the WithTimeout timeout (default
+// 30s), while the S3 data plane gets a separate client with NO whole-request
+// timeout — large transfers are bounded by context deadlines and SDK retries,
+// not the API timeout (BUG-042).
 func NewClient(opts ...ClientOption) (R2Client, error) {
 	cfg := &clientConfig{
 		region:     "auto",
@@ -153,9 +155,19 @@ func (c *client) initS3() error {
 	accessKey := c.cfg.accessKey
 	secretKey := c.cfg.secretKey
 
+	// BUG-042: the S3 data plane must not carry the control-plane's
+	// whole-request timeout (default 30s) — large transfers die mid-body.
+	// Transfer limits come from context deadlines; retries come from the SDK.
+	// An explicitly provided WithHTTPClient is honored on both transports
+	// (caller's deliberate choice).
+	dataPlaneClient := c.httpClient
+	if c.cfg.httpClient == nil {
+		dataPlaneClient = &http.Client{}
+	}
+
 	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(),
 		awsconfig.WithRegion(c.cfg.region),
-		awsconfig.WithHTTPClient(c.httpClient),
+		awsconfig.WithHTTPClient(dataPlaneClient),
 		awsconfig.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
 			if accessKey != "" && secretKey != "" {
 				return aws.Credentials{

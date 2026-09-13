@@ -113,3 +113,73 @@ describe("a11y: notifications fragment (axe)", () => {
     expect(results).toHaveNoViolations();
   });
 });
+
+// --- BUG-047: notifications must be announced on EVERY view (WCAG 4.1.3) ---
+//
+// Per-view live regions unmount on tab switch, so incoming notifications are
+// silent while any non-Notifications view is active. The fix is an
+// always-mounted, visually-hidden polite live region at the App level plus
+// the unread count in the nav button's accessible name.
+
+describe("a11y: notification announcements (BUG-047)", () => {
+  let notifListeners: Array<(e: { data: string }) => void>;
+  class NotifEventSource {
+    constructor(_url: string) {}
+    addEventListener(channel: string, h: EventListener) {
+      if (channel === "notifications")
+        notifListeners.push(h as unknown as (e: { data: string }) => void);
+    }
+    removeEventListener() {}
+    close() {}
+  }
+  const emit = (msg: string) =>
+    notifListeners.forEach((h) => h({ data: JSON.stringify({ message: msg }) }));
+
+  beforeEach(() => {
+    notifListeners = [];
+    vi.mocked(invoke).mockResolvedValue({ url: "http://127.0.0.1:1", token: "t" });
+    vi.stubGlobal("EventSource", NotifEventSource);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("announces notifications from an always-mounted polite live region on the Dashboard view", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByText("Zones")).toBeInTheDocument());
+
+    emit("Backups quota at 90%");
+    await waitFor(() => {
+      const region = document.querySelector('[aria-live="polite"].cf-live-region');
+      expect(region).not.toBeNull();
+      expect(region?.textContent).toContain("Backups quota at 90%");
+    });
+  });
+
+  it("keeps the live region mounted while the Notifications view is active", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByText("Zones")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+
+    emit("Cloudflare back online");
+    await waitFor(() => {
+      const region = document.querySelector('[aria-live="polite"].cf-live-region');
+      expect(region).not.toBeNull();
+      expect(region?.textContent).toContain("Cloudflare back online");
+    });
+  });
+
+  it("names the nav button with the unread count once notifications arrive", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByText("Zones")).toBeInTheDocument());
+
+    // Zero unread: plain accessible name (existing tests rely on it).
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+
+    emit("Zone record missing");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /Notifications, 1 unread/i })
+      ).toBeInTheDocument()
+    );
+  });
+});

@@ -1,0 +1,190 @@
+{
+  "healthy": false,
+  "summary": {
+    "drifted": 2,
+    "orphaned": 1,
+    "thin": 17
+  },
+  "items": [
+    {
+      "id": "ROAD-084",
+      "title": "Desktop v1.1 reliability \u0026 live data (metrics + daemon watchdog)",
+      "category": "orphaned",
+      "severity": "high",
+      "detail": "All 1 linked issues (FEAT-008) are closed/implemented",
+      "suggestion": "Update status to completed",
+      "auto_fixable": true
+    },
+    {
+      "id": "ROAD-084",
+      "title": "Desktop v1.1 reliability \u0026 live data (metrics + daemon watchdog)",
+      "category": "drifted",
+      "severity": "medium",
+      "detail": "14 recent commits match title keywords but item wasn't updated (no linked issues)",
+      "suggestion": "Review recent work and update item status or notes",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-085",
+      "title": "Secrets hygiene — purge scan findings from committed GOrchestra artifacts",
+      "category": "drifted",
+      "severity": "medium",
+      "detail": "133 recent commits match title keywords but item wasn't updated (no linked issues)",
+      "suggestion": "Review recent work and update item status or notes",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-002",
+      "title": "Tech stack defined",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-003",
+      "title": "Credentials set up",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-006",
+      "title": "Domain \u0026 hosting configured",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-007",
+      "title": "Backup strategy defined",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-008",
+      "title": "Monitoring \u0026 uptime",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-010",
+      "title": "Linting \u0026 formatting enforced",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-011",
+      "title": "Error tracking configured",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-012",
+      "title": "Database initialized",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "BASE-015",
+      "title": "Environment separation",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-064",
+      "title": "React Native mobile app — on-the-go monitoring and quick actions",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-075",
+      "title": "Desktop v2 — infrastructure graph + write/CRUD operations",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-081",
+      "title": "Desktop distribution — code-signing, notarization, auto-update",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-082",
+      "title": "Paid-tier licensing \u0026 auth (desktop + mobile)",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-083",
+      "title": "cmd/ DI testability rollout — extend factory-var pattern across all command handlers",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-088",
+      "title": "Process-spawning hardening — close the last raw cmd.Start() (ROAD-525 class)",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-089",
+      "title": "Launch: public flip + Homebrew tap",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    },
+    {
+      "id": "ROAD-093",
+      "title": "Access / Zero Trust service surface",
+      "category": "thin",
+      "severity": "low",
+      "detail": "No linked issues, no brainstorm, no plan",
+      "suggestion": "Link issues or add brainstorm/plan references",
+      "auto_fixable": false
+    }
+  ]
+}

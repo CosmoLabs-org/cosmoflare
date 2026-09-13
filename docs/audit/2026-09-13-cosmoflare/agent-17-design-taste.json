@@ -1,0 +1,115 @@
+{
+  "agent": "design-taste",
+  "overall_score": 7.5,
+  "sub_scores": {
+    "visual_hierarchy": 7,
+    "typography": 7,
+    "color_system": 8,
+    "spacing_layout": 7,
+    "anti_slop": 9,
+    "responsiveness_states": 7
+  },
+  "critical_findings": [
+    {
+      "title": "Accent overexposure on notifications — no severity encoding",
+      "severity": "medium",
+      "file": "desktop/src/styles.css:327",
+      "fix": "Add a severity field to NotificationItem and key border-left-color to --danger (error/offline), --accent (warning), neutral (info); reserve bare accent for warnings",
+      "effort": "small"
+    },
+    {
+      "title": "Dark-only theme — no light mode for paid desktop tier",
+      "severity": "medium",
+      "file": "desktop/src/styles.css:12",
+      "fix": "Define a second token value set under [data-theme=\"light\"] with a header toggle; re-verify the documented contrast pairs for the light ground",
+      "effort": "medium"
+    },
+    {
+      "title": "Touch-target drift: 44px nav items vs 32px switcher and Mark read button",
+      "severity": "low",
+      "file": "desktop/src/styles.css:121",
+      "fix": "Extract a shared --control-height: 44px token and apply to .cf-account-switcher and .cf-mark-seen",
+      "effort": "small"
+    },
+    {
+      "title": "No typographic identity — system stack only, plus 12/13px near-duplicate scale steps",
+      "severity": "low",
+      "file": "desktop/src/styles.css:29",
+      "fix": "Collapse --text-xs/--text-sm into one 12px step; introduce a characterful display face for brand + view titles over the system body stack",
+      "effort": "small"
+    },
+    {
+      "title": "Pure neutral grays — zero hue bias toward the amber accent",
+      "severity": "low",
+      "file": "desktop/src/styles.css:17",
+      "fix": "Nudge surface/border/muted tokens 2-3 degrees warm toward #f59e0b; keep documented contrast ratios valid",
+      "effort": "small"
+    },
+    {
+      "title": "Zero motion — hover states snap, live notifications pop in with no enter cue",
+      "severity": "low",
+      "file": "desktop/src/styles.css:1",
+      "fix": "Add 120ms ease-out transitions on interactive hover/active states and a ~150ms fade/translate on notification item enter (plain CSS, no Framer Motion needed)",
+      "effort": "small"
+    },
+    {
+      "title": "Magic number calc(100vh - 14rem) caps the notification list",
+      "severity": "low",
+      "file": "desktop/src/styles.css:318",
+      "fix": "Make .cf-notifications a min-height:0 flex column and let the list flex-fill with its own overflow-y: auto",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Add severity encoding to notifications (severity field + conditional border-left color)",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Add light theme: second token set under [data-theme=\"light\"] + header toggle, re-verify contrast pairs",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Unify control heights on a 44px token and collapse the 12/13px type-scale step",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Add CSS micro-transitions for hover states and notification enter animation",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Warm neutral grays 2-3 degrees toward the amber accent",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Replace calc(100vh - 14rem) with a flex-based fill layout for the notification list",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Notification severity system",
+      "description": "Severity field from daemon events + visual ranking in the panel; prerequisite for any alerting UX",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Light/dark theme support",
+      "description": "Token-level second palette + toggle; expected of a paid desktop tier",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Motion polish pass",
+      "description": "CSS-only micro-interactions for hover states and notification enter; no Framer Motion dependency needed at this scope",
+      "priority": "low",
+      "effort": "small"
+    }
+  ]
+}

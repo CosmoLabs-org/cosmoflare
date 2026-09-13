@@ -1,0 +1,171 @@
+{
+  "agent": "infrastructure",
+  "overall_score": 6,
+  "sub_scores": {
+    "containerization": 5,
+    "orchestration": 4,
+    "iac_quality": 7,
+    "security": 6
+  },
+  "critical_findings": [
+    {
+      "title": "Docker builder toolchain drift: golang:1.25-alpine vs go.mod go 1.26",
+      "severity": "high",
+      "file": "Dockerfile:5",
+      "fix": "Pin FROM golang:1.26-alpine (digest-pinned ideally); decide whether the image ships at all since goreleaser releases bare binaries only",
+      "effort": "small"
+    },
+    {
+      "title": "auth rotate is a shipped placeholder that always errors; --revoke-old would revoke the NEW token",
+      "severity": "high",
+      "file": "cmd/auth.go:479-491",
+      "fix": "Implement rotation via Cloudflare API Token endpoints or remove the subcommand; capture oldToken before overwriting profile.APIToken (cmd/auth.go:227-239)",
+      "effort": "medium"
+    },
+    {
+      "title": ".dockerignore incomplete: COPY . . sends ~1.4GB build context (desktop/node_modules, 105MB stale binaries)",
+      "severity": "medium",
+      "file": ".dockerignore:1-50",
+      "fix": "Exclude desktop/, GOrchestra/, r2go2*, cmd.test, *-setup, ClaudeDesktop/, ClaudeDesign/, plugins/; dedupe duplicate entries",
+      "effort": "small"
+    },
+    {
+      "title": "Dead CI workflows encode a divergent, untested release path with no security scanning",
+      "severity": "medium",
+      "file": ".github/workflows/release.yml:39-66",
+      "fix": "Delete workflows (CI permanently disabled by policy) or reduce to notes-only; add govulncheck to make release-prepare so the live pipeline has a vulnerability gate",
+      "effort": "small"
+    },
+    {
+      "title": "Tauri desktop webview has no Content-Security-Policy (csp: null)",
+      "severity": "medium",
+      "file": "desktop/src-tauri/tauri.conf.json:19-21",
+      "fix": "Set explicit CSP: default-src 'self'; connect-src 'self' http://127.0.0.1:*; img-src 'self' data:",
+      "effort": "small"
+    },
+    {
+      "title": "Unpinned runtime base image alpine:latest",
+      "severity": "medium",
+      "file": "Dockerfile:36",
+      "fix": "Pin alpine:3.x or digest",
+      "effort": "small"
+    },
+    {
+      "title": "Non-constant-time daemon token comparison",
+      "severity": "low",
+      "file": "internal/server/server.go:148-151",
+      "fix": "Use subtle.ConstantTimeCompare for the bearer and query token checks",
+      "effort": "small"
+    },
+    {
+      "title": "API token prompted with terminal echo; flags leak to shell history/ps",
+      "severity": "low",
+      "file": "cmd/auth.go:417-422",
+      "fix": "Use golang.org/x/term.ReadPassword for silent input; document env-var as the history-safe path",
+      "effort": "small"
+    },
+    {
+      "title": "93 committed transcripts + GOrchestra artifacts make the secret scanner 538-finding noise",
+      "severity": "low",
+      "file": "docs/conversation-transcripts/",
+      "fix": "Move transcripts/agent logs out of the tracked tree; allowlist AKIAIOSFODNN7EXAMPLE (AWS docs placeholder) in scanner config",
+      "effort": "medium"
+    },
+    {
+      "title": "Stale r2go2 identity across Dockerfile, Makefile, SECURITY.md (dead repo URL CosmoDev-R2Go2)",
+      "severity": "low",
+      "file": "Makefile:30",
+      "fix": "Rename sweep to cosmoflare; fix SECURITY.md URLs and binary names",
+      "effort": "small"
+    },
+    {
+      "title": "Terraform export provider version default stale (~> 4.0 vs provider 5.x)",
+      "severity": "low",
+      "file": "cmd/terraform.go:84",
+      "fix": "Default to ~> 5.0, matching the command's own help example",
+      "effort": "small"
+    },
+    {
+      "title": "Plaintext secrets fallback when OS keychain unavailable (no warning)",
+      "severity": "low",
+      "file": "internal/config/config.go:381-395",
+      "fix": "Print one-time warning on auth login when storing unencrypted to config.yaml",
+      "effort": "small"
+    },
+    {
+      "title": "Raw cmd.Start() in installer TUI violates project spawn policy (ROAD-525)",
+      "severity": "low",
+      "file": "cmd/installer_tui/main.go:1280",
+      "fix": "Use cmd.Run() in a goroutine or daemon.SpawnAsync()",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Decide the Docker story: publish a scanned multi-arch image via goreleaser docker section, or delete the container surface",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Add govulncheck (and optionally gosec) to make release-prepare — the only pipeline that runs",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Implement real auth rotate via Cloudflare API and fix the revoke-old token ordering bug",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Dockerfile hygiene: golang:1.26-alpine, pinned alpine, -o cosmoflare, HEALTHCHECK, extended .dockerignore",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Delete or neuter dead workflow files; leave a policy pointer",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Set Tauri CSP; constant-time token compare; silent token prompt",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Create .env.example (gitignore whitelist already expects it)",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Bump terraform --provider-version default to ~> 5.0",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Release supply-chain hardening",
+      "description": "cosign-sign release assets, govulncheck gate in release-prepare, scanner allowlist for AWS docs placeholders so real findings surface",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Real credential lifecycle",
+      "description": "Implement auth rotate/revoke against the Cloudflare API Tokens API with expiry warnings in auth status",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Container image or bust",
+      "description": "Either publish a maintained multi-arch image via goreleaser with trivy scanning and digest pinning, or remove the Dockerfile and Makefile docker targets entirely",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Repo de-noising",
+      "description": "Move conversation transcripts and GOrchestra agent artifacts out of the tracked tree; coordinate with history-purge constraints",
+      "priority": "low",
+      "effort": "medium"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "agent": "roadmap-health",
+  "overall_score": 5.4,
+  "sub_scores": {
+    "infrastructure": 7,
+    "coverage": 6,
+    "linkage": 4,
+    "staleness": 5,
+    "hydration_needed": 5
+  },
+  "critical_findings": [
+    {
+      "title": "ROAD-084 orphaned and drifted; auto-fix 'mark completed' would be wrong",
+      "severity": "high",
+      "file": "docs/roadmap/items/ROAD-084.yaml:6",
+      "fix": "Replace closed FEAT-008 link with IDEA-038 (daemon watchdog, unfinished); add progress note; keep captured",
+      "effort": "small"
+    },
+    {
+      "title": "ROAD-085 secrets-hygiene drifted: purge already landed (GOrchestra 234MB->7.3MB tracked, 70+ commits), description stale, linked IDEA-046 withered",
+      "severity": "high",
+      "file": "docs/roadmap/items/ROAD-085.yaml:5",
+      "fix": "Mark purge half completed_in; re-scope to remaining residue (transcript AWS keys, test-fixture keys in internal/interactive/backup_restore_test.go and tests/fixtures/testdata.go)",
+      "effort": "small"
+    },
+    {
+      "title": "docs/issues/index.yaml is empty (issues: []) and titled 'R2Go2 Issues Index' despite 81 issue files",
+      "severity": "high",
+      "file": "docs/issues/index.yaml:3",
+      "fix": "Rebuild index via ccs issues tooling; verify entry count and project name",
+      "effort": "small"
+    },
+    {
+      "title": "Linkage desert: 19/109 items carry linked_issues; 16/18 open FEAT issues have no roadmap home",
+      "severity": "medium",
+      "file": "docs/roadmap/items/ (aggregate)",
+      "fix": "Link open FEATs during next triage; ROAD-089<-FEAT-016, ROAD-091<-FEAT-035/036/037",
+      "effort": "medium"
+    },
+    {
+      "title": "Stale prose roadmap trio (roadmap.md, VISION-AND-ARCHITECTURE.md, GUI-INTEGRATION-STRATEGY.md; all 2025-11-24) contradicts structured roadmap with dead repo links and unchecked shipped features",
+      "severity": "medium",
+      "file": "docs/roadmap/roadmap.md:16",
+      "fix": "Replace with pointers to index.yaml + PRODUCT-VISION.md; port or wont-do the CI/CD template promise",
+      "effort": "small"
+    },
+    {
+      "title": "13/22 captured items idle 85-129 days including ROAD-064 (mobile paid tier, priority 80); no in_progress status exists",
+      "severity": "medium",
+      "file": "docs/roadmap/items/ROAD-029.yaml:6",
+      "fix": "Monthly grooming pass over captured>60d items; archive inapplicable BASE items",
+      "effort": "small"
+    },
+    {
+      "title": "Duplicate completed items: ROAD-047/048 (Vectorize) and ROAD-073/079 (serve daemon); archived/captured re-import pairs 076/081, 077/082, 078/083",
+      "severity": "low",
+      "file": "docs/roadmap/items/ROAD-048.yaml:4",
+      "fix": "Merge duplicates with cross-references; add superseded_by to archived pairs",
+      "effort": "small"
+    },
+    {
+      "title": "Shipped strategic work untracked: FEAT-005 (keychain), FEAT-013 (traffic classes), FEAT-028 (bucket policy), FEAT-033 (domain fleet status) closed with no roadmap record",
+      "severity": "low",
+      "file": "docs/issues/FEAT-033.yaml:1",
+      "fix": "Backfill a completed umbrella item linking the four; link FEAT-005 under security posture",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {"action": "Rebuild docs/issues/index.yaml via ccs issues tooling (empty since 2026-02-26)", "effort": "small", "priority": "high"},
+    {"action": "Fix ROAD-084 links (drop closed FEAT-008, add IDEA-038) and ROAD-085 scope (purge landed; residue remains)", "effort": "small", "priority": "high"},
+    {"action": "Link 16 unlinked open FEAT issues to roadmap items in next /triage round", "effort": "medium", "priority": "high"},
+    {"action": "Replace three 2025-11-24 prose roadmap docs with pointers to structured index", "effort": "small", "priority": "medium"},
+    {"action": "Dedupe ROAD-048/047 and ROAD-079/073; annotate superseded archived pairs", "effort": "small", "priority": "low"},
+    {"action": "Monthly grooming cadence for captured items older than 60 days", "effort": "small", "priority": "medium"},
+    {"action": "Backfill roadmap records for shipped FEAT-005/013/028/033", "effort": "small", "priority": "low"}
+  ],
+  "roadmap_suggestions": [
+    {"title": "Roadmap hygiene sweep #2", "description": "Link-or-close open FEAT queue, dedupe 047/048 and 073/079, refresh ROAD-084/085, rebuild issues index", "priority": "high", "effort": "medium"},
+    {"title": "Agent-first onboarding tier", "description": "First-run setup wizard (FEAT-017) + permission manifest/token doctor (FEAT-019) — the CLI differentiator, currently untracked", "priority": "high", "effort": "large"},
+    {"title": "API client resilience & rate-limit awareness", "description": "FEAT-025 shared client (Retry-After, backoff); commit 74718b2 landed part — track remainder", "priority": "high", "effort": "medium"},
+    {"title": "Production-evidence reliability loop", "description": "Group FEAT-018 (MyCarGuide friction), FEAT-011 (token permission drift), FEAT-014 (snapshot cadence)", "priority": "medium", "effort": "medium"},
+    {"title": "Cloudflare surface completion wave 2", "description": "FEAT-026/029/030/031/032/035/036/037 umbrella or ROAD-091/093 extension", "priority": "medium", "effort": "large"},
+    {"title": "CI/CD template toolkit", "description": "Only relevant unshipped promise from PLANNED_FEATURES.md; no cmd/ exists — capture or record wont-do", "priority": "low", "effort": "medium"}
+  ],
+  "roadmap_hydration": [
+    {"title": "Roadmap hygiene sweep #2 — linkage, dedupe, drift fixes", "description": "Rebuild empty docs/issues/index.yaml; link 16 open FEATs (ROAD-089<-FEAT-016, ROAD-091<-FEAT-035/036/037); fix ROAD-084 (relink IDEA-038, watchdog half unfinished) and ROAD-085 (purge landed, re-scope to transcript/fixture secret residue); dedupe ROAD-047/048 and ROAD-073/079; backfill shipped FEAT-005/013/028/033", "linked_issues": ["FEAT-016", "FEAT-035", "FEAT-036", "FEAT-037", "FEAT-033"], "priority": "high"},
+    {"title": "Agent-first onboarding — first-run wizard + least-privilege token doctor", "description": "One token, whole platform: setup wizard (FEAT-017) plus permission manifest and token doctor (FEAT-019). The agent-first UX is cosmoflare's stated differentiator per CLAUDE.md yet has no roadmap item", "linked_issues": ["FEAT-017", "FEAT-019"], "priority": "high"},
+    {"title": "Rate-limit-aware shared client", "description": "Retry-After parsing, exponential backoff, retry flags across all services (FEAT-025). Partially landed via commit 74718b2 (REST client retries) — needs a tracked home for the remaining surface and tests", "linked_issues": ["FEAT-025"], "priority": "high"},
+    {"title": "Production-evidence reliability loop", "description": "Convert MyCarGuide production friction into tracked reliability work: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit (FEAT-018), token permission-name drift (FEAT-011), serve limits-snapshot cadence (FEAT-014)", "linked_issues": ["FEAT-011", "FEAT-014", "FEAT-018"], "priority": "medium"},
+    {"title": "Cloudflare surface completion wave 2", "description": "Umbrella for the open depth/coverage FEATs: named env profiles (FEAT-026), auth modernization/device-flow (FEAT-029), registrar ops (FEAT-030), SSL SaaS hostnames (FEAT-031), WAF lists (FEAT-032), Tunnels (FEAT-035), account mgmt + audit logs (FEAT-036), zone long-tail batch (FEAT-037). Alternatively extend ROAD-091/ROAD-093 instead of creating new", "linked_issues": ["FEAT-026", "FEAT-029", "FEAT-030", "FEAT-031", "FEAT-032", "FEAT-035", "FEAT-036", "FEAT-037"], "priority": "medium"},
+    {"title": "CI/CD integration templates — decide or drop", "description": "PLANNED_FEATURES.md promises `cicd template` workflows (GitHub Actions, GitLab CI); no cmd/cicd exists and no structured item tracks it. Either capture as a real item or record an explicit wont-do so the prose promise stops dangling", "linked_issues": [], "priority": "low"}
+  ]
+}

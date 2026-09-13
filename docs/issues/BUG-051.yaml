@@ -1,11 +1,13 @@
 id: BUG-051
 type: bug
 created_at: 2026-09-13T15:39:24.912959+04:00
-updated_at: 2026-09-13T15:39:24.918799+04:00
+updated_at: 2026-09-13T15:39:27.156183+04:00
 source: local
 ulid: 01M2D918BPXGH20QQZ3WE4EPGY
 severity: medium
 status: open
+origin:
+    session: 53
 title: sync --include flag is a silent no-op (SyncPlanInput.Include never read)
 description: 'pkg/cosmoflare/sync.go defines SyncPlanInput.Include but no planner reads it (audit 2026-09-13, agent-2): users passing the include filter get no filtering and no warning.'
 fix_direction: Implement include filtering in planUp/planDown in pkg/cosmoflare/sync.go mirroring the isExcluded pattern, or remove the include flag from cmd/sync.go; add unit tests in sync_test.go covering include+exclude interaction

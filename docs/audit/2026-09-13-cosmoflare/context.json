@@ -1,0 +1,536 @@
+{
+ "project_name": "cosmoflare",
+ "version": "0.26.0",
+ "tech_stack": "CosmoLabs Tech Stack v2026.02 (updated 2026-02-23)\n\n\u2696\ufe0f  Constitution:\n  \u2022 Data Sovereignty: Users own their data \u2014 control, export, delete at any time\n  \u2022 Mobile-First: Every screen matters \u2014 design for mobile first, scale up\n  \u2022 Offline-First: The network is optional \u2014 local storage as primary data layer\n  \u2022 Privacy by Default: No surveillance \u2014 minimal collection, opt-in analytics\n  \u2022 Accessibility-First: Every user matters \u2014 WCAG 2.2 AA minimum\n  \u2022 Open Standards: No vendor lock-in \u2014 interoperability and portability\n\nPrinciples:\n  \u2022 Type safety everywhere (TypeScript, Go, Rust, Swift)\n  \u2022 Tailwind CSS for all web styling\n  \u2022 shadcn/ui for React components\n  \u2022 Bun over npm/pnpm/yarn\n  \u2022 Go for CLI tools and backends\n  \u2022 Vite for frontend builds\n  \u2022 Native-first for platform apps (SwiftUI, Jetpack Compose, Tauri)\n  \u2022 PostgreSQL for all relational databases\n\n\u2500\u2500 android-native \u2500\u2500\n  architecture        MVVM + Hilt\n  data                Room\n  dependency_manager  Gradle (Kotlin DSL)\n  language            Kotlin 2.1\n  local_storage       Room\n  min_target          API 26 (Android 8.0)\n  networking          Retrofit + OkHttp + Kotlin Coroutines\n  sync                WorkManager for background sync\n  testing             JUnit 5 + Espresso + Compose Test\n  ui_framework        Jetpack Compose\n\n\u2500\u2500 api-backend \u2500\u2500\n  database    PostgreSQL\n  docs        Swagger/OpenAPI\n  framework   Gin 1.11 (simple) or Fiber 3 (fast)\n  language    Go 1.25\n  orm         GORM 1.31 or sqlx\n  sync        Versioned sync endpoints + conflict resolution\n  testing     go test + testify\n  validation  go-playground/validator\n\n\u2500\u2500 desktop-cross-platform \u2500\u2500\n  alternative    Electron (when native Node.js access needed)\n  animations     Framer Motion 12\n  components     shadcn/ui\n  e2e_testing    WebDriver\n  framework      Tauri 2.10 (Rust + Web)\n  frontend       React 19 + TypeScript 5 + Tailwind 4\n  icons          Hugeicons + Lucide\n  local_storage  SQLite (tauri-plugin-sql 2)\n  state          Zustand 5\n  sync           HTTP sync when online\n  targets        macOS, Windows, Linux\n  unit_testing   Vitest + jsdom\n\n\u2500\u2500 go-cli \u2500\u2500\n  cli_framework  Cobra 1.10\n  config         Viper 1.21\n  language       Go 1.25\n  local_storage  SQLite (modernc.org/sqlite) or bbolt\n  logging        zerolog\n  sync           HTTP sync when online\n  testing        go test + testify\n  tui            Bubbletea 1.3 + Lipgloss 1.1\n\n\u2500\u2500 ios-native \u2500\u2500\n  architecture        MVVM\n  data                SwiftData (or Core Data for complex needs)\n  dependency_manager  Swift Package Manager\n  fallback_ui         UIKit (legacy integration)\n  language            Swift 6\n  local_storage       SwiftData + CloudKit\n  min_target          iOS 17\n  networking          URLSession + async/await\n  sync                CloudKit automatic sync or custom URLSession sync\n  testing             XCTest + Swift Testing\n  ui_framework        SwiftUI\n\n\u2500\u2500 macos-native \u2500\u2500\n  app_lifecycle  SwiftUI App\n  data           SwiftData\n  distribution   Mac App Store or notarized DMG\n  language       Swift 6\n  local_storage  SwiftData + CloudKit\n  min_target     macOS 14\n  sync           CloudKit automatic sync or custom URLSession sync\n  testing        XCTest + Swift Testing\n  ui_framework   SwiftUI\n\n\u2500\u2500 mobile-cross-platform \u2500\u2500\n  e2e_testing    Detox\n  framework      React Native + Expo SDK 54\n  language       TypeScript 5\n  local_storage  WatermelonDB or MMKV (react-native-mmkv 3)\n  navigation     Expo Router\n  state          Zustand 5\n  styling        NativeWind (Tailwind for RN)\n  sync           Custom sync service + expo-background-fetch\n  unit_testing   Jest + React Native Testing Library\n\n\u2500\u2500 monorepo \u2500\u2500\n  apps             apps/ (web, api, mobile, docs)\n  ci               GitHub Actions with Turbo remote cache\n  language         TypeScript 5\n  package_manager  Bun Workspaces\n  shared           packages/ (ui, config, tsconfig, utils)\n  tool             Turborepo 2.8\n\n\u2500\u2500 php-api \u2500\u2500\n  database         PostgreSQL\n  framework        Slim 4.15\n  language         PHP 8.4\n  orm              Doctrine or Eloquent (standalone)\n  package_manager  Composer\n  testing          Pest or PHPUnit\n\n\u2500\u2500 php-fullstack \u2500\u2500\n  database         PostgreSQL\n  framework        Laravel 12\n  frontend         Livewire + Alpine.js + Tailwind (TALL stack)\n  language         PHP 8.4\n  orm              Eloquent\n  package_manager  Composer\n  testing          Pest\n\n\u2500\u2500 python-api \u2500\u2500\n  async            uvicorn + asyncio\n  database         PostgreSQL\n  framework        FastAPI 0.129\n  language         Python 3.13\n  orm              SQLAlchemy 2.0\n  package_manager  uv\n  testing          pytest + httpx\n  validation       Pydantic 2.12\n\n\u2500\u2500 rust-cli \u2500\u2500\n  async           tokio (if needed)\n  cli_framework   clap 4.5\n  error_handling  anyhow + thiserror\n  language        Rust (stable)\n  serialization   serde + serde_json\n  testing         cargo test\n  tui             ratatui 0.30\n\n\u2500\u2500 web-frontend \u2500\u2500\n  animations       Framer Motion 12\n  build            Vite\n  components       shadcn/ui\n  data_fetching    TanStack Query 5\n  e2e_testing      Playwright\n  forms            React Hook Form + Zod 4\n  framework        React 19\n  icons            Hugeicons + Lucide\n  language         TypeScript 5\n  local_storage    IndexedDB (via Dexie.js 4)\n  package_manager  Bun\n  state            Zustand 5\n  styling          Tailwind CSS 4\n  sync             Service Workers + Background Sync API\n  unit_testing     Vitest + jsdom\n\n\u2500\u2500 web-fullstack \u2500\u2500\n  animations       Framer Motion 12\n  auth             NextAuth\n  components       shadcn/ui\n  data_fetching    TanStack Query 5\n  database         PostgreSQL\n  e2e_testing      Playwright\n  forms            React Hook Form + Zod 4\n  framework        Next.js 15 (App Router)\n  icons            Hugeicons + Lucide\n  language         TypeScript 5\n  local_storage    IndexedDB (via Dexie.js 4)\n  orm              Drizzle ORM\n  package_manager  Bun\n  state            Zustand 5\n  styling          Tailwind CSS 4\n  sync             Service Workers + Background Sync API\n  unit_testing     Vitest + jsdom\n\n\u2500\u2500 web-static \u2500\u2500\n  components       shadcn/ui (via React islands)\n  content          Astro Content Collections (MDX)\n  e2e_testing      Playwright\n  framework        Astro 5\n  icons            Hugeicons + Lucide\n  language         TypeScript 5\n  package_manager  Bun\n  styling          Tailwind CSS 4\n  unit_testing     Vitest + jsdom",
+ "file_tree": [
+  "cmd/object.go",
+  "cmd/limits.go",
+  "cmd/waf.go",
+  "cmd/bucket_notifications.go",
+  "cmd/queue_dlq.go",
+  "cmd/theme.go",
+  "cmd/installer_tui/main.go",
+  "cmd/installer_tui/main_test.go",
+  "cmd/decode_test.go",
+  "cmd/create.go",
+  "cmd/firewall.go",
+  "cmd/ratelimit_probe_test.go",
+  "cmd/cors.go",
+  "cmd/completion.go",
+  "cmd/dns.go",
+  "cmd/migrate_test.go",
+  "cmd/firewall_test.go",
+  "cmd/compare_test.go",
+  "cmd/pages_deployment_test.go",
+  "cmd/config.go",
+  "cmd/cors_test.go",
+  "cmd/mcp_test.go",
+  "cmd/pages_domain.go",
+  "cmd/list.go",
+  "cmd/switch_test.go",
+  "cmd/bucket.go",
+  "cmd/audit.go",
+  "cmd/d1_test.go",
+  "cmd/mcp_generate_test.go",
+  "cmd/redirects_test.go",
+  "cmd/queue_dlq_test.go",
+  "cmd/bucket_test.go",
+  "cmd/terraform.go",
+  "cmd/cache_run_test.go",
+  "cmd/backup.go",
+  "cmd/bucket_policy.go",
+  "cmd/auth_test.go",
+  "cmd/metrics.go",
+  "cmd/d1_migrations.go",
+  "cmd/auth.go",
+  "cmd/audit_test.go",
+  "cmd/cache_test.go",
+  "cmd/d1_import.go",
+  "cmd/terraform_test.go",
+  "cmd/d1.go",
+  "cmd/worker.go",
+  "cmd/domains_tui.go",
+  "cmd/d1_timetravel.go",
+  "cmd/images_test.go",
+  "cmd/sync.go",
+  "cmd/demo_test.go",
+  "cmd/queue.go",
+  "cmd/sync_guardrails_test.go",
+  "cmd/alerts.go",
+  "cmd/delete.go",
+  "cmd/pages_env.go",
+  "cmd/mcp_generate.go",
+  "cmd/kv.go",
+  "cmd/apply_test.go",
+  "cmd/switch.go",
+  "cmd/stream.go",
+  "cmd/wrangler_test.go",
+  "cmd/init_test.go",
+  "cmd/metrics_test.go",
+  "cmd/d1_export.go",
+  "cmd/export.go",
+  "cmd/queue_send_test.go",
+  "cmd/hyperdrive_test.go",
+  "cmd/ratelimit.go",
+  "cmd/create_test.go",
+  "cmd/pagerules.go",
+  "cmd/completion_test.go",
+  "cmd/serve.go",
+  "cmd/validate_test.go",
+  "cmd/email_test.go",
+  "cmd/domains_test.go",
+  "cmd/root_test.go",
+  "cmd/sync_test.go",
+  "cmd/copy.go",
+  "cmd/queue_send.go",
+  "cmd/status_test.go",
+  "cmd/cache.go",
+  "cmd/serve_test.go",
+  "cmd/queue_test.go",
+  "cmd/domains.go",
+  "cmd/waf_test.go",
+  "cmd/dev_test.go",
+  "cmd/analytics_test.go",
+  "cmd/templates_test.go",
+  "cmd/ai.go",
+  "cmd/domains_get.go",
+  "cmd/diff_test.go",
+  "cmd/bucket_domain.go",
+  "cmd/hyperdrive.go",
+  "cmd/alerts_test.go",
+  "cmd/domains_ns.go",
+  "cmd/pagerules_test.go",
+  "cmd/plugin_test.go",
+  "cmd/dns_test.go",
+  "cmd/diff.go",
+  "cmd/vectorize.go",
+  "cmd/pages_domain_test.go",
+  "cmd/plugin.go",
+  "cmd/wrangler.go",
+  "cmd/auth_permissions.go",
+  "cmd/pages_deployment.go",
+  "cmd/cost_test.go",
+  "cmd/images.go",
+  "cmd/zone.go",
+  "cmd/pages_test.go",
+  "cmd/email.go",
+  "cmd/domains_tui_test.go",
+  "cmd/mcp.go",
+  "cmd/domains_stats_test.go",
+  "cmd/export_test.go",
+  "cmd/watch_test.go",
+  "cmd/setup.go",
+  "cmd/redirects.go",
+  "cmd/auth_permissions_test.go",
+  "cmd/pages.go"
+ ],
+ "entry_points": [
+  "main.go",
+  "cmd/root.go"
+ ],
+ "intel": "\u2713 intel OK",
+ "has_ccs": true,
+ "has_roadmap": true,
+ "has_issues": true,
+ "has_docs": true,
+ "git_branch": "master",
+ "file_count": 4828,
+ "project_type": "structured",
+ "capabilities": [
+  "issues",
+  "ideas",
+  "roadmap",
+  "feedback",
+  "changelog"
+ ],
+ "design": {
+  "frontend": {
+   "detected": true,
+   "component_files": 10,
+   "dirs": [
+    "desktop/src/",
+    "desktop/src/__tests__/",
+    "desktop/src/components/",
+    "desktop/src/views/"
+   ],
+   "animation_instances": 0,
+   "motion_evidence": false
+  },
+  "skipped_paths": 0
+ },
+ "readiness": {
+  "context": "Readiness:\n  PR: \u2713 No conflicts",
+  "pr_ready": true,
+  "deploy_ready": true,
+  "tests_passing": true,
+  "ci_passing": false,
+  "has_conflicts": false,
+  "needs_rebase": false,
+  "analysis_ms": 0
+ },
+ "security_summary": {
+  "scanned_files": 7197,
+  "total": 538,
+  "critical": 13,
+  "high": 221,
+  "medium": 59,
+  "low": 236,
+  "top_rules": [
+   [
+    "hardcoded-ip",
+    236
+   ],
+   [
+    "go-sql-injection",
+    143
+   ],
+   [
+    "debug-true",
+    50
+   ],
+   [
+    "disabled-ssl-verify",
+    24
+   ],
+   [
+    "twilio-account-sid",
+    23
+   ],
+   [
+    "aws-access-key",
+    13
+   ],
+   [
+    "path-traversal",
+    12
+   ],
+   [
+    "command-injection",
+    9
+   ],
+   [
+    "generic-secret",
+    9
+   ],
+   [
+    "cors-wildcard",
+    8
+   ],
+   [
+    "todo-auth",
+    5
+   ],
+   [
+    "todo-security",
+    4
+   ]
+  ],
+  "critical_findings": [
+   "- [aws-access-key] docs/audit/2026-08-31-cosmoflare/agent-1-code-quality.md:52 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/audit/2026-08-31-cosmoflare/risk-map.md:31 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12110 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12163 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12438 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/conversation-transcripts/2026-08-31_023804_e6394177.md:1339 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/conversation-transcripts/2026-09-06_201854_d6606927.md:1068 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] docs/feedback/outgoing/2026-09-06-claudecodesetup-gorchestra-recovery-patches-never-pruned.md:58 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] internal/interactive/backup_restore_test.go:47 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] internal/interactive/backup_restore_test.go:106 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] internal/interactive/backup_restore_test.go:378 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] tests/fixtures/testdata.go:17 \u2014 AWS Access Key ID - never commit these",
+   "- [aws-access-key] tests/fixtures/testdata.go:27 \u2014 AWS Access Key ID - never commit these"
+  ]
+ },
+ "git_audit": [
+  {
+   "path": ".github/.DS_Store",
+   "type": "artifact",
+   "severity": "error",
+   "message": "Build artifact should not be tracked"
+  },
+  {
+   "path": ".gorchestra/symbol-index.json",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/00bdfe1c_auto_2026-05-07_00bdfe1c-f550-4548-b01c-adc3b17385b1.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.7MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/0584c971_auto_2026-05-16_0584c971-5a3e-4b69-a38a-50a0c2068e2b.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.9MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/07f6ec12_auto_2026-02-26_07f6ec12-1cfb-4372-8a79-8f66b312142e.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.6MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/11701c1b_auto_2026-05-18_11701c1b-07e6-4387-a95e-a34067600fee.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.1MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/128d0938_auto_2026-03-09_128d0938-2593-42f4-aa64-63b0b711950b.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/217918b0_auto_2026-05-13_217918b0-b5d5-4041-a8ea-bccc0e02a4cb.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.4MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/2478f353_auto_2026-09-09_2478f353-d2fe-487a-9e76-2d68e6b46d30.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 3.7MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/259c0148_auto_2026-05-12_259c0148-9d84-4a92-9d4b-3cb154825ed9.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/26b93284_auto_2026-06-09_26b93284-9949-40cb-9493-de70724769a7.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 3.6MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/2cffd242_auto_2026-05-16_2cffd242-7cf6-4f30-990f-9c9b2456e13d.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.5MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/3f34abbc_manual_2026-05-08_04-49-37_3f34abbc-b4d1-446b-ab2d-f81bf98e6724.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.1MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/45a0d177_auto_2026-07-06_45a0d177-4113-4977-960b-76f826b61fb3.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.2MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/4918d7f3_auto_2026-06-07_4918d7f3-2153-45bd-8e12-ddb44826ddd9.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 3.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/4e2e559d_auto_2026-05-15_4e2e559d-2f0d-4455-a45a-36f19d2aa076.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/4e97f51c_auto_2026-05-29_4e97f51c-13c8-4d95-83c8-fac1ecf6ecb8.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.1MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/505988c1_manual_2026-05-08_00-27-39_505988c1-ccdf-423f-b9f1-14a2664196d7.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.5MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/666a5e17_auto_2026-05-16_666a5e17-ff79-4e3f-aabf-88ff006f7fe2.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.2MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/7d679cb4_auto_2026-09-10_7d679cb4-7d36-4784-8d4f-eb485161d032.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.9MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/8539348e_auto_2026-06-23_8539348e-e207-4f4a-a6b7-43e1428e366b.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.4MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/855615a4_manual_2026-05-15_14-04-29_855615a4-2690-4d84-aca1-53e9e0d628ab.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.5MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/ac23a1f3_auto_2026-09-07_ac23a1f3-0f21-43f2-bc39-47ab746d1295.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.5MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/b581dcc1_auto_2026-03-03_b581dcc1-bbdc-4511-acd3-8fe002fb0ddf.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.7MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/b7200621_auto_2026-03-02_b7200621-418a-487c-b168-cc5e1feb2c3d.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.9MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/caed4f81_auto_2026-05-16_caed4f81-8053-4dd0-867e-26ed8bde036c.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/cd8ef88b_auto_2026-06-21_cd8ef88b-59e8-48c6-a1bf-7ba279caa88d.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 4.2MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/d0fc64f9_auto_2026-05-18_d0fc64f9-976c-4699-aa43-105120a381fb.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/d6606927_auto_2026-09-06_d6606927-fb96-4bda-ac25-f6ae9dd48714.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.5MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/d702a441_auto_2026-06-16_d702a441-5eb8-49fb-b439-6cdcda16ca5e.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.1MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/d9645d10_auto_2026-03-11_d9645d10-41f8-4c0c-91b9-ac5bde190727.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.2MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/df4230f5_auto_2026-09-09_df4230f5-cf4c-4022-b33b-5161f2a4f2e7.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 3.6MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/e6394177_auto_2026-09-06_e6394177-8a4e-4e8d-acfe-7a2647fbf9ed.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 4.3MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/e9ad75ae_manual_2026-05-14_05-24-28_e9ad75ae-89d4-4bc6-abbd-48f8d61d2018.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 1.9MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/ef8e8d39_auto_2026-03-07_ef8e8d39-8989-447f-a90d-30656a852d34.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 2.6MB"
+  },
+  {
+   "path": "docs/sessions/transcripts/f50e3775_auto_2026-09-10_f50e3775-aaad-45a0-827b-e2ed212d6670.jsonl",
+   "type": "large_file",
+   "severity": "warning",
+   "message": "Large file: 5.0MB"
+  }
+ ],
+ "commit_audit": {
+  "total": 50,
+  "valid": 46,
+  "with_type": 46,
+  "with_warning": 8,
+  "invalid": 4,
+  "score": 92,
+  "type_breakdown": {
+   "chore": 26,
+   "docs": 7,
+   "feat": 13
+  },
+  "worst_offenders": [
+   {
+    "hash": "3812f504",
+    "subject": "Merge branch '_glm-agent-0132-feat-023-pages-depth'",
+    "type": "",
+    "valid": false,
+    "warnings": null,
+    "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0132-feat-023-pages-depth'\"\n  Try: \"chore: merge branch '_glm-agent-0132-feat-023-pages-depth'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+    "suggestion": "chore: merge branch '_glm-agent-0132-feat-023-pages-depth'"
+   },
+   {
+    "hash": "53749d4d",
+    "subject": "Merge branch '_glm-agent-0131-feat-034-durable-objects'",
+    "type": "",
+    "valid": false,
+    "warnings": null,
+    "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0131-feat-034-durable-objects'\"\n  Try: \"chore: merge branch '_glm-agent-0131-feat-034-durable-objects'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+    "suggestion": "chore: merge branch '_glm-agent-0131-feat-034-durable-objects'"
+   },
+   {
+    "hash": "27b28b45",
+    "subject": "Merge branch '_glm-agent-0130-feat-033-domain-fleet'",
+    "type": "",
+    "valid": false,
+    "warnings": null,
+    "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0130-feat-033-domain-fleet'\"\n  Try: \"chore: merge branch '_glm-agent-0130-feat-033-domain-fleet'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+    "suggestion": "chore: merge branch '_glm-agent-0130-feat-033-domain-fleet'"
+   },
+   {
+    "hash": "6136c790",
+    "subject": "Merge branch '_glm-agent-0129-feat-022-wave-completion'",
+    "type": "",
+    "valid": false,
+    "warnings": null,
+    "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0129-feat-022-wave-completion'\"\n  Try: \"chore: merge branch '_glm-agent-0129-feat-022-wave-completion'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+    "suggestion": "chore: merge branch '_glm-agent-0129-feat-022-wave-completion'"
+   }
+  ]
+ },
+ "audit_model": {
+  "provider": "glm",
+  "model_id": "glm-5.3",
+  "model_display": "GLM 5.3 (1M context)",
+  "timestamp": "2026-09-13T06:45:52+04:00"
+ },
+ "cosmokit": "not installed",
+ "impeccable": "unavailable",
+ "design_context": {
+  "frontend": {
+   "detected": true,
+   "component_files": 10,
+   "dirs": [
+    "desktop/src/",
+    "desktop/src/__tests__/",
+    "desktop/src/components/",
+    "desktop/src/views/"
+   ],
+   "animation_instances": 0,
+   "motion_evidence": false
+  },
+  "skipped_paths": 0
+ }
+}

@@ -1,0 +1,1 @@
+Model: glm / provider= / base=https://api.z.ai/api/anthropic

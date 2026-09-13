@@ -1,0 +1,73 @@
+{
+ "scanned_files": 7197,
+ "total": 538,
+ "critical": 13,
+ "high": 221,
+ "medium": 59,
+ "low": 236,
+ "top_rules": [
+  [
+   "hardcoded-ip",
+   236
+  ],
+  [
+   "go-sql-injection",
+   143
+  ],
+  [
+   "debug-true",
+   50
+  ],
+  [
+   "disabled-ssl-verify",
+   24
+  ],
+  [
+   "twilio-account-sid",
+   23
+  ],
+  [
+   "aws-access-key",
+   13
+  ],
+  [
+   "path-traversal",
+   12
+  ],
+  [
+   "command-injection",
+   9
+  ],
+  [
+   "generic-secret",
+   9
+  ],
+  [
+   "cors-wildcard",
+   8
+  ],
+  [
+   "todo-auth",
+   5
+  ],
+  [
+   "todo-security",
+   4
+  ]
+ ],
+ "critical_findings": [
+  "- [aws-access-key] docs/audit/2026-08-31-cosmoflare/agent-1-code-quality.md:52 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/audit/2026-08-31-cosmoflare/risk-map.md:31 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12110 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12163 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/conversation-transcripts/2026-05-16_024358_2cffd242.md:12438 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/conversation-transcripts/2026-08-31_023804_e6394177.md:1339 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/conversation-transcripts/2026-09-06_201854_d6606927.md:1068 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] docs/feedback/outgoing/2026-09-06-claudecodesetup-gorchestra-recovery-patches-never-pruned.md:58 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] internal/interactive/backup_restore_test.go:47 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] internal/interactive/backup_restore_test.go:106 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] internal/interactive/backup_restore_test.go:378 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] tests/fixtures/testdata.go:17 \u2014 AWS Access Key ID - never commit these",
+  "- [aws-access-key] tests/fixtures/testdata.go:27 \u2014 AWS Access Key ID - never commit these"
+ ]
+}

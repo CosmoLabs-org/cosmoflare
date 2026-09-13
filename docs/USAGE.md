@@ -50,7 +50,14 @@ final error).
 
 ## Dev Server
 
-Start a local development proxy that routes requests to Cloudflare services through your configured credentials.
+Start a local development server scaffold.
+
+> **Status (BUG-046):** the server binds the port, serves `/health`, emits
+> `--json` startup events, and shuts down cleanly on SIGINT/SIGTERM — but
+> **per-service proxying is not yet implemented**. Every service route
+> currently answers `502 {"error":"upstream not configured"}`. Credential-
+> aware reverse proxying is tracked work; until it lands, use this server
+> only for health/startup-event integration.
 
 ### Start dev server
 ```bash

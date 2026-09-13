@@ -1,0 +1,142 @@
+{
+  "project": "cosmoflare",
+  "version": "0.26.0",
+  "audit_date": "2026-09-13",
+  "overall_score": 59.8,
+  "maturity": "Developing",
+  "priority": "Medium",
+  "methodology": 2,
+  "audit_model": {
+    "provider": "glm",
+    "model_id": "glm-5.3",
+    "model_display": "GLM 5.3 (1M context)",
+    "timestamp": "2026-09-13T00:00:00+04:00"
+  },
+  "prior_audit": {
+    "path": "docs/audit/2026-08-31-cosmoflare",
+    "overall_score": 46.1,
+    "maturity": "Developing",
+    "delta": "+13.7",
+    "delta_note": "553 commits, 653 files changed (+107K lines) between audits. Every comparable dimension held or improved; none regressed. Infrastructure +20 and documentation +20 lead. Core-logic flat at 50 — the sync-engine data-loss bugs are new discoveries in unchanged-code areas, not regressions."
+  },
+  "agents": [
+    {
+      "name": "code-quality",
+      "score": 70,
+      "grade": "C-",
+      "delta": "(=)",
+      "sub_scores": { "architecture": 70, "code_patterns": 70, "tech_debt": 70, "test_coverage": 70, "maintainability": 70 }
+    },
+    {
+      "name": "core-logic",
+      "score": 50,
+      "grade": "E",
+      "delta": "(=)",
+      "sub_scores": { "bug_detection": 50, "performance": 50, "edge_cases": 60, "security": 60, "data_integrity": 40 }
+    },
+    {
+      "name": "competitive",
+      "score": 50,
+      "grade": "E",
+      "delta": "(=)",
+      "sub_scores": { "feature_parity": 70, "differentiation": 80, "market_position": 30, "technical_moat": 60, "growth_potential": 20 }
+    },
+    {
+      "name": "distribution",
+      "score": 50,
+      "grade": "E",
+      "delta": "(+20)",
+      "sub_scores": { "ci_cd": 40, "packaging": 50, "deployment": 40, "multi_platform": 60, "developer_experience": 60 }
+    },
+    {
+      "name": "seo-content",
+      "score": 20,
+      "grade": "F-",
+      "delta": "(=)",
+      "sub_scores": { "meta_tags": 10, "structured_data": 10, "technical_seo": 10, "content_strategy": 50, "discoverability": 10, "conversion_cta": 30 }
+    },
+    {
+      "name": "api-design",
+      "score": 70,
+      "grade": "C-",
+      "delta": "(+10)",
+      "sub_scores": { "api_design": 70, "versioning": 60, "auth_security": 70, "documentation": 70 }
+    },
+    {
+      "name": "infrastructure",
+      "score": 60,
+      "grade": "D",
+      "delta": "(+20)",
+      "sub_scores": { "containerization": 50, "orchestration": 40, "iac_quality": 70, "security": 60 }
+    },
+    {
+      "name": "documentation",
+      "score": 70,
+      "grade": "C-",
+      "delta": "(+20)",
+      "sub_scores": { "completeness": 60, "accuracy": 80, "onboarding": 60, "api_docs": 70 }
+    },
+    {
+      "name": "roadmap-health",
+      "score": 54,
+      "grade": "E",
+      "delta": "(+4)",
+      "sub_scores": { "infrastructure": 70, "coverage": 60, "linkage": 40, "staleness": 50, "hydration_needed": 50 }
+    },
+    {
+      "name": "doc-integrity",
+      "score": 59,
+      "grade": "E",
+      "delta": "(+12)",
+      "deterministic": true,
+      "sub_scores": { "chain_integrity": 70, "enrichment": 20, "review_coverage": 30, "prompt_freshness": 70 }
+    },
+    {
+      "name": "work-completion",
+      "score": 86,
+      "grade": "B",
+      "delta": "baseline",
+      "deterministic": true,
+      "sub_scores": { "issue_closure": 70, "roadmap_sync": 50, "plan_freshness": 100 }
+    }
+  ],
+  "design": {
+    "composite_score": 78,
+    "child_scores": {
+      "agent_17_taste": { "score": 75, "sub_scores": { "visual_hierarchy": 70, "typography": 70, "color_system": 80, "spacing_layout": 70, "anti_slop": 90, "responsiveness_states": 70 } },
+      "agent_18_accessibility": { "score": 80, "sub_scores": { "color_contrast": 80, "keyboard_nav": 90, "screen_reader": 70, "semantic_html": 90, "forms_labels": 90 } },
+      "agent_19_motion": { "score": null, "status": "skipped_no_motion" }
+    }
+  },
+  "doc_integrity": {
+    "score": 59,
+    "inputs": { "broken_chains": 4, "unenriched_docs": 102, "unreviewed_docs": 69, "stale_docs": 0, "stale_prompts": 0 },
+    "delta": "+12"
+  },
+  "work_completion": {
+    "score": 86,
+    "inputs": { "possibly_done_issues": 2, "orphaned_roadmap": 1, "stale_roadmap": 0, "drifted_roadmap": 2, "stalled_plans": 0 },
+    "delta": "baseline",
+    "note": "recomputed with --possibly-done 2 per DD-3 after Agent 15 evidence"
+  },
+  "critical_bugs": [
+    { "title": "sync down --delete deletes wrong remote object (never local)", "file": "pkg/cosmoflare/sync.go:425", "severity": "high", "source": "agent-2-core-logic.md" },
+    { "title": "sync up --delete deletes remote objects matching exclude patterns", "file": "pkg/cosmoflare/sync.go:275", "severity": "high", "source": "agent-2-core-logic.md" },
+    { "title": "Shared 30s HTTP timeout kills large S3 transfers mid-body", "file": "pkg/cosmoflare/client.go:113", "severity": "high", "source": "agent-2-core-logic.md" },
+    { "title": "Multipart abort uses canceled context, orphaning billed uploads", "file": "pkg/cosmoflare/upload.go:181", "severity": "high", "source": "agent-2-core-logic.md" },
+    { "title": "auth rotate placeholder always errors; --revoke-old would revoke NEW token", "file": "cmd/auth.go:479", "severity": "high", "source": "agent-9-infrastructure.md" },
+    { "title": "make dist tars docs/ (AWS-key transcripts) into release archives", "file": "Makefile:97", "severity": "high", "source": "agent-5-distribution.md" },
+    { "title": "Repository is PRIVATE — install/pkg.go.dev/docs all dead for outsiders", "file": "README.md:10", "severity": "high", "source": "agent-6-seo-content.md" },
+    { "title": "4 tagged releases (v0.23-v0.26) never published to GitHub", "file": ".goreleaser.yaml:22", "severity": "high", "source": "agent-5-distribution.md, agent-4-competitive.md" },
+    { "title": "Notifications silent on non-Notifications tabs (WCAG 4.1.3 live regions unmount)", "file": "desktop/src/App.tsx:152", "severity": "high", "source": "agent-18-accessibility.md" },
+    { "title": "Docker builder toolchain drift golang:1.25-alpine vs go.mod 1.26", "file": "Dockerfile:5", "severity": "high", "source": "agent-9-infrastructure.md" }
+  ],
+  "meta": {
+    "agent_count": 13,
+    "mode": "fresh",
+    "cosmokit_agent": "skipped — cosmokit not installed",
+    "motion_agent": "skipped — no motion evidence (0 animation instances)",
+    "impeccable": "unavailable",
+    "commits_since_prior_audit": 553
+  }
+}

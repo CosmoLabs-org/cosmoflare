@@ -1,0 +1,25 @@
+{
+  "score": 59,
+  "applicable": true,
+  "inputs": {
+    "chains_total": 102,
+    "broken_chains": 4,
+    "unenriched_docs": 102,
+    "reviewed_docs": 28,
+    "unreviewed_docs": 69,
+    "stale_docs": 0,
+    "stale_prompts": 0,
+    "vendored_excluded_docs": 64
+  },
+  "weights": {
+    "broken_chain": 6,
+    "broken_cap_pt": 25,
+    "unenriched_pct": 0.1,
+    "unenriched_cap_pt": 12,
+    "unreviewed_pct": 0.1,
+    "unreviewed_cap_pt": 12,
+    "stale_doc": 1,
+    "stale_cap_pt": 8,
+    "stale_prompt": 1
+  }
+}

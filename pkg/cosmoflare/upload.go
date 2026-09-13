@@ -178,7 +178,12 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 	// Abort on any failure
 	var completedParts []types.CompletedPart
 	abort := func() {
-		c.s3Client().AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
+		// BUG-043: abort with a context that survives cancellation of the
+		// request context — aborting with the canceled ctx fails instantly
+		// and leaks the incomplete upload (billed parts, 7-day retention).
+		abortCtx, abortCancel := abortContext(ctx)
+		defer abortCancel()
+		c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
 			Bucket:   aws.String(bucket),
 			Key:      aws.String(key),
 			UploadId: aws.String(uploadID),

@@ -1,0 +1,708 @@
+{
+  "reviewed": 28,
+  "stale": 0,
+  "unreviewed": 133,
+  "total": 161,
+  "docs": [
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.458964+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-16-cors-transform-rules.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.493258+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-16-domain-operations.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.523187+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-18-service-interfaces.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.555851+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-18-tui-command-palette.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.608268+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-07-road002-tui-object-browser.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.112825+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-07-road020-dashboard-tui.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.147964+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-08-road007-s3-migration-resume.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.181089+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-14-domain-management-center.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.255701+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-20-cosmoflare-desktop.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.214377+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-21-inprocess-event-bus.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-07-01-live-metrics-producer.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.16862+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-domain-center-residuals.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-quota-limit-view.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-11-d1-depth.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/collaborative-template.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/feature-ideas.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.646502+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2025-11-24-r2go2-initial-development.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.68069+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-02-26-codebase-analysis-v0.2.0.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.716607+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-03-03-consolidate-duplicated-code.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.753229+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-07-r2go2-phase0-phase1-implementation.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.785884+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-12-phase3-workers-kv.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.82069+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-cosmoflare-module-rename.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.8533+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-domain-operations.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.888689+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-phase4-cloudflare-services.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:16:30.284393+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-18-service-interfaces.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.956218+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-18-tui-command-palette.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:03.99216+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-07-road020-dashboard-tui.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.025447+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-08-road002-tui-object-browser.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.059273+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-08-road007-s3-migration-resume.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.094279+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-14-domain-management-center.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.129586+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-20-cosmoflare-desktop.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:17:20.078057+04:00",
+      "last_modified": "2026-09-06T20:17:50+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-21-inprocess-event-bus.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-07-01-live-metrics-producer.md",
+      "status": "reviewed",
+      "last_reviewed": "2026-09-06T20:14:04.21166+04:00",
+      "last_modified": "2026-09-06T20:15:38+04:00"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-domain-center-residuals.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-quota-limit-view.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-11-d1-depth.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2025-01-25-tui-installer-wizard-implementation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-02-testing-strategy-progress.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-07-testing-quality-next-steps.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-25-project-audit-followup.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-28-r2go2-audit-followup.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase1-library-extraction.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase2-continuation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase2-integration-and-hardening.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-12-phase2-roadmap-expansion.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-13-phase3-workers-kv-implementation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-14-batch2-batch3-quick-wins.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-14-session-continuation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-domain-operations.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-glm-parallel-coverage-wave2.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-19-post-audit-fixes.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-27-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-30-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-06-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-07-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-09-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-14-domain-management-center.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-20-cosmoflare-desktop.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-desktop-followups-and-event-bus.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-inprocess-event-bus.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-master-session-next.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-08-31-cosmoflare-audit-followup.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-05-next-session.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-06-launch-and-hardening.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-08-post-v0.22.0-control-plane.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-cf-api-knowledge-layer.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-domain-center-residuals.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-quota-limit-view.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cosmoflare-continuation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cosmoflare-handoff.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-ratelimit-traffic-classes.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-11-d1-depth.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-12-session-2026-continuation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/CONTINUATION-session-008-cli-features.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/CONTINUATION-session-008-tui-installer.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/PARALLEL-SESSION-COORDINATION.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/cli-feature-commands.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/continuation-prompt-v0.2.0.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/enhanced-interactive-features.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-007-continuation-completed.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-007-continuation-prompt.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-D-testing-continuation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-e-continuation-prompt.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/testing-strategy-bulletproof-cli.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/testing-validation-production.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/tui-dashboard-implementation.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/worktrees/2026-05-15-UnitTesting-session-2.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/accessibility-compliance/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/advance-roadmap/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/audit/references/agent-prompts.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/audit/references/output-format.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/brainstorming/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/brainstorming-research/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/bug-fix/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/bug-report/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/bugfixed/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/cerebro/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/claudedesign/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/claudedesktop/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/competitive-analysis/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/cosmoelements-audit/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/cosmove/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/credentials/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/deep-research/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/diagram/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/feedback/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/flowchart/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/frontend-design-pro/references/color-palettes.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/frontend-design-pro/references/font-pairings.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/frontend-design-pro/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/references/analyze-mode.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/references/context-engineering.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/references/generation-versioning.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/references/prompt-templates.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/references/video-mode.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/gemini/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/glm-agent/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/goralph/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/hold/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/image-testing/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/inception/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/independent-review/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/integration-audit/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/iq-test/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/localize/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/new-project/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/parallel/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/pre-commit-quality/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/project-audit/references/synthesis.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/project-audit/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/project-brief/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/project-upgrade/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/quality-gate/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/recover-last/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/reflect/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/roadmap/references/commands.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/roadmap/references/decision-framework.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/roadmap/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/schedule-prompt/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/skill-creator/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/sop-mac-desktop-app/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/spec/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/sweep/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/test-coverage/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/triage/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/ux-designer/references/heuristic-checklist.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/ux-designer/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/verification-before-completion/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/web-artifacts-builder/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/work-sprint/skill.md",
+      "status": "unreviewed"
+    },
+    {
+      "path": "/Users/gabstudio/PROJECTS/cosmoflare/plugins/internal/skills/workcheck/skill.md",
+      "status": "unreviewed"
+    }
+  ]
+}

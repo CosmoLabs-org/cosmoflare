@@ -1,0 +1,141 @@
+{
+  "agent": "api-design",
+  "overall_score": 7,
+  "sub_scores": {
+    "api_design": 7,
+    "versioning": 6,
+    "auth_security": 7,
+    "documentation": 7
+  },
+  "critical_findings": [
+    {
+      "title": "cosmoflare dev proxy is a stub but documented as functional",
+      "severity": "high",
+      "file": "pkg/cosmoflare/dev.go:161",
+      "fix": "Implement the per-service reverse proxy with profile-resolved credentials and fsnotify config watch, or remove the command/options and correct docs/USAGE.md to match current behavior",
+      "effort": "medium"
+    },
+    {
+      "title": "No HTTP timeout on cloudflare-go transport in 27 FromCreds constructors (http.DefaultClient fallback)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/kv.go:93",
+      "fix": "Pass a package-default http.Client{Timeout: 30s} via cloudflare.HTTPClient in every NewXServiceFromCreds; document the single timeout policy",
+      "effort": "small"
+    },
+    {
+      "title": "Daemon REST handlers accept any HTTP method (no 405 enforcement)",
+      "severity": "medium",
+      "file": "internal/server/rest.go:48",
+      "fix": "Add a GET-only guard (405 for other verbs) in authMiddleware or a wrapper applied to all routes",
+      "effort": "small"
+    },
+    {
+      "title": "Daemon-to-desktop wire contract untyped (any in ServeSource and MetricsSnapshot, unchecked cast in TS client)",
+      "severity": "medium",
+      "file": "internal/server/rest.go:24",
+      "fix": "Return concrete typed structs from ServeSource methods and generate TypeScript types for desktop/src/api from Go definitions",
+      "effort": "medium"
+    },
+    {
+      "title": "Exported public retry API (retry.Do) is unwired dead code",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/retry.go:68",
+      "fix": "Unexport or delete the retry helper package; restClient already implements superior Retry-After-aware retry",
+      "effort": "small"
+    },
+    {
+      "title": "Split product identity: r2go2 vs cosmoflare across public API surface",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/types.go:2",
+      "fix": "Fix stale doc comments (Package r2go2, .r2go2.yaml on ProjectConfig); plan error-prefix rename to cosmoflare: and ~/.cosmoflare machine-config path with read fallback",
+      "effort": "medium"
+    },
+    {
+      "title": "Inconsistent error content types (text/plain 401/503 vs application/json) and non-constant-time token comparison with ?token= query fallback",
+      "severity": "low",
+      "file": "internal/server/server.go:134",
+      "fix": "Route all error paths through writeJSONStatus; use subtle.ConstantTimeCompare for the bearer token check",
+      "effort": "small"
+    },
+    {
+      "title": "Token config file written at default perms then chmod'd to 0600; isNotFound classifies errors by substring matching",
+      "severity": "low",
+      "file": "pkg/cosmoflare/config.go:164",
+      "fix": "Write machine config atomically at 0600 (temp file + rename); restrict isNotFound string fallback to library-produced R2Error messages",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Implement or remove the cosmoflare dev proxy; correct USAGE.md until then",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Thread a timeout-bearing http.Client through all NewXServiceFromCreds constructors",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Reject non-GET methods with 405 on all daemon REST routes",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Type the daemon wire contract (concrete Go structs) and generate TS types for the desktop client",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Unexport/delete the unwired retry.go public API",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Unify naming: fix stale r2go2 doc comments, plan error-prefix and machine-config path migration",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Use writeJSONStatus for 503/401 error paths and constant-time token comparison",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Write machine config atomically at 0600 permissions",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Document a Go API compatibility policy for the public pkg/cosmoflare library",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Dev server: real proxy or removal",
+      "description": "cosmoflare dev currently returns 502 for every request while USAGE.md documents a working proxy with config hot-reload; implement per-service proxying or deprecate the command",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Unified transport resilience policy",
+      "description": "One timeout/retry/backoff policy across the three transports (R2 client, restClient, cloudflare-go path), configurable via ClientOption and documented once",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Typed daemon wire contract with TS codegen",
+      "description": "Concrete Go response structs for all daemon REST/SSE payloads with generated TypeScript types in desktop/src/api, drift-checked in CI",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Public library v1 readiness",
+      "description": "Compat policy doc, cosmoflare identity cleanup, dead exported API removal ahead of a 1.0 of pkg/cosmoflare",
+      "priority": "low",
+      "effort": "small"
+    }
+  ]
+}

@@ -144,10 +144,46 @@ type ApplyService struct {
 	accountID string
 	apiToken  string
 	diff      *DiffService
+	// deleteUnmanaged gates delete-by-omission (BUG-049): resources that
+	// exist live but are absent from the config are only deleted when the
+	// operator explicitly opted in. Defaults to false — cosmoflare has no
+	// managed-resource tracking yet, so an unmanaged live resource must
+	// never be destroyed just because the config does not mention it.
+	deleteUnmanaged bool
 }
 
+// WithDeleteUnmanaged enables deletion of unmanaged resources (those present
+// live but absent from the config) during apply. Without it, delete ops
+// derived from diff omissions are skipped with an explanatory note.
+func WithDeleteUnmanaged(enable bool) ApplyServiceOption {
+	return func(a *ApplyService) { a.deleteUnmanaged = enable }
+}
+
+// gateUnmanagedDeletes rewrites delete ops to skipped when the operator has
+// not opted into deleting unmanaged resources (BUG-049). Non-delete ops pass
+// through untouched. Called before the dry-run preview so the preview shows
+// the same skips a real run would perform.
+func (a *ApplyService) gateUnmanagedDeletes(ops []ApplyOperation) []ApplyOperation {
+	if a.deleteUnmanaged {
+		return ops
+	}
+	for i := range ops {
+		if ops[i].Action != ApplyDelete {
+			continue
+		}
+		ops[i].Status = ApplyStatusSkipped
+		ops[i].Detail = fmt.Sprintf(
+			"resource %q exists but is not in config (unmanaged) — pass --delete-unmanaged to delete it",
+			ops[i].Resource)
+	}
+	return ops
+}
+
+// ApplyServiceOption configures an ApplyService at construction time.
+type ApplyServiceOption func(*ApplyService)
+
 // NewApplyService creates a new ApplyService.
-func NewApplyService(accountID, apiToken string) (*ApplyService, error) {
+func NewApplyService(accountID, apiToken string, opts ...ApplyServiceOption) (*ApplyService, error) {
 	if accountID == "" {
 		return nil, validationError("NewApplyService", "account ID is required")
 	}
@@ -160,11 +196,15 @@ func NewApplyService(accountID, apiToken string) (*ApplyService, error) {
 		return nil, fmt.Errorf("failed to create diff service: %w", err)
 	}
 
-	return &ApplyService{
+	a := &ApplyService{
 		accountID: accountID,
 		apiToken:  apiToken,
 		diff:      diffSvc,
-	}, nil
+	}
+	for _, o := range opts {
+		o(a)
+	}
+	return a, nil
 }
 
 // ApplyAll computes diffs for all configured services and applies changes.
@@ -284,6 +324,9 @@ func (a *ApplyService) ApplyDNS(ctx context.Context, cfg *CosmoflareConfig, dryR
 
 func (a *ApplyService) applyWorkerChanges(ctx context.Context, cfg *CosmoflareConfig, dr *DiffResult, dryRun bool) (*ApplyResult, error) {
 	ops := DiffToApplyOperations(dr)
+	// BUG-049: gate delete-by-omission behind the explicit opt-in — before
+	// the dry-run branch so previews show the same skips a real run makes.
+	ops = a.gateUnmanagedDeletes(ops)
 	result := &ApplyResult{Service: "workers", Operations: make([]ApplyOperation, 0, len(ops))}
 
 	if dryRun {
@@ -388,6 +431,9 @@ func (a *ApplyService) applyWorkerChanges(ctx context.Context, cfg *CosmoflareCo
 
 func (a *ApplyService) applyR2Changes(ctx context.Context, _ *CosmoflareConfig, dr *DiffResult, dryRun bool) (*ApplyResult, error) {
 	ops := DiffToApplyOperations(dr)
+	// BUG-049: gate delete-by-omission behind the explicit opt-in — before
+	// the dry-run branch so previews show the same skips a real run makes.
+	ops = a.gateUnmanagedDeletes(ops)
 	result := &ApplyResult{Service: "r2", Operations: make([]ApplyOperation, 0, len(ops))}
 
 	if dryRun {
@@ -441,6 +487,9 @@ func (a *ApplyService) applyR2Changes(ctx context.Context, _ *CosmoflareConfig, 
 
 func (a *ApplyService) applyKVChanges(ctx context.Context, _ *CosmoflareConfig, dr *DiffResult, dryRun bool) (*ApplyResult, error) {
 	ops := DiffToApplyOperations(dr)
+	// BUG-049: gate delete-by-omission behind the explicit opt-in — before
+	// the dry-run branch so previews show the same skips a real run makes.
+	ops = a.gateUnmanagedDeletes(ops)
 	result := &ApplyResult{Service: "kv", Operations: make([]ApplyOperation, 0, len(ops))}
 
 	if dryRun {
@@ -478,13 +527,16 @@ func (a *ApplyService) applyKVChanges(ctx context.Context, _ *CosmoflareConfig, 
 				result.Operations = append(result.Operations, op)
 				continue
 			}
-			var nsID string
-			for _, ns := range namespaces {
-				if ns.Title == op.Resource {
-					nsID = ns.ID
-					break
-				}
+			// BUG-048: a title collision makes first-match resolution delete
+			// the WRONG namespace — refuse ambiguity instead of guessing.
+			idx, idxErr := indexKVByTitle(namespaces)
+			if idxErr != nil {
+				op.Status = ApplyStatusFailed
+				op.Error = idxErr.Error()
+				result.Operations = append(result.Operations, op)
+				continue
 			}
+			nsID := idx[op.Resource]
 			if nsID == "" {
 				op.Status = ApplyStatusFailed
 				op.Error = fmt.Sprintf("namespace %q not found for deletion", op.Resource)
@@ -512,6 +564,9 @@ func (a *ApplyService) applyKVChanges(ctx context.Context, _ *CosmoflareConfig, 
 
 func (a *ApplyService) applyDNSChanges(ctx context.Context, cfg *CosmoflareConfig, dr *DiffResult, dryRun bool) (*ApplyResult, error) {
 	ops := DiffToApplyOperations(dr)
+	// BUG-049: gate delete-by-omission behind the explicit opt-in — before
+	// the dry-run branch so previews show the same skips a real run makes.
+	ops = a.gateUnmanagedDeletes(ops)
 	result := &ApplyResult{Service: "dns", Operations: make([]ApplyOperation, 0, len(ops))}
 
 	if dryRun {

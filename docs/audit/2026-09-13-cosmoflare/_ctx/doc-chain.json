@@ -1,0 +1,3189 @@
+[
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-16-cors-transform-rules.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainstorming\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-05-16-glm-parallel-coverage-wave2.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-16-domain-operations.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-05-16-domain-operations.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-18-service-interfaces.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "TASK-002 (status: unknown)"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-05-18-tui-command-palette.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-001 (status: unknown)"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-07-road002-tui-object-browser.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-08-road002-tui-object-browser.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-002\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-07-road020-dashboard-tui.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-07-road020-dashboard-tui.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-020\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-08-road007-s3-migration-resume.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-08-road007-s3-migration-resume.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-007\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-14-domain-management-center.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-14-domain-management-center.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-14-domain-management-center.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-20-cosmoflare-desktop.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-20-cosmoflare-desktop.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-20-cosmoflare-desktop.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-06-21-inprocess-event-bus.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-21-inprocess-event-bus.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-21-inprocess-event-bus.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-07-01-live-metrics-producer.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-07-01-live-metrics-producer.md (bidirectional)"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-012 (status: unknown)"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-cf-api-knowledge-layer.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-domain-center-residuals.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-domain-center-residuals.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-09-quota-limit-view.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-quota-limit-view.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-013 (status: unknown)"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-10-ratelimit-traffic-classes.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/2026-09-11-d1-depth.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-022 (status: unknown)"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-11-d1-depth.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/README.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/README.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/USAGE.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/USAGE.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/collaborative-template.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/brainstorming/feature-ideas.md",
+    "doc_type": "brainstorm",
+    "links": [
+      {
+        "name": "Brainstorm → Plan",
+        "status": "missing",
+        "detail": "No plan_ref in frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Brainstorm → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this brainstorm"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2025-11-24-r2go2-initial-development.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-02-26-codebase-analysis-v0.2.0.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-03-03-consolidate-duplicated-code.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-07-r2go2-phase0-phase1-implementation.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-12-phase3-workers-kv.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-cosmoflare-module-rename.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"manual\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 4
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-domain-operations.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-05-16-domain-operations.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-16-phase4-cloudflare-services.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"manual\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-18-service-interfaces.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "TASK-002 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-05-18-tui-command-palette.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-001 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-07-road020-dashboard-tui.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-07-road020-dashboard-tui.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-020\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-08-road002-tui-object-browser.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-07-road002-tui-object-browser.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-002\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-08-road007-s3-migration-resume.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-08-road007-s3-migration-resume.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"ROAD-007\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-14-domain-management-center.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-14-domain-management-center.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-14-domain-management-center.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-20-cosmoflare-desktop.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-20-cosmoflare-desktop.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/brainplan\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-20-cosmoflare-desktop.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-06-21-inprocess-event-bus.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-21-inprocess-event-bus.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-06-21-inprocess-event-bus.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-07-01-live-metrics-producer.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-07-01-live-metrics-producer.md (bidirectional)"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-008 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "missing",
+        "detail": "No prompt references this plan"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "orphaned",
+        "detail": "brainstorm exists but has no plan_ref back-link"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-012 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-cf-api-knowledge-layer.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 1,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-domain-center-residuals.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "orphaned",
+        "detail": "brainstorm exists but has no plan_ref back-link"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-domain-center-residuals.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 1,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-09-quota-limit-view.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "orphaned",
+        "detail": "brainstorm exists but has no plan_ref back-link"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-09-quota-limit-view.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 1,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "orphaned",
+        "detail": "brainstorm exists but has no plan_ref back-link"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-013 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-10-ratelimit-traffic-classes.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 1,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/2026-09-11-d1-depth.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Plan → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref in frontmatter"
+      },
+      {
+        "name": "Deliverables Match",
+        "status": "missing",
+        "detail": "No covers_brainstorm_deliverables in plan frontmatter"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "ok",
+        "detail": "FEAT-022 (status: unknown)"
+      },
+      {
+        "name": "Plan → Prompt",
+        "status": "ok",
+        "detail": "Referenced by docs/prompts/2026-09-11-d1-depth.md"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/README.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/README.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/USAGE.md",
+    "doc_type": "plan",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/planning-mode/USAGE.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2025-01-25-tui-installer-wizard-implementation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-02-testing-strategy-progress.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/continuation-prompt\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-07-testing-quality-next-steps.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/continuation-prompt\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-25-project-audit-followup.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-03-28-r2go2-audit-followup.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase1-library-extraction.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase2-continuation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/prompts/2026-05-08-phase2-integration-and-hardening.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-08-phase2-integration-and-hardening.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-12-phase2-roadmap-expansion.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-13-phase3-workers-kv-implementation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-14-batch2-batch3-quick-wins.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-14-session-continuation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-05-16-phase4-cloudflare-services.md (via requires_reading)"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"manual\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-domain-operations.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-05-16-domain-operations.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-05-16-domain-operations.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-16-glm-parallel-coverage-wave2.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-05-16-cors-transform-rules.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-19-post-audit-fixes.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-27-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-05-30-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-06-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-07-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-09-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-14-domain-management-center.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-14-domain-management-center.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-14-domain-management-center.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-20-cosmoflare-desktop.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-20-cosmoflare-desktop.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-20-cosmoflare-desktop.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-desktop-followups-and-event-bus.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"/session-end\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-inprocess-event-bus.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-06-21-inprocess-event-bus.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-06-21-inprocess-event-bus.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-06-21-master-session-next.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-08-31-cosmoflare-audit-followup.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-05-next-session.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-06-launch-and-hardening.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-08-post-v0.22.0-control-plane.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-cf-api-knowledge-layer.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-domain-center-residuals.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-09-09-domain-center-residuals.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-09-domain-center-residuals.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-09-quota-limit-view.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-09-09-quota-limit-view.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-09-quota-limit-view.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 2,
+      "warnings": 0,
+      "gaps": 2
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cosmoflare-continuation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-cosmoflare-handoff.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-10-ratelimit-traffic-classes.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-11-d1-depth.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "ok",
+        "detail": "docs/planning-mode/2026-09-11-d1-depth.md"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "ok",
+        "detail": "docs/brainstorming/2026-09-11-d1-depth.md"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 3,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/2026-09-12-session-2026-continuation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "No origin/issue/issue_ref in frontmatter"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/CONTINUATION-session-008-cli-features.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/CONTINUATION-session-008-tui-installer.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/PARALLEL-SESSION-COORDINATION.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/README.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/README.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/USAGE.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Frontmatter",
+        "status": "missing",
+        "detail": "Could not parse: parsing frontmatter in /Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/USAGE.md: no YAML frontmatter delimiters found"
+      }
+    ],
+    "summary": {
+      "ok": 0,
+      "warnings": 0,
+      "gaps": 1
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/cli-feature-commands.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/continuation-prompt-v0.2.0.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/enhanced-interactive-features.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-007-continuation-completed.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-007-continuation-prompt.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-D-testing-continuation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/session-e-continuation-prompt.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/testing-strategy-bulletproof-cli.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/testing-validation-production.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  },
+  {
+    "file": "/Users/gabstudio/PROJECTS/cosmoflare/docs/prompts/tui-dashboard-implementation.md",
+    "doc_type": "prompt",
+    "links": [
+      {
+        "name": "Prompt → Plan",
+        "status": "missing",
+        "detail": "No plan_ref or plan in requires_reading"
+      },
+      {
+        "name": "Prompt → Brainstorm",
+        "status": "missing",
+        "detail": "No brainstorm_ref or brainstorm in requires_reading"
+      },
+      {
+        "name": "Origin → Issue",
+        "status": "missing",
+        "detail": "origin=\"migrated by ccs prompts migrate\" doesn't contain a valid issue ID"
+      },
+      {
+        "name": "Timestamps",
+        "status": "ok",
+        "detail": "All timestamp fields are ISO8601+TZ"
+      }
+    ],
+    "summary": {
+      "ok": 1,
+      "warnings": 0,
+      "gaps": 3
+    }
+  }
+]

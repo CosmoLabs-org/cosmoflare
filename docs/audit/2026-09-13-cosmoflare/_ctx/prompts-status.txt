@@ -1,0 +1,23 @@
+Prompt Status Summary (129 files)
+==================================================
+
+docs/prompts/ (53 files)
+  ✅ COMPLETED    38
+  ⏳ PENDING      6
+  💀 ABANDONED    2
+  ❓ UNKNOWN      7  ← needs migration
+
+docs/prompts/worktrees/ (1 files)
+  ✅ COMPLETED    1
+
+docs/planning-mode/ (23 files)
+  ✅ COMPLETED    14
+  💀 ABANDONED    1
+  ❓ UNKNOWN      8  ← needs migration
+
+docs/sessions/ (52 files)
+  ✅ COMPLETED    49
+  ❓ UNKNOWN      3  ← needs migration
+
+==================================================
+Total: 102 completed, 6 actionable, 18 need migration

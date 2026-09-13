@@ -1,0 +1,11 @@
+{
+  "versions": [
+    {
+      "source": ".version-registry.json",
+      "version": "0.26.0",
+      "file": ".version-registry.json"
+    }
+  ],
+  "has_conflict": false,
+  "canonical": "0.26.0"
+}

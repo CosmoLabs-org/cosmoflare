@@ -1,0 +1,51 @@
+{
+  "total": 50,
+  "valid": 46,
+  "with_type": 46,
+  "with_warning": 8,
+  "invalid": 4,
+  "score": 92,
+  "type_breakdown": {
+    "chore": 26,
+    "docs": 7,
+    "feat": 13
+  },
+  "worst_offenders": [
+    {
+      "hash": "3812f504",
+      "subject": "Merge branch '_glm-agent-0132-feat-023-pages-depth'",
+      "type": "",
+      "valid": false,
+      "warnings": null,
+      "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0132-feat-023-pages-depth'\"\n  Try: \"chore: merge branch '_glm-agent-0132-feat-023-pages-depth'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+      "suggestion": "chore: merge branch '_glm-agent-0132-feat-023-pages-depth'"
+    },
+    {
+      "hash": "53749d4d",
+      "subject": "Merge branch '_glm-agent-0131-feat-034-durable-objects'",
+      "type": "",
+      "valid": false,
+      "warnings": null,
+      "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0131-feat-034-durable-objects'\"\n  Try: \"chore: merge branch '_glm-agent-0131-feat-034-durable-objects'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+      "suggestion": "chore: merge branch '_glm-agent-0131-feat-034-durable-objects'"
+    },
+    {
+      "hash": "27b28b45",
+      "subject": "Merge branch '_glm-agent-0130-feat-033-domain-fleet'",
+      "type": "",
+      "valid": false,
+      "warnings": null,
+      "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0130-feat-033-domain-fleet'\"\n  Try: \"chore: merge branch '_glm-agent-0130-feat-033-domain-fleet'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+      "suggestion": "chore: merge branch '_glm-agent-0130-feat-033-domain-fleet'"
+    },
+    {
+      "hash": "6136c790",
+      "subject": "Merge branch '_glm-agent-0129-feat-022-wave-completion'",
+      "type": "",
+      "valid": false,
+      "warnings": null,
+      "error": "missing conventional commit type prefix\n  Got: \"Merge branch '_glm-agent-0129-feat-022-wave-completion'\"\n  Try: \"chore: merge branch '_glm-agent-0129-feat-022-wave-completion'\"\n  Valid types: feat, fix, docs, refactor, perf, test, chore, style, ci, build, revert, release, security, audit, merge\n  Use --force to bypass",
+      "suggestion": "chore: merge branch '_glm-agent-0129-feat-022-wave-completion'"
+    }
+  ]
+}

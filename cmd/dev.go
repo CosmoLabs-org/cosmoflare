@@ -24,14 +24,14 @@ var (
 
 var devCmd = &cobra.Command{
 	Use:   "dev",
-	Short: "Start a local development proxy for Cloudflare services",
-	Long: `Start a local HTTP server that proxies requests to Cloudflare services.
+	Short: "Start a local dev server for Cloudflare services (proxying in progress)",
+	Long: `Start a local HTTP development server.
 
-Enables offline-friendly development with a local URL rewrite layer and
-optional hot-reload of configuration changes.
-
-The server reads credentials from your active profile (or --profile flag)
-and proxies requests to the real Cloudflare API through a local endpoint.
+STATUS: the server scaffold is live — it binds the port, serves /health,
+emits startup events (--json), and shuts down cleanly on SIGINT/SIGTERM.
+Per-service proxying is NOT yet implemented: every service route currently
+returns 502 {"error":"upstream not configured"} until the reverse proxy
+lands (tracked as BUG-046).
 
 Flags:
   --port       Local port to listen on (default: 8787, matches Wrangler)

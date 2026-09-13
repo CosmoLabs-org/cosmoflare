@@ -1,0 +1,14 @@
+[
+  {
+    "linter": "go vet",
+    "pass": true,
+    "error_count": 0,
+    "output": ""
+  },
+  {
+    "linter": "spawn-check (ROAD-525)",
+    "pass": false,
+    "error_count": 1,
+    "output": "Found 1 raw cmd.Start() calls that should use daemon.SpawnAsync() or daemon.Acquire():\n  cmd/installer_tui/main.go:1280: _ = cmd.Start() // Fire and forget"
+  }
+]

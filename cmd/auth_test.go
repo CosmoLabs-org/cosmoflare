@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -672,5 +673,64 @@ func TestAuthCmd_FindSubcommandByName(t *testing.T) {
 		if sub == nil || sub.Name() != name {
 			t.Errorf("authCmd.Find(%q) = %v, want command named %q", name, sub, name)
 		}
+	}
+}
+
+// --- BUG-044: --revoke-old must revoke the OLD token, never the NEW one ---
+
+// authRotateEnv isolates HOME + keychain, seeds a profile, and stubs the
+// token generation/validation/revocation seams.
+func authRotateEnv(t *testing.T, profileName, oldToken string) *[]string {
+	t.Helper()
+	t.Setenv("COSMOFLARE_NO_KEYCHAIN", "1")
+	t.Setenv("HOME", t.TempDir())
+
+	mgr, err := getConfigManager()
+	if err != nil {
+		t.Fatalf("getConfigManager: %v", err)
+	}
+	if err := mgr.SetProfile(&config.Profile{
+		Name:      profileName,
+		AccountID: "acc-test",
+		APIToken:  oldToken,
+		Region:    "auto",
+	}); err != nil {
+		t.Fatalf("SetProfile: %v", err)
+	}
+
+	oldGen, oldTest, oldRevoke := generateNewToken, testCredentials, revokeOldToken
+	revoked := &[]string{}
+	generateNewToken = func(p *config.Profile) (string, error) { return "NEW-TOKEN", nil }
+	testCredentials = func(c *AuthCredentials) error { return nil }
+	revokeOldToken = func(token string) error {
+		*revoked = append(*revoked, token)
+		return nil
+	}
+	t.Cleanup(func() {
+		generateNewToken, testCredentials, revokeOldToken = oldGen, oldTest, oldRevoke
+	})
+	return revoked
+}
+
+func TestRunAuthRotate_RevokeOldRevokesOldTokenNotNew(t *testing.T) {
+	revoked := authRotateEnv(t, "prod", "OLD-TOKEN")
+
+	rotateCmd, _, err := rootCmd.Find([]string{"auth", "rotate"})
+	if err != nil {
+		t.Fatalf("find auth rotate: %v", err)
+	}
+	if err := rotateCmd.ParseFlags([]string{"--profile", "prod", "--revoke-old"}); err != nil {
+		t.Fatalf("parse flags: %v", err)
+	}
+
+	if err := runAuthRotate(rotateCmd, []string{}); err != nil {
+		t.Fatalf("runAuthRotate returned error: %v", err)
+	}
+
+	if len(*revoked) != 1 {
+		t.Fatalf("revokeOldToken called %d times, want exactly 1", len(*revoked))
+	}
+	if (*revoked)[0] != "OLD-TOKEN" {
+		t.Errorf("revokeOldToken received %q — the NEW token was revoked (BUG-044); must revoke the pre-rotation token %q", (*revoked)[0], "OLD-TOKEN")
 	}
 }

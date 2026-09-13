@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -539,6 +540,158 @@ func TestExecute_DeleteOps(t *testing.T) {
 	}
 }
 
+// BUG-040: a down-sync with --delete must remove stale LOCAL files and must
+// never issue a remote delete (the old code called DeleteRemoteObject with an
+// unprefixed key, which could delete an unrelated bucket-root object).
+func TestExecuteSyncDown_DeleteRemovesLocalFileNeverRemote(t *testing.T) {
+	dir := t.TempDir()
+	stale := filepath.Join(dir, "stale-local.txt")
+	if err := os.WriteFile(stale, []byte("stale"), 0o644); err != nil {
+		t.Fatalf("write stale file: %v", err)
+	}
+
+	backend := &mockStorageBackend{
+		objects: []ObjectInfo{
+			{Key: "shared.txt", Size: 10, LastModified: time.Now()},
+		},
+	}
+	svc := NewSyncService(backend)
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction: SyncDown,
+		Bucket:    "test-bucket",
+		LocalDir:  dir,
+		LocalFiles: []LocalFileInfo{
+			{RelPath: "shared.txt", Size: 10, ModTime: time.Now()},
+			{RelPath: "stale-local.txt", Size: 5, ModTime: time.Now()},
+		},
+		Delete: true,
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	result, err := svc.Execute(context.Background(), plan)
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if result.Failed != 0 {
+		t.Fatalf("unexpected failures: %v", result.Errors)
+	}
+
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Errorf("down-sync --delete must remove the local file, still present: %s", stale)
+	}
+	if len(backend.deleted) != 0 {
+		t.Errorf("down-sync must never delete remote objects; DeleteRemoteObject called with %v", backend.deleted)
+	}
+}
+
+// Regression guard: up-sync --delete still deletes remote objects.
+func TestExecuteSyncUp_DeleteStillRemovesRemote(t *testing.T) {
+	dir := t.TempDir()
+	backend := &mockStorageBackend{
+		objects: []ObjectInfo{
+			{Key: "orphan-remote.txt", Size: 50, LastModified: time.Now()},
+		},
+	}
+	svc := NewSyncService(backend)
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction:  SyncUp,
+		Bucket:     "test-bucket",
+		LocalDir:   dir,
+		LocalFiles: []LocalFileInfo{},
+		Delete:     true,
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	result, err := svc.Execute(context.Background(), plan)
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if result.Failed != 0 {
+		t.Fatalf("unexpected failures: %v", result.Errors)
+	}
+
+	if len(backend.deleted) != 1 || backend.deleted[0] != "orphan-remote.txt" {
+		t.Errorf("up-sync --delete must delete the remote orphan; deleted = %v", backend.deleted)
+	}
+}
+
+// BUG-041: --delete must never target paths matching exclude patterns.
+func TestPlanUp_DeleteNeverTargetsExcludedRemoteObjects(t *testing.T) {
+	backend := &mockStorageBackend{
+		objects: []ObjectInfo{
+			{Key: ".env", Size: 30, LastModified: time.Now()},
+			{Key: "keep.txt", Size: 10, LastModified: time.Now()},
+			{Key: ".git/config", Size: 10, LastModified: time.Now()},
+		},
+	}
+	svc := NewSyncService(backend)
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction:  SyncUp,
+		Bucket:     "test-bucket",
+		LocalDir:   t.TempDir(),
+		LocalFiles: []LocalFileInfo{},
+		Delete:     true,
+		Exclude:    []string{".env", ".git/"},
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	for _, op := range plan.Operations {
+		if op.Action != SyncOpDelete {
+			continue
+		}
+		rel := strings.TrimPrefix(op.Key, plan.Prefix)
+		if rel == ".env" || rel == ".git/config" {
+			t.Errorf("delete op planned for excluded path %q (BUG-041)", op.Key)
+		}
+	}
+	if plan.Summary.Deletes != 1 {
+		t.Errorf("expected exactly 1 delete (keep.txt), got %d", plan.Summary.Deletes)
+	}
+}
+
+// BUG-041 (down direction): excluded local files must survive --delete.
+func TestPlanDown_DeleteNeverTargetsExcludedLocalFiles(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".env"), []byte("SECRET=1"), 0o644); err != nil {
+		t.Fatalf("write .env: %v", err)
+	}
+
+	backend := &mockStorageBackend{objects: []ObjectInfo{}}
+	svc := NewSyncService(backend)
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction: SyncDown,
+		Bucket:    "test-bucket",
+		LocalDir:  dir,
+		LocalFiles: []LocalFileInfo{
+			{RelPath: ".env", Size: 9, ModTime: time.Now()},
+		},
+		Delete:  true,
+		Exclude: []string{".env"},
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	for _, op := range plan.Operations {
+		if op.Action == SyncOpDelete {
+			t.Errorf("delete op planned for excluded local file %q (BUG-041)", op.LocalPath)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".env")); err != nil {
+		t.Fatalf(".env must be protected, stat error: %v", err)
+	}
+}
+
 func TestExecute_SkipsSkipOps(t *testing.T) {
 	backend := &mockStorageBackend{}
 	svc := NewSyncService(backend)
@@ -738,5 +891,86 @@ func TestIsUnchangedPlainETagChecksum(t *testing.T) {
 	local.Checksum = "0123456789abcdef0123456789abcdef"
 	if svc.isUnchanged(local, remote, true) {
 		t.Error("expected isUnchanged=false for mismatched plain ETag checksum")
+	}
+}
+
+// --- BUG-051: --include must filter the sync universe (it was a no-op) ---
+
+func TestPlanUp_IncludeFiltersUploads(t *testing.T) {
+	backend := &mockStorageBackend{objects: []ObjectInfo{}}
+	svc := NewSyncService(backend)
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction: SyncUp,
+		Bucket:    "test-bucket",
+		LocalDir:  t.TempDir(),
+		LocalFiles: []LocalFileInfo{
+			{RelPath: "data/a.csv", Size: 10, ModTime: time.Now()},
+			{RelPath: "data/b.csv", Size: 10, ModTime: time.Now()},
+			{RelPath: "other/x.txt", Size: 10, ModTime: time.Now()},
+		},
+		Include: []string{"data/"},
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	uploaded := map[string]bool{}
+	for _, op := range plan.Operations {
+		if op.Action == SyncOpUpload {
+			uploaded[strings.TrimPrefix(op.Key, plan.Prefix)] = true
+		}
+	}
+	if !uploaded["data/a.csv"] || !uploaded["data/b.csv"] {
+		t.Errorf("included files must upload, got %v", uploaded)
+	}
+	if uploaded["other/x.txt"] {
+		t.Error("file outside the include filter must not upload (BUG-051: --include was a silent no-op)")
+	}
+}
+
+func TestPlanDown_IncludeFiltersDownloadsAndDeletes(t *testing.T) {
+	backend := &mockStorageBackend{
+		objects: []ObjectInfo{
+			{Key: "keep/1.csv", Size: 10, LastModified: time.Now()},
+			{Key: "skip/2.txt", Size: 10, LastModified: time.Now()},
+		},
+	}
+	svc := NewSyncService(backend)
+
+	// Local has a stale file OUTSIDE the include universe: down-sync --delete
+	// must not touch it (it is not part of the managed set).
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "skip"), 0o755); err != nil {
+		t.Fatalf("mkdir skip: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "skip", "stale.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("write stale: %v", err)
+	}
+
+	plan, err := svc.Plan(context.Background(), SyncPlanInput{
+		Direction: SyncDown,
+		Bucket:    "test-bucket",
+		LocalDir:  dir,
+		LocalFiles: []LocalFileInfo{
+			{RelPath: "skip/stale.txt", Size: 1, ModTime: time.Now()},
+		},
+		Include: []string{"keep/"},
+		Delete:  true,
+	})
+	if err != nil {
+		t.Fatalf("Plan returned error: %v", err)
+	}
+
+	for _, op := range plan.Operations {
+		if op.Action == SyncOpDownload && op.Key == "skip/2.txt" {
+			t.Error("remote object outside the include filter must not download (BUG-051)")
+		}
+		if op.Action == SyncOpDelete {
+			t.Errorf("delete planned for %q — paths outside the include universe must never be delete-eligible (BUG-051)", op.Key)
+		}
+	}
+	if plan.Summary.Deletes != 0 {
+		t.Errorf("expected 0 deletes, got %d", plan.Summary.Deletes)
 	}
 }

@@ -1,24 +1,25 @@
 ---
 id: FEAT-018
-title: 'MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit'
 type: feature
-status: open
+created: "2026-09-11"
+updated: "2026-09-13T15:38:36.869037+04:00"
 priority: 70
-complexity: complex
+status: open
 area: reliability
 labels:
-  - d1
-  - pages
-  - waf
-  - agent-ux
-  - production-evidence
-created: 2026-09-11
-updated: 2026-09-11
+    - d1
+    - pages
+    - waf
+    - agent-ux
+    - production-evidence
 origin:
-  feedback_id: ''
-  from_project: MyCarGuide
-  received: 2026-09-10
-  converted: 2026-09-11
+    roadmap_items:
+        - ROAD-099
+    from_project: MyCarGuide
+    received: "2026-09-10"
+    converted: "2026-09-11"
+title: 'MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit'
+
 ---
 
 # FEAT-018: MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit

@@ -379,6 +379,16 @@ func (c *client) completeMultipartFromState(ctx context.Context, state *Multipar
 	}, nil
 }
 
+// abortContext derives the context for best-effort AbortMultipartUpload calls.
+// The parent request context is frequently already canceled by the time an
+// upload fails (user interrupt, timeout) — aborting with it would fail
+// instantly and leak the incomplete upload's billed parts (BUG-043). The
+// derived context keeps the parent's values but not its cancellation, and
+// carries its own bounded deadline so a hung endpoint cannot pin a goroutine.
+func abortContext(parent context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(parent), 30*time.Second)
+}
+
 // ResumableMultipartUpload performs a multipart upload with state tracking for resume capability.
 // Unlike the base MultipartUpload, this persists progress after each part so interrupted
 // uploads can be resumed with ResumeMultipartUpload.
@@ -464,7 +474,12 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 
 	// Abort helper
 	abort := func() {
-		c.s3Client().AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
+		// BUG-043: abort with a context that survives cancellation of the
+		// request context — aborting with the canceled ctx fails instantly
+		// and leaks the incomplete upload (billed parts, 7-day retention).
+		abortCtx, abortCancel := abortContext(ctx)
+		defer abortCancel()
+		c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
 			Bucket:   aws.String(bucket),
 			Key:      aws.String(key),
 			UploadId: aws.String(uploadID),

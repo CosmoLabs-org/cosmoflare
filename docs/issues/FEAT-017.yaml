@@ -1,7 +1,7 @@
 id: FEAT-017
 type: feature
 created_at: 2026-09-10T02:06:10.691338+04:00
-updated_at: 2026-09-10T02:06:12.795755+04:00
+updated_at: 2026-09-13T15:38:36.74673+04:00
 source: local
 ulid: 01M243A0R8A55YFZNZE2D4XKRG
 status: open
@@ -9,6 +9,8 @@ labels:
     - onboarding
     - ux
 origin:
+    roadmap_items:
+        - ROAD-095
     idea_slug: 2026-09-08-first-run-setup-wizard-one-token-whole-platform
     session: 43
 title: First-run setup wizard — one token, whole platform

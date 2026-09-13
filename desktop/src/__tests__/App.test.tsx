@@ -90,22 +90,28 @@ describe("App notifications persistence (#8)", () => {
       );
     });
 
-    // Switch to Notifications → present, unread = 1.
-    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    // Switch to Notifications → present, unread = 1. With unread > 0 the
+    // nav button's accessible name includes the count (BUG-047), so match
+    // by regex rather than the exact string.
+    fireEvent.click(screen.getByRole("button", { name: /Notifications/ }));
     await waitFor(() => {
       expect(screen.getByTestId("unread-badge")).toHaveTextContent("1");
-      expect(screen.getByText("CF back online")).toBeInTheDocument();
+      // The always-mounted live region (BUG-047) renders the newest message
+      // too, so the text legitimately appears twice — assert presence.
+      expect(screen.getAllByText("CF back online").length).toBeGreaterThan(0);
     });
 
     // Leave to Dashboard, then return to Notifications.
     fireEvent.click(screen.getByRole("button", { name: "Dashboard" }));
     await waitFor(() => expect(screen.getByText("Zones")).toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    fireEvent.click(screen.getByRole("button", { name: /Notifications/ }));
 
     // History + unread survived the round-trip.
     await waitFor(() => {
       expect(screen.getByTestId("unread-badge")).toHaveTextContent("1");
-      expect(screen.getByText("CF back online")).toBeInTheDocument();
+      // The always-mounted live region (BUG-047) renders the newest message
+      // too, so the text legitimately appears twice — assert presence.
+      expect(screen.getAllByText("CF back online").length).toBeGreaterThan(0);
     });
   });
 });

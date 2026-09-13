@@ -1,0 +1,129 @@
+{
+  "agent": "documentation",
+  "overall_score": 7,
+  "sub_scores": {
+    "completeness": 6,
+    "accuracy": 8,
+    "onboarding": 6,
+    "api_docs": 7
+  },
+  "critical_findings": [
+    {
+      "title": "93 committed AI transcripts + 83 raw JSONL session dumps (103MB) tracked in a repo positioned for public OSS release",
+      "severity": "high",
+      "file": "docs/conversation-transcripts/ (93 files, 8MB, 209667 lines); docs/sessions/transcripts/ (83 files, 95MB); GOrchestra/ (144 files)",
+      "fix": "Gitignore + git rm --cached these paths, filter-repo purge history (or keep private mirror) before making repo public; internal session memory does not belong in the public tree",
+      "effort": "medium"
+    },
+    {
+      "title": "No architecture documentation - docs/architecture/ is an unfilled template, zero ADRs anywhere",
+      "severity": "medium",
+      "file": "docs/architecture/README.md",
+      "fix": "Write docs/architecture/system-overview.md (cmd/ -> pkg/cosmoflare services -> CF API layering, serve daemon) and ADR-001-library-first.md",
+      "effort": "medium"
+    },
+    {
+      "title": "No package-level godoc for pkg/cosmoflare - pkg.go.dev renders no overview for the 'stable API surface'",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/ (no doc.go, no package comment in any of 148 files)",
+      "fix": "Add pkg/cosmoflare/doc.go with package overview and example_test.go with runnable godoc examples",
+      "effort": "small"
+    },
+    {
+      "title": "No CONTRIBUTING.md in an MIT OSS project at v0.26.0",
+      "severity": "medium",
+      "file": "repo root (missing)",
+      "fix": "Add CONTRIBUTING.md with build/test commands, conventional commits, --json/--help requirements for new commands",
+      "effort": "small"
+    },
+    {
+      "title": "Stale pre-rename docs create a conflicting second onboarding path",
+      "severity": "medium",
+      "file": "GETTING_STARTED.md:1 (R2Go2 branding, untouched since 2025-11-24); docs/README.md:1 (titled CosmoDev-R2Go2, links nonexistent docs/SPEC.md)",
+      "fix": "Delete or rewrite GETTING_STARTED.md/BUILD-SUMMARY.md/INTERACTIVE-SETUP-DEMO.md; retitle docs/README.md; remove dead SPEC.md link; fill template stubs",
+      "effort": "small"
+    },
+    {
+      "title": "CLOUDFLARE_EMAIL env var used in code but undocumented anywhere",
+      "severity": "low",
+      "file": "docs/USAGE.md:7-15; README.md:69-74",
+      "fix": "Add a complete env-var reference table (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CLOUDFLARE_EMAIL, COSMOFLARE_NO_KEYCHAIN) with precedence rules",
+      "effort": "small"
+    },
+    {
+      "title": "No runnable examples directory or godoc example tests for the library",
+      "severity": "low",
+      "file": "repo root (no examples/); pkg/cosmoflare/ (no example_test.go)",
+      "fix": "Add examples/ with one program per major service plus example_test.go so documented snippets are test-verified",
+      "effort": "medium"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Define public-release content boundary: exclude and history-purge transcripts/sessions/GOrchestra/feedback/handoffs before repo goes public",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Write pkg/cosmoflare/doc.go package overview plus example_test.go runnable examples",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Add CONTRIBUTING.md with build/test/commit conventions and command requirements",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Write docs/architecture/system-overview.md and ADR-001-library-first.md",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Remove stale root docs (GETTING_STARTED.md, BUILD-SUMMARY.md, INTERACTIVE-SETUP-DEMO.md) and fix docs/README.md branding + SPEC.md dead link",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Add complete environment-variable reference table to README and USAGE.md",
+      "effort": "small",
+      "priority": "low"
+    },
+    {
+      "action": "Add examples/ directory with runnable library programs per service",
+      "effort": "medium",
+      "priority": "low"
+    },
+    {
+      "action": "Add a table of contents to the top of USAGE.md (60 sections, no TOC)",
+      "effort": "small",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Public-release repo hygiene",
+      "description": "Split internal session artifacts (transcripts, JSONL dumps, agent logs, feedback, handoffs) out of the public tree and purge history; prerequisite for the README install path and release badges to work for outside users",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Library godoc presence (pkg.go.dev)",
+      "description": "Package doc, example functions, and doc-coverage lint so the stable-API-surface claim is visible where Go developers look first",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Architecture documentation and ADR series",
+      "description": "System overview diagram and recorded design decisions (library-first, 3-tier product, MCP tool generation)",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Contributor onboarding package",
+      "description": "CONTRIBUTING.md, env-var reference, examples/ directory, USAGE.md table of contents",
+      "priority": "medium",
+      "effort": "small"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "agent": "doc-integrity",
+  "overall_score": 59,
+  "score_scale": 100,
+  "score_source": "ccs audit doc-score --json (deterministic, DD-3) — reported verbatim",
+  "sub_scores": {
+    "chain_integrity": 7,
+    "enrichment": 2,
+    "review_coverage": 3,
+    "prompt_freshness": 7
+  },
+  "critical_findings": [
+    {
+      "title": "Zero machine-verifiable enrichment (102/102 docs un-enriched)",
+      "severity": "high",
+      "file": "docs/planning-mode/2026-09-11-d1-depth.md (representative; 0/25 plans carry covers_brainstorm_deliverables)",
+      "fix": "ccs prompts enrich <plan> --apply for the 23 flagged plans; re-derive prompts via ccs prompts init --from-plan so requires_reading/covers_* are machine-generated",
+      "effort": "medium"
+    },
+    {
+      "title": "Review coverage 29%; entire post-2026-07-01 documentation wave unreviewed",
+      "severity": "high",
+      "file": "docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md (plus 14 more design docs listed in unreviewed_docs)",
+      "fix": "/independent-review on the 15 unreviewed design docs; prioritize the 6 Sept docs that are also chain-broken",
+      "effort": "medium"
+    },
+    {
+      "title": "4 orphaned plan-to-brainstorm edges (2026-09-09/10 batch lacks plan_ref back-links)",
+      "severity": "medium",
+      "file": "docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md, docs/planning-mode/2026-09-09-domain-center-residuals.md, docs/planning-mode/2026-09-09-quota-limit-view.md, docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md",
+      "fix": "Add plan_ref: to the 4 paired brainstorm frontmatters via ccs prompts tooling",
+      "effort": "small"
+    },
+    {
+      "title": "Origin/issue traceability absent for 66 docs (46 no origin, 20 migrated-origin without issue ID)",
+      "severity": "medium",
+      "file": "docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md (representative)",
+      "fix": "ccs prompts enrich backfills issue linkage where the issue exists; suppress tooling noise for genuinely issue-less historical docs",
+      "effort": "medium"
+    },
+    {
+      "title": "18 UNKNOWN-status docs need migration; 6 PENDING + 3 ABANDONED prompts need triage",
+      "severity": "medium",
+      "file": "docs/prompts/2026-09-12-session-2026-continuation.md (PENDING, likely done)",
+      "fix": "ccs prompts scan for PENDING; ccs prompts set-status for ABANDONED; ccs prompts migrate for UNKNOWN",
+      "effort": "small"
+    },
+    {
+      "title": "Stale-detector blind spot: 28/28 reviewed docs modified after review stamp yet stale_docs=0",
+      "severity": "low",
+      "file": "docs/audit/2026-09-13-cosmoflare/_ctx/doc-status.json (all 28 reviewed entries)",
+      "fix": "ccs feedback send to ClaudeCodeSetup: compare at timestamp granularity excluding the stamp write",
+      "effort": "small"
+    },
+    {
+      "title": "6 README/USAGE index files fail frontmatter parse and pollute the chain universe",
+      "severity": "low",
+      "file": "docs/prompts/README.md (plus 5 sibling index files)",
+      "fix": "ccs feedback send: exclude README/USAGE directory indexes from the doc-review universe",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    { "action": "Add plan_ref to the 4 orphaned brainstorms (clears all 4 broken chains)", "effort": "small", "priority": "high" },
+    { "action": "ccs prompts enrich --apply over the 23 flagged plans, Sept plans first", "effort": "medium", "priority": "high" },
+    { "action": "/independent-review on the 15 unreviewed design docs", "effort": "medium", "priority": "high" },
+    { "action": "ccs prompts scan + set-status triage for 6 PENDING / 3 ABANDONED prompts", "effort": "small", "priority": "medium" },
+    { "action": "ccs prompts migrate for the 18 UNKNOWN-status docs", "effort": "small", "priority": "medium" },
+    { "action": "Send stale-granularity and README/USAGE-exclusion feedback to ClaudeCodeSetup", "effort": "small", "priority": "low" }
+  ],
+  "roadmap_suggestions": [
+    { "title": "Documentation spine cadence: enrich + review at session-end", "description": "Every ADR-005 chain doc gets enriched at creation and independently reviewed before its feature ships", "priority": "high", "effort": "medium" },
+    { "title": "Prompt metadata migration completion", "description": "Clear the 18 UNKNOWN + 9 PENDING/ABANDONED backlog and gate regressions in ccs sync", "priority": "medium", "effort": "small" }
+  ],
+  "broken_chains": [
+    { "doc": "docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md", "broken_edge": "plan -> brainstorm orphaned: docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md has no plan_ref back-link", "fix": "Add plan_ref: docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md to the brainstorm frontmatter via ccs prompts tooling" },
+    { "doc": "docs/planning-mode/2026-09-09-domain-center-residuals.md", "broken_edge": "plan -> brainstorm orphaned: docs/brainstorming/2026-09-09-domain-center-residuals.md has no plan_ref back-link", "fix": "Add plan_ref back-link to brainstorm frontmatter" },
+    { "doc": "docs/planning-mode/2026-09-09-quota-limit-view.md", "broken_edge": "plan -> brainstorm orphaned: docs/brainstorming/2026-09-09-quota-limit-view.md has no plan_ref back-link", "fix": "Add plan_ref back-link to brainstorm frontmatter" },
+    { "doc": "docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md", "broken_edge": "plan -> brainstorm orphaned: docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md has no plan_ref back-link", "fix": "Add plan_ref back-link to brainstorm frontmatter" }
+  ],
+  "unenriched_docs": ["docs/brainstorming/2026-03-28-r2go2-product-vision-and-integration.md","docs/brainstorming/2026-05-16-cors-transform-rules.md","docs/brainstorming/2026-05-16-domain-operations.md","docs/brainstorming/2026-05-18-service-interfaces.md","docs/brainstorming/2026-05-18-tui-command-palette.md","docs/brainstorming/2026-06-07-road002-tui-object-browser.md","docs/brainstorming/2026-06-07-road020-dashboard-tui.md","docs/brainstorming/2026-06-08-road007-s3-migration-resume.md","docs/brainstorming/2026-06-14-domain-management-center.md","docs/brainstorming/2026-06-20-cosmoflare-desktop.md","docs/brainstorming/2026-06-21-inprocess-event-bus.md","docs/brainstorming/2026-07-01-live-metrics-producer.md","docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md","docs/brainstorming/2026-09-09-domain-center-residuals.md","docs/brainstorming/2026-09-09-quota-limit-view.md","docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md","docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md","docs/brainstorming/2026-09-11-d1-depth.md","docs/brainstorming/README.md","docs/brainstorming/USAGE.md","docs/brainstorming/collaborative-template.md","docs/brainstorming/feature-ideas.md","docs/planning-mode/2025-11-24-r2go2-initial-development.md","docs/planning-mode/2026-02-26-codebase-analysis-v0.2.0.md","docs/planning-mode/2026-03-03-consolidate-duplicated-code.md","docs/planning-mode/2026-05-07-r2go2-phase0-phase1-implementation.md","docs/planning-mode/2026-05-12-phase3-workers-kv.md","docs/planning-mode/2026-05-16-cosmoflare-module-rename.md","docs/planning-mode/2026-05-16-domain-operations.md","docs/planning-mode/2026-05-16-phase4-cloudflare-services.md","docs/planning-mode/2026-05-18-service-interfaces.md","docs/planning-mode/2026-05-18-tui-command-palette.md","docs/planning-mode/2026-06-07-road020-dashboard-tui.md","docs/planning-mode/2026-06-08-road002-tui-object-browser.md","docs/planning-mode/2026-06-08-road007-s3-migration-resume.md","docs/planning-mode/2026-06-14-domain-management-center.md","docs/planning-mode/2026-06-20-cosmoflare-desktop.md","docs/planning-mode/2026-06-21-inprocess-event-bus.md","docs/planning-mode/2026-07-01-live-metrics-producer.md","docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md","docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md","docs/planning-mode/2026-09-09-domain-center-residuals.md","docs/planning-mode/2026-09-09-quota-limit-view.md","docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md","docs/planning-mode/2026-09-11-d1-depth.md","docs/planning-mode/README.md","docs/planning-mode/USAGE.md","docs/prompts/2025-01-25-tui-installer-wizard-implementation.md","docs/prompts/2026-03-02-testing-strategy-progress.md","docs/prompts/2026-03-07-testing-quality-next-steps.md","docs/prompts/2026-03-25-project-audit-followup.md","docs/prompts/2026-03-28-r2go2-audit-followup.md","docs/prompts/2026-05-08-phase1-library-extraction.md","docs/prompts/2026-05-08-phase2-continuation.md","docs/prompts/2026-05-08-phase2-integration-and-hardening.md","docs/prompts/2026-05-12-phase2-roadmap-expansion.md","docs/prompts/2026-05-13-phase3-workers-kv-implementation.md","docs/prompts/2026-05-14-batch2-batch3-quick-wins.md","docs/prompts/2026-05-14-session-continuation.md","docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md","docs/prompts/2026-05-16-domain-operations.md","docs/prompts/2026-05-16-glm-parallel-coverage-wave2.md","docs/prompts/2026-05-19-post-audit-fixes.md","docs/prompts/2026-05-27-next-session.md","docs/prompts/2026-05-30-next-session.md","docs/prompts/2026-06-06-next-session.md","docs/prompts/2026-06-07-next-session.md","docs/prompts/2026-06-09-next-session.md","docs/prompts/2026-06-14-domain-management-center.md","docs/prompts/2026-06-20-cosmoflare-desktop.md","docs/prompts/2026-06-21-desktop-followups-and-event-bus.md","docs/prompts/2026-06-21-inprocess-event-bus.md","docs/prompts/2026-06-21-master-session-next.md","docs/prompts/2026-08-31-cosmoflare-audit-followup.md","docs/prompts/2026-09-05-next-session.md","docs/prompts/2026-09-06-launch-and-hardening.md","docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md","docs/prompts/2026-09-08-post-v0.22.0-control-plane.md","docs/prompts/2026-09-09-cf-api-knowledge-layer.md","docs/prompts/2026-09-09-domain-center-residuals.md","docs/prompts/2026-09-09-quota-limit-view.md","docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md","docs/prompts/2026-09-10-cosmoflare-continuation.md","docs/prompts/2026-09-10-cosmoflare-handoff.md","docs/prompts/2026-09-10-ratelimit-traffic-classes.md","docs/prompts/2026-09-11-d1-depth.md","docs/prompts/2026-09-12-session-2026-continuation.md","docs/prompts/CONTINUATION-session-008-cli-features.md","docs/prompts/CONTINUATION-session-008-tui-installer.md","docs/prompts/PARALLEL-SESSION-COORDINATION.md","docs/prompts/README.md","docs/prompts/USAGE.md","docs/prompts/cli-feature-commands.md","docs/prompts/continuation-prompt-v0.2.0.md","docs/prompts/enhanced-interactive-features.md","docs/prompts/session-007-continuation-completed.md","docs/prompts/session-007-continuation-prompt.md","docs/prompts/session-D-testing-continuation.md","docs/prompts/session-e-continuation-prompt.md","docs/prompts/testing-strategy-bulletproof-cli.md","docs/prompts/testing-validation-production.md","docs/prompts/tui-dashboard-implementation.md"],
+  "unreviewed_docs": ["docs/brainstorming/2026-06-21-inprocess-event-bus.md","docs/brainstorming/2026-09-09-cf-api-knowledge-layer.md","docs/brainstorming/2026-09-09-domain-center-residuals.md","docs/brainstorming/2026-09-09-quota-limit-view.md","docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md","docs/brainstorming/2026-09-10-ratelimit-traffic-classes.md","docs/brainstorming/2026-09-11-d1-depth.md","docs/brainstorming/collaborative-template.md","docs/planning-mode/2026-06-21-inprocess-event-bus.md","docs/planning-mode/2026-09-06-feat008-alert-sse-bridge.md","docs/planning-mode/2026-09-09-cf-api-knowledge-layer.md","docs/planning-mode/2026-09-09-domain-center-residuals.md","docs/planning-mode/2026-09-09-quota-limit-view.md","docs/planning-mode/2026-09-10-ratelimit-traffic-classes.md","docs/planning-mode/2026-09-11-d1-depth.md","docs/prompts/2025-01-25-tui-installer-wizard-implementation.md","docs/prompts/2026-03-02-testing-strategy-progress.md","docs/prompts/2026-03-07-testing-quality-next-steps.md","docs/prompts/2026-03-25-project-audit-followup.md","docs/prompts/2026-03-28-r2go2-audit-followup.md","docs/prompts/2026-05-08-phase1-library-extraction.md","docs/prompts/2026-05-08-phase2-continuation.md","docs/prompts/2026-05-08-phase2-integration-and-hardening.md","docs/prompts/2026-05-12-phase2-roadmap-expansion.md","docs/prompts/2026-05-13-phase3-workers-kv-implementation.md","docs/prompts/2026-05-14-batch2-batch3-quick-wins.md","docs/prompts/2026-05-14-session-continuation.md","docs/prompts/2026-05-16-cosmoflare-phase4-rebrand.md","docs/prompts/2026-05-16-domain-operations.md","docs/prompts/2026-05-16-glm-parallel-coverage-wave2.md","docs/prompts/2026-05-19-post-audit-fixes.md","docs/prompts/2026-05-27-next-session.md","docs/prompts/2026-05-30-next-session.md","docs/prompts/2026-06-06-next-session.md","docs/prompts/2026-06-07-next-session.md","docs/prompts/2026-06-09-next-session.md","docs/prompts/2026-06-14-domain-management-center.md","docs/prompts/2026-06-20-cosmoflare-desktop.md","docs/prompts/2026-06-21-desktop-followups-and-event-bus.md","docs/prompts/2026-06-21-inprocess-event-bus.md","docs/prompts/2026-06-21-master-session-next.md","docs/prompts/2026-08-31-cosmoflare-audit-followup.md","docs/prompts/2026-09-05-next-session.md","docs/prompts/2026-09-06-launch-and-hardening.md","docs/prompts/2026-09-07-launch-gate-and-v0.21.0.md","docs/prompts/2026-09-08-post-v0.22.0-control-plane.md","docs/prompts/2026-09-09-cf-api-knowledge-layer.md","docs/prompts/2026-09-09-domain-center-residuals.md","docs/prompts/2026-09-09-quota-limit-view.md","docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md","docs/prompts/2026-09-10-cosmoflare-continuation.md","docs/prompts/2026-09-10-cosmoflare-handoff.md","docs/prompts/2026-09-10-ratelimit-traffic-classes.md","docs/prompts/2026-09-11-d1-depth.md","docs/prompts/2026-09-12-session-2026-continuation.md","docs/prompts/CONTINUATION-session-008-cli-features.md","docs/prompts/CONTINUATION-session-008-tui-installer.md","docs/prompts/PARALLEL-SESSION-COORDINATION.md","docs/prompts/cli-feature-commands.md","docs/prompts/continuation-prompt-v0.2.0.md","docs/prompts/enhanced-interactive-features.md","docs/prompts/session-007-continuation-completed.md","docs/prompts/session-007-continuation-prompt.md","docs/prompts/session-D-testing-continuation.md","docs/prompts/session-e-continuation-prompt.md","docs/prompts/testing-strategy-bulletproof-cli.md","docs/prompts/testing-validation-production.md","docs/prompts/tui-dashboard-implementation.md","docs/prompts/worktrees/2026-05-15-UnitTesting-session-2.md"],
+  "stale_prompts": [],
+  "pending_prompts": ["docs/prompts/2026-06-21-master-session-next.md","docs/prompts/2026-06-21-desktop-followups-and-event-bus.md","docs/prompts/2026-09-08-post-v0.22.0-control-plane.md","docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md","docs/prompts/2026-09-10-cosmoflare-continuation.md","docs/prompts/2026-09-12-session-2026-continuation.md"],
+  "abandoned_prompts": ["docs/prompts/2026-05-14-session-continuation.md","docs/prompts/2026-06-21-inprocess-event-bus.md","docs/planning-mode/2026-06-21-inprocess-event-bus.md"]
+}

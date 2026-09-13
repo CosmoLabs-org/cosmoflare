@@ -1,0 +1,19 @@
+{
+  "score": 86,
+  "applicable": true,
+  "inputs": {
+    "possibly_done_issues": 2,
+    "orphaned_roadmap": 1,
+    "stale_roadmap": 0,
+    "drifted_roadmap": 2,
+    "stalled_plans": 0
+  },
+  "weights": {
+    "possibly_done_issue": 5,
+    "orphaned_roadmap": 3,
+    "stale_roadmap": 2,
+    "drifted_roadmap": 0.3,
+    "stalled_plan": 4,
+    "drifted_cap_pt": 15
+  }
+}

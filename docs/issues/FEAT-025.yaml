@@ -1,11 +1,13 @@
 id: FEAT-025
 type: feature
 created_at: 2026-09-11T01:08:29.344245+04:00
-updated_at: 2026-09-11T18:17:42.388903+04:00
+updated_at: 2026-09-13T15:38:36.829488+04:00
 source: local
 ulid: 01M26JD3H52VY5Z9FFGBNV4YQ6
-status: open
+status: closed
 origin:
+    roadmap_items:
+        - ROAD-098
     session: 51
 title: 'Rate-limit-aware shared client: Retry-After, backoff, retry flags'
 description: 'Every API call respects Cloudflare rate-limit semantics: inspect Retry-After and Ratelimit/Ratelimit-Policy headers, exponential backoff with jitter, never hammer on 429. Per-service awareness: global 1,200/5min per token, 200 r/s per IP, GraphQL cost-based 320/5min, R2 REST 1,200/5min, KV 1 write/sec per key, Queues 5,000 msg/s per queue. CLI surface: --max-retries, --retry-backoff, --retry-budget on API-bound commands. Corpus section 6 (docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md). Feeds limits-layer guards (brainstorm D4) and the command registry manifest (FEAT-020).'
@@ -18,3 +20,6 @@ delegation:
     delegated_to: "0126"
     delegated_at: 2026-09-11T18:17:42.385837+04:00
     delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-13"
+      action: closed

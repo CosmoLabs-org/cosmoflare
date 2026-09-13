@@ -1,11 +1,13 @@
 id: BUG-048
 type: bug
 created_at: 2026-09-13T15:37:07.881287+04:00
-updated_at: 2026-09-13T15:37:07.897946+04:00
+updated_at: 2026-09-13T15:37:09.922061+04:00
 source: local
 ulid: 01M2D8X2HSJYHEHMBH1BTCKARR
 severity: medium
 status: open
+origin:
+    session: 53
 title: KV namespaces assumed unique by title; duplicate titles delete wrong namespace
 description: 'pkg/cosmoflare/diff.go:280 matches KV namespaces by title (audit 2026-09-13, agent-2): two namespaces with the same title make diff/apply target the wrong one — a delete can hit the wrong namespace.'
 fix_direction: Match namespaces by ID where available in pkg/cosmoflare/diff.go (~line 280); refuse ambiguous duplicate-title operations with an actionable error naming both namespace IDs

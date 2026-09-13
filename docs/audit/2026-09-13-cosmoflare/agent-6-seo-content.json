@@ -1,0 +1,138 @@
+{
+  "agent": "seo-content",
+  "overall_score": 2,
+  "sub_scores": {
+    "meta_tags": 1,
+    "structured_data": 1,
+    "technical_seo": 1,
+    "content_strategy": 5,
+    "discoverability": 1,
+    "conversion_cta": 3
+  },
+  "critical_findings": [
+    {
+      "title": "Repository is PRIVATE — entire distribution surface dark",
+      "severity": "high",
+      "file": "README.md:10",
+      "fix": "Flip repo to public, verify go install works unauthenticated, trigger pkg.go.dev indexing",
+      "effort": "small"
+    },
+    {
+      "title": "Package doc comment brands library as r2go2 (pkg.go.dev landing text)",
+      "severity": "medium",
+      "file": "pkg/cosmoflare/types.go:1",
+      "fix": "Rewrite package comment to cosmoflare branding, current config name and service list",
+      "effort": "small"
+    },
+    {
+      "title": "Third brand variant in docs index (CosmoDev-R2Go2)",
+      "severity": "medium",
+      "file": "docs/README.md:1",
+      "fix": "Retitle to Cosmoflare Documentation and sweep stale brand strings from user-facing docs",
+      "effort": "small"
+    },
+    {
+      "title": "Homepage cosmolabs.org never mentions Cosmoflare — dead conversion path",
+      "severity": "medium",
+      "file": "README.md:12",
+      "fix": "Ship /cosmoflare product page with meta/OG tags and install CTA, or point homepageUrl at the repo",
+      "effort": "medium"
+    },
+    {
+      "title": "Four tagged versions (v0.23-v0.26) have no GitHub Releases",
+      "severity": "medium",
+      "file": ".goreleaser.yaml:61",
+      "fix": "Run local goreleaser release for pushed tags; add release step to local release SOP",
+      "effort": "small"
+    },
+    {
+      "title": "Zero keyword positioning vs wrangler (the dominant competitor)",
+      "severity": "medium",
+      "file": "README.md:16",
+      "fix": "Add 'Cosmoflare vs Wrangler' section targeting wrangler-alternative and no-nodejs-cloudflare-cli queries",
+      "effort": "medium"
+    },
+    {
+      "title": "USAGE.md has no install section; GETTING_STARTED.md orphaned",
+      "severity": "low",
+      "file": "docs/USAGE.md:7",
+      "fix": "Add Install section at top of USAGE.md; link or fold GETTING_STARTED.md",
+      "effort": "small"
+    },
+    {
+      "title": "No social preview image for link unfurls",
+      "severity": "low",
+      "file": ".github/assets/ (absent)",
+      "fix": "Create 1280x640 preview image and upload via repo social preview setting",
+      "effort": "small"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Make repo public and verify unauthenticated go install + pkg.go.dev indexing",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Rewrite package doc comment in pkg/cosmoflare/types.go to Cosmoflare branding",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Publish GitHub Releases for v0.23-v0.26 from existing tags",
+      "effort": "small",
+      "priority": "high"
+    },
+    {
+      "action": "Add Cosmoflare-vs-Wrangler positioning section to README",
+      "effort": "medium",
+      "priority": "high"
+    },
+    {
+      "action": "Fill remaining 11 GitHub topic slots and upload social preview image",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Add Install section to docs/USAGE.md and link GETTING_STARTED.md",
+      "effort": "small",
+      "priority": "medium"
+    },
+    {
+      "action": "Ship /cosmoflare product page on cosmolabs.org with meta/OG/JSON-LD",
+      "effort": "medium",
+      "priority": "medium"
+    },
+    {
+      "action": "Build Astro docs site with per-service pages, sitemap, structured data",
+      "effort": "large",
+      "priority": "low"
+    }
+  ],
+  "roadmap_suggestions": [
+    {
+      "title": "Public Launch Readiness",
+      "description": "Flip visibility, fix r2go2/CosmoDev branding, publish missing releases, social preview — unlocks all discoverability",
+      "priority": "high",
+      "effort": "small"
+    },
+    {
+      "title": "Cosmoflare Product Page on cosmolabs.org",
+      "description": "First indexable web page: meta/OG tags, JSON-LD SoftwareApplication schema, install CTA",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "title": "Comparison Content Pillar (Cosmoflare vs Wrangler)",
+      "description": "Own the Cloudflare-CLI-without-Node whitespace before Cloudflare's EmDash ships",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "title": "Astro Docs Site with per-service pages",
+      "description": "Split USAGE.md's 40+ sections into individually indexable keyword-targeted pages with sitemap and structured data",
+      "priority": "medium",
+      "effort": "large"
+    }
+  ]
+}
