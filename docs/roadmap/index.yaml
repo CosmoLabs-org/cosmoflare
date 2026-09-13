@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T15:38:25.424782+04:00
-next_id: 96
+last_updated: 2026-09-13T15:38:27.827391+04:00
+next_id: 97
 items:
+    - id: ROAD-096
+      title: Launch and distribution program (0 to 1,000 stars)
+      status: captured
+      created_at: 2026-09-13T15:38:27.827191+04:00
     - id: ROAD-095
       title: Agent-first onboarding — first-run wizard + least-privilege token doctor
       status: captured

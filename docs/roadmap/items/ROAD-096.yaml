@@ -1,0 +1,11 @@
+id: ROAD-096
+created_at: 2026-09-13T15:38:27.827191+04:00
+updated_at: 2026-09-13T15:38:27.829306+04:00
+title: Launch and distribution program (0 to 1,000 stars)
+description: 'Sequenced: Phase 0 sync-engine fixes (BUG-040..043) then purge transcripts/GOrchestra from tracked tree, publish v0.26.0 (staged in dist/upload/), flip repo public, fix install URLs, brand sweep, then Show HN / r/Cloudflare / Cloudflare Community / awesome-list PRs + vs-Wrangler comparison page. Source: audit 2026-09-13 agent-4-competitive.md + agent-6-seo-content.md'
+status: captured
+tags:
+    - audit-hydrated
+origin:
+    session: 53
+ulid: 01M2D8ZGKN90VZT82KY7XNNS6B
