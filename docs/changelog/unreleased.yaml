@@ -5,10 +5,7 @@
 version: pending
 entries:
     added: []
-    fixed:
-        - description: 'Sync engine data-loss fixes from 360-degree audit: direction-aware deletes for sync down --delete (BUG-040), exclude-protected deletes (BUG-041), timeout-free S3 data-plane client so large transfers survive past 30s (BUG-042), cancellation-safe multipart aborts (BUG-043). Also: auth rotate --revoke-old no longer revokes the new token (BUG-044), apply deletes gated behind --delete-unmanaged (BUG-049), KV duplicate-title ambiguity refused (BUG-048), --include sync filter implemented (BUG-051), desktop WCAG 4.1.3 live region (BUG-047), release archives no longer bundle docs/ (BUG-045), Dockerfile toolchain pinned (BUG-050).'
-          source: manual
-          date: 2026-09-13T17:06:11.118376+04:00
+    fixed: []
     changed: []
     deprecated: []
     removed: []

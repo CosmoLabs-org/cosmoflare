@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.27.0] - 2026-09-13
+
+### Fixed
+- Sync engine data-loss fixes from 360-degree audit: direction-aware deletes for sync down --delete (BUG-040), exclude-protected deletes (BUG-041), timeout-free S3 data-plane client so large transfers survive past 30s (BUG-042), cancellation-safe multipart aborts (BUG-043). Also: auth rotate --revoke-old no longer revokes the new token (BUG-044), apply deletes gated behind --delete-unmanaged (BUG-049), KV duplicate-title ambiguity refused (BUG-048), --include sync filter implemented (BUG-051), desktop WCAG 4.1.3 live region (BUG-047), release archives no longer bundle docs/ (BUG-045), Dockerfile toolchain pinned (BUG-050).
+- resolve all 12 critical bugs from the 2026-09-13 360-degree audit (commit:f29430a6)
+
 ## [0.26.0] - 2026-09-13
 
 ### Added
