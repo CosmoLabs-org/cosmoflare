@@ -1,0 +1,14 @@
+id: BUG-043
+type: bug
+created_at: 2026-09-13T15:36:23.179129+04:00
+updated_at: 2026-09-13T15:36:23.186125+04:00
+source: local
+ulid: 01M2D8VPWJQBG3KZX58ZBVWRR2
+severity: high
+status: open
+title: Multipart abort uses canceled context, orphaning billed uploads
+description: pkg/cosmoflare/upload.go:181 and multipart.go:467 abort incomplete multipart uploads with the already-canceled request context, so the abort itself fails silently and billed parts leak (audit 2026-09-13, agent-2).
+fix_direction: Use context.WithoutCancel(ctx) with a timeout for AbortMultipartUpload calls in pkg/cosmoflare/upload.go and multipart.go; log abort failures instead of discarding them
+affected_files:
+    - pkg/cosmoflare/upload.go
+    - pkg/cosmoflare/multipart.go
