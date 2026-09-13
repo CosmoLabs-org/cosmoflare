@@ -2,7 +2,7 @@
 ulid: 01M2CB48TT411HK9Q0EQ1TRDA4
 title: Homebrew tap + Scoop/winget manifests
 created: "2026-09-13T06:56:46.427012+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 53
@@ -11,7 +11,13 @@ origin:
 tags:
     - audit
     - distribution
+resolution:
+    reason: duplicate
+    date: "2026-09-13T17:05:13.050675+04:00"
+    note: covered by ROAD-096 (launch & distribution program)
 ---
+
+# Homebrew tap + Scoop/winget manifests
 
 # Homebrew tap + Scoop/winget manifests
 

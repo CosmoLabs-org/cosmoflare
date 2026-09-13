@@ -2,7 +2,7 @@
 ulid: 01M2CB46XQ33M11PCNQ6FCJZS2
 title: govulncheck gate in release-prepare
 created: "2026-09-13T06:56:44.471747+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - infrastructure
+promoted_to: TASK-006
 ---
+
+# govulncheck gate in release-prepare
 
 # govulncheck gate in release-prepare
 

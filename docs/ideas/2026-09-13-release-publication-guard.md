@@ -2,7 +2,7 @@
 ulid: 01M2CB4AVCXEWJCWKEDMJVR7KF
 title: Release publication guard
 created: "2026-09-13T06:56:48.492056+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 53
@@ -11,7 +11,13 @@ origin:
 tags:
     - audit
     - distribution
+resolution:
+    reason: duplicate
+    date: "2026-09-13T17:05:13.089586+04:00"
+    note: covered by ROAD-096 (launch & distribution program)
 ---
+
+# Release publication guard
 
 # Release publication guard
 

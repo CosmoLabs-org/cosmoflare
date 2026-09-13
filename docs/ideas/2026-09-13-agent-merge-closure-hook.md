@@ -2,7 +2,7 @@
 ulid: 01M2CB4TY5X70VPN5KPZS8012K
 title: Agent-merge closure hook
 created: "2026-09-13T06:57:04.965901+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 53
@@ -11,7 +11,13 @@ origin:
 tags:
     - audit
     - work-completion
+resolution:
+    reason: superseded
+    date: "2026-09-13T17:05:53.796706+04:00"
+    note: sent to ClaudeCodeSetup as cross-project feedback — the closure check belongs in ccs merge tooling
 ---
+
+# Agent-merge closure hook
 
 # Agent-merge closure hook
 

@@ -2,7 +2,7 @@
 ulid: 01M2CB4PMD5883M5EQ0ZQZPEQS
 title: SSE announcement bus (WCAG 4.1.3)
 created: "2026-09-13T06:57:00.55725+04:00"
-status: seed
+status: withered
 source: agent
 origin:
     session: 53
@@ -11,7 +11,13 @@ origin:
 tags:
     - audit
     - design
+resolution:
+    reason: implemented
+    date: "2026-09-13T17:05:31.790564+04:00"
+    note: 'implemented in BUG-047 fix (commit 744f88a): always-mounted aria-live=polite region + unread count in nav label. Remaining sliver (health-transition announcements) folded into the notification-severity/light-theme idea'
 ---
+
+# SSE announcement bus (WCAG 4.1.3)
 
 # SSE announcement bus (WCAG 4.1.3)
 
