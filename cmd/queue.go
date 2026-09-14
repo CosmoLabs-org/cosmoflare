@@ -146,15 +146,15 @@ func runQueueCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create queue", map[string]string{"name": name})
-		}
-		printInfo("DRY RUN: Would create queue '%s'", name)
-		return nil
+		return outPayload("DRY RUN: Would create queue", func() any {
+			return map[string]string{"name": name}
+		}, func() {
+			printInfo("DRY RUN: Would create queue '%s'", name)
+		})
 	}
 
 	q, err := svc.Create(context.Background(), name)
@@ -162,17 +162,17 @@ func runQueueCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create queue", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Queue created successfully", q)
-	}
-	printSuccess("Queue '%s' created (ID: %s)", q.Name, q.ID)
-	return nil
+	return outPayload("Queue created successfully", func() any {
+		return q
+	}, func() {
+		printSuccess("Queue '%s' created (ID: %s)", q.Name, q.ID)
+	})
 }
 
 func runQueueList(cmd *cobra.Command, args []string) error {
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	queues, err := svc.List(context.Background())
@@ -180,23 +180,20 @@ func runQueueList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list queues", err)
 	}
 
-	if JSONOutput {
-		return printJSON(queues)
-	}
+	return outResult(queues, func() {
+		if len(queues) == 0 {
+			printInfo("No queues found")
+			return
+		}
 
-	if len(queues) == 0 {
-		printInfo("No queues found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tPRODUCERS\tCONSUMERS")
-	for _, q := range queues {
-		fmt.Fprintf(w, "%s\t%s\t%d\t%d\n", q.ID, q.Name, q.ProducersTotalCount, q.ConsumersTotalCount)
-	}
-	w.Flush()
-	printInfo("Total: %d queue(s)", len(queues))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tPRODUCERS\tCONSUMERS")
+		for _, q := range queues {
+			fmt.Fprintf(w, "%s\t%s\t%d\t%d\n", q.ID, q.Name, q.ProducersTotalCount, q.ConsumersTotalCount)
+		}
+		w.Flush()
+		printInfo("Total: %d queue(s)", len(queues))
+	})
 }
 
 func runQueueGet(cmd *cobra.Command, args []string) error {
@@ -204,7 +201,7 @@ func runQueueGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	q, err := svc.Get(context.Background(), queueName)
@@ -212,23 +209,20 @@ func runQueueGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get queue", err)
 	}
 
-	if JSONOutput {
-		return printJSON(q)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "ID:\t%s\n", q.ID)
-	fmt.Fprintf(w, "Name:\t%s\n", q.Name)
-	fmt.Fprintf(w, "Producers:\t%d\n", q.ProducersTotalCount)
-	fmt.Fprintf(w, "Consumers:\t%d\n", q.ConsumersTotalCount)
-	if q.CreatedOn != nil {
-		fmt.Fprintf(w, "Created:\t%s\n", q.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
-	}
-	if q.ModifiedOn != nil {
-		fmt.Fprintf(w, "Modified:\t%s\n", q.ModifiedOn.Format("2006-01-02 15:04:05 UTC"))
-	}
-	w.Flush()
-	return nil
+	return outResult(q, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "ID:\t%s\n", q.ID)
+		fmt.Fprintf(w, "Name:\t%s\n", q.Name)
+		fmt.Fprintf(w, "Producers:\t%d\n", q.ProducersTotalCount)
+		fmt.Fprintf(w, "Consumers:\t%d\n", q.ConsumersTotalCount)
+		if q.CreatedOn != nil {
+			fmt.Fprintf(w, "Created:\t%s\n", q.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
+		}
+		if q.ModifiedOn != nil {
+			fmt.Fprintf(w, "Modified:\t%s\n", q.ModifiedOn.Format("2006-01-02 15:04:05 UTC"))
+		}
+		w.Flush()
+	})
 }
 
 func runQueueUpdate(cmd *cobra.Command, args []string) error {
@@ -240,18 +234,18 @@ func runQueueUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would rename queue", map[string]string{
+		return outPayload("DRY RUN: Would rename queue", func() any {
+			return map[string]string{
 				"old_name": queueName,
 				"new_name": queueNewName,
-			})
-		}
-		printInfo("DRY RUN: Would rename queue '%s' to '%s'", queueName, queueNewName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would rename queue '%s' to '%s'", queueName, queueNewName)
+		})
 	}
 
 	q, err := svc.Update(context.Background(), queueName, queueNewName)
@@ -259,11 +253,11 @@ func runQueueUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update queue", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Queue updated successfully", q)
-	}
-	printSuccess("Queue renamed to '%s' (ID: %s)", q.Name, q.ID)
-	return nil
+	return outPayload("Queue updated successfully", func() any {
+		return q
+	}, func() {
+		printSuccess("Queue renamed to '%s' (ID: %s)", q.Name, q.ID)
+	})
 }
 
 func runQueueDelete(cmd *cobra.Command, args []string) error {
@@ -282,26 +276,26 @@ func runQueueDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete queue", map[string]string{"name": queueName})
-		}
-		printInfo("DRY RUN: Would delete queue '%s'", queueName)
-		return nil
+		return outPayload("DRY RUN: Would delete queue", func() any {
+			return map[string]string{"name": queueName}
+		}, func() {
+			printInfo("DRY RUN: Would delete queue '%s'", queueName)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), queueName); err != nil {
 		return outErr("failed to delete queue", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Queue deleted successfully", map[string]string{"name": queueName})
-	}
-	printSuccess("Queue '%s' deleted successfully!", queueName)
-	return nil
+	return outPayload("Queue deleted successfully", func() any {
+		return map[string]string{"name": queueName}
+	}, func() {
+		printSuccess("Queue '%s' deleted successfully!", queueName)
+	})
 }
 
 func runQueueConsumers(cmd *cobra.Command, args []string) error {
@@ -309,7 +303,7 @@ func runQueueConsumers(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	consumers, err := svc.ListConsumers(context.Background(), queueName)
@@ -317,23 +311,20 @@ func runQueueConsumers(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list consumers", err)
 	}
 
-	if JSONOutput {
-		return printJSON(consumers)
-	}
+	return outResult(consumers, func() {
+		if len(consumers) == 0 {
+			printInfo("No consumers found for queue '%s'", queueName)
+			return
+		}
 
-	if len(consumers) == 0 {
-		printInfo("No consumers found for queue '%s'", queueName)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSCRIPT\tENVIRONMENT\tBATCH_SIZE\tMAX_RETRIES\tDEAD_LETTER")
-	for _, c := range consumers {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%d\t%s\n",
-			c.Name, c.ScriptName, c.Environment,
-			c.Settings.BatchSize, c.Settings.MaxRetries, c.DeadLetterQueue)
-	}
-	w.Flush()
-	printInfo("Total: %d consumer(s)", len(consumers))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tSCRIPT\tENVIRONMENT\tBATCH_SIZE\tMAX_RETRIES\tDEAD_LETTER")
+		for _, c := range consumers {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%d\t%s\n",
+				c.Name, c.ScriptName, c.Environment,
+				c.Settings.BatchSize, c.Settings.MaxRetries, c.DeadLetterQueue)
+		}
+		w.Flush()
+		printInfo("Total: %d consumer(s)", len(consumers))
+	})
 }
