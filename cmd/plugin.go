@@ -155,7 +155,7 @@ func getPluginService() (*cosmoflare.PluginService, error) {
 func runPluginList(cmd *cobra.Command, args []string) error {
 	svc, err := getPluginService()
 	if err != nil {
-		return fmt.Errorf("failed to initialize plugin service: %w", err)
+		return outErr("failed to initialize plugin service", err)
 	}
 
 	plugins, err := svc.List()
@@ -163,39 +163,38 @@ func runPluginList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list plugins", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("plugins listed", map[string]interface{}{
+	return outPayload("plugins listed", func() any {
+		return map[string]interface{}{
 			"plugins": plugins,
 			"count":   len(plugins),
 			"path":    svc.PluginsDir(),
-		})
-	}
+		}
+	}, func() {
+		if len(plugins) == 0 {
+			printInfo("No plugins installed")
+			printInfo("Install one: cosmoflare plugin install <git-url-or-path>")
+			printInfo("Scaffold one: cosmoflare plugin init <name>")
+			return
+		}
 
-	if len(plugins) == 0 {
-		printInfo("No plugins installed")
-		printInfo("Install one: cosmoflare plugin install <git-url-or-path>")
-		printInfo("Scaffold one: cosmoflare plugin init <name>")
-		return nil
-	}
+		fmt.Printf("\nInstalled Plugins (%d)\n", len(plugins))
+		fmt.Println(strings.Repeat("─", 60))
 
-	fmt.Printf("\nInstalled Plugins (%d)\n", len(plugins))
-	fmt.Println(strings.Repeat("─", 60))
+		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tVERSION\tCOMMANDS\tDESCRIPTION")
+		fmt.Fprintln(w, "────\t───────\t────────\t───────────")
+		for _, p := range plugins {
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\n",
+				p.Manifest.Name,
+				p.Manifest.Version,
+				len(p.Manifest.Commands),
+				p.Manifest.Description,
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tVERSION\tCOMMANDS\tDESCRIPTION")
-	fmt.Fprintln(w, "────\t───────\t────────\t───────────")
-	for _, p := range plugins {
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n",
-			p.Manifest.Name,
-			p.Manifest.Version,
-			len(p.Manifest.Commands),
-			p.Manifest.Description,
-		)
-	}
-	w.Flush()
-
-	fmt.Printf("\nPlugins directory: %s\n", svc.PluginsDir())
-	return nil
+		fmt.Printf("\nPlugins directory: %s\n", svc.PluginsDir())
+	})
 }
 
 func runPluginInstall(cmd *cobra.Command, args []string) error {
@@ -203,7 +202,7 @@ func runPluginInstall(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPluginService()
 	if err != nil {
-		return fmt.Errorf("failed to initialize plugin service: %w", err)
+		return outErr("failed to initialize plugin service", err)
 	}
 
 	if DryRun {
@@ -216,19 +215,18 @@ func runPluginInstall(cmd *cobra.Command, args []string) error {
 		return outErr("failed to install plugin", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("plugin installed", map[string]interface{}{
+	return outPayload("plugin installed", func() any {
+		return map[string]interface{}{
 			"name":    info.Manifest.Name,
 			"version": info.Manifest.Version,
 			"path":    info.Path,
-		})
-	}
-
-	printSuccess("Plugin %q v%s installed at %s", info.Manifest.Name, info.Manifest.Version, info.Path)
-	if len(info.Manifest.Commands) > 0 {
-		printInfo("Run it: cosmoflare plugin run %s", info.Manifest.Name)
-	}
-	return nil
+		}
+	}, func() {
+		printSuccess("Plugin %q v%s installed at %s", info.Manifest.Name, info.Manifest.Version, info.Path)
+		if len(info.Manifest.Commands) > 0 {
+			printInfo("Run it: cosmoflare plugin run %s", info.Manifest.Name)
+		}
+	})
 }
 
 func runPluginRemove(cmd *cobra.Command, args []string) error {
@@ -236,7 +234,7 @@ func runPluginRemove(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPluginService()
 	if err != nil {
-		return fmt.Errorf("failed to initialize plugin service: %w", err)
+		return outErr("failed to initialize plugin service", err)
 	}
 
 	if DryRun {
@@ -248,14 +246,13 @@ func runPluginRemove(cmd *cobra.Command, args []string) error {
 		return outErr("failed to remove plugin", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("plugin removed", map[string]interface{}{
+	return outPayload("plugin removed", func() any {
+		return map[string]interface{}{
 			"name": name,
-		})
-	}
-
-	printSuccess("Plugin %q removed", name)
-	return nil
+		}
+	}, func() {
+		printSuccess("Plugin %q removed", name)
+	})
 }
 
 func runPluginInit(cmd *cobra.Command, args []string) error {
@@ -263,7 +260,7 @@ func runPluginInit(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPluginService()
 	if err != nil {
-		return fmt.Errorf("failed to initialize plugin service: %w", err)
+		return outErr("failed to initialize plugin service", err)
 	}
 
 	if DryRun {
@@ -276,25 +273,24 @@ func runPluginInit(cmd *cobra.Command, args []string) error {
 		return outErr("failed to scaffold plugin", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("plugin scaffolded", map[string]interface{}{
+	return outPayload("plugin scaffolded", func() any {
+		return map[string]interface{}{
 			"name": name,
 			"path": pluginDir,
-		})
-	}
-
-	printSuccess("Plugin %q scaffolded at %s", name, pluginDir)
-	fmt.Println()
-	printInfo("Files created:")
-	printInfo("  %s/plugin.yaml   — Plugin manifest", pluginDir)
-	printInfo("  %s/bin/          — Place your compiled binary here", pluginDir)
-	printInfo("  %s/README.md     — Plugin documentation", pluginDir)
-	fmt.Println()
-	printInfo("Next steps:")
-	printInfo("  1. Edit plugin.yaml with your plugin's metadata")
-	printInfo("  2. Build your binary and place it in bin/")
-	printInfo("  3. Test: cosmoflare plugin run %s", name)
-	return nil
+		}
+	}, func() {
+		printSuccess("Plugin %q scaffolded at %s", name, pluginDir)
+		fmt.Println()
+		printInfo("Files created:")
+		printInfo("  %s/plugin.yaml   — Plugin manifest", pluginDir)
+		printInfo("  %s/bin/          — Place your compiled binary here", pluginDir)
+		printInfo("  %s/README.md     — Plugin documentation", pluginDir)
+		fmt.Println()
+		printInfo("Next steps:")
+		printInfo("  1. Edit plugin.yaml with your plugin's metadata")
+		printInfo("  2. Build your binary and place it in bin/")
+		printInfo("  3. Test: cosmoflare plugin run %s", name)
+	})
 }
 
 func runPluginRun(cmd *cobra.Command, args []string) error {
@@ -306,7 +302,7 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPluginService()
 	if err != nil {
-		return fmt.Errorf("failed to initialize plugin service: %w", err)
+		return outErr("failed to initialize plugin service", err)
 	}
 
 	output, err := svc.Run(name, pluginArgs)
