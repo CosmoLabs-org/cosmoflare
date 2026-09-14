@@ -149,27 +149,25 @@ func runWAFPackages(cmd *cobra.Command, args []string) error {
 	}
 	svc, err := getWAFService(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 	packages, err := svc.ListPackages(context.Background())
 	if err != nil {
 		return outErr("failed to list WAF packages", err)
 	}
-	if JSONOutput {
-		return printJSON(packages)
-	}
-	if len(packages) == 0 {
-		printInfo("No WAF packages found")
-		return nil
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tSENSITIVITY\tACTION MODE")
-	for _, p := range packages {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.ID, p.Name, p.Sensitivity, p.ActionMode)
-	}
-	w.Flush()
-	printInfo("Total: %d package(s)", len(packages))
-	return nil
+	return outResult(packages, func() {
+		if len(packages) == 0 {
+			printInfo("No WAF packages found")
+			return
+		}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tSENSITIVITY\tACTION MODE")
+		for _, p := range packages {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.ID, p.Name, p.Sensitivity, p.ActionMode)
+		}
+		w.Flush()
+		printInfo("Total: %d package(s)", len(packages))
+	})
 }
 
 func runWAFRules(cmd *cobra.Command, args []string) error {
@@ -178,31 +176,29 @@ func runWAFRules(cmd *cobra.Command, args []string) error {
 	}
 	svc, err := getWAFService(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 	rules, err := svc.ListRules(context.Background(), args[1])
 	if err != nil {
 		return outErr("failed to list WAF rules", err)
 	}
-	if JSONOutput {
-		return printJSON(rules)
-	}
-	if len(rules) == 0 {
-		printInfo("No WAF rules found in package '%s'", args[1])
-		return nil
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tMODE\tGROUP\tDESCRIPTION")
-	for _, r := range rules {
-		desc := r.Description
-		if len(desc) > 60 {
-			desc = desc[:57] + "..."
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No WAF rules found in package '%s'", args[1])
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.ID, r.Mode, r.Group.Name, desc)
-	}
-	w.Flush()
-	printInfo("Total: %d rule(s)", len(rules))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tMODE\tGROUP\tDESCRIPTION")
+		for _, r := range rules {
+			desc := r.Description
+			if len(desc) > 60 {
+				desc = desc[:57] + "..."
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.ID, r.Mode, r.Group.Name, desc)
+		}
+		w.Flush()
+		printInfo("Total: %d rule(s)", len(rules))
+	})
 }
 
 func runWAFRule(cmd *cobra.Command, args []string) error {
@@ -213,42 +209,40 @@ func runWAFRule(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWAFService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 
 	if wafRuleMode != "" {
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would update WAF rule", map[string]string{"rule_id": ruleID, "mode": wafRuleMode})
-			}
-			printInfo("DRY RUN: Would update WAF rule '%s' to mode '%s'", ruleID, wafRuleMode)
-			return nil
+			return outPayload("DRY RUN: Would update WAF rule", func() any {
+				return map[string]string{"rule_id": ruleID, "mode": wafRuleMode}
+			}, func() {
+				printInfo("DRY RUN: Would update WAF rule '%s' to mode '%s'", ruleID, wafRuleMode)
+			})
 		}
 		rule, err := svc.UpdateRule(context.Background(), packageID, ruleID, wafRuleMode)
 		if err != nil {
 			return outErr("failed to update WAF rule", err)
 		}
-		if JSONOutput {
-			return printSuccessJSON("WAF rule updated", rule)
-		}
-		printSuccess("WAF rule '%s' mode set to '%s'", ruleID, rule.Mode)
-		return nil
+		return outPayload("WAF rule updated", func() any {
+			return rule
+		}, func() {
+			printSuccess("WAF rule '%s' mode set to '%s'", ruleID, rule.Mode)
+		})
 	}
 
 	rule, err := svc.GetRule(context.Background(), packageID, ruleID)
 	if err != nil {
 		return outErr("failed to get WAF rule", err)
 	}
-	if JSONOutput {
-		return printJSON(rule)
-	}
-	fmt.Printf("ID:           %s\n", rule.ID)
-	fmt.Printf("Description:  %s\n", rule.Description)
-	fmt.Printf("Mode:         %s\n", rule.Mode)
-	fmt.Printf("Default Mode: %s\n", rule.DefaultMode)
-	fmt.Printf("Group:        %s (%s)\n", rule.Group.Name, rule.Group.ID)
-	fmt.Printf("Allowed:      %s\n", strings.Join(rule.AllowedModes, ", "))
-	return nil
+	return outResult(rule, func() {
+		fmt.Printf("ID:           %s\n", rule.ID)
+		fmt.Printf("Description:  %s\n", rule.Description)
+		fmt.Printf("Mode:         %s\n", rule.Mode)
+		fmt.Printf("Default Mode: %s\n", rule.DefaultMode)
+		fmt.Printf("Group:        %s (%s)\n", rule.Group.Name, rule.Group.ID)
+		fmt.Printf("Allowed:      %s\n", strings.Join(rule.AllowedModes, ", "))
+	})
 }
 
 func runWAFAccessList(cmd *cobra.Command, args []string) error {
@@ -257,27 +251,25 @@ func runWAFAccessList(cmd *cobra.Command, args []string) error {
 	}
 	svc, err := getWAFService(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 	rules, err := svc.ListAccessRules(context.Background())
 	if err != nil {
 		return outErr("failed to list access rules", err)
 	}
-	if JSONOutput {
-		return printJSON(rules)
-	}
-	if len(rules) == 0 {
-		printInfo("No IP access rules found")
-		return nil
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tMODE\tTARGET\tVALUE\tNOTES")
-	for _, r := range rules {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.ID, r.Mode, r.Configuration.Target, r.Configuration.Value, r.Notes)
-	}
-	w.Flush()
-	printInfo("Total: %d rule(s)", len(rules))
-	return nil
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No IP access rules found")
+			return
+		}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tMODE\tTARGET\tVALUE\tNOTES")
+		for _, r := range rules {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.ID, r.Mode, r.Configuration.Target, r.Configuration.Value, r.Notes)
+		}
+		w.Flush()
+		printInfo("Total: %d rule(s)", len(rules))
+	})
 }
 
 func runWAFAccessCreate(cmd *cobra.Command, args []string) error {
@@ -292,24 +284,24 @@ func runWAFAccessCreate(cmd *cobra.Command, args []string) error {
 	}
 	svc, err := getWAFService(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create access rule", map[string]string{"ip": wafAccessIP, "mode": wafAccessMode})
-		}
-		printInfo("DRY RUN: Would create access rule for %s mode=%s", wafAccessIP, wafAccessMode)
-		return nil
+		return outPayload("DRY RUN: Would create access rule", func() any {
+			return map[string]string{"ip": wafAccessIP, "mode": wafAccessMode}
+		}, func() {
+			printInfo("DRY RUN: Would create access rule for %s mode=%s", wafAccessIP, wafAccessMode)
+		})
 	}
 	rule, err := svc.CreateAccessRule(context.Background(), "ip", wafAccessIP, wafAccessMode, wafAccessNote)
 	if err != nil {
 		return outErr("failed to create access rule", err)
 	}
-	if JSONOutput {
-		return printSuccessJSON("Access rule created", rule)
-	}
-	printSuccess("Access rule created: %s %s %s", rule.Mode, rule.Configuration.Target, rule.Configuration.Value)
-	return nil
+	return outPayload("Access rule created", func() any {
+		return rule
+	}, func() {
+		printSuccess("Access rule created: %s %s %s", rule.Mode, rule.Configuration.Target, rule.Configuration.Value)
+	})
 }
 
 func runWAFAccessDelete(cmd *cobra.Command, args []string) error {
@@ -330,21 +322,21 @@ func runWAFAccessDelete(cmd *cobra.Command, args []string) error {
 	}
 	svc, err := getWAFService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create WAF service: %w", err)
+		return outErr("failed to create WAF service", err)
 	}
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete access rule", map[string]string{"rule_id": ruleID})
-		}
-		printInfo("DRY RUN: Would delete access rule '%s'", ruleID)
-		return nil
+		return outPayload("DRY RUN: Would delete access rule", func() any {
+			return map[string]string{"rule_id": ruleID}
+		}, func() {
+			printInfo("DRY RUN: Would delete access rule '%s'", ruleID)
+		})
 	}
 	if err := svc.DeleteAccessRule(context.Background(), ruleID); err != nil {
 		return outErr("failed to delete access rule", err)
 	}
-	if JSONOutput {
-		return printSuccessJSON("Access rule deleted", map[string]string{"rule_id": ruleID})
-	}
-	printSuccess("Access rule '%s' deleted", ruleID)
-	return nil
+	return outPayload("Access rule deleted", func() any {
+		return map[string]string{"rule_id": ruleID}
+	}, func() {
+		printSuccess("Access rule '%s' deleted", ruleID)
+	})
 }
