@@ -107,10 +107,7 @@ func runPagesEnvList(cmd *cobra.Command, args []string) error {
 
 	vars, err := svc.ListEnvVars(context.Background(), project, pagesEnv)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list env vars: %v", err))
-		}
-		return fmt.Errorf("failed to list env vars: %w", err)
+		return outErr("failed to list env vars", err)
 	}
 
 	if JSONOutput {
@@ -187,10 +184,7 @@ func runPagesEnvSet(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.SetEnvVars(context.Background(), project, pagesEnv, vars); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to set env vars: %v", err))
-		}
-		return fmt.Errorf("failed to set env vars: %w", err)
+		return outErr("failed to set env vars", err)
 	}
 
 	if JSONOutput {
@@ -233,10 +227,7 @@ func runPagesEnvDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteEnvVar(context.Background(), project, pagesEnv, key); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete env var: %v", err))
-		}
-		return fmt.Errorf("failed to delete env var: %w", err)
+		return outErr("failed to delete env var", err)
 	}
 
 	if JSONOutput {

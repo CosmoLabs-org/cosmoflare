@@ -296,10 +296,7 @@ func runStreamUpload(cmd *cobra.Command, args []string) error {
 
 	video, err := svc.UploadFile(context.Background(), filePath, metadata)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to upload video: %v", err))
-		}
-		return fmt.Errorf("failed to upload video: %w", err)
+		return outErr("failed to upload video", err)
 	}
 
 	if JSONOutput {
@@ -348,10 +345,7 @@ func runStreamUploadByURL(cmd *cobra.Command) error {
 
 	video, err := svc.UploadByURL(context.Background(), streamURL, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to upload video from URL: %v", err))
-		}
-		return fmt.Errorf("failed to upload video from URL: %w", err)
+		return outErr("failed to upload video from URL", err)
 	}
 
 	if JSONOutput {
@@ -372,10 +366,7 @@ func runStreamList(cmd *cobra.Command, args []string) error {
 
 	videos, err := svc.ListVideos(context.Background(), streamStatus)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list videos: %v", err))
-		}
-		return fmt.Errorf("failed to list videos: %w", err)
+		return outErr("failed to list videos", err)
 	}
 
 	if JSONOutput {
@@ -427,10 +418,7 @@ func runStreamGet(cmd *cobra.Command, args []string) error {
 
 	video, err := svc.GetVideo(context.Background(), videoID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get video: %v", err))
-		}
-		return fmt.Errorf("failed to get video: %w", err)
+		return outErr("failed to get video", err)
 	}
 
 	if JSONOutput {
@@ -504,10 +492,7 @@ func runStreamDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteVideo(context.Background(), videoID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete video: %v", err))
-		}
-		return fmt.Errorf("failed to delete video: %w", err)
+		return outErr("failed to delete video", err)
 	}
 
 	if JSONOutput {
@@ -549,10 +534,7 @@ func runStreamToken(cmd *cobra.Command, args []string) error {
 
 	token, err := svc.CreateSignedToken(context.Background(), videoID, expiresSeconds)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create signed token: %v", err))
-		}
-		return fmt.Errorf("failed to create signed token: %w", err)
+		return outErr("failed to create signed token", err)
 	}
 
 	if JSONOutput {
@@ -598,10 +580,7 @@ func runStreamLiveCreate(cmd *cobra.Command, args []string) error {
 
 	input, err := svc.CreateLiveInput(context.Background(), name, streamLiveMode)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create live input: %v", err))
-		}
-		return fmt.Errorf("failed to create live input: %w", err)
+		return outErr("failed to create live input", err)
 	}
 
 	if JSONOutput {
@@ -631,10 +610,7 @@ func runStreamLiveList(cmd *cobra.Command, args []string) error {
 
 	inputs, err := svc.ListLiveInputs(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list live inputs: %v", err))
-		}
-		return fmt.Errorf("failed to list live inputs: %w", err)
+		return outErr("failed to list live inputs", err)
 	}
 
 	if JSONOutput {
@@ -706,10 +682,7 @@ func runStreamLiveDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteLiveInput(context.Background(), inputID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete live input: %v", err))
-		}
-		return fmt.Errorf("failed to delete live input: %w", err)
+		return outErr("failed to delete live input", err)
 	}
 
 	if JSONOutput {

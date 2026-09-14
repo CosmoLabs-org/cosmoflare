@@ -283,10 +283,7 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 		Checksum:   syncFlagChecksum,
 	})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to generate sync plan: %v", err))
-		}
-		return fmt.Errorf("failed to generate sync plan: %w", err)
+		return outErr("failed to generate sync plan", err)
 	}
 
 	// Dry-run: show plan and exit
@@ -306,10 +303,7 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 	// Execute
 	result, err := svc.Execute(context.Background(), plan)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("sync execution failed: %v", err))
-		}
-		return fmt.Errorf("sync execution failed: %w", err)
+		return outErr("sync execution failed", err)
 	}
 
 	return printSyncResult(plan, result)
@@ -359,10 +353,7 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 		Checksum:   syncFlagChecksum,
 	})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to generate sync plan: %v", err))
-		}
-		return fmt.Errorf("failed to generate sync plan: %w", err)
+		return outErr("failed to generate sync plan", err)
 	}
 
 	// Dry-run: show plan and exit
@@ -382,10 +373,7 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 	// Execute
 	result, err := svc.Execute(context.Background(), plan)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("sync execution failed: %v", err))
-		}
-		return fmt.Errorf("sync execution failed: %w", err)
+		return outErr("sync execution failed", err)
 	}
 
 	return printSyncResult(plan, result)

@@ -131,10 +131,7 @@ func runCORSSettings(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.GetCORSRules(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get CORS rules: %v", err))
-		}
-		return fmt.Errorf("failed to get CORS rules: %w", err)
+		return outErr("failed to get CORS rules", err)
 	}
 
 	if JSONOutput {
@@ -226,10 +223,7 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.SetCORSHeaders(context.Background(), opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to set CORS rule: %v", err))
-		}
-		return fmt.Errorf("failed to set CORS rule: %w", err)
+		return outErr("failed to set CORS rule", err)
 	}
 
 	if JSONOutput {
@@ -276,10 +270,7 @@ func runCORSRemove(cmd *cobra.Command, args []string) error {
 			}
 			return fmt.Errorf("CORS rule %q not found on zone %s.\n       Use \"cosmoflare cors settings %s\" to list active CORS rules", corsRuleName, zoneID, zoneID)
 		}
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to remove CORS rule: %v", err))
-		}
-		return fmt.Errorf("failed to remove CORS rule: %w", err)
+		return outErr("failed to remove CORS rule", err)
 	}
 
 	if JSONOutput {

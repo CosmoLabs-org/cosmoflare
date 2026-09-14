@@ -72,10 +72,7 @@ func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
 	svc := getBucketPolicyService()
 	policy, err := svc.GetBucketPolicy(cmd.Context(), bucket)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get bucket policy: %v", err))
-		}
-		return fmt.Errorf("failed to get bucket policy: %w", err)
+		return outErr("failed to get bucket policy", err)
 	}
 
 	if JSONOutput {
@@ -106,10 +103,7 @@ func runBucketPolicySet(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketPolicyService()
 	if err := svc.SetBucketPolicy(cmd.Context(), bucket, json.RawMessage(data)); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to set bucket policy: %v", err))
-		}
-		return fmt.Errorf("failed to set bucket policy: %w", err)
+		return outErr("failed to set bucket policy", err)
 	}
 
 	if JSONOutput {

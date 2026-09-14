@@ -93,18 +93,12 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 func runDoctorAll(ctx context.Context) error {
 	fleet, err := cosmoflare.NewFleetStatusServiceFromCreds(AccountID, APIToken)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create fleet status service: %v", err))
-		}
-		return fmt.Errorf("failed to create fleet status service: %w", err)
+		return outErr("failed to create fleet status service", err)
 	}
 
 	snap, err := fleet.Snapshot(ctx)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to collect fleet status: %v", err))
-		}
-		return fmt.Errorf("failed to collect fleet status: %w", err)
+		return outErr("failed to collect fleet status", err)
 	}
 
 	if len(snap.Zones) == 0 {

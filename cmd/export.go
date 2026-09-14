@@ -100,17 +100,11 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	export, err := svc.Export(context.Background(), opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("export failed: %v", err))
-		}
-		return fmt.Errorf("export failed: %w", err)
+		return outErr("export failed", err)
 	}
 
 	if err := svc.WriteFile(export, outputFile, format); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to write file: %v", err))
-		}
-		return fmt.Errorf("failed to write file: %w", err)
+		return outErr("failed to write file", err)
 	}
 
 	// Build summary

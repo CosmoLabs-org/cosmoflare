@@ -260,10 +260,7 @@ func runImagesUpload(cmd *cobra.Command, args []string) error {
 
 	img, err := svc.UploadFile(context.Background(), file, filePath, metadata)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to upload image: %v", err))
-		}
-		return fmt.Errorf("failed to upload image: %w", err)
+		return outErr("failed to upload image", err)
 	}
 
 	if JSONOutput {
@@ -308,10 +305,7 @@ func runImagesUploadByURL(cmd *cobra.Command) error {
 
 	img, err := svc.UploadByURL(context.Background(), imagesURL, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to upload image from URL: %v", err))
-		}
-		return fmt.Errorf("failed to upload image from URL: %w", err)
+		return outErr("failed to upload image from URL", err)
 	}
 
 	if JSONOutput {
@@ -334,10 +328,7 @@ func runImagesList(cmd *cobra.Command, args []string) error {
 
 	images, err := svc.ListImages(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list images: %v", err))
-		}
-		return fmt.Errorf("failed to list images: %w", err)
+		return outErr("failed to list images", err)
 	}
 
 	if JSONOutput {
@@ -383,10 +374,7 @@ func runImagesGet(cmd *cobra.Command, args []string) error {
 
 	img, err := svc.GetImage(context.Background(), imageID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get image: %v", err))
-		}
-		return fmt.Errorf("failed to get image: %w", err)
+		return outErr("failed to get image", err)
 	}
 
 	if JSONOutput {
@@ -438,10 +426,7 @@ func runImagesDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteImage(context.Background(), imageID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete image: %v", err))
-		}
-		return fmt.Errorf("failed to delete image: %w", err)
+		return outErr("failed to delete image", err)
 	}
 
 	if JSONOutput {
@@ -461,10 +446,7 @@ func runImagesVariantsList(cmd *cobra.Command, args []string) error {
 
 	variants, err := svc.ListVariants(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list variants: %v", err))
-		}
-		return fmt.Errorf("failed to list variants: %w", err)
+		return outErr("failed to list variants", err)
 	}
 
 	if JSONOutput {
@@ -519,10 +501,7 @@ func runImagesVariantsCreate(cmd *cobra.Command, args []string) error {
 
 	variant, err := svc.CreateVariant(context.Background(), name, variantFit, variantWidth, variantHeight, variantMetadataMode)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create variant: %v", err))
-		}
-		return fmt.Errorf("failed to create variant: %w", err)
+		return outErr("failed to create variant", err)
 	}
 
 	if JSONOutput {
@@ -572,10 +551,7 @@ func runImagesVariantsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteVariant(context.Background(), name); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete variant: %v", err))
-		}
-		return fmt.Errorf("failed to delete variant: %w", err)
+		return outErr("failed to delete variant", err)
 	}
 
 	if JSONOutput {

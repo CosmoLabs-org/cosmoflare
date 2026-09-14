@@ -61,10 +61,7 @@ func runD1Export(cmd *cobra.Command, args []string) error {
 
 	rc, err := svc.Export(context.Background(), databaseID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to export database: %v", err))
-		}
-		return fmt.Errorf("failed to export database: %w", err)
+		return outErr("failed to export database", err)
 	}
 	defer rc.Close()
 

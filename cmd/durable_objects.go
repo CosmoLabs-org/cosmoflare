@@ -98,10 +98,7 @@ func runDoNamespaces(cmd *cobra.Command, args []string) error {
 
 	namespaces, err := svc.ListNamespaces(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list namespaces: %v", err))
-		}
-		return fmt.Errorf("failed to list namespaces: %w", err)
+		return outErr("failed to list namespaces", err)
 	}
 
 	if JSONOutput {
@@ -136,10 +133,7 @@ func runDoObjects(cmd *cobra.Command, args []string) error {
 		Cursor: doObjectsCursor,
 	})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list objects: %v", err))
-		}
-		return fmt.Errorf("failed to list objects: %w", err)
+		return outErr("failed to list objects", err)
 	}
 
 	if JSONOutput {
@@ -175,10 +169,7 @@ func runDoInspect(cmd *cobra.Command, args []string) error {
 
 	detail, err := svc.GetObject(context.Background(), namespaceID, objectID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to inspect object: %v", err))
-		}
-		return fmt.Errorf("failed to inspect object: %w", err)
+		return outErr("failed to inspect object", err)
 	}
 
 	if JSONOutput {

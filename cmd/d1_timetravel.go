@@ -69,10 +69,7 @@ func runD1TimeTravelRestore(cmd *cobra.Command, args []string) error {
 
 	quota, err := svc.TimeTravelQuotaCheck(databaseID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to check time-travel quota: %v", err))
-		}
-		return fmt.Errorf("failed to check time-travel quota: %w", err)
+		return outErr("failed to check time-travel quota", err)
 	}
 	if quota.Used >= quota.Limit {
 		msg := fmt.Sprintf("time-travel restore quota exceeded (%d/%d used); resets at %s", quota.Used, quota.Limit, quota.WindowResetsAt.Format(time.RFC3339))
@@ -108,10 +105,7 @@ func runD1TimeTravelRestore(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.TimeTravelRestore(context.Background(), databaseID, timestamp)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to restore database: %v", err))
-		}
-		return fmt.Errorf("failed to restore database: %w", err)
+		return outErr("failed to restore database", err)
 	}
 
 	remaining := quota.Limit - (quota.Used + 1)

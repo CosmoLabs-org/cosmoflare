@@ -173,10 +173,7 @@ func runFirewallList(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list firewall rules: %v", err))
-		}
-		return fmt.Errorf("failed to list firewall rules: %w", err)
+		return outErr("failed to list firewall rules", err)
 	}
 
 	if JSONOutput {
@@ -227,10 +224,7 @@ func runFirewallGet(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.Get(context.Background(), ruleID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get firewall rule: %v", err))
-		}
-		return fmt.Errorf("failed to get firewall rule: %w", err)
+		return outErr("failed to get firewall rule", err)
 	}
 
 	if JSONOutput {
@@ -278,10 +272,7 @@ func runFirewallCreate(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.Create(context.Background(), fwExpression, fwAction, fwDescription)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create firewall rule: %v", err))
-		}
-		return fmt.Errorf("failed to create firewall rule: %w", err)
+		return outErr("failed to create firewall rule", err)
 	}
 
 	if JSONOutput {
@@ -327,10 +318,7 @@ func runFirewallUpdate(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.Update(context.Background(), ruleID, fwExpression, fwAction, fwDescription)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update firewall rule: %v", err))
-		}
-		return fmt.Errorf("failed to update firewall rule: %w", err)
+		return outErr("failed to update firewall rule", err)
 	}
 
 	if JSONOutput {
@@ -376,10 +364,7 @@ func runFirewallDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), ruleID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete firewall rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete firewall rule: %w", err)
+		return outErr("failed to delete firewall rule", err)
 	}
 
 	if JSONOutput {

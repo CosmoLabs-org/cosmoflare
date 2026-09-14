@@ -114,10 +114,7 @@ func runD1MigrationsCreate(cmd *cobra.Command, args []string) error {
 
 	path, err := svc.MigrationsCreate(name, d1MigrationsDir)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create migration: %v", err))
-		}
-		return fmt.Errorf("failed to create migration: %w", err)
+		return outErr("failed to create migration", err)
 	}
 
 	if JSONOutput {
@@ -141,10 +138,7 @@ func runD1MigrationsList(cmd *cobra.Command, args []string) error {
 
 	migrations, err := svc.MigrationsList(context.Background(), databaseID, d1MigrationsDir)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list migrations: %v", err))
-		}
-		return fmt.Errorf("failed to list migrations: %w", err)
+		return outErr("failed to list migrations", err)
 	}
 
 	if JSONOutput {
@@ -218,10 +212,7 @@ func runD1MigrationsApply(cmd *cobra.Command, args []string) error {
 
 	results, err := svc.MigrationsApply(context.Background(), databaseID, d1MigrationsDir, DryRun)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to apply migrations: %v", err))
-		}
-		return fmt.Errorf("failed to apply migrations: %w", err)
+		return outErr("failed to apply migrations", err)
 	}
 
 	if JSONOutput {

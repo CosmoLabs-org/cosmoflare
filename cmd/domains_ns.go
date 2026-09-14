@@ -34,20 +34,14 @@ type domainNSEntry struct {
 func runDomainsNS(cmd *cobra.Command, args []string) error {
 	svc, err := newDomainService(false)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create domain service: %v", err))
-		}
-		return fmt.Errorf("failed to create domain service: %w", err)
+		return outErr("failed to create domain service", err)
 	}
 
 	ctx := context.Background()
 
 	domains, _, err := svc.List(ctx, cosmoflare.DomainListOptions{})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list domains: %v", err))
-		}
-		return fmt.Errorf("failed to list domains: %w", err)
+		return outErr("failed to list domains", err)
 	}
 
 	if JSONOutput {

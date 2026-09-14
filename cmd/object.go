@@ -461,10 +461,7 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 		close(done)
 	}
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to download object: %v", err))
-		}
-		return fmt.Errorf("failed to download object: %w", err)
+		return outErr("failed to download object", err)
 	}
 
 	if JSONOutput {
@@ -522,10 +519,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 		result, err := client.Upload(context.Background(), bucketName, key, os.Stdin, 0, opts...)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to upload object: %v", err))
-			}
-			return fmt.Errorf("failed to upload object: %w", err)
+			return outErr("failed to upload object", err)
 		}
 
 		if JSONOutput {
@@ -589,10 +583,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 		result, err := client.ResumeMultipartUpload(context.Background(), bucketName, key, file, state.TotalSize, opts...)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to resume upload: %v", err))
-			}
-			return fmt.Errorf("failed to resume upload: %w", err)
+			return outErr("failed to resume upload", err)
 		}
 
 		if objectProgress && !JSONOutput {
@@ -686,10 +677,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		result, err = client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
 	}
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to upload object: %v", err))
-		}
-		return fmt.Errorf("failed to upload object: %w", err)
+		return outErr("failed to upload object", err)
 	}
 
 	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
@@ -732,10 +720,7 @@ func runObjectDelete(cmd *cobra.Command, args []string) error {
 
 	// Delete object
 	if err := client.DeleteObject(context.Background(), bucketName, objectKey); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete object: %v", err))
-		}
-		return fmt.Errorf("failed to delete object: %w", err)
+		return outErr("failed to delete object", err)
 	}
 
 	if JSONOutput {
@@ -786,10 +771,7 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 
 	result, err := client.CopyObject(context.Background(), srcBucket, srcKey, dstBucket, dstKey)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to copy object: %v", err))
-		}
-		return fmt.Errorf("failed to copy object: %w", err)
+		return outErr("failed to copy object", err)
 	}
 
 	if JSONOutput {

@@ -209,10 +209,7 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 
 	worker, err := svc.Deploy(context.Background(), name, f, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to deploy worker: %v", err))
-		}
-		return fmt.Errorf("failed to deploy worker: %w", err)
+		return outErr("failed to deploy worker", err)
 	}
 
 	if JSONOutput {
@@ -232,10 +229,7 @@ func runWorkerList(cmd *cobra.Command, args []string) error {
 
 	workers, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list workers: %v", err))
-		}
-		return fmt.Errorf("failed to list workers: %w", err)
+		return outErr("failed to list workers", err)
 	}
 
 	if JSONOutput {
@@ -275,10 +269,7 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 
 	worker, err := svc.Get(context.Background(), name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get worker: %v", err))
-		}
-		return fmt.Errorf("failed to get worker: %w", err)
+		return outErr("failed to get worker", err)
 	}
 
 	if JSONOutput {
@@ -334,10 +325,7 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), name); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete worker: %v", err))
-		}
-		return fmt.Errorf("failed to delete worker: %w", err)
+		return outErr("failed to delete worker", err)
 	}
 
 	if JSONOutput {
@@ -369,10 +357,7 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 
 	entries, err := svc.Logs(context.Background(), name, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get worker logs: %v", err))
-		}
-		return fmt.Errorf("failed to get worker logs: %w", err)
+		return outErr("failed to get worker logs", err)
 	}
 
 	if JSONOutput {
@@ -480,10 +465,7 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.UpdateSettings(context.Background(), name, settings); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update worker settings: %v", err))
-		}
-		return fmt.Errorf("failed to update worker settings: %w", err)
+		return outErr("failed to update worker settings", err)
 	}
 
 	if JSONOutput {

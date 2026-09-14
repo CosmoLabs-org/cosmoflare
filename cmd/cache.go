@@ -160,10 +160,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 		result, err := svc.PurgeAll(ctx)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to purge cache: %v", err))
-			}
-			return fmt.Errorf("failed to purge cache: %w", err)
+			return outErr("failed to purge cache", err)
 		}
 
 		if JSONOutput {
@@ -185,10 +182,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 		result, err := svc.PurgeByURLs(ctx, cachePurgeURLs)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to purge URLs: %v", err))
-			}
-			return fmt.Errorf("failed to purge URLs: %w", err)
+			return outErr("failed to purge URLs", err)
 		}
 
 		if JSONOutput {
@@ -210,10 +204,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 		result, err := svc.PurgeByTags(ctx, cachePurgeTags)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to purge tags: %v", err))
-			}
-			return fmt.Errorf("failed to purge tags: %w", err)
+			return outErr("failed to purge tags", err)
 		}
 
 		if JSONOutput {
@@ -235,10 +226,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 		result, err := svc.PurgeByHosts(ctx, cachePurgeHosts)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to purge hosts: %v", err))
-			}
-			return fmt.Errorf("failed to purge hosts: %w", err)
+			return outErr("failed to purge hosts", err)
 		}
 
 		if JSONOutput {
@@ -288,10 +276,7 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := svc.UpdateSettings(ctx, opts...); err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to update cache settings: %v", err))
-			}
-			return fmt.Errorf("failed to update cache settings: %w", err)
+			return outErr("failed to update cache settings", err)
 		}
 
 		if JSONOutput {
@@ -304,10 +289,7 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 	// No update flags — display current settings
 	settings, err := svc.GetSettings(ctx)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get cache settings: %v", err))
-		}
-		return fmt.Errorf("failed to get cache settings: %w", err)
+		return outErr("failed to get cache settings", err)
 	}
 
 	if JSONOutput {

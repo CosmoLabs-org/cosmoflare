@@ -186,10 +186,7 @@ func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
 
 	ns, err := svc.CreateNamespace(context.Background(), title)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create namespace: %v", err))
-		}
-		return fmt.Errorf("failed to create namespace: %w", err)
+		return outErr("failed to create namespace", err)
 	}
 
 	if JSONOutput {
@@ -207,10 +204,7 @@ func runKVNamespaceList(cmd *cobra.Command, args []string) error {
 
 	namespaces, err := svc.ListNamespaces(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list namespaces: %v", err))
-		}
-		return fmt.Errorf("failed to list namespaces: %w", err)
+		return outErr("failed to list namespaces", err)
 	}
 
 	if JSONOutput {
@@ -264,10 +258,7 @@ func runKVNamespaceDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteNamespace(context.Background(), id); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete namespace: %v", err))
-		}
-		return fmt.Errorf("failed to delete namespace: %w", err)
+		return outErr("failed to delete namespace", err)
 	}
 
 	if JSONOutput {
@@ -317,10 +308,7 @@ func runKVPut(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Put(context.Background(), namespaceID, key, valueReader, opts...); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to write key: %v", err))
-		}
-		return fmt.Errorf("failed to write key: %w", err)
+		return outErr("failed to write key", err)
 	}
 
 	if JSONOutput {
@@ -343,10 +331,7 @@ func runKVGet(cmd *cobra.Command, args []string) error {
 
 	data, err := svc.Get(context.Background(), namespaceID, key)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get key: %v", err))
-		}
-		return fmt.Errorf("failed to get key: %w", err)
+		return outErr("failed to get key", err)
 	}
 
 	if JSONOutput {
@@ -385,10 +370,7 @@ func runKVDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), namespaceID, key); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete key: %v", err))
-		}
-		return fmt.Errorf("failed to delete key: %w", err)
+		return outErr("failed to delete key", err)
 	}
 
 	if JSONOutput {
@@ -419,10 +401,7 @@ func runKVList(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.ListKeys(context.Background(), namespaceID, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list keys: %v", err))
-		}
-		return fmt.Errorf("failed to list keys: %w", err)
+		return outErr("failed to list keys", err)
 	}
 
 	if JSONOutput {

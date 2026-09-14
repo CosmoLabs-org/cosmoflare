@@ -197,10 +197,7 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 
 	record, err := svc.Create(context.Background(), dnsRecordType, dnsName, dnsContent, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create DNS record: %v", err))
-		}
-		return fmt.Errorf("failed to create DNS record: %w", err)
+		return outErr("failed to create DNS record", err)
 	}
 
 	if JSONOutput {
@@ -241,10 +238,7 @@ func runDNSList(cmd *cobra.Command, args []string) error {
 
 	records, err := svc.List(context.Background(), opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list DNS records: %v", err))
-		}
-		return fmt.Errorf("failed to list DNS records: %w", err)
+		return outErr("failed to list DNS records", err)
 	}
 
 	if JSONOutput {
@@ -295,10 +289,7 @@ func runDNSGet(cmd *cobra.Command, args []string) error {
 
 	record, err := svc.Get(context.Background(), recordID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get DNS record: %v", err))
-		}
-		return fmt.Errorf("failed to get DNS record: %w", err)
+		return outErr("failed to get DNS record", err)
 	}
 
 	if JSONOutput {
@@ -370,10 +361,7 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 
 	record, err := svc.Update(context.Background(), recordID, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update DNS record: %v", err))
-		}
-		return fmt.Errorf("failed to update DNS record: %w", err)
+		return outErr("failed to update DNS record", err)
 	}
 
 	if JSONOutput {
@@ -419,10 +407,7 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), recordID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete DNS record: %v", err))
-		}
-		return fmt.Errorf("failed to delete DNS record: %w", err)
+		return outErr("failed to delete DNS record", err)
 	}
 
 	if JSONOutput {

@@ -148,10 +148,7 @@ func runQueueSend(cmd *cobra.Command, args []string) error {
 		DelaySeconds: queueSendDelaySeconds,
 	})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to send message: %v", err))
-		}
-		return fmt.Errorf("failed to send message: %w", err)
+		return outErr("failed to send message", err)
 	}
 
 	if JSONOutput {
@@ -207,10 +204,7 @@ func runQueueSendBatch(cmd *cobra.Command, args []string) error {
 
 	res, err := svc.SendBatch(context.Background(), queueName, msgs)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to send batch: %v", err))
-		}
-		return fmt.Errorf("failed to send batch: %w", err)
+		return outErr("failed to send batch", err)
 	}
 
 	if JSONOutput {

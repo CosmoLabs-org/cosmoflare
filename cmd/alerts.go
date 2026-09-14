@@ -304,10 +304,7 @@ func runAlertsList(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.List()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list alerts: %v", err))
-		}
-		return fmt.Errorf("failed to list alerts: %w", err)
+		return outErr("failed to list alerts", err)
 	}
 
 	if JSONOutput {
@@ -356,10 +353,7 @@ func runAlertsCreate(cmd *cobra.Command, args []string) error {
 
 	created, err := svc.Create(rule)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create alert rule: %v", err))
-		}
-		return fmt.Errorf("failed to create alert rule: %w", err)
+		return outErr("failed to create alert rule", err)
 	}
 
 	if JSONOutput {
@@ -438,10 +432,7 @@ func runAlertsUpdate(cmd *cobra.Command, args []string) error {
 
 	updated, err := svc.Update(name, update)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update alert rule: %v", err))
-		}
-		return fmt.Errorf("failed to update alert rule: %w", err)
+		return outErr("failed to update alert rule", err)
 	}
 
 	if JSONOutput {
@@ -472,10 +463,7 @@ func runAlertsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(name); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete alert rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete alert rule: %w", err)
+		return outErr("failed to delete alert rule", err)
 	}
 
 	if JSONOutput {
@@ -495,10 +483,7 @@ func runAlertsTest(cmd *cobra.Command, args []string) error {
 
 	entry, err := svc.Test(name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to test alert: %v", err))
-		}
-		return fmt.Errorf("failed to test alert: %w", err)
+		return outErr("failed to test alert", err)
 	}
 
 	if JSONOutput {
@@ -529,10 +514,7 @@ func runAlertsHistory(cmd *cobra.Command, args []string) error {
 
 	entries, err := svc.History(alertLimit, since)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to read alert history: %v", err))
-		}
-		return fmt.Errorf("failed to read alert history: %w", err)
+		return outErr("failed to read alert history", err)
 	}
 
 	if JSONOutput {

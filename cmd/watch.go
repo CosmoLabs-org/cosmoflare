@@ -97,10 +97,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		Delete:   watchDelete,
 	})
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create watcher: %v", err))
-		}
-		return fmt.Errorf("failed to create watcher: %w", err)
+		return outErr("failed to create watcher", err)
 	}
 
 	// Create R2 client (unless dry-run), with project guardrails attached so
@@ -112,20 +109,14 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			cosmoflare.WithAPIToken(APIToken),
 		}, projectConfigOptions(absDir)...)...)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to create R2 client: %v", err))
-			}
-			return fmt.Errorf("failed to create R2 client: %w", err)
+			return outErr("failed to create R2 client", err)
 		}
 	}
 
 	// Take initial snapshot
 	lastSnap, err := fw.Snapshot()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to scan directory: %v", err))
-		}
-		return fmt.Errorf("failed to scan directory: %w", err)
+		return outErr("failed to scan directory", err)
 	}
 
 	if !JSONOutput {

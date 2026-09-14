@@ -142,10 +142,7 @@ func runD1Create(cmd *cobra.Command, args []string) error {
 
 	db, err := svc.Create(context.Background(), name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create database: %v", err))
-		}
-		return fmt.Errorf("failed to create database: %w", err)
+		return outErr("failed to create database", err)
 	}
 
 	if JSONOutput {
@@ -163,10 +160,7 @@ func runD1List(cmd *cobra.Command, args []string) error {
 
 	databases, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list databases: %v", err))
-		}
-		return fmt.Errorf("failed to list databases: %w", err)
+		return outErr("failed to list databases", err)
 	}
 
 	if JSONOutput {
@@ -199,10 +193,7 @@ func runD1Get(cmd *cobra.Command, args []string) error {
 
 	db, err := svc.Get(context.Background(), databaseID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get database: %v", err))
-		}
-		return fmt.Errorf("failed to get database: %w", err)
+		return outErr("failed to get database", err)
 	}
 
 	if JSONOutput {
@@ -250,10 +241,7 @@ func runD1Delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), databaseID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete database: %v", err))
-		}
-		return fmt.Errorf("failed to delete database: %w", err)
+		return outErr("failed to delete database", err)
 	}
 
 	if JSONOutput {
@@ -288,10 +276,7 @@ func runD1Query(cmd *cobra.Command, args []string) error {
 
 	results, err := svc.Query(context.Background(), databaseID, d1SQL, d1Params...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to execute query: %v", err))
-		}
-		return fmt.Errorf("failed to execute query: %w", err)
+		return outErr("failed to execute query", err)
 	}
 
 	if JSONOutput {

@@ -124,10 +124,7 @@ func runSSLStatus(cmd *cobra.Command, args []string) error {
 
 	status, err := svc.GetSSL(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get SSL status: %v", err))
-		}
-		return fmt.Errorf("failed to get SSL status: %w", err)
+		return outErr("failed to get SSL status", err)
 	}
 
 	if JSONOutput {
@@ -156,10 +153,7 @@ func runSSLSettings(cmd *cobra.Command, args []string) error {
 
 	settings, err := svc.GetSettings(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get SSL settings: %v", err))
-		}
-		return fmt.Errorf("failed to get SSL settings: %w", err)
+		return outErr("failed to get SSL settings", err)
 	}
 
 	if JSONOutput {
@@ -205,10 +199,7 @@ func runSSLUpdate(cmd *cobra.Command, args []string) error {
 	if hasMode {
 		status, err := svc.UpdateSSL(context.Background(), sslMode)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to update SSL mode: %v", err))
-			}
-			return fmt.Errorf("failed to update SSL mode: %w", err)
+			return outErr("failed to update SSL mode", err)
 		}
 		if JSONOutput {
 			printJSON(status)
@@ -230,10 +221,7 @@ func runSSLUpdate(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := svc.UpdateSettings(context.Background(), opts...); err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to update SSL settings: %v", err))
-			}
-			return fmt.Errorf("failed to update SSL settings: %w", err)
+			return outErr("failed to update SSL settings", err)
 		}
 		if !JSONOutput {
 			printSuccess("SSL/TLS settings updated for zone '%s'", zoneID)
@@ -256,10 +244,7 @@ func runSSLVerify(cmd *cobra.Command, args []string) error {
 
 	verifications, err := svc.GetVerification(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get SSL verification: %v", err))
-		}
-		return fmt.Errorf("failed to get SSL verification: %w", err)
+		return outErr("failed to get SSL verification", err)
 	}
 
 	if JSONOutput {

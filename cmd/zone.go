@@ -140,10 +140,7 @@ func runZoneCreate(cmd *cobra.Command, args []string) error {
 
 	zone, err := svc.Create(context.Background(), name, zoneType)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create zone: %v", err))
-		}
-		return fmt.Errorf("failed to create zone: %w", err)
+		return outErr("failed to create zone", err)
 	}
 
 	if JSONOutput {
@@ -166,10 +163,7 @@ func runZoneList(cmd *cobra.Command, args []string) error {
 
 	zones, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list zones: %v", err))
-		}
-		return fmt.Errorf("failed to list zones: %w", err)
+		return outErr("failed to list zones", err)
 	}
 
 	if JSONOutput {
@@ -211,10 +205,7 @@ func runZoneGet(cmd *cobra.Command, args []string) error {
 
 	zone, err := svc.Get(context.Background(), zoneID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get zone: %v", err))
-		}
-		return fmt.Errorf("failed to get zone: %w", err)
+		return outErr("failed to get zone", err)
 	}
 
 	if JSONOutput {
@@ -251,10 +242,7 @@ func runZoneSettings(cmd *cobra.Command, args []string) error {
 
 	settings, err := svc.GetSettings(context.Background(), zoneID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get zone settings: %v", err))
-		}
-		return fmt.Errorf("failed to get zone settings: %w", err)
+		return outErr("failed to get zone settings", err)
 	}
 
 	if JSONOutput {
@@ -321,10 +309,7 @@ func runZoneDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), zoneID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete zone: %v", err))
-		}
-		return fmt.Errorf("failed to delete zone: %w", err)
+		return outErr("failed to delete zone", err)
 	}
 
 	if JSONOutput {

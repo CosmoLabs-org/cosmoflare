@@ -190,10 +190,7 @@ func runHyperdriveCreate(cmd *cobra.Command, args []string) error {
 
 	cfg, err := svc.Create(context.Background(), name, origin)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create Hyperdrive config: %v", err))
-		}
-		return fmt.Errorf("failed to create Hyperdrive config: %w", err)
+		return outErr("failed to create Hyperdrive config", err)
 	}
 
 	if JSONOutput {
@@ -213,10 +210,7 @@ func runHyperdriveList(cmd *cobra.Command, args []string) error {
 
 	configs, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list Hyperdrive configs: %v", err))
-		}
-		return fmt.Errorf("failed to list Hyperdrive configs: %w", err)
+		return outErr("failed to list Hyperdrive configs", err)
 	}
 
 	if JSONOutput {
@@ -249,10 +243,7 @@ func runHyperdriveGet(cmd *cobra.Command, args []string) error {
 
 	cfg, err := svc.Get(context.Background(), configID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get Hyperdrive config: %v", err))
-		}
-		return fmt.Errorf("failed to get Hyperdrive config: %w", err)
+		return outErr("failed to get Hyperdrive config", err)
 	}
 
 	if JSONOutput {
@@ -315,10 +306,7 @@ func runHyperdriveUpdate(cmd *cobra.Command, args []string) error {
 
 	cfg, err := svc.Update(context.Background(), configID, params)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update Hyperdrive config: %v", err))
-		}
-		return fmt.Errorf("failed to update Hyperdrive config: %w", err)
+		return outErr("failed to update Hyperdrive config", err)
 	}
 
 	if JSONOutput {
@@ -360,10 +348,7 @@ func runHyperdriveDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), configID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete Hyperdrive config: %v", err))
-		}
-		return fmt.Errorf("failed to delete Hyperdrive config: %w", err)
+		return outErr("failed to delete Hyperdrive config", err)
 	}
 
 	if JSONOutput {

@@ -124,10 +124,7 @@ func runTerraformExport(cmd *cobra.Command, args []string) error {
 
 	result, err := exporter.Export(ctx, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("terraform export failed: %v", err))
-		}
-		return fmt.Errorf("terraform export failed: %w", err)
+		return outErr("terraform export failed", err)
 	}
 
 	if JSONOutput {
@@ -192,10 +189,7 @@ func runTerraformImportBlock(cmd *cobra.Command, args []string) error {
 
 	imports, err := exporter.GenerateImportBlocks(ctx, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to generate import blocks: %v", err))
-		}
-		return fmt.Errorf("failed to generate import blocks: %w", err)
+		return outErr("failed to generate import blocks", err)
 	}
 
 	if JSONOutput {

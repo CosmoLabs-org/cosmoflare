@@ -153,10 +153,7 @@ func runWAFPackages(cmd *cobra.Command, args []string) error {
 	}
 	packages, err := svc.ListPackages(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list WAF packages: %v", err))
-		}
-		return fmt.Errorf("failed to list WAF packages: %w", err)
+		return outErr("failed to list WAF packages", err)
 	}
 	if JSONOutput {
 		return printJSON(packages)
@@ -185,10 +182,7 @@ func runWAFRules(cmd *cobra.Command, args []string) error {
 	}
 	rules, err := svc.ListRules(context.Background(), args[1])
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list WAF rules: %v", err))
-		}
-		return fmt.Errorf("failed to list WAF rules: %w", err)
+		return outErr("failed to list WAF rules", err)
 	}
 	if JSONOutput {
 		return printJSON(rules)
@@ -232,10 +226,7 @@ func runWAFRule(cmd *cobra.Command, args []string) error {
 		}
 		rule, err := svc.UpdateRule(context.Background(), packageID, ruleID, wafRuleMode)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to update WAF rule: %v", err))
-			}
-			return fmt.Errorf("failed to update WAF rule: %w", err)
+			return outErr("failed to update WAF rule", err)
 		}
 		if JSONOutput {
 			return printSuccessJSON("WAF rule updated", rule)
@@ -246,10 +237,7 @@ func runWAFRule(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.GetRule(context.Background(), packageID, ruleID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get WAF rule: %v", err))
-		}
-		return fmt.Errorf("failed to get WAF rule: %w", err)
+		return outErr("failed to get WAF rule", err)
 	}
 	if JSONOutput {
 		return printJSON(rule)
@@ -273,10 +261,7 @@ func runWAFAccessList(cmd *cobra.Command, args []string) error {
 	}
 	rules, err := svc.ListAccessRules(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list access rules: %v", err))
-		}
-		return fmt.Errorf("failed to list access rules: %w", err)
+		return outErr("failed to list access rules", err)
 	}
 	if JSONOutput {
 		return printJSON(rules)
@@ -318,10 +303,7 @@ func runWAFAccessCreate(cmd *cobra.Command, args []string) error {
 	}
 	rule, err := svc.CreateAccessRule(context.Background(), "ip", wafAccessIP, wafAccessMode, wafAccessNote)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create access rule: %v", err))
-		}
-		return fmt.Errorf("failed to create access rule: %w", err)
+		return outErr("failed to create access rule", err)
 	}
 	if JSONOutput {
 		return printSuccessJSON("Access rule created", rule)
@@ -358,10 +340,7 @@ func runWAFAccessDelete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	if err := svc.DeleteAccessRule(context.Background(), ruleID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete access rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete access rule: %w", err)
+		return outErr("failed to delete access rule", err)
 	}
 	if JSONOutput {
 		return printSuccessJSON("Access rule deleted", map[string]string{"rule_id": ruleID})

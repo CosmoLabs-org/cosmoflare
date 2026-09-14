@@ -113,10 +113,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.Import(context.Background(), exportCfg, opts...)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("import failed: %v", err))
-		}
-		return fmt.Errorf("import failed: %w", err)
+		return outErr("import failed", err)
 	}
 
 	if JSONOutput {

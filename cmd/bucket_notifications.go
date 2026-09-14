@@ -147,10 +147,7 @@ func runBucketNotificationsList(cmd *cobra.Command, args []string) error {
 	svc := getBucketNotificationService()
 	queues, err := svc.List(context.Background(), bucket)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list notifications: %v", err))
-		}
-		return fmt.Errorf("failed to list notifications: %w", err)
+		return outErr("failed to list notifications", err)
 	}
 
 	if JSONOutput {
@@ -228,10 +225,7 @@ func runBucketNotificationsCreate(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketNotificationService()
 	if err := svc.Set(context.Background(), bucket, queueID, []cosmoflare.NotificationRule{rule}); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to set notifications: %v", err))
-		}
-		return fmt.Errorf("failed to set notifications: %w", err)
+		return outErr("failed to set notifications", err)
 	}
 
 	if JSONOutput {
@@ -259,10 +253,7 @@ func runBucketNotificationsGet(cmd *cobra.Command, args []string) error {
 	svc := getBucketNotificationService()
 	q, err := svc.Get(context.Background(), bucket, queueID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get notifications: %v", err))
-		}
-		return fmt.Errorf("failed to get notifications: %w", err)
+		return outErr("failed to get notifications", err)
 	}
 
 	if JSONOutput {
@@ -326,10 +317,7 @@ func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketNotificationService()
 	if err := svc.Delete(context.Background(), bucket, queueID, ids); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete notifications: %v", err))
-		}
-		return fmt.Errorf("failed to delete notifications: %w", err)
+		return outErr("failed to delete notifications", err)
 	}
 
 	if JSONOutput {

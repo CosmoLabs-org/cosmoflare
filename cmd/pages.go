@@ -144,10 +144,7 @@ func runPagesCreate(cmd *cobra.Command, args []string) error {
 
 	project, err := svc.Create(context.Background(), name, pagesBranch)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create project: %v", err))
-		}
-		return fmt.Errorf("failed to create project: %w", err)
+		return outErr("failed to create project", err)
 	}
 
 	if JSONOutput {
@@ -165,10 +162,7 @@ func runPagesList(cmd *cobra.Command, args []string) error {
 
 	projects, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list projects: %v", err))
-		}
-		return fmt.Errorf("failed to list projects: %w", err)
+		return outErr("failed to list projects", err)
 	}
 
 	if JSONOutput {
@@ -201,10 +195,7 @@ func runPagesGet(cmd *cobra.Command, args []string) error {
 
 	project, err := svc.Get(context.Background(), projectName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get project: %v", err))
-		}
-		return fmt.Errorf("failed to get project: %w", err)
+		return outErr("failed to get project", err)
 	}
 
 	if JSONOutput {
@@ -252,10 +243,7 @@ func runPagesDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), projectName); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete project: %v", err))
-		}
-		return fmt.Errorf("failed to delete project: %w", err)
+		return outErr("failed to delete project", err)
 	}
 
 	if JSONOutput {
@@ -275,10 +263,7 @@ func runPagesDeployments(cmd *cobra.Command, args []string) error {
 
 	deployments, err := svc.ListDeployments(context.Background(), projectName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list deployments: %v", err))
-		}
-		return fmt.Errorf("failed to list deployments: %w", err)
+		return outErr("failed to list deployments", err)
 	}
 
 	if JSONOutput {

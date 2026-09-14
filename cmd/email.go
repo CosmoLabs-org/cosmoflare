@@ -355,10 +355,7 @@ func runEmailRulesList(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.ListRules(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list email routing rules: %v", err))
-		}
-		return fmt.Errorf("failed to list email routing rules: %w", err)
+		return outErr("failed to list email routing rules", err)
 	}
 
 	if JSONOutput {
@@ -421,10 +418,7 @@ func runEmailRulesGet(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.GetRule(context.Background(), ruleID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get email routing rule: %v", err))
-		}
-		return fmt.Errorf("failed to get email routing rule: %w", err)
+		return outErr("failed to get email routing rule", err)
 	}
 
 	if JSONOutput {
@@ -518,10 +512,7 @@ func runEmailRulesCreate(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.CreateRule(context.Background(), emailRuleName, matchers, actions, emailPriority, emailEnabled)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create email routing rule: %v", err))
-		}
-		return fmt.Errorf("failed to create email routing rule: %w", err)
+		return outErr("failed to create email routing rule", err)
 	}
 
 	if JSONOutput {
@@ -614,10 +605,7 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.UpdateRule(context.Background(), ruleID, name, matchers, actions, priority, enabled)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update email routing rule: %v", err))
-		}
-		return fmt.Errorf("failed to update email routing rule: %w", err)
+		return outErr("failed to update email routing rule", err)
 	}
 
 	if JSONOutput {
@@ -665,10 +653,7 @@ func runEmailRulesDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteRule(context.Background(), ruleID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete email routing rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete email routing rule: %w", err)
+		return outErr("failed to delete email routing rule", err)
 	}
 
 	if JSONOutput {
@@ -696,10 +681,7 @@ func runEmailDestList(cmd *cobra.Command, args []string) error {
 
 	destinations, err := svc.ListDestinations(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list email destinations: %v", err))
-		}
-		return fmt.Errorf("failed to list email destinations: %w", err)
+		return outErr("failed to list email destinations", err)
 	}
 
 	if JSONOutput {
@@ -759,10 +741,7 @@ func runEmailDestAdd(cmd *cobra.Command, args []string) error {
 
 	dest, err := svc.CreateDestination(context.Background(), emailAddr)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to add email destination: %v", err))
-		}
-		return fmt.Errorf("failed to add email destination: %w", err)
+		return outErr("failed to add email destination", err)
 	}
 
 	if JSONOutput {
@@ -789,10 +768,7 @@ func runEmailDestGet(cmd *cobra.Command, args []string) error {
 
 	dest, err := svc.GetDestination(context.Background(), addressID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get email destination: %v", err))
-		}
-		return fmt.Errorf("failed to get email destination: %w", err)
+		return outErr("failed to get email destination", err)
 	}
 
 	if JSONOutput {
@@ -849,10 +825,7 @@ func runEmailDestDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteDestination(context.Background(), addressID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete email destination: %v", err))
-		}
-		return fmt.Errorf("failed to delete email destination: %w", err)
+		return outErr("failed to delete email destination", err)
 	}
 
 	if JSONOutput {
@@ -880,10 +853,7 @@ func runEmailCatchall(cmd *cobra.Command, args []string) error {
 
 	catchall, err := svc.GetCatchAll(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get catch-all rule: %v", err))
-		}
-		return fmt.Errorf("failed to get catch-all rule: %w", err)
+		return outErr("failed to get catch-all rule", err)
 	}
 
 	if JSONOutput {
@@ -936,10 +906,7 @@ func runEmailCatchallUpdate(cmd *cobra.Command, args []string) error {
 
 	catchall, err := svc.UpdateCatchAll(context.Background(), emailForwardTo, true)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update catch-all rule: %v", err))
-		}
-		return fmt.Errorf("failed to update catch-all rule: %w", err)
+		return outErr("failed to update catch-all rule", err)
 	}
 
 	if JSONOutput {
@@ -967,10 +934,7 @@ func runEmailSettings(cmd *cobra.Command, args []string) error {
 
 	settings, err := svc.GetSettings(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get email routing settings: %v", err))
-		}
-		return fmt.Errorf("failed to get email routing settings: %w", err)
+		return outErr("failed to get email routing settings", err)
 	}
 
 	if JSONOutput {
@@ -1011,10 +975,7 @@ func runEmailEnable(cmd *cobra.Command, args []string) error {
 
 	settings, err := svc.Enable(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to enable email routing: %v", err))
-		}
-		return fmt.Errorf("failed to enable email routing: %w", err)
+		return outErr("failed to enable email routing", err)
 	}
 
 	if JSONOutput {
@@ -1047,10 +1008,7 @@ func runEmailDisable(cmd *cobra.Command, args []string) error {
 
 	settings, err := svc.Disable(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to disable email routing: %v", err))
-		}
-		return fmt.Errorf("failed to disable email routing: %w", err)
+		return outErr("failed to disable email routing", err)
 	}
 
 	if JSONOutput {

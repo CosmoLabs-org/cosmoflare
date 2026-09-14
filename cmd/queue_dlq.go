@@ -131,10 +131,7 @@ func runQueueConsumerUpdate(cmd *cobra.Command, args []string) error {
 
 	c, err := svc.UpdateConsumer(context.Background(), queueName, consumerName, settings)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update consumer: %v", err))
-		}
-		return fmt.Errorf("failed to update consumer: %w", err)
+		return outErr("failed to update consumer", err)
 	}
 
 	if JSONOutput {
@@ -165,10 +162,7 @@ func runQueueConsumerRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DeleteConsumer(context.Background(), queueName, consumerName); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to remove consumer: %v", err))
-		}
-		return fmt.Errorf("failed to remove consumer: %w", err)
+		return outErr("failed to remove consumer", err)
 	}
 
 	if JSONOutput {
@@ -196,10 +190,7 @@ func runQueueDlq(cmd *cobra.Command, args []string) error {
 	if !queueDLQClear && queueDLQConsumerName == "" && queueDLQProducerName == "" {
 		q, err := svc.Get(context.Background(), queueName)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to get queue: %v", err))
-			}
-			return fmt.Errorf("failed to get queue: %w", err)
+			return outErr("failed to get queue", err)
 		}
 
 		if JSONOutput {
@@ -234,10 +225,7 @@ func runQueueDlq(cmd *cobra.Command, args []string) error {
 
 	q, err := svc.ConfigureDLQ(context.Background(), queueName, queueDLQConsumerName, queueDLQProducerName, queueDLQClear)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to configure DLQ: %v", err))
-		}
-		return fmt.Errorf("failed to configure DLQ: %w", err)
+		return outErr("failed to configure DLQ", err)
 	}
 
 	if JSONOutput {

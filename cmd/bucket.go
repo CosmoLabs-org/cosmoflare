@@ -203,10 +203,7 @@ func runBucketCreate(cmd *cobra.Command, args []string) error {
 
 	bucket, err := client.CreateBucket(context.Background(), bucketName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create bucket: %v", err))
-		}
-		return fmt.Errorf("failed to create bucket: %w", err)
+		return outErr("failed to create bucket", err)
 	}
 
 	if JSONOutput {
@@ -384,10 +381,7 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create API client: %v", err))
-		}
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	if DryRun {
@@ -399,10 +393,7 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := client.DeleteBucket(context.Background(), bucketName); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete bucket: %v", err))
-		}
-		return fmt.Errorf("failed to delete bucket: %w", err)
+		return outErr("failed to delete bucket", err)
 	}
 
 	if JSONOutput {

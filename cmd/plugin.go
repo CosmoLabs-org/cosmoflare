@@ -160,10 +160,7 @@ func runPluginList(cmd *cobra.Command, args []string) error {
 
 	plugins, err := svc.List()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list plugins: %v", err))
-		}
-		return fmt.Errorf("failed to list plugins: %w", err)
+		return outErr("failed to list plugins", err)
 	}
 
 	if JSONOutput {
@@ -216,10 +213,7 @@ func runPluginInstall(cmd *cobra.Command, args []string) error {
 
 	info, err := svc.Install(source)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to install plugin: %v", err))
-		}
-		return fmt.Errorf("failed to install plugin: %w", err)
+		return outErr("failed to install plugin", err)
 	}
 
 	if JSONOutput {
@@ -251,10 +245,7 @@ func runPluginRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Remove(name); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to remove plugin: %v", err))
-		}
-		return fmt.Errorf("failed to remove plugin: %w", err)
+		return outErr("failed to remove plugin", err)
 	}
 
 	if JSONOutput {
@@ -282,10 +273,7 @@ func runPluginInit(cmd *cobra.Command, args []string) error {
 
 	pluginDir, err := svc.Init(name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to scaffold plugin: %v", err))
-		}
-		return fmt.Errorf("failed to scaffold plugin: %w", err)
+		return outErr("failed to scaffold plugin", err)
 	}
 
 	if JSONOutput {
@@ -323,10 +311,7 @@ func runPluginRun(cmd *cobra.Command, args []string) error {
 
 	output, err := svc.Run(name, pluginArgs)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("plugin execution failed: %v", err))
-		}
-		return fmt.Errorf("plugin execution failed: %w", err)
+		return outErr("plugin execution failed", err)
 	}
 
 	if len(output) > 0 {

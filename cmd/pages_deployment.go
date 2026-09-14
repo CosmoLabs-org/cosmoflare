@@ -80,10 +80,7 @@ func runPagesDeploymentView(cmd *cobra.Command, args []string) error {
 
 	deployment, err := svc.GetDeployment(context.Background(), project, deploymentID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get deployment: %v", err))
-		}
-		return fmt.Errorf("failed to get deployment: %w", err)
+		return outErr("failed to get deployment", err)
 	}
 
 	if JSONOutput {
@@ -129,10 +126,7 @@ func runPagesDeploymentRetry(cmd *cobra.Command, args []string) error {
 
 	newDeployment, err := svc.RetryDeployment(context.Background(), project, deploymentID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to retry deployment: %v", err))
-		}
-		return fmt.Errorf("failed to retry deployment: %w", err)
+		return outErr("failed to retry deployment", err)
 	}
 
 	if JSONOutput {
@@ -153,10 +147,7 @@ func runPagesDeploymentLogs(cmd *cobra.Command, args []string) error {
 
 	logs, err := svc.GetDeploymentLogs(context.Background(), project, deploymentID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get deployment logs: %v", err))
-		}
-		return fmt.Errorf("failed to get deployment logs: %w", err)
+		return outErr("failed to get deployment logs", err)
 	}
 
 	if JSONOutput {

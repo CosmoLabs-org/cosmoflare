@@ -159,10 +159,7 @@ func runBucketLifecycleGet(cmd *cobra.Command, args []string) error {
 	svc := getBucketLifecycleService()
 	rules, err := svc.Get(cmd.Context(), bucket)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get lifecycle rules: %v", err))
-		}
-		return fmt.Errorf("failed to get lifecycle rules: %w", err)
+		return outErr("failed to get lifecycle rules", err)
 	}
 
 	if JSONOutput {
@@ -293,10 +290,7 @@ func runBucketLifecycleSet(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketLifecycleService()
 	if err := svc.Set(cmd.Context(), bucket, rules); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to set lifecycle rules: %v", err))
-		}
-		return fmt.Errorf("failed to set lifecycle rules: %w", err)
+		return outErr("failed to set lifecycle rules", err)
 	}
 
 	if JSONOutput {
@@ -320,10 +314,7 @@ func runBucketLifecycleClear(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketLifecycleService()
 	if err := svc.Set(cmd.Context(), bucket, nil); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to clear lifecycle rules: %v", err))
-		}
-		return fmt.Errorf("failed to clear lifecycle rules: %w", err)
+		return outErr("failed to clear lifecycle rules", err)
 	}
 
 	if JSONOutput {

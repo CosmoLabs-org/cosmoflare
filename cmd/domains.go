@@ -106,10 +106,7 @@ type domainsResponse struct {
 func runDomains(cmd *cobra.Command, args []string) error {
 	zoneSvc, err := getZoneService()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create zone service: %v", err))
-		}
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	var doctor *cosmoflare.DoctorService
@@ -119,10 +116,7 @@ func runDomains(cmd *cobra.Command, args []string) error {
 
 	domainSvc, err := cosmoflare.NewDomainService(zoneSvc, nil, nil, doctor)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create domain service: %v", err))
-		}
-		return fmt.Errorf("failed to create domain service: %w", err)
+		return outErr("failed to create domain service", err)
 	}
 
 	opts := cosmoflare.DomainListOptions{
@@ -146,10 +140,7 @@ func runDomains(cmd *cobra.Command, args []string) error {
 
 	domains, pagination, err := domainSvc.List(ctx, opts)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list domains: %v", err))
-		}
-		return fmt.Errorf("failed to list domains: %w", err)
+		return outErr("failed to list domains", err)
 	}
 
 	if domainsEnrich {

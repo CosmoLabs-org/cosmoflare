@@ -203,10 +203,7 @@ func runBucketDomainAttach(cmd *cobra.Command, args []string) error {
 	}
 	d, err := svc.Attach(ctx, bucket, req)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to attach domain: %v", err))
-		}
-		return fmt.Errorf("failed to attach domain: %w", err)
+		return outErr("failed to attach domain", err)
 	}
 
 	if JSONOutput {
@@ -226,10 +223,7 @@ func runBucketDomainList(cmd *cobra.Command, args []string) error {
 	svc := getBucketDomainService()
 	domains, err := svc.List(context.Background(), bucket)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list domains: %v", err))
-		}
-		return fmt.Errorf("failed to list domains: %w", err)
+		return outErr("failed to list domains", err)
 	}
 
 	if JSONOutput {
@@ -265,10 +259,7 @@ func runBucketDomainGet(cmd *cobra.Command, args []string) error {
 	svc := getBucketDomainService()
 	d, err := svc.Get(context.Background(), bucket, domain)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get domain: %v", err))
-		}
-		return fmt.Errorf("failed to get domain: %w", err)
+		return outErr("failed to get domain", err)
 	}
 
 	if JSONOutput {
@@ -368,10 +359,7 @@ func runBucketDomainUpdate(cmd *cobra.Command, args []string) error {
 	svc := getBucketDomainService()
 	d, err := svc.Update(context.Background(), bucket, domain, req)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update domain: %v", err))
-		}
-		return fmt.Errorf("failed to update domain: %w", err)
+		return outErr("failed to update domain", err)
 	}
 
 	if JSONOutput {
@@ -395,10 +383,7 @@ func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
 
 	svc := getBucketDomainService()
 	if err := svc.Detach(context.Background(), bucket, domain); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to detach domain: %v", err))
-		}
-		return fmt.Errorf("failed to detach domain: %w", err)
+		return outErr("failed to detach domain", err)
 	}
 
 	if JSONOutput {

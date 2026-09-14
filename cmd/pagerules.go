@@ -170,10 +170,7 @@ func runPageRulesList(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list page rules: %v", err))
-		}
-		return fmt.Errorf("failed to list page rules: %w", err)
+		return outErr("failed to list page rules", err)
 	}
 
 	if JSONOutput {
@@ -223,10 +220,7 @@ func runPageRulesGet(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.Get(context.Background(), ruleID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get page rule: %v", err))
-		}
-		return fmt.Errorf("failed to get page rule: %w", err)
+		return outErr("failed to get page rule", err)
 	}
 
 	if JSONOutput {
@@ -306,10 +300,7 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.Create(context.Background(), targets, actions, pageruleStatus, pagerulePriority)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create page rule: %v", err))
-		}
-		return fmt.Errorf("failed to create page rule: %w", err)
+		return outErr("failed to create page rule", err)
 	}
 
 	if JSONOutput {
@@ -379,10 +370,7 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 
 	err = svc.Update(context.Background(), ruleID, targets, actions, pageruleStatus, pagerulePriority)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update page rule: %v", err))
-		}
-		return fmt.Errorf("failed to update page rule: %w", err)
+		return outErr("failed to update page rule", err)
 	}
 
 	if JSONOutput {
@@ -430,10 +418,7 @@ func runPageRulesDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), ruleID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete page rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete page rule: %w", err)
+		return outErr("failed to delete page rule", err)
 	}
 
 	if JSONOutput {

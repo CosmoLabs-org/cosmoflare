@@ -159,10 +159,7 @@ func runQueueCreate(cmd *cobra.Command, args []string) error {
 
 	q, err := svc.Create(context.Background(), name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create queue: %v", err))
-		}
-		return fmt.Errorf("failed to create queue: %w", err)
+		return outErr("failed to create queue", err)
 	}
 
 	if JSONOutput {
@@ -180,10 +177,7 @@ func runQueueList(cmd *cobra.Command, args []string) error {
 
 	queues, err := svc.List(context.Background())
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list queues: %v", err))
-		}
-		return fmt.Errorf("failed to list queues: %w", err)
+		return outErr("failed to list queues", err)
 	}
 
 	if JSONOutput {
@@ -215,10 +209,7 @@ func runQueueGet(cmd *cobra.Command, args []string) error {
 
 	q, err := svc.Get(context.Background(), queueName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get queue: %v", err))
-		}
-		return fmt.Errorf("failed to get queue: %w", err)
+		return outErr("failed to get queue", err)
 	}
 
 	if JSONOutput {
@@ -265,10 +256,7 @@ func runQueueUpdate(cmd *cobra.Command, args []string) error {
 
 	q, err := svc.Update(context.Background(), queueName, queueNewName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to update queue: %v", err))
-		}
-		return fmt.Errorf("failed to update queue: %w", err)
+		return outErr("failed to update queue", err)
 	}
 
 	if JSONOutput {
@@ -306,10 +294,7 @@ func runQueueDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(context.Background(), queueName); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete queue: %v", err))
-		}
-		return fmt.Errorf("failed to delete queue: %w", err)
+		return outErr("failed to delete queue", err)
 	}
 
 	if JSONOutput {
@@ -329,10 +314,7 @@ func runQueueConsumers(cmd *cobra.Command, args []string) error {
 
 	consumers, err := svc.ListConsumers(context.Background(), queueName)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list consumers: %v", err))
-		}
-		return fmt.Errorf("failed to list consumers: %w", err)
+		return outErr("failed to list consumers", err)
 	}
 
 	if JSONOutput {

@@ -106,10 +106,7 @@ func runRedirectsList(cmd *cobra.Command, args []string) error {
 
 	rules, err := svc.List(cmd.Context(), zoneID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list redirect rules: %v", err))
-		}
-		return fmt.Errorf("failed to list redirect rules: %w", err)
+		return outErr("failed to list redirect rules", err)
 	}
 
 	if JSONOutput {
@@ -184,10 +181,7 @@ func runRedirectsCreate(cmd *cobra.Command, args []string) error {
 
 	rule, err := svc.Create(cmd.Context(), input)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create redirect rule: %v", err))
-		}
-		return fmt.Errorf("failed to create redirect rule: %w", err)
+		return outErr("failed to create redirect rule", err)
 	}
 
 	if JSONOutput {
@@ -222,10 +216,7 @@ func runRedirectsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Delete(cmd.Context(), zoneID, ruleID); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to delete redirect rule: %v", err))
-		}
-		return fmt.Errorf("failed to delete redirect rule: %w", err)
+		return outErr("failed to delete redirect rule", err)
 	}
 
 	if JSONOutput {

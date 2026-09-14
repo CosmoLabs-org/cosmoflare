@@ -79,10 +79,7 @@ func runPagesDomainList(cmd *cobra.Command, args []string) error {
 
 	domains, err := svc.ListDomains(context.Background(), project)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list domains: %v", err))
-		}
-		return fmt.Errorf("failed to list domains: %w", err)
+		return outErr("failed to list domains", err)
 	}
 
 	if JSONOutput {
@@ -126,10 +123,7 @@ func runPagesDomainAttach(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.AttachDomain(context.Background(), project, domain)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to attach domain: %v", err))
-		}
-		return fmt.Errorf("failed to attach domain: %w", err)
+		return outErr("failed to attach domain", err)
 	}
 
 	if JSONOutput {
@@ -160,10 +154,7 @@ func runPagesDomainDetach(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.DetachDomain(context.Background(), project, domain); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to detach domain: %v", err))
-		}
-		return fmt.Errorf("failed to detach domain: %w", err)
+		return outErr("failed to detach domain", err)
 	}
 
 	if JSONOutput {

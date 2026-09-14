@@ -136,10 +136,7 @@ func runD1Import(cmd *cobra.Command, args []string) error {
 	if DryRun {
 		result, err := svc.Import(context.Background(), databaseID, d1ImportFile, cosmoflare.ImportOptions{BatchSize: d1ImportBatchSize, DryRun: true})
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to parse import file: %v", err))
-			}
-			return fmt.Errorf("failed to parse import file: %w", err)
+			return outErr("failed to parse import file", err)
 		}
 
 		if JSONOutput {
@@ -174,10 +171,7 @@ func runD1Import(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.Import(context.Background(), databaseID, d1ImportFile, opts)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to import file: %v", err))
-		}
-		return fmt.Errorf("failed to import file: %w", err)
+		return outErr("failed to import file", err)
 	}
 
 	if JSONOutput {
