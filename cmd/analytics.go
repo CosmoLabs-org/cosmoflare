@@ -59,7 +59,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	if analyticsBucket != "" {
@@ -71,7 +71,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 func runSingleBucketAnalytics(client cosmoflare.R2Client) error {
 	result, err := client.ListObjects(context.Background(), analyticsBucket, "", "", 0, "")
 	if err != nil {
-		return fmt.Errorf("failed to list objects: %w", err)
+		return outErr("failed to list objects", err)
 	}
 
 	var totalSize int64
@@ -90,29 +90,28 @@ func runSingleBucketAnalytics(client cosmoflare.R2Client) error {
 		TotalSize:   totalSize,
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Analytics for bucket", map[string]interface{}{
+	return outPayload("Analytics for bucket", func() any {
+		return map[string]interface{}{
 			"bucket":       stat.Name,
 			"object_count": stat.ObjectCount,
 			"total_size":   stat.TotalSize,
 			"avg_size":     avgSize,
 			"period":       analyticsPeriod,
-		})
-	}
-
-	fmt.Printf("Bucket: %s\n", stat.Name)
-	fmt.Printf("Objects: %d\n", stat.ObjectCount)
-	fmt.Printf("Total Size: %s\n", utils.FormatBytes(stat.TotalSize))
-	if stat.ObjectCount > 0 {
-		fmt.Printf("Avg Object Size: %s\n", utils.FormatBytes(avgSize))
-	}
-	return nil
+		}
+	}, func() {
+		fmt.Printf("Bucket: %s\n", stat.Name)
+		fmt.Printf("Objects: %d\n", stat.ObjectCount)
+		fmt.Printf("Total Size: %s\n", utils.FormatBytes(stat.TotalSize))
+		if stat.ObjectCount > 0 {
+			fmt.Printf("Avg Object Size: %s\n", utils.FormatBytes(avgSize))
+		}
+	})
 }
 
 func runAllBucketsAnalytics(client cosmoflare.R2Client) error {
 	buckets, err := client.ListBuckets(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to list buckets: %w", err)
+		return outErr("failed to list buckets", err)
 	}
 
 	stats := make([]BucketStat, 0, len(buckets))
@@ -146,25 +145,23 @@ func runAllBucketsAnalytics(client cosmoflare.R2Client) error {
 		}
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Analytics summary", AnalyticsResult{
+	return outPayload("Analytics summary", func() any {
+		return AnalyticsResult{
 			Buckets: stats,
 			Total:   BucketStat{Name: "TOTAL", ObjectCount: int64(len(buckets)), TotalSize: grandTotal},
 			Period:  analyticsPeriod,
-		})
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "BUCKET\tOBJECTS\tSIZE\t% OF TOTAL")
-	for _, s := range stats {
-		pct := fmt.Sprintf("%.1f%%", s.Percentage)
-		if grandTotal == 0 {
-			pct = "N/A"
 		}
-		fmt.Fprintf(w, "%s\t%d\t%s\t%s\n", s.Name, s.ObjectCount, utils.FormatBytes(s.TotalSize), pct)
-	}
-	fmt.Fprintf(w, "TOTAL\t%d\t%s\t100%%\n", len(buckets), utils.FormatBytes(grandTotal))
-	w.Flush()
-
-	return nil
+	}, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "BUCKET\tOBJECTS\tSIZE\t% OF TOTAL")
+		for _, s := range stats {
+			pct := fmt.Sprintf("%.1f%%", s.Percentage)
+			if grandTotal == 0 {
+				pct = "N/A"
+			}
+			fmt.Fprintf(w, "%s\t%d\t%s\t%s\n", s.Name, s.ObjectCount, utils.FormatBytes(s.TotalSize), pct)
+		}
+		fmt.Fprintf(w, "TOTAL\t%d\t%s\t100%%\n", len(buckets), utils.FormatBytes(grandTotal))
+		w.Flush()
+	})
 }
