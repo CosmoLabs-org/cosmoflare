@@ -75,7 +75,7 @@ func runPagesDeploymentView(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	deployment, err := svc.GetDeployment(context.Background(), project, deploymentID)
@@ -83,23 +83,20 @@ func runPagesDeploymentView(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get deployment", err)
 	}
 
-	if JSONOutput {
-		return printJSON(deployment)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "ID:\t%s\n", deployment.ID)
-	fmt.Fprintf(w, "Project:\t%s\n", deployment.ProjectName)
-	fmt.Fprintf(w, "Environment:\t%s\n", deployment.Environment)
-	fmt.Fprintf(w, "URL:\t%s\n", deployment.URL)
-	if deployment.CreatedOn != nil {
-		fmt.Fprintf(w, "Created:\t%s\n", deployment.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
-	}
-	if deployment.ModifiedOn != nil {
-		fmt.Fprintf(w, "Modified:\t%s\n", deployment.ModifiedOn.Format("2006-01-02 15:04:05 UTC"))
-	}
-	w.Flush()
-	return nil
+	return outResult(deployment, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "ID:\t%s\n", deployment.ID)
+		fmt.Fprintf(w, "Project:\t%s\n", deployment.ProjectName)
+		fmt.Fprintf(w, "Environment:\t%s\n", deployment.Environment)
+		fmt.Fprintf(w, "URL:\t%s\n", deployment.URL)
+		if deployment.CreatedOn != nil {
+			fmt.Fprintf(w, "Created:\t%s\n", deployment.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
+		}
+		if deployment.ModifiedOn != nil {
+			fmt.Fprintf(w, "Modified:\t%s\n", deployment.ModifiedOn.Format("2006-01-02 15:04:05 UTC"))
+		}
+		w.Flush()
+	})
 }
 
 func runPagesDeploymentRetry(cmd *cobra.Command, args []string) error {
@@ -108,18 +105,18 @@ func runPagesDeploymentRetry(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would retry deployment", map[string]string{
+		return outPayload("DRY RUN: Would retry deployment", func() any {
+			return map[string]string{
 				"project":       project,
 				"deployment_id": deploymentID,
-			})
-		}
-		printInfo("DRY RUN: Would retry deployment '%s' for project '%s' (re-runs the build using the same source)", deploymentID, project)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would retry deployment '%s' for project '%s' (re-runs the build using the same source)", deploymentID, project)
+		})
 	}
 
 	printInfo("Retrying deployment '%s': this triggers a new build using the same source", deploymentID)
@@ -129,11 +126,11 @@ func runPagesDeploymentRetry(cmd *cobra.Command, args []string) error {
 		return outErr("failed to retry deployment", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Deployment retry started", newDeployment)
-	}
-	printSuccess("Retry started: new deployment '%s' for project '%s'", newDeployment.ID, project)
-	return nil
+	return outPayload("Deployment retry started", func() any {
+		return newDeployment
+	}, func() {
+		printSuccess("Retry started: new deployment '%s' for project '%s'", newDeployment.ID, project)
+	})
 }
 
 func runPagesDeploymentLogs(cmd *cobra.Command, args []string) error {
@@ -142,7 +139,7 @@ func runPagesDeploymentLogs(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	logs, err := svc.GetDeploymentLogs(context.Background(), project, deploymentID)
@@ -150,22 +147,19 @@ func runPagesDeploymentLogs(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get deployment logs", err)
 	}
 
-	if JSONOutput {
-		return printJSON(logs)
-	}
-
-	if len(logs.Data) == 0 {
-		printInfo("No log lines found for deployment '%s'", deploymentID)
-		return nil
-	}
-
-	for _, line := range logs.Data {
-		if line.Timestamp != nil {
-			fmt.Printf("[%s] %s\n", line.Timestamp.Format("2006-01-02 15:04:05"), line.Line)
-		} else {
-			fmt.Println(line.Line)
+	return outResult(logs, func() {
+		if len(logs.Data) == 0 {
+			printInfo("No log lines found for deployment '%s'", deploymentID)
+			return
 		}
-	}
-	printInfo("Total: %d log line(s)", logs.Total)
-	return nil
+
+		for _, line := range logs.Data {
+			if line.Timestamp != nil {
+				fmt.Printf("[%s] %s\n", line.Timestamp.Format("2006-01-02 15:04:05"), line.Line)
+			} else {
+				fmt.Println(line.Line)
+			}
+		}
+		printInfo("Total: %d log line(s)", logs.Total)
+	})
 }
