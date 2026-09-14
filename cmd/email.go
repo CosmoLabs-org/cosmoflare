@@ -869,18 +869,18 @@ func runEmailCatchallUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update catch-all rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would update catch-all rule", func() any {
+			return map[string]interface{}{
 				"zone_id":    zoneID,
 				"forward_to": emailForwardTo,
-			})
-		}
-		printInfo("DRY RUN: Would update catch-all rule to forward to %s", emailForwardTo)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update catch-all rule to forward to %s", emailForwardTo)
+		})
 	}
 
 	catchall, err := svc.UpdateCatchAll(context.Background(), emailForwardTo, true)
@@ -888,14 +888,13 @@ func runEmailCatchallUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update catch-all rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Catch-all rule updated successfully", catchall)
-	}
-
-	printSuccess("Catch-all rule updated successfully!")
-	printInfo("Forward to: %s", emailForwardTo)
-	printInfo("Enabled: %v", catchall.Enabled)
-	return nil
+	return outPayload("Catch-all rule updated successfully", func() any {
+		return catchall
+	}, func() {
+		printSuccess("Catch-all rule updated successfully!")
+		printInfo("Forward to: %s", emailForwardTo)
+		printInfo("Enabled: %v", catchall.Enabled)
+	})
 }
 
 // --- Settings handlers ---
@@ -908,7 +907,7 @@ func runEmailSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	settings, err := svc.GetSettings(context.Background())
@@ -916,21 +915,18 @@ func runEmailSettings(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get email routing settings", err)
 	}
 
-	if JSONOutput {
-		return printJSON(settings)
-	}
-
-	fmt.Printf("ID:       %s\n", settings.ID)
-	fmt.Printf("Name:     %s\n", settings.Name)
-	fmt.Printf("Enabled:  %v\n", settings.Enabled)
-	fmt.Printf("Status:   %s\n", settings.Status)
-	if settings.Created != nil {
-		fmt.Printf("Created:  %s\n", settings.Created.Format("2006-01-02 15:04:05"))
-	}
-	if settings.Modified != nil {
-		fmt.Printf("Modified: %s\n", settings.Modified.Format("2006-01-02 15:04:05"))
-	}
-	return nil
+	return outResult(settings, func() {
+		fmt.Printf("ID:       %s\n", settings.ID)
+		fmt.Printf("Name:     %s\n", settings.Name)
+		fmt.Printf("Enabled:  %v\n", settings.Enabled)
+		fmt.Printf("Status:   %s\n", settings.Status)
+		if settings.Created != nil {
+			fmt.Printf("Created:  %s\n", settings.Created.Format("2006-01-02 15:04:05"))
+		}
+		if settings.Modified != nil {
+			fmt.Printf("Modified: %s\n", settings.Modified.Format("2006-01-02 15:04:05"))
+		}
+	})
 }
 
 func runEmailEnable(cmd *cobra.Command, args []string) error {
@@ -941,15 +937,15 @@ func runEmailEnable(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would enable email routing", map[string]string{"zone_id": zoneID})
-		}
-		printInfo("DRY RUN: Would enable email routing for zone '%s'", zoneID)
-		return nil
+		return outPayload("DRY RUN: Would enable email routing", func() any {
+			return map[string]string{"zone_id": zoneID}
+		}, func() {
+			printInfo("DRY RUN: Would enable email routing for zone '%s'", zoneID)
+		})
 	}
 
 	settings, err := svc.Enable(context.Background())
@@ -957,13 +953,12 @@ func runEmailEnable(cmd *cobra.Command, args []string) error {
 		return outErr("failed to enable email routing", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email routing enabled successfully", settings)
-	}
-
-	printSuccess("Email routing enabled for zone '%s'!", zoneID)
-	printInfo("Status: %s", settings.Status)
-	return nil
+	return outPayload("Email routing enabled successfully", func() any {
+		return settings
+	}, func() {
+		printSuccess("Email routing enabled for zone '%s'!", zoneID)
+		printInfo("Status: %s", settings.Status)
+	})
 }
 
 func runEmailDisable(cmd *cobra.Command, args []string) error {
@@ -974,15 +969,15 @@ func runEmailDisable(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would disable email routing", map[string]string{"zone_id": zoneID})
-		}
-		printInfo("DRY RUN: Would disable email routing for zone '%s'", zoneID)
-		return nil
+		return outPayload("DRY RUN: Would disable email routing", func() any {
+			return map[string]string{"zone_id": zoneID}
+		}, func() {
+			printInfo("DRY RUN: Would disable email routing for zone '%s'", zoneID)
+		})
 	}
 
 	settings, err := svc.Disable(context.Background())
@@ -990,11 +985,10 @@ func runEmailDisable(cmd *cobra.Command, args []string) error {
 		return outErr("failed to disable email routing", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email routing disabled successfully", settings)
-	}
-
-	printSuccess("Email routing disabled for zone '%s'!", zoneID)
-	printInfo("Status: %s", settings.Status)
-	return nil
+	return outPayload("Email routing disabled successfully", func() any {
+		return settings
+	}, func() {
+		printSuccess("Email routing disabled for zone '%s'!", zoneID)
+		printInfo("Status: %s", settings.Status)
+	})
 }
