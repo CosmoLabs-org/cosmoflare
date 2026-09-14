@@ -101,23 +101,20 @@ func runDoNamespaces(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list namespaces", err)
 	}
 
-	if JSONOutput {
-		return printJSON(namespaces)
-	}
+	return outResult(namespaces, func() {
+		if len(namespaces) == 0 {
+			printInfo("No Durable Objects namespaces found")
+			return
+		}
 
-	if len(namespaces) == 0 {
-		printInfo("No Durable Objects namespaces found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tSCRIPT")
-	for _, ns := range namespaces {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", ns.ID, ns.Name, ns.Script)
-	}
-	w.Flush()
-	printInfo("Total: %d namespace(s)", len(namespaces))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tSCRIPT")
+		for _, ns := range namespaces {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", ns.ID, ns.Name, ns.Script)
+		}
+		w.Flush()
+		printInfo("Total: %d namespace(s)", len(namespaces))
+	})
 }
 
 func runDoObjects(cmd *cobra.Command, args []string) error {
@@ -136,26 +133,23 @@ func runDoObjects(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list objects", err)
 	}
 
-	if JSONOutput {
-		return printJSON(result)
-	}
+	return outResult(result, func() {
+		if len(result.Objects) == 0 {
+			printInfo("No objects found in namespace '%s'", namespaceID)
+			return
+		}
 
-	if len(result.Objects) == 0 {
-		printInfo("No objects found in namespace '%s'", namespaceID)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tHAS STORED DATA")
-	for _, obj := range result.Objects {
-		fmt.Fprintf(w, "%s\t%t\n", obj.ID, obj.HasStoredData)
-	}
-	w.Flush()
-	printInfo("Total: %d object(s)", len(result.Objects))
-	if result.NextCursor != "" {
-		printInfo("Next cursor: %s", result.NextCursor)
-	}
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tHAS STORED DATA")
+		for _, obj := range result.Objects {
+			fmt.Fprintf(w, "%s\t%t\n", obj.ID, obj.HasStoredData)
+		}
+		w.Flush()
+		printInfo("Total: %d object(s)", len(result.Objects))
+		if result.NextCursor != "" {
+			printInfo("Next cursor: %s", result.NextCursor)
+		}
+	})
 }
 
 func runDoInspect(cmd *cobra.Command, args []string) error {
@@ -172,14 +166,11 @@ func runDoInspect(cmd *cobra.Command, args []string) error {
 		return outErr("failed to inspect object", err)
 	}
 
-	if JSONOutput {
-		return printJSON(detail)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "Namespace:\t%s\n", detail.NamespaceID)
-	fmt.Fprintf(w, "Object ID:\t%s\n", detail.ID)
-	fmt.Fprintf(w, "Has Stored Data:\t%t\n", detail.HasStoredData)
-	w.Flush()
-	return nil
+	return outResult(detail, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "Namespace:\t%s\n", detail.NamespaceID)
+		fmt.Fprintf(w, "Object ID:\t%s\n", detail.ID)
+		fmt.Fprintf(w, "Has Stored Data:\t%t\n", detail.HasStoredData)
+		w.Flush()
+	})
 }
