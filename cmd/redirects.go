@@ -101,7 +101,7 @@ func runRedirectsList(cmd *cobra.Command, args []string) error {
 
 	svc, err := newRedirectService()
 	if err != nil {
-		return fmt.Errorf("failed to create redirect service: %w", err)
+		return outErr("failed to create redirect service", err)
 	}
 
 	rules, err := svc.List(cmd.Context(), zoneID)
@@ -109,39 +109,36 @@ func runRedirectsList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list redirect rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
-	if len(rules) == 0 {
-		printInfo("No redirect rules found for zone '%s'", zoneID)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tSTATUS\tENABLED\tPRESERVE-QUERY\tWHEN\tDESTINATION")
-	for _, r := range rules {
-		enabled := "no"
-		if r.Enabled {
-			enabled = "yes"
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No redirect rules found for zone '%s'", zoneID)
+			return
 		}
-		preserve := "no"
-		if r.PreserveQuery {
-			preserve = "yes"
-		}
-		fmt.Fprintf(w, "%s\t%d\t%s\t%s\t%s\t%s\n",
-			r.ID,
-			r.StatusCode,
-			enabled,
-			preserve,
-			r.When,
-			r.Destination,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d redirect rule(s)", len(rules))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tSTATUS\tENABLED\tPRESERVE-QUERY\tWHEN\tDESTINATION")
+		for _, r := range rules {
+			enabled := "no"
+			if r.Enabled {
+				enabled = "yes"
+			}
+			preserve := "no"
+			if r.PreserveQuery {
+				preserve = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%d\t%s\t%s\t%s\t%s\n",
+				r.ID,
+				r.StatusCode,
+				enabled,
+				preserve,
+				r.When,
+				r.Destination,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d redirect rule(s)", len(rules))
+	})
 }
 
 func runRedirectsCreate(cmd *cobra.Command, args []string) error {
@@ -167,16 +164,16 @@ func runRedirectsCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := newRedirectService()
 	if err != nil {
-		return fmt.Errorf("failed to create redirect service: %w", err)
+		return outErr("failed to create redirect service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create redirect rule", input)
-		}
-		printInfo("DRY RUN: Would create redirect rule in zone '%s' (when: %s, dest: %s, status: %d)",
-			zoneID, redirectWhen, redirectDest, redirectStatus)
-		return nil
+		return outPayload("DRY RUN: Would create redirect rule", func() any {
+			return input
+		}, func() {
+			printInfo("DRY RUN: Would create redirect rule in zone '%s' (when: %s, dest: %s, status: %d)",
+				zoneID, redirectWhen, redirectDest, redirectStatus)
+		})
 	}
 
 	rule, err := svc.Create(cmd.Context(), input)
@@ -184,15 +181,14 @@ func runRedirectsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create redirect rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Redirect rule created successfully", rule)
-	}
-
-	printSuccess("Redirect rule created (ID: %s)", rule.ID)
-	printInfo("When: %s", rule.When)
-	printInfo("Destination: %s", rule.Destination)
-	printInfo("Status: %d", rule.StatusCode)
-	return nil
+	return outPayload("Redirect rule created successfully", func() any {
+		return rule
+	}, func() {
+		printSuccess("Redirect rule created (ID: %s)", rule.ID)
+		printInfo("When: %s", rule.When)
+		printInfo("Destination: %s", rule.Destination)
+		printInfo("Status: %d", rule.StatusCode)
+	})
 }
 
 func runRedirectsDelete(cmd *cobra.Command, args []string) error {
@@ -204,24 +200,24 @@ func runRedirectsDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := newRedirectService()
 	if err != nil {
-		return fmt.Errorf("failed to create redirect service: %w", err)
+		return outErr("failed to create redirect service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete redirect rule", map[string]string{"zone_id": zoneID, "rule_id": ruleID})
-		}
-		printInfo("DRY RUN: Would delete redirect rule '%s' from zone '%s'", ruleID, zoneID)
-		return nil
+		return outPayload("DRY RUN: Would delete redirect rule", func() any {
+			return map[string]string{"zone_id": zoneID, "rule_id": ruleID}
+		}, func() {
+			printInfo("DRY RUN: Would delete redirect rule '%s' from zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	if err := svc.Delete(cmd.Context(), zoneID, ruleID); err != nil {
 		return outErr("failed to delete redirect rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Redirect rule deleted successfully", map[string]string{"zone_id": zoneID, "rule_id": ruleID})
-	}
-	printSuccess("Redirect rule '%s' deleted from zone '%s'", ruleID, zoneID)
-	return nil
+	return outPayload("Redirect rule deleted successfully", func() any {
+		return map[string]string{"zone_id": zoneID, "rule_id": ruleID}
+	}, func() {
+		printSuccess("Redirect rule '%s' deleted from zone '%s'", ruleID, zoneID)
+	})
 }
