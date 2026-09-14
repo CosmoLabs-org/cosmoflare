@@ -237,37 +237,34 @@ func getAIService() (*cosmoflare.AIService, error) {
 func runAIModelsList(cmd *cobra.Command, args []string) error {
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	models, err := svc.ListModels(context.Background(), aiModelsFilter)
 	if err != nil {
-		return fmt.Errorf("failed to list models: %w", err)
+		return outErr("failed to list models", err)
 	}
 
-	if JSONOutput {
-		return printJSON(models)
-	}
-
-	if len(models) == 0 {
-		printInfo("No AI models found")
-		if aiModelsFilter != "" {
-			printInfo("Try a different --filter value or omit it to list all models")
+	return outResult(models, func() {
+		if len(models) == 0 {
+			printInfo("No AI models found")
+			if aiModelsFilter != "" {
+				printInfo("Try a different --filter value or omit it to list all models")
+			}
+			return
 		}
-		return nil
-	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "MODEL\tTASK\tDESCRIPTION")
-	for _, m := range models {
-		desc := m.Description
-		if len(desc) > 60 {
-			desc = desc[:57] + "..."
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "MODEL\tTASK\tDESCRIPTION")
+		for _, m := range models {
+			desc := m.Description
+			if len(desc) > 60 {
+				desc = desc[:57] + "..."
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", m.Name, m.Task.Name, desc)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", m.Name, m.Task.Name, desc)
-	}
-	w.Flush()
-	return nil
+		w.Flush()
+	})
 }
 
 func runAIModelsGet(cmd *cobra.Command, args []string) error {
@@ -275,33 +272,30 @@ func runAIModelsGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	model, err := svc.GetModel(context.Background(), modelName)
 	if err != nil {
-		return fmt.Errorf("failed to get model: %w", err)
+		return outErr("failed to get model", err)
 	}
 
-	if JSONOutput {
-		return printJSON(model)
-	}
-
-	fmt.Printf("Name:        %s\n", model.Name)
-	fmt.Printf("Task:        %s\n", model.Task.Name)
-	if model.Description != "" {
-		fmt.Printf("Description: %s\n", model.Description)
-	}
-	if model.Task.Description != "" {
-		fmt.Printf("Task Info:   %s\n", model.Task.Description)
-	}
-	if len(model.Properties) > 0 {
-		fmt.Println("Properties:")
-		for _, p := range model.Properties {
-			fmt.Printf("  %s: %s\n", p.PropertyID, p.Value)
+	return outResult(model, func() {
+		fmt.Printf("Name:        %s\n", model.Name)
+		fmt.Printf("Task:        %s\n", model.Task.Name)
+		if model.Description != "" {
+			fmt.Printf("Description: %s\n", model.Description)
 		}
-	}
-	return nil
+		if model.Task.Description != "" {
+			fmt.Printf("Task Info:   %s\n", model.Task.Description)
+		}
+		if len(model.Properties) > 0 {
+			fmt.Println("Properties:")
+			for _, p := range model.Properties {
+				fmt.Printf("  %s: %s\n", p.PropertyID, p.Value)
+			}
+		}
+	})
 }
 
 func runAIRun(cmd *cobra.Command, args []string) error {
@@ -312,26 +306,24 @@ func runAIRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{
-				"dry_run": true,
-				"action":  "run_inference",
-				"model":   modelName,
-				"prompt":  aiRunPrompt,
-				"system":  aiRunSystem,
-			})
-		}
-		printInfo("DRY RUN: Would run inference on model '%s'", modelName)
-		printInfo("  Prompt: %s", aiRunPrompt)
-		if aiRunSystem != "" {
-			printInfo("  System: %s", aiRunSystem)
-		}
-		return nil
+		return outResult(map[string]interface{}{
+			"dry_run": true,
+			"action":  "run_inference",
+			"model":   modelName,
+			"prompt":  aiRunPrompt,
+			"system":  aiRunSystem,
+		}, func() {
+			printInfo("DRY RUN: Would run inference on model '%s'", modelName)
+			printInfo("  Prompt: %s", aiRunPrompt)
+			if aiRunSystem != "" {
+				printInfo("  System: %s", aiRunSystem)
+			}
+		})
 	}
 
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	input := &cosmoflare.AIInferenceInput{}
@@ -347,91 +339,83 @@ func runAIRun(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.RunInference(context.Background(), modelName, input)
 	if err != nil {
-		return fmt.Errorf("failed to run inference: %w", err)
+		return outErr("failed to run inference", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{
-			"success":  true,
-			"model":    modelName,
-			"response": result.Response,
-		})
-	}
-
-	if result.Response != "" {
-		fmt.Println(result.Response)
-	} else {
-		// For non-text responses, output the raw result
-		fmt.Printf("%s\n", result.Result)
-	}
-	return nil
+	return outResult(map[string]interface{}{
+		"success":  true,
+		"model":    modelName,
+		"response": result.Response,
+	}, func() {
+		if result.Response != "" {
+			fmt.Println(result.Response)
+		} else {
+			// For non-text responses, output the raw result
+			fmt.Printf("%s\n", result.Result)
+		}
+	})
 }
 
 func runAIGatewayList(cmd *cobra.Command, args []string) error {
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	gateways, err := svc.ListGateways(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to list gateways: %w", err)
+		return outErr("failed to list gateways", err)
 	}
 
-	if JSONOutput {
-		return printJSON(gateways)
-	}
-
-	if len(gateways) == 0 {
-		printInfo("No AI gateways found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tCACHE TTL\tCREATED")
-	for _, gw := range gateways {
-		cacheTTL := "disabled"
-		if gw.CacheTTL > 0 {
-			cacheTTL = fmt.Sprintf("%ds", gw.CacheTTL)
+	return outResult(gateways, func() {
+		if len(gateways) == 0 {
+			printInfo("No AI gateways found")
+			return
 		}
-		created := gw.CreatedAt
-		if len(created) > 10 {
-			created = created[:10]
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tCACHE TTL\tCREATED")
+		for _, gw := range gateways {
+			cacheTTL := "disabled"
+			if gw.CacheTTL > 0 {
+				cacheTTL = fmt.Sprintf("%ds", gw.CacheTTL)
+			}
+			created := gw.CreatedAt
+			if len(created) > 10 {
+				created = created[:10]
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", gw.ID, gw.Name, cacheTTL, created)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", gw.ID, gw.Name, cacheTTL, created)
-	}
-	w.Flush()
-	return nil
+		w.Flush()
+	})
 }
 
 func runAIGatewayCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{
-				"dry_run":      true,
-				"action":       "create_gateway",
-				"name":         name,
-				"cache_ttl":    aiGatewayCacheTTL,
-				"rate_limit":   aiGatewayRateLimit,
-				"rate_window":  aiGatewayRateWindow,
-				"collect_logs": aiGatewayCollectLogs,
-			})
-		}
-		printInfo("DRY RUN: Would create AI gateway '%s'", name)
-		if aiGatewayCacheTTL > 0 {
-			printInfo("  Cache TTL: %ds", aiGatewayCacheTTL)
-		}
-		if aiGatewayRateLimit > 0 {
-			printInfo("  Rate limit: %d requests per %ds", aiGatewayRateLimit, aiGatewayRateWindow)
-		}
-		return nil
+		return outResult(map[string]interface{}{
+			"dry_run":      true,
+			"action":       "create_gateway",
+			"name":         name,
+			"cache_ttl":    aiGatewayCacheTTL,
+			"rate_limit":   aiGatewayRateLimit,
+			"rate_window":  aiGatewayRateWindow,
+			"collect_logs": aiGatewayCollectLogs,
+		}, func() {
+			printInfo("DRY RUN: Would create AI gateway '%s'", name)
+			if aiGatewayCacheTTL > 0 {
+				printInfo("  Cache TTL: %ds", aiGatewayCacheTTL)
+			}
+			if aiGatewayRateLimit > 0 {
+				printInfo("  Rate limit: %d requests per %ds", aiGatewayRateLimit, aiGatewayRateWindow)
+			}
+		})
 	}
 
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	params := cosmoflare.AIGatewayCreateParams{
@@ -445,45 +429,38 @@ func runAIGatewayCreate(cmd *cobra.Command, args []string) error {
 
 	gw, err := svc.CreateGateway(context.Background(), name, params)
 	if err != nil {
-		return fmt.Errorf("failed to create gateway: %w", err)
+		return outErr("failed to create gateway", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "data": gw})
-	}
-
-	printSuccess("Created AI gateway '%s'", gw.ID)
-	if gw.CacheTTL > 0 {
-		printInfo("Cache TTL: %ds", gw.CacheTTL)
-	}
-	return nil
+	return outResult(map[string]interface{}{"success": true, "data": gw}, func() {
+		printSuccess("Created AI gateway '%s'", gw.ID)
+		if gw.CacheTTL > 0 {
+			printInfo("Cache TTL: %ds", gw.CacheTTL)
+		}
+	})
 }
 
 func runAIGatewayDelete(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "delete_gateway", "name": name})
-		}
-		printInfo("DRY RUN: Would delete AI gateway '%s'", name)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "delete_gateway", "name": name}, func() {
+			printInfo("DRY RUN: Would delete AI gateway '%s'", name)
+		})
 	}
 
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	if err := svc.DeleteGateway(context.Background(), name); err != nil {
-		return fmt.Errorf("failed to delete gateway: %w", err)
+		return outErr("failed to delete gateway", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "message": fmt.Sprintf("Gateway '%s' deleted", name)})
-	}
-	printSuccess("Deleted AI gateway '%s'", name)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "message": fmt.Sprintf("Gateway '%s' deleted", name)}, func() {
+		printSuccess("Deleted AI gateway '%s'", name)
+	})
 }
 
 func runAIGatewayLogs(cmd *cobra.Command, args []string) error {
@@ -491,41 +468,38 @@ func runAIGatewayLogs(cmd *cobra.Command, args []string) error {
 
 	svc, err := getAIService()
 	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
+		return outErr("failed to create AI service", err)
 	}
 
 	logs, err := svc.GetGatewayLogs(context.Background(), name, aiGatewayLogsLimit)
 	if err != nil {
-		return fmt.Errorf("failed to get gateway logs: %w", err)
+		return outErr("failed to get gateway logs", err)
 	}
 
-	if JSONOutput {
-		return printJSON(logs)
-	}
+	return outResult(logs, func() {
+		if len(logs) == 0 {
+			printInfo("No logs found for gateway '%s'", name)
+			return
+		}
 
-	if len(logs) == 0 {
-		printInfo("No logs found for gateway '%s'", name)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tMODEL\tSTATUS\tCACHED\tTOKENS\tCOST")
-	for _, l := range logs {
-		model := l.Model
-		if len(model) > 40 {
-			// Shorten long model names for display
-			parts := strings.Split(model, "/")
-			if len(parts) >= 3 {
-				model = parts[len(parts)-1]
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tMODEL\tSTATUS\tCACHED\tTOKENS\tCOST")
+		for _, l := range logs {
+			model := l.Model
+			if len(model) > 40 {
+				// Shorten long model names for display
+				parts := strings.Split(model, "/")
+				if len(parts) >= 3 {
+					model = parts[len(parts)-1]
+				}
 			}
+			cached := "no"
+			if l.Cached {
+				cached = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%d\t$%.4f\n",
+				l.ID, model, l.StatusCode, cached, l.Tokens, l.Cost)
 		}
-		cached := "no"
-		if l.Cached {
-			cached = "yes"
-		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%d\t$%.4f\n",
-			l.ID, model, l.StatusCode, cached, l.Tokens, l.Cost)
-	}
-	w.Flush()
-	return nil
+		w.Flush()
+	})
 }
