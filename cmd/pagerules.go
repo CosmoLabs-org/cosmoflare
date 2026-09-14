@@ -165,7 +165,7 @@ func runPageRulesList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPageRuleService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create page rule service: %w", err)
+		return outErr("failed to create page rule service", err)
 	}
 
 	rules, err := svc.List(context.Background())
@@ -173,13 +173,10 @@ func runPageRulesList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list page rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
+	return outResult(rules, func() {
 	if len(rules) == 0 {
 		printInfo("No page rules found")
-		return nil
+		return
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
@@ -204,7 +201,7 @@ func runPageRulesList(cmd *cobra.Command, args []string) error {
 	w.Flush()
 
 	printInfo("Total: %d page rule(s)", len(rules))
-	return nil
+	})
 }
 
 func runPageRulesGet(cmd *cobra.Command, args []string) error {
@@ -215,7 +212,7 @@ func runPageRulesGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPageRuleService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create page rule service: %w", err)
+		return outErr("failed to create page rule service", err)
 	}
 
 	rule, err := svc.Get(context.Background(), ruleID)
@@ -223,10 +220,7 @@ func runPageRulesGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get page rule", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rule)
-	}
-
+	return outResult(rule, func() {
 	fmt.Printf("ID:         %s\n", rule.ID)
 	fmt.Printf("Status:     %s\n", rule.Status)
 	fmt.Printf("Priority:   %d\n", rule.Priority)
@@ -244,7 +238,7 @@ func runPageRulesGet(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  %s\n", a.ID)
 		}
 	}
-	return nil
+	})
 }
 
 func runPageRulesCreate(cmd *cobra.Command, args []string) error {
@@ -280,22 +274,22 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create page rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would create page rule", func() any {
+			return map[string]interface{}{
 				"zone_id":  zoneID,
 				"url":      pageruleURL,
 				"action":   pageruleAction,
 				"status":   pageruleStatus,
 				"priority": pagerulePriority,
-			})
-		}
-		printInfo("DRY RUN: Would create page rule matching '%s' with action '%s' in zone %s", pageruleURL, pageruleAction, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create page rule matching '%s' with action '%s' in zone %s", pageruleURL, pageruleAction, zoneID)
+		})
 	}
 
 	svc, err := getPageRuleService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create page rule service: %w", err)
+		return outErr("failed to create page rule service", err)
 	}
 
 	rule, err := svc.Create(context.Background(), targets, actions, pageruleStatus, pagerulePriority)
@@ -303,17 +297,16 @@ func runPageRulesCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create page rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Page rule created successfully", rule)
-	}
-
-	printSuccess("Page rule created successfully!")
-	printInfo("ID: %s", rule.ID)
-	printInfo("Status: %s", rule.Status)
-	printInfo("Priority: %d", rule.Priority)
-	printInfo("URL: %s", pageruleURL)
-	printInfo("Action: %s", pageruleAction)
-	return nil
+	return outPayload("Page rule created successfully", func() any {
+		return rule
+	}, func() {
+		printSuccess("Page rule created successfully!")
+		printInfo("ID: %s", rule.ID)
+		printInfo("Status: %s", rule.Status)
+		printInfo("Priority: %d", rule.Priority)
+		printInfo("URL: %s", pageruleURL)
+		printInfo("Action: %s", pageruleAction)
+	})
 }
 
 func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
@@ -349,23 +342,23 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update page rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would update page rule", func() any {
+			return map[string]interface{}{
 				"zone_id":  zoneID,
 				"rule_id":  ruleID,
 				"url":      pageruleURL,
 				"action":   pageruleAction,
 				"status":   pageruleStatus,
 				"priority": pagerulePriority,
-			})
-		}
-		printInfo("DRY RUN: Would update page rule '%s' in zone '%s'", ruleID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update page rule '%s' in zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	svc, err := getPageRuleService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create page rule service: %w", err)
+		return outErr("failed to create page rule service", err)
 	}
 
 	err = svc.Update(context.Background(), ruleID, targets, actions, pageruleStatus, pagerulePriority)
@@ -373,15 +366,14 @@ func runPageRulesUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update page rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Page rule updated successfully", map[string]string{
+	return outPayload("Page rule updated successfully", func() any {
+		return map[string]string{
 			"zone_id": zoneID,
 			"rule_id": ruleID,
-		})
-	}
-
-	printSuccess("Page rule '%s' updated successfully!", ruleID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Page rule '%s' updated successfully!", ruleID)
+	})
 }
 
 func runPageRulesDelete(cmd *cobra.Command, args []string) error {
@@ -403,30 +395,30 @@ func runPageRulesDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPageRuleService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create page rule service: %w", err)
+		return outErr("failed to create page rule service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete page rule", map[string]string{
+		return outPayload("DRY RUN: Would delete page rule", func() any {
+			return map[string]string{
 				"zone_id": zoneID,
 				"rule_id": ruleID,
-			})
-		}
-		printInfo("DRY RUN: Would delete page rule '%s' from zone '%s'", ruleID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete page rule '%s' from zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), ruleID); err != nil {
 		return outErr("failed to delete page rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Page rule deleted successfully", map[string]string{
+	return outPayload("Page rule deleted successfully", func() any {
+		return map[string]string{
 			"zone_id": zoneID,
 			"rule_id": ruleID,
-		})
-	}
-	printSuccess("Page rule '%s' deleted successfully!", ruleID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Page rule '%s' deleted successfully!", ruleID)
+	})
 }
