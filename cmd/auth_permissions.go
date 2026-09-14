@@ -74,18 +74,17 @@ func runAuthPermissionsList(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("unknown command group %q: no least-privilege entry in the permission manifest", authPermissionsGroup)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Least-privilege permissions", map[string]interface{}{
+		return outPayload("Least-privilege permissions", func() any {
+			return map[string]interface{}{
 				"command_group": authPermissionsGroup,
 				"permissions":   perms,
-			})
-		}
-
-		fmt.Printf("Least-privilege permissions for %q:\n", authPermissionsGroup)
-		for _, p := range perms {
-			fmt.Printf("  - %s\n", p)
-		}
-		return nil
+			}
+		}, func() {
+			fmt.Printf("Least-privilege permissions for %q:\n", authPermissionsGroup)
+			for _, p := range perms {
+				fmt.Printf("  - %s\n", p)
+			}
+		})
 	}
 
 	families := permdata.Families(authPermissionsScope)
@@ -96,17 +95,15 @@ func runAuthPermissionsList(cmd *cobra.Command, args []string) error {
 		return families[i].Name < families[j].Name
 	})
 
-	if JSONOutput {
-		return printSuccessJSON("Permission families", families)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tSCOPE\tNAME\tREAD\tEDIT\tUSED BY")
-	for _, f := range families {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%v\t%s\n",
-			f.ID, f.Scope, f.Name, f.Read, f.Edit, strings.Join(f.UsedBy, ", "))
-	}
-	w.Flush()
-
-	return nil
+	return outPayload("Permission families", func() any {
+		return families
+	}, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tSCOPE\tNAME\tREAD\tEDIT\tUSED BY")
+		for _, f := range families {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%v\t%s\n",
+				f.ID, f.Scope, f.Name, f.Read, f.Edit, strings.Join(f.UsedBy, ", "))
+		}
+		w.Flush()
+	})
 }
