@@ -150,34 +150,31 @@ func runBucketNotificationsList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list notifications", err)
 	}
 
-	if JSONOutput {
-		return printJSON(queues)
-	}
+	return outResult(queues, func() {
+		if len(queues) == 0 {
+			printInfo("No event notification queues wired to bucket '%s'", bucket)
+			return
+		}
 
-	if len(queues) == 0 {
-		printInfo("No event notification queues wired to bucket '%s'", bucket)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "QUEUE ID\tQUEUE NAME\tRULES\tACTIONS")
-	for _, q := range queues {
-		actions := map[string]bool{}
-		for _, r := range q.Rules {
-			for _, a := range r.Actions {
-				actions[string(a)] = true
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "QUEUE ID\tQUEUE NAME\tRULES\tACTIONS")
+		for _, q := range queues {
+			actions := map[string]bool{}
+			for _, r := range q.Rules {
+				for _, a := range r.Actions {
+					actions[string(a)] = true
+				}
 			}
+			names := make([]string, 0, len(actions))
+			for a := range actions {
+				names = append(names, a)
+			}
+			sort.Strings(names)
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", q.QueueID, q.QueueName, len(q.Rules), strings.Join(names, ", "))
 		}
-		names := make([]string, 0, len(actions))
-		for a := range actions {
-			names = append(names, a)
-		}
-		sort.Strings(names)
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", q.QueueID, q.QueueName, len(q.Rules), strings.Join(names, ", "))
-	}
-	w.Flush()
-	printInfo("Total: %d queue(s)", len(queues))
-	return nil
+		w.Flush()
+		printInfo("Total: %d queue(s)", len(queues))
+	})
 }
 
 func runBucketNotificationsCreate(cmd *cobra.Command, args []string) error {
@@ -228,16 +225,16 @@ func runBucketNotificationsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to set notifications", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("notification rules set on bucket %s for queue %s", bucket, queueID), rule)
-	}
-	names := make([]string, 0, len(actions))
-	for _, a := range actions {
-		names = append(names, string(a))
-	}
-	printSuccess("Queue '%s' now receives %s events from bucket '%s'", queueID, strings.Join(names, ", "), bucket)
-	printInfo("This replaced any previous rules for this queue; run 'cosmoflare bucket notifications get %s --queue-id %s' to verify", bucket, queueID)
-	return nil
+	return outPayload(fmt.Sprintf("notification rules set on bucket %s for queue %s", bucket, queueID), func() any {
+		return rule
+	}, func() {
+		names := make([]string, 0, len(actions))
+		for _, a := range actions {
+			names = append(names, string(a))
+		}
+		printSuccess("Queue '%s' now receives %s events from bucket '%s'", queueID, strings.Join(names, ", "), bucket)
+		printInfo("This replaced any previous rules for this queue; run 'cosmoflare bucket notifications get %s --queue-id %s' to verify", bucket, queueID)
+	})
 }
 
 func runBucketNotificationsGet(cmd *cobra.Command, args []string) error {
@@ -256,28 +253,25 @@ func runBucketNotificationsGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get notifications", err)
 	}
 
-	if JSONOutput {
-		return printJSON(q)
-	}
-
-	fmt.Printf("Queue ID:   %s\n", q.QueueID)
-	fmt.Printf("Queue Name: %s\n", q.QueueName)
-	if len(q.Rules) == 0 {
-		printInfo("No rules configured for this queue")
-		return nil
-	}
-	fmt.Printf("Rules:      %d\n", len(q.Rules))
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "RULE ID\tACTIONS\tPREFIX\tSUFFIX\tCREATED")
-	for _, r := range q.Rules {
-		names := make([]string, 0, len(r.Actions))
-		for _, a := range r.Actions {
-			names = append(names, string(a))
+	return outResult(q, func() {
+		fmt.Printf("Queue ID:   %s\n", q.QueueID)
+		fmt.Printf("Queue Name: %s\n", q.QueueName)
+		if len(q.Rules) == 0 {
+			printInfo("No rules configured for this queue")
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.RuleID, strings.Join(names, ","), r.Prefix, r.Suffix, r.CreatedAt.Format("2006-01-02 15:04:05"))
-	}
-	w.Flush()
-	return nil
+		fmt.Printf("Rules:      %d\n", len(q.Rules))
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "RULE ID\tACTIONS\tPREFIX\tSUFFIX\tCREATED")
+		for _, r := range q.Rules {
+			names := make([]string, 0, len(r.Actions))
+			for _, a := range r.Actions {
+				names = append(names, string(a))
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.RuleID, strings.Join(names, ","), r.Prefix, r.Suffix, r.CreatedAt.Format("2006-01-02 15:04:05"))
+		}
+		w.Flush()
+	})
 }
 
 func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
@@ -320,9 +314,9 @@ func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
 		return outErr("failed to delete notifications", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("deleted %s for queue %s on bucket %s", target, queueID, bucket), nil)
-	}
-	printSuccess("Deleted %s for queue '%s' on bucket '%s'", target, queueID, bucket)
-	return nil
+	return outPayload(fmt.Sprintf("deleted %s for queue %s on bucket %s", target, queueID, bucket), func() any {
+		return nil
+	}, func() {
+		printSuccess("Deleted %s for queue '%s' on bucket '%s'", target, queueID, bucket)
+	})
 }
