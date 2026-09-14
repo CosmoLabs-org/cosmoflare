@@ -163,6 +163,8 @@ func getAccountService() (*cosmoflare.AccountService, error) {
 }
 
 func runAccountList(cmd *cobra.Command, args []string) error {
+	p := NewPresenter()
+
 	svc, err := getAccountService()
 	if err != nil {
 		return fmt.Errorf("failed to initialize account service: %w", err)
@@ -170,10 +172,7 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 
 	accounts, err := svc.List()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to list accounts: %v", err))
-		}
-		return fmt.Errorf("failed to list accounts: %w", err)
+		return p.ErrorWrap("failed to list accounts", err)
 	}
 
 	// Determine active account
@@ -183,7 +182,7 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 		activeName = cur.Name
 	}
 
-	if JSONOutput {
+	return p.SuccessPayload("accounts listed", func() any {
 		type jsonAccount struct {
 			Name      string `json:"name"`
 			AccountID string `json:"account_id"`
@@ -191,7 +190,7 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 			Active    bool   `json:"active"`
 			CreatedAt string `json:"created_at"`
 		}
-		var out []jsonAccount
+		out := make([]jsonAccount, 0, len(accounts))
 		for _, a := range accounts {
 			out = append(out, jsonAccount{
 				Name:      a.Name,
@@ -201,47 +200,47 @@ func runAccountList(cmd *cobra.Command, args []string) error {
 				CreatedAt: a.CreatedAt,
 			})
 		}
-		return printSuccessJSON("accounts listed", map[string]interface{}{
+		return map[string]interface{}{
 			"accounts": out,
 			"count":    len(out),
 			"active":   activeName,
-		})
-	}
-
-	if len(accounts) == 0 {
-		printInfo("No accounts configured")
-		printInfo("Add one: cosmoflare account add <name> --account-id ID --api-token TOKEN")
-		return nil
-	}
-
-	fmt.Printf("\nConfigured Accounts (%d)\n", len(accounts))
-	fmt.Println(strings.Repeat("─", 60))
-
-	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "  \tNAME\tACCOUNT ID\tEMAIL")
-	fmt.Fprintln(w, "  \t────\t──────────\t─────")
-	for _, a := range accounts {
-		marker := "  "
-		if a.Name == activeName {
-			marker = "* "
 		}
-		maskedID := maskID(a.AccountID)
-		email := a.Email
-		if email == "" {
-			email = "-"
+	}, func() {
+		if len(accounts) == 0 {
+			printInfo("No accounts configured")
+			printInfo("Add one: cosmoflare account add <name> --account-id ID --api-token TOKEN")
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", marker, a.Name, maskedID, email)
-	}
-	w.Flush()
 
-	if activeName != "" {
-		fmt.Printf("\n* = active account (%s)\n", activeName)
-	}
-	return nil
+		fmt.Printf("\nConfigured Accounts (%d)\n", len(accounts))
+		fmt.Println(strings.Repeat("─", 60))
+
+		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "  \tNAME\tACCOUNT ID\tEMAIL")
+		fmt.Fprintln(w, "  \t────\t──────────\t─────")
+		for _, a := range accounts {
+			marker := "  "
+			if a.Name == activeName {
+				marker = "* "
+			}
+			maskedID := maskID(a.AccountID)
+			email := a.Email
+			if email == "" {
+				email = "-"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", marker, a.Name, maskedID, email)
+		}
+		w.Flush()
+
+		if activeName != "" {
+			fmt.Printf("\n* = active account (%s)\n", activeName)
+		}
+	})
 }
 
 func runAccountAdd(cmd *cobra.Command, args []string) error {
 	name := args[0]
+	p := NewPresenter()
 
 	svc, err := getAccountService()
 	if err != nil {
@@ -255,27 +254,24 @@ func runAccountAdd(cmd *cobra.Command, args []string) error {
 
 	acct, err := svc.Add(name, accountAddAccountID, accountAddAPIToken, accountAddEmail)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to add account: %v", err))
-		}
-		return fmt.Errorf("failed to add account: %w", err)
+		return p.ErrorWrap("failed to add account", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("account added", map[string]interface{}{
+	return p.SuccessPayload("account added", func() any {
+		return map[string]interface{}{
 			"name":       acct.Name,
 			"account_id": acct.AccountID,
 			"email":      acct.Email,
 			"created_at": acct.CreatedAt,
-		})
-	}
-
-	printSuccess("Account %q added (account ID: %s)", acct.Name, maskID(acct.AccountID))
-	return nil
+		}
+	}, func() {
+		printSuccess("Account %q added (account ID: %s)", acct.Name, maskID(acct.AccountID))
+	})
 }
 
 func runAccountSwitch(cmd *cobra.Command, args []string) error {
 	name := args[0]
+	p := NewPresenter()
 
 	svc, err := getAccountService()
 	if err != nil {
@@ -284,25 +280,22 @@ func runAccountSwitch(cmd *cobra.Command, args []string) error {
 
 	acct, err := svc.Switch(name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to switch account: %v", err))
-		}
-		return fmt.Errorf("failed to switch account: %w", err)
+		return p.ErrorWrap("failed to switch account", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("account switched", map[string]interface{}{
+	return p.SuccessPayload("account switched", func() any {
+		return map[string]interface{}{
 			"name":       acct.Name,
 			"account_id": acct.AccountID,
-		})
-	}
-
-	printSuccess("Switched to account %q (account ID: %s)", acct.Name, maskID(acct.AccountID))
-	return nil
+		}
+	}, func() {
+		printSuccess("Switched to account %q (account ID: %s)", acct.Name, maskID(acct.AccountID))
+	})
 }
 
 func runAccountRemove(cmd *cobra.Command, args []string) error {
 	name := args[0]
+	p := NewPresenter()
 
 	svc, err := getAccountService()
 	if err != nil {
@@ -315,23 +308,19 @@ func runAccountRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := svc.Remove(name, accountRemoveForce); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to remove account: %v", err))
-		}
-		return fmt.Errorf("failed to remove account: %w", err)
+		return p.ErrorWrap("failed to remove account", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("account removed", map[string]interface{}{
-			"name": name,
-		})
-	}
-
-	printSuccess("Account %q removed", name)
-	return nil
+	return p.SuccessPayload("account removed", func() any {
+		return map[string]interface{}{"name": name}
+	}, func() {
+		printSuccess("Account %q removed", name)
+	})
 }
 
 func runAccountCurrent(cmd *cobra.Command, args []string) error {
+	p := NewPresenter()
+
 	svc, err := getAccountService()
 	if err != nil {
 		return fmt.Errorf("failed to initialize account service: %w", err)
@@ -339,44 +328,39 @@ func runAccountCurrent(cmd *cobra.Command, args []string) error {
 
 	acct, err := svc.Current()
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to get current account: %v", err))
-		}
-		return fmt.Errorf("failed to get current account: %w", err)
+		return p.ErrorWrap("failed to get current account", err)
 	}
 
 	if acct == nil {
-		if JSONOutput {
-			return printSuccessJSON("no active account", map[string]interface{}{
-				"active": false,
-			})
-		}
-		printInfo("No active account")
-		printInfo("Set one: cosmoflare account switch <name>")
-		return nil
+		return p.SuccessPayload("no active account", func() any {
+			return map[string]interface{}{"active": false}
+		}, func() {
+			printInfo("No active account")
+			printInfo("Set one: cosmoflare account switch <name>")
+		})
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("current account", map[string]interface{}{
+	return p.SuccessPayload("current account", func() any {
+		return map[string]interface{}{
 			"name":       acct.Name,
 			"account_id": acct.AccountID,
 			"email":      acct.Email,
 			"active":     true,
-		})
-	}
-
-	fmt.Printf("\nActive Account\n")
-	fmt.Println(strings.Repeat("─", 40))
-	fmt.Printf("  Name:       %s\n", acct.Name)
-	fmt.Printf("  Account ID: %s\n", maskID(acct.AccountID))
-	if acct.Email != "" {
-		fmt.Printf("  Email:      %s\n", acct.Email)
-	}
-	return nil
+		}
+	}, func() {
+		fmt.Printf("\nActive Account\n")
+		fmt.Println(strings.Repeat("─", 40))
+		fmt.Printf("  Name:       %s\n", acct.Name)
+		fmt.Printf("  Account ID: %s\n", maskID(acct.AccountID))
+		if acct.Email != "" {
+			fmt.Printf("  Email:      %s\n", acct.Email)
+		}
+	})
 }
 
 func runAccountVerify(cmd *cobra.Command, args []string) error {
 	name := args[0]
+	p := NewPresenter()
 
 	svc, err := getAccountService()
 	if err != nil {
@@ -385,26 +369,22 @@ func runAccountVerify(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.Verify(name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to verify account: %v", err))
-		}
-		return fmt.Errorf("failed to verify account: %w", err)
+		return p.ErrorWrap("failed to verify account", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("account verified", map[string]interface{}{
+	return p.SuccessPayload("account verified", func() any {
+		return map[string]interface{}{
 			"name":    result.Name,
 			"valid":   result.Valid,
 			"message": result.Message,
-		})
-	}
-
-	if result.Valid {
-		printSuccess("Account %q: %s", result.Name, result.Message)
-	} else {
-		printError("Account %q: %s", result.Name, result.Message)
-	}
-	return nil
+		}
+	}, func() {
+		if result.Valid {
+			printSuccess("Account %q: %s", result.Name, result.Message)
+		} else {
+			printError("Account %q: %s", result.Name, result.Message)
+		}
+	})
 }
 
 // maskID shows the first 4 and last 4 characters of an ID, masking the middle.
