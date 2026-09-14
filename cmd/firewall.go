@@ -168,7 +168,7 @@ func runFirewallList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getFirewallService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall service: %w", err)
+		return outErr("failed to create firewall service", err)
 	}
 
 	rules, err := svc.List(context.Background())
@@ -176,39 +176,36 @@ func runFirewallList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list firewall rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
-	if len(rules) == 0 {
-		printInfo("No firewall rules found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tACTION\tDESCRIPTION\tEXPRESSION\tPAUSED")
-	for _, r := range rules {
-		pausedStr := "no"
-		if r.Paused {
-			pausedStr = "yes"
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No firewall rules found")
+			return
 		}
-		// Truncate long expressions for table display
-		expr := r.Filter.Expression
-		if len(expr) > 50 {
-			expr = expr[:47] + "..."
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			r.ID,
-			r.Action,
-			r.Description,
-			expr,
-			pausedStr,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d rule(s)", len(rules))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tACTION\tDESCRIPTION\tEXPRESSION\tPAUSED")
+		for _, r := range rules {
+			pausedStr := "no"
+			if r.Paused {
+				pausedStr = "yes"
+			}
+			// Truncate long expressions for table display
+			expr := r.Filter.Expression
+			if len(expr) > 50 {
+				expr = expr[:47] + "..."
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				r.ID,
+				r.Action,
+				r.Description,
+				expr,
+				pausedStr,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d rule(s)", len(rules))
+	})
 }
 
 func runFirewallGet(cmd *cobra.Command, args []string) error {
@@ -219,7 +216,7 @@ func runFirewallGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getFirewallService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall service: %w", err)
+		return outErr("failed to create firewall service", err)
 	}
 
 	rule, err := svc.Get(context.Background(), ruleID)
@@ -227,23 +224,20 @@ func runFirewallGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get firewall rule", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rule)
-	}
-
-	fmt.Printf("ID:          %s\n", rule.ID)
-	fmt.Printf("Description: %s\n", rule.Description)
-	fmt.Printf("Action:      %s\n", rule.Action)
-	fmt.Printf("Priority:    %d\n", rule.Priority)
-	fmt.Printf("Paused:      %v\n", rule.Paused)
-	fmt.Printf("Filter ID:   %s\n", rule.Filter.ID)
-	fmt.Printf("Expression:  %s\n", rule.Filter.Expression)
-	if rule.Filter.Description != "" {
-		fmt.Printf("Filter Desc: %s\n", rule.Filter.Description)
-	}
-	fmt.Printf("Created:     %s\n", rule.CreatedOn.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Modified:    %s\n", rule.ModifiedOn.Format("2006-01-02 15:04:05"))
-	return nil
+	return outResult(rule, func() {
+		fmt.Printf("ID:          %s\n", rule.ID)
+		fmt.Printf("Description: %s\n", rule.Description)
+		fmt.Printf("Action:      %s\n", rule.Action)
+		fmt.Printf("Priority:    %d\n", rule.Priority)
+		fmt.Printf("Paused:      %v\n", rule.Paused)
+		fmt.Printf("Filter ID:   %s\n", rule.Filter.ID)
+		fmt.Printf("Expression:  %s\n", rule.Filter.Expression)
+		if rule.Filter.Description != "" {
+			fmt.Printf("Filter Desc: %s\n", rule.Filter.Description)
+		}
+		fmt.Printf("Created:     %s\n", rule.CreatedOn.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Modified:    %s\n", rule.ModifiedOn.Format("2006-01-02 15:04:05"))
+	})
 }
 
 func runFirewallCreate(cmd *cobra.Command, args []string) error {
@@ -254,20 +248,20 @@ func runFirewallCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getFirewallService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall service: %w", err)
+		return outErr("failed to create firewall service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create firewall rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would create firewall rule", func() any {
+			return map[string]interface{}{
 				"zone_id":     zoneID,
 				"expression":  fwExpression,
 				"action":      fwAction,
 				"description": fwDescription,
-			})
-		}
-		printInfo("DRY RUN: Would create firewall rule: action=%s expression=%s", fwAction, fwExpression)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create firewall rule: action=%s expression=%s", fwAction, fwExpression)
+		})
 	}
 
 	rules, err := svc.Create(context.Background(), fwExpression, fwAction, fwDescription)
@@ -275,20 +269,19 @@ func runFirewallCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create firewall rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Firewall rule created successfully", rules)
-	}
-
-	printSuccess("Firewall rule created successfully!")
-	for _, r := range rules {
-		printInfo("ID: %s", r.ID)
-		printInfo("Action: %s", r.Action)
-		printInfo("Expression: %s", r.Filter.Expression)
-		if r.Description != "" {
-			printInfo("Description: %s", r.Description)
+	return outPayload("Firewall rule created successfully", func() any {
+		return rules
+	}, func() {
+		printSuccess("Firewall rule created successfully!")
+		for _, r := range rules {
+			printInfo("ID: %s", r.ID)
+			printInfo("Action: %s", r.Action)
+			printInfo("Expression: %s", r.Filter.Expression)
+			if r.Description != "" {
+				printInfo("Description: %s", r.Description)
+			}
 		}
-	}
-	return nil
+	})
 }
 
 func runFirewallUpdate(cmd *cobra.Command, args []string) error {
@@ -299,21 +292,21 @@ func runFirewallUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getFirewallService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall service: %w", err)
+		return outErr("failed to create firewall service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update firewall rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would update firewall rule", func() any {
+			return map[string]interface{}{
 				"zone_id":     zoneID,
 				"rule_id":     ruleID,
 				"expression":  fwExpression,
 				"action":      fwAction,
 				"description": fwDescription,
-			})
-		}
-		printInfo("DRY RUN: Would update firewall rule '%s' in zone '%s'", ruleID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update firewall rule '%s' in zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	rule, err := svc.Update(context.Background(), ruleID, fwExpression, fwAction, fwDescription)
@@ -321,13 +314,12 @@ func runFirewallUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update firewall rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Firewall rule updated successfully", rule)
-	}
-
-	printSuccess("Firewall rule '%s' updated successfully!", ruleID)
-	printInfo("Action: %s  Expression: %s", rule.Action, rule.Filter.Expression)
-	return nil
+	return outPayload("Firewall rule updated successfully", func() any {
+		return rule
+	}, func() {
+		printSuccess("Firewall rule '%s' updated successfully!", ruleID)
+		printInfo("Action: %s  Expression: %s", rule.Action, rule.Filter.Expression)
+	})
 }
 
 func runFirewallDelete(cmd *cobra.Command, args []string) error {
@@ -349,30 +341,30 @@ func runFirewallDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getFirewallService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall service: %w", err)
+		return outErr("failed to create firewall service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete firewall rule", map[string]string{
+		return outPayload("DRY RUN: Would delete firewall rule", func() any {
+			return map[string]string{
 				"zone_id": zoneID,
 				"rule_id": ruleID,
-			})
-		}
-		printInfo("DRY RUN: Would delete firewall rule '%s' from zone '%s'", ruleID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete firewall rule '%s' from zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), ruleID); err != nil {
 		return outErr("failed to delete firewall rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Firewall rule deleted successfully", map[string]string{
+	return outPayload("Firewall rule deleted successfully", func() any {
+		return map[string]string{
 			"zone_id": zoneID,
 			"rule_id": ruleID,
-		})
-	}
-	printSuccess("Firewall rule '%s' deleted successfully!", ruleID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Firewall rule '%s' deleted successfully!", ruleID)
+	})
 }
