@@ -231,11 +231,11 @@ type firedAlert struct {
 func runAlertsCheck(cmd *cobra.Command, args []string) error {
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 	rules, err := svc.List()
 	if err != nil {
-		return fmt.Errorf("failed to list alert rules: %w", err)
+		return outErr("failed to list alert rules", err)
 	}
 
 	var fired []firedAlert
@@ -260,7 +260,7 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 			End:   now,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to collect metrics: %w", err)
+			return outErr("failed to collect metrics", err)
 		}
 	}
 
@@ -276,14 +276,12 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 	eval := webhook.NewEvaluator(svc, mgr, 0) // one-shot: cooldown irrelevant
 	firedNames := eval.Evaluate(metrics)
 
-	if JSONOutput {
-		if fired == nil {
-			fired = []firedAlert{}
-		}
-		return printJSON(fired)
+	if fired == nil {
+		fired = []firedAlert{}
 	}
-	printInfo("%d rule(s) evaluated, %d fired", evaluated, len(firedNames))
-	return nil
+	return outResult(fired, func() {
+		printInfo("%d rule(s) evaluated, %d fired", evaluated, len(firedNames))
+	})
 }
 
 // getAlertServiceFn is the factory for AlertService. Tests override this
@@ -299,7 +297,7 @@ func getAlertService() (*cosmoflare.AlertService, error) {
 func runAlertsList(cmd *cobra.Command, args []string) error {
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	rules, err := svc.List()
@@ -307,23 +305,22 @@ func runAlertsList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list alerts", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Alert rules listed", rules)
-	}
+	return outPayload("Alert rules listed", func() any {
+		return rules
+	}, func() {
+		if len(rules) == 0 {
+			printInfo("No alert rules configured. Use 'cosmoflare alerts create' to add one.")
+			return
+		}
 
-	if len(rules) == 0 {
-		printInfo("No alert rules configured. Use 'cosmoflare alerts create' to add one.")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSERVICE\tCONDITION\tTHRESHOLD\tACTION\tENABLED")
-	for _, r := range rules {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%.2f\t%s\t%v\n",
-			r.Name, r.Service, r.Condition, r.Threshold, r.Action, r.Enabled)
-	}
-	w.Flush()
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tSERVICE\tCONDITION\tTHRESHOLD\tACTION\tENABLED")
+		for _, r := range rules {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%.2f\t%s\t%v\n",
+				r.Name, r.Service, r.Condition, r.Threshold, r.Action, r.Enabled)
+		}
+		w.Flush()
+	})
 }
 
 func runAlertsCreate(cmd *cobra.Command, args []string) error {
@@ -339,16 +336,16 @@ func runAlertsCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create alert rule", rule)
-		}
-		printInfo("DRY RUN: Would create alert rule %q", name)
-		return nil
+		return outPayload("DRY RUN: Would create alert rule", func() any {
+			return rule
+		}, func() {
+			printInfo("DRY RUN: Would create alert rule %q", name)
+		})
 	}
 
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	created, err := svc.Create(rule)
@@ -356,11 +353,11 @@ func runAlertsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create alert rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Alert rule created", created)
-	}
-	printSuccess("Alert rule %q created", created.Name)
-	return nil
+	return outPayload("Alert rule created", func() any {
+		return created
+	}, func() {
+		printSuccess("Alert rule %q created", created.Name)
+	})
 }
 
 func runAlertsGet(cmd *cobra.Command, args []string) error {
@@ -368,33 +365,27 @@ func runAlertsGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	rule, err := svc.Get(name)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("alert rule %q not found: %v", name, err))
-		}
-		return fmt.Errorf("alert rule %q not found: %w", name, err)
+		return outErr(fmt.Sprintf("alert rule %q not found", name), err)
 	}
 
-	if JSONOutput {
-		return printJSON(rule)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "Name:\t%s\n", rule.Name)
-	fmt.Fprintf(w, "Service:\t%s\n", rule.Service)
-	fmt.Fprintf(w, "Condition:\t%s\n", rule.Condition)
-	fmt.Fprintf(w, "Threshold:\t%.2f\n", rule.Threshold)
-	fmt.Fprintf(w, "Action:\t%s\n", rule.Action)
-	fmt.Fprintf(w, "Target:\t%s\n", rule.Target)
-	fmt.Fprintf(w, "Enabled:\t%v\n", rule.Enabled)
-	fmt.Fprintf(w, "Created:\t%s\n", rule.CreatedAt.Format(time.RFC3339))
-	fmt.Fprintf(w, "Updated:\t%s\n", rule.UpdatedAt.Format(time.RFC3339))
-	w.Flush()
-	return nil
+	return outResult(rule, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "Name:\t%s\n", rule.Name)
+		fmt.Fprintf(w, "Service:\t%s\n", rule.Service)
+		fmt.Fprintf(w, "Condition:\t%s\n", rule.Condition)
+		fmt.Fprintf(w, "Threshold:\t%.2f\n", rule.Threshold)
+		fmt.Fprintf(w, "Action:\t%s\n", rule.Action)
+		fmt.Fprintf(w, "Target:\t%s\n", rule.Target)
+		fmt.Fprintf(w, "Enabled:\t%v\n", rule.Enabled)
+		fmt.Fprintf(w, "Created:\t%s\n", rule.CreatedAt.Format(time.RFC3339))
+		fmt.Fprintf(w, "Updated:\t%s\n", rule.UpdatedAt.Format(time.RFC3339))
+		w.Flush()
+	})
 }
 
 func runAlertsUpdate(cmd *cobra.Command, args []string) error {
@@ -418,16 +409,16 @@ func runAlertsUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update alert rule", map[string]interface{}{"name": name, "updates": update})
-		}
-		printInfo("DRY RUN: Would update alert rule %q", name)
-		return nil
+		return outPayload("DRY RUN: Would update alert rule", func() any {
+			return map[string]interface{}{"name": name, "updates": update}
+		}, func() {
+			printInfo("DRY RUN: Would update alert rule %q", name)
+		})
 	}
 
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	updated, err := svc.Update(name, update)
@@ -435,11 +426,11 @@ func runAlertsUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update alert rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Alert rule updated", updated)
-	}
-	printSuccess("Alert rule %q updated", updated.Name)
-	return nil
+	return outPayload("Alert rule updated", func() any {
+		return updated
+	}, func() {
+		printSuccess("Alert rule %q updated", updated.Name)
+	})
 }
 
 func runAlertsDelete(cmd *cobra.Command, args []string) error {
@@ -450,27 +441,27 @@ func runAlertsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete alert rule", map[string]string{"name": name})
-		}
-		printInfo("DRY RUN: Would delete alert rule %q", name)
-		return nil
+		return outPayload("DRY RUN: Would delete alert rule", func() any {
+			return map[string]string{"name": name}
+		}, func() {
+			printInfo("DRY RUN: Would delete alert rule %q", name)
+		})
 	}
 
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	if err := svc.Delete(name); err != nil {
 		return outErr("failed to delete alert rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Alert rule deleted", map[string]string{"name": name})
-	}
-	printSuccess("Alert rule %q deleted", name)
-	return nil
+	return outPayload("Alert rule deleted", func() any {
+		return map[string]string{"name": name}
+	}, func() {
+		printSuccess("Alert rule %q deleted", name)
+	})
 }
 
 func runAlertsTest(cmd *cobra.Command, args []string) error {
@@ -478,7 +469,7 @@ func runAlertsTest(cmd *cobra.Command, args []string) error {
 
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	entry, err := svc.Test(name)
@@ -486,21 +477,21 @@ func runAlertsTest(cmd *cobra.Command, args []string) error {
 		return outErr("failed to test alert", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Test alert triggered", entry)
-	}
-	printSuccess("Test alert triggered for rule %q", name)
-	fmt.Printf("  Service:   %s\n", entry.Service)
-	fmt.Printf("  Condition: %s\n", entry.Condition)
-	fmt.Printf("  Action:    %s -> %s\n", entry.Action, entry.Target)
-	fmt.Printf("  Logged to: ~/.cosmoflare/alert-history.log\n")
-	return nil
+	return outPayload("Test alert triggered", func() any {
+		return entry
+	}, func() {
+		printSuccess("Test alert triggered for rule %q", name)
+		fmt.Printf("  Service:   %s\n", entry.Service)
+		fmt.Printf("  Condition: %s\n", entry.Condition)
+		fmt.Printf("  Action:    %s -> %s\n", entry.Action, entry.Target)
+		fmt.Printf("  Logged to: ~/.cosmoflare/alert-history.log\n")
+	})
 }
 
 func runAlertsHistory(cmd *cobra.Command, args []string) error {
 	svc, err := getAlertService()
 	if err != nil {
-		return fmt.Errorf("failed to create alert service: %w", err)
+		return outErr("failed to create alert service", err)
 	}
 
 	var since time.Time
@@ -517,26 +508,25 @@ func runAlertsHistory(cmd *cobra.Command, args []string) error {
 		return outErr("failed to read alert history", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Alert history", entries)
-	}
-
-	if len(entries) == 0 {
-		printInfo("No alert history found.")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "TIME\tRULE\tSERVICE\tCONDITION\tVALUE\tTHRESHOLD\tTEST")
-	for _, e := range entries {
-		testStr := ""
-		if e.IsTest {
-			testStr = "yes"
+	return outPayload("Alert history", func() any {
+		return entries
+	}, func() {
+		if len(entries) == 0 {
+			printInfo("No alert history found.")
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%.2f\t%.2f\t%s\n",
-			e.Timestamp.Format(time.RFC3339), e.RuleName, e.Service,
-			e.Condition, e.Value, e.Threshold, testStr)
-	}
-	w.Flush()
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "TIME\tRULE\tSERVICE\tCONDITION\tVALUE\tTHRESHOLD\tTEST")
+		for _, e := range entries {
+			testStr := ""
+			if e.IsTest {
+				testStr = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%.2f\t%.2f\t%s\n",
+				e.Timestamp.Format(time.RFC3339), e.RuleName, e.Service,
+				e.Condition, e.Value, e.Threshold, testStr)
+		}
+		w.Flush()
+	})
 }
