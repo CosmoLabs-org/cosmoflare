@@ -101,15 +101,15 @@ func runD1MigrationsCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create migration", map[string]string{"name": name, "migrations_dir": d1MigrationsDir})
-		}
-		printInfo("DRY RUN: Would create migration '%s' in '%s'", name, d1MigrationsDir)
-		return nil
+		return outPayload("DRY RUN: Would create migration", func() any {
+			return map[string]string{"name": name, "migrations_dir": d1MigrationsDir}
+		}, func() {
+			printInfo("DRY RUN: Would create migration '%s' in '%s'", name, d1MigrationsDir)
+		})
 	}
 
 	path, err := svc.MigrationsCreate(name, d1MigrationsDir)
@@ -117,11 +117,11 @@ func runD1MigrationsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create migration", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Migration created successfully", map[string]string{"file_path": path})
-	}
-	printSuccess("Migration created: %s", path)
-	return nil
+	return outPayload("Migration created successfully", func() any {
+		return map[string]string{"file_path": path}
+	}, func() {
+		printSuccess("Migration created: %s", path)
+	})
 }
 
 func runD1MigrationsList(cmd *cobra.Command, args []string) error {
@@ -133,7 +133,7 @@ func runD1MigrationsList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	migrations, err := svc.MigrationsList(context.Background(), databaseID, d1MigrationsDir)
@@ -141,28 +141,25 @@ func runD1MigrationsList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list migrations", err)
 	}
 
-	if JSONOutput {
-		return printJSON(migrations)
-	}
-
-	if len(migrations) == 0 {
-		printInfo("No migrations found in '%s'", d1MigrationsDir)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tAPPLIED AT")
-	for _, m := range migrations {
-		status := "pending"
-		appliedAt := "-"
-		if m.AppliedAt != nil {
-			status = "applied"
-			appliedAt = m.AppliedAt.Format("2006-01-02 15:04:05 UTC")
+	return outResult(migrations, func() {
+		if len(migrations) == 0 {
+			printInfo("No migrations found in '%s'", d1MigrationsDir)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", m.Name, status, appliedAt)
-	}
-	w.Flush()
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tSTATUS\tAPPLIED AT")
+		for _, m := range migrations {
+			status := "pending"
+			appliedAt := "-"
+			if m.AppliedAt != nil {
+				status = "applied"
+				appliedAt = m.AppliedAt.Format("2006-01-02 15:04:05 UTC")
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", m.Name, status, appliedAt)
+		}
+		w.Flush()
+	})
 }
 
 func runD1MigrationsApply(cmd *cobra.Command, args []string) error {
@@ -174,7 +171,7 @@ func runD1MigrationsApply(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if !d1MigrationsForce && !DryRun {
@@ -215,25 +212,28 @@ func runD1MigrationsApply(cmd *cobra.Command, args []string) error {
 		return outErr("failed to apply migrations", err)
 	}
 
-	if JSONOutput {
-		return printJSON(results)
-	}
-
 	failed := 0
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tERROR")
-	for _, r := range results {
-		if r.Status == "failed" {
-			failed++
+	if err := outResult(results, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tSTATUS\tERROR")
+		for _, r := range results {
+			if r.Status == "failed" {
+				failed++
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", r.Name, r.Status, r.Error)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", r.Name, r.Status, r.Error)
+		w.Flush()
+
+		if failed == 0 {
+			printSuccess("Migrations applied")
+		}
+	}); err != nil {
+		return err
 	}
-	w.Flush()
 
 	if failed > 0 {
 		return fmt.Errorf("%d migration(s) failed", failed)
 	}
 
-	printSuccess("Migrations applied")
 	return nil
 }
