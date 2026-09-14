@@ -142,13 +142,13 @@ func runApplyAll(cmd *cobra.Command, args []string) error {
 
 	svc, err := getApplyService()
 	if err != nil {
-		return fmt.Errorf("failed to create apply service: %w", err)
+		return outErr("failed to create apply service", err)
 	}
 
 	// First compute the diff to show the plan
 	diffSvc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
@@ -158,11 +158,11 @@ func runApplyAll(cmd *cobra.Command, args []string) error {
 	}
 
 	if !diffSummary.HasChanges {
-		if JSONOutput {
-			return printSuccessJSON("No changes to apply", nil)
-		}
-		printSuccess("No changes to apply — local config matches live state")
-		return nil
+		return outPayload("No changes to apply", func() any {
+			return nil
+		}, func() {
+			printSuccess("No changes to apply — local config matches live state")
+		})
 	}
 
 	// Show the plan
@@ -176,11 +176,11 @@ func runApplyAll(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("Dry run — no changes applied", diffSummary)
-		}
-		printWarning("Dry run — no changes were applied")
-		return nil
+		return outPayload("Dry run — no changes applied", func() any {
+			return diffSummary
+		}, func() {
+			printWarning("Dry run — no changes were applied")
+		})
 	}
 
 	// Confirm unless --yes
@@ -196,16 +196,16 @@ func runApplyAll(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("apply failed: %w", err)
 	}
 
-	if JSONOutput {
-		msg := "Apply complete"
-		if summary.HasErrors {
-			msg = "Apply completed with errors"
-		}
-		return printSuccessJSON(msg, summary)
+	msg := "Apply complete"
+	if summary.HasErrors {
+		msg = "Apply completed with errors"
 	}
 
-	printApplySummary(summary)
-	return nil
+	return outPayload(msg, func() any {
+		return summary
+	}, func() {
+		printApplySummary(summary)
+	})
 }
 
 func runApplyWorkers(cmd *cobra.Command, args []string) error {
@@ -221,13 +221,13 @@ func runApplyWorkers(cmd *cobra.Command, args []string) error {
 
 	svc, err := getApplyService()
 	if err != nil {
-		return fmt.Errorf("failed to create apply service: %w", err)
+		return outErr("failed to create apply service", err)
 	}
 
 	// Show diff first
 	diffSvc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
@@ -237,11 +237,11 @@ func runApplyWorkers(cmd *cobra.Command, args []string) error {
 	}
 
 	if !dr.HasChanges() {
-		if JSONOutput {
-			return printSuccessJSON("Workers: no changes to apply", nil)
-		}
-		printSuccess("Workers: no changes to apply")
-		return nil
+		return outPayload("Workers: no changes to apply", func() any {
+			return nil
+		}, func() {
+			printSuccess("Workers: no changes to apply")
+		})
 	}
 
 	if !JSONOutput {
@@ -250,11 +250,11 @@ func runApplyWorkers(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("Dry run — no changes applied", dr)
-		}
-		printWarning("Dry run — no changes were applied")
-		return nil
+		return outPayload("Dry run — no changes applied", func() any {
+			return dr
+		}, func() {
+			printWarning("Dry run — no changes were applied")
+		})
 	}
 
 	if !applyYes && !JSONOutput {
@@ -269,12 +269,11 @@ func runApplyWorkers(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("workers apply failed: %w", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Workers apply complete", result)
-	}
-
-	printApplyResult(result)
-	return nil
+	return outPayload("Workers apply complete", func() any {
+		return result
+	}, func() {
+		printApplyResult(result)
+	})
 }
 
 func runApplyDNS(cmd *cobra.Command, args []string) error {
@@ -289,12 +288,12 @@ func runApplyDNS(cmd *cobra.Command, args []string) error {
 
 	svc, err := getApplyService()
 	if err != nil {
-		return fmt.Errorf("failed to create apply service: %w", err)
+		return outErr("failed to create apply service", err)
 	}
 
 	diffSvc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
@@ -304,11 +303,11 @@ func runApplyDNS(cmd *cobra.Command, args []string) error {
 	}
 
 	if !dr.HasChanges() {
-		if JSONOutput {
-			return printSuccessJSON("DNS: no changes to apply", nil)
-		}
-		printSuccess("DNS: no changes to apply")
-		return nil
+		return outPayload("DNS: no changes to apply", func() any {
+			return nil
+		}, func() {
+			printSuccess("DNS: no changes to apply")
+		})
 	}
 
 	if !JSONOutput {
@@ -317,11 +316,11 @@ func runApplyDNS(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("Dry run — no changes applied", dr)
-		}
-		printWarning("Dry run — no changes were applied")
-		return nil
+		return outPayload("Dry run — no changes applied", func() any {
+			return dr
+		}, func() {
+			printWarning("Dry run — no changes were applied")
+		})
 	}
 
 	if !applyYes && !JSONOutput {
@@ -336,12 +335,11 @@ func runApplyDNS(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("dns apply failed: %w", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DNS apply complete", result)
-	}
-
-	printApplyResult(result)
-	return nil
+	return outPayload("DNS apply complete", func() any {
+		return result
+	}, func() {
+		printApplyResult(result)
+	})
 }
 
 func runApplyKV(cmd *cobra.Command, args []string) error {
@@ -357,12 +355,12 @@ func runApplyKV(cmd *cobra.Command, args []string) error {
 
 	svc, err := getApplyService()
 	if err != nil {
-		return fmt.Errorf("failed to create apply service: %w", err)
+		return outErr("failed to create apply service", err)
 	}
 
 	diffSvc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
@@ -372,11 +370,11 @@ func runApplyKV(cmd *cobra.Command, args []string) error {
 	}
 
 	if !dr.HasChanges() {
-		if JSONOutput {
-			return printSuccessJSON("KV: no changes to apply", nil)
-		}
-		printSuccess("KV: no changes to apply")
-		return nil
+		return outPayload("KV: no changes to apply", func() any {
+			return nil
+		}, func() {
+			printSuccess("KV: no changes to apply")
+		})
 	}
 
 	if !JSONOutput {
@@ -385,11 +383,11 @@ func runApplyKV(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("Dry run — no changes applied", dr)
-		}
-		printWarning("Dry run — no changes were applied")
-		return nil
+		return outPayload("Dry run — no changes applied", func() any {
+			return dr
+		}, func() {
+			printWarning("Dry run — no changes were applied")
+		})
 	}
 
 	if !applyYes && !JSONOutput {
@@ -404,12 +402,11 @@ func runApplyKV(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("kv apply failed: %w", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("KV apply complete", result)
-	}
-
-	printApplyResult(result)
-	return nil
+	return outPayload("KV apply complete", func() any {
+		return result
+	}, func() {
+		printApplyResult(result)
+	})
 }
 
 func runApplyR2(cmd *cobra.Command, args []string) error {
@@ -425,12 +422,12 @@ func runApplyR2(cmd *cobra.Command, args []string) error {
 
 	svc, err := getApplyService()
 	if err != nil {
-		return fmt.Errorf("failed to create apply service: %w", err)
+		return outErr("failed to create apply service", err)
 	}
 
 	diffSvc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
@@ -440,11 +437,11 @@ func runApplyR2(cmd *cobra.Command, args []string) error {
 	}
 
 	if !dr.HasChanges() {
-		if JSONOutput {
-			return printSuccessJSON("R2: no changes to apply", nil)
-		}
-		printSuccess("R2: no changes to apply")
-		return nil
+		return outPayload("R2: no changes to apply", func() any {
+			return nil
+		}, func() {
+			printSuccess("R2: no changes to apply")
+		})
 	}
 
 	if !JSONOutput {
@@ -453,11 +450,11 @@ func runApplyR2(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("Dry run — no changes applied", dr)
-		}
-		printWarning("Dry run — no changes were applied")
-		return nil
+		return outPayload("Dry run — no changes applied", func() any {
+			return dr
+		}, func() {
+			printWarning("Dry run — no changes were applied")
+		})
 	}
 
 	if !applyYes && !JSONOutput {
@@ -472,12 +469,11 @@ func runApplyR2(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("r2 apply failed: %w", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("R2 apply complete", result)
-	}
-
-	printApplyResult(result)
-	return nil
+	return outPayload("R2 apply complete", func() any {
+		return result
+	}, func() {
+		printApplyResult(result)
+	})
 }
 
 // confirmApply prompts the user for confirmation before applying changes.
