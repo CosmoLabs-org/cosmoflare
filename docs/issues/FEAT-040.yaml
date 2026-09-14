@@ -1,0 +1,18 @@
+id: FEAT-040
+type: feature
+created_at: 2026-09-14T06:06:34.155807+04:00
+updated_at: 2026-09-14T06:06:34.160413+04:00
+source: local
+ulid: 01M2ETN25G8YY8FZYQMKB2TSDX
+status: open
+labels:
+    - audit
+    - code-quality
+title: Output presenter interface to collapse 618 JSONOutput branches
+description: |-
+    # Output presenter interface to collapse 618 JSONOutput branches
+
+    618 inline if-JSONOutput presentation branches across cmd/. Extract a presenter interface (JSON/table implementations built once per run) called unconditionally from handlers. Large effort, do per-command-group. Evidence: agent-1-code-quality.md
+
+    Origin: audit-agent-1-code-quality
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-1-code-quality.md
