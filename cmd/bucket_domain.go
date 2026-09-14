@@ -183,10 +183,7 @@ func runBucketDomainAttach(cmd *cobra.Command, args []string) error {
 		printInfo("Auto-resolving zone for %s ...", domain)
 		resolved, err := resolveZoneID(ctx, domain)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(err.Error())
-			}
-			return err
+			return outErrf("%s", err)
 		}
 		zoneID = resolved
 		printInfo("Resolved zone: %s", zoneID)
@@ -206,12 +203,10 @@ func runBucketDomainAttach(cmd *cobra.Command, args []string) error {
 		return outErr("failed to attach domain", err)
 	}
 
-	if JSONOutput {
-		return printJSON(d)
-	}
-	printSuccess("Domain '%s' attached to bucket '%s'", domain, bucket)
-	printInfo("Ownership and SSL activate asynchronously; run 'cosmoflare bucket domain verify %s %s' to wait for activation", bucket, domain)
-	return nil
+	return outResult(d, func() {
+		printSuccess("Domain '%s' attached to bucket '%s'", domain, bucket)
+		printInfo("Ownership and SSL activate asynchronously; run 'cosmoflare bucket domain verify %s %s' to wait for activation", bucket, domain)
+	})
 }
 
 func runBucketDomainList(cmd *cobra.Command, args []string) error {
@@ -226,28 +221,25 @@ func runBucketDomainList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list domains", err)
 	}
 
-	if JSONOutput {
-		return printJSON(domains)
-	}
-
-	if len(domains) == 0 {
-		printInfo("No custom domains attached to bucket '%s'", bucket)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "DOMAIN\tENABLED\tOWNERSHIP\tSSL\tMIN-TLS")
-	for _, d := range domains {
-		ownership, ssl := bucketDomainStatuses(&d)
-		enabled := "false"
-		if d.Enabled {
-			enabled = "true"
+	return outResult(domains, func() {
+		if len(domains) == 0 {
+			printInfo("No custom domains attached to bucket '%s'", bucket)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", d.Domain, enabled, ownership, ssl, d.MinTLS)
-	}
-	w.Flush()
-	printInfo("Total: %d domain(s)", len(domains))
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "DOMAIN\tENABLED\tOWNERSHIP\tSSL\tMIN-TLS")
+		for _, d := range domains {
+			ownership, ssl := bucketDomainStatuses(&d)
+			enabled := "false"
+			if d.Enabled {
+				enabled = "true"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", d.Domain, enabled, ownership, ssl, d.MinTLS)
+		}
+		w.Flush()
+		printInfo("Total: %d domain(s)", len(domains))
+	})
 }
 
 func runBucketDomainGet(cmd *cobra.Command, args []string) error {
@@ -262,28 +254,25 @@ func runBucketDomainGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get domain", err)
 	}
 
-	if JSONOutput {
-		return printJSON(d)
-	}
-
-	ownership, ssl := bucketDomainStatuses(d)
-	fmt.Printf("Domain:   %s\n", d.Domain)
-	fmt.Printf("Enabled:  %t\n", d.Enabled)
-	fmt.Printf("Ownership: %s\n", ownership)
-	fmt.Printf("SSL:      %s\n", ssl)
-	if d.MinTLS != "" {
-		fmt.Printf("Min-TLS:  %s\n", d.MinTLS)
-	}
-	if d.ZoneID != "" {
-		fmt.Printf("Zone ID:  %s\n", d.ZoneID)
-	}
-	if d.ZoneName != "" {
-		fmt.Printf("Zone:     %s\n", d.ZoneName)
-	}
-	if len(d.Ciphers) > 0 {
-		fmt.Printf("Ciphers:  %s\n", strings.Join(d.Ciphers, ", "))
-	}
-	return nil
+	return outResult(d, func() {
+		ownership, ssl := bucketDomainStatuses(d)
+		fmt.Printf("Domain:   %s\n", d.Domain)
+		fmt.Printf("Enabled:  %t\n", d.Enabled)
+		fmt.Printf("Ownership: %s\n", ownership)
+		fmt.Printf("SSL:      %s\n", ssl)
+		if d.MinTLS != "" {
+			fmt.Printf("Min-TLS:  %s\n", d.MinTLS)
+		}
+		if d.ZoneID != "" {
+			fmt.Printf("Zone ID:  %s\n", d.ZoneID)
+		}
+		if d.ZoneName != "" {
+			fmt.Printf("Zone:     %s\n", d.ZoneName)
+		}
+		if len(d.Ciphers) > 0 {
+			fmt.Printf("Ciphers:  %s\n", strings.Join(d.Ciphers, ", "))
+		}
+	})
 }
 
 func runBucketDomainVerify(cmd *cobra.Command, args []string) error {
@@ -309,18 +298,13 @@ func runBucketDomainVerify(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		printError("Verification did not complete: %v", err)
 		fmt.Printf("ownership=%s ssl=%s\n", ownership, ssl)
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("verification failed: %v (ownership=%s ssl=%s)", err, ownership, ssl))
-		}
-		return fmt.Errorf("domain verification failed: ownership=%s ssl=%s", ownership, ssl)
+		return outErrf("domain verification failed: %v (ownership=%s ssl=%s)", err, ownership, ssl)
 	}
 
-	if JSONOutput {
-		return printJSON(d)
-	}
-	printSuccess("Domain '%s' is active", domain)
-	fmt.Printf("ownership=%s ssl=%s\n", ownership, ssl)
-	return nil
+	return outResult(d, func() {
+		printSuccess("Domain '%s' is active", domain)
+		fmt.Printf("ownership=%s ssl=%s\n", ownership, ssl)
+	})
 }
 
 func runBucketDomainUpdate(cmd *cobra.Command, args []string) error {
@@ -362,11 +346,9 @@ func runBucketDomainUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update domain", err)
 	}
 
-	if JSONOutput {
-		return printJSON(d)
-	}
-	printSuccess("Domain '%s' updated", domain)
-	return nil
+	return outResult(d, func() {
+		printSuccess("Domain '%s' updated", domain)
+	})
 }
 
 func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
@@ -386,9 +368,9 @@ func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
 		return outErr("failed to detach domain", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Domain detached successfully", map[string]string{"bucket": bucket, "domain": domain})
-	}
-	printSuccess("Domain '%s' detached from bucket '%s'", domain, bucket)
-	return nil
+	return outPayload("Domain detached successfully", func() any {
+		return map[string]string{"bucket": bucket, "domain": domain}
+	}, func() {
+		printSuccess("Domain '%s' detached from bucket '%s'", domain, bucket)
+	})
 }
