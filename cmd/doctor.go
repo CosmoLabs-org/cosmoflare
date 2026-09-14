@@ -102,19 +102,17 @@ func runDoctorAll(ctx context.Context) error {
 	}
 
 	if len(snap.Zones) == 0 {
-		if JSONOutput {
-			return printSuccessJSON("No zones found", nil)
-		}
-		printInfo("No zones found in account")
-		return nil
+		return outPayload("No zones found", func() any {
+			return nil
+		}, func() {
+			printInfo("No zones found in account")
+		})
 	}
 
-	if JSONOutput {
-		if err := printJSON(snap); err != nil {
-			return err
-		}
-	} else {
+	if err := outResult(snap, func() {
 		printFleetTable(snap)
+	}); err != nil {
+		return err
 	}
 
 	if snap.DegradedCount > 0 {
@@ -169,14 +167,11 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 	if zoneIDPattern.MatchString(target) {
 		zoneSvc, err := getZoneService()
 		if err != nil {
-			return fmt.Errorf("failed to create zone service: %w", err)
+			return outErr("failed to create zone service", err)
 		}
 		zone, err := zoneSvc.Get(ctx, target)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("failed to resolve zone ID: %v", err))
-			}
-			return fmt.Errorf("failed to resolve zone ID %s: %w", target, err)
+			return outErr(fmt.Sprintf("failed to resolve zone ID %s", target), err)
 		}
 		domain = zone.Name
 		expectedNS = zone.NameServers
@@ -199,10 +194,7 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 
 	report, err := doctor.RunDiagnostics(ctx, domain, expectedNS)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("diagnostics failed: %v", err))
-		}
-		return fmt.Errorf("diagnostics failed for %s: %w", domain, err)
+		return outErr(fmt.Sprintf("diagnostics failed for %s", domain), err)
 	}
 
 	// Redirect-target section (opt-in by having redirects): fetch the
@@ -246,13 +238,17 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 		}
 	}
 
-	if JSONOutput {
-		return printJSON(report)
+	p := NewPresenter()
+
+	if err := p.Result(report, func() {
+		printDoctorReport(report)
+	}); err != nil {
+		return err
 	}
 
-	printDoctorReport(report)
-
-	if report.Score == "critical" {
+	// The critical-score exit signal is a plain-mode concern in the legacy
+	// code: JSON mode returns the payload and exits 0 regardless of score.
+	if !p.IsJSON() && report.Score == "critical" {
 		return fmt.Errorf("domain health is critical")
 	}
 	return nil
