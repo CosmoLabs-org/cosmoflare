@@ -1,0 +1,18 @@
+id: FEAT-038
+type: feature
+created_at: 2026-09-14T06:06:22.864693+04:00
+updated_at: 2026-09-14T06:06:22.869832+04:00
+source: local
+ulid: 01M2ETMQ4NR3YPY2BA485VKZRC
+status: open
+labels:
+    - audit
+    - core-logic
+title: Parallel sync executor (bounded workers)
+description: |-
+    # Parallel sync executor (bounded workers)
+
+    SyncService.Execute is strictly sequential (sync.go:408). Bounded concurrent workers over plan.Operations with ordered error collection; est. 4-8x faster large syncs. Evidence: agent-2-core-logic.md
+
+    Origin: audit-agent-2-core-logic
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-2-core-logic.md
