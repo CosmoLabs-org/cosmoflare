@@ -22,10 +22,10 @@ You can always verify the installation:
 
 ```bash
 # Verify the download source
-curl -I https://github.com/CosmoLabs-org/CosmoDev-R2Go2/releases
+curl -I https://github.com/CosmoLabs-org/cosmoflare/releases
 
 # Check the binary integrity (after installation)
-./r2go2 --version
+./cosmoflare doctor
 ```
 
 ## API Token Security
@@ -35,7 +35,7 @@ Your Cloudflare API tokens are valuable credentials:
 ### ✅ Secure Practices
 - **Minimal Permissions**: Use only the permissions you need
 - **Token Rotation**: Regularly rotate your API tokens
-- **Secure Storage**: R2Go2 encrypts your configuration files
+- **Secure Storage**: API tokens are stored in the OS keychain when available (opt out with COSMOFLARE_NO_KEYCHAIN=1)
 - **Environment Variables**: Safe for CI/CD automation
 
 ### 🔒 Recommended Token Permissions
@@ -54,14 +54,15 @@ For read-only access:
 
 ## Configuration File Security
 
-R2Go2 stores your configuration securely:
+Cosmoflare stores your configuration securely:
 
 ```bash
-# Configuration location
-~/.config/r2go2/config.json
+# Machine config location (profiles, 0600 permissions)
+~/.cosmoflare/config.yaml
 
-# The file is encrypted and permissions-restricted
-chmod 600 ~/.config/r2go2/config.json
+# API tokens prefer the OS keychain; the config file is the
+# no-keychain fallback and is permission-restricted
+chmod 600 ~/.cosmoflare/config.yaml
 ```
 
 ### Profile Security Features
@@ -85,7 +86,7 @@ Found a security vulnerability? Please report it responsibly:
 2. **Least Privilege**: Grant only necessary permissions
 3. **Regular Rotation**: Rotate tokens periodically
 4. **Secure Networks**: Only use on trusted networks
-5. **Keep Updated**: Use the latest version of R2Go2
+5. **Keep Updated**: Use the latest version of Cosmoflare
 
 ### For Organizations
 1. **Service Accounts**: Create dedicated service accounts
@@ -96,7 +97,7 @@ Found a security vulnerability? Please report it responsibly:
 
 ## Compliance
 
-R2Go2 is designed with compliance in mind:
+Cosmoflare is designed with compliance in mind:
 
 - **GDPR Compliant**: No personal data collection
 - **SOC 2 Ready**: Secure development practices

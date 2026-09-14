@@ -1,13 +1,16 @@
 id: TASK-008
 type: task
 created_at: 2026-09-14T06:06:17.157093+04:00
-updated_at: 2026-09-14T06:06:17.163976+04:00
+updated_at: 2026-09-14T06:06:19.222751+04:00
 source: local
 ulid: 01M2ETMHJBWDTMKEGS5W82BFQY
 status: open
 labels:
     - audit
     - documentation
+origin:
+    idea_slug: 2026-09-13-contributing-md-env-var-reference-table
+    session: 53
 title: CONTRIBUTING.md + env-var reference table
 description: |-
     # CONTRIBUTING.md + env-var reference table

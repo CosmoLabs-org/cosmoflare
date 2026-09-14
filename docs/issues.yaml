@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-13T17:05:35.103392+04:00
+last_updated: 2026-09-14T06:06:34.159583+04:00
 next_bug_id: 52
-next_feat_id: 38
-next_task_id: 7
+next_feat_id: 41
+next_task_id: 9
 next_imp_id: 1
 issues:
     - id: BUG-001
@@ -503,6 +503,21 @@ issues:
       status: open
       title: 'Zone long-tail services batch: Waiting Room, Spectrum, LB, Page Shield, Turnstile, Web Analytics, Logpush'
       created_at: 2026-09-12T06:11:39.033572+04:00
+    - id: FEAT-038
+      type: feature
+      status: open
+      title: Parallel sync executor (bounded workers)
+      created_at: 2026-09-14T06:06:22.864693+04:00
+    - id: FEAT-039
+      type: feature
+      status: open
+      title: Unified transport resilience policy across 3 HTTP transports
+      created_at: 2026-09-14T06:06:28.165085+04:00
+    - id: FEAT-040
+      type: feature
+      status: open
+      title: Output presenter interface to collapse 618 JSONOutput branches
+      created_at: 2026-09-14T06:06:34.155807+04:00
     - id: TASK-001
       type: task
       status: closed
@@ -533,3 +548,13 @@ issues:
       status: open
       title: govulncheck gate in release-prepare
       created_at: 2026-09-13T17:05:35.099172+04:00
+    - id: TASK-007
+      type: task
+      status: open
+      title: 'pkg.go.dev presence: doc.go + example tests'
+      created_at: 2026-09-14T06:06:11.093735+04:00
+    - id: TASK-008
+      type: task
+      status: open
+      title: CONTRIBUTING.md + env-var reference table
+      created_at: 2026-09-14T06:06:17.157093+04:00

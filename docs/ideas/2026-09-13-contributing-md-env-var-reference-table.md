@@ -2,7 +2,7 @@
 ulid: 01M2CB4MPDVCN4A60MVRFQZ7NF
 title: CONTRIBUTING.md + env-var reference table
 created: "2026-09-13T06:56:58.573748+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - documentation
+promoted_to: TASK-008
 ---
+
+# CONTRIBUTING.md + env-var reference table
 
 # CONTRIBUTING.md + env-var reference table
 

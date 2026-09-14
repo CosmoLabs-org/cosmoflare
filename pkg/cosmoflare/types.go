@@ -1,12 +1,4 @@
-/*
-Package r2go2 provides a Go library for managing the full Cloudflare developer platform.
-
-It covers R2 (storage), Workers (compute), KV (key-value), D1 (SQL database),
-Pages (static hosting), and Queues (message queues) — all configured through
-a single .r2go2.yaml project config.
-
-Library-first design: zero CCS dependencies. Importable by any Go project.
-*/
+// Package cosmoflare — see doc.go for the package documentation.
 package cosmoflare
 
 import (

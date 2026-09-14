@@ -42,7 +42,7 @@ func TestNewError_ErrorStringContainsOpAndMessage(t *testing.T) {
 	if !strings.Contains(s, "timeout") {
 		t.Errorf("error string %q missing message", s)
 	}
-	if !strings.HasPrefix(s, "r2go2:") {
+	if !strings.HasPrefix(s, "cosmoflare:") {
 		t.Errorf("error string %q missing r2go2 prefix", s)
 	}
 }
@@ -79,7 +79,7 @@ func TestNewError_UnwrapReturnsCause(t *testing.T) {
 func TestR2Error_ErrorFormat_BucketAndKey(t *testing.T) {
 	err := &R2Error{Op: "GetObject", Bucket: "my-bucket", Key: "photo.jpg", Message: "not found"}
 	s := err.Error()
-	want := "r2go2: GetObject: bucket=my-bucket key=photo.jpg: not found"
+	want := "cosmoflare: GetObject: bucket=my-bucket key=photo.jpg: not found"
 	if s != want {
 		t.Errorf("got %q, want %q", s, want)
 	}
@@ -88,7 +88,7 @@ func TestR2Error_ErrorFormat_BucketAndKey(t *testing.T) {
 func TestR2Error_ErrorFormat_BucketOnly(t *testing.T) {
 	err := &R2Error{Op: "ListObjects", Bucket: "data-bucket", Message: "access denied"}
 	s := err.Error()
-	want := "r2go2: ListObjects: bucket=data-bucket: access denied"
+	want := "cosmoflare: ListObjects: bucket=data-bucket: access denied"
 	if s != want {
 		t.Errorf("got %q, want %q", s, want)
 	}
@@ -97,7 +97,7 @@ func TestR2Error_ErrorFormat_BucketOnly(t *testing.T) {
 func TestR2Error_ErrorFormat_OpAndMessageOnly(t *testing.T) {
 	err := &R2Error{Op: "ListBuckets", Message: "network error"}
 	s := err.Error()
-	want := "r2go2: ListBuckets: network error"
+	want := "cosmoflare: ListBuckets: network error"
 	if s != want {
 		t.Errorf("got %q, want %q", s, want)
 	}
@@ -111,7 +111,7 @@ func TestR2Error_ErrorFormat_KeyWithoutBucket(t *testing.T) {
 	if strings.Contains(s, "orphan-key") {
 		t.Error("key should not appear in output when bucket is empty")
 	}
-	want := "r2go2: GetObject: bad state"
+	want := "cosmoflare: GetObject: bad state"
 	if s != want {
 		t.Errorf("got %q, want %q", s, want)
 	}

@@ -1,13 +1,16 @@
 id: FEAT-038
 type: feature
 created_at: 2026-09-14T06:06:22.864693+04:00
-updated_at: 2026-09-14T06:06:22.869832+04:00
+updated_at: 2026-09-14T06:06:25.004027+04:00
 source: local
 ulid: 01M2ETMQ4NR3YPY2BA485VKZRC
 status: open
 labels:
     - audit
     - core-logic
+origin:
+    idea_slug: 2026-09-13-parallel-sync-executor-bounded-workers
+    session: 53
 title: Parallel sync executor (bounded workers)
 description: |-
     # Parallel sync executor (bounded workers)

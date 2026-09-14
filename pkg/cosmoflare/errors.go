@@ -22,12 +22,12 @@ type R2Error struct {
 
 func (e *R2Error) Error() string {
 	if e.Bucket != "" && e.Key != "" {
-		return fmt.Sprintf("r2go2: %s: bucket=%s key=%s: %s", e.Op, e.Bucket, e.Key, e.Message)
+		return fmt.Sprintf("cosmoflare: %s: bucket=%s key=%s: %s", e.Op, e.Bucket, e.Key, e.Message)
 	}
 	if e.Bucket != "" {
-		return fmt.Sprintf("r2go2: %s: bucket=%s: %s", e.Op, e.Bucket, e.Message)
+		return fmt.Sprintf("cosmoflare: %s: bucket=%s: %s", e.Op, e.Bucket, e.Message)
 	}
-	return fmt.Sprintf("r2go2: %s: %s", e.Op, e.Message)
+	return fmt.Sprintf("cosmoflare: %s: %s", e.Op, e.Message)
 }
 
 func (e *R2Error) Unwrap() error { return e.Err }

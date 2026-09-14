@@ -2,7 +2,7 @@
 ulid: 01M2CB3W6DSRSX0K9R16JQ74WW
 title: Output presenter interface to collapse 618 JSONOutput branches
 created: "2026-09-13T06:56:33.485218+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - code-quality
+promoted_to: FEAT-040
 ---
+
+# Output presenter interface to collapse 618 JSONOutput branches
 
 # Output presenter interface to collapse 618 JSONOutput branches
 

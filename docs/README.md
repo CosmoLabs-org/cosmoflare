@@ -1,4 +1,4 @@
-# CosmoDev-R2Go2 Documentation
+# Cosmoflare Documentation
 
 ## Quick Navigation
 
@@ -21,7 +21,6 @@
 
 | File | Purpose |
 |------|---------|
-| [SPEC.md](./SPEC.md) | Tech stack specification - single source of truth |
 
 ## Documentation Standards
 

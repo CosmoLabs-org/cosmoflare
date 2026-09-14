@@ -1,13 +1,16 @@
 id: TASK-007
 type: task
 created_at: 2026-09-14T06:06:11.093735+04:00
-updated_at: 2026-09-14T06:06:11.099235+04:00
+updated_at: 2026-09-14T06:06:13.55741+04:00
 source: local
 ulid: 01M2ETMBMVNMTYXYKFQ2JCQVFC
 status: open
 labels:
     - audit
     - documentation
+origin:
+    idea_slug: 2026-09-13-pkg-go-dev-presence-doc-go-example-tests
+    session: 53
 title: 'pkg.go.dev presence: doc.go + example tests'
 description: |-
     # pkg.go.dev presence: doc.go + example tests

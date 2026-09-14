@@ -1,5 +1,5 @@
-# R2Go2 - Cloudflare R2 CLI Tool
-# Makefile for building, testing, and releasing R2Go2
+# Cosmoflare - Go CLI + library for the Cloudflare developer platform
+# Makefile for building, testing, and releasing Cosmoflare
 # Copyright © 2025 CosmoLabs (https://cosmolabs.org)
 
 # Go parameters
@@ -11,7 +11,7 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Binary info
-BINARY_NAME=r2go2
+BINARY_NAME=cosmoflare
 BINARY_UNIX=$(BINARY_NAME)_unix
 VERSION=$(shell ccs version --short 2>/dev/null | sed 's/ .*//' || grep -o '"version":"[^"]*"' .version-registry.json 2>/dev/null | head -1 | cut -d'"' -f4 || echo "dev")
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
@@ -27,7 +27,7 @@ PLATFORMS=linux/amd64 linux/arm64 linux/armv7 windows/amd64 windows/arm64 darwin
 PLATFORMS_MAP=linux_amd64:linux-x86_64 linux_arm64:linux-aarch64 linux_armv7:linux-armv7 windows_amd64:windows-x86_64 windows_arm64:windows-aarch64 darwin_amd64:darwin-x86_64 darwin_arm64:darwin-aarch64
 
 # Docker settings
-DOCKER_IMAGE=r2go2
+DOCKER_IMAGE=cosmoflare
 DOCKER_TAG=$(VERSION)
 
 # Default target
@@ -40,14 +40,14 @@ deps:
 	$(GOMOD) download
 	$(GOMOD) tidy
 
-# Build for current platform (produces both cosmoflare and r2go2 binaries)
+# Build for current platform (cosmoflare binary + backward-compat r2go2 alias)
 .PHONY: build
 build:
 	@echo "🏗️  Building $(BINARY_NAME) for $(shell go env GOOS)/$(shell go env GOARCH)..."
 	@mkdir -p $(BUILD_DIR)
 	CGO_ENABLED=0 GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) $(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
-	@ln -sf $(BINARY_NAME) $(BUILD_DIR)/cosmoflare
-	@echo "✅ Build complete: $(BUILD_DIR)/$(BINARY_NAME) (+ $(BUILD_DIR)/cosmoflare symlink)"
+	@ln -sf $(BINARY_NAME) $(BUILD_DIR)/r2go2
+	@echo "✅ Build complete: $(BUILD_DIR)/$(BINARY_NAME) (+ $(BUILD_DIR)/r2go2 alias symlink)"
 
 # Build for all platforms
 .PHONY: build-all
@@ -129,17 +129,17 @@ deb: build
 	@mkdir -p $(DIST_DIR)/deb/DEBIAN
 	@mkdir -p $(DIST_DIR)/deb/usr/local/bin
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(DIST_DIR)/deb/usr/local/bin/
-	@echo "Package: r2go2" > $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Package: cosmoflare" > $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Version: $(VERSION)" >> $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Section: utils" >> $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Priority: optional" >> $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Architecture: amd64" >> $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Maintainer: CosmoLabs <support@cosmolabs.org>" >> $(DIST_DIR)/deb/DEBIAN/control
-	@echo "Description: Cloudflare R2 CLI management tool" >> $(DIST_DIR)/deb/DEBIAN/control
+	@echo "Description: Go CLI for the full Cloudflare developer platform" >> $(DIST_DIR)/deb/DEBIAN/control
 	@echo "Depends: " >> $(DIST_DIR)/deb/DEBIAN/control
-	@dpkg-deb --build $(DIST_DIR)/deb $(DIST_DIR)/r2go2_$(VERSION)_amd64.deb
+	@dpkg-deb --build $(DIST_DIR)/deb $(DIST_DIR)/cosmoflare_$(VERSION)_amd64.deb
 	@rm -rf $(DIST_DIR)/deb
-	@echo "✅ DEB package created: $(DIST_DIR)/r2go2_$(VERSION)_amd64.deb"
+	@echo "✅ DEB package created: $(DIST_DIR)/cosmoflare_$(VERSION)_amd64.deb"
 
 # Create RPM package
 .PHONY: rpm
@@ -147,22 +147,22 @@ rpm: build
 	@echo "📦 Creating RPM package..."
 	@mkdir -p $(DIST_DIR)/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(DIST_DIR)/rpmbuild/BUILD/
-	@echo "Name: r2go2" > $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "Version: $(VERSION)" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "Release: 1%{?dist}" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "Summary: Cloudflare R2 CLI management tool" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "License: MIT" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "URL: https://github.com/CosmoLabs-org/cosmoflare" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "%description" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "A CLI tool for managing Cloudflare R2 storage buckets and objects." >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "%prep" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "%build" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "%install" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "mkdir -p %{buildroot}/usr/local/bin" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "install -m 755 r2go2 %{buildroot}/usr/local/bin/" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "%files" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@echo "/usr/local/bin/r2go2" >> $(DIST_DIR)/rpmbuild/SPECS/r2go2.spec
-	@cd $(DIST_DIR)/rpmbuild && rpmbuild -bb SPECS/r2go2.spec --define "_topdir $(PWD)"
+	@echo "Name: cosmoflare" > $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "Version: $(VERSION)" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "Release: 1%{?dist}" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "Summary: Go CLI for the full Cloudflare developer platform" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "License: MIT" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "URL: https://github.com/CosmoLabs-org/cosmoflare" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "%description" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "Go CLI for the full Cloudflare developer platform (R2, Workers, KV, DNS, D1, and more)." >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "%prep" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "%build" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "%install" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "mkdir -p %{buildroot}/usr/local/bin" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "install -m 755 cosmoflare %{buildroot}/usr/local/bin/" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "%files" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@echo "/usr/local/bin/cosmoflare" >> $(DIST_DIR)/rpmbuild/SPECS/cosmoflare.spec
+	@cd $(DIST_DIR)/rpmbuild && rpmbuild -bb SPECS/cosmoflare.spec --define "_topdir $(PWD)"
 	@find $(DIST_DIR)/rpmbuild/RPMS -name "*.rpm" -exec cp {} $(DIST_DIR)/ \;
 	@rm -rf $(DIST_DIR)/rpmbuild
 	@echo "✅ RPM package created in $(DIST_DIR)/"
@@ -201,7 +201,7 @@ test-coverage:
 .PHONY: test-integration
 test-integration:
 	@echo "Running integration tests against live R2..."
-	$(GOTEST) -v -tags=integration -timeout 10m ./pkg/r2go2/
+	$(GOTEST) -v -tags=integration -timeout 10m ./pkg/cosmoflare/
 bench:
 	@echo "⚡ Running benchmarks..."
 	$(GOTEST) -bench=. -benchmem ./...
@@ -239,9 +239,9 @@ vet:
 install: build
 	@INSTALL_PATH="$${GOPATH:-$$HOME/.local}"/bin; \
 	mkdir -p "$$INSTALL_PATH"; \
-	echo "📥 Installing $(BINARY_NAME) to $$INSTALL_PATH/r2go2..."; \
-	cp $(BUILD_DIR)/$(BINARY_NAME) "$$INSTALL_PATH/r2go2"; \
-	chmod +x "$$INSTALL_PATH/r2go2"; \
+	echo "📥 Installing $(BINARY_NAME) to $$INSTALL_PATH/cosmoflare..."; \
+	cp $(BUILD_DIR)/$(BINARY_NAME) "$$INSTALL_PATH/cosmoflare"; \
+	chmod +x "$$INSTALL_PATH/cosmoflare"; \
 	echo "✅ Installed successfully!"; \
 	if ! echo "$$PATH" | grep -q "$$INSTALL_PATH"; then \
 		SHELL_RC="$$HOME/.zshrc"; \
@@ -250,28 +250,29 @@ install: build
 		fi; \
 		if ! grep -q "$$INSTALL_PATH" "$$SHELL_RC" 2>/dev/null; then \
 			echo "" >> "$$SHELL_RC"; \
-			echo "# R2Go2 CLI" >> "$$SHELL_RC"; \
+			echo "# Cosmoflare CLI" >> "$$SHELL_RC"; \
 			echo "export PATH=\"$$INSTALL_PATH:\$$PATH\"" >> "$$SHELL_RC"; \
 			echo "✅ Added $$INSTALL_PATH to PATH in $$SHELL_RC"; \
 		fi; \
 		echo ""; \
-		echo "🔄 Run this to use r2go2 now:"; \
+		echo "🔄 Run this to use cosmoflare now:"; \
 		echo "   source $$SHELL_RC"; \
 		echo ""; \
 		echo "   Or just open a new terminal."; \
 	else \
 		echo ""; \
-		echo "🎉 Ready to use! Run: r2go2 --version"; \
+		echo "🎉 Ready to use! Run: cosmoflare --help"; \
 	fi
 
 # Install to /usr/local/bin (system-wide, prompts for password)
 .PHONY: install-system
 install-system: build
-	@echo "📥 Installing $(BINARY_NAME) to /usr/local/bin/r2go2..."
+	@echo "📥 Installing $(BINARY_NAME) to /usr/local/bin/cosmoflare..."
 	@echo "🔐 You may be prompted for your password..."
-	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/r2go2
-	@sudo chmod +x /usr/local/bin/r2go2
-	@echo "✅ Installed successfully! Run: r2go2 --version"
+	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/cosmoflare
+	@sudo chmod +x /usr/local/bin/cosmoflare
+	@sudo ln -sf /usr/local/bin/cosmoflare /usr/local/bin/r2go2
+	@echo "✅ Installed successfully! Run: cosmoflare --help (r2go2 alias available)"
 
 # Install case-insensitive aliases (R2Go2, r2go2, R2go2 all work on any OS)
 .PHONY: install-aliases
@@ -390,7 +391,7 @@ version-major:
 # Show help
 .PHONY: help
 help:
-	@echo "📚 R2Go2 Makefile Commands"
+	@echo "📚 Cosmoflare Makefile Commands"
 	@echo ""
 	@echo "Build Commands:"
 	@echo "  build         Build binary for current platform"

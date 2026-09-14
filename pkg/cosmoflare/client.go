@@ -14,7 +14,7 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 )
 
-// R2Client is the primary interface for R2Go2 operations.
+// R2Client is the primary interface for R2 storage operations.
 // It provides bucket CRUD, object CRUD, upload, download, and copy operations.
 type R2Client interface {
 	// Bucket operations
@@ -65,7 +65,8 @@ type client struct {
 // WithAccountID/WithAPIToken first, then the CLOUDFLARE_ACCOUNT_ID /
 // CLOUDFLARE_API_TOKEN environment variables, then — only when an account
 // ID or API token is still missing — the named profile from
-// ~/.r2go2/config.yaml selected via WithProfile.
+// the machine config (~/.cosmoflare/config.yaml, legacy ~/.r2go2/config.yaml
+// read for compatibility) selected via WithProfile.
 //
 // Transport policy: an explicit WithHTTPClient is used by both transports
 // (the Cloudflare API client and the R2 S3 client). Otherwise the Cloudflare
@@ -139,7 +140,7 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 
 	// S3 client for object operations
 	if err := c.initS3(); err != nil {
-		return nil, fmt.Errorf("r2go2: init S3 client: %w", err)
+		return nil, fmt.Errorf("cosmoflare: init S3 client: %w", err)
 	}
 
 	return c, nil

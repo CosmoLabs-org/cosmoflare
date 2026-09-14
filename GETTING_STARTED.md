@@ -12,12 +12,12 @@ Welcome to R2Go2! This guide will help you get up and running in minutes with ou
 
 ### macOS & Linux
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CosmoLabs-org/CosmoDev-R2Go2/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CosmoLabs-org/cosmoflare/master/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CosmoLabs-org/CosmoDev-R2Go2/main/install.ps1" -UseBasicParsing | Invoke-Expression
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CosmoLabs-org/cosmoflare/master/install.ps1" -UseBasicParsing | Invoke-Expression
 ```
 
 That's it! The script will:
@@ -37,7 +37,7 @@ R2Go2 needs two things from your Cloudflare account:
 
 #### Option A: Interactive Setup (Recommended)
 ```bash
-r2go2 setup
+cosmoflare setup
 ```
 
 This will launch a beautiful wizard that:
@@ -53,7 +53,7 @@ export CLOUDFLARE_API_TOKEN="your_api_token_here"
 export CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
 
 # Verify it works
-r2go2 list
+cosmoflare list
 ```
 
 ### Where to Find Your Cloudflare Credentials
@@ -73,7 +73,7 @@ r2go2 list
 ### Step 2: Launch the Beautiful Dashboard
 
 ```bash
-r2go2 dashboard
+cosmoflare dashboard
 ```
 
 Welcome to your professional R2 management interface! 🎉
@@ -103,16 +103,16 @@ Welcome to your professional R2 management interface! 🎉
 #### Or Use Commands:
 ```bash
 # List all buckets
-r2go2 list
+cosmoflare list
 
 # Create a new bucket
-r2go2 create my-test-bucket
+cosmoflare create my-test-bucket
 
 # Upload a file
-r2go2 upload my-test-bucket ./my-file.txt --key="uploads/my-file.txt"
+cosmoflare upload my-test-bucket ./my-file.txt --key="uploads/my-file.txt"
 
 # List files in a bucket
-r2go2 objects list my-test-bucket
+cosmoflare objects list my-test-bucket
 ```
 
 ## 🔧 Power User Features
@@ -122,10 +122,10 @@ Every command supports `--json` for programmatic use:
 
 ```bash
 # Get JSON output for scripts
-r2go2 list --json
+cosmoflare list --json
 
 # Upload and get JSON response
-r2go2 upload my-bucket ./file.txt --key="uploads/file.txt" --json
+cosmoflare upload my-bucket ./file.txt --key="uploads/file.txt" --json
 ```
 
 ### Multiple Profiles
@@ -133,13 +133,13 @@ Manage multiple Cloudflare accounts:
 
 ```bash
 # Create a new profile
-r2go2 setup --profile=work
+cosmoflare setup --profile=work
 
 # Switch profiles
-r2go2 config switch work
+cosmoflare config switch work
 
 # List all profiles
-r2go2 config list
+cosmoflare config list
 ```
 
 ### Environment Variable Mode
@@ -151,7 +151,7 @@ export CLOUDFLARE_API_TOKEN="your_token"
 export CLOUDFLARE_ACCOUNT_ID="your_account"
 
 # All commands now work without setup
-r2go2 list --json
+cosmoflare list --json
 ```
 
 ## 🎨 Pro Tips
@@ -167,10 +167,10 @@ The dashboard (`r2go2 dashboard`) is your primary interface for:
 Perfect for automation and CI/CD:
 ```bash
 # Backup script
-r2go2 upload backup-$(date +%Y%m%d).tar.gz backups/
+cosmoflare upload backup-$(date +%Y%m%d).tar.gz backups/
 
 # Deploy script
-r2go2 upload build/ production-assets --recursive
+cosmoflare upload build/ production-assets --recursive
 ```
 
 ### 3. Enable Shell Completion
@@ -182,7 +182,7 @@ eval "$(r2go2 completion bash)"  # or zsh, fish, powershell
 ### 4. Use Dry Run Mode
 Test operations without making changes:
 ```bash
-r2go2 create test-bucket --dry-run
+cosmoflare create test-bucket --dry-run
 ```
 
 ## 🛠️ Common Workflows
@@ -190,28 +190,28 @@ r2go2 create test-bucket --dry-run
 ### Web Development Deployment
 ```bash
 # Deploy static site
-r2go2 upload ./dist my-website-bucket --recursive
+cosmoflare upload ./dist my-website-bucket --recursive
 
 # Update specific files
-r2go2 upload ./css/main.css my-website-bucket --key="css/main.css"
+cosmoflare upload ./css/main.css my-website-bucket --key="css/main.css"
 ```
 
 ### Backup and Restore
 ```bash
 # Backup important files
-r2go2 upload ./documents my-backups --recursive
+cosmoflare upload ./documents my-backups --recursive
 
 # Restore files
-r2go2 download my-backups ./restored-documents --recursive
+cosmoflare download my-backups ./restored-documents --recursive
 ```
 
 ### Media Management
 ```bash
 # Upload photos
-r2go2 upload ./photos my-photo-gallery --recursive
+cosmoflare upload ./photos my-photo-gallery --recursive
 
 # List by size
-r2go2 list --sort=size --json | jq '.buckets | sort_by(.size)'
+cosmoflare list --sort=size --json | jq '.buckets | sort_by(.size)'
 ```
 
 ## 🔍 Troubleshooting
@@ -248,7 +248,7 @@ curl -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
      https://api.cloudflare.com/client/v4/user/tokens/verify
 
 # Enable verbose logging
-r2go2 list --verbose
+cosmoflare list --verbose
 ```
 
 ## 📚 Next Steps

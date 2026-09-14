@@ -2,7 +2,7 @@
 ulid: 01M2CB4JR5YDFRMYR6XHC799MD
 title: 'pkg.go.dev presence: doc.go + example tests'
 created: "2026-09-13T06:56:56.581144+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - documentation
+promoted_to: TASK-007
 ---
+
+# pkg.go.dev presence: doc.go + example tests
 
 # pkg.go.dev presence: doc.go + example tests
 
