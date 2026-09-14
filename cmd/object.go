@@ -336,7 +336,7 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	// Create client
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	// List objects
@@ -346,30 +346,27 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	}
 	objects := result.Items
 
-	if JSONOutput {
-		return printJSON(objects)
-	}
+	return outResult(objects, func() {
+		// Table format
+		if len(objects) == 0 {
+			printInfo("No objects found")
+			return
+		}
 
-	// Table format
-	if len(objects) == 0 {
-		printInfo("No objects found")
-		return nil
-	}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "KEY\tSIZE\tLAST MODIFIED\tETAG")
+		for _, obj := range objects {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				obj.Key,
+				utils.FormatBytes(obj.Size),
+				obj.LastModified.Format("2006-01-02 15:04:05"),
+				etagDisplay(obj.ETag),
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "KEY\tSIZE\tLAST MODIFIED\tETAG")
-	for _, obj := range objects {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			obj.Key,
-			utils.FormatBytes(obj.Size),
-			obj.LastModified.Format("2006-01-02 15:04:05"),
-			etagDisplay(obj.ETag),
-		)
-	}
-	w.Flush()
-
-	printInfo("Total: %d object(s)", len(objects))
-	return nil
+		printInfo("Total: %d object(s)", len(objects))
+	})
 }
 
 func runObjectGet(cmd *cobra.Command, args []string) error {
@@ -396,7 +393,7 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	// Create client
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	// Get object
@@ -464,17 +461,16 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to download object", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Download successful", map[string]interface{}{
+	return outPayload("Download successful", func() any {
+		return map[string]interface{}{
 			"key":    objectKey,
 			"bucket": bucketName,
 			"output": output,
 			"size":   size,
-		})
-	}
-
-	printSuccess("✅ Downloaded: %s (%s)", output, utils.FormatBytes(size))
-	return nil
+		}
+	}, func() {
+		printSuccess("✅ Downloaded: %s (%s)", output, utils.FormatBytes(size))
+	})
 }
 
 func runObjectPut(cmd *cobra.Command, args []string) error {
@@ -503,7 +499,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 		client, err := getAPIClient()
 		if err != nil {
-			return fmt.Errorf("failed to create API client: %w", err)
+			return outErr("failed to create API client", err)
 		}
 
 		opts := []cosmoflare.UploadOption{}
@@ -522,14 +518,13 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 			return outErr("failed to upload object", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Upload successful", result)
-		}
-
-		printSuccess("✅ Uploaded successfully!")
-		printInfo("Key: %s", result.Key)
-		printInfo("ETag: %s", result.ETag)
-		return nil
+		return outPayload("Upload successful", func() any {
+			return result
+		}, func() {
+			printSuccess("✅ Uploaded successfully!")
+			printInfo("Key: %s", result.Key)
+			printInfo("ETag: %s", result.ETag)
+		})
 	}
 
 	if key == "" {
@@ -570,7 +565,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 		client, err := getAPIClient()
 		if err != nil {
-			return fmt.Errorf("failed to create API client: %w", err)
+			return outErr("failed to create API client", err)
 		}
 
 		opts := []cosmoflare.UploadOption{}
@@ -590,18 +585,17 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 			fmt.Println() // newline after progress bar
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Upload resumed and completed", result)
-		}
-
-		printSuccess("Upload resumed and completed!")
-		printInfo("Key: %s", result.Key)
-		printInfo("Size: %s", utils.FormatBytes(result.Size))
-		printInfo("ETag: %s", result.ETag)
-		if result.Parts > 0 {
-			printInfo("Parts: %d", result.Parts)
-		}
-		return nil
+		return outPayload("Upload resumed and completed", func() any {
+			return result
+		}, func() {
+			printSuccess("Upload resumed and completed!")
+			printInfo("Key: %s", result.Key)
+			printInfo("Size: %s", utils.FormatBytes(result.Size))
+			printInfo("ETag: %s", result.ETag)
+			if result.Parts > 0 {
+				printInfo("Parts: %d", result.Parts)
+			}
+		})
 	}
 
 	printInfo("⬆️  Uploading: %s -> %s/%s", localPath, bucketName, key)
@@ -647,7 +641,7 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	opts := []cosmoflare.UploadOption{}
@@ -684,18 +678,17 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		fmt.Println() // newline after progress bar
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Upload successful", result)
-	}
-
-	printSuccess("Uploaded successfully!")
-	printInfo("Key: %s", result.Key)
-	printInfo("Size: %s", utils.FormatBytes(result.Size))
-	printInfo("ETag: %s", result.ETag)
-	if result.Parts > 0 {
-		printInfo("Parts: %d (multipart)", result.Parts)
-	}
-	return nil
+	return outPayload("Upload successful", func() any {
+		return result
+	}, func() {
+		printSuccess("Uploaded successfully!")
+		printInfo("Key: %s", result.Key)
+		printInfo("Size: %s", utils.FormatBytes(result.Size))
+		printInfo("ETag: %s", result.ETag)
+		if result.Parts > 0 {
+			printInfo("Parts: %d (multipart)", result.Parts)
+		}
+	})
 }
 
 func runObjectDelete(cmd *cobra.Command, args []string) error {
@@ -710,7 +703,7 @@ func runObjectDelete(cmd *cobra.Command, args []string) error {
 	// Create client
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	if DryRun {
@@ -723,15 +716,14 @@ func runObjectDelete(cmd *cobra.Command, args []string) error {
 		return outErr("failed to delete object", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Object deleted successfully", map[string]string{
+	return outPayload("Object deleted successfully", func() any {
+		return map[string]string{
 			"bucket": bucketName,
 			"key":    objectKey,
-		})
-	}
-
-	printSuccess("✅ Object deleted successfully!")
-	return nil
+		}
+	}, func() {
+		printSuccess("✅ Object deleted successfully!")
+	})
 }
 
 func runObjectCopy(cmd *cobra.Command, args []string) error {
@@ -759,7 +751,7 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	if DryRun {
@@ -774,15 +766,14 @@ func runObjectCopy(cmd *cobra.Command, args []string) error {
 		return outErr("failed to copy object", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Object copied successfully", result)
-	}
-
-	printSuccess("✅ Object copied successfully!")
-	printInfo("Source: %s/%s", srcBucket, srcKey)
-	printInfo("Destination: %s/%s", dstBucket, dstKey)
-	printInfo("ETag: %s", result.ETag)
-	return nil
+	return outPayload("Object copied successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("✅ Object copied successfully!")
+		printInfo("Source: %s/%s", srcBucket, srcKey)
+		printInfo("Destination: %s/%s", dstBucket, dstKey)
+		printInfo("ETag: %s", result.ETag)
+	})
 }
 
 func runObjectHead(cmd *cobra.Command, args []string) error {
@@ -799,7 +790,7 @@ func runObjectHead(cmd *cobra.Command, args []string) error {
 	// Create client
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	// Get object metadata
@@ -843,7 +834,7 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	// Create client
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	// List all objects (would be more efficient with server-side filtering)
@@ -888,29 +879,26 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if JSONOutput {
-		return printJSON(results)
-	}
+	return outResult(results, func() {
+		// Table format
+		if len(results) == 0 {
+			printInfo("No objects found matching: %s", query)
+			return
+		}
 
-	// Table format
-	if len(results) == 0 {
-		printInfo("No objects found matching: %s", query)
-		return nil
-	}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "KEY\tSIZE\tLAST MODIFIED")
+		for _, obj := range results {
+			fmt.Fprintf(w, "%s\t%s\t%s\n",
+				obj.Key,
+				utils.FormatBytes(obj.Size),
+				obj.LastModified.Format("2006-01-02 15:04:05"),
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "KEY\tSIZE\tLAST MODIFIED")
-	for _, obj := range results {
-		fmt.Fprintf(w, "%s\t%s\t%s\n",
-			obj.Key,
-			utils.FormatBytes(obj.Size),
-			obj.LastModified.Format("2006-01-02 15:04:05"),
-		)
-	}
-	w.Flush()
-
-	printInfo("Found: %d object(s) matching '%s'", len(results), query)
-	return nil
+		printInfo("Found: %d object(s) matching '%s'", len(results), query)
+	})
 }
 
 func runObjectBatch(cmd *cobra.Command, args []string) error {
@@ -936,7 +924,7 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	successCount := 0
@@ -1027,15 +1015,15 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Batch operations complete", map[string]interface{}{
+	return outPayload("Batch operations complete", func() any {
+		return map[string]interface{}{
 			"successful": successCount,
 			"failed":     errorCount,
 			"total":      len(spec.Operations),
-		})
-	}
-	printInfo("Batch operations complete: %d successful, %d failed", successCount, errorCount)
-	return nil
+		}
+	}, func() {
+		printInfo("Batch operations complete: %d successful, %d failed", successCount, errorCount)
+	})
 }
 
 // Helper types and functions
@@ -1105,7 +1093,7 @@ func runObjectPresign(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	url, err := client.PresignGetObject(context.Background(), bucketName, key, expires)
@@ -1113,19 +1101,18 @@ func runObjectPresign(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to generate presigned URL: %w", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Pre-signed URL generated", map[string]interface{}{
+	return outPayload("Pre-signed URL generated", func() any {
+		return map[string]interface{}{
 			"url":        url,
 			"expires_in": expires.String(),
 			"key":        key,
 			"bucket":     bucketName,
-		})
-	}
-
-	printSuccess("Pre-signed URL generated:")
-	fmt.Println(url)
-	printInfo("Expires in: %s", expires)
-	return nil
+		}
+	}, func() {
+		printSuccess("Pre-signed URL generated:")
+		fmt.Println(url)
+		printInfo("Expires in: %s", expires)
+	})
 }
 
 // isTerminal checks if a file descriptor is a terminal.
