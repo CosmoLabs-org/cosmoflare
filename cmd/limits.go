@@ -69,15 +69,15 @@ func runLimits(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 	workersSvc, err := cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
 	if err != nil {
-		return fmt.Errorf("failed to create workers service: %w", err)
+		return outErr("failed to create workers service", err)
 	}
 	zonesSvc, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 	domainsSvc := cosmoflare.NewBucketDomainService(AccountID, APIToken)
 	analyticsSvc := cosmoflare.NewAnalyticsService(AccountID, APIToken)
@@ -94,37 +94,36 @@ func runLimits(cmd *cobra.Command, args []string) error {
 
 	snap, err := svc.Snapshot(context.Background(), limitsBucket)
 	if err != nil {
-		return fmt.Errorf("failed to collect limits: %w", err)
+		return outErr("failed to collect limits", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Plan limits", snap)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "RESOURCE\tSCOPE\tUSED\tLIMIT\tUSED%\tSOURCE")
-	for _, row := range sortRowsByPercent(snap.Rows) {
-		limit := "unlimited"
-		if row.LimitSource == "unknown" {
-			limit = "unknown" // limit exists but is unresolved (e.g. unknown plan tier)
-		} else if row.Limit > 0 {
-			limit = fmt.Sprintf("%d", row.Limit)
+	return outPayload("Plan limits", func() any {
+		return snap
+	}, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "RESOURCE\tSCOPE\tUSED\tLIMIT\tUSED%\tSOURCE")
+		for _, row := range sortRowsByPercent(snap.Rows) {
+			limit := "unlimited"
+			if row.LimitSource == "unknown" {
+				limit = "unknown" // limit exists but is unresolved (e.g. unknown plan tier)
+			} else if row.Limit > 0 {
+				limit = fmt.Sprintf("%d", row.Limit)
+			}
+			pct := "—"
+			if row.Limit > 0 { // 0.0% is a real value whenever a limit is known
+				pct = fmt.Sprintf("%.1f%%", row.Percent)
+			}
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\n",
+				row.Resource, row.Scope, row.Used, limit, pct, row.LimitSource)
 		}
-		pct := "—"
-		if row.Limit > 0 { // 0.0% is a real value whenever a limit is known
-			pct = fmt.Sprintf("%.1f%%", row.Percent)
-		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\n",
-			row.Resource, row.Scope, row.Used, limit, pct, row.LimitSource)
-	}
-	w.Flush()
+		w.Flush()
 
-	fmt.Printf("\nWorkers plan: %s (resolved via %s)\n", snap.WorkersPlan, snap.PlanSource)
-	for _, se := range snap.Sources {
-		printInfo("Source %s failed: %s", se.Source, se.Err)
-	}
-	if cfgErr != nil {
-		printInfo("No project config found (%v) — workers_plan fallback unavailable", cfgErr)
-	}
-	return nil
+		fmt.Printf("\nWorkers plan: %s (resolved via %s)\n", snap.WorkersPlan, snap.PlanSource)
+		for _, se := range snap.Sources {
+			printInfo("Source %s failed: %s", se.Source, se.Err)
+		}
+		if cfgErr != nil {
+			printInfo("No project config found (%v) — workers_plan fallback unavailable", cfgErr)
+		}
+	})
 }
