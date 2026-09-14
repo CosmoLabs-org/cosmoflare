@@ -28,6 +28,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.28.0] - 2026-09-14
+
+### Added
+- output presenter — pattern + first conversion (FEAT-040 slice) (commit:a6c7df10)
+- parallel executor + unified transport policy (FEAT-038/039) (commit:6da6553b)
+
+### Changed
+- species-2 presenter conversion for compare.go (FEAT-040) (commit:69c67400)
+- presenter conversion for knowledge_cmd (FEAT-040) (commit:cb7551fe)
+- hand-convert 6 irregular species-2 stragglers (FEAT-040) (commit:89834823)
+- presenter conversion for auth_permissions.go (FEAT-040) (commit:bd1b024c)
+- presenter conversion for domains_get.go (FEAT-040) (commit:83f0926d)
+- species-2 presenter conversion for bucket_lifecycle.go (FEAT-040) (commit:7bbd0e76)
+- presenter conversion for bucket_policy.go (commit:17d8bbc6)
+- presenter conversion for bucket_notifications (FEAT-040) (commit:b449051e)
+- presenter conversion for d1_migrations (FEAT-040) (commit:6c37f981)
+- species-2 presenter conversion for pages_deployment.go (FEAT-040) (commit:032dcb70)
+- presenter conversion queue_send.go (FEAT-040) (commit:e91e48f2)
+- presenter conversion for terraform.go (FEAT-040) (commit:0316d6a9)
+- presenter conversion bucket_domain.go (FEAT-040) (commit:3c20cd10)
+- finish species-2 conversion for email.go (FEAT-040) (commit:62506563)
+- presenter species-1 sweep — 196 error branches collapsed (commit:e06d5130)
+
+### Fixed
+- JSON-mode errors now exit non-zero: --json failures print the parseable error envelope to stdout and return exit code 1 (previously exit 0 — breaking the deterministic exit-code contract for agent consumers). Diagnostics mirror to stderr.
+- JSON-mode errors exit non-zero — envelope on stdout, exit 1 (commit:738623e7)
+
 ## [0.27.0] - 2026-09-13
 
 ### Fixed
