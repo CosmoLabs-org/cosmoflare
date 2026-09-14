@@ -169,23 +169,22 @@ func runAuditLog(cmd *cobra.Command, args []string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to read audit log: %w", err)
+		return outErr("failed to read audit log", err)
 	}
 
 	if len(entries) == 0 {
-		if JSONOutput {
-			return printSuccessJSON("No audit log entries found", []cosmoflare.AuditEntry{})
-		}
-		printInfo("No audit log entries found")
-		return nil
+		return outPayload("No audit log entries found", func() any {
+			return []cosmoflare.AuditEntry{}
+		}, func() {
+			printInfo("No audit log entries found")
+		})
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("Found %d audit log entries", len(entries)), entries)
-	}
-
-	printAuditTable(entries)
-	return nil
+	return outPayload(fmt.Sprintf("Found %d audit log entries", len(entries)), func() any {
+		return entries
+	}, func() {
+		printAuditTable(entries)
+	})
 }
 
 func runAuditSearch(cmd *cobra.Command, args []string) error {
@@ -197,23 +196,22 @@ func runAuditSearch(cmd *cobra.Command, args []string) error {
 	query := args[0]
 	entries, err := cosmoflare.SearchAuditLog(logPath, query, auditType)
 	if err != nil {
-		return fmt.Errorf("failed to search audit log: %w", err)
+		return outErr("failed to search audit log", err)
 	}
 
 	if len(entries) == 0 {
-		if JSONOutput {
-			return printSuccessJSON(fmt.Sprintf("No entries matching %q", query), []cosmoflare.AuditEntry{})
-		}
-		printInfo("No entries matching %q", query)
-		return nil
+		return outPayload(fmt.Sprintf("No entries matching %q", query), func() any {
+			return []cosmoflare.AuditEntry{}
+		}, func() {
+			printInfo("No entries matching %q", query)
+		})
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("Found %d entries matching %q", len(entries), query), entries)
-	}
-
-	printAuditTable(entries)
-	return nil
+	return outPayload(fmt.Sprintf("Found %d entries matching %q", len(entries), query), func() any {
+		return entries
+	}, func() {
+		printAuditTable(entries)
+	})
 }
 
 func runAuditExport(cmd *cobra.Command, args []string) error {
@@ -224,15 +222,15 @@ func runAuditExport(cmd *cobra.Command, args []string) error {
 
 	entries, err := cosmoflare.ReadAuditLog(logPath)
 	if err != nil {
-		return fmt.Errorf("failed to read audit log: %w", err)
+		return outErr("failed to read audit log", err)
 	}
 
 	if len(entries) == 0 {
-		if JSONOutput {
-			return printSuccessJSON("No audit log entries to export", []cosmoflare.AuditEntry{})
-		}
-		printInfo("No audit log entries to export")
-		return nil
+		return outPayload("No audit log entries to export", func() any {
+			return []cosmoflare.AuditEntry{}
+		}, func() {
+			printInfo("No audit log entries to export")
+		})
 	}
 
 	// No file argument: JSON to stdout
@@ -243,28 +241,28 @@ func runAuditExport(cmd *cobra.Command, args []string) error {
 	filePath := args[0]
 	f, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to create export file %q: %w", filePath, err)
+		return outErr(fmt.Sprintf("failed to create export file %q", filePath), err)
 	}
 	defer f.Close()
 
 	if strings.HasSuffix(strings.ToLower(filePath), ".csv") {
 		if err := cosmoflare.ExportAuditLogCSV(entries, f); err != nil {
-			return fmt.Errorf("failed to export CSV: %w", err)
+			return outErr("failed to export CSV", err)
 		}
 	} else {
 		if err := cosmoflare.ExportAuditLogJSON(entries, f); err != nil {
-			return fmt.Errorf("failed to export JSON: %w", err)
+			return outErr("failed to export JSON", err)
 		}
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("Exported %d entries to %s", len(entries), filePath), map[string]interface{}{
+	return outPayload(fmt.Sprintf("Exported %d entries to %s", len(entries), filePath), func() any {
+		return map[string]interface{}{
 			"file":    filePath,
 			"entries": len(entries),
-		})
-	}
-	printSuccess("Exported %d entries to %s", len(entries), filePath)
-	return nil
+		}
+	}, func() {
+		printSuccess("Exported %d entries to %s", len(entries), filePath)
+	})
 }
 
 func runAuditClear(cmd *cobra.Command, args []string) error {
@@ -288,21 +286,20 @@ func runAuditClear(cmd *cobra.Command, args []string) error {
 
 	removed, err := cosmoflare.ClearAuditLog(logPath, beforeTime)
 	if err != nil {
-		return fmt.Errorf("failed to clear audit log: %w", err)
+		return outErr("failed to clear audit log", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("Cleared %d audit log entries", removed), map[string]interface{}{
+	return outPayload(fmt.Sprintf("Cleared %d audit log entries", removed), func() any {
+		return map[string]interface{}{
 			"removed": removed,
-		})
-	}
-
-	if removed == 0 {
-		printInfo("No entries to clear")
-	} else {
-		printSuccess("Cleared %d audit log entries", removed)
-	}
-	return nil
+		}
+	}, func() {
+		if removed == 0 {
+			printInfo("No entries to clear")
+		} else {
+			printSuccess("Cleared %d audit log entries", removed)
+		}
+	})
 }
 
 // printAuditTable formats audit entries as a table.
