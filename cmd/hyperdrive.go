@@ -169,23 +169,23 @@ func runHyperdriveCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create Hyperdrive config", map[string]interface{}{
+		return outPayload("DRY RUN: Would create Hyperdrive config", func() any {
+			return map[string]interface{}{
 				"name":        name,
 				"origin_host": origin.Host,
 				"origin_port": origin.Port,
 				"scheme":      origin.Scheme,
 				"database":    origin.Database,
 				"user":        origin.User,
-			})
-		}
-		printInfo("DRY RUN: Would create Hyperdrive config '%s' (host=%s, db=%s)", name, origin.Host, origin.Database)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create Hyperdrive config '%s' (host=%s, db=%s)", name, origin.Host, origin.Database)
+		})
 	}
 
 	svc, err := getHyperdriveService()
 	if err != nil {
-		return fmt.Errorf("failed to create Hyperdrive service: %w", err)
+		return outErr("failed to create Hyperdrive service", err)
 	}
 
 	cfg, err := svc.Create(context.Background(), name, origin)
@@ -193,19 +193,18 @@ func runHyperdriveCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create Hyperdrive config", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Hyperdrive config created successfully", cfg)
-	}
-
-	printSuccess("Hyperdrive config '%s' created (ID: %s)", cfg.Name, cfg.ID)
-	printInfo("Origin: %s://%s@%s:%d/%s", cfg.Origin.Scheme, cfg.Origin.User, cfg.Origin.Host, cfg.Origin.Port, cfg.Origin.Database)
-	return nil
+	return outPayload("Hyperdrive config created successfully", func() any {
+		return cfg
+	}, func() {
+		printSuccess("Hyperdrive config '%s' created (ID: %s)", cfg.Name, cfg.ID)
+		printInfo("Origin: %s://%s@%s:%d/%s", cfg.Origin.Scheme, cfg.Origin.User, cfg.Origin.Host, cfg.Origin.Port, cfg.Origin.Database)
+	})
 }
 
 func runHyperdriveList(cmd *cobra.Command, args []string) error {
 	svc, err := getHyperdriveService()
 	if err != nil {
-		return fmt.Errorf("failed to create Hyperdrive service: %w", err)
+		return outErr("failed to create Hyperdrive service", err)
 	}
 
 	configs, err := svc.List(context.Background())
@@ -213,24 +212,21 @@ func runHyperdriveList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list Hyperdrive configs", err)
 	}
 
-	if JSONOutput {
-		return printJSON(configs)
-	}
+	return outResult(configs, func() {
+		if len(configs) == 0 {
+			printInfo("No Hyperdrive configs found")
+			return
+		}
 
-	if len(configs) == 0 {
-		printInfo("No Hyperdrive configs found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tHOST\tPORT\tDATABASE\tSCHEME")
-	for _, c := range configs {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\t%s\n",
-			c.ID, c.Name, c.Origin.Host, c.Origin.Port, c.Origin.Database, c.Origin.Scheme)
-	}
-	w.Flush()
-	printInfo("Total: %d config(s)", len(configs))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tHOST\tPORT\tDATABASE\tSCHEME")
+		for _, c := range configs {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\t%s\n",
+				c.ID, c.Name, c.Origin.Host, c.Origin.Port, c.Origin.Database, c.Origin.Scheme)
+		}
+		w.Flush()
+		printInfo("Total: %d config(s)", len(configs))
+	})
 }
 
 func runHyperdriveGet(cmd *cobra.Command, args []string) error {
@@ -238,7 +234,7 @@ func runHyperdriveGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getHyperdriveService()
 	if err != nil {
-		return fmt.Errorf("failed to create Hyperdrive service: %w", err)
+		return outErr("failed to create Hyperdrive service", err)
 	}
 
 	cfg, err := svc.Get(context.Background(), configID)
@@ -246,29 +242,26 @@ func runHyperdriveGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get Hyperdrive config", err)
 	}
 
-	if JSONOutput {
-		return printJSON(cfg)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "ID:\t%s\n", cfg.ID)
-	fmt.Fprintf(w, "Name:\t%s\n", cfg.Name)
-	fmt.Fprintf(w, "Host:\t%s\n", cfg.Origin.Host)
-	fmt.Fprintf(w, "Port:\t%d\n", cfg.Origin.Port)
-	fmt.Fprintf(w, "Scheme:\t%s\n", cfg.Origin.Scheme)
-	fmt.Fprintf(w, "Database:\t%s\n", cfg.Origin.Database)
-	fmt.Fprintf(w, "User:\t%s\n", cfg.Origin.User)
-	if cfg.Caching.Disabled != nil {
-		fmt.Fprintf(w, "Caching Disabled:\t%v\n", *cfg.Caching.Disabled)
-	}
-	if cfg.Caching.MaxAge > 0 {
-		fmt.Fprintf(w, "Cache Max Age:\t%d\n", cfg.Caching.MaxAge)
-	}
-	if cfg.Caching.StaleWhileRevalidate > 0 {
-		fmt.Fprintf(w, "Stale While Revalidate:\t%d\n", cfg.Caching.StaleWhileRevalidate)
-	}
-	w.Flush()
-	return nil
+	return outResult(cfg, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "ID:\t%s\n", cfg.ID)
+		fmt.Fprintf(w, "Name:\t%s\n", cfg.Name)
+		fmt.Fprintf(w, "Host:\t%s\n", cfg.Origin.Host)
+		fmt.Fprintf(w, "Port:\t%d\n", cfg.Origin.Port)
+		fmt.Fprintf(w, "Scheme:\t%s\n", cfg.Origin.Scheme)
+		fmt.Fprintf(w, "Database:\t%s\n", cfg.Origin.Database)
+		fmt.Fprintf(w, "User:\t%s\n", cfg.Origin.User)
+		if cfg.Caching.Disabled != nil {
+			fmt.Fprintf(w, "Caching Disabled:\t%v\n", *cfg.Caching.Disabled)
+		}
+		if cfg.Caching.MaxAge > 0 {
+			fmt.Fprintf(w, "Cache Max Age:\t%d\n", cfg.Caching.MaxAge)
+		}
+		if cfg.Caching.StaleWhileRevalidate > 0 {
+			fmt.Fprintf(w, "Stale While Revalidate:\t%d\n", cfg.Caching.StaleWhileRevalidate)
+		}
+		w.Flush()
+	})
 }
 
 func runHyperdriveUpdate(cmd *cobra.Command, args []string) error {
@@ -287,21 +280,21 @@ func runHyperdriveUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update Hyperdrive config", map[string]interface{}{
+		return outPayload("DRY RUN: Would update Hyperdrive config", func() any {
+			return map[string]interface{}{
 				"config_id":   configID,
 				"name":        hdName,
 				"origin_host": hdOriginHost,
 				"database":    hdDatabase,
-			})
-		}
-		printInfo("DRY RUN: Would update Hyperdrive config '%s'", configID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update Hyperdrive config '%s'", configID)
+		})
 	}
 
 	svc, err := getHyperdriveService()
 	if err != nil {
-		return fmt.Errorf("failed to create Hyperdrive service: %w", err)
+		return outErr("failed to create Hyperdrive service", err)
 	}
 
 	cfg, err := svc.Update(context.Background(), configID, params)
@@ -309,13 +302,12 @@ func runHyperdriveUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update Hyperdrive config", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Hyperdrive config updated successfully", cfg)
-	}
-
-	printSuccess("Hyperdrive config '%s' updated (ID: %s)", cfg.Name, cfg.ID)
-	printInfo("Origin: %s://%s@%s:%d/%s", cfg.Origin.Scheme, cfg.Origin.User, cfg.Origin.Host, cfg.Origin.Port, cfg.Origin.Database)
-	return nil
+	return outPayload("Hyperdrive config updated successfully", func() any {
+		return cfg
+	}, func() {
+		printSuccess("Hyperdrive config '%s' updated (ID: %s)", cfg.Name, cfg.ID)
+		printInfo("Origin: %s://%s@%s:%d/%s", cfg.Origin.Scheme, cfg.Origin.User, cfg.Origin.Host, cfg.Origin.Port, cfg.Origin.Database)
+	})
 }
 
 func runHyperdriveDelete(cmd *cobra.Command, args []string) error {
@@ -333,29 +325,29 @@ func runHyperdriveDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete Hyperdrive config", map[string]string{
+		return outPayload("DRY RUN: Would delete Hyperdrive config", func() any {
+			return map[string]string{
 				"config_id": configID,
-			})
-		}
-		printInfo("DRY RUN: Would delete Hyperdrive config '%s'", configID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete Hyperdrive config '%s'", configID)
+		})
 	}
 
 	svc, err := getHyperdriveService()
 	if err != nil {
-		return fmt.Errorf("failed to create Hyperdrive service: %w", err)
+		return outErr("failed to create Hyperdrive service", err)
 	}
 
 	if err := svc.Delete(context.Background(), configID); err != nil {
 		return outErr("failed to delete Hyperdrive config", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Hyperdrive config deleted successfully", map[string]string{
+	return outPayload("Hyperdrive config deleted successfully", func() any {
+		return map[string]string{
 			"config_id": configID,
-		})
-	}
-	printSuccess("Hyperdrive config '%s' deleted successfully!", configID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Hyperdrive config '%s' deleted successfully!", configID)
+	})
 }
