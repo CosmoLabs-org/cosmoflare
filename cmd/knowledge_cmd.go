@@ -19,16 +19,14 @@ not registered are blocked before send.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		packs, err := knowledge.Load()
 		if err != nil {
-			return fmt.Errorf("knowledge packs failed to load: %w", err)
+			return outErr("knowledge packs failed to load", err)
 		}
-		if JSONOutput {
-			return printJSON(packs)
-		}
-		for _, p := range packs {
-			fmt.Printf("%s: %d endpoints, %d error decodes, %d plan caps, %d invariants, %d traffic classes (scopes: %v)\n",
-				p.Product, len(p.Endpoints), len(p.Errors), len(p.PlanCaps), len(p.Invariants), len(p.TrafficClasses), p.Scopes)
-		}
-		return nil
+		return outResult(packs, func() {
+			for _, p := range packs {
+				fmt.Printf("%s: %d endpoints, %d error decodes, %d plan caps, %d invariants, %d traffic classes (scopes: %v)\n",
+					p.Product, len(p.Endpoints), len(p.Errors), len(p.PlanCaps), len(p.Invariants), len(p.TrafficClasses), p.Scopes)
+			}
+		})
 	},
 }
 
