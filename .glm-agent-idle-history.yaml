@@ -1,0 +1,6 @@
+records:
+    - brief_hash: c86426a15b7a43b4
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-14T19:10:57.711192+04:00

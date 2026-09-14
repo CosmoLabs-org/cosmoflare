@@ -3,6 +3,11 @@ status: PENDING
 type: continuation
 priority: high
 created: 2026-09-14T17:55:00+04:00
+requires_reading:
+    - cmd/account.go
+    - cmd/output.go
+    - docs/audit/latest/brief.md
+schema_version: 1
 ---
 
 # Continuation: FEAT-040 Species-2 Presenter Sweep → v0.28.0
