@@ -128,12 +128,12 @@ func runDomains(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would list domains", opts)
-		}
-		printInfo("DRY RUN: Would list domains (page=%d, per-page=%d, filter=%q, name=%q, sort=%q)",
-			opts.Page, opts.PerPage, opts.Filter, opts.Name, opts.Sort)
-		return nil
+		return outPayload("DRY RUN: Would list domains", func() any {
+			return opts
+		}, func() {
+			printInfo("DRY RUN: Would list domains (page=%d, per-page=%d, filter=%q, name=%q, sort=%q)",
+				opts.Page, opts.PerPage, opts.Filter, opts.Name, opts.Sort)
+		})
 	}
 
 	ctx := context.Background()
@@ -152,36 +152,29 @@ func runDomains(cmd *cobra.Command, args []string) error {
 		return runDomainsDetail(ctx, domainSvc, domains, pagination)
 	}
 
-	// --json mode: machine-readable output
-	if JSONOutput {
-		return printJSON(domainsResponse{
-			Domains:    domains,
-			Pagination: pagination,
-		})
-	}
+	// Default: compact table output (JSON via outResult)
+	return outResult(domainsResponse{
+		Domains:    domains,
+		Pagination: pagination,
+	}, func() {
+		if len(domains) == 0 {
+			printInfo("No domains found")
+			return
+		}
 
-	// Default: compact table output
-	if len(domains) == 0 {
-		printInfo("No domains found")
-		return nil
-	}
-
-	fmt.Print(cosmoflare.FormatDomainTable(domains))
-	printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
-
-	return nil
+		fmt.Print(cosmoflare.FormatDomainTable(domains))
+		printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
+	})
 }
 
 func runDomainsDetail(ctx context.Context, svc *cosmoflare.DomainService, domains []*cosmoflare.DomainStatus, pagination *cosmoflare.Pagination) error {
 	if len(domains) == 0 {
-		if JSONOutput {
-			return printJSON(domainsResponse{
-				Domains:    domains,
-				Pagination: pagination,
-			})
-		}
-		printInfo("No domains found")
-		return nil
+		return outResult(domainsResponse{
+			Domains:    domains,
+			Pagination: pagination,
+		}, func() {
+			printInfo("No domains found")
+		})
 	}
 
 	details := make([]*cosmoflare.DomainDetail, 0, len(domains))
@@ -198,24 +191,20 @@ func runDomainsDetail(ctx context.Context, svc *cosmoflare.DomainService, domain
 		details = append(details, detail)
 	}
 
-	if JSONOutput {
-		type detailResponse struct {
-			Domains    []*cosmoflare.DomainDetail `json:"domains"`
-			Pagination *cosmoflare.Pagination     `json:"pagination"`
-		}
-		return printJSON(detailResponse{
-			Domains:    details,
-			Pagination: pagination,
-		})
+	type detailResponse struct {
+		Domains    []*cosmoflare.DomainDetail `json:"domains"`
+		Pagination *cosmoflare.Pagination     `json:"pagination"`
 	}
-
-	for i, detail := range details {
-		if i > 0 {
-			fmt.Println()
+	return outResult(detailResponse{
+		Domains:    details,
+		Pagination: pagination,
+	}, func() {
+		for i, detail := range details {
+			if i > 0 {
+				fmt.Println()
+			}
+			fmt.Print(cosmoflare.FormatDomainDetail(detail))
 		}
-		fmt.Print(cosmoflare.FormatDomainDetail(detail))
-	}
-	printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
-
-	return nil
+		printInfo("Page %d/%d (%d total)", pagination.Page, pagination.TotalPages, pagination.Total)
+	})
 }
