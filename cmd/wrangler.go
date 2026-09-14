@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var wranglerCmd = &cobra.Command{
@@ -132,10 +132,7 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 
 	tomlPath, err := cosmoflare.FindWranglerToml(inputPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to find wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to find wrangler.toml: %w", err)
+		return outErr("failed to find wrangler.toml", err)
 	}
 
 	ws := cosmoflare.NewWranglerService()
@@ -143,28 +140,32 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 	// Parse
 	wc, err := ws.ParseToml(tomlPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to parse wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to parse %s: %w", tomlPath, err)
+		return outErr(fmt.Sprintf("failed to parse %s", tomlPath), err)
 	}
 
 	// Validate
 	results := ws.Validate(wc)
 	if cosmoflare.WranglerHasErrors(results) {
-		if JSONOutput {
-			return printSuccessJSON("validation failed", map[string]interface{}{
+		// JSON mode prints the shaped payload; plain mode prints the errors
+		// and surfaces the validation failure as the command's error.
+		var humanErr error
+		if perr := outPayload("validation failed", func() any {
+			return map[string]interface{}{
 				"valid":   false,
 				"results": results,
-			})
-		}
-		printError("wrangler.toml has validation errors:")
-		for _, r := range results {
-			if r.Level == "error" {
-				printError("  %s: %s", r.Field, r.Message)
 			}
+		}, func() {
+			printError("wrangler.toml has validation errors:")
+			for _, r := range results {
+				if r.Level == "error" {
+					printError("  %s: %s", r.Field, r.Message)
+				}
+			}
+			humanErr = fmt.Errorf("wrangler.toml validation failed; fix errors before importing")
+		}); perr != nil {
+			return perr
 		}
-		return fmt.Errorf("wrangler.toml validation failed; fix errors before importing")
+		return humanErr
 	}
 
 	// Print warnings
@@ -188,67 +189,59 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 	// Check if output exists
 	if !wranglerForce {
 		if _, err := os.Stat(outputPath); err == nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("Output file %s already exists. Use --force to overwrite.", outputPath))
-			}
-			return fmt.Errorf("output file %s already exists. Use --force to overwrite", outputPath)
+			return outErrf("output file %s already exists. Use --force to overwrite", outputPath)
 		}
 	}
 
 	if DryRun {
-		if JSONOutput {
+		return outPayload("dry run: would write .cosmoflare.yaml", func() any {
 			data, _ := cosmoflare.MarshalWranglerImportYAML(cc)
-			return printSuccessJSON("dry run: would write .cosmoflare.yaml", map[string]interface{}{
+			return map[string]interface{}{
 				"input":   tomlPath,
 				"output":  outputPath,
 				"preview": string(data),
 				"worker":  wc.Name,
-			})
-		}
-		printSuccess("Would import %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
-		printInfo("Worker: %s", wc.Name)
-		if wc.Main != "" {
-			printInfo("Entry point: %s", wc.Main)
-		}
-		return nil
+			}
+		}, func() {
+			printSuccess("Would import %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
+			printInfo("Worker: %s", wc.Name)
+			if wc.Main != "" {
+				printInfo("Entry point: %s", wc.Main)
+			}
+		})
 	}
 
 	// Write output
 	if err := cosmoflare.WriteWranglerImportYAML(cc, outputPath); err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to write .cosmoflare.yaml: %v", err))
-		}
-		return fmt.Errorf("failed to write %s: %w", outputPath, err)
+		return outErr(fmt.Sprintf("failed to write %s", outputPath), err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("imported wrangler.toml to .cosmoflare.yaml", map[string]interface{}{
-			"input":  tomlPath,
-			"output": outputPath,
-			"worker": wc.Name,
+	return outPayload("imported wrangler.toml to .cosmoflare.yaml", func() any {
+		return map[string]interface{}{
+			"input":         tomlPath,
+			"output":        outputPath,
+			"worker":        wc.Name,
 			"kv_namespaces": len(wc.KVNamespaces),
 			"r2_buckets":    len(wc.R2Buckets),
 			"d1_databases":  len(wc.D1Databases),
 			"environments":  len(wc.Env),
-		})
-	}
-
-	printSuccess("Imported %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
-	printInfo("Worker: %s", wc.Name)
-	if len(wc.KVNamespaces) > 0 {
-		printInfo("KV namespaces: %d", len(wc.KVNamespaces))
-	}
-	if len(wc.R2Buckets) > 0 {
-		printInfo("R2 buckets: %d", len(wc.R2Buckets))
-	}
-	if len(wc.D1Databases) > 0 {
-		printInfo("D1 databases: %d", len(wc.D1Databases))
-	}
-	if len(wc.Env) > 0 {
-		printInfo("Environments: %d", len(wc.Env))
-	}
-
-	return nil
+		}
+	}, func() {
+		printSuccess("Imported %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
+		printInfo("Worker: %s", wc.Name)
+		if len(wc.KVNamespaces) > 0 {
+			printInfo("KV namespaces: %d", len(wc.KVNamespaces))
+		}
+		if len(wc.R2Buckets) > 0 {
+			printInfo("R2 buckets: %d", len(wc.R2Buckets))
+		}
+		if len(wc.D1Databases) > 0 {
+			printInfo("D1 databases: %d", len(wc.D1Databases))
+		}
+		if len(wc.Env) > 0 {
+			printInfo("Environments: %d", len(wc.Env))
+		}
+	})
 }
 
 func runWranglerDiff(cmd *cobra.Command, args []string) error {
@@ -259,19 +252,13 @@ func runWranglerDiff(cmd *cobra.Command, args []string) error {
 
 	tomlPath, err := cosmoflare.FindWranglerToml(inputPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to find wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to find wrangler.toml: %w", err)
+		return outErr("failed to find wrangler.toml", err)
 	}
 
 	// Find existing .cosmoflare.yaml
 	cosmoPath := filepath.Join(filepath.Dir(tomlPath), ".cosmoflare.yaml")
 	if _, err := os.Stat(cosmoPath); os.IsNotExist(err) {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("No .cosmoflare.yaml found at %s. Run 'cosmoflare wrangler import' first.", cosmoPath))
-		}
-		return fmt.Errorf("no .cosmoflare.yaml found at %s. Run 'cosmoflare wrangler import' first", cosmoPath)
+		return outErrf("no .cosmoflare.yaml found at %s. Run 'cosmoflare wrangler import' first", cosmoPath)
 	}
 
 	ws := cosmoflare.NewWranglerService()
@@ -279,39 +266,31 @@ func runWranglerDiff(cmd *cobra.Command, args []string) error {
 	// Parse wrangler.toml
 	wc, err := ws.ParseToml(tomlPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to parse wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to parse wrangler.toml: %w", err)
+		return outErr("failed to parse wrangler.toml", err)
 	}
 
 	// Load existing .cosmoflare.yaml
 	existing, err := cosmoflare.LoadWranglerImportYAML(cosmoPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to parse .cosmoflare.yaml: %v", err))
-		}
-		return fmt.Errorf("failed to parse .cosmoflare.yaml: %w", err)
+		return outErr("failed to parse .cosmoflare.yaml", err)
 	}
 
 	// Diff
 	diffs := ws.DiffWranglerConfigs(wc, existing)
 
-	if JSONOutput {
-		return printSuccessJSON("diff complete", map[string]interface{}{
-			"wrangler_path":  tomlPath,
-			"cosmo_path":     cosmoPath,
-			"differences":    diffs,
-			"diff_count":     len(diffs),
-			"in_sync":        len(diffs) == 0,
-		})
-	}
-
-	printInfo("Comparing %s ↔ %s", getRelativePath(tomlPath), getRelativePath(cosmoPath))
-	fmt.Println()
-	fmt.Print(cosmoflare.FormatWranglerDiffTable(diffs))
-
-	return nil
+	return outPayload("diff complete", func() any {
+		return map[string]interface{}{
+			"wrangler_path": tomlPath,
+			"cosmo_path":    cosmoPath,
+			"differences":   diffs,
+			"diff_count":    len(diffs),
+			"in_sync":       len(diffs) == 0,
+		}
+	}, func() {
+		printInfo("Comparing %s ↔ %s", getRelativePath(tomlPath), getRelativePath(cosmoPath))
+		fmt.Println()
+		fmt.Print(cosmoflare.FormatWranglerDiffTable(diffs))
+	})
 }
 
 func runWranglerValidate(cmd *cobra.Command, args []string) error {
@@ -322,10 +301,7 @@ func runWranglerValidate(cmd *cobra.Command, args []string) error {
 
 	tomlPath, err := cosmoflare.FindWranglerToml(inputPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to find wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to find wrangler.toml: %w", err)
+		return outErr("failed to find wrangler.toml", err)
 	}
 
 	ws := cosmoflare.NewWranglerService()
@@ -333,54 +309,56 @@ func runWranglerValidate(cmd *cobra.Command, args []string) error {
 	// Parse
 	wc, err := ws.ParseToml(tomlPath)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("Failed to parse wrangler.toml: %v", err))
-		}
-		return fmt.Errorf("failed to parse wrangler.toml: %w", err)
+		return outErr("failed to parse wrangler.toml", err)
 	}
 
 	// Validate
 	results := ws.Validate(wc)
 
-	if JSONOutput {
-		return printSuccessJSON("validation complete", map[string]interface{}{
-			"path":    tomlPath,
-			"valid":   !cosmoflare.WranglerHasErrors(results),
-			"results": results,
-			"errors":  countByLevel(results, "error"),
+	// JSON mode prints the shaped payload; plain mode prints the results and
+	// surfaces a validation failure as the command's error.
+	var humanErr error
+	if perr := outPayload("validation complete", func() any {
+		return map[string]interface{}{
+			"path":     tomlPath,
+			"valid":    !cosmoflare.WranglerHasErrors(results),
+			"results":  results,
+			"errors":   countByLevel(results, "error"),
 			"warnings": countByLevel(results, "warning"),
-		})
-	}
-
-	printInfo("Validating %s", getRelativePath(tomlPath))
-	fmt.Println()
-
-	errors := 0
-	warnings := 0
-	for _, r := range results {
-		switch r.Level {
-		case "error":
-			printError("%s: %s", r.Field, r.Message)
-			errors++
-		case "warning":
-			printWarning("%s: %s", r.Field, r.Message)
-			warnings++
 		}
-	}
+	}, func() {
+		printInfo("Validating %s", getRelativePath(tomlPath))
+		fmt.Println()
 
-	fmt.Println()
-	if errors > 0 {
-		printError("%d error(s), %d warning(s)", errors, warnings)
-		return fmt.Errorf("validation failed with %d error(s)", errors)
-	}
+		errors := 0
+		warnings := 0
+		for _, r := range results {
+			switch r.Level {
+			case "error":
+				printError("%s: %s", r.Field, r.Message)
+				errors++
+			case "warning":
+				printWarning("%s: %s", r.Field, r.Message)
+				warnings++
+			}
+		}
 
-	if warnings > 0 {
-		printWarning("%d warning(s), 0 errors", warnings)
-	} else {
-		printSuccess("wrangler.toml is valid (0 errors, 0 warnings)")
-	}
+		fmt.Println()
+		if errors > 0 {
+			printError("%d error(s), %d warning(s)", errors, warnings)
+			humanErr = fmt.Errorf("validation failed with %d error(s)", errors)
+			return
+		}
 
-	return nil
+		if warnings > 0 {
+			printWarning("%d warning(s), 0 errors", warnings)
+		} else {
+			printSuccess("wrangler.toml is valid (0 errors, 0 warnings)")
+		}
+	}); perr != nil {
+		return perr
+	}
+	return humanErr
 }
 
 // countByLevel counts validation results matching a level.
