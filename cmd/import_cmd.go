@@ -55,19 +55,13 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	// Check file exists
 	if _, err := os.Stat(inputFile); os.IsNotExist(err) {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("file not found: %s", inputFile))
-		}
-		return fmt.Errorf("file not found: %s", inputFile)
+		return outErrf("file not found: %s", inputFile)
 	}
 
 	// Parse the export file
 	exportCfg, err := cosmoflare.ParseFile(inputFile)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to parse %s: %v", inputFile, err))
-		}
-		return fmt.Errorf("failed to parse %s: %w", inputFile, err)
+		return outErr(fmt.Sprintf("failed to parse %s", inputFile), err)
 	}
 
 	// Show what will be imported
@@ -94,7 +88,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	svc, err := getExportService()
 	if err != nil {
-		return fmt.Errorf("failed to create export service: %w", err)
+		return outErr("failed to create export service", err)
 	}
 
 	var opts []cosmoflare.ImportOption
@@ -116,50 +110,49 @@ func runImport(cmd *cobra.Command, args []string) error {
 		return outErr("import failed", err)
 	}
 
-	if JSONOutput {
-		msg := "import complete"
-		if DryRun {
-			msg = "import preview"
-		}
-		return printSuccessJSON(msg, result)
-	}
-
-	// Print results table
-	if len(result.Actions) > 0 {
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "SERVICE\tACTION\tRESOURCE\tDETAIL")
-		for _, a := range result.Actions {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", a.Service, a.Action, a.Resource, a.Detail)
-		}
-		w.Flush()
-		fmt.Println()
-	}
-
-	// Print errors
-	if len(result.Errors) > 0 {
-		printWarning("%d errors occurred:", len(result.Errors))
-		for _, e := range result.Errors {
-			printError("  %s", e)
-		}
-	}
-
-	// Summary
-	created := 0
-	skipped := 0
-	for _, a := range result.Actions {
-		switch a.Action {
-		case "create":
-			created++
-		case "skip":
-			skipped++
-		}
-	}
-
+	msg := "import complete"
 	if DryRun {
-		printSuccess("DRY RUN: %d would be created, %d would be skipped", created, skipped)
-	} else {
-		printSuccess("Import complete: %d created, %d skipped, %d errors", created, skipped, len(result.Errors))
+		msg = "import preview"
 	}
 
-	return nil
+	return outPayload(msg, func() any {
+		return result
+	}, func() {
+		// Print results table
+		if len(result.Actions) > 0 {
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "SERVICE\tACTION\tRESOURCE\tDETAIL")
+			for _, a := range result.Actions {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", a.Service, a.Action, a.Resource, a.Detail)
+			}
+			w.Flush()
+			fmt.Println()
+		}
+
+		// Print errors
+		if len(result.Errors) > 0 {
+			printWarning("%d errors occurred:", len(result.Errors))
+			for _, e := range result.Errors {
+				printError("  %s", e)
+			}
+		}
+
+		// Summary
+		created := 0
+		skipped := 0
+		for _, a := range result.Actions {
+			switch a.Action {
+			case "create":
+				created++
+			case "skip":
+				skipped++
+			}
+		}
+
+		if DryRun {
+			printSuccess("DRY RUN: %d would be created, %d would be skipped", created, skipped)
+		} else {
+			printSuccess("Import complete: %d created, %d skipped, %d errors", created, skipped, len(result.Errors))
+		}
+	})
 }
