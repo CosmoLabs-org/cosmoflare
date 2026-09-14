@@ -6,8 +6,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	"github.com/spf13/cobra"
 )
 
 var comparePrefix string
@@ -55,17 +55,17 @@ func runCompare(cmd *cobra.Command, args []string) error {
 
 	client, err := getAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return outErr("failed to create API client", err)
 	}
 
 	srcResult, err := client.ListObjects(context.Background(), srcBucket, comparePrefix, "", 0, "")
 	if err != nil {
-		return fmt.Errorf("failed to list source bucket: %w", err)
+		return outErr("failed to list source bucket", err)
 	}
 
 	dstResult, err := client.ListObjects(context.Background(), dstBucket, comparePrefix, "", 0, "")
 	if err != nil {
-		return fmt.Errorf("failed to list destination bucket: %w", err)
+		return outErr("failed to list destination bucket", err)
 	}
 
 	srcMap := make(map[string]int64, len(srcResult.Items))
@@ -97,39 +97,38 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Comparison complete", result)
-	}
+	return outPayload("Comparison complete", func() any {
+		return result
+	}, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-
-	if len(result.OnlyInSource) > 0 {
-		fmt.Fprintln(w, "ONLY IN SOURCE\tSIZE")
-		for _, key := range result.OnlyInSource {
-			fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(srcMap[key]))
+		if len(result.OnlyInSource) > 0 {
+			fmt.Fprintln(w, "ONLY IN SOURCE\tSIZE")
+			for _, key := range result.OnlyInSource {
+				fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(srcMap[key]))
+			}
+			fmt.Fprintln(w)
 		}
-		fmt.Fprintln(w)
-	}
 
-	if len(result.OnlyInDest) > 0 {
-		fmt.Fprintln(w, "ONLY IN DEST\tSIZE")
-		for _, key := range result.OnlyInDest {
-			fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(dstMap[key]))
+		if len(result.OnlyInDest) > 0 {
+			fmt.Fprintln(w, "ONLY IN DEST\tSIZE")
+			for _, key := range result.OnlyInDest {
+				fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(dstMap[key]))
+			}
+			fmt.Fprintln(w)
 		}
-		fmt.Fprintln(w)
-	}
 
-	if len(result.DifferentSize) > 0 {
-		fmt.Fprintln(w, "DIFFERENT SIZE\tSOURCE\tDEST")
-		for _, d := range result.DifferentSize {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", d.Key, utils.FormatBytes(d.SourceSize), utils.FormatBytes(d.DestSize))
+		if len(result.DifferentSize) > 0 {
+			fmt.Fprintln(w, "DIFFERENT SIZE\tSOURCE\tDEST")
+			for _, d := range result.DifferentSize {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", d.Key, utils.FormatBytes(d.SourceSize), utils.FormatBytes(d.DestSize))
+			}
+			fmt.Fprintln(w)
 		}
-		fmt.Fprintln(w)
-	}
 
-	w.Flush()
+		w.Flush()
 
-	printInfo("Summary: %d only in source, %d only in dest, %d different size, %d same",
-		len(result.OnlyInSource), len(result.OnlyInDest), len(result.DifferentSize), len(result.Same))
-	return nil
+		printInfo("Summary: %d only in source, %d only in dest, %d different size, %d same",
+			len(result.OnlyInSource), len(result.OnlyInDest), len(result.DifferentSize), len(result.Same))
+	})
 }
