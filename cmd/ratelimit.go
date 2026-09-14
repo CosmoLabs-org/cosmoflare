@@ -33,24 +33,21 @@ var rateLimitListCmd = &cobra.Command{
 		}
 		rules, err := svc.List(cmd.Context(), zoneID)
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(err.Error())
+			return outErr("failed to list rate-limiting rules", err)
+		}
+		return outPayload("rate-limiting rules listed", func() any {
+			return rules
+		}, func() {
+			if len(rules) == 0 {
+				fmt.Println("no rate-limiting rules (fresh zones have no entrypoint — this counts as zero)")
+				return
 			}
-			return err
-		}
-		if JSONOutput {
-			return printSuccessJSON("rate-limiting rules listed", rules)
-		}
-		if len(rules) == 0 {
-			fmt.Println("no rate-limiting rules (fresh zones have no entrypoint — this counts as zero)")
-			return nil
-		}
-		for _, r := range rules {
-			fmt.Printf("%s  %s  %d req/%ds block %ds  characteristics=%s\n",
-				r.ID, r.Expression, r.RequestsPerPeriod, r.Period, r.MitigationTimeout,
-				strings.Join(r.Characteristics, ","))
-		}
-		return nil
+			for _, r := range rules {
+				fmt.Printf("%s  %s  %d req/%ds block %ds  characteristics=%s\n",
+					r.ID, r.Expression, r.RequestsPerPeriod, r.Period, r.MitigationTimeout,
+					strings.Join(r.Characteristics, ","))
+			}
+		})
 	},
 }
 
@@ -87,21 +84,18 @@ var rateLimitCreateCmd = &cobra.Command{
 			Characteristics:   chars,
 		})
 		if err != nil {
-			if JSONOutput {
-				return printErrorJSON(err.Error())
-			}
-			return err
+			return outErr("failed to create rate-limiting rule", err)
 		}
-		if JSONOutput {
-			if err := printSuccessJSON("rate-limiting rule created", rule); err != nil {
-				return err
-			}
-		} else {
+		if err := outPayload("rate-limiting rule created", func() any {
+			return rule
+		}, func() {
 			fmt.Printf("created %s  %s  %d req/%ds block %ds\n",
 				rule.ID, rule.Expression, rule.RequestsPerPeriod, rule.Period, rule.MitigationTimeout)
 			if adv := probeAdvisory(); adv != "" {
 				fmt.Println(adv)
 			}
+		}); err != nil {
+			return err
 		}
 		if probeOnCreate {
 			path := cosmoflare.ExpressionPath(rule.Expression)
@@ -128,12 +122,10 @@ var rateLimitCreateCmd = &cobra.Command{
 // reportProbe prints one probe result in the active output mode — the
 // single rendering shared by `ratelimit probe` and `create --probe`.
 func reportProbe(res cosmoflare.RateLimitProbeResult) error {
-	if JSONOutput {
-		return printJSON(res)
-	}
-	fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
-		res.URL, res.Requests, res.Verdict, res.Explanation)
-	return nil
+	return outResult(res, func() {
+		fmt.Printf("probe   %s\nsent    %d requests\nverdict %s\n        %s\n",
+			res.URL, res.Requests, res.Verdict, res.Explanation)
+	})
 }
 
 var ratelimitExpression string
@@ -145,7 +137,7 @@ var ratelimitExpression string
 func ratelimitServiceAndZone(ctx context.Context, target string) (*cosmoflare.RateLimitService, string, error) {
 	svc, err := cosmoflare.NewRateLimitServiceFromCreds(AccountID, APIToken)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create rate-limit service: %w", err)
+		return nil, "", outErr("failed to create rate-limit service", err)
 	}
 	zoneID, err := resolveZoneID(ctx, target)
 	if err != nil {
