@@ -33,11 +33,9 @@ Examples:
 		if d == nil {
 			return fmt.Errorf("no knowledge entry for code %d (context %q) — the knowledge layer never fabricates a verdict", code, decodeContext)
 		}
-		if JSONOutput {
-			return printJSON(d)
-		}
-		cmd.Printf("code:    %d\ncontext: %s\ncause:   %s\nfix:     %s\n", d.Code, d.Context, d.Cause, d.Fix)
-		return nil
+		return outResult(d, func() {
+			cmd.Printf("code:    %d\ncontext: %s\ncause:   %s\nfix:     %s\n", d.Code, d.Context, d.Cause, d.Fix)
+		})
 	},
 }
 
