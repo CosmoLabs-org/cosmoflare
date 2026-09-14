@@ -127,15 +127,15 @@ func runZoneCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getZoneService()
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create zone", map[string]string{"name": name, "type": zoneType})
-		}
-		printInfo("DRY RUN: Would create zone '%s' (type: %s)", name, zoneType)
-		return nil
+		return outPayload("DRY RUN: Would create zone", func() any {
+			return map[string]string{"name": name, "type": zoneType}
+		}, func() {
+			printInfo("DRY RUN: Would create zone '%s' (type: %s)", name, zoneType)
+		})
 	}
 
 	zone, err := svc.Create(context.Background(), name, zoneType)
@@ -143,22 +143,21 @@ func runZoneCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create zone", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Zone created successfully", zone)
-	}
-
-	printSuccess("Zone '%s' created (ID: %s)", zone.Name, zone.ID)
-	printInfo("Status: %s", zone.Status)
-	if len(zone.NameServers) > 0 {
-		printInfo("Name servers: %s", strings.Join(zone.NameServers, ", "))
-	}
-	return nil
+	return outPayload("Zone created successfully", func() any {
+		return zone
+	}, func() {
+		printSuccess("Zone '%s' created (ID: %s)", zone.Name, zone.ID)
+		printInfo("Status: %s", zone.Status)
+		if len(zone.NameServers) > 0 {
+			printInfo("Name servers: %s", strings.Join(zone.NameServers, ", "))
+		}
+	})
 }
 
 func runZoneList(cmd *cobra.Command, args []string) error {
 	svc, err := getZoneService()
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	zones, err := svc.List(context.Background())
@@ -166,30 +165,27 @@ func runZoneList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list zones", err)
 	}
 
-	if JSONOutput {
-		return printJSON(zones)
-	}
+	return outResult(zones, func() {
+		if len(zones) == 0 {
+			printInfo("No zones found")
+			return
+		}
 
-	if len(zones) == 0 {
-		printInfo("No zones found")
-		return nil
-	}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tSTATUS\tTYPE\tPLAN")
+		for _, z := range zones {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				z.ID,
+				z.Name,
+				z.Status,
+				z.Type,
+				z.Plan.Name,
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tSTATUS\tTYPE\tPLAN")
-	for _, z := range zones {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			z.ID,
-			z.Name,
-			z.Status,
-			z.Type,
-			z.Plan.Name,
-		)
-	}
-	w.Flush()
-
-	printInfo("Total: %d zone(s)", len(zones))
-	return nil
+		printInfo("Total: %d zone(s)", len(zones))
+	})
 }
 
 func runZoneGet(cmd *cobra.Command, args []string) error {
@@ -200,7 +196,7 @@ func runZoneGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getZoneService()
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	zone, err := svc.Get(context.Background(), zoneID)
@@ -208,25 +204,22 @@ func runZoneGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get zone", err)
 	}
 
-	if JSONOutput {
-		return printJSON(zone)
-	}
-
-	fmt.Printf("Zone: %s\n", zone.Name)
-	fmt.Printf("ID: %s\n", zone.ID)
-	fmt.Printf("Status: %s\n", zone.Status)
-	fmt.Printf("Type: %s\n", zone.Type)
-	fmt.Printf("Paused: %t\n", zone.Paused)
-	fmt.Printf("Plan: %s\n", zone.Plan.Name)
-	if len(zone.NameServers) > 0 {
-		fmt.Printf("Name Servers: %s\n", strings.Join(zone.NameServers, ", "))
-	}
-	if len(zone.OriginalNS) > 0 {
-		fmt.Printf("Original NS: %s\n", strings.Join(zone.OriginalNS, ", "))
-	}
-	fmt.Printf("Created: %s\n", zone.CreatedOn.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Modified: %s\n", zone.ModifiedOn.Format("2006-01-02 15:04:05"))
-	return nil
+	return outResult(zone, func() {
+		fmt.Printf("Zone: %s\n", zone.Name)
+		fmt.Printf("ID: %s\n", zone.ID)
+		fmt.Printf("Status: %s\n", zone.Status)
+		fmt.Printf("Type: %s\n", zone.Type)
+		fmt.Printf("Paused: %t\n", zone.Paused)
+		fmt.Printf("Plan: %s\n", zone.Plan.Name)
+		if len(zone.NameServers) > 0 {
+			fmt.Printf("Name Servers: %s\n", strings.Join(zone.NameServers, ", "))
+		}
+		if len(zone.OriginalNS) > 0 {
+			fmt.Printf("Original NS: %s\n", strings.Join(zone.OriginalNS, ", "))
+		}
+		fmt.Printf("Created: %s\n", zone.CreatedOn.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Modified: %s\n", zone.ModifiedOn.Format("2006-01-02 15:04:05"))
+	})
 }
 
 func runZoneSettings(cmd *cobra.Command, args []string) error {
@@ -237,7 +230,7 @@ func runZoneSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getZoneService()
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	settings, err := svc.GetSettings(context.Background(), zoneID)
@@ -245,37 +238,34 @@ func runZoneSettings(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get zone settings", err)
 	}
 
-	if JSONOutput {
-		return printJSON(settings)
-	}
-
-	if len(settings) == 0 {
-		printInfo("No settings found for zone '%s'", zoneID)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tVALUE\tEDITABLE\tMODIFIED")
-	for _, s := range settings {
-		editable := "no"
-		if s.Editable {
-			editable = "yes"
+	return outResult(settings, func() {
+		if len(settings) == 0 {
+			printInfo("No settings found for zone '%s'", zoneID)
+			return
 		}
-		modified := "-"
-		if s.ModifiedOn != "" {
-			modified = s.ModifiedOn
-		}
-		fmt.Fprintf(w, "%s\t%v\t%s\t%s\n",
-			s.ID,
-			s.Value,
-			editable,
-			modified,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d setting(s)", len(settings))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tVALUE\tEDITABLE\tMODIFIED")
+		for _, s := range settings {
+			editable := "no"
+			if s.Editable {
+				editable = "yes"
+			}
+			modified := "-"
+			if s.ModifiedOn != "" {
+				modified = s.ModifiedOn
+			}
+			fmt.Fprintf(w, "%s\t%v\t%s\t%s\n",
+				s.ID,
+				s.Value,
+				editable,
+				modified,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d setting(s)", len(settings))
+	})
 }
 
 func runZoneDelete(cmd *cobra.Command, args []string) error {
@@ -297,24 +287,24 @@ func runZoneDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getZoneService()
 	if err != nil {
-		return fmt.Errorf("failed to create zone service: %w", err)
+		return outErr("failed to create zone service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete zone", map[string]string{"id": zoneID})
-		}
-		printInfo("DRY RUN: Would delete zone '%s'", zoneID)
-		return nil
+		return outPayload("DRY RUN: Would delete zone", func() any {
+			return map[string]string{"id": zoneID}
+		}, func() {
+			printInfo("DRY RUN: Would delete zone '%s'", zoneID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), zoneID); err != nil {
 		return outErr("failed to delete zone", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Zone deleted successfully", map[string]string{"id": zoneID})
-	}
-	printSuccess("Zone '%s' deleted successfully!", zoneID)
-	return nil
+	return outPayload("Zone deleted successfully", func() any {
+		return map[string]string{"id": zoneID}
+	}, func() {
+		printSuccess("Zone '%s' deleted successfully!", zoneID)
+	})
 }
