@@ -114,19 +114,19 @@ func runQueueConsumerUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update consumer", map[string]interface{}{
+		return outPayload("DRY RUN: Would update consumer", func() any {
+			return map[string]interface{}{
 				"queue":    queueName,
 				"consumer": consumerName,
 				"settings": settings,
-			})
-		}
-		printInfo("DRY RUN: Would update consumer '%s' on queue '%s'", consumerName, queueName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update consumer '%s' on queue '%s'", consumerName, queueName)
+		})
 	}
 
 	c, err := svc.UpdateConsumer(context.Background(), queueName, consumerName, settings)
@@ -134,11 +134,11 @@ func runQueueConsumerUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update consumer", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Consumer updated successfully", c)
-	}
-	printSuccess("Consumer '%s' updated on queue '%s'", consumerName, queueName)
-	return nil
+	return outPayload("Consumer updated successfully", func() any {
+		return c
+	}, func() {
+		printSuccess("Consumer '%s' updated on queue '%s'", consumerName, queueName)
+	})
 }
 
 func runQueueConsumerRemove(cmd *cobra.Command, args []string) error {
@@ -147,32 +147,32 @@ func runQueueConsumerRemove(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would remove consumer", map[string]string{
+		return outPayload("DRY RUN: Would remove consumer", func() any {
+			return map[string]string{
 				"queue":    queueName,
 				"consumer": consumerName,
-			})
-		}
-		printInfo("DRY RUN: Would remove consumer '%s' from queue '%s'", consumerName, queueName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would remove consumer '%s' from queue '%s'", consumerName, queueName)
+		})
 	}
 
 	if err := svc.DeleteConsumer(context.Background(), queueName, consumerName); err != nil {
 		return outErr("failed to remove consumer", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Consumer removed successfully", map[string]string{
+	return outPayload("Consumer removed successfully", func() any {
+		return map[string]string{
 			"queue":    queueName,
 			"consumer": consumerName,
-		})
-	}
-	printSuccess("Consumer '%s' removed from queue '%s'", consumerName, queueName)
-	return nil
+		}
+	}, func() {
+		printSuccess("Consumer '%s' removed from queue '%s'", consumerName, queueName)
+	})
 }
 
 func runQueueDlq(cmd *cobra.Command, args []string) error {
@@ -184,7 +184,7 @@ func runQueueDlq(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if !queueDLQClear && queueDLQConsumerName == "" && queueDLQProducerName == "" {
@@ -193,34 +193,32 @@ func runQueueDlq(cmd *cobra.Command, args []string) error {
 			return outErr("failed to get queue", err)
 		}
 
-		if JSONOutput {
-			return printJSON(q)
-		}
-		printInfo("Queue '%s' DLQ configuration:", q.Name)
-		if len(q.Consumers) == 0 {
-			printInfo("  no consumers configured")
-		}
-		for _, c := range q.Consumers {
-			fmt.Printf("  consumer %s dead_letter_queue: %s\n", c.Name, c.DeadLetterQueue)
-		}
-		return nil
+		return outResult(q, func() {
+			printInfo("Queue '%s' DLQ configuration:", q.Name)
+			if len(q.Consumers) == 0 {
+				printInfo("  no consumers configured")
+			}
+			for _, c := range q.Consumers {
+				fmt.Printf("  consumer %s dead_letter_queue: %s\n", c.Name, c.DeadLetterQueue)
+			}
+		})
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would configure DLQ", map[string]interface{}{
+		return outPayload("DRY RUN: Would configure DLQ", func() any {
+			return map[string]interface{}{
 				"queue":        queueName,
 				"consumer_dlq": queueDLQConsumerName,
 				"producer_dlq": queueDLQProducerName,
 				"clear":        queueDLQClear,
-			})
-		}
-		if queueDLQClear {
-			printInfo("DRY RUN: Would clear DLQ bindings for queue '%s'", queueName)
-		} else {
-			printInfo("DRY RUN: Would configure DLQ for queue '%s'", queueName)
-		}
-		return nil
+			}
+		}, func() {
+			if queueDLQClear {
+				printInfo("DRY RUN: Would clear DLQ bindings for queue '%s'", queueName)
+			} else {
+				printInfo("DRY RUN: Would configure DLQ for queue '%s'", queueName)
+			}
+		})
 	}
 
 	q, err := svc.ConfigureDLQ(context.Background(), queueName, queueDLQConsumerName, queueDLQProducerName, queueDLQClear)
@@ -228,13 +226,13 @@ func runQueueDlq(cmd *cobra.Command, args []string) error {
 		return outErr("failed to configure DLQ", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DLQ configured successfully", q)
-	}
-	if queueDLQClear {
-		printSuccess("DLQ bindings cleared for queue '%s'", queueName)
-	} else {
-		printSuccess("DLQ configured for queue '%s'", queueName)
-	}
-	return nil
+	return outPayload("DLQ configured successfully", func() any {
+		return q
+	}, func() {
+		if queueDLQClear {
+			printSuccess("DLQ bindings cleared for queue '%s'", queueName)
+		} else {
+			printSuccess("DLQ configured for queue '%s'", queueName)
+		}
+	})
 }
