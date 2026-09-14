@@ -172,12 +172,12 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	f, err := os.Open(workerScript)
 	if err != nil {
-		return fmt.Errorf("failed to open script file: %w", err)
+		return outErr("failed to open script file", err)
 	}
 	defer f.Close()
 
@@ -200,11 +200,11 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would deploy worker", map[string]string{"name": name, "script": workerScript})
-		}
-		printInfo("DRY RUN: Would deploy worker '%s' from %s", name, workerScript)
-		return nil
+		return outPayload("DRY RUN: Would deploy worker", func() any {
+			return map[string]string{"name": name, "script": workerScript}
+		}, func() {
+			printInfo("DRY RUN: Would deploy worker '%s' from %s", name, workerScript)
+		})
 	}
 
 	worker, err := svc.Deploy(context.Background(), name, f, opts...)
@@ -212,19 +212,18 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 		return outErr("failed to deploy worker", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Worker deployed successfully", worker)
-	}
-
-	printSuccess("Worker '%s' deployed successfully!", name)
-	printInfo("Size: %d bytes", worker.Size)
-	return nil
+	return outPayload("Worker deployed successfully", func() any {
+		return worker
+	}, func() {
+		printSuccess("Worker '%s' deployed successfully!", name)
+		printInfo("Size: %d bytes", worker.Size)
+	})
 }
 
 func runWorkerList(cmd *cobra.Command, args []string) error {
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	workers, err := svc.List(context.Background())
@@ -232,28 +231,25 @@ func runWorkerList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list workers", err)
 	}
 
-	if JSONOutput {
-		return printJSON(workers)
-	}
+	return outResult(workers, func() {
+		if len(workers) == 0 {
+			printInfo("No workers found")
+			return
+		}
 
-	if len(workers) == 0 {
-		printInfo("No workers found")
-		return nil
-	}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tMODIFIED\tSIZE")
+		for _, worker := range workers {
+			fmt.Fprintf(w, "%s\t%s\t%d\n",
+				worker.Name,
+				worker.Modified.Format("2006-01-02 15:04:05"),
+				worker.Size,
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tMODIFIED\tSIZE")
-	for _, worker := range workers {
-		fmt.Fprintf(w, "%s\t%s\t%d\n",
-			worker.Name,
-			worker.Modified.Format("2006-01-02 15:04:05"),
-			worker.Size,
-		)
-	}
-	w.Flush()
-
-	printInfo("Total: %d worker(s)", len(workers))
-	return nil
+		printInfo("Total: %d worker(s)", len(workers))
+	})
 }
 
 func runWorkerGet(cmd *cobra.Command, args []string) error {
@@ -264,7 +260,7 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	worker, err := svc.Get(context.Background(), name)
@@ -272,26 +268,23 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get worker", err)
 	}
 
-	if JSONOutput {
-		return printJSON(worker)
-	}
-
-	fmt.Printf("Worker: %s\n", worker.Name)
-	fmt.Printf("Modified: %s\n", worker.Modified.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Size: %d bytes\n", worker.Size)
-	if worker.CompatibilityDate != "" {
-		fmt.Printf("Compatibility Date: %s\n", worker.CompatibilityDate)
-	}
-	if len(worker.Bindings) > 0 {
-		fmt.Println("Bindings:")
-		for _, b := range worker.Bindings {
-			fmt.Printf("  %s (%s): %s\n", b.Name, b.Type, b.ID)
+	return outResult(worker, func() {
+		fmt.Printf("Worker: %s\n", worker.Name)
+		fmt.Printf("Modified: %s\n", worker.Modified.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Size: %d bytes\n", worker.Size)
+		if worker.CompatibilityDate != "" {
+			fmt.Printf("Compatibility Date: %s\n", worker.CompatibilityDate)
 		}
-	}
-	fmt.Println()
-	fmt.Println("--- Script ---")
-	fmt.Println(worker.Script)
-	return nil
+		if len(worker.Bindings) > 0 {
+			fmt.Println("Bindings:")
+			for _, b := range worker.Bindings {
+				fmt.Printf("  %s (%s): %s\n", b.Name, b.Type, b.ID)
+			}
+		}
+		fmt.Println()
+		fmt.Println("--- Script ---")
+		fmt.Println(worker.Script)
+	})
 }
 
 func runWorkerDelete(cmd *cobra.Command, args []string) error {
@@ -313,26 +306,26 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete worker", map[string]string{"name": name})
-		}
-		printInfo("DRY RUN: Would delete worker '%s'", name)
-		return nil
+		return outPayload("DRY RUN: Would delete worker", func() any {
+			return map[string]string{"name": name}
+		}, func() {
+			printInfo("DRY RUN: Would delete worker '%s'", name)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), name); err != nil {
 		return outErr("failed to delete worker", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Worker deleted successfully", map[string]string{"name": name})
-	}
-	printSuccess("Worker '%s' deleted successfully!", name)
-	return nil
+	return outPayload("Worker deleted successfully", func() any {
+		return map[string]string{"name": name}
+	}, func() {
+		printSuccess("Worker '%s' deleted successfully!", name)
+	})
 }
 
 func runWorkerLogs(cmd *cobra.Command, args []string) error {
@@ -343,7 +336,7 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	if workerLogFollow {
@@ -360,27 +353,24 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get worker logs", err)
 	}
 
-	if JSONOutput {
-		return printJSON(entries)
-	}
+	return outResult(entries, func() {
+		if len(entries) == 0 {
+			printInfo("No log entries found for worker '%s'", name)
+			return
+		}
 
-	if len(entries) == 0 {
-		printInfo("No log entries found for worker '%s'", name)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "TIMESTAMP\tLEVEL\tEVENT\tMESSAGE")
-	for _, e := range entries {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			e.Timestamp.Format("2006-01-02 15:04:05"),
-			e.Level,
-			e.Event,
-			e.Message,
-		)
-	}
-	w.Flush()
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "TIMESTAMP\tLEVEL\tEVENT\tMESSAGE")
+		for _, e := range entries {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				e.Timestamp.Format("2006-01-02 15:04:05"),
+				e.Level,
+				e.Event,
+				e.Message,
+			)
+		}
+		w.Flush()
+	})
 }
 
 func runWorkerLogsFollow(cmd *cobra.Command, svc *cosmoflare.WorkerService, name string) error {
@@ -409,12 +399,16 @@ func runWorkerLogsFollow(cmd *cobra.Command, svc *cosmoflare.WorkerService, name
 
 	ch, err := svc.TailLogs(ctx, name, tailOpts)
 	if err != nil {
-		return fmt.Errorf("failed to start log tailing: %w", err)
+		return outErr("failed to start log tailing", err)
 	}
 
+	// Streaming per-entry render: the JSON mode writes one compact object
+	// per line via the encoder (NOT printJSON), so this stays a mode check
+	// rather than an outResult/outPayload call.
+	p := NewPresenter()
 	enc := json.NewEncoder(cmd.OutOrStdout())
 	for entry := range ch {
-		if JSONOutput {
+		if p.IsJSON() {
 			enc.Encode(entry)
 		} else {
 			fmt.Fprintf(cmd.OutOrStdout(), "%s  [%s]  %s  %s\n",
@@ -440,7 +434,7 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getWorkerService()
 	if err != nil {
-		return fmt.Errorf("failed to create worker service: %w", err)
+		return outErr("failed to create worker service", err)
 	}
 
 	settings := cosmoflare.WorkerSettings{
@@ -457,22 +451,22 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update worker settings", map[string]interface{}{"name": name, "settings": settings})
-		}
-		printInfo("DRY RUN: Would update settings for worker '%s'", name)
-		return nil
+		return outPayload("DRY RUN: Would update worker settings", func() any {
+			return map[string]interface{}{"name": name, "settings": settings}
+		}, func() {
+			printInfo("DRY RUN: Would update settings for worker '%s'", name)
+		})
 	}
 
 	if err := svc.UpdateSettings(context.Background(), name, settings); err != nil {
 		return outErr("failed to update worker settings", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Worker settings updated", map[string]string{"name": name})
-	}
-	printSuccess("Settings updated for worker '%s'", name)
-	return nil
+	return outPayload("Worker settings updated", func() any {
+		return map[string]string{"name": name}
+	}, func() {
+		printSuccess("Settings updated for worker '%s'", name)
+	})
 }
 
 func parseWorkerBindings(raw []string) ([]cosmoflare.WorkerBinding, error) {
