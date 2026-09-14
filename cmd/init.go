@@ -122,18 +122,15 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{
-			"success":  true,
-			"message":  "Project initialized",
-			"template": template,
-			"config":   ".cosmoflare.yaml",
-		})
-	}
-
-	fmt.Fprintf(cmd.OutOrStdout(), "✅ Cosmoflare project initialized with template: %s\n", template)
-	fmt.Fprintf(cmd.OutOrStdout(), "   Config: %s\n", filepath.Join(dir, ".cosmoflare.yaml"))
-	return nil
+	return outResult(map[string]interface{}{
+		"success":  true,
+		"message":  "Project initialized",
+		"template": template,
+		"config":   ".cosmoflare.yaml",
+	}, func() {
+		fmt.Fprintf(cmd.OutOrStdout(), "✅ Cosmoflare project initialized with template: %s\n", template)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Config: %s\n", filepath.Join(dir, ".cosmoflare.yaml"))
+	})
 }
 
 func scaffoldProject(dir string, template string, force bool) error {
