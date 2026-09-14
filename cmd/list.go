@@ -40,17 +40,16 @@ Examples:
 			return buckets[i].CreatedAt.After(buckets[j].CreatedAt)
 		})
 
-		if JSONOutput {
-			response := map[string]interface{}{
-				"success": true,
-				"buckets": buckets,
-				"total":   len(buckets),
-				"dry_run": DryRun,
-			}
-			printJSON(response)
-		} else {
+		// Run closure (not RunE): the legacy branch swallowed printJSON's
+		// error, so the outResult error is discarded the same way.
+		_ = outResult(map[string]interface{}{
+			"success": true,
+			"buckets": buckets,
+			"total":   len(buckets),
+			"dry_run": DryRun,
+		}, func() {
 			printBucketsTable(buckets)
-		}
+		})
 	},
 }
 

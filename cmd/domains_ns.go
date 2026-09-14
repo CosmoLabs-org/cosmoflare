@@ -44,30 +44,28 @@ func runDomainsNS(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list domains", err)
 	}
 
-	if JSONOutput {
-		entries := make([]domainNSEntry, 0, len(domains))
-		for _, d := range domains {
-			entries = append(entries, domainNSEntry{
-				Name:     d.Zone.Name,
-				ZoneID:   d.Zone.ID,
-				NSStatus: d.NSStatus,
-			})
-		}
-		return printJSON(entries)
-	}
-
-	if len(domains) == 0 {
-		printInfo("No domains found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "DOMAIN\tNS STATUS")
+	entries := make([]domainNSEntry, 0, len(domains))
 	for _, d := range domains {
-		fmt.Fprintf(w, "%s\t%s\n", d.Zone.Name, d.NSStatus)
+		entries = append(entries, domainNSEntry{
+			Name:     d.Zone.Name,
+			ZoneID:   d.Zone.ID,
+			NSStatus: d.NSStatus,
+		})
 	}
-	w.Flush()
 
-	printInfo("Total: %d domain(s)", len(domains))
-	return nil
+	return outResult(entries, func() {
+		if len(domains) == 0 {
+			printInfo("No domains found")
+			return
+		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "DOMAIN\tNS STATUS")
+		for _, d := range domains {
+			fmt.Fprintf(w, "%s\t%s\n", d.Zone.Name, d.NSStatus)
+		}
+		w.Flush()
+
+		printInfo("Total: %d domain(s)", len(domains))
+	})
 }

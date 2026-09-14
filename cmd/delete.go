@@ -72,18 +72,17 @@ Examples:
 			printErrorAndExit(err, "Failed to delete bucket")
 		}
 
-		if JSONOutput {
-			response := map[string]interface{}{
-				"success":      true,
-				"message":      fmt.Sprintf("Bucket '%s' deleted successfully", bucketName),
-				"bucket_name":  bucketName,
-				"dry_run":      DryRun,
-			}
-			printJSON(response)
-		} else {
+		// Run closure (not RunE): the legacy branch swallowed printJSON's
+		// error, so the outResult error is discarded the same way.
+		_ = outResult(map[string]interface{}{
+			"success":     true,
+			"message":     fmt.Sprintf("Bucket '%s' deleted successfully", bucketName),
+			"bucket_name": bucketName,
+			"dry_run":     DryRun,
+		}, func() {
 			printSuccess("Bucket '%s' deleted successfully", bucketName)
 			printWarning("This operation is permanent and cannot be undone")
-		}
+		})
 	},
 }
 

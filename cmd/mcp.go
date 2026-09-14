@@ -170,7 +170,10 @@ func runMCPTools(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if JSONOutput {
+	// The human renderer's flush error was the old plain-mode return value,
+	// so it is captured and propagated after the presenter runs.
+	var flushErr error
+	if err := outPayload("MCP tools", func() any {
 		type toolInfo struct {
 			Name        string      `json:"name"`
 			Description string      `json:"description"`
@@ -188,15 +191,18 @@ func runMCPTools(cmd *cobra.Command, args []string) error {
 				InputSchema: schema,
 			}
 		}
-		return printSuccessJSON("MCP tools", out)
+		return out
+	}, func() {
+		fmt.Printf("Available MCP Tools (%d)\n\n", len(tools))
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "TOOL\tDESCRIPTION\n")
+		fmt.Fprintf(w, "----\t-----------\n")
+		for _, t := range tools {
+			fmt.Fprintf(w, "%s\t%s\n", t.Name, t.Description)
+		}
+		flushErr = w.Flush()
+	}); err != nil {
+		return err
 	}
-
-	fmt.Printf("Available MCP Tools (%d)\n\n", len(tools))
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "TOOL\tDESCRIPTION\n")
-	fmt.Fprintf(w, "----\t-----------\n")
-	for _, t := range tools {
-		fmt.Fprintf(w, "%s\t%s\n", t.Name, t.Description)
-	}
-	return w.Flush()
+	return flushErr
 }

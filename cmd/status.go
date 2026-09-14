@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -168,14 +166,11 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	report.QueryTimeMs = time.Since(start).Milliseconds()
 	report.Errors = errors
 
-	if JSONOutput {
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(report)
-	}
-
-	printStatusDashboard(report)
-	return nil
+	// outResult is byte-identical to the raw json.Encoder branch it replaced:
+	// Encoder with SetIndent("", "  ") + trailing newline == MarshalIndent + Println.
+	return outResult(report, func() {
+		printStatusDashboard(report)
+	})
 }
 
 func printStatusDashboard(r *StatusReport) {

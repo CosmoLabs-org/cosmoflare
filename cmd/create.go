@@ -50,12 +50,14 @@ Examples:
 			printErrorAndExit(err, "Failed to create bucket")
 		}
 
-		if JSONOutput {
-			printSuccessJSON("Bucket created successfully", bucket)
-		} else {
+		// Run closure (not RunE): the legacy branch swallowed printSuccessJSON's
+		// error, so the outPayload error is discarded the same way.
+		_ = outPayload("Bucket created successfully", func() any {
+			return bucket
+		}, func() {
 			printSuccess("Bucket '%s' created successfully", bucket.Name)
 			printInfo("Creation date: %s", bucket.CreatedAt.Format(time.RFC3339))
-		}
+		})
 	},
 }
 
