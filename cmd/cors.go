@@ -126,7 +126,7 @@ func runCORSSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getCORSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create CORS service: %w", err)
+		return outErr("failed to create CORS service", err)
 	}
 
 	rules, err := svc.GetCORSRules(context.Background())
@@ -134,30 +134,27 @@ func runCORSSettings(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get CORS rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
-	if len(rules) == 0 {
-		printInfo("No CORS rules configured for zone '%s'.", zoneID)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tORIGINS\tMETHODS\tCREDENTIALS\tEXPRESSION")
-	for _, r := range rules {
-		origins := strings.Join(r.AllowOrigins, ", ")
-		methods := strings.Join(r.AllowMethods, ", ")
-		creds := "false"
-		if r.AllowCredentials {
-			creds = "true"
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No CORS rules configured for zone '%s'.", zoneID)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			r.Name, origins, methods, creds, r.Expression)
-	}
-	w.Flush()
-	printInfo("Total: %d CORS rule(s) on zone '%s'", len(rules), zoneID)
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tORIGINS\tMETHODS\tCREDENTIALS\tEXPRESSION")
+		for _, r := range rules {
+			origins := strings.Join(r.AllowOrigins, ", ")
+			methods := strings.Join(r.AllowMethods, ", ")
+			creds := "false"
+			if r.AllowCredentials {
+				creds = "true"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				r.Name, origins, methods, creds, r.Expression)
+		}
+		w.Flush()
+		printInfo("Total: %d CORS rule(s) on zone '%s'", len(rules), zoneID)
+	})
 }
 
 func runCORSSet(cmd *cobra.Command, args []string) error {
@@ -190,8 +187,8 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would set CORS rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would set CORS rule", func() any {
+			return map[string]interface{}{
 				"zone_id":  zoneID,
 				"rule":     corsRuleName,
 				"origins":  origins,
@@ -200,15 +197,15 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 				"max_age":  corsMaxAge,
 				"creds":    corsCredentials,
 				"expr":     corsExpression,
-			})
-		}
-		printInfo("DRY RUN: Would set CORS rule '%s' on zone '%s'", corsRuleName, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would set CORS rule '%s' on zone '%s'", corsRuleName, zoneID)
+		})
 	}
 
 	svc, err := getCORSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create CORS service: %w", err)
+		return outErr("failed to create CORS service", err)
 	}
 
 	opts := []cosmoflare.CORSOption{
@@ -226,18 +223,15 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to set CORS rule", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rule)
-	}
-
-	printSuccess("CORS rule %q applied to zone %s.", rule.Name, zoneID)
-	fmt.Printf("  Origins:      %s\n", strings.Join(rule.AllowOrigins, ", "))
-	fmt.Printf("  Methods:      %s\n", strings.Join(rule.AllowMethods, ", "))
-	fmt.Printf("  Headers:      %s\n", strings.Join(rule.AllowHeaders, ", "))
-	fmt.Printf("  Max-Age:      %d\n", rule.MaxAge)
-	fmt.Printf("  Credentials:  %v\n", rule.AllowCredentials)
-	fmt.Printf("  Expression:   %s\n", rule.Expression)
-	return nil
+	return outResult(rule, func() {
+		printSuccess("CORS rule %q applied to zone %s.", rule.Name, zoneID)
+		fmt.Printf("  Origins:      %s\n", strings.Join(rule.AllowOrigins, ", "))
+		fmt.Printf("  Methods:      %s\n", strings.Join(rule.AllowMethods, ", "))
+		fmt.Printf("  Headers:      %s\n", strings.Join(rule.AllowHeaders, ", "))
+		fmt.Printf("  Max-Age:      %d\n", rule.MaxAge)
+		fmt.Printf("  Credentials:  %v\n", rule.AllowCredentials)
+		fmt.Printf("  Expression:   %s\n", rule.Expression)
+	})
 }
 
 func runCORSRemove(cmd *cobra.Command, args []string) error {
@@ -247,37 +241,34 @@ func runCORSRemove(cmd *cobra.Command, args []string) error {
 	zoneID := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would remove CORS rule", map[string]string{
+		return outPayload("DRY RUN: Would remove CORS rule", func() any {
+			return map[string]string{
 				"zone_id": zoneID,
 				"rule":    corsRuleName,
-			})
-		}
-		printInfo("DRY RUN: Would remove CORS rule '%s' from zone '%s'", corsRuleName, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would remove CORS rule '%s' from zone '%s'", corsRuleName, zoneID)
+		})
 	}
 
 	svc, err := getCORSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create CORS service: %w", err)
+		return outErr("failed to create CORS service", err)
 	}
 
 	err = svc.RemoveCORSRule(context.Background(), corsRuleName)
 	if err != nil {
 		if errors.Is(err, cosmoflare.ErrCORSRuleNotFound) {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("CORS rule %q not found on zone %s. Use \"cosmoflare cors settings %s\" to list active CORS rules.", corsRuleName, zoneID, zoneID))
-			}
-			return fmt.Errorf("CORS rule %q not found on zone %s.\n       Use \"cosmoflare cors settings %s\" to list active CORS rules", corsRuleName, zoneID, zoneID)
+			return outErrf("CORS rule %q not found on zone %s. Use \"cosmoflare cors settings %s\" to list active CORS rules.", corsRuleName, zoneID, zoneID)
 		}
 		return outErr("failed to remove CORS rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON(fmt.Sprintf("CORS rule %q removed from zone %s.", corsRuleName, zoneID), nil)
-	}
-	printSuccess("CORS rule %q removed from zone %s.", corsRuleName, zoneID)
-	return nil
+	return outPayload(fmt.Sprintf("CORS rule %q removed from zone %s.", corsRuleName, zoneID), func() any {
+		return nil
+	}, func() {
+		printSuccess("CORS rule %q removed from zone %s.", corsRuleName, zoneID)
+	})
 }
 
 // parseCORSList splits a comma-separated string into trimmed, non-empty items.
