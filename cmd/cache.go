@@ -143,7 +143,7 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 	svc, err := getCacheService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create cache service: %w", err)
+		return outErr("failed to create cache service", err)
 	}
 
 	ctx := context.Background()
@@ -151,11 +151,11 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 	// Purge all
 	if cachePurgeAll {
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would purge all cache", map[string]string{"zone_id": zoneID})
-			}
-			printInfo("DRY RUN: Would purge all cached content for zone '%s'", zoneID)
-			return nil
+			return outPayload("DRY RUN: Would purge all cache", func() any {
+				return map[string]string{"zone_id": zoneID}
+			}, func() {
+				printInfo("DRY RUN: Would purge all cached content for zone '%s'", zoneID)
+			})
 		}
 
 		result, err := svc.PurgeAll(ctx)
@@ -163,21 +163,21 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 			return outErr("failed to purge cache", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Cache purged successfully", result)
-		}
-		printSuccess("All cached content purged for zone '%s'", zoneID)
-		return nil
+		return outPayload("Cache purged successfully", func() any {
+			return result
+		}, func() {
+			printSuccess("All cached content purged for zone '%s'", zoneID)
+		})
 	}
 
 	// Purge by URLs
 	if len(cachePurgeURLs) > 0 {
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would purge URLs", map[string]interface{}{"zone_id": zoneID, "urls": cachePurgeURLs})
-			}
-			printInfo("DRY RUN: Would purge %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
-			return nil
+			return outPayload("DRY RUN: Would purge URLs", func() any {
+				return map[string]interface{}{"zone_id": zoneID, "urls": cachePurgeURLs}
+			}, func() {
+				printInfo("DRY RUN: Would purge %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
+			})
 		}
 
 		result, err := svc.PurgeByURLs(ctx, cachePurgeURLs)
@@ -185,21 +185,21 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 			return outErr("failed to purge URLs", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("URLs purged successfully", result)
-		}
-		printSuccess("Purged %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
-		return nil
+		return outPayload("URLs purged successfully", func() any {
+			return result
+		}, func() {
+			printSuccess("Purged %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
+		})
 	}
 
 	// Purge by tags
 	if len(cachePurgeTags) > 0 {
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would purge tags", map[string]interface{}{"zone_id": zoneID, "tags": cachePurgeTags})
-			}
-			printInfo("DRY RUN: Would purge %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
-			return nil
+			return outPayload("DRY RUN: Would purge tags", func() any {
+				return map[string]interface{}{"zone_id": zoneID, "tags": cachePurgeTags}
+			}, func() {
+				printInfo("DRY RUN: Would purge %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
+			})
 		}
 
 		result, err := svc.PurgeByTags(ctx, cachePurgeTags)
@@ -207,21 +207,21 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 			return outErr("failed to purge tags", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Tags purged successfully", result)
-		}
-		printSuccess("Purged %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
-		return nil
+		return outPayload("Tags purged successfully", func() any {
+			return result
+		}, func() {
+			printSuccess("Purged %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
+		})
 	}
 
 	// Purge by hosts
 	if len(cachePurgeHosts) > 0 {
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would purge hosts", map[string]interface{}{"zone_id": zoneID, "hosts": cachePurgeHosts})
-			}
-			printInfo("DRY RUN: Would purge %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
-			return nil
+			return outPayload("DRY RUN: Would purge hosts", func() any {
+				return map[string]interface{}{"zone_id": zoneID, "hosts": cachePurgeHosts}
+			}, func() {
+				printInfo("DRY RUN: Would purge %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
+			})
 		}
 
 		result, err := svc.PurgeByHosts(ctx, cachePurgeHosts)
@@ -229,11 +229,11 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 			return outErr("failed to purge hosts", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Hosts purged successfully", result)
-		}
-		printSuccess("Purged %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
-		return nil
+		return outPayload("Hosts purged successfully", func() any {
+			return result
+		}, func() {
+			printSuccess("Purged %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
+		})
 	}
 
 	return nil
@@ -247,7 +247,7 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getCacheService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create cache service: %w", err)
+		return outErr("failed to create cache service", err)
 	}
 
 	ctx := context.Background()
@@ -268,22 +268,22 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 		}
 
 		if DryRun {
-			if JSONOutput {
-				return printSuccessJSON("DRY RUN: Would update cache settings", map[string]string{"zone_id": zoneID})
-			}
-			printInfo("DRY RUN: Would update cache settings for zone '%s'", zoneID)
-			return nil
+			return outPayload("DRY RUN: Would update cache settings", func() any {
+				return map[string]string{"zone_id": zoneID}
+			}, func() {
+				printInfo("DRY RUN: Would update cache settings for zone '%s'", zoneID)
+			})
 		}
 
 		if err := svc.UpdateSettings(ctx, opts...); err != nil {
 			return outErr("failed to update cache settings", err)
 		}
 
-		if JSONOutput {
-			return printSuccessJSON("Cache settings updated", map[string]string{"zone_id": zoneID})
-		}
-		printSuccess("Cache settings updated for zone '%s'", zoneID)
-		return nil
+		return outPayload("Cache settings updated", func() any {
+			return map[string]string{"zone_id": zoneID}
+		}, func() {
+			printSuccess("Cache settings updated for zone '%s'", zoneID)
+		})
 	}
 
 	// No update flags — display current settings
@@ -292,23 +292,19 @@ func runCacheSettings(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get cache settings", err)
 	}
 
-	if JSONOutput {
-		return printJSON(settings)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "SETTING\tVALUE")
-	fmt.Fprintf(w, "Browser Cache TTL\t%d seconds\n", settings.BrowserCacheTTL)
-	devModeStr := "off"
-	if settings.DevelopmentMode > 0 {
-		devModeStr = "on"
-	}
-	fmt.Fprintf(w, "Development Mode\t%s\n", devModeStr)
-	fmt.Fprintf(w, "Cache Level\t%s\n", settings.CacheLevel)
-	fmt.Fprintf(w, "Minify CSS\t%v\n", settings.MinifyCss)
-	fmt.Fprintf(w, "Minify JS\t%v\n", settings.MinifyJs)
-	fmt.Fprintf(w, "Minify HTML\t%v\n", settings.MinifyHtml)
-	w.Flush()
-
-	return nil
+	return outResult(settings, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "SETTING\tVALUE")
+		fmt.Fprintf(w, "Browser Cache TTL\t%d seconds\n", settings.BrowserCacheTTL)
+		devModeStr := "off"
+		if settings.DevelopmentMode > 0 {
+			devModeStr = "on"
+		}
+		fmt.Fprintf(w, "Development Mode\t%s\n", devModeStr)
+		fmt.Fprintf(w, "Cache Level\t%s\n", settings.CacheLevel)
+		fmt.Fprintf(w, "Minify CSS\t%v\n", settings.MinifyCss)
+		fmt.Fprintf(w, "Minify JS\t%v\n", settings.MinifyJs)
+		fmt.Fprintf(w, "Minify HTML\t%v\n", settings.MinifyHtml)
+		w.Flush()
+	})
 }
