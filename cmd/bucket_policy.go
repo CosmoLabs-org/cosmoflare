@@ -75,11 +75,9 @@ func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get bucket policy", err)
 	}
 
-	if JSONOutput {
-		return printJSON(policy)
-	}
-	fmt.Println(string(policy))
-	return nil
+	return outResult(policy, func() {
+		fmt.Println(string(policy))
+	})
 }
 
 func runBucketPolicySet(cmd *cobra.Command, args []string) error {
@@ -94,11 +92,9 @@ func runBucketPolicySet(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "set_bucket_policy", "bucket": bucket})
-		}
-		printInfo("DRY RUN: Would set policy on bucket '%s'", bucket)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "set_bucket_policy", "bucket": bucket}, func() {
+			printInfo("DRY RUN: Would set policy on bucket '%s'", bucket)
+		})
 	}
 
 	svc := getBucketPolicyService()
@@ -106,9 +102,9 @@ func runBucketPolicySet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to set bucket policy", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Bucket policy replaced", map[string]string{"bucket": bucket})
-	}
-	printSuccess("Set policy on bucket '%s'", bucket)
-	return nil
+	return outPayload("Bucket policy replaced", func() any {
+		return map[string]string{"bucket": bucket}
+	}, func() {
+		printSuccess("Set policy on bucket '%s'", bucket)
+	})
 }
