@@ -162,31 +162,28 @@ func runBucketLifecycleGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get lifecycle rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
-	if len(rules) == 0 {
-		printInfo("No lifecycle rules on bucket '%s' (default: multipart uploads abort after 7 days)", bucket)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tENABLED\tPREFIX\tDELETE\tABORT MPU\tTRANSITION")
-	for _, r := range rules {
-		enabled := "false"
-		if r.Enabled {
-			enabled = "true"
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No lifecycle rules on bucket '%s' (default: multipart uploads abort after 7 days)", bucket)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			r.ID, enabled, r.Conditions.Prefix,
-			lifecycleSeconds(r.DeleteObjectsTransition),
-			lifecycleSeconds(r.AbortMultipartUploadsTransition),
-			lifecycleTransitionSummary(r))
-	}
-	w.Flush()
-	printInfo("Total: %d rule(s) — set/clear REPLACE the whole rule set; get first if you mean to add", len(rules))
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tENABLED\tPREFIX\tDELETE\tABORT MPU\tTRANSITION")
+		for _, r := range rules {
+			enabled := "false"
+			if r.Enabled {
+				enabled = "true"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+				r.ID, enabled, r.Conditions.Prefix,
+				lifecycleSeconds(r.DeleteObjectsTransition),
+				lifecycleSeconds(r.AbortMultipartUploadsTransition),
+				lifecycleTransitionSummary(r))
+		}
+		w.Flush()
+		printInfo("Total: %d rule(s) — set/clear REPLACE the whole rule set; get first if you mean to add", len(rules))
+	})
 }
 
 // parseLifecycleShorthandFlags builds one rule from the shorthand flags.
@@ -293,12 +290,12 @@ func runBucketLifecycleSet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to set lifecycle rules", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Lifecycle rules replaced", map[string]interface{}{"bucket": bucket, "rules": rules})
-	}
-	printSuccess("Replaced lifecycle rules on bucket '%s' (%d rule(s))", bucket, len(rules))
-	printInfo("This replaced the whole rule set; run 'cosmoflare bucket lifecycle get %s' to verify", bucket)
-	return nil
+	return outPayload("Lifecycle rules replaced", func() any {
+		return map[string]interface{}{"bucket": bucket, "rules": rules}
+	}, func() {
+		printSuccess("Replaced lifecycle rules on bucket '%s' (%d rule(s))", bucket, len(rules))
+		printInfo("This replaced the whole rule set; run 'cosmoflare bucket lifecycle get %s' to verify", bucket)
+	})
 }
 
 func runBucketLifecycleClear(cmd *cobra.Command, args []string) error {
@@ -317,9 +314,9 @@ func runBucketLifecycleClear(cmd *cobra.Command, args []string) error {
 		return outErr("failed to clear lifecycle rules", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Lifecycle rules cleared", map[string]string{"bucket": bucket})
-	}
-	printSuccess("Cleared all lifecycle rules on bucket '%s'", bucket)
-	return nil
+	return outPayload("Lifecycle rules cleared", func() any {
+		return map[string]string{"bucket": bucket}
+	}, func() {
+		printSuccess("Cleared all lifecycle rules on bucket '%s'", bucket)
+	})
 }
