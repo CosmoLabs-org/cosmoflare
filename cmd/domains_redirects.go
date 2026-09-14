@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var domainsRedirectsCmd = &cobra.Command{
@@ -23,8 +23,8 @@ Examples:
 
 // domainRedirectsEntry is the JSON shape for a domain's redirect rules.
 type domainRedirectsEntry struct {
-	Name      string                  `json:"name"`
-	ZoneID    string                  `json:"zone_id"`
+	Name      string                    `json:"name"`
+	ZoneID    string                    `json:"zone_id"`
 	Redirects []cosmoflare.RedirectRule `json:"redirects"`
 }
 
@@ -58,29 +58,26 @@ func runDomainsRedirects(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	if JSONOutput {
-		return printJSON(entries)
-	}
-
-	if len(entries) == 0 {
-		printInfo("No domains with redirect rules found")
-		return nil
-	}
-
-	for i, e := range entries {
-		if i > 0 {
-			fmt.Println()
+	return outResult(entries, func() {
+		if len(entries) == 0 {
+			printInfo("No domains with redirect rules found")
+			return
 		}
-		fmt.Printf("%s (%d redirect rule(s)):\n", e.Name, len(e.Redirects))
-		for _, r := range e.Redirects {
-			state := "enabled"
-			if !r.Enabled {
-				state = "disabled"
+
+		for i, e := range entries {
+			if i > 0 {
+				fmt.Println()
 			}
-			fmt.Printf("  - %s -> %s (%d, %s)\n", r.When, r.Destination, r.StatusCode, state)
+			fmt.Printf("%s (%d redirect rule(s)):\n", e.Name, len(e.Redirects))
+			for _, r := range e.Redirects {
+				state := "enabled"
+				if !r.Enabled {
+					state = "disabled"
+				}
+				fmt.Printf("  - %s -> %s (%d, %s)\n", r.When, r.Destination, r.StatusCode, state)
+			}
 		}
-	}
 
-	printInfo("Total: %d domain(s) with redirects", len(entries))
-	return nil
+		printInfo("Total: %d domain(s) with redirects", len(entries))
+	})
 }
