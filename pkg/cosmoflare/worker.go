@@ -117,7 +117,7 @@ func NewWorkerServiceFromCreds(accountID, apiToken string) (*WorkerService, erro
 	if apiToken == "" {
 		return nil, validationError("NewWorkerService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewWorkerService", "failed to create Cloudflare API client", err)
 	}

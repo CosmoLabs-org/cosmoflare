@@ -151,7 +151,7 @@ func NewExportServiceFromCreds(accountID, apiToken string) (*ExportService, erro
 	if apiToken == "" {
 		return nil, validationError("NewExportService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewExportService", "failed to create Cloudflare API client", err)
 	}

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -145,6 +147,12 @@ type StorageBackend interface {
 type SyncService struct {
 	backend    StorageBackend
 	OnProgress func(SyncProgress)
+	// Concurrency caps the number of plan operations executed in parallel
+	// (FEAT-038). Zero or 1 keeps execution strictly sequential — the
+	// historical behavior and the default for library callers who want
+	// zero surprise. Values >1 run a bounded worker pool; progress
+	// callbacks fire in completion order with Current = completed count.
+	Concurrency int
 }
 
 // NewSyncService creates a new SyncService with the given storage backend.
@@ -453,6 +461,14 @@ func isExcluded(relPath string, excludes []string) bool {
 
 // Execute runs all operations in a SyncPlan against the storage backend.
 func (s *SyncService) Execute(ctx context.Context, plan *SyncPlan) (*SyncResult, error) {
+	if s.Concurrency > 1 && len(plan.Operations) > 1 {
+		return s.executeConcurrent(ctx, plan)
+	}
+	return s.executeSequential(ctx, plan)
+}
+
+// executeSequential is the historical single-worker loop.
+func (s *SyncService) executeSequential(ctx context.Context, plan *SyncPlan) (*SyncResult, error) {
 	result := &SyncResult{}
 	total := len(plan.Operations)
 
@@ -463,26 +479,8 @@ func (s *SyncService) Execute(ctx context.Context, plan *SyncPlan) (*SyncResult,
 
 		var opErr error
 
+		opErr = s.runOperation(ctx, plan, op)
 		switch op.Action {
-		case SyncOpUpload:
-			opErr = s.backend.UploadFile(ctx, plan.Bucket, op.Key, op.LocalPath)
-		case SyncOpDownload:
-			opErr = s.backend.DownloadFile(ctx, plan.Bucket, op.Key, op.LocalPath)
-			if opErr == nil && !op.RemoteModTime.IsZero() {
-				// Restore the remote timestamp so the next plan's mtime compare
-				// treats the file as unchanged instead of perpetually newer.
-				_ = os.Chtimes(op.LocalPath, op.RemoteModTime, op.RemoteModTime)
-			}
-		case SyncOpDelete:
-			// Delete is direction-aware: a down-sync delete removes the stale
-			// LOCAL file; an up-sync delete removes the remote object. Calling
-			// DeleteRemoteObject for a down-sync op would target an unprefixed
-			// key and could destroy an unrelated bucket-root object (BUG-040).
-			if plan.Direction == SyncDown {
-				opErr = os.Remove(op.LocalPath)
-			} else {
-				opErr = s.backend.DeleteRemoteObject(ctx, plan.Bucket, op.Key)
-			}
 		case SyncOpSkip:
 			result.Skipped++
 			s.reportProgress(SyncProgress{
@@ -518,6 +516,119 @@ func (s *SyncService) Execute(ctx context.Context, plan *SyncPlan) (*SyncResult,
 		}
 	}
 
+	return result, nil
+}
+
+// runOperation executes a single non-skip plan operation and returns its
+// error. Shared by the sequential and concurrent executors so both paths
+// have identical semantics.
+func (s *SyncService) runOperation(ctx context.Context, plan *SyncPlan, op SyncOp) error {
+	switch op.Action {
+	case SyncOpUpload:
+		return s.backend.UploadFile(ctx, plan.Bucket, op.Key, op.LocalPath)
+	case SyncOpDownload:
+		if err := s.backend.DownloadFile(ctx, plan.Bucket, op.Key, op.LocalPath); err != nil {
+			return err
+		}
+		if !op.RemoteModTime.IsZero() {
+			// Restore the remote timestamp so the next plan's mtime compare
+			// treats the file as unchanged instead of perpetually newer.
+			_ = os.Chtimes(op.LocalPath, op.RemoteModTime, op.RemoteModTime)
+		}
+		return nil
+	case SyncOpDelete:
+		// Delete is direction-aware: a down-sync delete removes the stale
+		// LOCAL file; an up-sync delete removes the remote object. Calling
+		// DeleteRemoteObject for a down-sync op would target an unprefixed
+		// key and could destroy an unrelated bucket-root object (BUG-040).
+		if plan.Direction == SyncDown {
+			return os.Remove(op.LocalPath)
+		}
+		return s.backend.DeleteRemoteObject(ctx, plan.Bucket, op.Key)
+	default: // SyncOpSkip — callers count it, no work to do
+		return nil
+	}
+}
+
+// executeConcurrent runs plan operations on a bounded worker pool
+// (FEAT-038). Result semantics match the sequential executor: every op is
+// attempted (no early exit on op error), errors are collected, and
+// cancellation aborts remaining work with ctx's error. Progress callbacks
+// fire in completion order with Current = completed-op count.
+func (s *SyncService) executeConcurrent(ctx context.Context, plan *SyncPlan) (*SyncResult, error) {
+	total := len(plan.Operations)
+	workers := s.Concurrency
+	if workers > total {
+		workers = total
+	}
+
+	jobs := make(chan int, total)
+	for i := range plan.Operations {
+		jobs <- i
+	}
+	close(jobs)
+
+	var (
+		mu       sync.Mutex
+		completed int64
+		wg       sync.WaitGroup
+	)
+	result := &SyncResult{}
+
+	report := func(op SyncOp, done int64, errMsg string) {
+		s.reportProgress(SyncProgress{
+			Current: int(done),
+			Total:   total,
+			Action:  op.Action,
+			Key:     op.Key,
+			Size:    op.Size,
+			Error:   errMsg,
+		})
+	}
+
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range jobs {
+				if ctx.Err() != nil {
+					return
+				}
+				op := plan.Operations[i]
+
+				if op.Action == SyncOpSkip {
+					mu.Lock()
+					result.Skipped++
+					done := atomic.AddInt64(&completed, 1)
+					report(op, done, "")
+					mu.Unlock()
+					continue
+				}
+
+				opErr := s.runOperation(ctx, plan, op)
+
+				mu.Lock()
+				if opErr != nil {
+					result.Failed++
+					result.Errors = append(result.Errors, opErr.Error())
+				} else {
+					result.Succeeded++
+				}
+				done := atomic.AddInt64(&completed, 1)
+				errMsg := ""
+				if opErr != nil {
+					errMsg = opErr.Error()
+				}
+				report(op, done, errMsg)
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+
+	if ctx.Err() != nil {
+		return result, ctx.Err()
+	}
 	return result, nil
 }
 

@@ -2,9 +2,12 @@ package cosmoflare
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -972,5 +975,76 @@ func TestPlanDown_IncludeFiltersDownloadsAndDeletes(t *testing.T) {
 	}
 	if plan.Summary.Deletes != 0 {
 		t.Errorf("expected 0 deletes, got %d", plan.Summary.Deletes)
+	}
+}
+
+// --- FEAT-038: bounded-concurrency execution ---
+
+// concurrentBackend records the peak number of simultaneously in-flight
+// operations so tests can prove parallelism without wall-clock flakiness.
+type concurrentBackend struct {
+	mockStorageBackend
+	mu       sync.Mutex
+	inFlight int64
+	peak     int64
+}
+
+func (m *concurrentBackend) UploadFile(ctx context.Context, bucket, key, localPath string) error {
+	m.addInFlight()
+	time.Sleep(25 * time.Millisecond)
+	m.doneInFlight()
+	m.mu.Lock()
+	m.uploaded = append(m.uploaded, key)
+	m.mu.Unlock()
+	return nil
+}
+func (m *concurrentBackend) addInFlight() int64 {
+	n := atomic.AddInt64(&m.inFlight, 1)
+	for {
+		p := atomic.LoadInt64(&m.peak)
+		if n <= p || atomic.CompareAndSwapInt64(&m.peak, p, n) {
+			break
+		}
+	}
+	return n
+}
+func (m *concurrentBackend) doneInFlight() { atomic.AddInt64(&m.inFlight, -1) }
+
+func TestExecuteConcurrency_ParallelWorkersExecute(t *testing.T) {
+	backend := &concurrentBackend{}
+	svc := NewSyncService(backend)
+	svc.Concurrency = 4
+
+	ops := make([]SyncOp, 0, 8)
+	for i := 0; i < 8; i++ {
+		ops = append(ops, SyncOp{Action: SyncOpUpload, Key: fmt.Sprintf("f%d.txt", i), LocalPath: "/tmp/f"})
+	}
+
+	result, err := svc.Execute(context.Background(), &SyncPlan{Bucket: "b", Direction: SyncUp, Operations: ops})
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result.Succeeded != 8 || result.Failed != 0 {
+		t.Fatalf("result = %+v, want 8 succeeded / 0 failed", result)
+	}
+	if peak := atomic.LoadInt64(&backend.peak); peak < 2 {
+		t.Errorf("peak in-flight = %d — operations ran sequentially despite Concurrency=4 (FEAT-038)", peak)
+	}
+	if len(backend.uploaded) != 8 {
+		t.Errorf("uploaded %d keys, want 8", len(backend.uploaded))
+	}
+}
+
+func TestExecuteConcurrency_DefaultIsSequential(t *testing.T) {
+	backend := &concurrentBackend{}
+	svc := NewSyncService(backend) // Concurrency zero-value
+
+	ops := []SyncOp{{Action: SyncOpUpload, Key: "a.txt", LocalPath: "/tmp/a"}, {Action: SyncOpUpload, Key: "b.txt", LocalPath: "/tmp/b"}}
+
+	if _, err := svc.Execute(context.Background(), &SyncPlan{Bucket: "b", Direction: SyncUp, Operations: ops}); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if peak := atomic.LoadInt64(&backend.peak); peak != 1 {
+		t.Errorf("peak in-flight = %d, want 1 — default must stay sequential (zero surprise)", peak)
 	}
 }

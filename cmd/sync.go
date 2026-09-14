@@ -42,11 +42,12 @@ Examples:
 }
 
 var (
-	syncFlagDelete   bool
-	syncFlagExclude  []string
-	syncFlagInclude  []string
-	syncFlagChecksum bool
-	syncFlagProgress bool
+	syncFlagDelete      bool
+	syncFlagExclude     []string
+	syncFlagInclude     []string
+	syncFlagChecksum    bool
+	syncFlagProgress    bool
+	syncFlagConcurrency int
 )
 
 // defaultSyncExcludes are applied when the user provides no --exclude. They
@@ -120,6 +121,7 @@ func init() {
 	syncUpCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
 	syncUpCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime (multipart-uploaded objects fall back to size/mtime)")
 	syncUpCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
+	syncUpCmd.Flags().IntVar(&syncFlagConcurrency, "concurrency", 4, "Parallel file operations (1 = sequential; large syncs run ~N times faster)")
 
 	// Shared flags for sync down
 	syncDownCmd.Flags().BoolVar(&syncFlagDelete, "delete", false, "Delete local files not present in bucket")
@@ -127,6 +129,7 @@ func init() {
 	syncDownCmd.Flags().StringArrayVar(&syncFlagInclude, "include", nil, "Include only files matching glob pattern (can be repeated)")
 	syncDownCmd.Flags().BoolVar(&syncFlagChecksum, "checksum", false, "Compare files by MD5 checksum instead of size/mtime (multipart-uploaded objects fall back to size/mtime)")
 	syncDownCmd.Flags().BoolVar(&syncFlagProgress, "progress", false, "Show progress for each file operation")
+	syncDownCmd.Flags().IntVar(&syncFlagConcurrency, "concurrency", 4, "Parallel file operations (1 = sequential; large syncs run ~N times faster)")
 }
 
 // parseBucketPrefix splits "bucket/prefix/path" into bucket and prefix.
@@ -265,6 +268,7 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 	}
 
 	svc := cosmoflare.NewSyncService(backend)
+	svc.Concurrency = syncFlagConcurrency
 
 	// Generate plan
 	plan, err := svc.Plan(context.Background(), cosmoflare.SyncPlanInput{
@@ -340,6 +344,7 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 	}
 
 	svc := cosmoflare.NewSyncService(backend)
+	svc.Concurrency = syncFlagConcurrency
 
 	// Generate plan
 	plan, err := svc.Plan(context.Background(), cosmoflare.SyncPlanInput{

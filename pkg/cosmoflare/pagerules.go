@@ -64,7 +64,7 @@ func NewPageRuleServiceFromCreds(zoneID, apiToken string) (*PageRuleService, err
 	if apiToken == "" {
 		return nil, validationError("NewPageRuleService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewPageRuleService", "failed to create Cloudflare API client", err)
 	}

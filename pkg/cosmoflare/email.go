@@ -93,7 +93,7 @@ func NewEmailServiceFromCreds(zoneID, accountID, apiToken string) (*EmailService
 	if apiToken == "" {
 		return nil, validationError("NewEmailService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewEmailService", "failed to create Cloudflare API client", err)
 	}

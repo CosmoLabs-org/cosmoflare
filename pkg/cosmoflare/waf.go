@@ -79,7 +79,7 @@ func NewWAFServiceFromCreds(zoneID, apiToken string) (*WAFService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewWAFService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewWAFService", "failed to create Cloudflare API client", err)
 	}

@@ -58,7 +58,7 @@ func NewRedirectServiceFromCreds(accountID, apiToken string) (*RedirectService, 
 	if apiToken == "" {
 		return nil, validationError("NewRedirectService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewRedirectService", "failed to create Cloudflare API client", err)
 	}

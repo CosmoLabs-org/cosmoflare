@@ -84,7 +84,7 @@ func NewSSLServiceFromCreds(zoneID, apiToken string) (*SSLService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewSSLService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewSSLService", "failed to create Cloudflare API client", err)
 	}

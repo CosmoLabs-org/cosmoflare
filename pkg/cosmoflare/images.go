@@ -59,7 +59,7 @@ func NewImagesServiceFromCreds(accountID, apiToken string) (*ImagesService, erro
 	if apiToken == "" {
 		return nil, validationError("NewImagesService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewImagesService", "failed to create Cloudflare API client", err)
 	}

@@ -75,7 +75,7 @@ func NewFleetStatusServiceFromCreds(accountID, apiToken string) (*FleetStatusSer
 	if apiToken == "" {
 		return nil, validationError("NewFleetStatusService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewFleetStatusService", "failed to create Cloudflare API client", err)
 	}

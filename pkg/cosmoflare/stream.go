@@ -124,7 +124,7 @@ func NewStreamServiceFromCreds(accountID, apiToken string) (*StreamService, erro
 	if apiToken == "" {
 		return nil, validationError("NewStreamService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewStreamService", "failed to create Cloudflare API client", err)
 	}

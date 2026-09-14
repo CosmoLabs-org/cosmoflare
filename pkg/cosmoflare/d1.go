@@ -80,7 +80,7 @@ func NewD1ServiceFromCreds(accountID, apiToken string) (*D1Service, error) {
 	if apiToken == "" {
 		return nil, validationError("NewD1Service", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewD1Service", "failed to create Cloudflare API client", err)
 	}
@@ -563,7 +563,7 @@ func (s *D1Service) Export(ctx context.Context, databaseID string) (io.ReadClose
 			if err != nil {
 				return nil, newError("D1Service.Export", "failed to build export download request", err)
 			}
-			httpResp, err := http.DefaultClient.Do(req)
+			httpResp, err := controlPlaneClient().Do(req)
 			if err != nil {
 				return nil, newError("D1Service.Export", "failed to download export dump", err)
 			}

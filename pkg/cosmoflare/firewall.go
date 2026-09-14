@@ -56,7 +56,7 @@ func NewFirewallServiceFromCreds(zoneID, apiToken string) (*FirewallService, err
 	if apiToken == "" {
 		return nil, validationError("NewFirewallService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewFirewallService", "failed to create Cloudflare API client", err)
 	}

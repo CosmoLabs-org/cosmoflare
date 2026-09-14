@@ -104,7 +104,7 @@ func NewDNSServiceFromCreds(zoneID, apiToken string) (*DNSService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewDNSService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewDNSService", "failed to create Cloudflare API client", err)
 	}

@@ -117,7 +117,7 @@ func NewCORSServiceFromCreds(zoneID, apiToken string) (*CORSService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewCORSService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewCORSService", "failed to create Cloudflare API client", err)
 	}

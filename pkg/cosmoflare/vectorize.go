@@ -78,7 +78,7 @@ func NewVectorizeServiceFromCreds(accountID, apiToken string) (*VectorizeService
 	if apiToken == "" {
 		return nil, validationError("NewVectorizeServiceFromCreds", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, newError("NewVectorizeServiceFromCreds", "failed to create API client", err)
 	}
@@ -376,7 +376,7 @@ func (s *VectorizeService) doRaw(ctx context.Context, method, url, contentType s
 		req.Header.Set("Authorization", "Bearer "+s.apiToken)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := controlPlaneClient().Do(req)
 	if err != nil {
 		return err
 	}

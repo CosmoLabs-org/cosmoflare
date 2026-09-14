@@ -347,7 +347,7 @@ func defaultVerifyCredentials(ctx context.Context, accountID, apiToken string) e
 	}
 	req.Header.Set("Authorization", "Bearer "+apiToken)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := controlPlaneClient().Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}

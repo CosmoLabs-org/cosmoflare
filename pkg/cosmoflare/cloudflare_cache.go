@@ -73,7 +73,7 @@ func NewCacheServiceFromCreds(zoneID, apiToken string) (*CacheService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewCacheService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewCacheService", "failed to create Cloudflare API client", err)
 	}

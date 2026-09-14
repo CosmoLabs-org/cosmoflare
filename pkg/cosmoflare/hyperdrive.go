@@ -76,7 +76,7 @@ func NewHyperdriveServiceFromCreds(accountID, apiToken string) (*HyperdriveServi
 	if apiToken == "" {
 		return nil, validationError("NewHyperdriveService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewHyperdriveService", "failed to create Cloudflare API client", err)
 	}

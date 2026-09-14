@@ -83,7 +83,7 @@ func NewDurableObjectsServiceFromCreds(accountID, apiToken string) (*DurableObje
 	if apiToken == "" {
 		return nil, validationError("NewDurableObjectsService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewDurableObjectsService", "failed to create Cloudflare API client", err)
 	}

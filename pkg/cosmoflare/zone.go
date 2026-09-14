@@ -64,7 +64,7 @@ func NewZoneServiceFromCreds(accountID, apiToken string) (*ZoneService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewZoneService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewZoneService", "failed to create Cloudflare API client", err)
 	}

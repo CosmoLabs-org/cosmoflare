@@ -98,7 +98,7 @@ func NewHealthcheckServiceFromCreds(zoneID, apiToken string) (*HealthcheckServic
 	if apiToken == "" {
 		return nil, validationError("NewHealthcheckService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewHealthcheckService", "failed to create Cloudflare API client", err)
 	}

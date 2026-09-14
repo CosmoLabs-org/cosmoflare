@@ -55,7 +55,7 @@ func NewPagesServiceFromCreds(accountID, apiToken string) (*PagesService, error)
 	if apiToken == "" {
 		return nil, validationError("NewPagesService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewPagesService", "failed to create Cloudflare API client", err)
 	}

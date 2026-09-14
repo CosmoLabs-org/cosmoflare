@@ -90,7 +90,7 @@ func NewKVServiceFromCreds(accountID, apiToken string) (*KVService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewKVService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewKVService", "failed to create Cloudflare API client", err)
 	}

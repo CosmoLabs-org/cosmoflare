@@ -73,7 +73,7 @@ func NewQueueServiceFromCreds(accountID, apiToken string) (*QueueService, error)
 	if apiToken == "" {
 		return nil, validationError("NewQueueService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, authError("NewQueueService", "failed to create Cloudflare API client", err)
 	}

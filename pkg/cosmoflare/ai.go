@@ -133,7 +133,7 @@ func NewAIServiceFromCreds(accountID, apiToken string) (*AIService, error) {
 	if apiToken == "" {
 		return nil, validationError("NewAIServiceFromCreds", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken)
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, newError("NewAIServiceFromCreds", "failed to create API client", err)
 	}
@@ -264,7 +264,7 @@ func (s *AIService) RunInferenceRaw(ctx context.Context, modelName string, input
 		req.Header.Set("Authorization", "Bearer "+s.apiToken)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := controlPlaneClient().Do(req)
 	if err != nil {
 		return nil, newError("AIService.RunInferenceRaw", "request failed", err)
 	}
@@ -432,7 +432,7 @@ func (s *AIService) aiDoJSON(ctx context.Context, method, url string, body inter
 		req.Header.Set("Authorization", "Bearer "+s.apiToken)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := controlPlaneClient().Do(req)
 	if err != nil {
 		return err
 	}
