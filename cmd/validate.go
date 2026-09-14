@@ -65,10 +65,7 @@ func runValidate(cmd *cobra.Command, args []string) error {
 		filePath := args[0]
 		info, statErr := os.Stat(filePath)
 		if statErr != nil {
-			if JSONOutput {
-				return printErrorJSON(fmt.Sprintf("config file not found: %s", filePath))
-			}
-			return fmt.Errorf("config file not found: %s", filePath)
+			return outErrf("config file not found: %s", filePath)
 		}
 		if info.IsDir() {
 			baseDir = filePath
@@ -86,20 +83,24 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to load config: %v", err))
-		}
-		return fmt.Errorf("failed to load config: %w\n\nRun 'cosmoflare init' to create a .cosmoflare.yaml", err)
+		// The init hint folds into the message both ways; %w keeps
+		// errors.Is/As working in plain mode.
+		return outErrf("failed to load config: %w\n\nRun 'cosmoflare init' to create a .cosmoflare.yaml", err)
 	}
 
 	validator := cosmoflare.NewConfigValidator(baseDir)
 	result := validator.Validate(cfg)
 
-	if JSONOutput {
-		return printJSON(result)
+	// The human renderer doubles as the exit-status oracle (it returns an
+	// error on validation failures / strict warnings), so its error is
+	// captured and propagated after the presenter runs.
+	var renderErr error
+	if perr := outResult(result, func() {
+		renderErr = printValidationResult(result)
+	}); perr != nil {
+		return perr
 	}
-
-	return printValidationResult(result)
+	return renderErr
 }
 
 // printValidationResult renders the validation result for human consumption.
