@@ -140,30 +140,29 @@ func runDiffAll(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
 	summary, err := svc.CompareAll(ctx, cfg)
 	if err != nil {
-		return fmt.Errorf("diff failed: %w", err)
+		return outErr("diff failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Diff complete", summary)
-	}
+	return outPayload("Diff complete", func() any {
+		return summary
+	}, func() {
+		if !summary.HasChanges {
+			printSuccess("No differences found — local config matches live state")
+			return
+		}
 
-	if !summary.HasChanges {
-		printSuccess("No differences found — local config matches live state")
-		return nil
-	}
+		for _, result := range summary.Results {
+			printDiffResult(&result)
+		}
 
-	for _, result := range summary.Results {
-		printDiffResult(&result)
-	}
-
-	printDiffSummaryLine(summary)
-	return nil
+		printDiffSummaryLine(summary)
+	})
 }
 
 func runDiffWorkers(cmd *cobra.Command, args []string) error {
@@ -179,26 +178,25 @@ func runDiffWorkers(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
 	result, err := svc.CompareWorkers(ctx, cfg.Workers)
 	if err != nil {
-		return fmt.Errorf("workers diff failed: %w", err)
+		return outErr("workers diff failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Workers diff complete", result)
-	}
+	return outPayload("Workers diff complete", func() any {
+		return result
+	}, func() {
+		if !result.HasChanges() {
+			printSuccess("Workers: no differences found")
+			return
+		}
 
-	if !result.HasChanges() {
-		printSuccess("Workers: no differences found")
-		return nil
-	}
-
-	printDiffResult(result)
-	return nil
+		printDiffResult(result)
+	})
 }
 
 func runDiffDNS(cmd *cobra.Command, args []string) error {
@@ -213,26 +211,25 @@ func runDiffDNS(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
 	result, err := svc.CompareDNS(ctx, cfg.DNS)
 	if err != nil {
-		return fmt.Errorf("dns diff failed: %w", err)
+		return outErr("dns diff failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DNS diff complete", result)
-	}
+	return outPayload("DNS diff complete", func() any {
+		return result
+	}, func() {
+		if !result.HasChanges() {
+			printSuccess("DNS: no differences found")
+			return
+		}
 
-	if !result.HasChanges() {
-		printSuccess("DNS: no differences found")
-		return nil
-	}
-
-	printDiffResult(result)
-	return nil
+		printDiffResult(result)
+	})
 }
 
 func runDiffKV(cmd *cobra.Command, args []string) error {
@@ -248,26 +245,25 @@ func runDiffKV(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
 	result, err := svc.CompareKV(ctx, cfg.KV)
 	if err != nil {
-		return fmt.Errorf("kv diff failed: %w", err)
+		return outErr("kv diff failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("KV diff complete", result)
-	}
+	return outPayload("KV diff complete", func() any {
+		return result
+	}, func() {
+		if !result.HasChanges() {
+			printSuccess("KV: no differences found")
+			return
+		}
 
-	if !result.HasChanges() {
-		printSuccess("KV: no differences found")
-		return nil
-	}
-
-	printDiffResult(result)
-	return nil
+		printDiffResult(result)
+	})
 }
 
 func runDiffR2(cmd *cobra.Command, args []string) error {
@@ -283,26 +279,25 @@ func runDiffR2(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDiffService()
 	if err != nil {
-		return fmt.Errorf("failed to create diff service: %w", err)
+		return outErr("failed to create diff service", err)
 	}
 
 	ctx := context.Background()
 	result, err := svc.CompareR2(ctx, cfg.R2)
 	if err != nil {
-		return fmt.Errorf("r2 diff failed: %w", err)
+		return outErr("r2 diff failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("R2 diff complete", result)
-	}
+	return outPayload("R2 diff complete", func() any {
+		return result
+	}, func() {
+		if !result.HasChanges() {
+			printSuccess("R2: no differences found")
+			return
+		}
 
-	if !result.HasChanges() {
-		printSuccess("R2: no differences found")
-		return nil
-	}
-
-	printDiffResult(result)
-	return nil
+		printDiffResult(result)
+	})
 }
 
 // printDiffResult renders a single service diff in human-readable format.
