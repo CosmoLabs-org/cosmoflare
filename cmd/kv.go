@@ -173,15 +173,15 @@ func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create namespace", map[string]string{"title": title})
-		}
-		printInfo("DRY RUN: Would create namespace '%s'", title)
-		return nil
+		return outPayload("DRY RUN: Would create namespace", func() any {
+			return map[string]string{"title": title}
+		}, func() {
+			printInfo("DRY RUN: Would create namespace '%s'", title)
+		})
 	}
 
 	ns, err := svc.CreateNamespace(context.Background(), title)
@@ -189,17 +189,17 @@ func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create namespace", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Namespace created successfully", ns)
-	}
-	printSuccess("Namespace '%s' created (ID: %s)", ns.Title, ns.ID)
-	return nil
+	return outPayload("Namespace created successfully", func() any {
+		return ns
+	}, func() {
+		printSuccess("Namespace '%s' created (ID: %s)", ns.Title, ns.ID)
+	})
 }
 
 func runKVNamespaceList(cmd *cobra.Command, args []string) error {
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	namespaces, err := svc.ListNamespaces(context.Background())
@@ -207,23 +207,20 @@ func runKVNamespaceList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list namespaces", err)
 	}
 
-	if JSONOutput {
-		return printJSON(namespaces)
-	}
+	return outResult(namespaces, func() {
+		if len(namespaces) == 0 {
+			printInfo("No KV namespaces found")
+			return
+		}
 
-	if len(namespaces) == 0 {
-		printInfo("No KV namespaces found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tTITLE")
-	for _, ns := range namespaces {
-		fmt.Fprintf(w, "%s\t%s\n", ns.ID, ns.Title)
-	}
-	w.Flush()
-	printInfo("Total: %d namespace(s)", len(namespaces))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tTITLE")
+		for _, ns := range namespaces {
+			fmt.Fprintf(w, "%s\t%s\n", ns.ID, ns.Title)
+		}
+		w.Flush()
+		printInfo("Total: %d namespace(s)", len(namespaces))
+	})
 }
 
 func runKVNamespaceDelete(cmd *cobra.Command, args []string) error {
@@ -246,26 +243,26 @@ func runKVNamespaceDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete namespace", map[string]string{"id": id})
-		}
-		printInfo("DRY RUN: Would delete namespace '%s'", id)
-		return nil
+		return outPayload("DRY RUN: Would delete namespace", func() any {
+			return map[string]string{"id": id}
+		}, func() {
+			printInfo("DRY RUN: Would delete namespace '%s'", id)
+		})
 	}
 
 	if err := svc.DeleteNamespace(context.Background(), id); err != nil {
 		return outErr("failed to delete namespace", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Namespace deleted successfully", map[string]string{"id": id})
-	}
-	printSuccess("Namespace '%s' deleted successfully!", id)
-	return nil
+	return outPayload("Namespace deleted successfully", func() any {
+		return map[string]string{"id": id}
+	}, func() {
+		printSuccess("Namespace '%s' deleted successfully!", id)
+	})
 }
 
 func runKVPut(cmd *cobra.Command, args []string) error {
@@ -280,7 +277,7 @@ func runKVPut(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	var valueReader *strings.Reader
@@ -300,22 +297,22 @@ func runKVPut(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would write key", map[string]string{"namespace": namespaceID, "key": key})
-		}
-		printInfo("DRY RUN: Would write key '%s' to namespace '%s'", key, namespaceID)
-		return nil
+		return outPayload("DRY RUN: Would write key", func() any {
+			return map[string]string{"namespace": namespaceID, "key": key}
+		}, func() {
+			printInfo("DRY RUN: Would write key '%s' to namespace '%s'", key, namespaceID)
+		})
 	}
 
 	if err := svc.Put(context.Background(), namespaceID, key, valueReader, opts...); err != nil {
 		return outErr("failed to write key", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Key written successfully", map[string]string{"namespace": namespaceID, "key": key})
-	}
-	printSuccess("Key '%s' written to namespace '%s'", key, namespaceID)
-	return nil
+	return outPayload("Key written successfully", func() any {
+		return map[string]string{"namespace": namespaceID, "key": key}
+	}, func() {
+		printSuccess("Key '%s' written to namespace '%s'", key, namespaceID)
+	})
 }
 
 func runKVGet(cmd *cobra.Command, args []string) error {
@@ -326,7 +323,7 @@ func runKVGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	data, err := svc.Get(context.Background(), namespaceID, key)
@@ -334,20 +331,17 @@ func runKVGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get key", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{
-			"namespace": namespaceID,
-			"key":       key,
-			"value":     string(data),
-			"size":      len(data),
-		})
-	}
-
-	fmt.Print(string(data))
-	if len(data) > 0 && data[len(data)-1] != '\n' {
-		fmt.Println()
-	}
-	return nil
+	return outResult(map[string]interface{}{
+		"namespace": namespaceID,
+		"key":       key,
+		"value":     string(data),
+		"size":      len(data),
+	}, func() {
+		fmt.Print(string(data))
+		if len(data) > 0 && data[len(data)-1] != '\n' {
+			fmt.Println()
+		}
+	})
 }
 
 func runKVDelete(cmd *cobra.Command, args []string) error {
@@ -358,26 +352,26 @@ func runKVDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete key", map[string]string{"namespace": namespaceID, "key": key})
-		}
-		printInfo("DRY RUN: Would delete key '%s' from namespace '%s'", key, namespaceID)
-		return nil
+		return outPayload("DRY RUN: Would delete key", func() any {
+			return map[string]string{"namespace": namespaceID, "key": key}
+		}, func() {
+			printInfo("DRY RUN: Would delete key '%s' from namespace '%s'", key, namespaceID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), namespaceID, key); err != nil {
 		return outErr("failed to delete key", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Key deleted successfully", map[string]string{"namespace": namespaceID, "key": key})
-	}
-	printSuccess("Key '%s' deleted from namespace '%s'", key, namespaceID)
-	return nil
+	return outPayload("Key deleted successfully", func() any {
+		return map[string]string{"namespace": namespaceID, "key": key}
+	}, func() {
+		printSuccess("Key '%s' deleted from namespace '%s'", key, namespaceID)
+	})
 }
 
 func runKVList(cmd *cobra.Command, args []string) error {
@@ -388,7 +382,7 @@ func runKVList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getKVService()
 	if err != nil {
-		return fmt.Errorf("failed to create KV service: %w", err)
+		return outErr("failed to create KV service", err)
 	}
 
 	var opts []cosmoflare.KVListOption
@@ -404,25 +398,22 @@ func runKVList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list keys", err)
 	}
 
-	if JSONOutput {
-		return printJSON(result)
-	}
-
-	if len(result.Items) == 0 {
-		printInfo("No keys found in namespace '%s'", namespaceID)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "KEY\tEXPIRATION")
-	for _, k := range result.Items {
-		exp := "never"
-		if k.Expiration > 0 {
-			exp = fmt.Sprintf("%d", k.Expiration)
+	return outResult(result, func() {
+		if len(result.Items) == 0 {
+			printInfo("No keys found in namespace '%s'", namespaceID)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\n", k.Key, exp)
-	}
-	w.Flush()
-	printInfo("Total: %d key(s)", len(result.Items))
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "KEY\tEXPIRATION")
+		for _, k := range result.Items {
+			exp := "never"
+			if k.Expiration > 0 {
+				exp = fmt.Sprintf("%d", k.Expiration)
+			}
+			fmt.Fprintf(w, "%s\t%s\n", k.Key, exp)
+		}
+		w.Flush()
+		printInfo("Total: %d key(s)", len(result.Items))
+	})
 }
