@@ -80,20 +80,20 @@ func runExport(cmd *cobra.Command, args []string) error {
 	opts = append(opts, cosmoflare.WithExportFormat(format))
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("dry run: would export configuration", map[string]interface{}{
+		return outPayload("dry run: would export configuration", func() any {
+			return map[string]interface{}{
 				"output_file": outputFile,
 				"format":      string(format),
 				"services":    exportServices,
-			})
-		}
-		printInfo("DRY RUN: Would export configuration to %s (format: %s)", outputFile, format)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would export configuration to %s (format: %s)", outputFile, format)
+		})
 	}
 
 	svc, err := getExportService()
 	if err != nil {
-		return fmt.Errorf("failed to create export service: %w", err)
+		return outErr("failed to create export service", err)
 	}
 
 	printInfo("Exporting Cloudflare configuration...")
@@ -118,15 +118,14 @@ func runExport(cmd *cobra.Command, args []string) error {
 		"zones":         len(export.Services.Zones),
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("configuration exported", summary)
-	}
-
-	printSuccess("Configuration exported to %s", outputFile)
-	printInfo("  Workers:       %d", len(export.Services.Workers))
-	printInfo("  KV Namespaces: %d", len(export.Services.KVNamespaces))
-	printInfo("  R2 Buckets:    %d", len(export.Services.R2Buckets))
-	printInfo("  DNS Records:   %d", len(export.Services.DNSRecords))
-	printInfo("  Zones:         %d", len(export.Services.Zones))
-	return nil
+	return outPayload("configuration exported", func() any {
+		return summary
+	}, func() {
+		printSuccess("Configuration exported to %s", outputFile)
+		printInfo("  Workers:       %d", len(export.Services.Workers))
+		printInfo("  KV Namespaces: %d", len(export.Services.KVNamespaces))
+		printInfo("  R2 Buckets:    %d", len(export.Services.R2Buckets))
+		printInfo("  DNS Records:   %d", len(export.Services.DNSRecords))
+		printInfo("  Zones:         %d", len(export.Services.Zones))
+	})
 }
