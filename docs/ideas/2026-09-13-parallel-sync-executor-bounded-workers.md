@@ -2,7 +2,7 @@
 ulid: 01M2CB40KC4WT58346HX7JFFX6
 title: Parallel sync executor (bounded workers)
 created: "2026-09-13T06:56:37.996488+04:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 53
@@ -12,7 +12,14 @@ tags:
     - audit
     - core-logic
 promoted_to: FEAT-038
+resolution:
+    reason: implemented
+    date: "2026-09-14T06:54:35.263436+04:00"
+    ref: FEAT-038
+    note: Resolved via FEAT-038 (closed)
 ---
+
+# Parallel sync executor (bounded workers)
 
 # Parallel sync executor (bounded workers)
 

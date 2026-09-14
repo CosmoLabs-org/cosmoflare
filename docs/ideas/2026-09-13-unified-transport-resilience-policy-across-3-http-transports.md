@@ -2,7 +2,7 @@
 ulid: 01M2CB44PXQFVMSJD8586FR211
 title: Unified transport resilience policy across 3 HTTP transports
 created: "2026-09-13T06:56:42.205417+04:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 53
@@ -12,7 +12,14 @@ tags:
     - audit
     - api-design
 promoted_to: FEAT-039
+resolution:
+    reason: implemented
+    date: "2026-09-14T06:54:35.458635+04:00"
+    ref: FEAT-039
+    note: Resolved via FEAT-039 (closed)
 ---
+
+# Unified transport resilience policy across 3 HTTP transports
 
 # Unified transport resilience policy across 3 HTTP transports
 
