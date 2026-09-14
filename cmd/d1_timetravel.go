@@ -64,7 +64,7 @@ func runD1TimeTravelRestore(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	quota, err := svc.TimeTravelQuotaCheck(databaseID)
@@ -72,24 +72,20 @@ func runD1TimeTravelRestore(cmd *cobra.Command, args []string) error {
 		return outErr("failed to check time-travel quota", err)
 	}
 	if quota.Used >= quota.Limit {
-		msg := fmt.Sprintf("time-travel restore quota exceeded (%d/%d used); resets at %s", quota.Used, quota.Limit, quota.WindowResetsAt.Format(time.RFC3339))
-		if JSONOutput {
-			return printErrorJSON(msg)
-		}
-		return fmt.Errorf("%s", msg)
+		return outErrf("time-travel restore quota exceeded (%d/%d used); resets at %s", quota.Used, quota.Limit, quota.WindowResetsAt.Format(time.RFC3339))
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would restore database", map[string]any{
+		return outPayload("DRY RUN: Would restore database", func() any {
+			return map[string]any{
 				"database_id": databaseID,
 				"timestamp":   timestamp.UTC().Format(time.RFC3339),
 				"quota_used":  quota.Used,
 				"quota_limit": quota.Limit,
-			})
-		}
-		printInfo("DRY RUN: Would restore database '%s' to '%s' (%d/%d restores used this window)", databaseID, timestamp.UTC().Format(time.RFC3339), quota.Used, quota.Limit)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would restore database '%s' to '%s' (%d/%d restores used this window)", databaseID, timestamp.UTC().Format(time.RFC3339), quota.Used, quota.Limit)
+		})
 	}
 
 	if !d1TimeTravelForce {
@@ -110,15 +106,14 @@ func runD1TimeTravelRestore(cmd *cobra.Command, args []string) error {
 
 	remaining := quota.Limit - (quota.Used + 1)
 
-	if JSONOutput {
-		return printSuccessJSON("Database restored", map[string]any{
+	return outPayload("Database restored", func() any {
+		return map[string]any{
 			"result":             result,
 			"remaining_restores": remaining,
 			"window_resets_at":   quota.WindowResetsAt.Format(time.RFC3339),
-		})
-	}
-
-	printSuccess("Database '%s' restored to '%s'", databaseID, timestamp.UTC().Format(time.RFC3339))
-	printInfo("%d restore(s) remaining in the current window", remaining)
-	return nil
+		}
+	}, func() {
+		printSuccess("Database '%s' restored to '%s'", databaseID, timestamp.UTC().Format(time.RFC3339))
+		printInfo("%d restore(s) remaining in the current window", remaining)
+	})
 }
