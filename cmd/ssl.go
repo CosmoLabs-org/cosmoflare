@@ -119,7 +119,7 @@ func runSSLStatus(cmd *cobra.Command, args []string) error {
 
 	svc, err := getSSLService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create SSL service: %w", err)
+		return outErr("failed to create SSL service", err)
 	}
 
 	status, err := svc.GetSSL(context.Background())
@@ -127,17 +127,14 @@ func runSSLStatus(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get SSL status", err)
 	}
 
-	if JSONOutput {
-		return printJSON(status)
-	}
-
-	fmt.Printf("SSL/TLS Encryption Mode: %s\n", status.Value)
-	fmt.Printf("Certificate Status:      %s\n", status.CertificateStatus)
-	fmt.Printf("Editable:                %v\n", status.Editable)
-	if status.ModifiedOn != "" {
-		fmt.Printf("Modified:                %s\n", status.ModifiedOn)
-	}
-	return nil
+	return outResult(status, func() {
+		fmt.Printf("SSL/TLS Encryption Mode: %s\n", status.Value)
+		fmt.Printf("Certificate Status:      %s\n", status.CertificateStatus)
+		fmt.Printf("Editable:                %v\n", status.Editable)
+		if status.ModifiedOn != "" {
+			fmt.Printf("Modified:                %s\n", status.ModifiedOn)
+		}
+	})
 }
 
 func runSSLSettings(cmd *cobra.Command, args []string) error {
@@ -148,7 +145,7 @@ func runSSLSettings(cmd *cobra.Command, args []string) error {
 
 	svc, err := getSSLService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create SSL service: %w", err)
+		return outErr("failed to create SSL service", err)
 	}
 
 	settings, err := svc.GetSettings(context.Background())
@@ -156,18 +153,15 @@ func runSSLSettings(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get SSL settings", err)
 	}
 
-	if JSONOutput {
-		return printJSON(settings)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "SETTING\tVALUE")
-	fmt.Fprintf(w, "Minimum TLS Version\t%s\n", settings.MinTLSVersion)
-	fmt.Fprintf(w, "Always Use HTTPS\t%v\n", settings.AlwaysUseHTTPS)
-	fmt.Fprintf(w, "Automatic HTTPS Rewrites\t%v\n", settings.AutomaticHTTPSRewrites)
-	fmt.Fprintf(w, "Universal SSL\t%v\n", settings.UniversalSSL)
-	w.Flush()
-	return nil
+	return outResult(settings, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "SETTING\tVALUE")
+		fmt.Fprintf(w, "Minimum TLS Version\t%s\n", settings.MinTLSVersion)
+		fmt.Fprintf(w, "Always Use HTTPS\t%v\n", settings.AlwaysUseHTTPS)
+		fmt.Fprintf(w, "Automatic HTTPS Rewrites\t%v\n", settings.AutomaticHTTPSRewrites)
+		fmt.Fprintf(w, "Universal SSL\t%v\n", settings.UniversalSSL)
+		w.Flush()
+	})
 }
 
 func runSSLUpdate(cmd *cobra.Command, args []string) error {
@@ -185,15 +179,15 @@ func runSSLUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getSSLService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create SSL service: %w", err)
+		return outErr("failed to create SSL service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update SSL settings", map[string]string{"zone_id": zoneID})
-		}
-		printInfo("DRY RUN: Would update SSL settings for zone '%s'", zoneID)
-		return nil
+		return outPayload("DRY RUN: Would update SSL settings", func() any {
+			return map[string]string{"zone_id": zoneID}
+		}, func() {
+			printInfo("DRY RUN: Would update SSL settings for zone '%s'", zoneID)
+		})
 	}
 
 	if hasMode {
@@ -201,10 +195,10 @@ func runSSLUpdate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return outErr("failed to update SSL mode", err)
 		}
-		if JSONOutput {
-			printJSON(status)
-		} else {
+		if err := outResult(status, func() {
 			printSuccess("SSL/TLS mode updated to '%s'", status.Value)
+		}); err != nil {
+			return err
 		}
 	}
 
@@ -239,7 +233,7 @@ func runSSLVerify(cmd *cobra.Command, args []string) error {
 
 	svc, err := getSSLService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create SSL service: %w", err)
+		return outErr("failed to create SSL service", err)
 	}
 
 	verifications, err := svc.GetVerification(context.Background())
@@ -247,37 +241,34 @@ func runSSLVerify(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get SSL verification", err)
 	}
 
-	if JSONOutput {
-		return printJSON(verifications)
-	}
-
-	if len(verifications) == 0 {
-		printInfo("No SSL verification entries found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "CERT PACK\tSTATUS\tTYPE\tMETHOD\tVERIFIED\tBRAND CHECK")
-	for _, v := range verifications {
-		verified := "no"
-		if v.VerificationStatus {
-			verified = "yes"
+	return outResult(verifications, func() {
+		if len(verifications) == 0 {
+			printInfo("No SSL verification entries found")
+			return
 		}
-		brandCheck := "no"
-		if v.BrandCheck {
-			brandCheck = "yes"
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			v.CertPackUUID,
-			v.CertificateStatus,
-			v.VerificationType,
-			v.ValidationMethod,
-			verified,
-			brandCheck,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d verification(s)", len(verifications))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "CERT PACK\tSTATUS\tTYPE\tMETHOD\tVERIFIED\tBRAND CHECK")
+		for _, v := range verifications {
+			verified := "no"
+			if v.VerificationStatus {
+				verified = "yes"
+			}
+			brandCheck := "no"
+			if v.BrandCheck {
+				brandCheck = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+				v.CertPackUUID,
+				v.CertificateStatus,
+				v.VerificationType,
+				v.ValidationMethod,
+				verified,
+				brandCheck,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d verification(s)", len(verifications))
+	})
 }
