@@ -94,15 +94,12 @@ func runPagesEnvList(cmd *cobra.Command, args []string) error {
 	project := args[0]
 
 	if err := validatePagesEnvFlag(pagesEnv); err != nil {
-		if JSONOutput {
-			return printErrorJSON(err.Error())
-		}
-		return err
+		return outErrf("%s", err)
 	}
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	vars, err := svc.ListEnvVars(context.Background(), project, pagesEnv)
@@ -110,27 +107,24 @@ func runPagesEnvList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list env vars", err)
 	}
 
-	if JSONOutput {
-		return printJSON(vars)
-	}
-
-	if len(vars) == 0 {
-		printInfo("No environment variables found for project '%s' (%s)", project, pagesEnv)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "KEY\tTYPE\tVALUE")
-	for _, v := range vars {
-		value := v.Value
-		if v.Type == "secret" {
-			value = "(secret)"
+	return outResult(vars, func() {
+		if len(vars) == 0 {
+			printInfo("No environment variables found for project '%s' (%s)", project, pagesEnv)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", v.Key, v.Type, value)
-	}
-	w.Flush()
-	printInfo("Total: %d variable(s)", len(vars))
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "KEY\tTYPE\tVALUE")
+		for _, v := range vars {
+			value := v.Value
+			if v.Type == "secret" {
+				value = "(secret)"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", v.Key, v.Type, value)
+		}
+		w.Flush()
+		printInfo("Total: %d variable(s)", len(vars))
+	})
 }
 
 func runPagesEnvSet(cmd *cobra.Command, args []string) error {
@@ -138,10 +132,7 @@ func runPagesEnvSet(cmd *cobra.Command, args []string) error {
 	pairs := args[1:]
 
 	if err := validatePagesEnvFlag(pagesEnv); err != nil {
-		if JSONOutput {
-			return printErrorJSON(err.Error())
-		}
-		return err
+		return outErrf("%s", err)
 	}
 
 	varType := "plain"
@@ -153,11 +144,7 @@ func runPagesEnvSet(cmd *cobra.Command, args []string) error {
 	for _, pair := range pairs {
 		parts := strings.SplitN(pair, "=", 2)
 		if len(parts) != 2 || parts[0] == "" {
-			err := fmt.Errorf("invalid KEY=VALUE pair: %q", pair)
-			if JSONOutput {
-				return printErrorJSON(err.Error())
-			}
-			return err
+			return outErrf("invalid KEY=VALUE pair: %q", pair)
 		}
 		vars = append(vars, cosmoflare.PagesEnvVar{
 			Key:   parts[0],
@@ -168,34 +155,34 @@ func runPagesEnvSet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would set env vars", map[string]interface{}{
+		return outPayload("DRY RUN: Would set env vars", func() any {
+			return map[string]interface{}{
 				"project": project,
 				"env":     pagesEnv,
 				"vars":    vars,
-			})
-		}
-		printInfo("DRY RUN: Would set %d env var(s) for project '%s' (%s)", len(vars), project, pagesEnv)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would set %d env var(s) for project '%s' (%s)", len(vars), project, pagesEnv)
+		})
 	}
 
 	if err := svc.SetEnvVars(context.Background(), project, pagesEnv, vars); err != nil {
 		return outErr("failed to set env vars", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Environment variables set successfully", map[string]interface{}{
+	return outPayload("Environment variables set successfully", func() any {
+		return map[string]interface{}{
 			"project": project,
 			"env":     pagesEnv,
 			"count":   len(vars),
-		})
-	}
-	printSuccess("Set %d environment variable(s) for project '%s' (%s)", len(vars), project, pagesEnv)
-	return nil
+		}
+	}, func() {
+		printSuccess("Set %d environment variable(s) for project '%s' (%s)", len(vars), project, pagesEnv)
+	})
 }
 
 func runPagesEnvDelete(cmd *cobra.Command, args []string) error {
@@ -203,40 +190,37 @@ func runPagesEnvDelete(cmd *cobra.Command, args []string) error {
 	key := args[1]
 
 	if err := validatePagesEnvFlag(pagesEnv); err != nil {
-		if JSONOutput {
-			return printErrorJSON(err.Error())
-		}
-		return err
+		return outErrf("%s", err)
 	}
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete env var", map[string]string{
+		return outPayload("DRY RUN: Would delete env var", func() any {
+			return map[string]string{
 				"project": project,
 				"env":     pagesEnv,
 				"key":     key,
-			})
-		}
-		printInfo("DRY RUN: Would delete env var '%s' for project '%s' (%s)", key, project, pagesEnv)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete env var '%s' for project '%s' (%s)", key, project, pagesEnv)
+		})
 	}
 
 	if err := svc.DeleteEnvVar(context.Background(), project, pagesEnv, key); err != nil {
 		return outErr("failed to delete env var", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Environment variable deleted successfully", map[string]string{
+	return outPayload("Environment variable deleted successfully", func() any {
+		return map[string]string{
 			"project": project,
 			"env":     pagesEnv,
 			"key":     key,
-		})
-	}
-	printSuccess("Deleted environment variable '%s' for project '%s' (%s)", key, project, pagesEnv)
-	return nil
+		}
+	}, func() {
+		printSuccess("Deleted environment variable '%s' for project '%s' (%s)", key, project, pagesEnv)
+	})
 }
