@@ -1,0 +1,18 @@
+id: TASK-008
+type: task
+created_at: 2026-09-14T06:06:17.157093+04:00
+updated_at: 2026-09-14T06:06:17.163976+04:00
+source: local
+ulid: 01M2ETMHJBWDTMKEGS5W82BFQY
+status: open
+labels:
+    - audit
+    - documentation
+title: CONTRIBUTING.md + env-var reference table
+description: |-
+    # CONTRIBUTING.md + env-var reference table
+
+    No CONTRIBUTING.md in an MIT OSS project at v0.26.0; CLOUDFLARE_EMAIL used in code but undocumented. Add both. Evidence: agent-10-documentation.md
+
+    Origin: audit-agent-10-documentation
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-10-documentation.md
