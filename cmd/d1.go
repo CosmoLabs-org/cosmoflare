@@ -31,8 +31,8 @@ Examples:
 }
 
 var (
-	d1Force bool
-	d1SQL   string
+	d1Force  bool
+	d1SQL    string
 	d1Params []string
 )
 
@@ -129,15 +129,15 @@ func runD1Create(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create database", map[string]string{"name": name})
-		}
-		printInfo("DRY RUN: Would create database '%s'", name)
-		return nil
+		return outPayload("DRY RUN: Would create database", func() any {
+			return map[string]string{"name": name}
+		}, func() {
+			printInfo("DRY RUN: Would create database '%s'", name)
+		})
 	}
 
 	db, err := svc.Create(context.Background(), name)
@@ -145,17 +145,17 @@ func runD1Create(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create database", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Database created successfully", db)
-	}
-	printSuccess("Database '%s' created (ID: %s)", db.Name, db.UUID)
-	return nil
+	return outPayload("Database created successfully", func() any {
+		return db
+	}, func() {
+		printSuccess("Database '%s' created (ID: %s)", db.Name, db.UUID)
+	})
 }
 
 func runD1List(cmd *cobra.Command, args []string) error {
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	databases, err := svc.List(context.Background())
@@ -163,24 +163,21 @@ func runD1List(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list databases", err)
 	}
 
-	if JSONOutput {
-		return printJSON(databases)
-	}
+	return outResult(databases, func() {
+		if len(databases) == 0 {
+			printInfo("No D1 databases found")
+			return
+		}
 
-	if len(databases) == 0 {
-		printInfo("No D1 databases found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "UUID\tNAME\tTABLES\tSIZE\tVERSION")
-	for _, db := range databases {
-		size := formatBytes(db.FileSize)
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\n", db.UUID, db.Name, db.NumTables, size, db.Version)
-	}
-	w.Flush()
-	printInfo("Total: %d database(s)", len(databases))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "UUID\tNAME\tTABLES\tSIZE\tVERSION")
+		for _, db := range databases {
+			size := formatBytes(db.FileSize)
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\n", db.UUID, db.Name, db.NumTables, size, db.Version)
+		}
+		w.Flush()
+		printInfo("Total: %d database(s)", len(databases))
+	})
 }
 
 func runD1Get(cmd *cobra.Command, args []string) error {
@@ -188,7 +185,7 @@ func runD1Get(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	db, err := svc.Get(context.Background(), databaseID)
@@ -196,21 +193,18 @@ func runD1Get(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get database", err)
 	}
 
-	if JSONOutput {
-		return printJSON(db)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "UUID:\t%s\n", db.UUID)
-	fmt.Fprintf(w, "Name:\t%s\n", db.Name)
-	fmt.Fprintf(w, "Version:\t%s\n", db.Version)
-	fmt.Fprintf(w, "Tables:\t%d\n", db.NumTables)
-	fmt.Fprintf(w, "Size:\t%s\n", formatBytes(db.FileSize))
-	if db.CreatedAt != nil {
-		fmt.Fprintf(w, "Created:\t%s\n", db.CreatedAt.Format("2006-01-02 15:04:05 UTC"))
-	}
-	w.Flush()
-	return nil
+	return outResult(db, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "UUID:\t%s\n", db.UUID)
+		fmt.Fprintf(w, "Name:\t%s\n", db.Name)
+		fmt.Fprintf(w, "Version:\t%s\n", db.Version)
+		fmt.Fprintf(w, "Tables:\t%d\n", db.NumTables)
+		fmt.Fprintf(w, "Size:\t%s\n", formatBytes(db.FileSize))
+		if db.CreatedAt != nil {
+			fmt.Fprintf(w, "Created:\t%s\n", db.CreatedAt.Format("2006-01-02 15:04:05 UTC"))
+		}
+		w.Flush()
+	})
 }
 
 func runD1Delete(cmd *cobra.Command, args []string) error {
@@ -229,26 +223,26 @@ func runD1Delete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete database", map[string]string{"id": databaseID})
-		}
-		printInfo("DRY RUN: Would delete database '%s'", databaseID)
-		return nil
+		return outPayload("DRY RUN: Would delete database", func() any {
+			return map[string]string{"id": databaseID}
+		}, func() {
+			printInfo("DRY RUN: Would delete database '%s'", databaseID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), databaseID); err != nil {
 		return outErr("failed to delete database", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Database deleted successfully", map[string]string{"id": databaseID})
-	}
-	printSuccess("Database '%s' deleted successfully!", databaseID)
-	return nil
+	return outPayload("Database deleted successfully", func() any {
+		return map[string]string{"id": databaseID}
+	}, func() {
+		printSuccess("Database '%s' deleted successfully!", databaseID)
+	})
 }
 
 func runD1Query(cmd *cobra.Command, args []string) error {
@@ -260,18 +254,18 @@ func runD1Query(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would execute query", map[string]string{
+		return outPayload("DRY RUN: Would execute query", func() any {
+			return map[string]string{
 				"database_id": databaseID,
 				"sql":         d1SQL,
-			})
-		}
-		printInfo("DRY RUN: Would execute query on database '%s'", databaseID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would execute query on database '%s'", databaseID)
+		})
 	}
 
 	results, err := svc.Query(context.Background(), databaseID, d1SQL, d1Params...)
@@ -279,38 +273,35 @@ func runD1Query(cmd *cobra.Command, args []string) error {
 		return outErr("failed to execute query", err)
 	}
 
-	if JSONOutput {
-		return printJSON(results)
-	}
-
-	for i, result := range results {
-		if i > 0 {
-			fmt.Println()
-		}
-
-		if len(result.Rows) == 0 {
-			printInfo("Query executed successfully (no rows returned)")
-			printQueryMeta(result)
-			continue
-		}
-
-		// Extract column names from the first row
-		columns := extractColumns(result.Rows)
-
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, strings.Join(columns, "\t"))
-		for _, row := range result.Rows {
-			vals := make([]string, 0, len(columns))
-			for _, col := range columns {
-				vals = append(vals, fmt.Sprintf("%v", row[col]))
+	return outResult(results, func() {
+		for i, result := range results {
+			if i > 0 {
+				fmt.Println()
 			}
-			fmt.Fprintln(w, strings.Join(vals, "\t"))
-		}
-		w.Flush()
 
-		printQueryMeta(result)
-	}
-	return nil
+			if len(result.Rows) == 0 {
+				printInfo("Query executed successfully (no rows returned)")
+				printQueryMeta(result)
+				continue
+			}
+
+			// Extract column names from the first row
+			columns := extractColumns(result.Rows)
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, strings.Join(columns, "\t"))
+			for _, row := range result.Rows {
+				vals := make([]string, 0, len(columns))
+				for _, col := range columns {
+					vals = append(vals, fmt.Sprintf("%v", row[col]))
+				}
+				fmt.Fprintln(w, strings.Join(vals, "\t"))
+			}
+			w.Flush()
+
+			printQueryMeta(result)
+		}
+	})
 }
 
 // printQueryMeta prints metadata about a query result.
