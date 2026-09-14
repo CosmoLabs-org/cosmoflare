@@ -100,19 +100,16 @@ func runTemplatesList(cmd *cobra.Command, args []string) error {
 	svc := cosmoflare.NewTemplateService()
 	templates := svc.ListTemplates()
 
-	if JSONOutput {
-		return printJSON(templates)
-	}
+	return outResult(templates, func() {
+		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tDESCRIPTION\tSERVICES")
+		for _, t := range templates {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", t.Name, t.Description, strings.Join(t.Services, ", "))
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tDESCRIPTION\tSERVICES")
-	for _, t := range templates {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", t.Name, t.Description, strings.Join(t.Services, ", "))
-	}
-	w.Flush()
-
-	fmt.Fprintf(cmd.OutOrStdout(), "\nUse 'cosmoflare templates info <name>' for details.\n")
-	return nil
+		fmt.Fprintf(cmd.OutOrStdout(), "\nUse 'cosmoflare templates info <name>' for details.\n")
+	})
 }
 
 func runTemplatesInfo(cmd *cobra.Command, args []string) error {
@@ -126,23 +123,20 @@ func runTemplatesInfo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if JSONOutput {
-		return printJSON(tmpl)
-	}
-
-	out := cmd.OutOrStdout()
-	fmt.Fprintf(out, "Template: %s\n", tmpl.Name)
-	fmt.Fprintf(out, "Description: %s\n", tmpl.Description)
-	fmt.Fprintf(out, "\nServices:\n")
-	for _, s := range tmpl.Services {
-		fmt.Fprintf(out, "  - %s\n", s)
-	}
-	fmt.Fprintf(out, "\nFiles generated:\n")
-	for _, f := range tmpl.Files {
-		fmt.Fprintf(out, "  - %s\n", f)
-	}
-	fmt.Fprintf(out, "\nUsage: cosmoflare templates create %s [directory]\n", tmpl.Name)
-	return nil
+	return outResult(tmpl, func() {
+		out := cmd.OutOrStdout()
+		fmt.Fprintf(out, "Template: %s\n", tmpl.Name)
+		fmt.Fprintf(out, "Description: %s\n", tmpl.Description)
+		fmt.Fprintf(out, "\nServices:\n")
+		for _, s := range tmpl.Services {
+			fmt.Fprintf(out, "  - %s\n", s)
+		}
+		fmt.Fprintf(out, "\nFiles generated:\n")
+		for _, f := range tmpl.Files {
+			fmt.Fprintf(out, "  - %s\n", f)
+		}
+		fmt.Fprintf(out, "\nUsage: cosmoflare templates create %s [directory]\n", tmpl.Name)
+	})
 }
 
 func runTemplatesCreate(cmd *cobra.Command, args []string) error {
@@ -174,25 +168,19 @@ func runTemplatesCreate(cmd *cobra.Command, args []string) error {
 	svc := cosmoflare.NewTemplateService()
 	result, err := svc.CreateFromTemplate(templateName, absDir, projectName, templatesForce)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create project: %v", err))
+		return outErr("failed to create project", err)
+	}
+
+	return outResult(result, func() {
+		out := cmd.OutOrStdout()
+		fmt.Fprintf(out, "Project %q created from template %q\n", result.ProjectName, result.TemplateName)
+		fmt.Fprintf(out, "Directory: %s\n", result.Directory)
+		fmt.Fprintf(out, "\nFiles created:\n")
+		for _, f := range result.FilesCreated {
+			fmt.Fprintf(out, "  - %s\n", f)
 		}
-		return err
-	}
-
-	if JSONOutput {
-		return printJSON(result)
-	}
-
-	out := cmd.OutOrStdout()
-	fmt.Fprintf(out, "Project %q created from template %q\n", result.ProjectName, result.TemplateName)
-	fmt.Fprintf(out, "Directory: %s\n", result.Directory)
-	fmt.Fprintf(out, "\nFiles created:\n")
-	for _, f := range result.FilesCreated {
-		fmt.Fprintf(out, "  - %s\n", f)
-	}
-	fmt.Fprintf(out, "\nNext steps:\n")
-	fmt.Fprintf(out, "  cd %s\n", result.Directory)
-	fmt.Fprintf(out, "  cosmoflare doctor %s   # verify domain health\n", result.ProjectName)
-	return nil
+		fmt.Fprintf(out, "\nNext steps:\n")
+		fmt.Fprintf(out, "  cd %s\n", result.Directory)
+		fmt.Fprintf(out, "  cosmoflare doctor %s   # verify domain health\n", result.ProjectName)
+	})
 }
