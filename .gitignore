@@ -219,3 +219,6 @@ GOrchestra/worktrees/**/recovery_*.patch
 docs/conversation-transcripts/
 docs/sessions/transcripts/*.jsonl
 GOrchestra/
+
+# Claude Code local session state (harness bookkeeping, not source)
+.claude/

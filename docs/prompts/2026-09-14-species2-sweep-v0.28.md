@@ -1,13 +1,19 @@
 ---
-status: PENDING
-type: continuation
+created: "2026-09-14T17:55:00+04:00"
+goals_completed: 1
+goals_total: 2
 priority: high
-created: 2026-09-14T17:55:00+04:00
+related_prompts: []
 requires_reading:
     - cmd/account.go
     - cmd/output.go
     - docs/audit/latest/brief.md
 schema_version: 1
+started: "2026-09-14T22:24:21+04:00"
+status: IN_PROGRESS
+tags: []
+title: 'Continuation: FEAT-040 Species-2 Presenter Sweep → v0.28.0'
+type: continuation
 ---
 
 # Continuation: FEAT-040 Species-2 Presenter Sweep → v0.28.0
