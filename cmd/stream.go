@@ -268,13 +268,13 @@ func runStreamUpload(cmd *cobra.Command, args []string) error {
 	filePath := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would upload video", map[string]interface{}{
+		return outPayload("DRY RUN: Would upload video", func() any {
+			return map[string]interface{}{
 				"file": filePath,
-			})
-		}
-		printInfo("DRY RUN: Would upload video from '%s'", filePath)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would upload video from '%s'", filePath)
+		})
 	}
 
 	// Verify file exists before creating service
@@ -284,7 +284,7 @@ func runStreamUpload(cmd *cobra.Command, args []string) error {
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	var metadata map[string]interface{}
@@ -299,33 +299,32 @@ func runStreamUpload(cmd *cobra.Command, args []string) error {
 		return outErr("failed to upload video", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Video uploaded successfully", video)
-	}
-
-	printSuccess("Video uploaded successfully!")
-	printInfo("UID: %s", video.UID)
-	printInfo("Status: %s", video.Status.State)
-	if video.Duration > 0 {
-		printInfo("Duration: %.1fs", video.Duration)
-	}
-	return nil
+	return outPayload("Video uploaded successfully", func() any {
+		return video
+	}, func() {
+		printSuccess("Video uploaded successfully!")
+		printInfo("UID: %s", video.UID)
+		printInfo("Status: %s", video.Status.State)
+		if video.Duration > 0 {
+			printInfo("Duration: %.1fs", video.Duration)
+		}
+	})
 }
 
 func runStreamUploadByURL(cmd *cobra.Command) error {
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would upload video from URL", map[string]interface{}{
+		return outPayload("DRY RUN: Would upload video from URL", func() any {
+			return map[string]interface{}{
 				"url": streamURL,
-			})
-		}
-		printInfo("DRY RUN: Would upload video from URL '%s'", streamURL)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would upload video from URL '%s'", streamURL)
+		})
 	}
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	var opts []cosmoflare.StreamUploadOption
@@ -348,20 +347,19 @@ func runStreamUploadByURL(cmd *cobra.Command) error {
 		return outErr("failed to upload video from URL", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Video uploaded from URL successfully", video)
-	}
-
-	printSuccess("Video uploaded from URL successfully!")
-	printInfo("UID: %s", video.UID)
-	printInfo("Status: %s", video.Status.State)
-	return nil
+	return outPayload("Video uploaded from URL successfully", func() any {
+		return video
+	}, func() {
+		printSuccess("Video uploaded from URL successfully!")
+		printInfo("UID: %s", video.UID)
+		printInfo("Status: %s", video.Status.State)
+	})
 }
 
 func runStreamList(cmd *cobra.Command, args []string) error {
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	videos, err := svc.ListVideos(context.Background(), streamStatus)
@@ -369,40 +367,37 @@ func runStreamList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list videos", err)
 	}
 
-	if JSONOutput {
-		return printJSON(videos)
-	}
-
-	if len(videos) == 0 {
-		printInfo("No videos found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "UID\tSTATUS\tDURATION\tSIZE\tREADY\tSIGNED")
-	for _, v := range videos {
-		readyStr := "no"
-		if v.ReadyToStream {
-			readyStr = "yes"
+	return outResult(videos, func() {
+		if len(videos) == 0 {
+			printInfo("No videos found")
+			return
 		}
-		signedStr := "no"
-		if v.RequireSignedURLs {
-			signedStr = "yes"
-		}
-		sizeStr := formatBytes(int64(v.Size))
-		fmt.Fprintf(w, "%s\t%s\t%.1fs\t%s\t%s\t%s\n",
-			v.UID,
-			v.Status.State,
-			v.Duration,
-			sizeStr,
-			readyStr,
-			signedStr,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d video(s)", len(videos))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "UID\tSTATUS\tDURATION\tSIZE\tREADY\tSIGNED")
+		for _, v := range videos {
+			readyStr := "no"
+			if v.ReadyToStream {
+				readyStr = "yes"
+			}
+			signedStr := "no"
+			if v.RequireSignedURLs {
+				signedStr = "yes"
+			}
+			sizeStr := formatBytes(int64(v.Size))
+			fmt.Fprintf(w, "%s\t%s\t%.1fs\t%s\t%s\t%s\n",
+				v.UID,
+				v.Status.State,
+				v.Duration,
+				sizeStr,
+				readyStr,
+				signedStr,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d video(s)", len(videos))
+	})
 }
 
 func runStreamGet(cmd *cobra.Command, args []string) error {
@@ -413,7 +408,7 @@ func runStreamGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	video, err := svc.GetVideo(context.Background(), videoID)
@@ -421,42 +416,39 @@ func runStreamGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get video", err)
 	}
 
-	if JSONOutput {
-		return printJSON(video)
-	}
-
-	fmt.Printf("UID:               %s\n", video.UID)
-	fmt.Printf("Status:            %s\n", video.Status.State)
-	if video.Status.PctComplete != "" {
-		fmt.Printf("Progress:          %s%%\n", video.Status.PctComplete)
-	}
-	fmt.Printf("Ready to Stream:   %v\n", video.ReadyToStream)
-	fmt.Printf("Duration:          %.1fs\n", video.Duration)
-	fmt.Printf("Size:              %s\n", formatBytes(int64(video.Size)))
-	if video.Input.Width > 0 && video.Input.Height > 0 {
-		fmt.Printf("Resolution:        %dx%d\n", video.Input.Width, video.Input.Height)
-	}
-	fmt.Printf("Require Signed:    %v\n", video.RequireSignedURLs)
-	if video.Playback.HLS != "" {
-		fmt.Printf("HLS URL:           %s\n", video.Playback.HLS)
-	}
-	if video.Playback.Dash != "" {
-		fmt.Printf("DASH URL:          %s\n", video.Playback.Dash)
-	}
-	if video.Preview != "" {
-		fmt.Printf("Preview:           %s\n", video.Preview)
-	}
-	if video.Thumbnail != "" {
-		fmt.Printf("Thumbnail:         %s\n", video.Thumbnail)
-	}
-	if video.Created != nil {
-		fmt.Printf("Created:           %s\n", video.Created.Format("2006-01-02 15:04:05"))
-	}
-	if len(video.Meta) > 0 {
-		metaJSON, _ := json.MarshalIndent(video.Meta, "                   ", "  ")
-		fmt.Printf("Metadata:          %s\n", string(metaJSON))
-	}
-	return nil
+	return outResult(video, func() {
+		fmt.Printf("UID:               %s\n", video.UID)
+		fmt.Printf("Status:            %s\n", video.Status.State)
+		if video.Status.PctComplete != "" {
+			fmt.Printf("Progress:          %s%%\n", video.Status.PctComplete)
+		}
+		fmt.Printf("Ready to Stream:   %v\n", video.ReadyToStream)
+		fmt.Printf("Duration:          %.1fs\n", video.Duration)
+		fmt.Printf("Size:              %s\n", formatBytes(int64(video.Size)))
+		if video.Input.Width > 0 && video.Input.Height > 0 {
+			fmt.Printf("Resolution:        %dx%d\n", video.Input.Width, video.Input.Height)
+		}
+		fmt.Printf("Require Signed:    %v\n", video.RequireSignedURLs)
+		if video.Playback.HLS != "" {
+			fmt.Printf("HLS URL:           %s\n", video.Playback.HLS)
+		}
+		if video.Playback.Dash != "" {
+			fmt.Printf("DASH URL:          %s\n", video.Playback.Dash)
+		}
+		if video.Preview != "" {
+			fmt.Printf("Preview:           %s\n", video.Preview)
+		}
+		if video.Thumbnail != "" {
+			fmt.Printf("Thumbnail:         %s\n", video.Thumbnail)
+		}
+		if video.Created != nil {
+			fmt.Printf("Created:           %s\n", video.Created.Format("2006-01-02 15:04:05"))
+		}
+		if len(video.Meta) > 0 {
+			metaJSON, _ := json.MarshalIndent(video.Meta, "                   ", "  ")
+			fmt.Printf("Metadata:          %s\n", string(metaJSON))
+		}
+	})
 }
 
 func runStreamDelete(cmd *cobra.Command, args []string) error {
@@ -477,31 +469,31 @@ func runStreamDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete video", map[string]string{
+		return outPayload("DRY RUN: Would delete video", func() any {
+			return map[string]string{
 				"video_id": videoID,
-			})
-		}
-		printInfo("DRY RUN: Would delete video '%s'", videoID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete video '%s'", videoID)
+		})
 	}
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	if err := svc.DeleteVideo(context.Background(), videoID); err != nil {
 		return outErr("failed to delete video", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Video deleted successfully", map[string]string{
+	return outPayload("Video deleted successfully", func() any {
+		return map[string]string{
 			"video_id": videoID,
-		})
-	}
-	printSuccess("Video '%s' deleted successfully!", videoID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Video '%s' deleted successfully!", videoID)
+	})
 }
 
 func runStreamToken(cmd *cobra.Command, args []string) error {
@@ -517,19 +509,19 @@ func runStreamToken(cmd *cobra.Command, args []string) error {
 	expiresSeconds := int(dur.Seconds())
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would generate signed token", map[string]interface{}{
+		return outPayload("DRY RUN: Would generate signed token", func() any {
+			return map[string]interface{}{
 				"video_id": videoID,
 				"expires":  streamExpires,
-			})
-		}
-		printInfo("DRY RUN: Would generate signed token for video '%s' (expires: %s)", videoID, streamExpires)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would generate signed token for video '%s' (expires: %s)", videoID, streamExpires)
+		})
 	}
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	token, err := svc.CreateSignedToken(context.Background(), videoID, expiresSeconds)
@@ -537,20 +529,19 @@ func runStreamToken(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create signed token", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Signed token generated", map[string]string{
+	return outPayload("Signed token generated", func() any {
+		return map[string]string{
 			"video_id": videoID,
 			"token":    token,
 			"expires":  streamExpires,
-		})
-	}
-
-	printSuccess("Signed playback token generated!")
-	printInfo("Video: %s", videoID)
-	printInfo("Expires: %s", streamExpires)
-	fmt.Println()
-	fmt.Println(token)
-	return nil
+		}
+	}, func() {
+		printSuccess("Signed playback token generated!")
+		printInfo("Video: %s", videoID)
+		printInfo("Expires: %s", streamExpires)
+		fmt.Println()
+		fmt.Println(token)
+	})
 }
 
 func runStreamLiveCreate(cmd *cobra.Command, args []string) error {
@@ -560,22 +551,22 @@ func runStreamLiveCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create live input", map[string]interface{}{
+		return outPayload("DRY RUN: Would create live input", func() any {
+			return map[string]interface{}{
 				"name": name,
 				"mode": streamLiveMode,
-			})
-		}
-		printInfo("DRY RUN: Would create live input '%s'", name)
-		if streamLiveMode != "" {
-			printInfo("Recording mode: %s", streamLiveMode)
-		}
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create live input '%s'", name)
+			if streamLiveMode != "" {
+				printInfo("Recording mode: %s", streamLiveMode)
+			}
+		})
 	}
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	input, err := svc.CreateLiveInput(context.Background(), name, streamLiveMode)
@@ -583,29 +574,28 @@ func runStreamLiveCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create live input", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Live input created successfully", input)
-	}
-
-	printSuccess("Live input '%s' created successfully!", name)
-	printInfo("UID: %s", input.UID)
-	if input.RTMPS.URL != "" {
-		printInfo("RTMPS URL: %s", input.RTMPS.URL)
-		printInfo("RTMPS Stream Key: %s", input.RTMPS.StreamKey)
-	}
-	if input.SRT.URL != "" {
-		printInfo("SRT URL: %s", input.SRT.URL)
-	}
-	if input.WebRTC.URL != "" {
-		printInfo("WebRTC URL: %s", input.WebRTC.URL)
-	}
-	return nil
+	return outPayload("Live input created successfully", func() any {
+		return input
+	}, func() {
+		printSuccess("Live input '%s' created successfully!", name)
+		printInfo("UID: %s", input.UID)
+		if input.RTMPS.URL != "" {
+			printInfo("RTMPS URL: %s", input.RTMPS.URL)
+			printInfo("RTMPS Stream Key: %s", input.RTMPS.StreamKey)
+		}
+		if input.SRT.URL != "" {
+			printInfo("SRT URL: %s", input.SRT.URL)
+		}
+		if input.WebRTC.URL != "" {
+			printInfo("WebRTC URL: %s", input.WebRTC.URL)
+		}
+	})
 }
 
 func runStreamLiveList(cmd *cobra.Command, args []string) error {
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	inputs, err := svc.ListLiveInputs(context.Background())
@@ -613,40 +603,37 @@ func runStreamLiveList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list live inputs", err)
 	}
 
-	if JSONOutput {
-		return printJSON(inputs)
-	}
+	return outResult(inputs, func() {
+		if len(inputs) == 0 {
+			printInfo("No live inputs found")
+			return
+		}
 
-	if len(inputs) == 0 {
-		printInfo("No live inputs found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "UID\tNAME\tSTATUS\tRECORDING\tCREATED")
-	for _, inp := range inputs {
-		name := ""
-		if inp.Meta != nil {
-			if n, ok := inp.Meta["name"].(string); ok {
-				name = n
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "UID\tNAME\tSTATUS\tRECORDING\tCREATED")
+		for _, inp := range inputs {
+			name := ""
+			if inp.Meta != nil {
+				if n, ok := inp.Meta["name"].(string); ok {
+					name = n
+				}
 			}
+			created := ""
+			if inp.Created != nil {
+				created = inp.Created.Format("2006-01-02 15:04:05")
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				inp.UID,
+				name,
+				inp.Status,
+				inp.Recording.Mode,
+				created,
+			)
 		}
-		created := ""
-		if inp.Created != nil {
-			created = inp.Created.Format("2006-01-02 15:04:05")
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			inp.UID,
-			name,
-			inp.Status,
-			inp.Recording.Mode,
-			created,
-		)
-	}
-	w.Flush()
+		w.Flush()
 
-	printInfo("Total: %d live input(s)", len(inputs))
-	return nil
+		printInfo("Total: %d live input(s)", len(inputs))
+	})
 }
 
 func runStreamLiveDelete(cmd *cobra.Command, args []string) error {
@@ -667,30 +654,29 @@ func runStreamLiveDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete live input", map[string]string{
+		return outPayload("DRY RUN: Would delete live input", func() any {
+			return map[string]string{
 				"input_id": inputID,
-			})
-		}
-		printInfo("DRY RUN: Would delete live input '%s'", inputID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete live input '%s'", inputID)
+		})
 	}
 
 	svc, err := getStreamService()
 	if err != nil {
-		return fmt.Errorf("failed to create Stream service: %w", err)
+		return outErr("failed to create Stream service", err)
 	}
 
 	if err := svc.DeleteLiveInput(context.Background(), inputID); err != nil {
 		return outErr("failed to delete live input", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Live input deleted successfully", map[string]string{
+	return outPayload("Live input deleted successfully", func() any {
+		return map[string]string{
 			"input_id": inputID,
-		})
-	}
-	printSuccess("Live input '%s' deleted successfully!", inputID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Live input '%s' deleted successfully!", inputID)
+	})
 }
-
