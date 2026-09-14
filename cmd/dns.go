@@ -165,7 +165,7 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDNSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create DNS service: %w", err)
+		return outErr("failed to create DNS service", err)
 	}
 
 	var opts []cosmoflare.DNSOption
@@ -183,16 +183,16 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create DNS record", map[string]interface{}{
+		return outPayload("DRY RUN: Would create DNS record", func() any {
+			return map[string]interface{}{
 				"zone_id": zoneID,
 				"type":    dnsRecordType,
 				"name":    dnsName,
 				"content": dnsContent,
-			})
-		}
-		printInfo("DRY RUN: Would create %s record '%s' -> %s in zone %s", dnsRecordType, dnsName, dnsContent, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create %s record '%s' -> %s in zone %s", dnsRecordType, dnsName, dnsContent, zoneID)
+		})
 	}
 
 	record, err := svc.Create(context.Background(), dnsRecordType, dnsName, dnsContent, opts...)
@@ -200,18 +200,17 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create DNS record", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DNS record created successfully", record)
-	}
-
-	printSuccess("DNS record created successfully!")
-	printInfo("ID: %s", record.ID)
-	printInfo("Type: %s", record.Type)
-	printInfo("Name: %s", record.Name)
-	printInfo("Content: %s", record.Content)
-	printInfo("TTL: %d", record.TTL)
-	printInfo("Proxied: %v", record.Proxied)
-	return nil
+	return outPayload("DNS record created successfully", func() any {
+		return record
+	}, func() {
+		printSuccess("DNS record created successfully!")
+		printInfo("ID: %s", record.ID)
+		printInfo("Type: %s", record.Type)
+		printInfo("Name: %s", record.Name)
+		printInfo("Content: %s", record.Content)
+		printInfo("TTL: %d", record.TTL)
+		printInfo("Proxied: %v", record.Proxied)
+	})
 }
 
 func runDNSList(cmd *cobra.Command, args []string) error {
@@ -222,7 +221,7 @@ func runDNSList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDNSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create DNS service: %w", err)
+		return outErr("failed to create DNS service", err)
 	}
 
 	var opts []cosmoflare.DNSListOption
@@ -241,39 +240,36 @@ func runDNSList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list DNS records", err)
 	}
 
-	if JSONOutput {
-		return printJSON(records)
-	}
-
-	if len(records) == 0 {
-		printInfo("No DNS records found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tTYPE\tNAME\tCONTENT\tTTL\tPROXIED")
-	for _, r := range records {
-		ttlStr := fmt.Sprintf("%d", r.TTL)
-		if r.TTL == 1 {
-			ttlStr = "auto"
+	return outResult(records, func() {
+		if len(records) == 0 {
+			printInfo("No DNS records found")
+			return
 		}
-		proxiedStr := "no"
-		if r.Proxied {
-			proxiedStr = "yes"
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			r.ID,
-			r.Type,
-			r.Name,
-			r.Content,
-			ttlStr,
-			proxiedStr,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d record(s)", len(records))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tTYPE\tNAME\tCONTENT\tTTL\tPROXIED")
+		for _, r := range records {
+			ttlStr := fmt.Sprintf("%d", r.TTL)
+			if r.TTL == 1 {
+				ttlStr = "auto"
+			}
+			proxiedStr := "no"
+			if r.Proxied {
+				proxiedStr = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+				r.ID,
+				r.Type,
+				r.Name,
+				r.Content,
+				ttlStr,
+				proxiedStr,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d record(s)", len(records))
+	})
 }
 
 func runDNSGet(cmd *cobra.Command, args []string) error {
@@ -284,7 +280,7 @@ func runDNSGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDNSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create DNS service: %w", err)
+		return outErr("failed to create DNS service", err)
 	}
 
 	record, err := svc.Get(context.Background(), recordID)
@@ -292,31 +288,28 @@ func runDNSGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get DNS record", err)
 	}
 
-	if JSONOutput {
-		return printJSON(record)
-	}
-
-	fmt.Printf("ID:         %s\n", record.ID)
-	fmt.Printf("Type:       %s\n", record.Type)
-	fmt.Printf("Name:       %s\n", record.Name)
-	fmt.Printf("Content:    %s\n", record.Content)
-	ttlStr := fmt.Sprintf("%d", record.TTL)
-	if record.TTL == 1 {
-		ttlStr = "auto (1)"
-	}
-	fmt.Printf("TTL:        %s\n", ttlStr)
-	fmt.Printf("Proxied:    %v\n", record.Proxied)
-	fmt.Printf("Proxiable:  %v\n", record.Proxiable)
-	if record.Priority != nil {
-		fmt.Printf("Priority:   %d\n", *record.Priority)
-	}
-	if record.Comment != "" {
-		fmt.Printf("Comment:    %s\n", record.Comment)
-	}
-	fmt.Printf("Zone ID:    %s\n", record.ZoneID)
-	fmt.Printf("Created:    %s\n", record.CreatedOn.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Modified:   %s\n", record.ModifiedOn.Format("2006-01-02 15:04:05"))
-	return nil
+	return outResult(record, func() {
+		fmt.Printf("ID:         %s\n", record.ID)
+		fmt.Printf("Type:       %s\n", record.Type)
+		fmt.Printf("Name:       %s\n", record.Name)
+		fmt.Printf("Content:    %s\n", record.Content)
+		ttlStr := fmt.Sprintf("%d", record.TTL)
+		if record.TTL == 1 {
+			ttlStr = "auto (1)"
+		}
+		fmt.Printf("TTL:        %s\n", ttlStr)
+		fmt.Printf("Proxied:    %v\n", record.Proxied)
+		fmt.Printf("Proxiable:  %v\n", record.Proxiable)
+		if record.Priority != nil {
+			fmt.Printf("Priority:   %d\n", *record.Priority)
+		}
+		if record.Comment != "" {
+			fmt.Printf("Comment:    %s\n", record.Comment)
+		}
+		fmt.Printf("Zone ID:    %s\n", record.ZoneID)
+		fmt.Printf("Created:    %s\n", record.CreatedOn.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Modified:   %s\n", record.ModifiedOn.Format("2006-01-02 15:04:05"))
+	})
 }
 
 func runDNSUpdate(cmd *cobra.Command, args []string) error {
@@ -345,18 +338,18 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDNSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create DNS service: %w", err)
+		return outErr("failed to create DNS service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update DNS record", map[string]string{
+		return outPayload("DRY RUN: Would update DNS record", func() any {
+			return map[string]string{
 				"zone_id":   zoneID,
 				"record_id": recordID,
-			})
-		}
-		printInfo("DRY RUN: Would update DNS record '%s' in zone '%s'", recordID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update DNS record '%s' in zone '%s'", recordID, zoneID)
+		})
 	}
 
 	record, err := svc.Update(context.Background(), recordID, opts...)
@@ -364,13 +357,12 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update DNS record", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DNS record updated successfully", record)
-	}
-
-	printSuccess("DNS record '%s' updated successfully!", recordID)
-	printInfo("Type: %s  Name: %s  Content: %s", record.Type, record.Name, record.Content)
-	return nil
+	return outPayload("DNS record updated successfully", func() any {
+		return record
+	}, func() {
+		printSuccess("DNS record '%s' updated successfully!", recordID)
+		printInfo("Type: %s  Name: %s  Content: %s", record.Type, record.Name, record.Content)
+	})
 }
 
 func runDNSDelete(cmd *cobra.Command, args []string) error {
@@ -392,30 +384,30 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getDNSService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create DNS service: %w", err)
+		return outErr("failed to create DNS service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete DNS record", map[string]string{
+		return outPayload("DRY RUN: Would delete DNS record", func() any {
+			return map[string]string{
 				"zone_id":   zoneID,
 				"record_id": recordID,
-			})
-		}
-		printInfo("DRY RUN: Would delete DNS record '%s' from zone '%s'", recordID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete DNS record '%s' from zone '%s'", recordID, zoneID)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), recordID); err != nil {
 		return outErr("failed to delete DNS record", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("DNS record deleted successfully", map[string]string{
+	return outPayload("DNS record deleted successfully", func() any {
+		return map[string]string{
 			"zone_id":   zoneID,
 			"record_id": recordID,
-		})
-	}
-	printSuccess("DNS record '%s' deleted successfully!", recordID)
-	return nil
+		}
+	}, func() {
+		printSuccess("DNS record '%s' deleted successfully!", recordID)
+	})
 }
