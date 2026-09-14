@@ -381,37 +381,36 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 
 // printSyncPlan displays the sync plan (used for --dry-run).
 func printSyncPlan(plan *cosmoflare.SyncPlan) error {
-	if JSONOutput {
-		return printSuccessJSON("Sync plan (dry run)", plan)
-	}
+	return outPayload("Sync plan (dry run)", func() any {
+		return plan
+	}, func() {
+		printWarning("DRY RUN: No actual changes will be made")
+		fmt.Printf("\nSync %s: %s -> %s%s\n\n", plan.Direction, plan.LocalDir, plan.Bucket, prefixDisplay(plan.Prefix))
 
-	printWarning("DRY RUN: No actual changes will be made")
-	fmt.Printf("\nSync %s: %s -> %s%s\n\n", plan.Direction, plan.LocalDir, plan.Bucket, prefixDisplay(plan.Prefix))
-
-	for _, op := range plan.Operations {
-		symbol := "  "
-		switch op.Action {
-		case cosmoflare.SyncOpUpload:
-			symbol = "+ "
-		case cosmoflare.SyncOpDownload:
-			symbol = "< "
-		case cosmoflare.SyncOpDelete:
-			symbol = "- "
-		case cosmoflare.SyncOpSkip:
-			symbol = "= "
+		for _, op := range plan.Operations {
+			symbol := "  "
+			switch op.Action {
+			case cosmoflare.SyncOpUpload:
+				symbol = "+ "
+			case cosmoflare.SyncOpDownload:
+				symbol = "< "
+			case cosmoflare.SyncOpDelete:
+				symbol = "- "
+			case cosmoflare.SyncOpSkip:
+				symbol = "= "
+			}
+			fmt.Printf("  %s%s (%s)\n", symbol, op.Key, op.Reason)
 		}
-		fmt.Printf("  %s%s (%s)\n", symbol, op.Key, op.Reason)
-	}
 
-	fmt.Printf("\nSummary: %d upload(s), %d download(s), %d delete(s), %d skip(s)\n",
-		plan.Summary.Uploads, plan.Summary.Downloads, plan.Summary.Deletes, plan.Summary.Skips)
-	return nil
+		fmt.Printf("\nSummary: %d upload(s), %d download(s), %d delete(s), %d skip(s)\n",
+			plan.Summary.Uploads, plan.Summary.Downloads, plan.Summary.Deletes, plan.Summary.Skips)
+	})
 }
 
 // printSyncResult displays the outcome of a sync execution.
 func printSyncResult(plan *cosmoflare.SyncPlan, result *cosmoflare.SyncResult) error {
-	if JSONOutput {
-		return printSuccessJSON("Sync completed", map[string]interface{}{
+	return outPayload("Sync completed", func() any {
+		return map[string]interface{}{
 			"direction": plan.Direction.String(),
 			"bucket":    plan.Bucket,
 			"prefix":    plan.Prefix,
@@ -419,27 +418,25 @@ func printSyncResult(plan *cosmoflare.SyncPlan, result *cosmoflare.SyncResult) e
 			"failed":    result.Failed,
 			"skipped":   result.Skipped,
 			"errors":    result.Errors,
-		})
-	}
-
-	if result.Failed > 0 {
-		printWarning("Sync completed with errors")
-	} else {
-		printSuccess("Sync completed successfully!")
-	}
-
-	printInfo("Direction: %s", plan.Direction)
-	printInfo("Bucket: %s%s", plan.Bucket, prefixDisplay(plan.Prefix))
-	printInfo("Succeeded: %d, Failed: %d, Skipped: %d", result.Succeeded, result.Failed, result.Skipped)
-
-	if len(result.Errors) > 0 {
-		printError("Errors:")
-		for _, e := range result.Errors {
-			printError("  - %s", e)
 		}
-	}
+	}, func() {
+		if result.Failed > 0 {
+			printWarning("Sync completed with errors")
+		} else {
+			printSuccess("Sync completed successfully!")
+		}
 
-	return nil
+		printInfo("Direction: %s", plan.Direction)
+		printInfo("Bucket: %s%s", plan.Bucket, prefixDisplay(plan.Prefix))
+		printInfo("Succeeded: %d, Failed: %d, Skipped: %d", result.Succeeded, result.Failed, result.Skipped)
+
+		if len(result.Errors) > 0 {
+			printError("Errors:")
+			for _, e := range result.Errors {
+				printError("  - %s", e)
+			}
+		}
+	})
 }
 
 func prefixDisplay(prefix string) string {
