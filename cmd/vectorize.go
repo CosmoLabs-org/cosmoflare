@@ -234,19 +234,17 @@ func runVectorizeCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{
-				"dry_run": true, "action": "create_index",
-				"name": name, "dimensions": vectorizeDimensions, "metric": vectorizeMetric,
-			})
-		}
-		printInfo("DRY RUN: Would create index '%s' (dimensions=%d, metric=%s)", name, vectorizeDimensions, vectorizeMetric)
-		return nil
+		return outResult(map[string]interface{}{
+			"dry_run": true, "action": "create_index",
+			"name": name, "dimensions": vectorizeDimensions, "metric": vectorizeMetric,
+		}, func() {
+			printInfo("DRY RUN: Would create index '%s' (dimensions=%d, metric=%s)", name, vectorizeDimensions, vectorizeMetric)
+		})
 	}
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	idx, err := svc.CreateIndex(context.Background(), name, vectorizeDimensions, vectorizeMetric)
@@ -254,17 +252,15 @@ func runVectorizeCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create index: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "data": idx})
-	}
-	printSuccess("Created index '%s' (dimensions=%d, metric=%s)", idx.Name, idx.Dimensions, idx.Metric)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "data": idx}, func() {
+		printSuccess("Created index '%s' (dimensions=%d, metric=%s)", idx.Name, idx.Dimensions, idx.Metric)
+	})
 }
 
 func runVectorizeList(cmd *cobra.Command, args []string) error {
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	indexes, err := svc.ListIndexes(context.Background())
@@ -272,22 +268,19 @@ func runVectorizeList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to list indexes: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(indexes)
-	}
+	return outResult(indexes, func() {
+		if len(indexes) == 0 {
+			printInfo("No vectorize indexes found")
+			return
+		}
 
-	if len(indexes) == 0 {
-		printInfo("No vectorize indexes found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tDIMENSIONS\tMETRIC\tVECTORS")
-	for _, idx := range indexes {
-		fmt.Fprintf(w, "%s\t%d\t%s\t%d\n", idx.Name, idx.Dimensions, idx.Metric, idx.VectorCount)
-	}
-	w.Flush()
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tDIMENSIONS\tMETRIC\tVECTORS")
+		for _, idx := range indexes {
+			fmt.Fprintf(w, "%s\t%d\t%s\t%d\n", idx.Name, idx.Dimensions, idx.Metric, idx.VectorCount)
+		}
+		w.Flush()
+	})
 }
 
 func runVectorizeGet(cmd *cobra.Command, args []string) error {
@@ -295,7 +288,7 @@ func runVectorizeGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	idx, err := svc.GetIndex(context.Background(), name)
@@ -303,45 +296,38 @@ func runVectorizeGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get index: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(idx)
-	}
-
-	fmt.Printf("Name:       %s\n", idx.Name)
-	fmt.Printf("Dimensions: %d\n", idx.Dimensions)
-	fmt.Printf("Metric:     %s\n", idx.Metric)
-	fmt.Printf("Vectors:    %d\n", idx.VectorCount)
-	if idx.Description != "" {
-		fmt.Printf("Description: %s\n", idx.Description)
-	}
-	return nil
+	return outResult(idx, func() {
+		fmt.Printf("Name:       %s\n", idx.Name)
+		fmt.Printf("Dimensions: %d\n", idx.Dimensions)
+		fmt.Printf("Metric:     %s\n", idx.Metric)
+		fmt.Printf("Vectors:    %d\n", idx.VectorCount)
+		if idx.Description != "" {
+			fmt.Printf("Description: %s\n", idx.Description)
+		}
+	})
 }
 
 func runVectorizeDelete(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "delete_index", "name": name})
-		}
-		printInfo("DRY RUN: Would delete index '%s'", name)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "delete_index", "name": name}, func() {
+			printInfo("DRY RUN: Would delete index '%s'", name)
+		})
 	}
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	if err := svc.DeleteIndex(context.Background(), name); err != nil {
 		return fmt.Errorf("failed to delete index: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "message": fmt.Sprintf("Index '%s' deleted", name)})
-	}
-	printSuccess("Deleted index '%s'", name)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "message": fmt.Sprintf("Index '%s' deleted", name)}, func() {
+		printSuccess("Deleted index '%s'", name)
+	})
 }
 
 func runVectorizeInsert(cmd *cobra.Command, args []string) error {
@@ -349,7 +335,7 @@ func runVectorizeInsert(cmd *cobra.Command, args []string) error {
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	var vectors []cosmoflare.VectorizeVector
@@ -380,22 +366,18 @@ func runVectorizeInsert(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "insert", "index": indexName, "count": len(vectors)})
-		}
-		printInfo("DRY RUN: Would insert %d vectors into '%s'", len(vectors), indexName)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "insert", "index": indexName, "count": len(vectors)}, func() {
+			printInfo("DRY RUN: Would insert %d vectors into '%s'", len(vectors), indexName)
+		})
 	}
 
 	if err := svc.InsertVectors(context.Background(), indexName, vectors); err != nil {
 		return fmt.Errorf("failed to insert vectors: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "inserted": len(vectors), "index": indexName})
-	}
-	printSuccess("Inserted %d vectors into '%s'", len(vectors), indexName)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "inserted": len(vectors), "index": indexName}, func() {
+		printSuccess("Inserted %d vectors into '%s'", len(vectors), indexName)
+	})
 }
 
 func runVectorizeQuery(cmd *cobra.Command, args []string) error {
@@ -412,7 +394,7 @@ func runVectorizeQuery(cmd *cobra.Command, args []string) error {
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	results, err := svc.QueryVectors(context.Background(), indexName, vals, vectorizeTopK)
@@ -420,22 +402,19 @@ func runVectorizeQuery(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to query index: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "matches": results})
-	}
+	return outResult(map[string]interface{}{"success": true, "matches": results}, func() {
+		if len(results) == 0 {
+			printInfo("No matches found")
+			return
+		}
 
-	if len(results) == 0 {
-		printInfo("No matches found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tSCORE")
-	for _, r := range results {
-		fmt.Fprintf(w, "%s\t%.4f\n", r.ID, r.Score)
-	}
-	w.Flush()
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tSCORE")
+		for _, r := range results {
+			fmt.Fprintf(w, "%s\t%.4f\n", r.ID, r.Score)
+		}
+		w.Flush()
+	})
 }
 
 func runVectorizeUpsert(cmd *cobra.Command, args []string) error {
@@ -454,16 +433,14 @@ func runVectorizeUpsert(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "upsert", "index": indexName, "count": len(vectors)})
-		}
-		printInfo("DRY RUN: Would upsert %d vectors into '%s'", len(vectors), indexName)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "upsert", "index": indexName, "count": len(vectors)}, func() {
+			printInfo("DRY RUN: Would upsert %d vectors into '%s'", len(vectors), indexName)
+		})
 	}
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	result, err := svc.UpsertVectors(context.Background(), indexName, vectors)
@@ -471,11 +448,9 @@ func runVectorizeUpsert(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to upsert vectors: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "data": result})
-	}
-	printSuccess("Upserted %d vectors into '%s' (mutation: %s)", len(vectors), indexName, result.MutationID)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "data": result}, func() {
+		printSuccess("Upserted %d vectors into '%s' (mutation: %s)", len(vectors), indexName, result.MutationID)
+	})
 }
 
 func runVectorizeGetVector(cmd *cobra.Command, args []string) error {
@@ -487,7 +462,7 @@ func runVectorizeGetVector(cmd *cobra.Command, args []string) error {
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	v, err := svc.GetVector(context.Background(), indexName, vectorizeGetVectorID)
@@ -495,15 +470,13 @@ func runVectorizeGetVector(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get vector: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(v)
-	}
-	fmt.Printf("ID:     %s\n", v.ID)
-	fmt.Printf("Values: %v\n", v.Values)
-	if len(v.Metadata) > 0 {
-		fmt.Printf("Metadata: %v\n", v.Metadata)
-	}
-	return nil
+	return outResult(v, func() {
+		fmt.Printf("ID:     %s\n", v.ID)
+		fmt.Printf("Values: %v\n", v.Values)
+		if len(v.Metadata) > 0 {
+			fmt.Printf("Metadata: %v\n", v.Metadata)
+		}
+	})
 }
 
 func runVectorizeDeleteVectors(cmd *cobra.Command, args []string) error {
@@ -519,16 +492,14 @@ func runVectorizeDeleteVectors(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printJSON(map[string]interface{}{"dry_run": true, "action": "delete_vectors", "index": indexName, "ids": ids})
-		}
-		printInfo("DRY RUN: Would delete %d vectors from '%s'", len(ids), indexName)
-		return nil
+		return outResult(map[string]interface{}{"dry_run": true, "action": "delete_vectors", "index": indexName, "ids": ids}, func() {
+			printInfo("DRY RUN: Would delete %d vectors from '%s'", len(ids), indexName)
+		})
 	}
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	result, err := svc.DeleteVectors(context.Background(), indexName, ids)
@@ -536,11 +507,9 @@ func runVectorizeDeleteVectors(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to delete vectors: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(map[string]interface{}{"success": true, "data": result})
-	}
-	printSuccess("Deleted %d vector(s) from '%s'", len(ids), indexName)
-	return nil
+	return outResult(map[string]interface{}{"success": true, "data": result}, func() {
+		printSuccess("Deleted %d vector(s) from '%s'", len(ids), indexName)
+	})
 }
 
 func runVectorizeNamespaces(cmd *cobra.Command, args []string) error {
@@ -548,7 +517,7 @@ func runVectorizeNamespaces(cmd *cobra.Command, args []string) error {
 
 	svc, err := getVectorizeService()
 	if err != nil {
-		return fmt.Errorf("failed to create vectorize service: %w", err)
+		return outErr("failed to create vectorize service", err)
 	}
 
 	namespaces, err := svc.ListNamespaces(context.Background(), indexName)
@@ -556,17 +525,15 @@ func runVectorizeNamespaces(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to list namespaces: %w", err)
 	}
 
-	if JSONOutput {
-		return printJSON(namespaces)
-	}
-	if len(namespaces) == 0 {
-		printInfo("No namespaces found in '%s'", indexName)
-		return nil
-	}
-	for _, ns := range namespaces {
-		fmt.Println(ns)
-	}
-	return nil
+	return outResult(namespaces, func() {
+		if len(namespaces) == 0 {
+			printInfo("No namespaces found in '%s'", indexName)
+			return
+		}
+		for _, ns := range namespaces {
+			fmt.Println(ns)
+		}
+	})
 }
 
 func parseFloatSlice(s string) ([]float64, error) {
