@@ -48,15 +48,15 @@ func runD1Export(cmd *cobra.Command, args []string) error {
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would export database", map[string]string{"database_id": databaseID, "output": d1ExportOutput})
-		}
-		printInfo("DRY RUN: Would export database '%s'", databaseID)
-		return nil
+		return outPayload("DRY RUN: Would export database", func() any {
+			return map[string]string{"database_id": databaseID, "output": d1ExportOutput}
+		}, func() {
+			printInfo("DRY RUN: Would export database '%s'", databaseID)
+		})
 	}
 
 	rc, err := svc.Export(context.Background(), databaseID)
@@ -65,41 +65,35 @@ func runD1Export(cmd *cobra.Command, args []string) error {
 	}
 	defer rc.Close()
 
+	p := NewPresenter()
 	if d1ExportOutput == "" {
-		if JSONOutput {
-			return printErrorJSON("--json requires --output; streaming the dump to stdout is incompatible with JSON metadata output")
+		if p.IsJSON() {
+			return p.Error("--json requires --output; streaming the dump to stdout is incompatible with JSON metadata output")
 		}
 		if _, err := io.Copy(os.Stdout, rc); err != nil {
-			return fmt.Errorf("failed to write export dump to stdout: %w", err)
+			return outErr("failed to write export dump to stdout", err)
 		}
 		return nil
 	}
 
 	f, err := os.Create(d1ExportOutput)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to create output file: %v", err))
-		}
-		return fmt.Errorf("failed to create output file %q: %w", d1ExportOutput, err)
+		return outErr(fmt.Sprintf("failed to create output file %q", d1ExportOutput), err)
 	}
 	defer f.Close()
 
 	written, err := io.Copy(f, rc)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to write export dump: %v", err))
-		}
-		return fmt.Errorf("failed to write export dump to %q: %w", d1ExportOutput, err)
+		return outErr(fmt.Sprintf("failed to write export dump to %q", d1ExportOutput), err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Database exported", map[string]any{
+	return outPayload("Database exported", func() any {
+		return map[string]any{
 			"database_id": databaseID,
 			"output_path": d1ExportOutput,
 			"bytes":       written,
-		})
-	}
-
-	printSuccess("Database '%s' exported to '%s' (%d bytes)", databaseID, d1ExportOutput, written)
-	return nil
+		}
+	}, func() {
+		printSuccess("Database '%s' exported to '%s' (%d bytes)", databaseID, d1ExportOutput, written)
+	})
 }
