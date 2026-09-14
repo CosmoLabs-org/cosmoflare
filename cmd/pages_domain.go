@@ -74,7 +74,7 @@ func runPagesDomainList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	domains, err := svc.ListDomains(context.Background(), project)
@@ -82,23 +82,20 @@ func runPagesDomainList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list domains", err)
 	}
 
-	if JSONOutput {
-		return printJSON(domains)
-	}
+	return outResult(domains, func() {
+		if len(domains) == 0 {
+			printInfo("No custom domains found for project '%s'", project)
+			return
+		}
 
-	if len(domains) == 0 {
-		printInfo("No custom domains found for project '%s'", project)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tVERIFICATION\tVALIDATION")
-	for _, d := range domains {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", d.Name, d.Status, d.VerificationStatus, d.ValidationStatus)
-	}
-	w.Flush()
-	printInfo("Total: %d domain(s)", len(domains))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tSTATUS\tVERIFICATION\tVALIDATION")
+		for _, d := range domains {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", d.Name, d.Status, d.VerificationStatus, d.ValidationStatus)
+		}
+		w.Flush()
+		printInfo("Total: %d domain(s)", len(domains))
+	})
 }
 
 func runPagesDomainAttach(cmd *cobra.Command, args []string) error {
@@ -107,18 +104,18 @@ func runPagesDomainAttach(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would attach domain", map[string]string{
+		return outPayload("DRY RUN: Would attach domain", func() any {
+			return map[string]string{
 				"project": project,
 				"domain":  domain,
-			})
-		}
-		printInfo("DRY RUN: Would attach domain '%s' to project '%s'", domain, project)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would attach domain '%s' to project '%s'", domain, project)
+		})
 	}
 
 	result, err := svc.AttachDomain(context.Background(), project, domain)
@@ -126,11 +123,11 @@ func runPagesDomainAttach(cmd *cobra.Command, args []string) error {
 		return outErr("failed to attach domain", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Domain attached successfully", result)
-	}
-	printSuccess("Domain '%s' attached to project '%s' (status: %s, validation: %s)", result.Name, project, result.Status, result.ValidationStatus)
-	return nil
+	return outPayload("Domain attached successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("Domain '%s' attached to project '%s' (status: %s, validation: %s)", result.Name, project, result.Status, result.ValidationStatus)
+	})
 }
 
 func runPagesDomainDetach(cmd *cobra.Command, args []string) error {
@@ -139,30 +136,30 @@ func runPagesDomainDetach(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would detach domain", map[string]string{
+		return outPayload("DRY RUN: Would detach domain", func() any {
+			return map[string]string{
 				"project": project,
 				"domain":  domain,
-			})
-		}
-		printInfo("DRY RUN: Would detach domain '%s' from project '%s'", domain, project)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would detach domain '%s' from project '%s'", domain, project)
+		})
 	}
 
 	if err := svc.DetachDomain(context.Background(), project, domain); err != nil {
 		return outErr("failed to detach domain", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Domain detached successfully", map[string]string{
+	return outPayload("Domain detached successfully", func() any {
+		return map[string]string{
 			"project": project,
 			"domain":  domain,
-		})
-	}
-	printSuccess("Domain '%s' detached from project '%s'", domain, project)
-	return nil
+		}
+	}, func() {
+		printSuccess("Domain '%s' detached from project '%s'", domain, project)
+	})
 }
