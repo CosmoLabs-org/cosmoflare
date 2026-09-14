@@ -297,7 +297,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 
 	bucket, err := client.GetBucket(context.Background(), bucketName)
 	if err != nil {
-		return fmt.Errorf("failed to get bucket details: %w", err)
+		return outErr("failed to get bucket details", err)
 	}
 
 	if includeObjects {

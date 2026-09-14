@@ -24,19 +24,21 @@ func TestPresenter_ErrorPlainMode(t *testing.T) {
 	}
 }
 
-func TestPresenter_ErrorJSONModeMatchesLegacyContract(t *testing.T) {
-	// Legacy contract (all 618 existing branches): JSON-mode errors print
-	// the error envelope and return printErrorJSON's result — nil when the
-	// print succeeds, i.e. exit 0 in JSON mode. The presenter preserves
-	// that contract exactly; changing exit semantics is a separate decision.
+func TestPresenter_ErrorJSONModeFailsTheCommand(t *testing.T) {
+	// Decision 2026-09-14: JSON-mode errors print the envelope to stdout
+	// (machine-parseable) AND return a non-nil error so cobra exits 1 —
+	// deterministic exit codes apply to --json consumers too.
 	old := JSONOutput
 	JSONOutput = true
 	t.Cleanup(func() { JSONOutput = old })
 
 	p := NewPresenter()
 	err := p.Error("bucket %q not found", "data")
-	if err != nil {
-		t.Errorf("JSON-mode Error = %v, want nil (printErrorJSON contract)", err)
+	if err == nil {
+		t.Fatal("JSON-mode Error returned nil — command would exit 0 on failure")
+	}
+	if got := err.Error(); got != `bucket "data" not found` {
+		t.Errorf("JSON-mode error message = %q, want the formatted message", got)
 	}
 }
 
@@ -115,5 +117,17 @@ func TestPresenter_ErrorWrapPreservesWrapping(t *testing.T) {
 	err := p.ErrorWrap("list failed", sentinel)
 	if !errors.Is(err, sentinel) {
 		t.Error("plain-mode ErrorWrap must preserve %w wrapping for errors.Is")
+	}
+}
+
+func TestPrintErrorJSON_ReturnsNonNilAfterPrinting(t *testing.T) {
+	// The envelope goes to stdout; the return value must be non-nil so the
+	// CLI exits non-zero (agent-first contract: parseable body + exit code).
+	err := printErrorJSON("kaboom")
+	if err == nil {
+		t.Fatal("printErrorJSON returned nil — exit code stays 0 on error")
+	}
+	if err.Error() != "kaboom" {
+		t.Errorf("returned error = %q, want the envelope message", err.Error())
 	}
 }

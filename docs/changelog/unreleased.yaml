@@ -5,7 +5,10 @@
 version: pending
 entries:
     added: []
-    fixed: []
+    fixed:
+        - description: 'JSON-mode errors now exit non-zero: --json failures print the parseable error envelope to stdout and return exit code 1 (previously exit 0 — breaking the deterministic exit-code contract for agent consumers). Diagnostics mirror to stderr.'
+          source: manual
+          date: 2026-09-14T17:36:07.971323+04:00
     changed: []
     deprecated: []
     removed: []

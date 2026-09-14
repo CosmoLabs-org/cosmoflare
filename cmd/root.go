@@ -9,6 +9,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -236,7 +237,13 @@ func printErrorJSON(message string) error {
 		Error:   message,
 		DryRun:  DryRun,
 	}
-	return printJSON(response)
+	_ = printJSON(response)
+	// Decision 2026-09-14: JSON-mode errors must exit non-zero. The
+	// envelope is printed to stdout for machine consumers; the returned
+	// error makes cobra exit 1 (and prints "Error: <msg>" to stderr).
+	// Previously this returned printJSON's nil — exit 0 on failure —
+	// breaking the deterministic-exit-code contract for --json callers.
+	return errors.New(message)
 }
 
 // emitConfigError renders a fatal configuration error to stdout in the

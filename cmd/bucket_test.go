@@ -306,8 +306,8 @@ func TestBucketUpdate_DryRunJSON(t *testing.T) {
 	w.Close()
 	os.Stdout = old
 
-	if err != nil {
-		t.Errorf("runBucketUpdate(JSON) returned error: %v", err)
+	if err == nil {
+		t.Error("runBucketUpdate(JSON) must return an error — JSON-mode failures exit non-zero (2026-09-14 exit-code contract)")
 	}
 
 	var buf bytes.Buffer
