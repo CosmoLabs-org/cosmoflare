@@ -126,20 +126,20 @@ func runQueueSend(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would send message to queue", map[string]interface{}{
+		return outPayload("DRY RUN: Would send message to queue", func() any {
+			return map[string]interface{}{
 				"queue":         queueName,
 				"body_size":     len(body),
 				"content_type":  queueSendContentType,
 				"delay_seconds": queueSendDelaySeconds,
-			})
-		}
-		printInfo("DRY RUN: Would send %d-byte message to queue '%s'", len(body), queueName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would send %d-byte message to queue '%s'", len(body), queueName)
+		})
 	}
 
 	res, err := svc.Send(context.Background(), queueName, cosmoflare.QueueMessage{
@@ -151,15 +151,15 @@ func runQueueSend(cmd *cobra.Command, args []string) error {
 		return outErr("failed to send message", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Message sent successfully", res)
-	}
-	if res.MessageID != "" {
-		printSuccess("Message sent to queue '%s' (message ID: %s)", queueName, res.MessageID)
-	} else {
-		printSuccess("Message sent to queue '%s'", queueName)
-	}
-	return nil
+	return outPayload("Message sent successfully", func() any {
+		return res
+	}, func() {
+		if res.MessageID != "" {
+			printSuccess("Message sent to queue '%s' (message ID: %s)", queueName, res.MessageID)
+		} else {
+			printSuccess("Message sent to queue '%s'", queueName)
+		}
+	})
 }
 
 func runQueueSendBatch(cmd *cobra.Command, args []string) error {
@@ -188,18 +188,18 @@ func runQueueSendBatch(cmd *cobra.Command, args []string) error {
 
 	svc, err := getQueueService()
 	if err != nil {
-		return fmt.Errorf("failed to create Queue service: %w", err)
+		return outErr("failed to create Queue service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would send batch to queue", map[string]interface{}{
+		return outPayload("DRY RUN: Would send batch to queue", func() any {
+			return map[string]interface{}{
 				"queue":    queueName,
 				"messages": len(msgs),
-			})
-		}
-		printInfo("DRY RUN: Would send batch of %d message(s) to queue '%s'", len(msgs), queueName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would send batch of %d message(s) to queue '%s'", len(msgs), queueName)
+		})
 	}
 
 	res, err := svc.SendBatch(context.Background(), queueName, msgs)
@@ -207,9 +207,9 @@ func runQueueSendBatch(cmd *cobra.Command, args []string) error {
 		return outErr("failed to send batch", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Batch sent successfully", res)
-	}
-	printSuccess("Sent %d message(s) to queue '%s'", res.Sent, queueName)
-	return nil
+	return outPayload("Batch sent successfully", func() any {
+		return res
+	}, func() {
+		printSuccess("Sent %d message(s) to queue '%s'", res.Sent, queueName)
+	})
 }
