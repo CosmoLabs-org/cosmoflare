@@ -231,18 +231,18 @@ func runImagesUpload(cmd *cobra.Command, args []string) error {
 	filePath := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would upload image", map[string]interface{}{
+		return outPayload("DRY RUN: Would upload image", func() any {
+			return map[string]interface{}{
 				"file": filePath,
-			})
-		}
-		printInfo("DRY RUN: Would upload image from '%s'", filePath)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would upload image from '%s'", filePath)
+		})
 	}
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	file, err := os.Open(filePath)
@@ -263,32 +263,31 @@ func runImagesUpload(cmd *cobra.Command, args []string) error {
 		return outErr("failed to upload image", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Image uploaded successfully", img)
-	}
-
-	printSuccess("Image uploaded successfully!")
-	printInfo("ID: %s", img.ID)
-	printInfo("Filename: %s", img.Filename)
-	printInfo("Uploaded: %s", img.Uploaded.Format("2006-01-02 15:04:05"))
-	printInfo("Variants: %s", strings.Join(img.Variants, ", "))
-	return nil
+	return outPayload("Image uploaded successfully", func() any {
+		return img
+	}, func() {
+		printSuccess("Image uploaded successfully!")
+		printInfo("ID: %s", img.ID)
+		printInfo("Filename: %s", img.Filename)
+		printInfo("Uploaded: %s", img.Uploaded.Format("2006-01-02 15:04:05"))
+		printInfo("Variants: %s", strings.Join(img.Variants, ", "))
+	})
 }
 
 func runImagesUploadByURL(cmd *cobra.Command) error {
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would upload image from URL", map[string]interface{}{
+		return outPayload("DRY RUN: Would upload image from URL", func() any {
+			return map[string]interface{}{
 				"url": imagesURL,
-			})
-		}
-		printInfo("DRY RUN: Would upload image from URL '%s'", imagesURL)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would upload image from URL '%s'", imagesURL)
+		})
 	}
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	var opts []cosmoflare.ImageUploadOption
@@ -308,22 +307,21 @@ func runImagesUploadByURL(cmd *cobra.Command) error {
 		return outErr("failed to upload image from URL", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Image uploaded from URL successfully", img)
-	}
-
-	printSuccess("Image uploaded from URL successfully!")
-	printInfo("ID: %s", img.ID)
-	printInfo("Filename: %s", img.Filename)
-	printInfo("Uploaded: %s", img.Uploaded.Format("2006-01-02 15:04:05"))
-	printInfo("Variants: %s", strings.Join(img.Variants, ", "))
-	return nil
+	return outPayload("Image uploaded from URL successfully", func() any {
+		return img
+	}, func() {
+		printSuccess("Image uploaded from URL successfully!")
+		printInfo("ID: %s", img.ID)
+		printInfo("Filename: %s", img.Filename)
+		printInfo("Uploaded: %s", img.Uploaded.Format("2006-01-02 15:04:05"))
+		printInfo("Variants: %s", strings.Join(img.Variants, ", "))
+	})
 }
 
 func runImagesList(cmd *cobra.Command, args []string) error {
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	images, err := svc.ListImages(context.Background())
@@ -331,34 +329,31 @@ func runImagesList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list images", err)
 	}
 
-	if JSONOutput {
-		return printJSON(images)
-	}
-
-	if len(images) == 0 {
-		printInfo("No images found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tFILENAME\tSIGNED\tVARIANTS\tUPLOADED")
-	for _, img := range images {
-		signedStr := "no"
-		if img.RequireSignedURLs {
-			signedStr = "yes"
+	return outResult(images, func() {
+		if len(images) == 0 {
+			printInfo("No images found")
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\n",
-			img.ID,
-			img.Filename,
-			signedStr,
-			len(img.Variants),
-			img.Uploaded.Format("2006-01-02 15:04:05"),
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d image(s)", len(images))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tFILENAME\tSIGNED\tVARIANTS\tUPLOADED")
+		for _, img := range images {
+			signedStr := "no"
+			if img.RequireSignedURLs {
+				signedStr = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s\n",
+				img.ID,
+				img.Filename,
+				signedStr,
+				len(img.Variants),
+				img.Uploaded.Format("2006-01-02 15:04:05"),
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d image(s)", len(images))
+	})
 }
 
 func runImagesGet(cmd *cobra.Command, args []string) error {
@@ -369,7 +364,7 @@ func runImagesGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	img, err := svc.GetImage(context.Background(), imageID)
@@ -377,20 +372,17 @@ func runImagesGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get image", err)
 	}
 
-	if JSONOutput {
-		return printJSON(img)
-	}
-
-	fmt.Printf("ID:                %s\n", img.ID)
-	fmt.Printf("Filename:          %s\n", img.Filename)
-	fmt.Printf("Uploaded:          %s\n", img.Uploaded.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Require Signed:    %v\n", img.RequireSignedURLs)
-	fmt.Printf("Variants:          %s\n", strings.Join(img.Variants, ", "))
-	if len(img.Meta) > 0 {
-		metaJSON, _ := json.MarshalIndent(img.Meta, "                   ", "  ")
-		fmt.Printf("Metadata:          %s\n", string(metaJSON))
-	}
-	return nil
+	return outResult(img, func() {
+		fmt.Printf("ID:                %s\n", img.ID)
+		fmt.Printf("Filename:          %s\n", img.Filename)
+		fmt.Printf("Uploaded:          %s\n", img.Uploaded.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Require Signed:    %v\n", img.RequireSignedURLs)
+		fmt.Printf("Variants:          %s\n", strings.Join(img.Variants, ", "))
+		if len(img.Meta) > 0 {
+			metaJSON, _ := json.MarshalIndent(img.Meta, "                   ", "  ")
+			fmt.Printf("Metadata:          %s\n", string(metaJSON))
+		}
+	})
 }
 
 func runImagesDelete(cmd *cobra.Command, args []string) error {
@@ -411,37 +403,37 @@ func runImagesDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete image", map[string]string{
+		return outPayload("DRY RUN: Would delete image", func() any {
+			return map[string]string{
 				"image_id": imageID,
-			})
-		}
-		printInfo("DRY RUN: Would delete image '%s'", imageID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete image '%s'", imageID)
+		})
 	}
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	if err := svc.DeleteImage(context.Background(), imageID); err != nil {
 		return outErr("failed to delete image", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Image deleted successfully", map[string]string{
+	return outPayload("Image deleted successfully", func() any {
+		return map[string]string{
 			"image_id": imageID,
-		})
-	}
-	printSuccess("Image '%s' deleted successfully!", imageID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Image '%s' deleted successfully!", imageID)
+	})
 }
 
 func runImagesVariantsList(cmd *cobra.Command, args []string) error {
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	variants, err := svc.ListVariants(context.Background())
@@ -449,30 +441,27 @@ func runImagesVariantsList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list variants", err)
 	}
 
-	if JSONOutput {
-		return printJSON(variants)
-	}
+	return outResult(variants, func() {
+		if len(variants) == 0 {
+			printInfo("No variants found")
+			return
+		}
 
-	if len(variants) == 0 {
-		printInfo("No variants found")
-		return nil
-	}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "NAME\tFIT\tWIDTH\tHEIGHT\tMETADATA")
+		for _, v := range variants {
+			fmt.Fprintf(w, "%s\t%s\t%d\t%d\t%s\n",
+				v.ID,
+				v.Options.Fit,
+				v.Options.Width,
+				v.Options.Height,
+				v.Options.Metadata,
+			)
+		}
+		w.Flush()
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tFIT\tWIDTH\tHEIGHT\tMETADATA")
-	for _, v := range variants {
-		fmt.Fprintf(w, "%s\t%s\t%d\t%d\t%s\n",
-			v.ID,
-			v.Options.Fit,
-			v.Options.Width,
-			v.Options.Height,
-			v.Options.Metadata,
-		)
-	}
-	w.Flush()
-
-	printInfo("Total: %d variant(s)", len(variants))
-	return nil
+		printInfo("Total: %d variant(s)", len(variants))
+	})
 }
 
 func runImagesVariantsCreate(cmd *cobra.Command, args []string) error {
@@ -482,21 +471,21 @@ func runImagesVariantsCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create variant", map[string]interface{}{
+		return outPayload("DRY RUN: Would create variant", func() any {
+			return map[string]interface{}{
 				"name":   name,
 				"fit":    variantFit,
 				"width":  variantWidth,
 				"height": variantHeight,
-			})
-		}
-		printInfo("DRY RUN: Would create variant '%s' (%s %dx%d)", name, variantFit, variantWidth, variantHeight)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create variant '%s' (%s %dx%d)", name, variantFit, variantWidth, variantHeight)
+		})
 	}
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	variant, err := svc.CreateVariant(context.Background(), name, variantFit, variantWidth, variantHeight, variantMetadataMode)
@@ -504,18 +493,17 @@ func runImagesVariantsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create variant", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Variant created successfully", variant)
-	}
-
-	printSuccess("Variant '%s' created successfully!", name)
-	printInfo("Fit: %s", variant.Options.Fit)
-	printInfo("Width: %d", variant.Options.Width)
-	printInfo("Height: %d", variant.Options.Height)
-	if variant.Options.Metadata != "" {
-		printInfo("Metadata: %s", variant.Options.Metadata)
-	}
-	return nil
+	return outPayload("Variant created successfully", func() any {
+		return variant
+	}, func() {
+		printSuccess("Variant '%s' created successfully!", name)
+		printInfo("Fit: %s", variant.Options.Fit)
+		printInfo("Width: %d", variant.Options.Width)
+		printInfo("Height: %d", variant.Options.Height)
+		if variant.Options.Metadata != "" {
+			printInfo("Metadata: %s", variant.Options.Metadata)
+		}
+	})
 }
 
 func runImagesVariantsDelete(cmd *cobra.Command, args []string) error {
@@ -536,29 +524,29 @@ func runImagesVariantsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete variant", map[string]string{
+		return outPayload("DRY RUN: Would delete variant", func() any {
+			return map[string]string{
 				"variant": name,
-			})
-		}
-		printInfo("DRY RUN: Would delete variant '%s'", name)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete variant '%s'", name)
+		})
 	}
 
 	svc, err := getImagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Images service: %w", err)
+		return outErr("failed to create Images service", err)
 	}
 
 	if err := svc.DeleteVariant(context.Background(), name); err != nil {
 		return outErr("failed to delete variant", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Variant deleted successfully", map[string]string{
+	return outPayload("Variant deleted successfully", func() any {
+		return map[string]string{
 			"variant": name,
-		})
-	}
-	printSuccess("Variant '%s' deleted successfully!", name)
-	return nil
+		}
+	}, func() {
+		printSuccess("Variant '%s' deleted successfully!", name)
+	})
 }
