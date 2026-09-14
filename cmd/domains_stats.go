@@ -49,27 +49,23 @@ func runDomainsStats(cmd *cobra.Command, args []string) error {
 
 	summary := cosmoflare.SummarizeDomains(domains)
 
-	if JSONOutput {
-		return printJSON(summary)
-	}
+	return outResult(summary, func() {
+		fmt.Printf("Total domains: %d\n", summary.Total)
+		fmt.Printf("Needs attention: %d\n", summary.NeedsAttention)
 
-	fmt.Printf("Total domains: %d\n", summary.Total)
-	fmt.Printf("Needs attention: %d\n", summary.NeedsAttention)
+		fmt.Println("By NS status:")
+		printCountMap(summary.ByNSStatus)
 
-	fmt.Println("By NS status:")
-	printCountMap(summary.ByNSStatus)
+		fmt.Println("By SSL status:")
+		printCountMap(summary.BySSLStatus)
 
-	fmt.Println("By SSL status:")
-	printCountMap(summary.BySSLStatus)
-
-	if len(summary.Attention) > 0 {
-		fmt.Println("Attention:")
-		for _, name := range summary.Attention {
-			fmt.Printf("  - %s\n", name)
+		if len(summary.Attention) > 0 {
+			fmt.Println("Attention:")
+			for _, name := range summary.Attention {
+				fmt.Printf("  - %s\n", name)
+			}
 		}
-	}
-
-	return nil
+	})
 }
 
 // printCountMap prints a map[string]int in deterministic (key-sorted) order.
