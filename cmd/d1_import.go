@@ -121,12 +121,12 @@ func runD1Import(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--file flag is required")
 	}
 	if _, err := os.Stat(d1ImportFile); err != nil {
-		return fmt.Errorf("cannot read --file %q: %w", d1ImportFile, err)
+		return outErr(fmt.Sprintf("cannot read --file %q", d1ImportFile), err)
 	}
 
 	svc, err := getD1Service()
 	if err != nil {
-		return fmt.Errorf("failed to create D1 service: %w", err)
+		return outErr("failed to create D1 service", err)
 	}
 
 	if offset, ok := d1ImportResumeOffset(databaseID, d1ImportFile); ok && !JSONOutput {
@@ -139,14 +139,12 @@ func runD1Import(cmd *cobra.Command, args []string) error {
 			return outErr("failed to parse import file", err)
 		}
 
-		if JSONOutput {
-			return printJSON(result)
-		}
-		printInfo(
-			"DRY RUN: would import %s statement(s) in %d batch(es) (%s total) into database '%s'",
-			formatCommaInt(result.TotalStatements), result.TotalBatches, formatBytes(result.BytesProcessed), databaseID,
-		)
-		return nil
+		return outResult(result, func() {
+			printInfo(
+				"DRY RUN: would import %s statement(s) in %d batch(es) (%s total) into database '%s'",
+				formatCommaInt(result.TotalStatements), result.TotalBatches, formatBytes(result.BytesProcessed), databaseID,
+			)
+		})
 	}
 
 	if !d1ImportForce && !d1ImportLocal {
@@ -174,21 +172,23 @@ func runD1Import(cmd *cobra.Command, args []string) error {
 		return outErr("failed to import file", err)
 	}
 
-	if JSONOutput {
-		return printJSON(result)
-	}
-
-	if !result.Success {
-		printWarning("import completed with %d error(s); see errors above", len(result.Errors))
-		for _, e := range result.Errors {
-			printError("%s", e)
+	var importErr error
+	if err := outResult(result, func() {
+		if !result.Success {
+			printWarning("import completed with %d error(s); see errors above", len(result.Errors))
+			for _, e := range result.Errors {
+				printError("%s", e)
+			}
+			if result.ResumeHint != "" {
+				printInfo("%s", result.ResumeHint)
+			}
+			importErr = fmt.Errorf("import completed with %d error(s)", len(result.Errors))
+			return
 		}
-		if result.ResumeHint != "" {
-			printInfo("%s", result.ResumeHint)
-		}
-		return fmt.Errorf("import completed with %d error(s)", len(result.Errors))
-	}
 
-	printSuccess("Imported %s statement(s) in %d batch(es) into database '%s' (%s)", formatCommaInt(result.TotalStatements), result.BatchesApplied, databaseID, formatBytes(result.BytesProcessed))
-	return nil
+		printSuccess("Imported %s statement(s) in %d batch(es) into database '%s' (%s)", formatCommaInt(result.TotalStatements), result.BatchesApplied, databaseID, formatBytes(result.BytesProcessed))
+	}); err != nil {
+		return err
+	}
+	return importErr
 }
