@@ -41,10 +41,7 @@ func runDomainsGet(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(domains) == 0 {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("no domain found matching %q", name))
-		}
-		return fmt.Errorf("no domain found matching %q", name)
+		return outErrf("no domain found matching %q", name)
 	}
 
 	target := domains[0]
@@ -53,12 +50,9 @@ func runDomainsGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get domain detail", err)
 	}
 
-	if JSONOutput {
-		return printJSON(detail)
-	}
-
-	printDomainDetail(detail)
-	return nil
+	return outResult(detail, func() {
+		printDomainDetail(detail)
+	})
 }
 
 // printDomainDetail renders a readable summary of a DomainDetail for humans.
