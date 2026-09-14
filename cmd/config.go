@@ -184,7 +184,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	// Check if config already exists
@@ -220,7 +220,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	// Get profile to validate
@@ -266,7 +266,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 func runConfigList(cmd *cobra.Command, args []string) error {
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	profiles := configMgr.ListProfiles()
@@ -277,33 +277,28 @@ func runConfigList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if JSONOutput {
-		data := map[string]interface{}{
-			"current":  currentProfile,
-			"profiles": configMgr.SanitizeForOutput().Profiles,
+	return outResult(map[string]interface{}{
+		"current":  currentProfile,
+		"profiles": configMgr.SanitizeForOutput().Profiles,
+	}, func() {
+		// Tabular output
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "PROFILE\tCURRENT\tACCOUNT ID\tDESCRIPTION")
+		for _, name := range profiles {
+			profile, _ := configMgr.GetProfile(name)
+			current := ""
+			if currentProfile != nil && currentProfile.Name == name {
+				current = "✓"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				name,
+				current,
+				utils.MaskAccountID(profile.AccountID),
+				profile.Description,
+			)
 		}
-		return printJSON(data)
-	}
-
-	// Tabular output
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "PROFILE\tCURRENT\tACCOUNT ID\tDESCRIPTION")
-	for _, name := range profiles {
-		profile, _ := configMgr.GetProfile(name)
-		current := ""
-		if currentProfile != nil && currentProfile.Name == name {
-			current = "✓"
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			name,
-			current,
-			utils.MaskAccountID(profile.AccountID),
-			profile.Description,
-		)
-	}
-	w.Flush()
-
-	return nil
+		w.Flush()
+	})
 }
 
 func runConfigShow(cmd *cobra.Command, args []string) error {
@@ -314,7 +309,7 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	// Get profile to show
@@ -330,45 +325,45 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if JSONOutput {
-		showSecrets, _ := cmd.Flags().GetBool("show-secrets")
-		if !showSecrets {
-			profile.APIToken = ""
-			profile.SecretKey = ""
-		}
-		return printJSON(profile)
-	}
-
-	// Human-readable output
-	printInfo("Profile: %s", profile.Name)
-	if profile.Description != "" {
-		printInfo("Description: %s", profile.Description)
-	}
-	printInfo("Account ID: %s", utils.MaskAccountID(profile.AccountID))
-
+	// Build the JSON payload on a copy so the human renderer below keeps
+	// operating on the unmodified profile (identical to the legacy JSON
+	// branch, which cleared secrets before marshalling).
 	showSecrets, _ := cmd.Flags().GetBool("show-secrets")
-	if showSecrets && profile.APIToken != "" {
-		printInfo("API Token: %s", profile.APIToken)
-	} else if profile.APIToken != "" {
-		printInfo("API Token: %s", config.MaskKey(profile.APIToken))
+	jsonProfile := *profile
+	if !showSecrets {
+		jsonProfile.APIToken = ""
+		jsonProfile.SecretKey = ""
 	}
 
-	if profile.Endpoint != "" {
-		printInfo("Endpoint: %s", profile.Endpoint)
-	}
-	if profile.AccessKey != "" {
-		printInfo("Access Key: %s", config.MaskKey(profile.AccessKey))
-	}
-	if showSecrets && profile.SecretKey != "" {
-		printInfo("Secret Key: %s", profile.SecretKey)
-	} else if profile.SecretKey != "" {
-		printInfo("Secret Key: %s", config.MaskKey(profile.SecretKey))
-	}
-	if profile.Region != "" {
-		printInfo("Region: %s", profile.Region)
-	}
+	return outResult(&jsonProfile, func() {
+		// Human-readable output
+		printInfo("Profile: %s", profile.Name)
+		if profile.Description != "" {
+			printInfo("Description: %s", profile.Description)
+		}
+		printInfo("Account ID: %s", utils.MaskAccountID(profile.AccountID))
 
-	return nil
+		if showSecrets && profile.APIToken != "" {
+			printInfo("API Token: %s", profile.APIToken)
+		} else if profile.APIToken != "" {
+			printInfo("API Token: %s", config.MaskKey(profile.APIToken))
+		}
+
+		if profile.Endpoint != "" {
+			printInfo("Endpoint: %s", profile.Endpoint)
+		}
+		if profile.AccessKey != "" {
+			printInfo("Access Key: %s", config.MaskKey(profile.AccessKey))
+		}
+		if showSecrets && profile.SecretKey != "" {
+			printInfo("Secret Key: %s", profile.SecretKey)
+		} else if profile.SecretKey != "" {
+			printInfo("Secret Key: %s", config.MaskKey(profile.SecretKey))
+		}
+		if profile.Region != "" {
+			printInfo("Region: %s", profile.Region)
+		}
+	})
 }
 
 func runConfigSet(cmd *cobra.Command, args []string) error {
@@ -383,7 +378,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	// Check if profile exists and load existing values
@@ -473,7 +468,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	if !configMgr.ProfileExists(profileName) {
@@ -516,7 +511,7 @@ func runConfigSwitch(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	if !configMgr.ProfileExists(profileName) {
@@ -539,7 +534,7 @@ func runConfigExport(cmd *cobra.Command, args []string) error {
 
 	configMgr, err := getConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to create config manager: %w", err)
+		return outErr("failed to create config manager", err)
 	}
 
 	// Get profile to export
@@ -663,7 +658,7 @@ profiles have been migrated.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cm, err := config.NewConfigManager()
 		if err != nil {
-			return fmt.Errorf("failed to initialize config: %w", err)
+			return outErr("failed to initialize config", err)
 		}
 
 		statusOnly, _ := cmd.Flags().GetBool("status")
