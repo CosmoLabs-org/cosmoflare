@@ -350,7 +350,7 @@ func runEmailRulesList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	rules, err := svc.ListRules(context.Background())
@@ -358,14 +358,11 @@ func runEmailRulesList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list email routing rules", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rules)
-	}
-
-	if len(rules) == 0 {
-		printInfo("No email routing rules found")
-		return nil
-	}
+	return outResult(rules, func() {
+		if len(rules) == 0 {
+			printInfo("No email routing rules found")
+			return
+		}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tMATCH\tACTION\tENABLED\tPRIORITY")
@@ -402,7 +399,7 @@ func runEmailRulesList(cmd *cobra.Command, args []string) error {
 	w.Flush()
 
 	printInfo("Total: %d rule(s)", len(rules))
-	return nil
+	})
 }
 
 func runEmailRulesGet(cmd *cobra.Command, args []string) error {
@@ -413,7 +410,7 @@ func runEmailRulesGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	rule, err := svc.GetRule(context.Background(), ruleID)
@@ -421,10 +418,7 @@ func runEmailRulesGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get email routing rule", err)
 	}
 
-	if JSONOutput {
-		return printJSON(rule)
-	}
-
+	return outResult(rule, func() {
 	fmt.Printf("ID:         %s\n", rule.ID)
 	fmt.Printf("Name:       %s\n", rule.Name)
 	fmt.Printf("Enabled:    %v\n", rule.Enabled)
@@ -449,7 +443,7 @@ func runEmailRulesGet(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	return nil
+	})
 }
 
 func runEmailRulesCreate(cmd *cobra.Command, args []string) error {
@@ -492,22 +486,22 @@ func runEmailRulesCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create email routing rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would create email routing rule", func() any {
+			return map[string]interface{}{
 				"zone_id":  zoneID,
 				"name":     emailRuleName,
 				"matchers": matchers,
 				"actions":  actions,
 				"priority": emailPriority,
 				"enabled":  emailEnabled,
-			})
-		}
-		printInfo("DRY RUN: Would create email routing rule %q", emailRuleName)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create email routing rule %q", emailRuleName)
+		})
 	}
 
 	rule, err := svc.CreateRule(context.Background(), emailRuleName, matchers, actions, emailPriority, emailEnabled)
@@ -515,16 +509,15 @@ func runEmailRulesCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create email routing rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email routing rule created successfully", rule)
-	}
-
-	printSuccess("Email routing rule created successfully!")
-	printInfo("ID: %s", rule.ID)
-	printInfo("Name: %s", rule.Name)
-	printInfo("Enabled: %v", rule.Enabled)
-	printInfo("Priority: %d", rule.Priority)
-	return nil
+	return outPayload("Email routing rule created successfully", func() any {
+		return rule
+	}, func() {
+		printSuccess("Email routing rule created successfully!")
+		printInfo("ID: %s", rule.ID)
+		printInfo("Name: %s", rule.Name)
+		printInfo("Enabled: %v", rule.Enabled)
+		printInfo("Priority: %d", rule.Priority)
+	})
 }
 
 func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
@@ -559,28 +552,25 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would update email routing rule", map[string]interface{}{
+		return outPayload("DRY RUN: Would update email routing rule", func() any {
+			return map[string]interface{}{
 				"zone_id": zoneID,
 				"rule_id": ruleID,
 				"name":    emailRuleName,
-			})
-		}
-		printInfo("DRY RUN: Would update email routing rule '%s'", ruleID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would update email routing rule '%s'", ruleID)
+		})
 	}
 
 	// Fetch existing rule to preserve unmodified fields (full-replacement API).
 	existing, err := svc.GetRule(context.Background(), ruleID)
 	if err != nil {
-		if JSONOutput {
-			return printErrorJSON(fmt.Sprintf("failed to fetch existing rule: %v", err))
-		}
-		return fmt.Errorf("failed to fetch existing rule %s: %w", ruleID, err)
+		return outErr(fmt.Sprintf("failed to fetch existing rule %s", ruleID), err)
 	}
 
 	// Merge: use flag value if explicitly set, otherwise keep existing.
@@ -608,15 +598,14 @@ func runEmailRulesUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to update email routing rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email routing rule updated successfully", rule)
-	}
-
-	printSuccess("Email routing rule '%s' updated successfully!", ruleID)
-	printInfo("Name: %s", rule.Name)
-	printInfo("Enabled: %v", rule.Enabled)
-	printInfo("Priority: %d", rule.Priority)
-	return nil
+	return outPayload("Email routing rule updated successfully", func() any {
+		return rule
+	}, func() {
+		printSuccess("Email routing rule '%s' updated successfully!", ruleID)
+		printInfo("Name: %s", rule.Name)
+		printInfo("Enabled: %v", rule.Enabled)
+		printInfo("Priority: %d", rule.Priority)
+	})
 }
 
 func runEmailRulesDelete(cmd *cobra.Command, args []string) error {
@@ -638,32 +627,32 @@ func runEmailRulesDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete email routing rule", map[string]string{
+		return outPayload("DRY RUN: Would delete email routing rule", func() any {
+			return map[string]string{
 				"zone_id": zoneID,
 				"rule_id": ruleID,
-			})
-		}
-		printInfo("DRY RUN: Would delete email routing rule '%s' from zone '%s'", ruleID, zoneID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete email routing rule '%s' from zone '%s'", ruleID, zoneID)
+		})
 	}
 
 	if err := svc.DeleteRule(context.Background(), ruleID); err != nil {
 		return outErr("failed to delete email routing rule", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email routing rule deleted successfully", map[string]string{
+	return outPayload("Email routing rule deleted successfully", func() any {
+		return map[string]string{
 			"zone_id": zoneID,
 			"rule_id": ruleID,
-		})
-	}
-	printSuccess("Email routing rule '%s' deleted successfully!", ruleID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Email routing rule '%s' deleted successfully!", ruleID)
+	})
 }
 
 // --- Destinations handlers ---
@@ -676,7 +665,7 @@ func runEmailDestList(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	destinations, err := svc.ListDestinations(context.Background())
@@ -684,14 +673,11 @@ func runEmailDestList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list email destinations", err)
 	}
 
-	if JSONOutput {
-		return printJSON(destinations)
-	}
-
-	if len(destinations) == 0 {
-		printInfo("No email destinations found")
-		return nil
-	}
+	return outResult(destinations, func() {
+		if len(destinations) == 0 {
+			printInfo("No email destinations found")
+			return
+		}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tEMAIL\tVERIFIED\tCREATED")
@@ -714,7 +700,7 @@ func runEmailDestList(cmd *cobra.Command, args []string) error {
 	w.Flush()
 
 	printInfo("Total: %d destination(s)", len(destinations))
-	return nil
+	})
 }
 
 func runEmailDestAdd(cmd *cobra.Command, args []string) error {
@@ -725,18 +711,18 @@ func runEmailDestAdd(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would add email destination", map[string]interface{}{
+		return outPayload("DRY RUN: Would add email destination", func() any {
+			return map[string]interface{}{
 				"zone_id": zoneID,
 				"email":   emailAddr,
-			})
-		}
-		printInfo("DRY RUN: Would add email destination %q", emailAddr)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would add email destination %q", emailAddr)
+		})
 	}
 
 	dest, err := svc.CreateDestination(context.Background(), emailAddr)
@@ -744,15 +730,14 @@ func runEmailDestAdd(cmd *cobra.Command, args []string) error {
 		return outErr("failed to add email destination", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email destination added successfully", dest)
-	}
-
-	printSuccess("Email destination added successfully!")
-	printInfo("ID: %s", dest.ID)
-	printInfo("Email: %s", dest.Email)
-	printInfo("A verification email has been sent. Please confirm to activate.")
-	return nil
+	return outPayload("Email destination added successfully", func() any {
+		return dest
+	}, func() {
+		printSuccess("Email destination added successfully!")
+		printInfo("ID: %s", dest.ID)
+		printInfo("Email: %s", dest.Email)
+		printInfo("A verification email has been sent. Please confirm to activate.")
+	})
 }
 
 func runEmailDestGet(cmd *cobra.Command, args []string) error {
@@ -763,7 +748,7 @@ func runEmailDestGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	dest, err := svc.GetDestination(context.Background(), addressID)
@@ -771,10 +756,7 @@ func runEmailDestGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get email destination", err)
 	}
 
-	if JSONOutput {
-		return printJSON(dest)
-	}
-
+	return outResult(dest, func() {
 	fmt.Printf("ID:       %s\n", dest.ID)
 	fmt.Printf("Email:    %s\n", dest.Email)
 	if !dest.Verified.IsZero() {
@@ -788,7 +770,7 @@ func runEmailDestGet(cmd *cobra.Command, args []string) error {
 	if !dest.Modified.IsZero() {
 		fmt.Printf("Modified: %s\n", dest.Modified.Format("2006-01-02 15:04:05"))
 	}
-	return nil
+	})
 }
 
 func runEmailDestDelete(cmd *cobra.Command, args []string) error {
@@ -810,32 +792,32 @@ func runEmailDestDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete email destination", map[string]string{
+		return outPayload("DRY RUN: Would delete email destination", func() any {
+			return map[string]string{
 				"zone_id":    zoneID,
 				"address_id": addressID,
-			})
-		}
-		printInfo("DRY RUN: Would delete email destination '%s'", addressID)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete email destination '%s'", addressID)
+		})
 	}
 
 	if err := svc.DeleteDestination(context.Background(), addressID); err != nil {
 		return outErr("failed to delete email destination", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Email destination deleted successfully", map[string]string{
+	return outPayload("Email destination deleted successfully", func() any {
+		return map[string]string{
 			"zone_id":    zoneID,
 			"address_id": addressID,
-		})
-	}
-	printSuccess("Email destination '%s' deleted successfully!", addressID)
-	return nil
+		}
+	}, func() {
+		printSuccess("Email destination '%s' deleted successfully!", addressID)
+	})
 }
 
 // --- Catch-all handlers ---
@@ -848,7 +830,7 @@ func runEmailCatchall(cmd *cobra.Command, args []string) error {
 
 	svc, err := getEmailService(zoneID)
 	if err != nil {
-		return fmt.Errorf("failed to create email service: %w", err)
+		return outErr("failed to create email service", err)
 	}
 
 	catchall, err := svc.GetCatchAll(context.Background())
@@ -856,10 +838,7 @@ func runEmailCatchall(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get catch-all rule", err)
 	}
 
-	if JSONOutput {
-		return printJSON(catchall)
-	}
-
+	return outResult(catchall, func() {
 	fmt.Printf("ID:       %s\n", catchall.ID)
 	fmt.Printf("Name:     %s\n", catchall.Name)
 	fmt.Printf("Enabled:  %v\n", catchall.Enabled)
@@ -879,7 +858,7 @@ func runEmailCatchall(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	return nil
+	})
 }
 
 func runEmailCatchallUpdate(cmd *cobra.Command, args []string) error {
