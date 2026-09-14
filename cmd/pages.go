@@ -128,18 +128,18 @@ func runPagesCreate(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would create project", map[string]string{
+		return outPayload("DRY RUN: Would create project", func() any {
+			return map[string]string{
 				"name":   name,
 				"branch": pagesBranch,
-			})
-		}
-		printInfo("DRY RUN: Would create project '%s' with production branch '%s'", name, pagesBranch)
-		return nil
+			}
+		}, func() {
+			printInfo("DRY RUN: Would create project '%s' with production branch '%s'", name, pagesBranch)
+		})
 	}
 
 	project, err := svc.Create(context.Background(), name, pagesBranch)
@@ -147,17 +147,17 @@ func runPagesCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create project", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Project created successfully", project)
-	}
-	printSuccess("Project '%s' created (ID: %s, subdomain: %s)", project.Name, project.ID, project.SubDomain)
-	return nil
+	return outPayload("Project created successfully", func() any {
+		return project
+	}, func() {
+		printSuccess("Project '%s' created (ID: %s, subdomain: %s)", project.Name, project.ID, project.SubDomain)
+	})
 }
 
 func runPagesList(cmd *cobra.Command, args []string) error {
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	projects, err := svc.List(context.Background())
@@ -165,24 +165,21 @@ func runPagesList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list projects", err)
 	}
 
-	if JSONOutput {
-		return printJSON(projects)
-	}
+	return outResult(projects, func() {
+		if len(projects) == 0 {
+			printInfo("No Pages projects found")
+			return
+		}
 
-	if len(projects) == 0 {
-		printInfo("No Pages projects found")
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tSUBDOMAIN\tBRANCH\tDOMAINS")
-	for _, p := range projects {
-		domains := strings.Join(p.Domains, ", ")
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", p.ID, p.Name, p.SubDomain, p.ProductionBranch, domains)
-	}
-	w.Flush()
-	printInfo("Total: %d project(s)", len(projects))
-	return nil
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tSUBDOMAIN\tBRANCH\tDOMAINS")
+		for _, p := range projects {
+			domains := strings.Join(p.Domains, ", ")
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", p.ID, p.Name, p.SubDomain, p.ProductionBranch, domains)
+		}
+		w.Flush()
+		printInfo("Total: %d project(s)", len(projects))
+	})
 }
 
 func runPagesGet(cmd *cobra.Command, args []string) error {
@@ -190,7 +187,7 @@ func runPagesGet(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	project, err := svc.Get(context.Background(), projectName)
@@ -198,21 +195,18 @@ func runPagesGet(cmd *cobra.Command, args []string) error {
 		return outErr("failed to get project", err)
 	}
 
-	if JSONOutput {
-		return printJSON(project)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "ID:\t%s\n", project.ID)
-	fmt.Fprintf(w, "Name:\t%s\n", project.Name)
-	fmt.Fprintf(w, "Subdomain:\t%s\n", project.SubDomain)
-	fmt.Fprintf(w, "Branch:\t%s\n", project.ProductionBranch)
-	fmt.Fprintf(w, "Domains:\t%s\n", strings.Join(project.Domains, ", "))
-	if project.CreatedOn != nil {
-		fmt.Fprintf(w, "Created:\t%s\n", project.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
-	}
-	w.Flush()
-	return nil
+	return outResult(project, func() {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintf(w, "ID:\t%s\n", project.ID)
+		fmt.Fprintf(w, "Name:\t%s\n", project.Name)
+		fmt.Fprintf(w, "Subdomain:\t%s\n", project.SubDomain)
+		fmt.Fprintf(w, "Branch:\t%s\n", project.ProductionBranch)
+		fmt.Fprintf(w, "Domains:\t%s\n", strings.Join(project.Domains, ", "))
+		if project.CreatedOn != nil {
+			fmt.Fprintf(w, "Created:\t%s\n", project.CreatedOn.Format("2006-01-02 15:04:05 UTC"))
+		}
+		w.Flush()
+	})
 }
 
 func runPagesDelete(cmd *cobra.Command, args []string) error {
@@ -231,26 +225,26 @@ func runPagesDelete(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("DRY RUN: Would delete project", map[string]string{"name": projectName})
-		}
-		printInfo("DRY RUN: Would delete project '%s'", projectName)
-		return nil
+		return outPayload("DRY RUN: Would delete project", func() any {
+			return map[string]string{"name": projectName}
+		}, func() {
+			printInfo("DRY RUN: Would delete project '%s'", projectName)
+		})
 	}
 
 	if err := svc.Delete(context.Background(), projectName); err != nil {
 		return outErr("failed to delete project", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("Project deleted successfully", map[string]string{"name": projectName})
-	}
-	printSuccess("Project '%s' deleted successfully!", projectName)
-	return nil
+	return outPayload("Project deleted successfully", func() any {
+		return map[string]string{"name": projectName}
+	}, func() {
+		printSuccess("Project '%s' deleted successfully!", projectName)
+	})
 }
 
 func runPagesDeployments(cmd *cobra.Command, args []string) error {
@@ -258,7 +252,7 @@ func runPagesDeployments(cmd *cobra.Command, args []string) error {
 
 	svc, err := getPagesService()
 	if err != nil {
-		return fmt.Errorf("failed to create Pages service: %w", err)
+		return outErr("failed to create Pages service", err)
 	}
 
 	deployments, err := svc.ListDeployments(context.Background(), projectName)
@@ -266,25 +260,22 @@ func runPagesDeployments(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list deployments", err)
 	}
 
-	if JSONOutput {
-		return printJSON(deployments)
-	}
-
-	if len(deployments) == 0 {
-		printInfo("No deployments found for project '%s'", projectName)
-		return nil
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tENVIRONMENT\tURL\tCREATED")
-	for _, d := range deployments {
-		created := ""
-		if d.CreatedOn != nil {
-			created = d.CreatedOn.Format("2006-01-02 15:04:05")
+	return outResult(deployments, func() {
+		if len(deployments) == 0 {
+			printInfo("No deployments found for project '%s'", projectName)
+			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", d.ID, d.Environment, d.URL, created)
-	}
-	w.Flush()
-	printInfo("Total: %d deployment(s)", len(deployments))
-	return nil
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tENVIRONMENT\tURL\tCREATED")
+		for _, d := range deployments {
+			created := ""
+			if d.CreatedOn != nil {
+				created = d.CreatedOn.Format("2006-01-02 15:04:05")
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", d.ID, d.Environment, d.URL, created)
+		}
+		w.Flush()
+		printInfo("Total: %d deployment(s)", len(deployments))
+	})
 }
