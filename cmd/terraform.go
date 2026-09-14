@@ -98,7 +98,7 @@ func runTerraformExport(cmd *cobra.Command, args []string) error {
 
 	exporter, err := getTerraformExporter()
 	if err != nil {
-		return fmt.Errorf("failed to create terraform exporter: %w", err)
+		return outErr("failed to create terraform exporter", err)
 	}
 
 	var opts []cosmoflare.TerraformExportOption
@@ -111,15 +111,15 @@ func runTerraformExport(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("dry run: would export terraform configs", map[string]interface{}{
+		return outPayload("dry run: would export terraform configs", func() any {
+			return map[string]interface{}{
 				"output_dir": outDir,
 				"services":   tfServices,
 				"format":     tfFormat,
-			})
-		}
-		printInfo("Would export Terraform configs to %s", outDir)
-		return nil
+			}
+		}, func() {
+			printInfo("Would export Terraform configs to %s", outDir)
+		})
 	}
 
 	result, err := exporter.Export(ctx, opts...)
@@ -127,38 +127,47 @@ func runTerraformExport(cmd *cobra.Command, args []string) error {
 		return outErr("terraform export failed", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("terraform export complete", result)
-	}
+	// writeErr preserves the legacy non-zero exit on human-mode write failures:
+	// the closure cannot return an error, so it captures it here.
+	var writeErr error
 
-	// Write files to disk
-	if err := os.MkdirAll(outDir, 0o755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
-
-	for filename, content := range result.Files {
-		path := filepath.Join(outDir, filename)
-		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-			return fmt.Errorf("failed to write %s: %w", filename, err)
+	err = outPayload("terraform export complete", func() any {
+		return result
+	}, func() {
+		// Write files to disk
+		if err := os.MkdirAll(outDir, 0o755); err != nil {
+			writeErr = fmt.Errorf("failed to create output directory: %w", err)
+			return
 		}
-		printSuccess("Wrote %s", getRelativePath(path))
-	}
 
-	printSuccess("Exported %d resources to %s", result.Summary.Total, outDir)
-	if result.Summary.Workers > 0 {
-		printInfo("  Workers:       %d", result.Summary.Workers)
-	}
-	if result.Summary.DNSRecords > 0 {
-		printInfo("  DNS Records:   %d", result.Summary.DNSRecords)
-	}
-	if result.Summary.R2Buckets > 0 {
-		printInfo("  R2 Buckets:    %d", result.Summary.R2Buckets)
-	}
-	if result.Summary.KVSpaces > 0 {
-		printInfo("  KV Namespaces: %d", result.Summary.KVSpaces)
-	}
-	if result.Summary.Zones > 0 {
-		printInfo("  Zones:         %d", result.Summary.Zones)
+		for filename, content := range result.Files {
+			path := filepath.Join(outDir, filename)
+			if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+				writeErr = fmt.Errorf("failed to write %s: %w", filename, err)
+				return
+			}
+			printSuccess("Wrote %s", getRelativePath(path))
+		}
+
+		printSuccess("Exported %d resources to %s", result.Summary.Total, outDir)
+		if result.Summary.Workers > 0 {
+			printInfo("  Workers:       %d", result.Summary.Workers)
+		}
+		if result.Summary.DNSRecords > 0 {
+			printInfo("  DNS Records:   %d", result.Summary.DNSRecords)
+		}
+		if result.Summary.R2Buckets > 0 {
+			printInfo("  R2 Buckets:    %d", result.Summary.R2Buckets)
+		}
+		if result.Summary.KVSpaces > 0 {
+			printInfo("  KV Namespaces: %d", result.Summary.KVSpaces)
+		}
+		if result.Summary.Zones > 0 {
+			printInfo("  Zones:         %d", result.Summary.Zones)
+		}
+	})
+	if writeErr != nil {
+		return writeErr
 	}
 
 	return nil
@@ -167,7 +176,7 @@ func runTerraformExport(cmd *cobra.Command, args []string) error {
 func runTerraformImportBlock(cmd *cobra.Command, args []string) error {
 	exporter, err := getTerraformExporter()
 	if err != nil {
-		return fmt.Errorf("failed to create terraform exporter: %w", err)
+		return outErr("failed to create terraform exporter", err)
 	}
 
 	var opts []cosmoflare.TerraformExportOption
@@ -178,13 +187,13 @@ func runTerraformImportBlock(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	if DryRun {
-		if JSONOutput {
-			return printSuccessJSON("dry run: would generate import blocks", map[string]interface{}{
+		return outPayload("dry run: would generate import blocks", func() any {
+			return map[string]interface{}{
 				"services": tfServices,
-			})
-		}
-		printInfo("Would generate terraform import blocks")
-		return nil
+			}
+		}, func() {
+			printInfo("Would generate terraform import blocks")
+		})
 	}
 
 	imports, err := exporter.GenerateImportBlocks(ctx, opts...)
@@ -192,33 +201,31 @@ func runTerraformImportBlock(cmd *cobra.Command, args []string) error {
 		return outErr("failed to generate import blocks", err)
 	}
 
-	if JSONOutput {
-		return printSuccessJSON("import blocks generated", map[string]interface{}{
+	return outPayload("import blocks generated", func() any {
+		return map[string]interface{}{
 			"imports": imports,
 			"count":   len(imports),
-		})
-	}
-
-	if len(imports) == 0 {
-		printInfo("No resources found to import")
-		return nil
-	}
-
-	hcl := cosmoflare.GenerateImportHCL(imports)
-	fmt.Print(hcl)
-
-	printSuccess("Generated %d import blocks", len(imports))
-	// Show per-service breakdown
-	counts := map[string]int{}
-	for _, imp := range imports {
-		parts := strings.SplitN(imp.To, ".", 2)
-		if len(parts) > 0 {
-			counts[parts[0]]++
 		}
-	}
-	for resType, count := range counts {
-		printInfo("  %s: %d", resType, count)
-	}
+	}, func() {
+		if len(imports) == 0 {
+			printInfo("No resources found to import")
+			return
+		}
 
-	return nil
+		hcl := cosmoflare.GenerateImportHCL(imports)
+		fmt.Print(hcl)
+
+		printSuccess("Generated %d import blocks", len(imports))
+		// Show per-service breakdown
+		counts := map[string]int{}
+		for _, imp := range imports {
+			parts := strings.SplitN(imp.To, ".", 2)
+			if len(parts) > 0 {
+				counts[parts[0]]++
+			}
+		}
+		for resType, count := range counts {
+			printInfo("  %s: %d", resType, count)
+		}
+	})
 }
