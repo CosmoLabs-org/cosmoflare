@@ -1,0 +1,107 @@
+{
+  "session_audit": {
+    "issues_flagged": 3,
+    "roadmap_in_progress": 0,
+    "readiness_score": 85,
+    "audit_warnings": [
+      {
+        "category": "Git",
+        "status": "warn",
+        "message": "1 untracked, 0 unpushed"
+      },
+      {
+        "category": "SVQ",
+        "status": "warn",
+        "message": "1 check(s) failed, 3 passed"
+      },
+      {
+        "category": "Changelog",
+        "status": "warn",
+        "message": "1 staged entries"
+      },
+      {
+        "category": "Prompts",
+        "status": "warn",
+        "message": "7 pending/active prompts"
+      }
+    ],
+    "audit_failures": null,
+    "completed_issue_hints": [
+      {
+        "issue_id": "FEAT-040",
+        "title": "Output presenter interface to collapse 618 JSONOutput branches",
+        "commit_hash": "32ae5481",
+        "commit_message": "docs(prompts): continuation for FEAT-040 species-2 sweep + v0.28.0; audit followup marked completed"
+      },
+      {
+        "issue_id": "TASK-008",
+        "title": "CONTRIBUTING.md + env-var reference table",
+        "commit_hash": "36baf6e1",
+        "commit_message": "chore(issues): create TASK-008"
+      },
+      {
+        "issue_id": "TASK-007",
+        "title": "pkg.go.dev presence: doc.go + example tests",
+        "commit_hash": "dac69080",
+        "commit_message": "chore(issues): create TASK-007"
+      }
+    ]
+  },
+  "release_check": {
+    "suggested_type": "minor",
+    "commits_since_tag": 13,
+    "hold_active": false,
+    "changelog_staged": 0
+  },
+  "pending_prompts": {
+    "count": 7,
+    "active_count": 7,
+    "items": [
+      {
+        "file": "docs/prompts/2026-09-12-session-2026-continuation.md",
+        "status": "PENDING",
+        "goals": "0/4"
+      },
+      {
+        "file": "docs/prompts/2026-09-14-species2-sweep-v0.28.md",
+        "status": "PENDING"
+      },
+      {
+        "file": "docs/prompts/2026-09-10-cf-limits-corpus-research-ingestion.md",
+        "status": "PENDING",
+        "goals": "0/6"
+      },
+      {
+        "file": "docs/prompts/2026-09-08-post-v0.22.0-control-plane.md",
+        "status": "PENDING",
+        "goals": "0/6"
+      },
+      {
+        "file": "docs/prompts/2026-06-21-desktop-followups-and-event-bus.md",
+        "status": "PENDING",
+        "goals": "3/6"
+      },
+      {
+        "file": "docs/prompts/2026-06-21-master-session-next.md",
+        "status": "PENDING"
+      },
+      {
+        "file": "docs/prompts/2026-09-10-cosmoflare-continuation.md",
+        "status": "PENDING"
+      }
+    ]
+  },
+  "prior_sessions": [
+    {
+      "file": "Session-49.efficiency.md",
+      "title": "Efficiency Review - 2026-09-10"
+    }
+  ],
+  "new_artifacts": [
+    {
+      "path": "docs/prompts/2026-09-14-species2-sweep-v0.28.md",
+      "type": "prompt"
+    }
+  ],
+  "log": "GOrchestra/cmd-output/session-end-post-2026-09-14.log"
+}
