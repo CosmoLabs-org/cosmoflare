@@ -28,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.28.1] - 2026-09-15
+
+### Added
+- typed daemon wire contract + TS codegen (FEAT-042) (commit:19449791)
+
+### Changed
+- split loadBuiltinThemes/createDefaultTutorials under funlen=80 (TASK-009) (commit:4c43a61b)
+- split browser handleKey/renderRightPane under funlen=80 (TASK-009) (commit:9f4c82fe)
+- split installer TUI god functions under funlen=80 (TASK-009) (commit:eb370472)
+- split config/status/setup/mcp functions under funlen=80 (TASK-009) (commit:fb025d98)
+- split 3 long fns under funlen=80 (TASK-009) (commit:fd0eee51)
+- split cache/compare/watch functions under funlen=80 (TASK-009) (commit:e2553924)
+- split file-table funcs for funlen (TASK-009) (commit:2f030734)
+
+### Fixed
+- dist archives carried ../ path entries (commit:bfd2aca5)
+
 ## [0.28.0] - 2026-09-14
 
 ### Added
