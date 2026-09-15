@@ -89,14 +89,9 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 	printInfo("Destination: %s", m.R2Bucket)
 	printInfo("Concurrency: %d", m.Concurrency)
 
-	s3Client, err := m.createS3Client()
+	s3Client, objects, err := m.scanPhase()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create S3 client: %w", err)
-	}
-
-	objects, err := m.listS3Objects(s3Client)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
+		return nil, err
 	}
 
 	if len(objects) == 0 {
@@ -112,13 +107,66 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 	}
 
 	cpPath := m.checkpointPath()
+	cp := m.loadOrCreateCheckpoint(cpPath, startTime, objects, totalSize)
+
+	remaining := remainingObjects(objects, cp)
+
+	if len(remaining) == 0 {
+		printInfo("All objects already transferred")
+		deleteCheckpoint(cpPath)
+		return &MigrationResult{
+			TotalObjects:    int64(len(objects)),
+			SuccessCount:    int64(len(objects)),
+			TransferredSize: totalSize,
+			Duration:        time.Since(startTime),
+		}, nil
+	}
+
+	printInfo("%d objects remaining", len(remaining))
+
+	result := &MigrationResult{
+		TotalObjects: int64(len(objects)),
+		SkippedCount: int64(len(objects) - len(remaining)),
+	}
+
+	stopping := m.runTransfer(s3Client, r2Client, remaining, cp, result)
+	result.Duration = time.Since(startTime)
+
+	if err := m.finalizeMigration(s3Client, r2Client, cpPath, cp, objects, result, stopping); err != nil {
+		return result, err
+	}
+
+	printMigrationSummary(result)
+	return result, nil
+}
+
+// scanPhase creates the S3 client and lists the source objects
+func (m *S3Migration) scanPhase() (*s3.Client, []*S3Object, error) {
+	s3Client, err := m.createS3Client()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create S3 client: %w", err)
+	}
+
+	objects, err := m.listS3Objects(s3Client)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list S3 objects: %w", err)
+	}
+
+	return s3Client, objects, nil
+}
+
+// loadOrCreateCheckpoint loads an existing checkpoint (when resuming) or
+// initializes a fresh one for the current run
+func (m *S3Migration) loadOrCreateCheckpoint(cpPath string, startTime time.Time, objects []*S3Object, totalSize int64) *Checkpoint {
 	var cp *Checkpoint
 
 	if m.Resume {
-		cp, err = loadCheckpoint(cpPath)
+		loaded, err := loadCheckpoint(cpPath)
 		if err != nil {
 			printWarning("Corrupt checkpoint, starting fresh: %v", err)
 			cp = nil
+		} else {
+			cp = loaded
 		}
 	} else {
 		existing, _ := loadCheckpoint(cpPath)
@@ -145,26 +193,29 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 			len(cp.Completed), cp.TotalObjects, FormatBytes(cp.TransferredSize))
 	}
 
+	return cp
+}
+
+// remainingObjects returns the objects not yet completed in the checkpoint
+func remainingObjects(objects []*S3Object, cp *Checkpoint) []*S3Object {
 	var remaining []*S3Object
 	for _, obj := range objects {
 		if !cp.isCompleted(obj.Key) {
 			remaining = append(remaining, obj)
 		}
 	}
+	return remaining
+}
 
-	if len(remaining) == 0 {
-		printInfo("All objects already transferred")
-		deleteCheckpoint(cpPath)
-		return &MigrationResult{
-			TotalObjects:    int64(len(objects)),
-			SuccessCount:    int64(len(objects)),
-			TransferredSize: totalSize,
-			Duration:        time.Since(startTime),
-		}, nil
-	}
-
-	printInfo("%d objects remaining", len(remaining))
-
+// runTransfer starts the worker pool, streams objects, and collects results.
+// It returns the stopping flag indicating whether a signal interrupted the run.
+func (m *S3Migration) runTransfer(
+	s3Client *s3.Client,
+	r2Client cosmoflare.R2Client,
+	remaining []*S3Object,
+	cp *Checkpoint,
+	result *MigrationResult,
+) *atomic.Bool {
 	var stopping atomic.Bool
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -206,11 +257,6 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 	defer flushTicker.Stop()
 	sinceLastFlush := 0
 
-	result := &MigrationResult{
-		TotalObjects: int64(len(objects)),
-		SkippedCount: int64(len(objects) - len(remaining)),
-	}
-
 	for r := range results {
 		if r.Err != nil {
 			cp.markFailed(r.Key)
@@ -237,8 +283,20 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 	}
 
 	bar.Finish()
-	result.Duration = time.Since(startTime)
+	return &stopping
+}
 
+// finalizeMigration handles checkpoint cleanup, interruption reporting, and
+// optional verification. It returns an error if the migration was interrupted.
+func (m *S3Migration) finalizeMigration(
+	s3Client *s3.Client,
+	r2Client cosmoflare.R2Client,
+	cpPath string,
+	cp *Checkpoint,
+	objects []*S3Object,
+	result *MigrationResult,
+	stopping *atomic.Bool,
+) error {
 	if result.ErrorCount == 0 && !stopping.Load() {
 		deleteCheckpoint(cpPath)
 		printSuccess("✅ Migration completed successfully!")
@@ -247,7 +305,7 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 		printWarning("Interrupted: %d/%d transferred. Run with --resume to continue.",
 			result.SuccessCount+result.SkippedCount, result.TotalObjects)
 		printMigrationSummary(result)
-		return result, fmt.Errorf("migration interrupted")
+		return fmt.Errorf("migration interrupted")
 	} else {
 		cp.flush()
 		printWarning("%d objects failed. Run with --resume to retry.", result.ErrorCount)
@@ -257,8 +315,7 @@ func (m *S3Migration) Execute(r2Client cosmoflare.R2Client) (*MigrationResult, e
 		m.verifyTransfers(s3Client, r2Client, objects, result)
 	}
 
-	printMigrationSummary(result)
-	return result, nil
+	return nil
 }
 
 func (m *S3Migration) verifyTransfers(
