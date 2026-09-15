@@ -142,6 +142,12 @@ func init() {
 	registerWorkerRouteCmds(workerCmd)
 	registerWorkerVersionCmds(workerCmd)
 	registerWorkerDeploymentCmds(workerCmd)
+	registerWorkerDomainCmds(workerCmd)
+	registerWorkerSubdomainCmds(workerCmd)
+	registerWorkerCronCmds(workerCmd)
+	registerWorkerBindingsCmds(workerCmd)
+	registerWorkerTailCmds(workerCmd)
+	registerWorkerTypesCmds(workerCmd)
 
 	workerDeployCmd.Flags().StringVarP(&workerScript, "script", "s", "", "Path to Worker script file")
 	workerDeployCmd.Flags().StringVar(&workerCompatDate, "compatibility-date", "", "Workers runtime compatibility date (yyyy-mm-dd)")

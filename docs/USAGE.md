@@ -382,6 +382,70 @@ JSON output:
 
 ## Worker Commands
 
+The `worker` tree carries the full daily loop (FEAT-021): secrets, routes,
+versions, deployments, rollback, custom domains, the workers.dev subdomain,
+cron triggers, bindings, live tail, and TypeScript type generation — every
+command supports `--json`.
+
+### Worker secrets (values are never printed)
+```bash
+cosmoflare worker secret put my-worker API_TOKEN --value=...   # or omit --value to read stdin
+cosmoflare worker secret list my-worker
+cosmoflare worker secret delete my-worker API_TOKEN --force
+cosmoflare worker secret bulk my-worker secrets.json           # JSON object of key -> value
+```
+
+### Worker routes (zone-scoped)
+```bash
+cosmoflare worker route list ZONE_ID
+cosmoflare worker route create ZONE_ID --pattern="example.com/api/*" --script=my-worker
+cosmoflare worker route update ZONE_ID ROUTE_ID --pattern="example.com/v2/*" --script=my-worker
+cosmoflare worker route delete ZONE_ID ROUTE_ID --force
+```
+
+### Worker versions (upload without deploying; deploy pins the live rollout)
+```bash
+cosmoflare worker versions upload my-worker --script=worker.js --compatibility-date=2024-01-01
+cosmoflare worker versions list my-worker
+cosmoflare worker versions view my-worker VERSION_ID
+cosmoflare worker versions deploy my-worker VERSION_ID
+cosmoflare worker versions rollback my-worker VERSION_ID
+cosmoflare worker versions delete my-worker VERSION_ID --force
+```
+
+### Deployments and rollback
+```bash
+cosmoflare worker deployments list my-worker          # newest first
+cosmoflare worker deployments view my-worker DEPLOYMENT_ID
+cosmoflare worker rollback my-worker                  # undo the last deploy
+cosmoflare worker rollback my-worker DEPLOYMENT_ID    # roll back to that deployment's version
+```
+
+### Custom domains and the workers.dev subdomain
+```bash
+cosmoflare worker domain list
+cosmoflare worker domain attach api.example.com --service=my-worker --zone=ZONE_ID
+cosmoflare worker domain detach DOMAIN_ID --force
+cosmoflare worker subdomain get
+cosmoflare worker subdomain set my-team
+```
+
+### Cron triggers (full-set replace under the hood)
+```bash
+cosmoflare worker cron list my-worker
+cosmoflare worker cron create my-worker --expr="*/5 * * * *"
+cosmoflare worker cron update my-worker --expr="*/5 * * * *" --new="0 * * * *"
+cosmoflare worker cron delete my-worker --expr="*/5 * * * *"
+```
+
+### Bindings, live tail, and types
+```bash
+cosmoflare worker bindings my-worker                  # binding table / --json array
+cosmoflare worker tail my-worker                      # stream live logs; ctrl-c exits 0
+cosmoflare worker tail my-worker --format=json        # one JSON object per entry
+cosmoflare worker types my-worker --out worker-configuration.d.ts
+```
+
 ### Deploy a Worker
 ```bash
 cosmoflare worker deploy my-worker --script=worker.js
