@@ -112,17 +112,23 @@ func registerWorkerRouteCmds(parent *cobra.Command) {
 	workerRouteCmd.AddCommand(workerRouteUpdateCmd)
 	workerRouteCmd.AddCommand(workerRouteDeleteCmd)
 
-	workerRouteCreateCmd.Flags().StringVar(&workerRoutePattern, "pattern", "", "URL pattern the route matches (e.g. example.com/api/*)")
-	workerRouteCreateCmd.Flags().StringVar(&workerRouteScript, "script", "", "Worker script name the route invokes")
+	if workerRouteCreateCmd.Flags().Lookup("pattern") == nil {
+		workerRouteCreateCmd.Flags().StringVar(&workerRoutePattern, "pattern", "", "URL pattern the route matches (e.g. example.com/api/*)")
+	}
+	if workerRouteCreateCmd.Flags().Lookup("script") == nil {
+		workerRouteCreateCmd.Flags().StringVar(&workerRouteScript, "script", "", "Worker script name the route invokes")
+	}
 
-	workerRouteUpdateCmd.Flags().StringVar(&workerRoutePattern, "pattern", "", "New URL pattern for the route")
-	workerRouteUpdateCmd.Flags().StringVar(&workerRouteScript, "script", "", "New Worker script name for the route")
+	if workerRouteUpdateCmd.Flags().Lookup("pattern") == nil {
+		workerRouteUpdateCmd.Flags().StringVar(&workerRoutePattern, "pattern", "", "New URL pattern for the route")
+	}
+	if workerRouteUpdateCmd.Flags().Lookup("script") == nil {
+		workerRouteUpdateCmd.Flags().StringVar(&workerRouteScript, "script", "", "New Worker script name for the route")
+	}
 
-	workerRouteDeleteCmd.Flags().BoolVar(&workerRouteForce, "force", false, "Skip confirmation prompt")
-}
-
-func init() {
-	registerWorkerRouteCmds(workerCmd)
+	if workerRouteDeleteCmd.Flags().Lookup("force") == nil {
+		workerRouteDeleteCmd.Flags().BoolVar(&workerRouteForce, "force", false, "Skip confirmation prompt")
+	}
 }
 
 func runWorkerRouteList(cmd *cobra.Command, args []string) error {

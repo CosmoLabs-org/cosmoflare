@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -59,16 +61,40 @@ func TestVersionUpload(t *testing.T) {
 		if got := r.Header.Get("Authorization"); got != "Bearer test-token" {
 			t.Errorf("expected bearer auth, got %q", got)
 		}
+		// The script-content API only accepts multipart bodies: a JSON
+		// "metadata" part plus the script part (FEAT-021 review finding).
+		if ct := r.Header.Get("Content-Type"); !strings.HasPrefix(ct, "multipart/form-data") {
+			t.Errorf("expected multipart/form-data content type, got %q", ct)
+		}
 
-		var body map[string]any
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			t.Errorf("decoding request body: %v", err)
+		boundary := strings.Split(r.Header.Get("Content-Type"), "boundary=")[1]
+		reader := multipart.NewReader(r.Body, boundary)
+		var metadata map[string]any
+		scriptBody := ""
+		for {
+			part, err := reader.NextPart()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				t.Errorf("next part: %v", err)
+				return
+			}
+			data, _ := io.ReadAll(part)
+			if part.FormName() == "metadata" {
+				_ = json.Unmarshal(data, &metadata)
+			} else {
+				scriptBody = string(data)
+			}
 		}
-		if body["script"] != "export default {}" {
-			t.Errorf("expected script body, got %v", body["script"])
+		if metadata["compatibility_date"] != "2024-09-01" {
+			t.Errorf("expected compatibility_date in metadata part, got %v", metadata["compatibility_date"])
 		}
-		if body["compatibility_date"] != "2024-09-01" {
-			t.Errorf("expected compatibility_date, got %v", body["compatibility_date"])
+		if metadata["main_module"] == "" {
+			t.Error("expected main_module in metadata part")
+		}
+		if scriptBody != "export default {}" {
+			t.Errorf("expected script part body, got %q", scriptBody)
 		}
 
 		w.Header().Set("Content-Type", "application/json")

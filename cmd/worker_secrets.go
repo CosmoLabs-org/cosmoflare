@@ -110,8 +110,12 @@ func registerWorkerSecretCmds(parent *cobra.Command) {
 	workerSecretCmd.AddCommand(workerSecretListCmd)
 	workerSecretCmd.AddCommand(workerSecretBulkCmd)
 
-	workerSecretPutCmd.Flags().StringVar(&workerSecretValue, "value", "", "Secret value (omit to read from stdin)")
-	workerSecretDeleteCmd.Flags().BoolVar(&workerSecretForce, "force", false, "Skip confirmation prompt")
+	if workerSecretPutCmd.Flags().Lookup("value") == nil {
+		workerSecretPutCmd.Flags().StringVar(&workerSecretValue, "value", "", "Secret value (omit to read from stdin)")
+	}
+	if workerSecretDeleteCmd.Flags().Lookup("force") == nil {
+		workerSecretDeleteCmd.Flags().BoolVar(&workerSecretForce, "force", false, "Skip confirmation prompt")
+	}
 }
 
 // parseSecretsBulkJSON decodes a JSON object of secret name -> value.

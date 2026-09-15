@@ -135,15 +135,19 @@ func registerWorkerVersionCmds(parent *cobra.Command) {
 	workerVersionsCmd.AddCommand(workerVersionDeleteCmd)
 	workerVersionsCmd.AddCommand(workerVersionRollbackCmd)
 
-	workerVersionUploadCmd.Flags().StringVarP(&workerVersionScript, "script", "s", "", "Path to Worker script file")
-	workerVersionUploadCmd.Flags().StringVar(&workerVersionCompatDate, "compatibility-date", "", "Workers runtime compatibility date (yyyy-mm-dd)")
-	workerVersionUploadCmd.Flags().BoolVar(&workerVersionModule, "module", false, "Treat script as ES module")
+	if workerVersionUploadCmd.Flags().Lookup("script") == nil {
+		workerVersionUploadCmd.Flags().StringVarP(&workerVersionScript, "script", "s", "", "Path to Worker script file")
+	}
+	if workerVersionUploadCmd.Flags().Lookup("compatibility-date") == nil {
+		workerVersionUploadCmd.Flags().StringVar(&workerVersionCompatDate, "compatibility-date", "", "Workers runtime compatibility date (yyyy-mm-dd)")
+	}
+	if workerVersionUploadCmd.Flags().Lookup("module") == nil {
+		workerVersionUploadCmd.Flags().BoolVar(&workerVersionModule, "module", false, "Treat script as ES module")
+	}
 
-	workerVersionDeleteCmd.Flags().BoolVar(&workerVersionForce, "force", false, "Skip confirmation prompt")
-}
-
-func init() {
-	registerWorkerVersionCmds(workerCmd)
+	if workerVersionDeleteCmd.Flags().Lookup("force") == nil {
+		workerVersionDeleteCmd.Flags().BoolVar(&workerVersionForce, "force", false, "Skip confirmation prompt")
+	}
 }
 
 // workerVersionArgs validates the positional arguments of a command that

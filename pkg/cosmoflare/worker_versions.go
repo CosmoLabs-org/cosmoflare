@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"time"
 )
 
@@ -42,10 +44,6 @@ type WorkerDeployment struct {
 // as *R2Error carrying the envelope's message. On success with out != nil the
 // envelope's "result" field is unmarshalled into out.
 func (s *WorkerService) rawRequest(ctx context.Context, method, path string, body, out any) error {
-	if s.apiToken == "" {
-		return validationError("rawRequest", "raw API requires credentials-based construction (NewWorkerServiceFromCreds)")
-	}
-
 	var payload io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
@@ -59,10 +57,20 @@ func (s *WorkerService) rawRequest(ctx context.Context, method, path string, bod
 	if err != nil {
 		return newError("rawRequest", "failed to create request", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+s.apiToken)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	return s.doRaw(ctx, req, out)
+}
+
+// doRaw sends an already-built request with bearer auth and unwraps the
+// Cloudflare response envelope into out. Callers with custom bodies
+// (multipart uploads) build their own request and hand it here.
+func (s *WorkerService) doRaw(ctx context.Context, req *http.Request, out any) error {
+	if s.apiToken == "" {
+		return validationError("rawRequest", "raw API requires credentials-based construction (NewWorkerServiceFromCreds)")
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiToken)
 
 	// controlPlaneClient() is the shared 30s-timeout control-plane client
 	// (transport.go, FEAT-039) — the raw path inherits the same policy as
@@ -118,8 +126,9 @@ func (s *WorkerService) workerVersionsPath(worker string) string {
 }
 
 // VersionUpload creates a new version of a Worker script without deploying
-// it. The JSON body mirrors Deploy's option set (script, bindings,
-// compatibility_date, plus optional tags/module flags).
+// it. The request is multipart/form-data — the Cloudflare script-content
+// API rejects JSON bodies: a "metadata" part (JSON: bindings,
+// compatibility_date, main_module, tags) plus the script part itself.
 func (s *WorkerService) VersionUpload(ctx context.Context, worker string, script io.Reader, opts ...WorkerOption) (*WorkerVersion, error) {
 	if worker == "" {
 		return nil, validationError("WorkerService.VersionUpload", "worker name is required")
@@ -138,20 +147,54 @@ func (s *WorkerService) VersionUpload(ctx context.Context, worker string, script
 		return nil, newError("WorkerService.VersionUpload", "failed to read script content", err)
 	}
 
-	body := map[string]any{
-		"script":             string(scriptBytes),
+	mainModule := "worker.js"
+	metadata := map[string]any{
+		"main_module":        mainModule,
 		"bindings":           toCFBindings(cfg.bindings),
 		"compatibility_date": cfg.compatibilityDate,
 	}
 	if len(cfg.tags) > 0 {
-		body["tags"] = cfg.tags
+		metadata["tags"] = cfg.tags
 	}
-	if cfg.module {
-		body["module"] = true
+	metadataJSON, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to encode version metadata", err)
 	}
 
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
+	mh := make(textproto.MIMEHeader)
+	mh.Set("Content-Disposition", `form-data; name="metadata"`)
+	mh.Set("Content-Type", "application/json")
+	part, err := writer.CreatePart(mh)
+	if err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to build metadata part", err)
+	}
+	if _, err := part.Write(metadataJSON); err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to write metadata part", err)
+	}
+	fh := make(textproto.MIMEHeader)
+	fh.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, mainModule, mainModule))
+	fh.Set("Content-Type", "application/javascript+module")
+	filePart, err := writer.CreatePart(fh)
+	if err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to build script part", err)
+	}
+	if _, err := filePart.Write(scriptBytes); err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to write script part", err)
+	}
+	if err := writer.Close(); err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to finalize multipart body", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.apiBaseURL+s.workerVersionsPath(worker), form)
+	if err != nil {
+		return nil, newError("WorkerService.VersionUpload", "failed to build request", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
 	var version WorkerVersion
-	if err := s.rawRequest(ctx, http.MethodPost, s.workerVersionsPath(worker), body, &version); err != nil {
+	if err := s.doRaw(ctx, req, &version); err != nil {
 		return nil, err
 	}
 	return &version, nil

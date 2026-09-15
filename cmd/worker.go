@@ -137,6 +137,12 @@ func init() {
 	workerCmd.AddCommand(workerLogsCmd)
 	workerCmd.AddCommand(workerSettingsCmd)
 
+	// FEAT-021 depth groups: each group file registers its own subcommands.
+	registerWorkerSecretCmds(workerCmd)
+	registerWorkerRouteCmds(workerCmd)
+	registerWorkerVersionCmds(workerCmd)
+	registerWorkerDeploymentCmds(workerCmd)
+
 	workerDeployCmd.Flags().StringVarP(&workerScript, "script", "s", "", "Path to Worker script file")
 	workerDeployCmd.Flags().StringVar(&workerCompatDate, "compatibility-date", "", "Workers runtime compatibility date (yyyy-mm-dd)")
 	workerDeployCmd.Flags().StringSliceVar(&workerBindings, "bindings", []string{}, "Bindings in name:type:id format (e.g., MY_KV:kv:ns-123)")
