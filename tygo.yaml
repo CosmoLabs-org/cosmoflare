@@ -1,0 +1,45 @@
+# tygo — Go → TypeScript type generation for the daemon wire contract (FEAT-042).
+#
+#   make wire-types          regenerate desktop/src/api/*.gen.ts
+#   make wire-types-check    fail if committed types drifted from Go
+#
+# The generated files are the ONLY hand-off point between internal/server's
+# concrete response types and the desktop app. Regenerate after ANY change to
+# a wire type and commit the result — wire-types-check gates releases.
+#
+# include_files pins generation to the files that DEFINE the wire contract.
+# When you add a wire type in a new file, add that file here — a type outside
+# these files silently will not generate.
+type_mappings:
+  time.Time: "string /* RFC3339 */"
+  time.Duration: "number /* ns */"
+  error: "string /* Go error, message form */"
+  time.Nanosecond: "1"
+  time.Microsecond: "1_000"
+  time.Millisecond: "1_000_000"
+  time.Second: "1_000_000_000"
+  time.Minute: "60_000_000_000"
+  time.Hour: "3_600_000_000_000"
+
+packages:
+  - path: github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare
+    output_path: desktop/src/api/cosmoflare.gen.ts
+    fallback_type: unknown
+    include_files:
+      - types.go
+      - zone.go
+      - worker.go
+      - kv.go
+  - path: github.com/CosmoLabs-org/cosmoflare/internal/server
+    output_path: desktop/src/api/server.gen.ts
+    fallback_type: unknown
+    include_files:
+      - rest.go
+      - metrics.go
+    type_mappings:
+      cosmoflare.Zone: "cosmoflare.Zone"
+      cosmoflare.Bucket: "cosmoflare.Bucket"
+      cosmoflare.Worker: "cosmoflare.Worker"
+      cosmoflare.KVNamespace: "cosmoflare.KVNamespace"
+    frontmatter: |
+      import type * as cosmoflare from "./cosmoflare.gen";

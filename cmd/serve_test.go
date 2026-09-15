@@ -40,11 +40,9 @@ func TestServeAdapter_AccountsListsProfiles(t *testing.T) {
 	got, err := a.Accounts(context.Background())
 	require.NoError(t, err)
 
-	list, ok := got.([]map[string]string)
-	require.True(t, ok, "Accounts should return []map[string]string, got %T", got)
-	names := make([]string, 0, len(list))
-	for _, m := range list {
-		names = append(names, m["name"])
+	names := make([]string, 0, len(got))
+	for _, p := range got {
+		names = append(names, p.Name)
 	}
 	assert.ElementsMatch(t, []string{"work", "personal"}, names)
 }
@@ -53,9 +51,7 @@ func TestServeAdapter_AccountsEmptyWhenNoProfiles(t *testing.T) {
 	a := newTestAdapter(t)
 	got, err := a.Accounts(context.Background())
 	require.NoError(t, err)
-	list, ok := got.([]map[string]string)
-	require.True(t, ok)
-	assert.Empty(t, list)
+	assert.Empty(t, got)
 }
 
 func TestServeAdapter_ResolveProfile(t *testing.T) {

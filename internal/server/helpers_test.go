@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // testServer starts an httptest server backed by s.Handler() and registers a
@@ -47,17 +49,19 @@ func healthzCloudflare(t *testing.T, url, token string) bool {
 type metricsSource struct {
 	mu        sync.Mutex
 	profile   string
-	zones     any
-	r2        any
-	workers   any
-	kv        any
+	zones     []*cosmoflare.Zone
+	r2        []*cosmoflare.Bucket
+	workers   []*cosmoflare.Worker
+	kv        []*cosmoflare.KVNamespace
 	zoneErr   error
 	r2Err     error
 	workerErr error
 	kvErr     error
 }
 
-func (m *metricsSource) Accounts(_ context.Context) (any, error) { return nil, nil }
+func (m *metricsSource) Accounts(_ context.Context) ([]AccountProfile, error) {
+	return nil, nil
+}
 
 func (m *metricsSource) CurrentProfileName() string {
 	m.mu.Lock()
@@ -65,32 +69,32 @@ func (m *metricsSource) CurrentProfileName() string {
 	return m.profile
 }
 
-func (m *metricsSource) Zones(_ context.Context, _ string) (any, error) {
+func (m *metricsSource) Zones(_ context.Context, _ string) ([]*cosmoflare.Zone, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.zones, m.zoneErr
 }
 
-func (m *metricsSource) R2Buckets(_ context.Context, _ string) (any, error) {
+func (m *metricsSource) R2Buckets(_ context.Context, _ string) ([]*cosmoflare.Bucket, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.r2, m.r2Err
 }
 
-func (m *metricsSource) Workers(_ context.Context, _ string) (any, error) {
+func (m *metricsSource) Workers(_ context.Context, _ string) ([]*cosmoflare.Worker, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.workers, m.workerErr
 }
 
-func (m *metricsSource) KV(_ context.Context, _ string) (any, error) {
+func (m *metricsSource) KV(_ context.Context, _ string) ([]*cosmoflare.KVNamespace, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.kv, m.kvErr
 }
 
 // setZones swaps the zones payload between polls; used for delta detection.
-func (m *metricsSource) setZones(v any) {
+func (m *metricsSource) setZones(v []*cosmoflare.Zone) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.zones = v

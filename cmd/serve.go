@@ -288,16 +288,16 @@ func (a *serveAdapter) CurrentProfileName() string {
 }
 
 // Accounts returns the local config profiles (NOT a Cloudflare API call).
-func (a *serveAdapter) Accounts(_ context.Context) (any, error) {
+func (a *serveAdapter) Accounts(_ context.Context) ([]server.AccountProfile, error) {
 	names := a.cm.ListProfiles()
-	out := make([]map[string]string, 0, len(names))
+	out := make([]server.AccountProfile, 0, len(names))
 	for _, n := range names {
-		out = append(out, map[string]string{"name": n})
+		out = append(out, server.AccountProfile{Name: n})
 	}
 	return out, nil
 }
 
-func (a *serveAdapter) Zones(ctx context.Context, profile string) (any, error) {
+func (a *serveAdapter) Zones(ctx context.Context, profile string) ([]*cosmoflare.Zone, error) {
 	p, err := a.resolveProfile(profile)
 	if err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func (a *serveAdapter) Zones(ctx context.Context, profile string) (any, error) {
 	return svc.List(ctx)
 }
 
-func (a *serveAdapter) R2Buckets(ctx context.Context, profile string) (any, error) {
+func (a *serveAdapter) R2Buckets(ctx context.Context, profile string) ([]*cosmoflare.Bucket, error) {
 	p, err := a.resolveProfile(profile)
 	if err != nil {
 		return nil, err
@@ -325,7 +325,7 @@ func (a *serveAdapter) R2Buckets(ctx context.Context, profile string) (any, erro
 	return client.ListBuckets(ctx)
 }
 
-func (a *serveAdapter) Workers(ctx context.Context, profile string) (any, error) {
+func (a *serveAdapter) Workers(ctx context.Context, profile string) ([]*cosmoflare.Worker, error) {
 	p, err := a.resolveProfile(profile)
 	if err != nil {
 		return nil, err
@@ -337,7 +337,7 @@ func (a *serveAdapter) Workers(ctx context.Context, profile string) (any, error)
 	return svc.List(ctx)
 }
 
-func (a *serveAdapter) KV(ctx context.Context, profile string) (any, error) {
+func (a *serveAdapter) KV(ctx context.Context, profile string) ([]*cosmoflare.KVNamespace, error) {
 	p, err := a.resolveProfile(profile)
 	if err != nil {
 		return nil, err

@@ -374,8 +374,26 @@ vulncheck:
 	@command -v govulncheck >/dev/null 2>&1 || go install golang.org/x/vuln/cmd/govulncheck@latest
 	@govulncheck ./...
 
+# Regenerate the daemon wire types (Go -> TypeScript via tygo, FEAT-042).
+.PHONY: wire-types
+wire-types:
+	@echo "🔌 Regenerating daemon wire types (tygo)..."
+	@tygo generate
+
+# Drift gate: regenerated types must match what is committed. Wired into
+# release-prepare so a Go wire-type change can never ship without its
+# TypeScript mirror (FEAT-042).
+.PHONY: wire-types-check
+wire-types-check:
+	@echo "🔒 Checking daemon wire types are fresh..."
+	@tygo generate
+	@git diff --exit-code -- desktop/src/api/ || { \
+		echo "❌ desktop/src/api/*.gen.ts drifted from the Go wire contract."; \
+		echo "   Run 'make wire-types' and commit the result."; \
+		exit 1; }
+
 .PHONY: release-prepare
-release-prepare: clean deps test vulncheck build-all dist checksums sbom
+release-prepare: clean deps test vulncheck build-all dist checksums sbom wire-types-check
 	@echo "🚀 Release preparation complete!"
 	@echo "📦 Distribution files:"
 	@ls -la $(DIST_DIR)/*.{tar.gz,zip,deb,rpm} 2>/dev/null || echo "No distribution files found"

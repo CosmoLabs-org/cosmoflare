@@ -7,35 +7,39 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // fakeSource is a test ServeSource. It records the profile each CF method was
 // called with so tests can assert the read-only ?profile= selection contract.
 type fakeSource struct {
-	zones     []map[string]any
-	accounts  []map[string]any
-	r2        []map[string]any
-	workers   []map[string]any
-	kv        []map[string]any
+	zones     []*cosmoflare.Zone
+	accounts  []AccountProfile
+	r2        []*cosmoflare.Bucket
+	workers   []*cosmoflare.Worker
+	kv        []*cosmoflare.KVNamespace
 	zoneErr   error
 	seenProf  string // last profile passed to a CF method
 }
 
-func (f *fakeSource) Accounts(_ context.Context) (any, error) { return f.accounts, nil }
-func (f *fakeSource) CurrentProfileName() string              { return "" }
-func (f *fakeSource) Zones(_ context.Context, profile string) (any, error) {
+func (f *fakeSource) Accounts(_ context.Context) ([]AccountProfile, error) {
+	return f.accounts, nil
+}
+func (f *fakeSource) CurrentProfileName() string { return "" }
+func (f *fakeSource) Zones(_ context.Context, profile string) ([]*cosmoflare.Zone, error) {
 	f.seenProf = profile
 	return f.zones, f.zoneErr
 }
-func (f *fakeSource) R2Buckets(_ context.Context, profile string) (any, error) {
+func (f *fakeSource) R2Buckets(_ context.Context, profile string) ([]*cosmoflare.Bucket, error) {
 	f.seenProf = profile
 	return f.r2, nil
 }
-func (f *fakeSource) Workers(_ context.Context, profile string) (any, error) {
+func (f *fakeSource) Workers(_ context.Context, profile string) ([]*cosmoflare.Worker, error) {
 	f.seenProf = profile
 	return f.workers, nil
 }
-func (f *fakeSource) KV(_ context.Context, profile string) (any, error) {
+func (f *fakeSource) KV(_ context.Context, profile string) ([]*cosmoflare.KVNamespace, error) {
 	f.seenProf = profile
 	return f.kv, nil
 }
@@ -62,7 +66,7 @@ func get(t *testing.T, url, token string) *http.Response {
 }
 
 func TestREST_RequiresToken(t *testing.T) {
-	s, url := newSourcedServer(t, &fakeSource{zones: []map[string]any{{"name": "z"}}})
+	s, url := newSourcedServer(t, &fakeSource{zones: []*cosmoflare.Zone{{Name: "z"}}})
 	defer func() { _ = s }()
 
 	resp := get(t, url+"/zones", "")
@@ -73,7 +77,7 @@ func TestREST_RequiresToken(t *testing.T) {
 }
 
 func TestREST_ZonesReturnsData(t *testing.T) {
-	src := &fakeSource{zones: []map[string]any{{"name": "example.com"}, {"name": "cosmolabs.org"}}}
+	src := &fakeSource{zones: []*cosmoflare.Zone{{Name: "example.com"}, {Name: "cosmolabs.org"}}}
 	_, url := newSourcedServer(t, src)
 
 	resp := get(t, url+"/zones", "t")
@@ -91,7 +95,7 @@ func TestREST_ZonesReturnsData(t *testing.T) {
 }
 
 func TestREST_AccountsIsLocal(t *testing.T) {
-	src := &fakeSource{accounts: []map[string]any{{"name": "work"}, {"name": "personal"}}}
+	src := &fakeSource{accounts: []AccountProfile{{Name: "work"}, {Name: "personal"}}}
 	s, url := newSourcedServer(t, src)
 
 	resp := get(t, url+"/accounts", "t")
@@ -110,7 +114,7 @@ func TestREST_AccountsIsLocal(t *testing.T) {
 }
 
 func TestREST_ProfileQueryParam(t *testing.T) {
-	src := &fakeSource{zones: []map[string]any{{"name": "z"}}}
+	src := &fakeSource{zones: []*cosmoflare.Zone{{Name: "z"}}}
 	_, url := newSourcedServer(t, src)
 
 	resp := get(t, url+"/zones?profile=work", "t")

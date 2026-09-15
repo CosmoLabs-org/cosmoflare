@@ -9,11 +9,24 @@ import (
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
+// AccountProfile is one local config profile in the /accounts response.
+// The wire shape is {"name": "<profile>"} — identical to the map the
+// adapter produced before this type existed (FEAT-042).
+type AccountProfile struct {
+	Name string `json:"name"`
+}
+
 // ServeSource is the daemon's data-access seam. It is a NEW abstraction for the
 // desktop daemon — it is NOT internal/tui.DataSource (which is R2-storage-only).
 // Injecting it lets the REST handlers be unit-tested with no live Cloudflare
 // credentials: tests pass a fake, the daemon passes an adapter over the real
 // per-service constructors (see cmd/serve.go).
+//
+// Wire contract (FEAT-042): every method returns a CONCRETE type. The JSON
+// encoding of these types IS the daemon's wire format; desktop/src/api
+// consumes TypeScript types generated from them (see the tygo config +
+// make wire-types-check). Renaming a field here breaks the desktop build,
+// not runtime.
 //
 // Account model (v1, read-only): an "account" is a local config profile. The CF
 // methods take a profile name (empty = current/default profile) so the daemon
@@ -21,14 +34,14 @@ import (
 type ServeSource interface {
 	// Accounts returns the local config profiles. This is a local read, NOT a
 	// Cloudflare API call — it must not affect cloudflare_online.
-	Accounts(ctx context.Context) (any, error)
+	Accounts(ctx context.Context) ([]AccountProfile, error)
 	// The following methods resolve credentials from the named profile and
 	// call the corresponding Cloudflare service. Success → caller records
 	// cloudflare_online=true; error → cloudflare_online=false + 502.
-	Zones(ctx context.Context, profile string) (any, error)
-	R2Buckets(ctx context.Context, profile string) (any, error)
-	Workers(ctx context.Context, profile string) (any, error)
-	KV(ctx context.Context, profile string) (any, error)
+	Zones(ctx context.Context, profile string) ([]*cosmoflare.Zone, error)
+	R2Buckets(ctx context.Context, profile string) ([]*cosmoflare.Bucket, error)
+	Workers(ctx context.Context, profile string) ([]*cosmoflare.Worker, error)
+	KV(ctx context.Context, profile string) ([]*cosmoflare.KVNamespace, error)
 	// CurrentProfileName returns the profile the daemon serves by default
 	// (the one resolveProfile("") resolves to). Local read, no API call.
 	CurrentProfileName() string

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 var (
@@ -20,10 +22,10 @@ var (
 
 func TestMetricsProducer_PublishesOnTick(t *testing.T) {
 	src := &fakeSource{
-		zones:   []map[string]any{{"name": "example.com"}},
-		r2:      []map[string]any{{"name": "bucket-1"}, {"name": "bucket-2"}},
-		workers: []map[string]any{{"name": "worker-1"}},
-		kv:      []map[string]any{{"name": "ns-1"}},
+		zones:   []*cosmoflare.Zone{{Name: "example.com"}},
+		r2:      []*cosmoflare.Bucket{{Name: "bucket-1"}, {Name: "bucket-2"}},
+		workers: []*cosmoflare.Worker{{Name: "worker-1"}},
+		kv:      []*cosmoflare.KVNamespace{{Title: "ns-1"}},
 	}
 	s, url := newSourcedServer(t, src)
 
@@ -68,8 +70,7 @@ func TestMetricsProducer_PublishesOnTick(t *testing.T) {
 			if payload.Profile != "" {
 				t.Fatalf("profile = %q, want empty (default)", payload.Profile)
 			}
-			zones, ok := payload.Zones.([]any)
-			if !ok || len(zones) != 1 {
+			if len(payload.Zones) != 1 {
 				t.Fatalf("zones = %v, want 1-element array", payload.Zones)
 			}
 			return
@@ -80,8 +81,8 @@ func TestMetricsProducer_PublishesOnTick(t *testing.T) {
 
 func TestMetricsProducer_SkipsWhenNoSubscribers(t *testing.T) {
 	src := &fakeSource{
-		zones: []map[string]any{{"name": "z"}},
-		r2:    []map[string]any{},
+		zones: []*cosmoflare.Zone{{Name: "z"}},
+		r2:    []*cosmoflare.Bucket{},
 	}
 	s := New(Config{Token: "t", Version: "test"})
 	s.SetData(src)
@@ -100,7 +101,7 @@ func TestMetricsProducer_SkipsWhenNoSubscribers(t *testing.T) {
 }
 
 func TestMetricsProducer_StopsOnContextCancel(t *testing.T) {
-	src := &fakeSource{zones: []map[string]any{{"name": "z"}}}
+	src := &fakeSource{zones: []*cosmoflare.Zone{{Name: "z"}}}
 	s := New(Config{Token: "t", Version: "test"})
 	s.SetData(src)
 
@@ -113,10 +114,10 @@ func TestMetricsProducer_StopsOnContextCancel(t *testing.T) {
 
 func TestMetricsPartialSnapshot(t *testing.T) {
 	src := &metricsSource{
-		zones:    []map[string]any{{"name": "example.com"}},
+		zones:    []*cosmoflare.Zone{{Name: "example.com"}},
 		r2Err:    errR2,
-		workers:  []map[string]any{{"name": "worker-1"}},
-		kv:       []map[string]any{{"name": "ns-1"}},
+		workers:  []*cosmoflare.Worker{{Name: "worker-1"}},
+		kv:       []*cosmoflare.KVNamespace{{Title: "ns-1"}},
 	}
 	s, url := newSourcedServer(t, src)
 
@@ -131,8 +132,7 @@ func TestMetricsPartialSnapshot(t *testing.T) {
 	if snap.Errors["r2_buckets"] == "" {
 		t.Fatalf("Errors[r2_buckets] not set: %+v", snap.Errors)
 	}
-	zones, ok := snap.Zones.([]any)
-	if !ok || len(zones) != 1 {
+	if len(snap.Zones) != 1 {
 		t.Fatalf("zones = %v, want 1-element array", snap.Zones)
 	}
 	if snap.Workers == nil || snap.KVNamespaces == nil {
@@ -143,7 +143,7 @@ func TestMetricsPartialSnapshot(t *testing.T) {
 func TestMetricsProfilePopulated(t *testing.T) {
 	src := &metricsSource{
 		profile: "default",
-		zones:   []map[string]any{{"name": "example.com"}},
+		zones:   []*cosmoflare.Zone{{Name: "example.com"}},
 	}
 	s, url := newSourcedServer(t, src)
 
@@ -162,7 +162,7 @@ func TestMetricsProfilePopulated(t *testing.T) {
 
 func TestMetricsDeltaDetection(t *testing.T) {
 	src := &metricsSource{
-		zones: []map[string]any{{"name": "example.com"}},
+		zones: []*cosmoflare.Zone{{Name: "example.com"}},
 	}
 	s, url := newSourcedServer(t, src)
 
@@ -178,9 +178,9 @@ func TestMetricsDeltaDetection(t *testing.T) {
 	// Identical data on subsequent polls → no re-publish.
 	expectNoMetricsSnapshot(t, ch, 300*time.Millisecond)
 	// Changed data → exactly one more publish.
-	src.setZones([]map[string]any{{"name": "example.com"}, {"name": "example.org"}})
+	src.setZones([]*cosmoflare.Zone{{Name: "example.com"}, {Name: "example.org"}})
 	snap := expectMetricsSnapshot(t, ch, 3*time.Second)
-	if zones, ok := snap.Zones.([]any); !ok || len(zones) != 2 {
+	if len(snap.Zones) != 2 {
 		t.Fatalf("zones = %v, want 2-element array", snap.Zones)
 	}
 }
