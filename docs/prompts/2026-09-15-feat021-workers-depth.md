@@ -41,6 +41,8 @@ title: FEAT-021 Workers Command Depth — Full Implementation
 implemented_commits:
     - {sha: '326511a6d3cc', covers: [P-01, P-02, P-03, P-04]}
     - {sha: 'a6e540456c68', covers: [P-05, P-06, P-07, P-08, P-09, P-10]}
+    - {sha: '326511a6d3cc', covers: [BR-01, BR-02, BR-03, BR-04]}
+    - {sha: 'a6e540456c68', covers: [BR-05, BR-06, BR-07, BR-08, BR-09, BR-10]}
 ---
 
 # FEAT-021 Workers Command Depth — Full Implementation
