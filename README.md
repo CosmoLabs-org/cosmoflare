@@ -21,6 +21,16 @@ It is designed agent-first: every command supports `--json` output, has detailed
 
 The Go library (`pkg/cosmoflare/`) is the stable API surface. The CLI and a Tauri desktop app wrap it; a React Native mobile app will follow. The `r2go2` binary remains as a backward-compatible alias.
 
+## Cosmoflare vs Wrangler
+
+Wrangler is the official CLI — the right pick for Workers-first development in
+Node.js. Cosmoflare covers the **whole platform** (R2, DNS, Zones, SSL, WAF,
+D1, KV, Queues, and 10+ more) in one static Go binary with `--json` on every
+command and a built-in, read-only-by-default MCP server. Wrangler still wins
+for local workerd dev and Workers secrets/versions.
+
+Full comparison: [docs/vs-wrangler.md](docs/vs-wrangler.md)
+
 ## Services
 
 | Service | Status | Commands |

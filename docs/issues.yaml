@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-15T05:34:03.525475+04:00
+last_updated: 2026-09-15T20:17:37.54228+04:00
 next_bug_id: 52
 next_feat_id: 43
 next_task_id: 11
@@ -392,7 +392,7 @@ issues:
       created_at: 2026-09-10T02:05:44.582212+04:00
     - id: FEAT-016
       type: feature
-      status: open
+      status: closed
       title: Makefile release target codifying the local goreleaser + gh publish recipe
       created_at: 2026-09-10T02:06:04.657233+04:00
     - id: FEAT-017
@@ -569,7 +569,7 @@ issues:
       created_at: 2026-09-14T06:06:17.157093+04:00
     - id: TASK-009
       type: task
-      status: open
+      status: closed
       title: Split 45 god functions; enforce funlen=80
       created_at: 2026-09-15T05:34:00.371247+04:00
     - id: TASK-010

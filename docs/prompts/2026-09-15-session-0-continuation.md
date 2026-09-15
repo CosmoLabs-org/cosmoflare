@@ -4,7 +4,8 @@ created: 2026-09-15
 status: PENDING
 branch: master
 goals_total: 4
-goals_completed: 0
+goals_completed: 3
+schema_version: 1
 ---
 
 ## Context
@@ -13,13 +14,13 @@ cmd/ renders all output through the Presenter — the 620-branch if-JSONOutput d
 
 ## Goals
 
-### [ ] 1. Launch program: ROAD-096 + TASK-010 product page + ROAD-089 Homebrew tap
+### [x] 1. Launch program: ROAD-096 + TASK-010 product page + ROAD-089 Homebrew tap
 Acceptance: vs-Wrangler comparison page and cosmolabs.org/cosmoflare product page exist with OG/JSON-LD; Show HN + r/Cloudflare drafts awaiting operator voice; tap formula installs cosmoflare
-### [ ] 2. TASK-009 funlen wave: split 45 god functions, adopt golangci funlen=80
+### [x] 2. TASK-009 funlen wave: split 45 god functions, adopt golangci funlen=80
 Acceptance: golangci-lint run with funlen=80 exits 0; go test ./... green; zero functions over 80 lines
 ### [ ] 3. Verify pkg.go.dev re-indexed v0.28.0
 Acceptance: pkg.go.dev/github.com/CosmoLabs-org/cosmoflare landing text reads 'Package cosmoflare provides' (not 'Package r2go2')
-### [ ] 4. Quality wave: FEAT-042 typed wire contract + cmd coverage 44.6%→60%
+### [x] 4. Quality wave: FEAT-042 typed wire contract + cmd coverage 44.6%→60%
 Acceptance: internal/server returns concrete structs; TS types generated drift-checked; go test ./cmd/ -cover ≥ 60%
 
 

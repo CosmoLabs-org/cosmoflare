@@ -1,10 +1,10 @@
 id: FEAT-016
 type: feature
 created_at: 2026-09-10T02:06:04.657233+04:00
-updated_at: 2026-09-10T02:06:07.004565+04:00
+updated_at: 2026-09-15T19:56:40.817594+04:00
 source: local
 ulid: 01M2439TVKDX30NKWY85ST7P8Z
-status: open
+status: closed
 origin:
     idea_slug: 2026-09-07-makefile-release-target-codifying-the-local-goreleaser-gh
     session: 40
@@ -17,3 +17,10 @@ description: |-
     ## Additional context
 
     Codify the proven local release recipe as 'make release TAG=vX.Y.Z'. Two releases in one session (v0.20.0, v0.21.0) hit identical friction: gh rejects --notes-from-tag with --repo; gh release create with file#label 404s on multi-asset; asset names need renamed copies (per-target dirs all contain 'cosmoflare'). Working recipe proven 3x now (v0.20/0.21/0.24, latest 2026-09-10): shallow-clone tag to mktemp, goreleaser release --clean, assert --version, extract CHANGELOG section to notes file, gh release create empty with --repo + --notes-file + --latest, cp binaries to final names, shasum -c verify, gh release upload, assert asset count 6. No-CI rule unaffected — fully local. Small, bounded, removes recurring release friction.
+resolution:
+    notes: 'Verified fixed on master: make release TAG= target exists (sanity gate, dist staging, operator-gated publish command) — commit 21c77af; re-verified live this session during the packaging-bug fix (bfd2aca touches the same dist target).'
+    resolved_at: 2026-09-15T19:56:40.816108+04:00
+revisions:
+    - date: "2026-09-15"
+      action: closed
+      context: 'Verified fixed on master: make release TAG= target exists (sanity gate, dist staging, operator-gated publish command) — commit 21c77af; re-verified live this session during the packaging-bug fix (bfd2aca touches the same dist target).'
