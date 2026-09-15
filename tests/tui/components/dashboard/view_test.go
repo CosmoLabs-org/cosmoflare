@@ -212,153 +212,174 @@ var viewErrorMessages = []string{
 	"Invalid configuration",
 }
 
+// viewBasicStructure verifies expected UI elements appear in rendered views.
+func viewBasicStructure(t *testing.T) {
+	// Test that we can create a view
+	// Since we can't directly access the model, we test the expected output patterns
+
+	// Test for expected UI elements
+	for _, element := range expectedViewUIElements {
+		t.Run("UI Element: "+element, func(t *testing.T) {
+			assert.NotEmpty(t, element, "UI element should not be empty")
+			assert.True(t, len(element) > 0, "UI element should have content")
+		})
+	}
+}
+
+// viewSectionRendering verifies each dashboard section renders with indicators.
+func viewSectionRendering(t *testing.T) {
+	for _, section := range viewSections {
+		t.Run("Section: "+section.name, func(t *testing.T) {
+			assert.NotEmpty(t, section.name, "Section name should not be empty")
+			assert.NotEmpty(t, section.description, "Section description should not be empty")
+			assert.NotEmpty(t, section.indicators, "Section should have UI indicators")
+
+			// Test that all indicators are valid unicode
+			for _, indicator := range section.indicators {
+				assert.NotEmpty(t, indicator, "UI indicator should not be empty")
+				assert.True(t, len(indicator) > 0, "UI indicator should have content")
+			}
+		})
+	}
+}
+
+// viewColorThemeSupport verifies supported color themes.
+func viewColorThemeSupport(t *testing.T) {
+	for _, theme := range viewColorThemes {
+		t.Run("Theme: "+theme.name, func(t *testing.T) {
+			assert.NotEmpty(t, theme.name, "Theme name should not be empty")
+			assert.NotEmpty(t, theme.colors, "Theme should have colors")
+
+			for _, color := range theme.colors {
+				assert.True(t, strings.HasPrefix(color, "#"), "Color should be hex format: "+color)
+				assert.Equal(t, 7, len(color), "Color should be 7 characters: "+color)
+			}
+		})
+	}
+}
+
+// viewResponsiveLayout verifies layout across terminal sizes.
+func viewResponsiveLayout(t *testing.T) {
+	// Test different terminal sizes
+	for _, size := range viewTerminalSizes {
+		t.Run(fmt.Sprintf("Terminal %dx%d", size.width, size.height), func(t *testing.T) {
+			assert.Greater(t, size.width, 0, "Width should be positive")
+			assert.Greater(t, size.height, 0, "Height should be positive")
+
+			if size.valid {
+				// Should handle gracefully
+				assert.True(t, true, "Valid terminal size should be supported")
+			} else {
+				// Should handle small size gracefully
+				assert.True(t, true, "Small terminal size should be handled gracefully")
+			}
+		})
+	}
+}
+
+// viewProgressBars verifies progress bar characters and patterns.
+func viewProgressBars(t *testing.T) {
+	for _, char := range progressBarCharacters {
+		t.Run("Progress char: "+char, func(t *testing.T) {
+			assert.NotEmpty(t, char, "Progress character should not be empty")
+			assert.Equal(t, 1, utf8.RuneCountInString(char), "Should be single character")
+		})
+	}
+
+	// Test progress bar patterns (each should be exactly 20 runes)
+	for _, pattern := range progressBarPatterns {
+		t.Run("Progress pattern", func(t *testing.T) {
+			assert.Equal(t, 20, utf8.RuneCountInString(pattern), "Progress bar should be 20 characters")
+			hasFilled := strings.Contains(pattern, "█")
+			hasEmpty := strings.Contains(pattern, "░")
+			assert.True(t, hasFilled || hasEmpty, "Should contain progress characters")
+		})
+	}
+}
+
+// viewStatusIndicatorRendering verifies status indicator rendering.
+func viewStatusIndicatorRendering(t *testing.T) {
+	for status, indicator := range viewStatusIndicators {
+		t.Run("Status: "+status, func(t *testing.T) {
+			assert.NotEmpty(t, status, "Status should not be empty")
+			assert.NotEmpty(t, indicator, "Indicator should not be empty")
+			assert.True(t, len(indicator) > 0, "Indicator should have content")
+		})
+	}
+}
+
+// viewDataFormatting verifies byte and number formatting patterns.
+func viewDataFormatting(t *testing.T) {
+	// Test byte formatting patterns
+	for _, test := range viewByteFormats {
+		t.Run(fmt.Sprintf("Bytes: %d", test.input), func(t *testing.T) {
+			assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
+			assert.NotEmpty(t, test.expected, "Expected format should not be empty")
+			assert.Contains(t, test.expected, "B", "Should contain unit indicator")
+		})
+	}
+
+	// Test number formatting patterns
+	for _, test := range viewNumberFormats {
+		t.Run(fmt.Sprintf("Number: %d", test.input), func(t *testing.T) {
+			assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
+			assert.NotEmpty(t, test.expected, "Expected format should not be empty")
+		})
+	}
+}
+
+// viewHelpScreen verifies help screen sections and content.
+func viewHelpScreen(t *testing.T) {
+	for _, section := range viewHelpSections {
+		t.Run("Help: "+section.title, func(t *testing.T) {
+			assert.NotEmpty(t, section.title, "Help section title should not be empty")
+			assert.NotEmpty(t, section.content, "Help section should have content")
+
+			for _, content := range section.content {
+				assert.NotEmpty(t, content, "Help content should not be empty")
+			}
+		})
+	}
+}
+
+// viewLoadingStates verifies loading animation frames and message.
+func viewLoadingStates(t *testing.T) {
+	// Test loading animation frames
+	for _, frame := range viewLoadingFrames {
+		t.Run("Loading frame: "+frame, func(t *testing.T) {
+			assert.NotEmpty(t, frame, "Loading frame should not be empty")
+			assert.Equal(t, 1, len([]rune(frame)), "Should be single rune")
+		})
+	}
+
+	// Test loading message
+	loadingMessage := "Loading R2Go2 Dashboard..."
+	assert.Contains(t, loadingMessage, "Loading", "Should contain loading text")
+	assert.Contains(t, loadingMessage, "R2Go2", "Should contain app name")
+}
+
+// viewErrorMessagesRendering verifies rendered error messages.
+func viewErrorMessagesRendering(t *testing.T) {
+	for _, errorMsg := range viewErrorMessages {
+		t.Run("Error: "+errorMsg, func(t *testing.T) {
+			assert.NotEmpty(t, errorMsg, "Error message should not be empty")
+			assert.Greater(t, len(errorMsg), 5, "Error message should be descriptive")
+		})
+	}
+}
+
 // TestViewRendering tests TUI view rendering functionality
 func TestViewRendering(t *testing.T) {
-	t.Run("Basic View Structure", func(t *testing.T) {
-		// Test that we can create a view
-		// Since we can't directly access the model, we test the expected output patterns
-
-		// Test for expected UI elements
-		for _, element := range expectedViewUIElements {
-			t.Run("UI Element: "+element, func(t *testing.T) {
-				assert.NotEmpty(t, element, "UI element should not be empty")
-				assert.True(t, len(element) > 0, "UI element should have content")
-			})
-		}
-	})
-
-	t.Run("Section Rendering", func(t *testing.T) {
-		for _, section := range viewSections {
-			t.Run("Section: "+section.name, func(t *testing.T) {
-				assert.NotEmpty(t, section.name, "Section name should not be empty")
-				assert.NotEmpty(t, section.description, "Section description should not be empty")
-				assert.NotEmpty(t, section.indicators, "Section should have UI indicators")
-
-				// Test that all indicators are valid unicode
-				for _, indicator := range section.indicators {
-					assert.NotEmpty(t, indicator, "UI indicator should not be empty")
-					assert.True(t, len(indicator) > 0, "UI indicator should have content")
-				}
-			})
-		}
-	})
-
-	t.Run("Color Theme Support", func(t *testing.T) {
-		for _, theme := range viewColorThemes {
-			t.Run("Theme: "+theme.name, func(t *testing.T) {
-				assert.NotEmpty(t, theme.name, "Theme name should not be empty")
-				assert.NotEmpty(t, theme.colors, "Theme should have colors")
-
-				for _, color := range theme.colors {
-					assert.True(t, strings.HasPrefix(color, "#"), "Color should be hex format: "+color)
-					assert.Equal(t, 7, len(color), "Color should be 7 characters: "+color)
-				}
-			})
-		}
-	})
-
-	t.Run("Responsive Layout", func(t *testing.T) {
-		// Test different terminal sizes
-		for _, size := range viewTerminalSizes {
-			t.Run(fmt.Sprintf("Terminal %dx%d", size.width, size.height), func(t *testing.T) {
-				assert.Greater(t, size.width, 0, "Width should be positive")
-				assert.Greater(t, size.height, 0, "Height should be positive")
-
-				if size.valid {
-					// Should handle gracefully
-					assert.True(t, true, "Valid terminal size should be supported")
-				} else {
-					// Should handle small size gracefully
-					assert.True(t, true, "Small terminal size should be handled gracefully")
-				}
-			})
-		}
-	})
-
-	t.Run("Progress Bars and Indicators", func(t *testing.T) {
-		for _, char := range progressBarCharacters {
-			t.Run("Progress char: "+char, func(t *testing.T) {
-				assert.NotEmpty(t, char, "Progress character should not be empty")
-				assert.Equal(t, 1, utf8.RuneCountInString(char), "Should be single character")
-			})
-		}
-
-		// Test progress bar patterns (each should be exactly 20 runes)
-		for _, pattern := range progressBarPatterns {
-			t.Run("Progress pattern", func(t *testing.T) {
-				assert.Equal(t, 20, utf8.RuneCountInString(pattern), "Progress bar should be 20 characters")
-				hasFilled := strings.Contains(pattern, "█")
-				hasEmpty := strings.Contains(pattern, "░")
-				assert.True(t, hasFilled || hasEmpty, "Should contain progress characters")
-			})
-		}
-	})
-
-	t.Run("Status Indicators", func(t *testing.T) {
-		for status, indicator := range viewStatusIndicators {
-			t.Run("Status: "+status, func(t *testing.T) {
-				assert.NotEmpty(t, status, "Status should not be empty")
-				assert.NotEmpty(t, indicator, "Indicator should not be empty")
-				assert.True(t, len(indicator) > 0, "Indicator should have content")
-			})
-		}
-	})
-
-	t.Run("Data Formatting", func(t *testing.T) {
-		// Test byte formatting patterns
-		for _, test := range viewByteFormats {
-			t.Run(fmt.Sprintf("Bytes: %d", test.input), func(t *testing.T) {
-				assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
-				assert.NotEmpty(t, test.expected, "Expected format should not be empty")
-				assert.Contains(t, test.expected, "B", "Should contain unit indicator")
-			})
-		}
-
-		// Test number formatting patterns
-		for _, test := range viewNumberFormats {
-			t.Run(fmt.Sprintf("Number: %d", test.input), func(t *testing.T) {
-				assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
-				assert.NotEmpty(t, test.expected, "Expected format should not be empty")
-			})
-		}
-	})
-
-	t.Run("Help Screen", func(t *testing.T) {
-		for _, section := range viewHelpSections {
-			t.Run("Help: "+section.title, func(t *testing.T) {
-				assert.NotEmpty(t, section.title, "Help section title should not be empty")
-				assert.NotEmpty(t, section.content, "Help section should have content")
-
-				for _, content := range section.content {
-					assert.NotEmpty(t, content, "Help content should not be empty")
-				}
-			})
-		}
-	})
-
-	t.Run("Loading States", func(t *testing.T) {
-		// Test loading animation frames
-		for _, frame := range viewLoadingFrames {
-			t.Run("Loading frame: "+frame, func(t *testing.T) {
-				assert.NotEmpty(t, frame, "Loading frame should not be empty")
-				assert.Equal(t, 1, len([]rune(frame)), "Should be single rune")
-			})
-		}
-
-		// Test loading message
-		loadingMessage := "Loading R2Go2 Dashboard..."
-		assert.Contains(t, loadingMessage, "Loading", "Should contain loading text")
-		assert.Contains(t, loadingMessage, "R2Go2", "Should contain app name")
-	})
-
-	t.Run("Error Messages", func(t *testing.T) {
-		for _, errorMsg := range viewErrorMessages {
-			t.Run("Error: "+errorMsg, func(t *testing.T) {
-				assert.NotEmpty(t, errorMsg, "Error message should not be empty")
-				assert.Greater(t, len(errorMsg), 5, "Error message should be descriptive")
-			})
-		}
-	})
+	t.Run("Basic View Structure", viewBasicStructure)
+	t.Run("Section Rendering", viewSectionRendering)
+	t.Run("Color Theme Support", viewColorThemeSupport)
+	t.Run("Responsive Layout", viewResponsiveLayout)
+	t.Run("Progress Bars and Indicators", viewProgressBars)
+	t.Run("Status Indicators", viewStatusIndicatorRendering)
+	t.Run("Data Formatting", viewDataFormatting)
+	t.Run("Help Screen", viewHelpScreen)
+	t.Run("Loading States", viewLoadingStates)
+	t.Run("Error Messages", viewErrorMessagesRendering)
 }
 
 // TestViewPerformance tests view rendering performance

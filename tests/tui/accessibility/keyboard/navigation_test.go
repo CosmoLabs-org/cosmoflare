@@ -333,119 +333,134 @@ var errorRecoveryActions = []struct {
 	},
 }
 
+// navAllFunctionsAccessible verifies every UI function has keyboard access.
+func navAllFunctionsAccessible(t *testing.T) {
+	// Test that every UI function is accessible via keyboard
+	for _, fn := range keyboardFunctions {
+		t.Run("Function: "+fn.function, func(t *testing.T) {
+			assert.NotEmpty(t, fn.keys, "Function should have keyboard shortcuts")
+			assert.NotEmpty(t, fn.function, "Function description should not be empty")
+
+			if fn.essential {
+				assert.Greater(t, len(fn.keys), 0, "Essential function must have keyboard access")
+			}
+
+			// Test that each key is valid
+			for _, key := range fn.keys {
+				assert.NotEmpty(t, key, "Keyboard shortcut should not be empty")
+				assert.True(t, len(key) > 0, "Key should have content")
+			}
+		})
+	}
+}
+
+// navConsistency verifies navigation follows standard conventions.
+func navConsistency(t *testing.T) {
+	// Test that navigation follows standard conventions
+	for _, pattern := range navigationPatterns {
+		t.Run("Pattern: "+pattern.description, func(t *testing.T) {
+			assert.NotEmpty(t, pattern.pattern, "Navigation pattern should have keys")
+			assert.NotEmpty(t, pattern.description, "Pattern should have description")
+
+			if pattern.standard {
+				// Standard patterns should be well-established
+				assert.Greater(t, len(pattern.pattern), 0, "Standard pattern should have keys")
+			}
+		})
+	}
+}
+
+// navAlternativeInput verifies functions have alternative input methods.
+func navAlternativeInput(t *testing.T) {
+	// Test that functions have alternative input methods
+	for _, fn := range alternativeInputFunctions {
+		t.Run("Alternative methods: "+fn.name, func(t *testing.T) {
+			assert.GreaterOrEqual(t, len(fn.methods), 1, "Function should have at least one input method")
+			assert.NotEmpty(t, fn.description, "Function should have description")
+
+			if len(fn.methods) > 1 {
+				// Functions with multiple methods are more accessible
+				assert.Greater(t, len(fn.methods), 1, "Should provide alternative input methods")
+			}
+
+			for _, method := range fn.methods {
+				assert.NotEmpty(t, method, "Input method should not be empty")
+			}
+		})
+	}
+}
+
+// navMouseFree verifies all functionality works without mouse.
+func navMouseFree(t *testing.T) {
+	// Test that all functionality works without mouse
+	for _, feature := range mouseFreeFeatures {
+		t.Run("Mouse-free: "+feature, func(t *testing.T) {
+			assert.NotEmpty(t, feature, "Feature should have description")
+			// The existence of this feature in the list confirms it's keyboard accessible
+			assert.True(t, true, "Feature should be accessible without mouse")
+		})
+	}
+}
+
+// navFocusManagement verifies focus management for accessibility.
+func navFocusManagement(t *testing.T) {
+	// Test focus management for accessibility
+	for _, focus := range focusFeatures {
+		t.Run("Focus: "+focus.feature, func(t *testing.T) {
+			assert.NotEmpty(t, focus.feature, "Focus feature should have name")
+			assert.NotEmpty(t, focus.description, "Focus feature should have description")
+
+			if focus.visible {
+				// Visible focus features are critical for accessibility
+				assert.True(t, focus.visible, "Focus should be visible to users")
+			}
+
+			if focus.predictable {
+				// Predictable focus behavior is essential for usability
+				assert.True(t, focus.predictable, "Focus behavior should be predictable")
+			}
+		})
+	}
+}
+
+// navShortcutsDocumentation verifies keyboard shortcuts are documented.
+func navShortcutsDocumentation(t *testing.T) {
+	// Test that keyboard shortcuts are documented
+	for _, doc := range documentedShortcuts {
+		t.Run("Documented: "+doc.shortcut, func(t *testing.T) {
+			assert.NotEmpty(t, doc.shortcut, "Shortcut should not be empty")
+			assert.NotEmpty(t, doc.function, "Function should not be empty")
+			assert.NotEmpty(t, doc.location, "Documentation location should not be empty")
+
+			if doc.accessible {
+				// Documented shortcuts should be accessible
+				assert.True(t, doc.accessible, "Documented shortcuts should be accessible")
+			}
+		})
+	}
+}
+
+// navErrorRecovery verifies error states can be handled via keyboard.
+func navErrorRecovery(t *testing.T) {
+	// Test that error states can be handled via keyboard
+	for _, recovery := range errorRecoveryActions {
+		t.Run("Error recovery: "+recovery.errorType, func(t *testing.T) {
+			assert.NotEmpty(t, recovery.errorType, "Error type should not be empty")
+			assert.NotEmpty(t, recovery.keyAction, "Key action should not be empty")
+			assert.NotEmpty(t, recovery.recovery, "Recovery method should not be empty")
+		})
+	}
+}
+
 // TestKeyboardNavigationAccessibility tests comprehensive keyboard navigation
 func TestKeyboardNavigationAccessibility(t *testing.T) {
-	t.Run("All Functions Keyboard Accessible", func(t *testing.T) {
-		// Test that every UI function is accessible via keyboard
-		for _, fn := range keyboardFunctions {
-			t.Run("Function: "+fn.function, func(t *testing.T) {
-				assert.NotEmpty(t, fn.keys, "Function should have keyboard shortcuts")
-				assert.NotEmpty(t, fn.function, "Function description should not be empty")
-
-				if fn.essential {
-					assert.Greater(t, len(fn.keys), 0, "Essential function must have keyboard access")
-				}
-
-				// Test that each key is valid
-				for _, key := range fn.keys {
-					assert.NotEmpty(t, key, "Keyboard shortcut should not be empty")
-					assert.True(t, len(key) > 0, "Key should have content")
-				}
-			})
-		}
-	})
-
-	t.Run("Keyboard Navigation Consistency", func(t *testing.T) {
-		// Test that navigation follows standard conventions
-		for _, pattern := range navigationPatterns {
-			t.Run("Pattern: "+pattern.description, func(t *testing.T) {
-				assert.NotEmpty(t, pattern.pattern, "Navigation pattern should have keys")
-				assert.NotEmpty(t, pattern.description, "Pattern should have description")
-
-				if pattern.standard {
-					// Standard patterns should be well-established
-					assert.Greater(t, len(pattern.pattern), 0, "Standard pattern should have keys")
-				}
-			})
-		}
-	})
-
-	t.Run("Alternative Input Methods", func(t *testing.T) {
-		// Test that functions have alternative input methods
-		for _, fn := range alternativeInputFunctions {
-			t.Run("Alternative methods: "+fn.name, func(t *testing.T) {
-				assert.GreaterOrEqual(t, len(fn.methods), 1, "Function should have at least one input method")
-				assert.NotEmpty(t, fn.description, "Function should have description")
-
-				if len(fn.methods) > 1 {
-					// Functions with multiple methods are more accessible
-					assert.Greater(t, len(fn.methods), 1, "Should provide alternative input methods")
-				}
-
-				for _, method := range fn.methods {
-					assert.NotEmpty(t, method, "Input method should not be empty")
-				}
-			})
-		}
-	})
-
-	t.Run("No Mouse Required", func(t *testing.T) {
-		// Test that all functionality works without mouse
-		for _, feature := range mouseFreeFeatures {
-			t.Run("Mouse-free: "+feature, func(t *testing.T) {
-				assert.NotEmpty(t, feature, "Feature should have description")
-				// The existence of this feature in the list confirms it's keyboard accessible
-				assert.True(t, true, "Feature should be accessible without mouse")
-			})
-		}
-	})
-
-	t.Run("Focus Management", func(t *testing.T) {
-		// Test focus management for accessibility
-		for _, focus := range focusFeatures {
-			t.Run("Focus: "+focus.feature, func(t *testing.T) {
-				assert.NotEmpty(t, focus.feature, "Focus feature should have name")
-				assert.NotEmpty(t, focus.description, "Focus feature should have description")
-
-				if focus.visible {
-					// Visible focus features are critical for accessibility
-					assert.True(t, focus.visible, "Focus should be visible to users")
-				}
-
-				if focus.predictable {
-					// Predictable focus behavior is essential for usability
-					assert.True(t, focus.predictable, "Focus behavior should be predictable")
-				}
-			})
-		}
-	})
-
-	t.Run("Keyboard Shortcuts Documentation", func(t *testing.T) {
-		// Test that keyboard shortcuts are documented
-		for _, doc := range documentedShortcuts {
-			t.Run("Documented: "+doc.shortcut, func(t *testing.T) {
-				assert.NotEmpty(t, doc.shortcut, "Shortcut should not be empty")
-				assert.NotEmpty(t, doc.function, "Function should not be empty")
-				assert.NotEmpty(t, doc.location, "Documentation location should not be empty")
-
-				if doc.accessible {
-					// Documented shortcuts should be accessible
-					assert.True(t, doc.accessible, "Documented shortcuts should be accessible")
-				}
-			})
-		}
-	})
-
-	t.Run("Error Recovery Keyboard", func(t *testing.T) {
-		// Test that error states can be handled via keyboard
-		for _, recovery := range errorRecoveryActions {
-			t.Run("Error recovery: "+recovery.errorType, func(t *testing.T) {
-				assert.NotEmpty(t, recovery.errorType, "Error type should not be empty")
-				assert.NotEmpty(t, recovery.keyAction, "Key action should not be empty")
-				assert.NotEmpty(t, recovery.recovery, "Recovery method should not be empty")
-			})
-		}
-	})
+	t.Run("All Functions Keyboard Accessible", navAllFunctionsAccessible)
+	t.Run("Keyboard Navigation Consistency", navConsistency)
+	t.Run("Alternative Input Methods", navAlternativeInput)
+	t.Run("No Mouse Required", navMouseFree)
+	t.Run("Focus Management", navFocusManagement)
+	t.Run("Keyboard Shortcuts Documentation", navShortcutsDocumentation)
+	t.Run("Error Recovery Keyboard", navErrorRecovery)
 }
 
 // wcagRequirements lists WCAG 2.1.1 keyboard accessibility requirements.
