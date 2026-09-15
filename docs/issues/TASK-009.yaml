@@ -1,13 +1,16 @@
 id: TASK-009
 type: task
 created_at: 2026-09-15T05:34:00.371247+04:00
-updated_at: 2026-09-15T05:34:00.378701+04:00
+updated_at: 2026-09-15T05:34:02.887766+04:00
 source: local
 ulid: 01M2HB655T8AZGF0E33VE6N68T
 status: open
 labels:
     - audit
     - code-quality
+origin:
+    idea_slug: 2026-09-13-split-45-god-functions-enforce-funlen-80
+    session: 53
 title: Split 45 god functions; enforce funlen=80
 description: |-
     # Split 45 god functions; enforce funlen=80

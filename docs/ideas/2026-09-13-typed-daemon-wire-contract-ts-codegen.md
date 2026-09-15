@@ -2,7 +2,7 @@
 ulid: 01M2CB42GA2Z0NKQCBJK8G86GZ
 title: Typed daemon wire contract + TS codegen
 created: "2026-09-13T06:56:39.946418+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - api-design
+promoted_to: FEAT-042
 ---
+
+# Typed daemon wire contract + TS codegen
 
 # Typed daemon wire contract + TS codegen
 

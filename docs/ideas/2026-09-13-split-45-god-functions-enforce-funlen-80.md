@@ -2,7 +2,7 @@
 ulid: 01M2CB3YME8QDR7HE12EHKQFT1
 title: Split 45 god functions; enforce funlen=80
 created: "2026-09-13T06:56:35.982137+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - code-quality
+promoted_to: TASK-009
 ---
+
+# Split 45 god functions; enforce funlen=80
 
 # Split 45 god functions; enforce funlen=80
 

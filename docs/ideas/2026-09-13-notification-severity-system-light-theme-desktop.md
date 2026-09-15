@@ -2,7 +2,7 @@
 ulid: 01M2CB4RVRQ30FK45PT3HV57J6
 title: Notification severity system + light theme (desktop)
 created: "2026-09-13T06:57:02.840136+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - design
+promoted_to: FEAT-041
 ---
+
+# Notification severity system + light theme (desktop)
 
 # Notification severity system + light theme (desktop)
 

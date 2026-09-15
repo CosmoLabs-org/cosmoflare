@@ -2,7 +2,7 @@
 ulid: 01M2CB4GW3CJ19QVNB9WPYQPRK
 title: cosmolabs.org/cosmoflare product page
 created: "2026-09-13T06:56:54.659561+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - seo-content
+promoted_to: TASK-010
 ---
+
+# cosmolabs.org/cosmoflare product page
 
 # cosmolabs.org/cosmoflare product page
 
