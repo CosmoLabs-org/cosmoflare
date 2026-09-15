@@ -280,133 +280,166 @@ func (b BrowserModel) Update(msg tea.Msg) (BrowserModel, tea.Cmd) {
 // Key handling
 // ---------------------------------------------------------------------------
 
+// handleKey dispatches key groups to per-group helpers. Case order is
+// behavior-relevant only in that the first matching case wins; each key has
+// exactly one case, so the precedence is unchanged.
 func (b BrowserModel) handleKey(msg tea.KeyMsg) (BrowserModel, tea.Cmd) {
-	key := msg.String()
-
-	switch key {
+	switch msg.String() {
 	case "tab":
 		b.toggleFocus()
 		return b, nil
 
 	case "up", "k":
-		if b.focusLeft {
-			if b.bucketIdx > 0 {
-				b.bucketIdx--
-			}
-		} else {
-			if b.objectIdx > 0 {
-				b.objectIdx--
-			}
-		}
-		return b, nil
+		return b.moveCursorUp(), nil
 
 	case "down", "j":
-		if b.focusLeft {
-			if b.bucketIdx < len(b.buckets)-1 {
-				b.bucketIdx++
-			}
-		} else {
-			total := b.totalRightItems()
-			if b.objectIdx < total-1 {
-				b.objectIdx++
-			}
-		}
-		return b, nil
+		return b.moveCursorDown(), nil
 
 	case "enter":
-		if b.focusLeft {
-			// Select bucket → switch to right pane and fetch root listing.
-			bucket := b.SelectedBucket()
-			if bucket == nil {
-				return b, nil
-			}
-			b.focusLeft = false
-			b.prefixStack = []string{""}
-			b.tokenStack = []string{""}
-			b.objectIdx = 0
-			b.listing = nil
-			b.loadingObjects = true
-			return b, b.fetchObjects(bucket.Name, "", "")
-		}
-		// Right pane enter.
-		if b.selectedIsDir() {
-			dir := b.selectedDirName()
-			if dir != "" {
-				bucket := b.SelectedBucket()
-				if bucket != nil {
-					b.pushPrefix(dir)
-					b.loadingObjects = true
-					return b, b.fetchObjects(bucket.Name, dir, "")
-				}
-			}
-		} else if obj := b.selectedObject(); obj != nil {
-			bucket := b.SelectedBucket()
-			if bucket != nil {
-				return b, b.headObject(bucket.Name, obj.Key)
-			}
-		}
-		return b, nil
+		return b.openSelected()
 
 	case "backspace":
-		if !b.focusLeft {
-			b.popPrefix()
-			if !b.focusLeft {
-				// Still on right pane — fetch at new prefix.
-				bucket := b.SelectedBucket()
-				if bucket != nil {
-					b.loadingObjects = true
-					return b, b.fetchObjects(bucket.Name, b.currentPrefix(), "")
-				}
-			}
-		}
-		return b, nil
+		return b.goUpPrefix()
 
 	case "r":
-		bucket := b.SelectedBucket()
-		if bucket != nil && !b.focusLeft {
-			token := ""
-			if len(b.tokenStack) > 0 {
-				token = b.tokenStack[len(b.tokenStack)-1]
-			}
-			b.loadingObjects = true
-			return b, b.fetchObjects(bucket.Name, b.currentPrefix(), token)
-		}
-		return b, nil
+		return b.refreshListing()
 
 	case "n":
-		if b.listing != nil && b.listing.HasMore && b.listing.NextToken != "" {
-			bucket := b.SelectedBucket()
-			if bucket != nil {
-				b.tokenStack = append(b.tokenStack, b.listing.NextToken)
-				b.loadingObjects = true
-				return b, b.fetchObjects(bucket.Name, b.currentPrefix(), b.listing.NextToken)
-			}
-		}
-		return b, nil
+		return b.nextPage()
 
 	case "p":
-		if len(b.tokenStack) > 1 {
-			b.tokenStack = b.tokenStack[:len(b.tokenStack)-1]
-			token := b.tokenStack[len(b.tokenStack)-1]
-			bucket := b.SelectedBucket()
-			if bucket != nil {
-				b.loadingObjects = true
-				return b, b.fetchObjects(bucket.Name, b.currentPrefix(), token)
-			}
-		}
-		return b, nil
+		return b.prevPage()
 
 	case "d":
-		if !b.focusLeft {
-			if obj := b.selectedObject(); obj != nil {
-				b.confirmAction = "delete"
-				b.confirmTarget = obj.Key
-			}
-		}
-		return b, nil
+		return b.requestDelete(), nil
 	}
 
 	return b, nil
+}
+
+func (b BrowserModel) moveCursorUp() BrowserModel {
+	if b.focusLeft {
+		if b.bucketIdx > 0 {
+			b.bucketIdx--
+		}
+	} else {
+		if b.objectIdx > 0 {
+			b.objectIdx--
+		}
+	}
+	return b
+}
+
+func (b BrowserModel) moveCursorDown() BrowserModel {
+	if b.focusLeft {
+		if b.bucketIdx < len(b.buckets)-1 {
+			b.bucketIdx++
+		}
+	} else {
+		total := b.totalRightItems()
+		if b.objectIdx < total-1 {
+			b.objectIdx++
+		}
+	}
+	return b
+}
+
+func (b BrowserModel) openSelected() (BrowserModel, tea.Cmd) {
+	if b.focusLeft {
+		// Select bucket → switch to right pane and fetch root listing.
+		bucket := b.SelectedBucket()
+		if bucket == nil {
+			return b, nil
+		}
+		b.focusLeft = false
+		b.prefixStack = []string{""}
+		b.tokenStack = []string{""}
+		b.objectIdx = 0
+		b.listing = nil
+		b.loadingObjects = true
+		return b, b.fetchObjects(bucket.Name, "", "")
+	}
+	// Right pane enter.
+	if b.selectedIsDir() {
+		dir := b.selectedDirName()
+		if dir != "" {
+			bucket := b.SelectedBucket()
+			if bucket != nil {
+				b.pushPrefix(dir)
+				b.loadingObjects = true
+				return b, b.fetchObjects(bucket.Name, dir, "")
+			}
+		}
+	} else if obj := b.selectedObject(); obj != nil {
+		bucket := b.SelectedBucket()
+		if bucket != nil {
+			return b, b.headObject(bucket.Name, obj.Key)
+		}
+	}
+	return b, nil
+}
+
+func (b BrowserModel) goUpPrefix() (BrowserModel, tea.Cmd) {
+	if !b.focusLeft {
+		b.popPrefix()
+		if !b.focusLeft {
+			// Still on right pane — fetch at new prefix.
+			bucket := b.SelectedBucket()
+			if bucket != nil {
+				b.loadingObjects = true
+				return b, b.fetchObjects(bucket.Name, b.currentPrefix(), "")
+			}
+		}
+	}
+	return b, nil
+}
+
+func (b BrowserModel) refreshListing() (BrowserModel, tea.Cmd) {
+	bucket := b.SelectedBucket()
+	if bucket != nil && !b.focusLeft {
+		token := ""
+		if len(b.tokenStack) > 0 {
+			token = b.tokenStack[len(b.tokenStack)-1]
+		}
+		b.loadingObjects = true
+		return b, b.fetchObjects(bucket.Name, b.currentPrefix(), token)
+	}
+	return b, nil
+}
+
+func (b BrowserModel) nextPage() (BrowserModel, tea.Cmd) {
+	if b.listing != nil && b.listing.HasMore && b.listing.NextToken != "" {
+		bucket := b.SelectedBucket()
+		if bucket != nil {
+			b.tokenStack = append(b.tokenStack, b.listing.NextToken)
+			b.loadingObjects = true
+			return b, b.fetchObjects(bucket.Name, b.currentPrefix(), b.listing.NextToken)
+		}
+	}
+	return b, nil
+}
+
+func (b BrowserModel) prevPage() (BrowserModel, tea.Cmd) {
+	if len(b.tokenStack) > 1 {
+		b.tokenStack = b.tokenStack[:len(b.tokenStack)-1]
+		token := b.tokenStack[len(b.tokenStack)-1]
+		bucket := b.SelectedBucket()
+		if bucket != nil {
+			b.loadingObjects = true
+			return b, b.fetchObjects(bucket.Name, b.currentPrefix(), token)
+		}
+	}
+	return b, nil
+}
+
+func (b BrowserModel) requestDelete() BrowserModel {
+	if !b.focusLeft {
+		if obj := b.selectedObject(); obj != nil {
+			b.confirmAction = "delete"
+			b.confirmTarget = obj.Key
+		}
+	}
+	return b
 }
 
 func (b BrowserModel) handleConfirm(msg tea.KeyMsg) (BrowserModel, tea.Cmd) {
@@ -454,7 +487,7 @@ func (b BrowserModel) View() string {
 	}
 
 	// Wide: side-by-side.
-	leftW := b.width*30/100
+	leftW := b.width * 30 / 100
 	if leftW < 20 {
 		leftW = 20
 	}
@@ -525,11 +558,7 @@ func (b BrowserModel) renderLeftPane(w, h int) string {
 // ---------------------------------------------------------------------------
 
 func (b BrowserModel) renderRightPane(w, h int) string {
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(primaryColor).
-		Width(w).
-		Render("📁 " + b.breadcrumb())
+	title := b.renderRightTitle(w)
 
 	if b.loadingObjects {
 		return lipgloss.JoinVertical(lipgloss.Left, title, "Loading...")
@@ -538,25 +567,40 @@ func (b BrowserModel) renderRightPane(w, h int) string {
 		return lipgloss.JoinVertical(lipgloss.Left, title, lipgloss.NewStyle().Foreground(mutedColor).Render("Press Enter on a bucket to browse."))
 	}
 
-	total := b.totalRightItems()
-	if total == 0 {
-		msg := "Empty"
-		if b.currentPrefix() != "" {
-			msg = "No objects at this prefix."
-		}
-		detail := b.renderDetailPanel(w)
-		footer := b.renderBrowserFooter(w)
-		return lipgloss.JoinVertical(lipgloss.Left, title,
-			lipgloss.NewStyle().Foreground(mutedColor).Render(msg), detail, footer)
+	if b.totalRightItems() == 0 {
+		return b.renderEmptyRightPane(w, title)
 	}
 
-	// Compute how much space is available for the list.
-	// Reserve lines for title(1) + detail(~4) + footer(1).
-	listHeight := h - 6
-	if listHeight < 3 {
-		listHeight = 3
-	}
+	lines := b.renderListingLines(w)
+	lines = b.scrollListing(lines, h)
 
+	list := lipgloss.JoinVertical(lipgloss.Left, lines...)
+	detail := b.renderDetailPanel(w)
+	footer := b.renderBrowserFooter(w)
+
+	return lipgloss.JoinVertical(lipgloss.Left, title, list, detail, footer)
+}
+
+func (b BrowserModel) renderRightTitle(w int) string {
+	return lipgloss.NewStyle().
+		Bold(true).
+		Foreground(primaryColor).
+		Width(w).
+		Render("📁 " + b.breadcrumb())
+}
+
+func (b BrowserModel) renderEmptyRightPane(w int, title string) string {
+	msg := "Empty"
+	if b.currentPrefix() != "" {
+		msg = "No objects at this prefix."
+	}
+	detail := b.renderDetailPanel(w)
+	footer := b.renderBrowserFooter(w)
+	return lipgloss.JoinVertical(lipgloss.Left, title,
+		lipgloss.NewStyle().Foreground(mutedColor).Render(msg), detail, footer)
+}
+
+func (b BrowserModel) renderListingLines(w int) []string {
 	var lines []string
 	// Directories first.
 	for i, dir := range b.listing.Dirs {
@@ -592,28 +636,36 @@ func (b BrowserModel) renderRightPane(w, h int) string {
 		lines = append(lines, style.Render(truncate(line, w)))
 	}
 
-	// Scroll if needed: show a window around objectIdx.
-	if len(lines) > listHeight {
-		start := b.objectIdx - listHeight/2
+	return lines
+}
+
+// scrollListing windows the rendered list lines around objectIdx if they
+// exceed the available list height.
+func (b BrowserModel) scrollListing(lines []string, h int) []string {
+	// Compute how much space is available for the list.
+	// Reserve lines for title(1) + detail(~4) + footer(1).
+	listHeight := h - 6
+	if listHeight < 3 {
+		listHeight = 3
+	}
+
+	if len(lines) <= listHeight {
+		return lines
+	}
+
+	start := b.objectIdx - listHeight/2
+	if start < 0 {
+		start = 0
+	}
+	end := start + listHeight
+	if end > len(lines) {
+		end = len(lines)
+		start = end - listHeight
 		if start < 0 {
 			start = 0
 		}
-		end := start + listHeight
-		if end > len(lines) {
-			end = len(lines)
-			start = end - listHeight
-			if start < 0 {
-				start = 0
-			}
-		}
-		lines = lines[start:end]
 	}
-
-	list := lipgloss.JoinVertical(lipgloss.Left, lines...)
-	detail := b.renderDetailPanel(w)
-	footer := b.renderBrowserFooter(w)
-
-	return lipgloss.JoinVertical(lipgloss.Left, title, list, detail, footer)
+	return lines[start:end]
 }
 
 // ---------------------------------------------------------------------------
