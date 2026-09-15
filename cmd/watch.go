@@ -72,6 +72,15 @@ type watchEvent struct {
 	Error  string `json:"error,omitempty"`
 }
 
+// watchState carries the per-run state shared between the watch loop and its
+// helpers.
+type watchState struct {
+	ctx      context.Context
+	fw       *cosmoflare.FileWatcher
+	r2client cosmoflare.R2Client
+	bucket   string
+}
+
 func runWatch(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("bucket name is required\n\nUsage: cosmoflare watch <bucket> [directory]")
@@ -90,27 +99,15 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create the file watcher
-	fw, err := cosmoflare.NewFileWatcher(absDir, &cosmoflare.WatcherOptions{
-		Prefix:   watchPrefix,
-		Exclude:  watchExclude,
-		Interval: watchInterval,
-		Delete:   watchDelete,
-	})
+	fw, err := newWatchWatcher(absDir)
 	if err != nil {
-		return outErr("failed to create watcher", err)
+		return err
 	}
 
-	// Create R2 client (unless dry-run), with project guardrails attached so
-	// uploads violating allowed_buckets / max_file_size / blocked_keys fail
-	var r2client cosmoflare.R2Client
-	if !DryRun {
-		r2client, err = cosmoflare.NewClient(append([]cosmoflare.ClientOption{
-			cosmoflare.WithAccountID(AccountID),
-			cosmoflare.WithAPIToken(APIToken),
-		}, projectConfigOptions(absDir)...)...)
-		if err != nil {
-			return outErr("failed to create R2 client", err)
-		}
+	// Create R2 client (unless dry-run)
+	r2client, err := newWatchR2Client(absDir)
+	if err != nil {
+		return err
 	}
 
 	// Take initial snapshot
@@ -119,15 +116,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return outErr("failed to scan directory", err)
 	}
 
-	if !JSONOutput {
-		printInfo("Watching %s → bucket %q (prefix=%q, interval=%s, delete=%v)",
-			absDir, bucket, watchPrefix, watchInterval, watchDelete)
-		printInfo("Initial scan: %d file(s)", len(lastSnap))
-		if DryRun {
-			printWarning("DRY RUN: no files will be uploaded or deleted")
-		}
-		printInfo("Press Ctrl+C to stop")
-	}
+	watchPrintHeader(absDir, bucket, len(lastSnap))
 
 	// Set up signal handling for clean exit
 	ctx, cancel := context.WithCancel(context.Background())
@@ -144,6 +133,8 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	ticker := time.NewTicker(fw.Interval())
 	defer ticker.Stop()
 
+	state := &watchState{ctx: ctx, fw: fw, r2client: r2client, bucket: bucket}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -152,31 +143,89 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			}
 			return nil
 		case <-ticker.C:
-			curSnap, err := fw.Snapshot()
-			if err != nil {
-				emitWatchError("scan error: "+err.Error(), "")
-				continue
-			}
+			lastSnap = state.tick(lastSnap)
+		}
+	}
+}
 
-			changes := fw.Diff(lastSnap, curSnap)
-			if len(changes) == 0 {
-				continue
-			}
+// newWatchWatcher creates the polling file watcher for the directory.
+func newWatchWatcher(absDir string) (*cosmoflare.FileWatcher, error) {
+	fw, err := cosmoflare.NewFileWatcher(absDir, &cosmoflare.WatcherOptions{
+		Prefix:   watchPrefix,
+		Exclude:  watchExclude,
+		Interval: watchInterval,
+		Delete:   watchDelete,
+	})
+	if err != nil {
+		return nil, outErr("failed to create watcher", err)
+	}
+	return fw, nil
+}
 
-			for _, change := range changes {
-				switch change.Type {
-				case cosmoflare.ChangeAdded, cosmoflare.ChangeModified:
-					syncUpload(ctx, r2client, bucket, change)
-				case cosmoflare.ChangeDeleted:
-					if watchDelete {
-						syncDelete(ctx, r2client, bucket, change)
-					} else if Verbose && !JSONOutput {
-						printInfo("Skipped deletion of %s (use --delete to sync)", change.Path)
-					}
-				}
-			}
+// newWatchR2Client creates the R2 client (unless dry-run), with project
+// guardrails attached so uploads violating allowed_buckets / max_file_size /
+// blocked_keys fail.
+func newWatchR2Client(absDir string) (cosmoflare.R2Client, error) {
+	var r2client cosmoflare.R2Client
+	if DryRun {
+		return r2client, nil
+	}
 
-			lastSnap = curSnap
+	var err error
+	r2client, err = cosmoflare.NewClient(append([]cosmoflare.ClientOption{
+		cosmoflare.WithAccountID(AccountID),
+		cosmoflare.WithAPIToken(APIToken),
+	}, projectConfigOptions(absDir)...)...)
+	if err != nil {
+		return nil, outErr("failed to create R2 client", err)
+	}
+	return r2client, nil
+}
+
+// watchPrintHeader prints the human-readable startup banner.
+func watchPrintHeader(absDir, bucket string, initialFiles int) {
+	if !JSONOutput {
+		printInfo("Watching %s → bucket %q (prefix=%q, interval=%s, delete=%v)",
+			absDir, bucket, watchPrefix, watchInterval, watchDelete)
+		printInfo("Initial scan: %d file(s)", initialFiles)
+		if DryRun {
+			printWarning("DRY RUN: no files will be uploaded or deleted")
+		}
+		printInfo("Press Ctrl+C to stop")
+	}
+}
+
+// tick scans the directory, syncs any detected changes, and returns the
+// snapshot to use as the baseline for the next tick.
+func (s *watchState) tick(lastSnap cosmoflare.FileSnapshot) cosmoflare.FileSnapshot {
+	curSnap, err := s.fw.Snapshot()
+	if err != nil {
+		emitWatchError("scan error: "+err.Error(), "")
+		return lastSnap
+	}
+
+	changes := s.fw.Diff(lastSnap, curSnap)
+	if len(changes) == 0 {
+		return lastSnap
+	}
+
+	s.applyChanges(changes)
+
+	return curSnap
+}
+
+// applyChanges dispatches each detected change to the matching sync action.
+func (s *watchState) applyChanges(changes []cosmoflare.FileChange) {
+	for _, change := range changes {
+		switch change.Type {
+		case cosmoflare.ChangeAdded, cosmoflare.ChangeModified:
+			syncUpload(s.ctx, s.r2client, s.bucket, change)
+		case cosmoflare.ChangeDeleted:
+			if watchDelete {
+				syncDelete(s.ctx, s.r2client, s.bucket, change)
+			} else if Verbose && !JSONOutput {
+				printInfo("Skipped deletion of %s (use --delete to sync)", change.Path)
+			}
 		}
 	}
 }
