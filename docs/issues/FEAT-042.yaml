@@ -1,0 +1,22 @@
+id: FEAT-042
+type: feature
+created_at: 2026-09-15T05:33:57.563443+04:00
+updated_at: 2026-09-15T05:33:57.568553+04:00
+source: local
+ulid: 01M2HB62E0P61C07P3X1S0S3FV
+status: open
+labels:
+    - audit
+    - api-design
+title: Typed daemon wire contract + TS codegen
+description: |-
+    # Typed daemon wire contract + TS codegen
+
+    ServeSource returns any; TS client casts unchecked (rest.go:24). Return concrete Go structs and generate TypeScript types for desktop/src/api, drift-checked. Evidence: agent-7-api-design.md
+
+    ## Additional context
+
+    internal/server returns untyped any over the wire; desktop/src/api casts unchecked (rest.go:24). Return concrete Go structs from ServeSource endpoints and generate TypeScript types for desktop/src/api, drift-checked in the build. Named in the audit sequenced quality wave (agent-7-api-design.md).
+
+    Origin: audit-agent-7-api-design
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-7-api-design.md
