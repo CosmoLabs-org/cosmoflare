@@ -26,26 +26,26 @@ import (
 
 // InstallerModel represents the main installer model
 type InstallerModel struct {
-	header    *installer.HeaderModel
-	menu      *navigation.MenuModel
-	width     int
-	height    int
-	state     InstallerState
-	styles    *InstallerStyles
+	header *installer.HeaderModel
+	menu   *navigation.MenuModel
+	width  int
+	height int
+	state  InstallerState
+	styles *InstallerStyles
 	// API Setup wizard fields
-	apiSetupStep     int    // 0=account, 1=token, 2=confirm
-	accountIDInput   string
-	apiTokenInput    string
-	inputCursorPos   int
-	inputError       string
+	apiSetupStep   int // 0=account, 1=token, 2=confirm
+	accountIDInput string
+	apiTokenInput  string
+	inputCursorPos int
+	inputError     string
 	// Quick start guide fields
 	quickStartScroll int
 	// Connection test fields
-	testResult       string
-	testSuccess      bool
+	testResult  string
+	testSuccess bool
 	// Installation info
-	installDir       string
-	pathAdded        bool
+	installDir string
+	pathAdded  bool
 }
 
 // InstallerState represents the current installer state
@@ -55,10 +55,10 @@ const (
 	StateMenu InstallerState = iota
 	StateInstalling
 	StateComplete
-	StatePostInstall   // Post-installation setup menu
-	StateAPISetup      // API credential setup wizard
+	StatePostInstall    // Post-installation setup menu
+	StateAPISetup       // API credential setup wizard
 	StateTestConnection // Testing R2 connection
-	StateQuickStart    // Quick start guide view
+	StateQuickStart     // Quick start guide view
 	StateError
 )
 
@@ -85,10 +85,10 @@ type apiSetupCompleteMsg struct {
 // InstallerStyles contains styling for the installer
 type InstallerStyles struct {
 	Container lipgloss.Style
-	Menu     lipgloss.Style
-	Status   lipgloss.Style
-	Error    lipgloss.Style
-	Success  lipgloss.Style
+	Menu      lipgloss.Style
+	Status    lipgloss.Style
+	Error     lipgloss.Style
+	Success   lipgloss.Style
 }
 
 // NewInstallerModel creates a new installer model
@@ -148,26 +148,8 @@ func (m *InstallerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Handle state-specific key events first
-		switch m.state {
-		case StateAPISetup:
-			return m.handleAPISetupKeys(msg)
-		case StateQuickStart:
-			return m.handleQuickStartKeys(msg)
-		case StateTestConnection:
-			// Any key returns to post-install menu
-			if msg.Type == tea.KeyEnter || msg.Type == tea.KeyEsc {
-				m.state = StatePostInstall
-				m.header = installer.CreateCompletionHeader(m.width)
-				m.menu = createPostInstallMenu(m.width, m.height-8)
-				m.menu.Init()
-				return m, nil
-			}
-		default:
-			switch msg.Type {
-			case tea.KeyEsc, tea.KeyCtrlC:
-				return m, tea.Quit
-			}
+		if model, cmd, handled := m.updateKeyMsg(msg); handled {
+			return model, cmd
 		}
 
 	case navigation.MenuSelectionMsg:
@@ -180,10 +162,7 @@ func (m *InstallerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case installCompleteMsg:
 		// Transition to post-install menu
-		m.state = StatePostInstall
-		m.header = installer.CreateCompletionHeader(m.width)
-		m.menu = createPostInstallMenu(m.width, m.height-8)
-		m.menu.Init()
+		m.transitionToPostInstall()
 
 	case progressUpdateMsg:
 		// Handle progress updates
@@ -201,50 +180,19 @@ func (m *InstallerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case apiSetupCompleteMsg:
 		// Handle API setup completion
 		if msg.success {
-			m.state = StatePostInstall
-			m.header = installer.CreateCompletionHeader(m.width)
-			m.menu = createPostInstallMenu(m.width, m.height-8)
-			m.menu.Init()
+			m.transitionToPostInstall()
 		} else {
 			m.inputError = msg.message
 		}
 
 	case installStepMsg:
-		// Handle installation step progress
-		progress := (msg.step * 100) / msg.totalSteps
-		m.header.SetProgress(progress, 100)
-		m.header.SetDescription(msg.message)
-
-		// Schedule next step or run actual installation
-		if msg.step < msg.totalSteps {
-			nextStep := msg.step + 1
-			var nextMsg string
-			switch nextStep {
-			case 2:
-				nextMsg = "Copying binary..."
-			case 3:
-				nextMsg = "Setting permissions..."
-			case 4:
-				nextMsg = "Creating command aliases..."
-			case 5:
-				nextMsg = "Configuring PATH..."
-			}
-			return m, tea.Tick(400*time.Millisecond, func(t time.Time) tea.Msg {
-				return installStepMsg{step: nextStep, totalSteps: 5, message: nextMsg}
-			})
-		} else {
-			// Final step - run actual installation
-			return m, m.runInstallationWithProgress()
-		}
+		return m.updateInstallStepMsg(msg)
 
 	case installResultMsg:
 		// Handle installation result
 		if msg.success {
 			m.header.SetProgress(100, 100)
-			m.state = StatePostInstall
-			m.header = installer.CreateCompletionHeader(m.width)
-			m.menu = createPostInstallMenu(m.width, m.height-8)
-			m.menu.Init()
+			m.transitionToPostInstall()
 			// Store install info for display
 			m.installDir = msg.installDir
 			m.pathAdded = msg.pathAdded
@@ -260,22 +208,93 @@ func (m *InstallerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Only update header/menu for menu-based states
 	if m.state == StateMenu || m.state == StatePostInstall || m.state == StateInstalling {
-		// Update header
-		headerModel, cmd := m.header.Update(msg)
-		if headerModel != nil {
-			m.header = headerModel.(*installer.HeaderModel)
-			cmds = append(cmds, cmd)
-		}
-
-		// Update menu
-		menuModel, cmd := m.menu.Update(msg)
-		if menuModel != nil {
-			m.menu = menuModel.(*navigation.MenuModel)
-			cmds = append(cmds, cmd)
-		}
+		cmds = append(cmds, m.updateChildModels(msg)...)
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+// updateKeyMsg handles state-specific key events. The returned bool reports
+// whether the message was fully handled and Update should return early.
+func (m *InstallerModel) updateKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd, bool) {
+	switch m.state {
+	case StateAPISetup:
+		model, cmd := m.handleAPISetupKeys(msg)
+		return model, cmd, true
+	case StateQuickStart:
+		model, cmd := m.handleQuickStartKeys(msg)
+		return model, cmd, true
+	case StateTestConnection:
+		// Any key returns to post-install menu
+		if msg.Type == tea.KeyEnter || msg.Type == tea.KeyEsc {
+			m.transitionToPostInstall()
+			return m, nil, true
+		}
+	default:
+		switch msg.Type {
+		case tea.KeyEsc, tea.KeyCtrlC:
+			return m, tea.Quit, true
+		}
+	}
+	return m, nil, false
+}
+
+// updateInstallStepMsg handles installation step progress.
+func (m *InstallerModel) updateInstallStepMsg(msg installStepMsg) (tea.Model, tea.Cmd) {
+	progress := (msg.step * 100) / msg.totalSteps
+	m.header.SetProgress(progress, 100)
+	m.header.SetDescription(msg.message)
+
+	// Schedule next step or run actual installation
+	if msg.step < msg.totalSteps {
+		nextStep := msg.step + 1
+		var nextMsg string
+		switch nextStep {
+		case 2:
+			nextMsg = "Copying binary..."
+		case 3:
+			nextMsg = "Setting permissions..."
+		case 4:
+			nextMsg = "Creating command aliases..."
+		case 5:
+			nextMsg = "Configuring PATH..."
+		}
+		return m, tea.Tick(400*time.Millisecond, func(t time.Time) tea.Msg {
+			return installStepMsg{step: nextStep, totalSteps: 5, message: nextMsg}
+		})
+	}
+	// Final step - run actual installation
+	return m, m.runInstallationWithProgress()
+}
+
+// transitionToPostInstall switches the model to the post-install menu state.
+func (m *InstallerModel) transitionToPostInstall() {
+	m.state = StatePostInstall
+	m.header = installer.CreateCompletionHeader(m.width)
+	m.menu = createPostInstallMenu(m.width, m.height-8)
+	m.menu.Init()
+}
+
+// updateChildModels forwards a message to the header and menu child models
+// for menu-based states and returns the commands they produce.
+func (m *InstallerModel) updateChildModels(msg tea.Msg) []tea.Cmd {
+	var cmds []tea.Cmd
+
+	// Update header
+	headerModel, cmd := m.header.Update(msg)
+	if headerModel != nil {
+		m.header = headerModel.(*installer.HeaderModel)
+		cmds = append(cmds, cmd)
+	}
+
+	// Update menu
+	menuModel, cmd := m.menu.Update(msg)
+	if menuModel != nil {
+		m.menu = menuModel.(*navigation.MenuModel)
+		cmds = append(cmds, cmd)
+	}
+
+	return cmds
 }
 
 // View renders the installer
@@ -383,7 +402,9 @@ func (m *InstallerModel) startLocalInstallation() tea.Cmd {
 
 	// Start with first progress tick, then run installation
 	return tea.Batch(
-		tea.Tick(300*time.Millisecond, func(t time.Time) tea.Msg { return installStepMsg{step: 1, totalSteps: 5, message: "Preparing directories..."} }),
+		tea.Tick(300*time.Millisecond, func(t time.Time) tea.Msg {
+			return installStepMsg{step: 1, totalSteps: 5, message: "Preparing directories..."}
+		}),
 	)
 }
 
@@ -571,11 +592,11 @@ func copyFile(src, dst string) error {
 func createBrandedSymlinks(installDir string) error {
 	// Common case variations users might type
 	aliases := []string{
-		"R2Go2",  // Branded (recommended)
-		"R2GO2",  // All caps
-		"r2Go2",  // Mixed
-		"R2go2",  // Mixed
-		"r2GO2",  // Mixed
+		"R2Go2", // Branded (recommended)
+		"R2GO2", // All caps
+		"r2Go2", // Mixed
+		"R2go2", // Mixed
+		"r2GO2", // Mixed
 		// "r2go2" is the main binary, not a symlink
 	}
 
@@ -990,38 +1011,11 @@ func (m *InstallerModel) renderAPISetupState() string {
 
 	switch m.apiSetupStep {
 	case 0: // Account ID
-		content = append(content, textStyle.Render("Enter your Cloudflare Account ID:"))
-		content = append(content, mutedStyle.Render("32-character hex string from dashboard.cloudflare.com"))
-		content = append(content, "")
-
-		inputDisplay := m.accountIDInput
-		if inputDisplay == "" {
-			inputDisplay = "                                " // 32 char placeholder
-		}
-		content = append(content, activeInputStyle.Render(inputDisplay+"█"))
-		content = append(content, mutedStyle.Render(fmt.Sprintf("%d/32 characters", len(m.accountIDInput))))
-
+		content = append(content, m.renderAccountIDStep(textStyle, mutedStyle, activeInputStyle)...)
 	case 1: // API Token
-		content = append(content, textStyle.Render("Enter your Cloudflare API Token:"))
-		content = append(content, mutedStyle.Render("Create at: dash.cloudflare.com/profile/api-tokens"))
-		content = append(content, mutedStyle.Render("Required permissions: R2:Read, R2:Write"))
-		content = append(content, "")
-
-		// Mask token for display
-		masked := strings.Repeat("•", len(m.apiTokenInput))
-		if masked == "" {
-			masked = "                    " // placeholder
-		}
-		content = append(content, activeInputStyle.Render(masked+"█"))
-		content = append(content, mutedStyle.Render(fmt.Sprintf("%d characters entered", len(m.apiTokenInput))))
-
+		content = append(content, m.renderTokenStep(textStyle, mutedStyle, activeInputStyle)...)
 	case 2: // Confirmation
-		content = append(content, successStyle.Render("✅ Ready to save configuration"))
-		content = append(content, "")
-		content = append(content, textStyle.Render("Account ID: "+config.MaskAccountID(m.accountIDInput)))
-		content = append(content, textStyle.Render("API Token:  "+maskToken(m.apiTokenInput)))
-		content = append(content, "")
-		content = append(content, mutedStyle.Render("Press Enter to save, Esc to cancel"))
+		content = append(content, m.renderConfirmStep(textStyle, mutedStyle, successStyle)...)
 	}
 
 	// Error message
@@ -1034,6 +1028,58 @@ func (m *InstallerModel) renderAPISetupState() string {
 	content = append(content, mutedStyle.Render("Tab: next field · Esc: cancel"))
 
 	return strings.Join(content, "\n")
+}
+
+// renderAccountIDStep renders the account ID input panel of the API setup wizard.
+func (m *InstallerModel) renderAccountIDStep(textStyle, mutedStyle, activeInputStyle lipgloss.Style) []string {
+	var content []string
+
+	content = append(content, textStyle.Render("Enter your Cloudflare Account ID:"))
+	content = append(content, mutedStyle.Render("32-character hex string from dashboard.cloudflare.com"))
+	content = append(content, "")
+
+	inputDisplay := m.accountIDInput
+	if inputDisplay == "" {
+		inputDisplay = "                                " // 32 char placeholder
+	}
+	content = append(content, activeInputStyle.Render(inputDisplay+"█"))
+	content = append(content, mutedStyle.Render(fmt.Sprintf("%d/32 characters", len(m.accountIDInput))))
+
+	return content
+}
+
+// renderTokenStep renders the API token input panel of the API setup wizard.
+func (m *InstallerModel) renderTokenStep(textStyle, mutedStyle, activeInputStyle lipgloss.Style) []string {
+	var content []string
+
+	content = append(content, textStyle.Render("Enter your Cloudflare API Token:"))
+	content = append(content, mutedStyle.Render("Create at: dash.cloudflare.com/profile/api-tokens"))
+	content = append(content, mutedStyle.Render("Required permissions: R2:Read, R2:Write"))
+	content = append(content, "")
+
+	// Mask token for display
+	masked := strings.Repeat("•", len(m.apiTokenInput))
+	if masked == "" {
+		masked = "                    " // placeholder
+	}
+	content = append(content, activeInputStyle.Render(masked+"█"))
+	content = append(content, mutedStyle.Render(fmt.Sprintf("%d characters entered", len(m.apiTokenInput))))
+
+	return content
+}
+
+// renderConfirmStep renders the confirmation panel of the API setup wizard.
+func (m *InstallerModel) renderConfirmStep(textStyle, mutedStyle, successStyle lipgloss.Style) []string {
+	var content []string
+
+	content = append(content, successStyle.Render("✅ Ready to save configuration"))
+	content = append(content, "")
+	content = append(content, textStyle.Render("Account ID: "+config.MaskAccountID(m.accountIDInput)))
+	content = append(content, textStyle.Render("API Token:  "+maskToken(m.apiTokenInput)))
+	content = append(content, "")
+	content = append(content, mutedStyle.Render("Press Enter to save, Esc to cancel"))
+
+	return content
 }
 
 // maskToken masks API token for display
@@ -1179,8 +1225,44 @@ func (m *InstallerModel) renderQuickStartState() string {
 
 	// Guide content
 	noteStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981")).Italic(true)
+	guide := quickStartGuide(headerStyle, textStyle, codeStyle, noteStyle)
 
-	guide := []string{
+	// Apply scroll offset
+	maxScroll := len(guide) - 15
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+	if m.quickStartScroll > maxScroll {
+		m.quickStartScroll = maxScroll
+	}
+
+	// Show visible portion
+	endIndex := m.quickStartScroll + 15
+	if endIndex > len(guide) {
+		endIndex = len(guide)
+	}
+
+	content = append(content, guide[m.quickStartScroll:endIndex]...)
+
+	// Scroll indicator
+	if len(guide) > 15 {
+		content = append(content, "")
+		scrollPercent := float64(m.quickStartScroll) / float64(maxScroll) * 100
+		if maxScroll == 0 {
+			scrollPercent = 0
+		}
+		content = append(content, mutedStyle.Render(fmt.Sprintf("↑↓ scroll · %.0f%% · Esc to return", scrollPercent)))
+	} else {
+		content = append(content, "")
+		content = append(content, mutedStyle.Render("Press Esc or Enter to return"))
+	}
+
+	return strings.Join(content, "\n")
+}
+
+// quickStartGuide builds the full quick start guide content lines.
+func quickStartGuide(headerStyle, textStyle, codeStyle, noteStyle lipgloss.Style) []string {
+	return []string{
 		noteStyle.Render("Note: Command is case-insensitive (R2Go2, r2go2, R2GO2 all work)"),
 		"",
 		headerStyle.Render("Basic Commands"),
@@ -1224,38 +1306,6 @@ func (m *InstallerModel) renderQuickStartState() string {
 		textStyle.Render("Get help for a command:"),
 		codeStyle.Render("R2Go2 bucket --help"),
 	}
-
-	// Apply scroll offset
-	maxScroll := len(guide) - 15
-	if maxScroll < 0 {
-		maxScroll = 0
-	}
-	if m.quickStartScroll > maxScroll {
-		m.quickStartScroll = maxScroll
-	}
-
-	// Show visible portion
-	endIndex := m.quickStartScroll + 15
-	if endIndex > len(guide) {
-		endIndex = len(guide)
-	}
-
-	content = append(content, guide[m.quickStartScroll:endIndex]...)
-
-	// Scroll indicator
-	if len(guide) > 15 {
-		content = append(content, "")
-		scrollPercent := float64(m.quickStartScroll) / float64(maxScroll) * 100
-		if maxScroll == 0 {
-			scrollPercent = 0
-		}
-		content = append(content, mutedStyle.Render(fmt.Sprintf("↑↓ scroll · %.0f%% · Esc to return", scrollPercent)))
-	} else {
-		content = append(content, "")
-		content = append(content, mutedStyle.Render("Press Esc or Enter to return"))
-	}
-
-	return strings.Join(content, "\n")
 }
 
 // openDocumentation opens the documentation in browser
