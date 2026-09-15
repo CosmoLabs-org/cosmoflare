@@ -17,9 +17,14 @@ func workerCronRunGlobals(t *testing.T) {
 	t.Helper()
 	oldExpr, oldNew := workerCronExpr, workerCronNew
 	oldToken, oldDry, oldJSON := APIToken, DryRun, JSONOutput
+	oldAcct := AccountID
+	// Zero credentials for the test's duration: earlier suite tests may
+	// leave them set, which would let service creation succeed and flip
+	// these tests from offline-error to dry-run-success (order-dependent).
+	AccountID, APIToken = "", ""
 	t.Cleanup(func() {
 		workerCronExpr, workerCronNew = oldExpr, oldNew
-		APIToken, DryRun, JSONOutput = oldToken, oldDry, oldJSON
+		AccountID, APIToken, DryRun, JSONOutput = oldAcct, oldToken, oldDry, oldJSON
 	})
 }
 
