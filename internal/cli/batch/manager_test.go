@@ -299,7 +299,19 @@ func TestSaveToFile_InvalidPath(t *testing.T) {
 // LoadFromFile
 // ---------------------------------------------------------------------------
 
-func TestLoadFromFile(t *testing.T) {
+// writeBatchSpecFile writes content to a fresh batch.json inside a temp dir
+// and returns its path.
+func writeBatchSpecFile(t *testing.T, content string) string {
+	t.Helper()
+	f := filepath.Join(t.TempDir(), "batch.json")
+	if err := os.WriteFile(f, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write batch file: %v", err)
+	}
+	return f
+}
+
+// runLoadFromFileErrorTests covers read and parse failures.
+func runLoadFromFileErrorTests(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile("/nonexistent/batch.json")
@@ -308,8 +320,7 @@ func TestLoadFromFile(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "bad.json")
+		f := filepath.Join(t.TempDir(), "bad.json")
 		os.WriteFile(f, []byte("not json"), 0644)
 
 		bm := NewBatchManager(nil)
@@ -317,18 +328,19 @@ func TestLoadFromFile(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to parse batch file")
 	})
+}
 
+// runLoadFromFileSpecTests covers well-formed specs: named batches,
+// per-operation options, and explicit operation IDs.
+func runLoadFromFileSpecTests(t *testing.T) {
 	t.Run("valid batch spec", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "batch.json")
-		content := `{
+		f := writeBatchSpecFile(t, `{
 			"name": "test batch",
 			"operations": [
 				{"type": "copy", "source": "/tmp/a", "destination": "/tmp/b"},
 				{"type": "upload", "source": "/tmp/c", "destination": "bucket/key"}
 			]
-		}`
-		os.WriteFile(f, []byte(content), 0644)
+		}`)
 
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile(f)
@@ -337,9 +349,7 @@ func TestLoadFromFile(t *testing.T) {
 	})
 
 	t.Run("operation with options", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "batch.json")
-		content := `{
+		f := writeBatchSpecFile(t, `{
 			"operations": [
 				{
 					"type": "copy",
@@ -348,8 +358,7 @@ func TestLoadFromFile(t *testing.T) {
 					"options": {"resume": true, "verify": false}
 				}
 			]
-		}`
-		os.WriteFile(f, []byte(content), 0644)
+		}`)
 
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile(f)
@@ -362,14 +371,11 @@ func TestLoadFromFile(t *testing.T) {
 	})
 
 	t.Run("operation with ID", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "batch.json")
-		content := `{
+		f := writeBatchSpecFile(t, `{
 			"operations": [
 				{"id": "my-op-1", "type": "delete", "source": "/tmp/old"}
 			]
-		}`
-		os.WriteFile(f, []byte(content), 0644)
+		}`)
 
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile(f)
@@ -380,11 +386,13 @@ func TestLoadFromFile(t *testing.T) {
 		assert.Equal(t, "my-op-1", ops[0].ID)
 		assert.Equal(t, OperationTypeDelete, ops[0].Type)
 	})
+}
 
+// runLoadFromFileEdgeTests covers degenerate-but-valid specs: empty
+// operation lists and operations with no destination.
+func runLoadFromFileEdgeTests(t *testing.T) {
 	t.Run("empty operations array", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "batch.json")
-		os.WriteFile(f, []byte(`{"operations": []}`), 0644)
+		f := writeBatchSpecFile(t, `{"operations": []}`)
 
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile(f)
@@ -393,14 +401,11 @@ func TestLoadFromFile(t *testing.T) {
 	})
 
 	t.Run("operation without destination", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		f := filepath.Join(tmpDir, "batch.json")
-		content := `{
+		f := writeBatchSpecFile(t, `{
 			"operations": [
 				{"type": "delete", "source": "/tmp/old"}
 			]
-		}`
-		os.WriteFile(f, []byte(content), 0644)
+		}`)
 
 		bm := NewBatchManager(nil)
 		err := bm.LoadFromFile(f)
@@ -410,6 +415,12 @@ func TestLoadFromFile(t *testing.T) {
 		require.Len(t, ops, 1)
 		assert.Equal(t, "", ops[0].Destination)
 	})
+}
+
+func TestLoadFromFile(t *testing.T) {
+	t.Run("errors", runLoadFromFileErrorTests)
+	t.Run("specs", runLoadFromFileSpecTests)
+	t.Run("edges", runLoadFromFileEdgeTests)
 }
 
 // ---------------------------------------------------------------------------

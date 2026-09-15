@@ -256,7 +256,9 @@ func TestFileSystemRetryStrategy(t *testing.T) {
 	assert.Equal(t, "linear", s.Strategy)
 }
 
-func TestRetryWithStrategy(t *testing.T) {
+// runRetryWithStrategyOutcomeTests covers the execution-outcome scenarios:
+// success paths, retry classification, and retry exhaustion.
+func runRetryWithStrategyOutcomeTests(t *testing.T) {
 	t.Run("immediate success", func(t *testing.T) {
 		callCount := 0
 		result := RetryWithStrategy(&RetryStrategy{
@@ -336,7 +338,11 @@ func TestRetryWithStrategy(t *testing.T) {
 		assert.Equal(t, 3, callCount) // 1 initial + 2 retries
 		assert.NotNil(t, result.LastError)
 	})
+}
 
+// runRetryWithStrategyResultFieldTests covers how RetryResult is populated
+// on success and failure, including recorded backoff delays.
+func runRetryWithStrategyResultFieldTests(t *testing.T) {
 	t.Run("result fields populated on success", func(t *testing.T) {
 		result := RetryWithStrategy(&RetryStrategy{
 			MaxRetries:    3,
@@ -386,6 +392,11 @@ func TestRetryWithStrategy(t *testing.T) {
 	})
 }
 
+func TestRetryWithStrategy(t *testing.T) {
+	t.Run("execution outcomes", runRetryWithStrategyOutcomeTests)
+	t.Run("result fields", runRetryWithStrategyResultFieldTests)
+}
+
 func TestRetryWithBackoff(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		err := RetryWithBackoff(0, func() error { return nil })
@@ -431,116 +442,110 @@ func TestRetryWithBackoff(t *testing.T) {
 	})
 }
 
+// calculateDelayCase is one strategy/delay scenario for TestCalculateDelay.
+type calculateDelayCase struct {
+	name    string
+	strat   *RetryStrategy
+	attempt int
+	min     time.Duration // inclusive lower bound (equal to max when exact)
+	max     time.Duration // inclusive upper bound (equal to min when exact)
+}
+
+// calculateDelayCases returns the strategy/delay scenario table covering
+// exponential, linear, fixed, and unknown strategies, the max-delay cap, and
+// jitter behavior.
+func calculateDelayCases() []calculateDelayCase {
+	return []calculateDelayCase{
+		{
+			name: "exponential attempt 0",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "exponential"},
+			attempt: 0, min: time.Second, max: time.Second,
+		},
+		{
+			name: "exponential attempt 1",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "exponential"},
+			attempt: 1, min: 2 * time.Second, max: 2 * time.Second,
+		},
+		{
+			name: "exponential attempt 2",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "exponential"},
+			attempt: 2, min: 4 * time.Second, max: 4 * time.Second,
+		},
+		{
+			name: "linear attempt 0",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "linear"},
+			attempt: 0, min: time.Second, max: time.Second,
+		},
+		{
+			name: "linear attempt 2",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "linear"},
+			attempt: 2, min: 3 * time.Second, max: 3 * time.Second,
+		},
+		{
+			name: "linear attempt 0 small base",
+			strat: &RetryStrategy{BaseDelay: 500 * time.Millisecond,
+				MaxDelay: 30 * time.Second, Strategy: "linear"},
+			attempt: 0, min: 500 * time.Millisecond, max: 500 * time.Millisecond,
+		},
+		{
+			name: "fixed attempt 0",
+			strat: &RetryStrategy{BaseDelay: time.Second,
+				MaxDelay: 30 * time.Second, Strategy: "fixed"},
+			attempt: 0, min: time.Second, max: time.Second,
+		},
+		{
+			name: "fixed ignores attempt",
+			strat: &RetryStrategy{BaseDelay: time.Second,
+				MaxDelay: 30 * time.Second, Strategy: "fixed"},
+			attempt: 5, min: time.Second, max: time.Second,
+		},
+		{
+			name: "max delay cap exponential",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 5 * time.Second,
+				BackoffFactor: 10.0, Strategy: "exponential"},
+			attempt: 3, min: 5 * time.Second, max: 5 * time.Second,
+		},
+		{
+			name: "max delay cap linear",
+			strat: &RetryStrategy{BaseDelay: time.Second,
+				MaxDelay: 2 * time.Second, Strategy: "linear"},
+			attempt: 10, min: 2 * time.Second, max: 2 * time.Second,
+		},
+		{
+			name: "with jitter",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "exponential", Jitter: true},
+			// With 10% jitter, delay should be between 1s and 1.1s
+			attempt: 0, min: time.Second, max: time.Second + 110*time.Millisecond,
+		},
+		{
+			name: "no jitter",
+			strat: &RetryStrategy{BaseDelay: time.Second, MaxDelay: 30 * time.Second,
+				BackoffFactor: 2.0, Strategy: "exponential", Jitter: false},
+			attempt: 2, min: 4 * time.Second, max: 4 * time.Second,
+		},
+		{
+			name: "unknown strategy defaults to base delay",
+			strat: &RetryStrategy{BaseDelay: time.Second,
+				MaxDelay: 30 * time.Second, Strategy: "unknown"},
+			attempt: 5, min: time.Second, max: time.Second,
+		},
+	}
+}
+
 func TestCalculateDelay(t *testing.T) {
-	t.Run("exponential", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay:     time.Second,
-			MaxDelay:      30 * time.Second,
-			BackoffFactor: 2.0,
-			Strategy:      "exponential",
-		}
-		d := calculateDelay(s, 0)
-		assert.Equal(t, time.Second, d)
-
-		d = calculateDelay(s, 1)
-		assert.Equal(t, 2*time.Second, d)
-
-		d = calculateDelay(s, 2)
-		assert.Equal(t, 4*time.Second, d)
-	})
-
-	t.Run("linear", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay:     time.Second,
-			MaxDelay:      30 * time.Second,
-			BackoffFactor: 2.0,
-			Strategy:      "linear",
-		}
-		d := calculateDelay(s, 0)
-		assert.Equal(t, time.Second, d)
-
-		d = calculateDelay(s, 2)
-		assert.Equal(t, 3*time.Second, d)
-	})
-
-	t.Run("fixed", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay: time.Second,
-			MaxDelay:  30 * time.Second,
-			Strategy:  "fixed",
-		}
-		d := calculateDelay(s, 0)
-		assert.Equal(t, time.Second, d)
-		d = calculateDelay(s, 5)
-		assert.Equal(t, time.Second, d)
-	})
-
-	t.Run("max delay cap", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay:     time.Second,
-			MaxDelay:      5 * time.Second,
-			BackoffFactor: 10.0,
-			Strategy:      "exponential",
-		}
-		d := calculateDelay(s, 3)
-		assert.Equal(t, 5*time.Second, d)
-	})
-
-	t.Run("with jitter", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay:     time.Second,
-			MaxDelay:      30 * time.Second,
-			BackoffFactor: 2.0,
-			Strategy:      "exponential",
-			Jitter:        true,
-		}
-		d := calculateDelay(s, 0)
-		// With 10% jitter, delay should be between 1s and 1.1s
-		assert.GreaterOrEqual(t, d, time.Second)
-		assert.LessOrEqual(t, d, time.Second+110*time.Millisecond)
-	})
-
-	t.Run("no jitter", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay:     time.Second,
-			MaxDelay:      30 * time.Second,
-			BackoffFactor: 2.0,
-			Strategy:      "exponential",
-			Jitter:        false,
-		}
-		d := calculateDelay(s, 2)
-		assert.Equal(t, 4*time.Second, d)
-	})
-
-	t.Run("unknown strategy defaults to base delay", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay: time.Second,
-			MaxDelay:  30 * time.Second,
-			Strategy:  "unknown",
-		}
-		d := calculateDelay(s, 5)
-		assert.Equal(t, time.Second, d)
-	})
-
-	t.Run("max delay cap with linear", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay: time.Second,
-			MaxDelay:  2 * time.Second,
-			Strategy:  "linear",
-		}
-		d := calculateDelay(s, 10)
-		assert.Equal(t, 2*time.Second, d)
-	})
-
-	t.Run("linear attempt 0", func(t *testing.T) {
-		s := &RetryStrategy{
-			BaseDelay: 500 * time.Millisecond,
-			MaxDelay:  30 * time.Second,
-			Strategy:  "linear",
-		}
-		d := calculateDelay(s, 0)
-		assert.Equal(t, 500*time.Millisecond, d)
-	})
+	for _, tc := range calculateDelayCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			d := calculateDelay(tc.strat, tc.attempt)
+			assert.GreaterOrEqual(t, d, tc.min)
+			assert.LessOrEqual(t, d, tc.max)
+		})
+	}
 }
 
 func TestErrorTypeToString(t *testing.T) {
@@ -670,7 +675,9 @@ func TestPrintRetryProgress(t *testing.T) {
 	})
 }
 
-func TestSmartRetryContext(t *testing.T) {
+// runSmartRetryContextSetupTests covers SmartRetryContext construction and
+// per-error-type strategy/context registration.
+func runSmartRetryContextSetupTests(t *testing.T) {
 	t.Run("create and set strategy", func(t *testing.T) {
 		ctx := NewSmartRetryContext()
 		require.NotNil(t, ctx)
@@ -687,7 +694,11 @@ func TestSmartRetryContext(t *testing.T) {
 		assert.Equal(t, "my-bucket", ctx.context["bucket"])
 		assert.Equal(t, 42, ctx.context["count"])
 	})
+}
 
+// runSmartRetryContextExecuteBasicTests covers Execute with the default
+// strategy: success, retry classification, and retry-until-success.
+func runSmartRetryContextExecuteBasicTests(t *testing.T) {
 	t.Run("execute success", func(t *testing.T) {
 		ctx := NewSmartRetryContext()
 		err := ctx.Execute(func() error { return nil })
@@ -718,7 +729,11 @@ func TestSmartRetryContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 3, callCount)
 	})
+}
 
+// runSmartRetryContextExecuteStrategyTests covers Execute behavior under
+// custom/default strategies, the global safety limit, and retry exhaustion.
+func runSmartRetryContextExecuteStrategyTests(t *testing.T) {
 	t.Run("execute with custom strategy", func(t *testing.T) {
 		ctx := NewSmartRetryContext()
 		ctx.SetStrategy(ErrorTypeNetwork, &RetryStrategy{
@@ -789,6 +804,12 @@ func TestSmartRetryContext(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, 3, callCount) // 1 + 2 retries
 	})
+}
+
+func TestSmartRetryContext(t *testing.T) {
+	t.Run("setup", runSmartRetryContextSetupTests)
+	t.Run("execute basic", runSmartRetryContextExecuteBasicTests)
+	t.Run("execute strategies", runSmartRetryContextExecuteStrategyTests)
 }
 
 // --- ConfirmRetry (via stdin redirect) ---
