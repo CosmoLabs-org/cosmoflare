@@ -114,60 +114,15 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 	// Show welcome screen
 	wizard.Welcome()
 
-	// Step 1: Authentication Method
-	authMethod, err := wizard.Step1_AuthMethod()
+	// Steps 1-2: Authentication method and API token
+	apiToken, err := setupWizardAuth(wizard)
 	if err != nil {
-		return fmt.Errorf("authentication selection failed: %w", err)
-	}
-
-	var apiToken string
-	switch authMethod {
-	case "env":
-		// Use environment variables
-		apiToken = ""
-		interactive.ShowSpinner("Checking environment variables...", 2*time.Second)
-
-		token := os.Getenv("CLOUDFLARE_API_TOKEN")
-		if token == "" {
-			printError("CLOUDFLARE_API_TOKEN environment variable not found")
-			return fmt.Errorf("environment variable CLOUDFLARE_API_TOKEN is not set")
-		}
-
-		interactive.ShowSpinner("Validating token...", 3*time.Second)
-
-	case "api_token", "service_key":
-		// Get token interactively
-		interactive.ShowSpinner("Preparing secure input...", 1*time.Second)
-		apiToken, err = wizard.Step2_APIToken()
-		if err != nil {
-			return fmt.Errorf("token input failed: %w", err)
-		}
-
-		// Validate the token with visual feedback
-		interactive.ShowSpinner("Validating API token...", 3*time.Second)
-		tokenInfo, err := interactive.ValidateAPIToken(apiToken)
-		if err != nil {
-			interactive.HandleError(interactive.AuthError("Token validation", err))
-
-			// Ask if user wants to continue anyway
-			if !interactive.ConfirmYesNo("Continue with this token anyway?", false) {
-				return fmt.Errorf("setup cancelled due to invalid token")
-			}
-		} else {
-			interactive.SuccessMessage("Token validated successfully!",
-				fmt.Sprintf("Account ID: %s", config.MaskAccountID(tokenInfo.AccountID)))
-		}
+		return err
 	}
 
 	// Step 3: Account Information
 	interactive.ShowSpinner("Preparing account setup...", 1*time.Second)
-	var accountID, accountName string
-
-	if setupAutoDetect && apiToken != "" {
-		accountID, accountName, _ = wizard.Step3_AccountInfo(apiToken)
-	} else {
-		accountID, accountName, _ = wizard.Step3_AccountInfo("")
-	}
+	accountID, accountName := setupWizardAccountInfo(wizard, apiToken)
 
 	// Validate account ID
 	if err := interactive.ValidateAccountID(accountID); err != nil {
@@ -189,21 +144,111 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 
 	// Test connection if not skipped
 	if !setupSkipTest && apiToken != "" {
-		interactive.ShowSpinner("Testing connection to Cloudflare R2...", 3*time.Second)
-		if err := interactive.TestConnection(accountID, apiToken); err != nil {
-			interactive.HandleError(interactive.NetworkError("Connection test", err))
-
-			if !interactive.ConfirmYesNo("Continue despite connection failure?", false) {
-				return fmt.Errorf("setup cancelled due to connection failure")
-			}
-		} else {
-			interactive.SuccessMessage("Connection test passed!", "Your credentials are working correctly.")
+		if err := setupWizardTestConnection(accountID, apiToken); err != nil {
+			return err
 		}
 	}
 
 	// Save configuration
 	interactive.ShowSpinner("Saving configuration...", 2*time.Second)
+	if err := setupWizardSaveProfile(profileName, description, accountID, apiToken); err != nil {
+		return err
+	}
 
+	// Show completion screen
+	wizard.Complete(profileName, accountName)
+
+	// Additional helpful information
+	printSetupNextSteps()
+
+	return nil
+}
+
+// setupWizardAuth covers Step 1 (authentication method selection) and, for
+// token-based methods, Step 2 (interactive token input plus validation with
+// visual feedback). It returns the resulting API token ("" for env auth).
+// TASK-009: extracted from runInteractiveSetup.
+func setupWizardAuth(wizard *interactive.SetupWizard) (string, error) {
+	// Step 1: Authentication Method
+	authMethod, err := wizard.Step1_AuthMethod()
+	if err != nil {
+		return "", fmt.Errorf("authentication selection failed: %w", err)
+	}
+
+	var apiToken string
+	switch authMethod {
+	case "env":
+		// Use environment variables
+		apiToken = ""
+		interactive.ShowSpinner("Checking environment variables...", 2*time.Second)
+
+		token := os.Getenv("CLOUDFLARE_API_TOKEN")
+		if token == "" {
+			printError("CLOUDFLARE_API_TOKEN environment variable not found")
+			return "", fmt.Errorf("environment variable CLOUDFLARE_API_TOKEN is not set")
+		}
+
+		interactive.ShowSpinner("Validating token...", 3*time.Second)
+
+	case "api_token", "service_key":
+		// Get token interactively
+		interactive.ShowSpinner("Preparing secure input...", 1*time.Second)
+		apiToken, err = wizard.Step2_APIToken()
+		if err != nil {
+			return "", fmt.Errorf("token input failed: %w", err)
+		}
+
+		// Validate the token with visual feedback
+		interactive.ShowSpinner("Validating API token...", 3*time.Second)
+		tokenInfo, err := interactive.ValidateAPIToken(apiToken)
+		if err != nil {
+			interactive.HandleError(interactive.AuthError("Token validation", err))
+
+			// Ask if user wants to continue anyway
+			if !interactive.ConfirmYesNo("Continue with this token anyway?", false) {
+				return "", fmt.Errorf("setup cancelled due to invalid token")
+			}
+		} else {
+			interactive.SuccessMessage("Token validated successfully!",
+				fmt.Sprintf("Account ID: %s", config.MaskAccountID(tokenInfo.AccountID)))
+		}
+	}
+
+	return apiToken, nil
+}
+
+// setupWizardAccountInfo covers Step 3 (account information), using
+// auto-detection when enabled and a token is available.
+// TASK-009: extracted from runInteractiveSetup.
+func setupWizardAccountInfo(wizard *interactive.SetupWizard, apiToken string) (string, string) {
+	if setupAutoDetect && apiToken != "" {
+		accountID, accountName, _ := wizard.Step3_AccountInfo(apiToken)
+		return accountID, accountName
+	}
+	accountID, accountName, _ := wizard.Step3_AccountInfo("")
+	return accountID, accountName
+}
+
+// setupWizardTestConnection tests the connection with visual feedback and
+// asks whether to continue on failure. TASK-009: extracted from
+// runInteractiveSetup.
+func setupWizardTestConnection(accountID, apiToken string) error {
+	interactive.ShowSpinner("Testing connection to Cloudflare R2...", 3*time.Second)
+	if err := interactive.TestConnection(accountID, apiToken); err != nil {
+		interactive.HandleError(interactive.NetworkError("Connection test", err))
+
+		if !interactive.ConfirmYesNo("Continue despite connection failure?", false) {
+			return fmt.Errorf("setup cancelled due to connection failure")
+		}
+	} else {
+		interactive.SuccessMessage("Connection test passed!", "Your credentials are working correctly.")
+	}
+	return nil
+}
+
+// setupWizardSaveProfile persists the finished profile and makes it the
+// current one. TASK-009: extracted from runInteractiveSetup.
+func setupWizardSaveProfile(profileName, description, accountID, apiToken string) error {
 	configMgr, err := config.NewConfigManager()
 	if err != nil {
 		return fmt.Errorf("failed to create config manager: %w", err)
@@ -226,10 +271,12 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 		printWarning("Failed to set profile as current: %v", err)
 	}
 
-	// Show completion screen
-	wizard.Complete(profileName, accountName)
+	return nil
+}
 
-	// Additional helpful information
+// printSetupNextSteps prints the post-setup help pointers.
+// TASK-009: extracted from runInteractiveSetup.
+func printSetupNextSteps() {
 	printInfo("📚 Next steps:")
 	printInfo("  cosmoflare config list                    # View all profiles")
 	printInfo("  cosmoflare bucket list                    # List existing buckets")
@@ -238,8 +285,6 @@ func runInteractiveSetup(wizard *interactive.SetupWizard) error {
 	printInfo("")
 	printInfo("📖 For more help: cosmoflare --help")
 	printInfo("🌐 Documentation: https://github.com/CosmoLabs-org/cosmoflare")
-
-	return nil
 }
 
 func runQuietSetup(wizard *interactive.SetupWizard) error {

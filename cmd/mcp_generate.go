@@ -361,10 +361,22 @@ func executeCommandTool(ctx context.Context, root, target *cobra.Command, pathWo
 		return nil, fmt.Errorf("command %q requires Cloudflare credentials: set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the MCP server environment", strings.Join(pathWords, " "))
 	}
 
-	// Reset the target's flags to defaults so state from a previous tool
-	// call never leaks into this one. pflag renders an empty slice default
-	// as "[]", which Set() would parse as a one-element slice ["[]"]; use ""
-	// for slice types instead (it parses back to an empty slice).
+	mcpResetCommandFlags(target)
+	argv := mcpBuildToolArgv(target, pathWords, args)
+
+	out, err := mcpExecuteCaptured(root, target, argv)
+	if err != nil {
+		return nil, err
+	}
+	return mcpParseCommandOutput(out)
+}
+
+// mcpResetCommandFlags resets the target's flags to defaults so state from a
+// previous tool call never leaks into this one. pflag renders an empty slice
+// default as "[]", which Set() would parse as a one-element slice ["[]"]; use
+// "" for slice types instead (it parses back to an empty slice).
+// TASK-009: extracted from executeCommandTool.
+func mcpResetCommandFlags(target *cobra.Command) {
 	target.LocalFlags().VisitAll(func(f *pflag.Flag) {
 		switch f.Value.Type() {
 		case "stringSlice", "stringArray", "stringToString":
@@ -375,7 +387,12 @@ func executeCommandTool(ctx context.Context, root, target *cobra.Command, pathWo
 		}
 		_ = f.Value.Set(f.DefValue)
 	})
+}
 
+// mcpBuildToolArgv maps tool args onto a cobra argv: the command path, --json,
+// positional arg1..argN in order, then --flag=value pairs for the flags the
+// command itself declares. TASK-009: extracted from executeCommandTool.
+func mcpBuildToolArgv(target *cobra.Command, pathWords []string, args map[string]interface{}) []string {
 	argv := append([]string{}, pathWords...)
 	argv = append(argv, "--json")
 
@@ -398,9 +415,16 @@ func executeCommandTool(ctx context.Context, root, target *cobra.Command, pathWo
 		argv = append(argv, mcpFormatFlagValue(f.Name, raw)...)
 	})
 
-	// Capture stdout (commands print their JSON envelope there) and detach
-	// stdin from the MCP channel so an interactive prompt cannot block the
-	// server forever.
+	return argv
+}
+
+// mcpExecuteCaptured runs root with argv while capturing stdout (commands
+// print their JSON envelope there) and detaching stdin from the MCP channel
+// so an interactive prompt cannot block the server forever, then restores
+// process state. It returns the captured stdout; when the command failed
+// without printing anything, it returns a wrapped error instead.
+// TASK-009: extracted from executeCommandTool.
+func mcpExecuteCaptured(root, target *cobra.Command, argv []string) ([]byte, error) {
 	savedStdout := os.Stdout
 	savedStdin := os.Stdin
 	pr, pw, err := os.Pipe()
@@ -444,7 +468,7 @@ func executeCommandTool(ctx context.Context, root, target *cobra.Command, pathWo
 	if execErr != nil && outBuf.Len() == 0 {
 		return nil, fmt.Errorf("command failed: %w", execErr)
 	}
-	return mcpParseCommandOutput(outBuf.Bytes())
+	return outBuf.Bytes(), nil
 }
 
 // mcpFormatArgValue renders a positional argument value as one or more argv

@@ -390,6 +390,39 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	}
 
 	// Set values from flags
+	applyConfigSetFlags(cmd, profile)
+
+	// Interactive mode for missing values
+	if interactive {
+		if err := fillProfileInteractively(profile); err != nil {
+			return fmt.Errorf("interactive input failed: %w", err)
+		}
+	}
+
+	// Validate profile
+	if err := configMgr.ValidateProfile(profile); err != nil {
+		return fmt.Errorf("profile validation failed: %w", err)
+	}
+
+	// Save profile
+	if err := configMgr.SetProfile(profile); err != nil {
+		return fmt.Errorf("failed to save profile: %w", err)
+	}
+
+	printSuccess("Profile '%s' saved successfully!", profileName)
+
+	// Test connection if requested
+	testConnection, _ := cmd.Flags().GetBool("test-connection")
+	if testConnection {
+		return runConfigSetConnectionTest()
+	}
+
+	return nil
+}
+
+// applyConfigSetFlags copies non-empty --description/--account-id/... flag
+// values onto the profile (TASK-009: extracted from runConfigSet).
+func applyConfigSetFlags(cmd *cobra.Command, profile *config.Profile) {
 	description, _ := cmd.Flags().GetString("description")
 	accountID, _ := cmd.Flags().GetString("account-id")
 	apiToken, _ := cmd.Flags().GetString("api-token")
@@ -419,44 +452,24 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	if region != "" {
 		profile.Region = region
 	}
+}
 
-	// Interactive mode for missing values
-	if interactive {
-		if err := fillProfileInteractively(profile); err != nil {
-			return fmt.Errorf("interactive input failed: %w", err)
-		}
+// runConfigSetConnectionTest builds an API client and reports the connection
+// test result (TASK-009: extracted from runConfigSet).
+func runConfigSetConnectionTest() error {
+	printInfo("Testing connection...")
+	client, err := getAPIClient()
+	if err != nil {
+		printError("Failed to create client: %v", err)
+		return err
 	}
 
-	// Validate profile
-	if err := configMgr.ValidateProfile(profile); err != nil {
-		return fmt.Errorf("profile validation failed: %w", err)
+	if err := client.TestConnection(context.Background()); err != nil {
+		printError("Connection test failed: %v", err)
+		return err
 	}
 
-	// Save profile
-	if err := configMgr.SetProfile(profile); err != nil {
-		return fmt.Errorf("failed to save profile: %w", err)
-	}
-
-	printSuccess("Profile '%s' saved successfully!", profileName)
-
-	// Test connection if requested
-	testConnection, _ := cmd.Flags().GetBool("test-connection")
-	if testConnection {
-		printInfo("Testing connection...")
-		client, err := getAPIClient()
-		if err != nil {
-			printError("Failed to create client: %v", err)
-			return err
-		}
-
-		if err := client.TestConnection(context.Background()); err != nil {
-			printError("Connection test failed: %v", err)
-			return err
-		}
-
-		printSuccess("Connection test passed!")
-	}
-
+	printSuccess("Connection test passed!")
 	return nil
 }
 
