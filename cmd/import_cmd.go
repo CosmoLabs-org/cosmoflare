@@ -64,31 +64,48 @@ func runImport(cmd *cobra.Command, args []string) error {
 		return outErr(fmt.Sprintf("failed to parse %s", inputFile), err)
 	}
 
-	// Show what will be imported
+	if !DryRun && !importYes {
+		if err := confirmImport(inputFile, exportCfg); err != nil {
+			return err
+		}
+	}
+
+	result, err := executeImport(inputFile, exportCfg)
+	if err != nil {
+		return err
+	}
+
+	return presentImportResult(result)
+}
+
+// confirmImport shows what will be imported and aborts unless the user
+// passes --yes or --dry-run.
+func confirmImport(inputFile string, exportCfg *cosmoflare.ExportConfig) error {
 	totalResources := len(exportCfg.Services.Workers) +
 		len(exportCfg.Services.KVNamespaces) +
 		len(exportCfg.Services.R2Buckets) +
 		len(exportCfg.Services.DNSRecords) +
 		len(exportCfg.Services.Zones)
 
-	if !DryRun && !importYes {
-		printWarning("About to import configuration from %s", inputFile)
-		printInfo("  Exported at: %s", exportCfg.ExportedAt)
-		printInfo("  Account ID:  %s", exportCfg.AccountID)
-		printInfo("  Resources:   %d total", totalResources)
-		if importMerge {
-			printInfo("  Mode:        merge (skip existing)")
-		} else {
-			printInfo("  Mode:        create")
-		}
-		printInfo("")
-		printError("This will modify your Cloudflare account. Use --dry-run to preview first.")
-		return fmt.Errorf("import aborted: use --yes to confirm or --dry-run to preview")
+	printWarning("About to import configuration from %s", inputFile)
+	printInfo("  Exported at: %s", exportCfg.ExportedAt)
+	printInfo("  Account ID:  %s", exportCfg.AccountID)
+	printInfo("  Resources:   %d total", totalResources)
+	if importMerge {
+		printInfo("  Mode:        merge (skip existing)")
+	} else {
+		printInfo("  Mode:        create")
 	}
+	printInfo("")
+	printError("This will modify your Cloudflare account. Use --dry-run to preview first.")
+	return fmt.Errorf("import aborted: use --yes to confirm or --dry-run to preview")
+}
 
+// executeImport builds import options from flags and runs the import.
+func executeImport(inputFile string, exportCfg *cosmoflare.ExportConfig) (*cosmoflare.ImportResult, error) {
 	svc, err := getExportService()
 	if err != nil {
-		return outErr("failed to create export service", err)
+		return nil, outErr("failed to create export service", err)
 	}
 
 	var opts []cosmoflare.ImportOption
@@ -107,9 +124,13 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	result, err := svc.Import(context.Background(), exportCfg, opts...)
 	if err != nil {
-		return outErr("import failed", err)
+		return nil, outErr("import failed", err)
 	}
+	return result, nil
+}
 
+// presentImportResult renders the actions table, errors, and summary.
+func presentImportResult(result *cosmoflare.ImportResult) error {
 	msg := "import complete"
 	if DryRun {
 		msg = "import preview"

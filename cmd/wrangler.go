@@ -145,37 +145,12 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 
 	// Validate
 	results := ws.Validate(wc)
-	if cosmoflare.WranglerHasErrors(results) {
-		// JSON mode prints the shaped payload; plain mode prints the errors
-		// and surfaces the validation failure as the command's error.
-		var humanErr error
-		if perr := outPayload("validation failed", func() any {
-			return map[string]interface{}{
-				"valid":   false,
-				"results": results,
-			}
-		}, func() {
-			printError("wrangler.toml has validation errors:")
-			for _, r := range results {
-				if r.Level == "error" {
-					printError("  %s: %s", r.Field, r.Message)
-				}
-			}
-			humanErr = fmt.Errorf("wrangler.toml validation failed; fix errors before importing")
-		}); perr != nil {
-			return perr
-		}
-		return humanErr
+	if err := wranglerReportValidation(results); err != nil {
+		return err
 	}
 
 	// Print warnings
-	if !JSONOutput {
-		for _, r := range results {
-			if r.Level == "warning" {
-				printWarning("%s: %s", r.Field, r.Message)
-			}
-		}
-	}
+	wranglerPrintWarnings(results)
 
 	// Convert
 	cc := ws.ConvertToConfig(wc)
@@ -194,21 +169,7 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 	}
 
 	if DryRun {
-		return outPayload("dry run: would write .cosmoflare.yaml", func() any {
-			data, _ := cosmoflare.MarshalWranglerImportYAML(cc)
-			return map[string]interface{}{
-				"input":   tomlPath,
-				"output":  outputPath,
-				"preview": string(data),
-				"worker":  wc.Name,
-			}
-		}, func() {
-			printSuccess("Would import %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
-			printInfo("Worker: %s", wc.Name)
-			if wc.Main != "" {
-				printInfo("Entry point: %s", wc.Main)
-			}
-		})
+		return wranglerImportDryRun(tomlPath, outputPath, wc, cc)
 	}
 
 	// Write output
@@ -216,6 +177,68 @@ func runWranglerImport(cmd *cobra.Command, args []string) error {
 		return outErr(fmt.Sprintf("failed to write %s", outputPath), err)
 	}
 
+	return wranglerImportSuccess(tomlPath, outputPath, wc)
+}
+
+// wranglerReportValidation surfaces validation errors: JSON mode prints the
+// shaped payload; plain mode prints the errors and returns the validation
+// failure as the command's error.
+func wranglerReportValidation(results []cosmoflare.WranglerValidationResult) error {
+	if !cosmoflare.WranglerHasErrors(results) {
+		return nil
+	}
+	var humanErr error
+	if perr := outPayload("validation failed", func() any {
+		return map[string]interface{}{
+			"valid":   false,
+			"results": results,
+		}
+	}, func() {
+		printError("wrangler.toml has validation errors:")
+		for _, r := range results {
+			if r.Level == "error" {
+				printError("  %s: %s", r.Field, r.Message)
+			}
+		}
+		humanErr = fmt.Errorf("wrangler.toml validation failed; fix errors before importing")
+	}); perr != nil {
+		return perr
+	}
+	return humanErr
+}
+
+// wranglerPrintWarnings prints validation warnings in plain (non-JSON) mode.
+func wranglerPrintWarnings(results []cosmoflare.WranglerValidationResult) {
+	if !JSONOutput {
+		for _, r := range results {
+			if r.Level == "warning" {
+				printWarning("%s: %s", r.Field, r.Message)
+			}
+		}
+	}
+}
+
+// wranglerImportDryRun presents the dry-run preview payload without writing.
+func wranglerImportDryRun(tomlPath, outputPath string, wc *cosmoflare.WranglerConfig, cc *cosmoflare.WranglerImportResult) error {
+	return outPayload("dry run: would write .cosmoflare.yaml", func() any {
+		data, _ := cosmoflare.MarshalWranglerImportYAML(cc)
+		return map[string]interface{}{
+			"input":   tomlPath,
+			"output":  outputPath,
+			"preview": string(data),
+			"worker":  wc.Name,
+		}
+	}, func() {
+		printSuccess("Would import %s → %s", getRelativePath(tomlPath), getRelativePath(outputPath))
+		printInfo("Worker: %s", wc.Name)
+		if wc.Main != "" {
+			printInfo("Entry point: %s", wc.Main)
+		}
+	})
+}
+
+// wranglerImportSuccess presents the final import result payload.
+func wranglerImportSuccess(tomlPath, outputPath string, wc *cosmoflare.WranglerConfig) error {
 	return outPayload("imported wrangler.toml to .cosmoflare.yaml", func() any {
 		return map[string]interface{}{
 			"input":         tomlPath,
