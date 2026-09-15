@@ -255,30 +255,63 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 		return c.completeMultipartFromState(ctx, state)
 	}
 
-	// Upload remaining parts concurrently
+	sess := &resumeSession{
+		bucket: bucket, key: key, reader: reader,
+		size: size, state: state, cfg: cfg,
+	}
+	if err := c.uploadResumeParts(ctx, sess, remaining); err != nil {
+		return nil, err
+	}
+
+	// Complete the upload
+	result, err := c.completeMultipartFromState(ctx, state)
+	if err != nil {
+		return nil, err
+	}
+
+	// Clean up state file on success
+	_ = RemoveUploadState(bucket, key)
+
+	return result, nil
+}
+
+// resumeSession carries the per-call state of a resumed upload's part loop.
+type resumeSession struct {
+	bucket string
+	key    string
+	reader io.ReadSeeker
+	size   int64
+	state  *MultipartUploadState
+	cfg    *uploadConfig
+}
+
+// uploadResumeParts uploads the given remaining part numbers concurrently,
+// persisting progress to the state file after each part. The reader is seeked
+// to each part's offset before reading, so already-uploaded parts are skipped.
+func (c *client) uploadResumeParts(ctx context.Context, s *resumeSession, remaining []int32) error {
 	type partResult struct {
 		info CompletedPartInfo
 		err  error
 	}
 
 	var mu sync.Mutex
-	sem := make(chan struct{}, cfg.concurrency)
+	sem := make(chan struct{}, s.cfg.concurrency)
 	results := make(chan partResult, len(remaining))
 
-	uploadedBytes := state.CompletedBytes()
+	uploadedBytes := s.state.CompletedBytes()
 
 	for _, partNum := range remaining {
-		offset := int64(partNum-1) * state.PartSize
+		offset := int64(partNum-1) * s.state.PartSize
 
 		// Read this part's data (BUG-026: a reader shorter than the declared
 		// size fails the resume instead of storing a truncated object; the
 		// saved state is kept so a corrected retry can continue)
-		if _, err := reader.Seek(offset, io.SeekStart); err != nil {
-			return nil, newError("ResumeMultipartUpload", fmt.Sprintf("failed to seek to part %d offset", partNum), err)
+		if _, err := s.reader.Seek(offset, io.SeekStart); err != nil {
+			return newError("ResumeMultipartUpload", fmt.Sprintf("failed to seek to part %d offset", partNum), err)
 		}
-		buf, err := readUploadPart("ResumeMultipartUpload", reader, state.PartSize, size, offset, int64(partNum))
+		buf, err := readUploadPart("ResumeMultipartUpload", s.reader, s.state.PartSize, s.size, offset, int64(partNum))
 		if err != nil {
-			return nil, err
+			return err
 		}
 		pn := partNum
 
@@ -287,9 +320,9 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 			defer func() { <-sem }()
 
 			resp, err := c.s3Client().UploadPart(ctx, &s3.UploadPartInput{
-				Bucket:     aws.String(bucket),
-				Key:        aws.String(key),
-				UploadId:   aws.String(state.UploadID),
+				Bucket:     aws.String(s.bucket),
+				Key:        aws.String(s.key),
+				UploadId:   aws.String(s.state.UploadID),
 				PartNumber: aws.Int32(partNumber),
 				Body:       bytes.NewReader(data),
 			})
@@ -306,16 +339,16 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 
 			// Save progress after each part
 			mu.Lock()
-			state.CompletedParts = append(state.CompletedParts, info)
-			_ = SaveUploadState(state)
+			s.state.CompletedParts = append(s.state.CompletedParts, info)
+			_ = SaveUploadState(s.state)
 			mu.Unlock()
 
 			results <- partResult{info: info}
 		}(pn, buf)
 
 		uploadedBytes += int64(len(buf))
-		if cfg.progressCallback != nil {
-			cfg.progressCallback(uploadedBytes, size)
+		if s.cfg.progressCallback != nil {
+			s.cfg.progressCallback(uploadedBytes, s.size)
 		}
 	}
 
@@ -324,21 +357,12 @@ func (c *client) ResumeMultipartUpload(ctx context.Context, bucket, key string, 
 		r := <-results
 		if r.err != nil {
 			// Save current progress before returning error
-			_ = SaveUploadState(state)
-			return nil, newError("ResumeMultipartUpload", "part upload failed", r.err)
+			_ = SaveUploadState(s.state)
+			return newError("ResumeMultipartUpload", "part upload failed", r.err)
 		}
 	}
 
-	// Complete the upload
-	result, err := c.completeMultipartFromState(ctx, state)
-	if err != nil {
-		return nil, err
-	}
-
-	// Clean up state file on success
-	_ = RemoveUploadState(bucket, key)
-
-	return result, nil
+	return nil
 }
 
 // completeMultipartFromState completes a multipart upload using the parts tracked in state.
@@ -425,25 +449,10 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 	}
 
 	// Initiate multipart upload
-	createInput := &s3.CreateMultipartUploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-	if cfg.contentType != "" {
-		createInput.ContentType = aws.String(cfg.contentType)
-	}
-	if cfg.cacheControl != "" {
-		createInput.CacheControl = aws.String(cfg.cacheControl)
-	}
-	if len(cfg.metadata) > 0 {
-		createInput.Metadata = cfg.metadata
-	}
-
-	createResp, err := c.s3Client().CreateMultipartUpload(ctx, createInput)
+	uploadID, err := c.initiateResumableUpload(ctx, bucket, key, cfg)
 	if err != nil {
-		return nil, newError("ResumableMultipartUpload", "failed to initiate multipart upload", err)
+		return nil, err
 	}
-	uploadID := aws.ToString(createResp.UploadId)
 
 	// Calculate parts
 	partSize := cfg.partSize
@@ -472,39 +481,105 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 		_ = err
 	}
 
-	// Abort helper
-	abort := func() {
-		// BUG-043: abort with a context that survives cancellation of the
-		// request context — aborting with the canceled ctx fails instantly
-		// and leaks the incomplete upload (billed parts, 7-day retention).
-		abortCtx, abortCancel := abortContext(ctx)
-		defer abortCancel()
-		c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
-			Bucket:   aws.String(bucket),
-			Key:      aws.String(key),
-			UploadId: aws.String(uploadID),
-		})
-		_ = RemoveUploadState(bucket, key)
+	sess := &resumableSession{
+		bucket: bucket, key: key, uploadID: uploadID,
+		reader: reader, size: size, partSize: partSize, numParts: numParts,
+		state: state, cfg: cfg,
+	}
+	if err := c.uploadResumableParts(ctx, sess); err != nil {
+		return nil, err
 	}
 
-	// Upload parts with state tracking
+	// Complete the upload
+	result, err := c.completeMultipartFromState(ctx, state)
+	if err != nil {
+		c.abortResumableUpload(ctx, bucket, key, uploadID)
+		return nil, err
+	}
+
+	// Clean up state file on success
+	_ = RemoveUploadState(bucket, key)
+
+	return result, nil
+}
+
+// initiateResumableUpload starts a state-tracked multipart upload, applying
+// content-type, cache-control and metadata headers from cfg. The returned
+// error is already wrapped for the ResumableMultipartUpload operation.
+func (c *client) initiateResumableUpload(ctx context.Context, bucket, key string, cfg *uploadConfig) (string, error) {
+	createInput := &s3.CreateMultipartUploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	if cfg.contentType != "" {
+		createInput.ContentType = aws.String(cfg.contentType)
+	}
+	if cfg.cacheControl != "" {
+		createInput.CacheControl = aws.String(cfg.cacheControl)
+	}
+	if len(cfg.metadata) > 0 {
+		createInput.Metadata = cfg.metadata
+	}
+
+	createResp, err := c.s3Client().CreateMultipartUpload(ctx, createInput)
+	if err != nil {
+		return "", newError("ResumableMultipartUpload", "failed to initiate multipart upload", err)
+	}
+	return aws.ToString(createResp.UploadId), nil
+}
+
+// abortResumableUpload aborts the in-flight upload and removes the saved
+// state file.
+//
+// BUG-043: abort with a context that survives cancellation of the
+// request context — aborting with the canceled ctx fails instantly
+// and leaks the incomplete upload (billed parts, 7-day retention).
+func (c *client) abortResumableUpload(parent context.Context, bucket, key, uploadID string) {
+	abortCtx, abortCancel := abortContext(parent)
+	defer abortCancel()
+	c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
+		Bucket:   aws.String(bucket),
+		Key:      aws.String(key),
+		UploadId: aws.String(uploadID),
+	})
+	_ = RemoveUploadState(bucket, key)
+}
+
+// resumableSession carries the per-call state of a resumable upload's part loop.
+type resumableSession struct {
+	bucket   string
+	key      string
+	uploadID string
+	reader   io.Reader
+	size     int64
+	partSize int64
+	numParts int64
+	state    *MultipartUploadState
+	cfg      *uploadConfig
+}
+
+// uploadResumableParts uploads every part concurrently, persisting progress
+// after each one so an interrupted upload can be resumed. On a failed part
+// read it aborts the upload; on a failed part upload it saves state instead
+// so the upload can be resumed.
+func (c *client) uploadResumableParts(ctx context.Context, s *resumableSession) error {
 	type partResult struct {
 		info CompletedPartInfo
 		err  error
 	}
 
 	var mu sync.Mutex
-	sem := make(chan struct{}, cfg.concurrency)
-	results := make(chan partResult, numParts)
+	sem := make(chan struct{}, s.cfg.concurrency)
+	results := make(chan partResult, s.numParts)
 	var uploadedBytes int64
 
-	for partNum := int64(1); partNum <= numParts; partNum++ {
+	for partNum := int64(1); partNum <= s.numParts; partNum++ {
 		// Read this part's data (BUG-026: a reader shorter than the declared
 		// size aborts the upload instead of storing a truncated object)
-		buf, err := readUploadPart("ResumableMultipartUpload", reader, partSize, size, uploadedBytes, partNum)
+		buf, err := readUploadPart("ResumableMultipartUpload", s.reader, s.partSize, s.size, uploadedBytes, partNum)
 		if err != nil {
-			abort()
-			return nil, err
+			c.abortResumableUpload(ctx, s.bucket, s.key, s.uploadID)
+			return err
 		}
 		pn := int32(partNum)
 
@@ -513,9 +588,9 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 			defer func() { <-sem }()
 
 			resp, err := c.s3Client().UploadPart(ctx, &s3.UploadPartInput{
-				Bucket:     aws.String(bucket),
-				Key:        aws.String(key),
-				UploadId:   aws.String(uploadID),
+				Bucket:     aws.String(s.bucket),
+				Key:        aws.String(s.key),
+				UploadId:   aws.String(s.uploadID),
 				PartNumber: aws.Int32(partNumber),
 				Body:       bytes.NewReader(data),
 			})
@@ -532,38 +607,28 @@ func (c *client) ResumableMultipartUpload(ctx context.Context, bucket, key strin
 
 			// Save progress after each part
 			mu.Lock()
-			state.CompletedParts = append(state.CompletedParts, info)
-			_ = SaveUploadState(state)
+			s.state.CompletedParts = append(s.state.CompletedParts, info)
+			_ = SaveUploadState(s.state)
 			mu.Unlock()
 
 			results <- partResult{info: info}
 		}(pn, buf)
 
 		uploadedBytes += int64(len(buf))
-		if cfg.progressCallback != nil {
-			cfg.progressCallback(uploadedBytes, size)
+		if s.cfg.progressCallback != nil {
+			s.cfg.progressCallback(uploadedBytes, s.size)
 		}
 	}
 
 	// Collect results
-	for i := int64(0); i < numParts; i++ {
+	for i := int64(0); i < s.numParts; i++ {
 		r := <-results
 		if r.err != nil {
 			// Save progress so upload can be resumed
-			_ = SaveUploadState(state)
-			return nil, newError("ResumableMultipartUpload", "part upload failed (state saved for resume)", r.err)
+			_ = SaveUploadState(s.state)
+			return newError("ResumableMultipartUpload", "part upload failed (state saved for resume)", r.err)
 		}
 	}
 
-	// Complete the upload
-	result, err := c.completeMultipartFromState(ctx, state)
-	if err != nil {
-		abort()
-		return nil, err
-	}
-
-	// Clean up state file on success
-	_ = RemoveUploadState(bucket, key)
-
-	return result, nil
+	return nil
 }

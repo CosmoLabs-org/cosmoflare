@@ -155,39 +155,9 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 	}
 
 	// Initiate multipart upload
-	createInput := &s3.CreateMultipartUploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-	if cfg.contentType != "" {
-		createInput.ContentType = aws.String(cfg.contentType)
-	}
-	if cfg.cacheControl != "" {
-		createInput.CacheControl = aws.String(cfg.cacheControl)
-	}
-	if len(cfg.metadata) > 0 {
-		createInput.Metadata = cfg.metadata
-	}
-
-	createResp, err := c.s3Client().CreateMultipartUpload(ctx, createInput)
+	uploadID, err := c.initiateMultipart(ctx, bucket, key, cfg)
 	if err != nil {
-		return nil, newError("MultipartUpload", "failed to initiate multipart upload", err)
-	}
-	uploadID := aws.ToString(createResp.UploadId)
-
-	// Abort on any failure
-	var completedParts []types.CompletedPart
-	abort := func() {
-		// BUG-043: abort with a context that survives cancellation of the
-		// request context — aborting with the canceled ctx fails instantly
-		// and leaks the incomplete upload (billed parts, 7-day retention).
-		abortCtx, abortCancel := abortContext(ctx)
-		defer abortCancel()
-		c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
-			Bucket:   aws.String(bucket),
-			Key:      aws.String(key),
-			UploadId: aws.String(uploadID),
-		})
+		return nil, err
 	}
 
 	// Upload parts
@@ -197,61 +167,14 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 		numParts = 1
 	}
 
-	var uploadedBytes int64
-	type partResult struct {
-		part  types.CompletedPart
-		err   error
+	sess := &multipartSession{
+		bucket: bucket, key: key, uploadID: uploadID,
+		reader: reader, size: size, partSize: partSize, numParts: numParts,
+		cfg: cfg,
 	}
-
-	sem := make(chan struct{}, cfg.concurrency)
-	results := make(chan partResult, numParts)
-
-	for partNum := int64(1); partNum <= numParts; partNum++ {
-		// Read this part's data (BUG-026: a reader shorter than the declared
-		// size aborts the upload instead of storing a truncated object)
-		buf, err := readUploadPart("MultipartUpload", reader, partSize, size, uploadedBytes, partNum)
-		if err != nil {
-			abort()
-			return nil, err
-		}
-		partOffset := uploadedBytes
-		partNumber := int32(partNum)
-
-		sem <- struct{}{}
-		go func(pn int32, data []byte, offset int64) {
-			defer func() { <-sem }()
-			resp, err := c.s3Client().UploadPart(ctx, &s3.UploadPartInput{
-				Bucket:     aws.String(bucket),
-				Key:        aws.String(key),
-				UploadId:   aws.String(uploadID),
-				PartNumber: aws.Int32(pn),
-				Body:       bytes.NewReader(data),
-			})
-			if err != nil {
-				results <- partResult{err: fmt.Errorf("part %d: %w", pn, err)}
-				return
-			}
-			results <- partResult{part: types.CompletedPart{
-				ETag:       resp.ETag,
-				PartNumber: aws.Int32(pn),
-			}}
-		}(partNumber, buf, partOffset)
-
-		uploadedBytes += int64(len(buf))
-
-		if cfg.progressCallback != nil {
-			cfg.progressCallback(uploadedBytes, size)
-		}
-	}
-
-	// Collect results
-	for i := int64(0); i < numParts; i++ {
-		r := <-results
-		if r.err != nil {
-			abort()
-			return nil, newError("MultipartUpload", "part upload failed", r.err)
-		}
-		completedParts = append(completedParts, r.part)
+	completedParts, err := c.uploadMultipartParts(ctx, sess)
+	if err != nil {
+		return nil, err
 	}
 
 	// Sort parts by part number (goroutine results arrive in non-deterministic order)
@@ -269,20 +192,138 @@ func (c *client) MultipartUpload(ctx context.Context, bucket, key string, reader
 		},
 	})
 	if err != nil {
-		abort()
+		c.abortMultipart(ctx, bucket, key, uploadID)
 		return nil, newError("MultipartUpload", "failed to complete multipart upload", err)
 	}
 
 	etag := aws.ToString(completeResp.ETag)
 
 	return &UploadResult{
-		Key:       key,
-		Bucket:    bucket,
-		Size:      size,
-		ETag:      etag,
-		Uploaded:  time.Now().UTC(),
-		Parts:     int(numParts),
+		Key:      key,
+		Bucket:   bucket,
+		Size:     size,
+		ETag:     etag,
+		Uploaded: time.Now().UTC(),
+		Parts:    int(numParts),
 	}, nil
+}
+
+// initiateMultipart starts a multipart upload, applying content-type,
+// cache-control and metadata headers from cfg. The returned error is already
+// wrapped for the MultipartUpload operation.
+func (c *client) initiateMultipart(ctx context.Context, bucket, key string, cfg *uploadConfig) (string, error) {
+	createInput := &s3.CreateMultipartUploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	if cfg.contentType != "" {
+		createInput.ContentType = aws.String(cfg.contentType)
+	}
+	if cfg.cacheControl != "" {
+		createInput.CacheControl = aws.String(cfg.cacheControl)
+	}
+	if len(cfg.metadata) > 0 {
+		createInput.Metadata = cfg.metadata
+	}
+
+	createResp, err := c.s3Client().CreateMultipartUpload(ctx, createInput)
+	if err != nil {
+		return "", newError("MultipartUpload", "failed to initiate multipart upload", err)
+	}
+	return aws.ToString(createResp.UploadId), nil
+}
+
+// abortMultipart aborts an in-flight multipart upload.
+//
+// BUG-043: abort with a context that survives cancellation of the
+// request context — aborting with the canceled ctx fails instantly
+// and leaks the incomplete upload (billed parts, 7-day retention).
+func (c *client) abortMultipart(parent context.Context, bucket, key, uploadID string) {
+	abortCtx, abortCancel := abortContext(parent)
+	defer abortCancel()
+	c.s3Client().AbortMultipartUpload(abortCtx, &s3.AbortMultipartUploadInput{
+		Bucket:   aws.String(bucket),
+		Key:      aws.String(key),
+		UploadId: aws.String(uploadID),
+	})
+}
+
+// multipartSession carries the per-call state of a plain multipart upload's
+// part loop.
+type multipartSession struct {
+	bucket   string
+	key      string
+	uploadID string
+	reader   io.Reader
+	size     int64
+	partSize int64
+	numParts int64
+	cfg      *uploadConfig
+}
+
+// uploadMultipartParts uploads every part concurrently and returns the
+// completed parts in completion order; the caller sorts them by part number.
+// It aborts the upload on any part read or upload failure.
+func (c *client) uploadMultipartParts(ctx context.Context, s *multipartSession) ([]types.CompletedPart, error) {
+	type partResult struct {
+		part types.CompletedPart
+		err  error
+	}
+
+	var uploadedBytes int64
+	sem := make(chan struct{}, s.cfg.concurrency)
+	results := make(chan partResult, s.numParts)
+
+	for partNum := int64(1); partNum <= s.numParts; partNum++ {
+		// Read this part's data (BUG-026: a reader shorter than the declared
+		// size aborts the upload instead of storing a truncated object)
+		buf, err := readUploadPart("MultipartUpload", s.reader, s.partSize, s.size, uploadedBytes, partNum)
+		if err != nil {
+			c.abortMultipart(ctx, s.bucket, s.key, s.uploadID)
+			return nil, err
+		}
+		partOffset := uploadedBytes
+		partNumber := int32(partNum)
+
+		sem <- struct{}{}
+		go func(pn int32, data []byte, offset int64) {
+			defer func() { <-sem }()
+			resp, err := c.s3Client().UploadPart(ctx, &s3.UploadPartInput{
+				Bucket:     aws.String(s.bucket),
+				Key:        aws.String(s.key),
+				UploadId:   aws.String(s.uploadID),
+				PartNumber: aws.Int32(pn),
+				Body:       bytes.NewReader(data),
+			})
+			if err != nil {
+				results <- partResult{err: fmt.Errorf("part %d: %w", pn, err)}
+				return
+			}
+			results <- partResult{part: types.CompletedPart{
+				ETag:       resp.ETag,
+				PartNumber: aws.Int32(pn),
+			}}
+		}(partNumber, buf, partOffset)
+
+		uploadedBytes += int64(len(buf))
+
+		if s.cfg.progressCallback != nil {
+			s.cfg.progressCallback(uploadedBytes, s.size)
+		}
+	}
+
+	// Collect results
+	var completedParts []types.CompletedPart
+	for i := int64(0); i < s.numParts; i++ {
+		r := <-results
+		if r.err != nil {
+			c.abortMultipart(ctx, s.bucket, s.key, s.uploadID)
+			return nil, newError("MultipartUpload", "part upload failed", r.err)
+		}
+		completedParts = append(completedParts, r.part)
+	}
+
+	return completedParts, nil
 }
 
 // readUploadPart reads the next multipart part from reader, enforcing the
@@ -353,34 +394,33 @@ func detectContentType(key string) string {
 }
 
 var mimeTypes = map[string]string{
-	".html": "text/html; charset=utf-8",
-	".htm":  "text/html; charset=utf-8",
-	".css":  "text/css; charset=utf-8",
-	".js":   "application/javascript",
-	".json": "application/json",
-	".xml":  "application/xml",
-	".txt":  "text/plain; charset=utf-8",
-	".csv":  "text/csv",
-	".md":   "text/markdown; charset=utf-8",
-	".png":  "image/png",
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
-	".gif":  "image/gif",
-	".webp": "image/webp",
-	".svg":  "image/svg+xml",
-	".ico":  "image/x-icon",
-	".pdf":  "application/pdf",
-	".zip":  "application/zip",
-	".tar":  "application/x-tar",
-	".gz":   "application/gzip",
-	".mp4":  "video/mp4",
-	".webm": "video/webm",
-	".mp3":  "audio/mpeg",
-	".wav":  "audio/wav",
+	".html":  "text/html; charset=utf-8",
+	".htm":   "text/html; charset=utf-8",
+	".css":   "text/css; charset=utf-8",
+	".js":    "application/javascript",
+	".json":  "application/json",
+	".xml":   "application/xml",
+	".txt":   "text/plain; charset=utf-8",
+	".csv":   "text/csv",
+	".md":    "text/markdown; charset=utf-8",
+	".png":   "image/png",
+	".jpg":   "image/jpeg",
+	".jpeg":  "image/jpeg",
+	".gif":   "image/gif",
+	".webp":  "image/webp",
+	".svg":   "image/svg+xml",
+	".ico":   "image/x-icon",
+	".pdf":   "application/pdf",
+	".zip":   "application/zip",
+	".tar":   "application/x-tar",
+	".gz":    "application/gzip",
+	".mp4":   "video/mp4",
+	".webm":  "video/webm",
+	".mp3":   "audio/mpeg",
+	".wav":   "audio/wav",
 	".woff":  "font/woff",
 	".woff2": "font/woff2",
 	".ttf":   "font/ttf",
 	".otf":   "font/otf",
 	".eot":   "application/vnd.ms-fontobject",
 }
-
