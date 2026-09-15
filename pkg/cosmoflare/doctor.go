@@ -534,104 +534,124 @@ func (d *DoctorService) RunDiagnostics(ctx context.Context, domain string, expec
 func (d *DoctorService) analyzeIssues(report *DiagnosticReport) []DiagnosticIssue {
 	var issues []DiagnosticIssue
 
-	// DNS issues.
-	if report.DNS != nil {
-		if !report.DNS.Consistent {
-			issues = append(issues, DiagnosticIssue{
-				Probe:    "dns",
-				Severity: "warning",
-				Message:  "A records are inconsistent across DNS resolvers",
-				Fix:      "Wait for DNS propagation to complete, or verify records are correct in your DNS provider",
-			})
-		}
-	}
+	issues = appendDNSIssues(issues, report.DNS)
+	issues = appendSSLIssues(issues, report.SSL)
+	issues = appendHTTPIssues(issues, report.HTTP)
+	issues = appendNSIssues(issues, report.Nameservers)
 
-	// SSL issues.
-	if report.SSL != nil {
-		if report.SSL.Error != "" {
-			issues = append(issues, DiagnosticIssue{
-				Probe:    "ssl",
-				Severity: "critical",
-				Message:  fmt.Sprintf("SSL probe failed: %s", report.SSL.Error),
-				Fix:      "Verify the domain has a valid SSL certificate and is accessible on port 443",
-			})
-		} else {
-			if report.SSL.DaysLeft < 0 {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "ssl",
-					Severity: "critical",
-					Message:  fmt.Sprintf("SSL certificate expired %d days ago", -report.SSL.DaysLeft),
-					Fix:      "Renew the SSL certificate immediately",
-				})
-			} else if report.SSL.DaysLeft < 30 {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "ssl",
-					Severity: "warning",
-					Message:  fmt.Sprintf("SSL certificate expires in %d days", report.SSL.DaysLeft),
-					Fix:      "Renew the SSL certificate before expiration",
-				})
-			}
-			if report.SSL.TLSVersion == "TLS 1.0" || report.SSL.TLSVersion == "TLS 1.1" {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "ssl",
-					Severity: "warning",
-					Message:  fmt.Sprintf("TLS version %s is outdated and insecure", report.SSL.TLSVersion),
-					Fix:      "cosmoflare ssl update ZONE_ID --min-tls=1.2",
-				})
-			}
-		}
-	}
+	return issues
+}
 
-	// HTTP issues.
-	if report.HTTP != nil {
-		if report.HTTP.Error != "" {
-			issues = append(issues, DiagnosticIssue{
-				Probe:    "http",
-				Severity: "critical",
-				Message:  fmt.Sprintf("HTTP probe failed: %s", report.HTTP.Error),
-			})
-		} else {
-			if report.HTTP.StatusCode >= 500 {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "http",
-					Severity: "critical",
-					Message:  fmt.Sprintf("HTTP returned server error status %d", report.HTTP.StatusCode),
-				})
-			} else if report.HTTP.StatusCode >= 400 {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "http",
-					Severity: "warning",
-					Message:  fmt.Sprintf("HTTP returned client error status %d", report.HTTP.StatusCode),
-				})
-			}
-			if report.HTTP.CloudflareRay == "" {
-				issues = append(issues, DiagnosticIssue{
-					Probe:    "http",
-					Severity: "info",
-					Message:  "No cf-ray header detected — domain may not be proxied through Cloudflare",
-				})
-			}
-		}
+// appendDNSIssues appends issues from the DNS propagation probe.
+func appendDNSIssues(issues []DiagnosticIssue, dns *DNSPropagationResult) []DiagnosticIssue {
+	if dns == nil {
+		return issues
 	}
-
-	// Nameserver issues.
-	if report.Nameservers != nil {
-		if report.Nameservers.Error != "" {
-			issues = append(issues, DiagnosticIssue{
-				Probe:    "ns",
-				Severity: "critical",
-				Message:  fmt.Sprintf("Nameserver probe failed: %s", report.Nameservers.Error),
-			})
-		} else if !report.Nameservers.Match {
-			issues = append(issues, DiagnosticIssue{
-				Probe:    "ns",
-				Severity: "critical",
-				Message:  "Nameservers do not match expected configuration",
-				Fix:      "Update nameservers at your registrar",
-			})
-		}
+	if !dns.Consistent {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "dns",
+			Severity: "warning",
+			Message:  "A records are inconsistent across DNS resolvers",
+			Fix:      "Wait for DNS propagation to complete, or verify records are correct in your DNS provider",
+		})
 	}
+	return issues
+}
 
+// appendSSLIssues appends issues from the SSL certificate probe.
+func appendSSLIssues(issues []DiagnosticIssue, ssl *SSLProbeResult) []DiagnosticIssue {
+	if ssl == nil {
+		return issues
+	}
+	if ssl.Error != "" {
+		return append(issues, DiagnosticIssue{
+			Probe:    "ssl",
+			Severity: "critical",
+			Message:  fmt.Sprintf("SSL probe failed: %s", ssl.Error),
+			Fix:      "Verify the domain has a valid SSL certificate and is accessible on port 443",
+		})
+	}
+	if ssl.DaysLeft < 0 {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "ssl",
+			Severity: "critical",
+			Message:  fmt.Sprintf("SSL certificate expired %d days ago", -ssl.DaysLeft),
+			Fix:      "Renew the SSL certificate immediately",
+		})
+	} else if ssl.DaysLeft < 30 {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "ssl",
+			Severity: "warning",
+			Message:  fmt.Sprintf("SSL certificate expires in %d days", ssl.DaysLeft),
+			Fix:      "Renew the SSL certificate before expiration",
+		})
+	}
+	if ssl.TLSVersion == "TLS 1.0" || ssl.TLSVersion == "TLS 1.1" {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "ssl",
+			Severity: "warning",
+			Message:  fmt.Sprintf("TLS version %s is outdated and insecure", ssl.TLSVersion),
+			Fix:      "cosmoflare ssl update ZONE_ID --min-tls=1.2",
+		})
+	}
+	return issues
+}
+
+// appendHTTPIssues appends issues from the HTTP response probe.
+func appendHTTPIssues(issues []DiagnosticIssue, httpResult *HTTPProbeResult) []DiagnosticIssue {
+	if httpResult == nil {
+		return issues
+	}
+	if httpResult.Error != "" {
+		return append(issues, DiagnosticIssue{
+			Probe:    "http",
+			Severity: "critical",
+			Message:  fmt.Sprintf("HTTP probe failed: %s", httpResult.Error),
+		})
+	}
+	if httpResult.StatusCode >= 500 {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "http",
+			Severity: "critical",
+			Message:  fmt.Sprintf("HTTP returned server error status %d", httpResult.StatusCode),
+		})
+	} else if httpResult.StatusCode >= 400 {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "http",
+			Severity: "warning",
+			Message:  fmt.Sprintf("HTTP returned client error status %d", httpResult.StatusCode),
+		})
+	}
+	if httpResult.CloudflareRay == "" {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "http",
+			Severity: "info",
+			Message:  "No cf-ray header detected — domain may not be proxied through Cloudflare",
+		})
+	}
+	return issues
+}
+
+// appendNSIssues appends issues from the nameserver consistency probe.
+func appendNSIssues(issues []DiagnosticIssue, ns *NSProbeResult) []DiagnosticIssue {
+	if ns == nil {
+		return issues
+	}
+	if ns.Error != "" {
+		return append(issues, DiagnosticIssue{
+			Probe:    "ns",
+			Severity: "critical",
+			Message:  fmt.Sprintf("Nameserver probe failed: %s", ns.Error),
+		})
+	}
+	if !ns.Match {
+		issues = append(issues, DiagnosticIssue{
+			Probe:    "ns",
+			Severity: "critical",
+			Message:  "Nameservers do not match expected configuration",
+			Fix:      "Update nameservers at your registrar",
+		})
+	}
 	return issues
 }
 

@@ -56,12 +56,12 @@ type DiffSummary struct {
 // used for diff comparisons. This is intentionally decoupled from the
 // init templates so the diff service can parse real-world configs.
 type CosmoflareConfig struct {
-	Name    string            `mapstructure:"name" json:"name"`
-	Type    string            `mapstructure:"type" json:"type"`
+	Name    string                  `mapstructure:"name" json:"name"`
+	Type    string                  `mapstructure:"type" json:"type"`
 	Workers map[string]WorkerConfig `mapstructure:"workers" json:"workers,omitempty"`
-	R2      R2Config          `mapstructure:"r2" json:"r2,omitempty"`
-	KV      KVConfig          `mapstructure:"kv" json:"kv,omitempty"`
-	DNS     DNSConfig         `mapstructure:"dns" json:"dns,omitempty"`
+	R2      R2Config                `mapstructure:"r2" json:"r2,omitempty"`
+	KV      KVConfig                `mapstructure:"kv" json:"kv,omitempty"`
+	DNS     DNSConfig               `mapstructure:"dns" json:"dns,omitempty"`
 }
 
 // WorkerConfig describes a single Worker in .cosmoflare.yaml.
@@ -94,7 +94,7 @@ type KVNamespaceConfig struct {
 
 // DNSConfig holds DNS-specific configuration.
 type DNSConfig struct {
-	ZoneID  string          `mapstructure:"zone_id" json:"zone_id,omitempty"`
+	ZoneID  string            `mapstructure:"zone_id" json:"zone_id,omitempty"`
 	Records []DNSRecordConfig `mapstructure:"records" json:"records,omitempty"`
 }
 
@@ -342,6 +342,38 @@ func (d *DiffService) CompareKV(ctx context.Context, local KVConfig) (*DiffResul
 	return result, nil
 }
 
+// dnsKey is the lookup key for DNS diffing: type+name+content uniquely
+// identifies a record.
+type dnsKey struct {
+	Type    string
+	Name    string
+	Content string
+}
+
+// dnsKeyOf builds the lookup key for a record config.
+func dnsKeyOf(r DNSRecordConfig) dnsKey {
+	return dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
+}
+
+// dnsLiveIndex indexes live DNS records by lookup key.
+func dnsLiveIndex(liveRecords []*DNSRecord) map[dnsKey]*DNSRecord {
+	liveMap := make(map[dnsKey]*DNSRecord, len(liveRecords))
+	for _, r := range liveRecords {
+		k := dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
+		liveMap[k] = r
+	}
+	return liveMap
+}
+
+// dnsLocalIndex indexes local DNS record configs by lookup key.
+func dnsLocalIndex(local []DNSRecordConfig) map[dnsKey]DNSRecordConfig {
+	localMap := make(map[dnsKey]DNSRecordConfig, len(local))
+	for _, r := range local {
+		localMap[dnsKeyOf(r)] = r
+	}
+	return localMap
+}
+
 // CompareDNS compares local DNS record config against live state.
 func (d *DiffService) CompareDNS(ctx context.Context, local DNSConfig) (*DiffResult, error) {
 	result := &DiffResult{Service: "dns"}
@@ -360,29 +392,21 @@ func (d *DiffService) CompareDNS(ctx context.Context, local DNSConfig) (*DiffRes
 		return nil, fmt.Errorf("failed to list live DNS records: %w", err)
 	}
 
-	// Build lookup key: type+name+content uniquely identifies a record
-	type dnsKey struct {
-		Type    string
-		Name    string
-		Content string
-	}
+	liveMap := dnsLiveIndex(liveRecords)
+	localMap := dnsLocalIndex(local.Records)
 
-	liveMap := make(map[dnsKey]*DNSRecord, len(liveRecords))
-	for _, r := range liveRecords {
-		k := dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
-		liveMap[k] = r
-	}
+	dnsDiffAdditions(result, local.Records, liveMap)
+	dnsDiffDeletions(result, liveMap, localMap)
+	dnsDiffModifications(result, local.Records, liveMap)
 
-	localMap := make(map[dnsKey]DNSRecordConfig, len(local.Records))
-	for _, r := range local.Records {
-		k := dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
-		localMap[k] = r
-	}
+	return result, nil
+}
 
-	// Find additions (in local, not live)
-	for _, r := range local.Records {
-		k := dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
-		if _, exists := liveMap[k]; !exists {
+// dnsDiffAdditions appends records present in the local config but not
+// live to the additions bucket.
+func dnsDiffAdditions(result *DiffResult, local []DNSRecordConfig, liveMap map[dnsKey]*DNSRecord) {
+	for _, r := range local {
+		if _, exists := liveMap[dnsKeyOf(r)]; !exists {
 			result.Additions = append(result.Additions, DiffEntry{
 				Action:   DiffAdd,
 				Service:  "dns",
@@ -391,8 +415,11 @@ func (d *DiffService) CompareDNS(ctx context.Context, local DNSConfig) (*DiffRes
 			})
 		}
 	}
+}
 
-	// Find deletions (live, not in local)
+// dnsDiffDeletions appends live records absent from the local config to
+// the deletions bucket.
+func dnsDiffDeletions(result *DiffResult, liveMap map[dnsKey]*DNSRecord, localMap map[dnsKey]DNSRecordConfig) {
 	for k, r := range liveMap {
 		if _, exists := localMap[k]; !exists {
 			result.Deletions = append(result.Deletions, DiffEntry{
@@ -403,11 +430,13 @@ func (d *DiffService) CompareDNS(ctx context.Context, local DNSConfig) (*DiffRes
 			})
 		}
 	}
+}
 
-	// Find modifications (same key, different settings)
-	for _, r := range local.Records {
-		k := dnsKey{Type: r.Type, Name: r.Name, Content: r.Content}
-		live, exists := liveMap[k]
+// dnsDiffModifications appends records whose lookup key matches live but
+// whose TTL or proxied settings differ to the changes bucket.
+func dnsDiffModifications(result *DiffResult, local []DNSRecordConfig, liveMap map[dnsKey]*DNSRecord) {
+	for _, r := range local {
+		live, exists := liveMap[dnsKeyOf(r)]
 		if !exists {
 			continue
 		}
@@ -428,8 +457,6 @@ func (d *DiffService) CompareDNS(ctx context.Context, local DNSConfig) (*DiffRes
 			})
 		}
 	}
-
-	return result, nil
 }
 
 // CompareAll runs comparisons for all configured services and returns a summary.
