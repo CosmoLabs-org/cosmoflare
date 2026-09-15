@@ -249,102 +249,53 @@ func (suite *AuthenticationTestSuite) handleWeakToken(w http.ResponseWriter, aut
 	fmt.Fprint(w, `{"error": "weak token detected", "error_code": "WEAK_TOKEN", "suggestion": "use a stronger authentication method"}`)
 }
 
+// assertValidateStatus performs a GET /auth/validate request with the given
+// Authorization header (omitted when empty) and asserts the response status.
+func (suite *AuthenticationTestSuite) assertValidateStatus(authHeader string, wantStatus int, msg string) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
+	require.NoError(suite.T(), err)
+
+	if authHeader != "" {
+		req.Header.Set("Authorization", authHeader)
+	}
+
+	resp, err := client.Do(req)
+	require.NoError(suite.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), wantStatus, resp.StatusCode, msg)
+}
+
 // TestTokenValidation tests various token validation scenarios
 func (suite *AuthenticationTestSuite) TestTokenValidation() {
 	suite.Run("Valid Token", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Bearer valid-token-12345")
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusOK, resp.StatusCode, "Valid token should be accepted")
+		suite.assertValidateStatus("Bearer valid-token-12345", http.StatusOK, "Valid token should be accepted")
 	})
 
 	suite.Run("Missing Authorization Header", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Missing auth header should be rejected")
+		suite.assertValidateStatus("", http.StatusUnauthorized, "Missing auth header should be rejected")
 	})
 
 	suite.Run("Invalid Authorization Format", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Basic dGVzdDp0ZXN0") // Basic auth instead of Bearer
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Invalid auth format should be rejected")
+		// Basic auth instead of Bearer
+		suite.assertValidateStatus("Basic dGVzdDp0ZXN0", http.StatusUnauthorized, "Invalid auth format should be rejected")
 	})
 
 	suite.Run("Expired Token", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Bearer expired-token-12345")
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Expired token should be rejected")
+		suite.assertValidateStatus("Bearer expired-token-12345", http.StatusUnauthorized, "Expired token should be rejected")
 	})
 
 	suite.Run("Revoked Token", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Bearer revoked-token-12345")
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Revoked token should be rejected")
+		suite.assertValidateStatus("Bearer revoked-token-12345", http.StatusUnauthorized, "Revoked token should be rejected")
 	})
 
 	suite.Run("Short Token", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Bearer short")
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Short token should be rejected")
+		suite.assertValidateStatus("Bearer short", http.StatusUnauthorized, "Short token should be rejected")
 	})
 
 	suite.Run("Token with Spaces", func() {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest("GET", suite.server.URL+"/auth/validate", nil)
-		require.NoError(suite.T(), err)
-
-		req.Header.Set("Authorization", "Bearer token with spaces")
-
-		resp, err := client.Do(req)
-		require.NoError(suite.T(), err)
-		defer resp.Body.Close()
-
-		assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode, "Token with spaces should be rejected")
+		suite.assertValidateStatus("Bearer token with spaces", http.StatusUnauthorized, "Token with spaces should be rejected")
 	})
 }
 
