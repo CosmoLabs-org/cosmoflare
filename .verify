@@ -1,1 +1,0 @@
-go build ./... && go test ./pkg/cosmoflare/ -run 'Secret' -count=1 && go test ./cmd/ -run 'Secret' -count=1
