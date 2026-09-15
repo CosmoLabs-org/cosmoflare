@@ -66,7 +66,7 @@ func TestWorkerRouteCmd_Metadata(t *testing.T) {
 }
 
 func TestWorkerRouteListCmd_Flags(t *testing.T) {
-	if workerRouteListCmd.Flags().Lookup("json") != nil {
+	if workerRouteListCmd.LocalFlags().Lookup("json") != nil {
 		t.Error("list should not define a local --json flag")
 	}
 }
