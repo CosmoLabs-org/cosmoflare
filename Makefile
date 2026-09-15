@@ -88,22 +88,34 @@ build-platform:
 	CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GOBUILD) $(LDFLAGS) -o $(DIST_DIR)/$$output_name .; \
 	echo "✅ Build complete: $(DIST_DIR)/$$output_name"
 
-# Create distribution archives
+# Create distribution archives.
+# Stage README/LICENSE into $(DIST_DIR) and archive clean root-level names.
+# NEVER pass ../-relative paths to tar/zip: they are stored literally in the
+# archive ("../README.md"), and extraction then writes OUTSIDE the target
+# directory — tar refuses, Homebrew refuses, the v0.28.0 assets shipped broken
+# this way. The platform binary is staged as plain $(BINARY_NAME) so users get
+# ./cosmoflare after untar, not ./cosmoflare-darwin-arm64.
 .PHONY: dist
 dist: build-all
 	@echo "📦 Creating distribution archives..."
+	@cp README.md LICENSE $(DIST_DIR)/
 	@cd $(DIST_DIR); \
 	for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d'/' -f1); \
 		arch=$$(echo $$platform | cut -d'/' -f2); \
 		output_name=$(BINARY_NAME)-$$os-$$arch; \
 		if [ $$os = "windows" ]; then output_name=$$output_name.exe; fi; \
+		bin_name=$(BINARY_NAME); \
+		if [ $$os = "windows" ]; then bin_name=$$bin_name.exe; fi; \
+		cp $$output_name $$bin_name; \
 		if [ $$os = "windows" ]; then \
-			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$output_name ../README.md ../LICENSE; \
+			zip -r $(BINARY_NAME)-$(VERSION)-$$os-$$arch.zip $$bin_name README.md LICENSE; \
 		else \
-			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$output_name ../README.md ../LICENSE; \
+			tar -czf $(BINARY_NAME)-$(VERSION)-$$os-$$arch.tar.gz $$bin_name README.md LICENSE; \
 		fi; \
-	done
+		rm -f $$bin_name; \
+	done; \
+	rm -f README.md LICENSE
 	@echo "✅ Distribution archives created in $(DIST_DIR)/"
 
 # Create checksums for distribution files
