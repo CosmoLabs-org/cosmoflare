@@ -190,6 +190,21 @@ go test ./tests/integration/... -v -count=1
 go vet ./...
 ```
 
+### Releasing
+
+Releases are cut locally — there is no CI, by policy. One command prepares and
+stages everything, then prints the publish command for you to run:
+
+```bash
+make release TAG=v0.X.Y
+```
+
+It runs the full preparation (clean, test, vulncheck, cross-build, archives),
+sanity-gates every archive (>1MB — smaller means a failed platform build),
+stages the tar.gz/zip archives in `dist/upload/` with sha256 checksums, and
+prints the `gh release create` command with the release notes file. Publishing
+itself stays manual and operator-gated.
+
 ### Project Structure
 
 ```

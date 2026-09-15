@@ -13,7 +13,11 @@ GOMOD=$(GOCMD) mod
 # Binary info
 BINARY_NAME=cosmoflare
 BINARY_UNIX=$(BINARY_NAME)_unix
-VERSION=$(shell ccs version --short 2>/dev/null | sed 's/ .*//' || grep -o '"version":"[^"]*"' .version-registry.json 2>/dev/null | head -1 | cut -d'"' -f4 || echo "dev")
+# Read from the registry directly. The old `ccs version --short | sed ... || fallback`
+# chain NEVER fell back: `--short` is an unknown flag (empty stdout, exit 0 through
+# the pipe), so every build since shipped with VERSION="" — double-dash archive
+# names and an empty cobra Version string (no --version flag in the binaries).
+VERSION=$(shell v=$$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' .version-registry.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$$/\1/'); echo $${v:-dev})
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/cosmoflare/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/cosmoflare/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/cosmoflare/cmd.GitCommit=$(GIT_COMMIT)"
@@ -23,7 +27,10 @@ BUILD_DIR=build
 DIST_DIR=dist
 
 # Cross-compilation targets
-PLATFORMS=linux/amd64 linux/arm64 linux/armv7 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64
+PLATFORMS=linux/amd64 linux/arm64 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64
+# linux/armv7 removed 2026-09-15: its cross-build fails silently and packs a docs-only
+# tarball (no binary); the release sanity gate refuses to stage it. Re-add only with a
+# working GOARM build. Never shipped in any release.
 PLATFORMS_MAP=linux_amd64:linux-x86_64 linux_arm64:linux-aarch64 linux_armv7:linux-armv7 windows_amd64:windows-x86_64 windows_arm64:windows-aarch64 darwin_amd64:darwin-x86_64 darwin_arm64:darwin-aarch64
 
 # Docker settings
@@ -363,6 +370,53 @@ release-prepare: clean deps test vulncheck build-all dist checksums sbom
 	@echo "🔐 Security files:"
 	@ls -la $(DIST_DIR)/*checksums* $(DIST_DIR)/sbom.* 2>/dev/null || echo "No security files found"
 
+# Release (FEAT-016): prepare + sanity-gate + stage + checksums, then PRINT the
+# publish command. Publishing stays operator-gated: releases are cut locally,
+# no CI (project policy). A platform build that fails mid-way still packs a
+# docs-only archive (README/LICENSE, ~4KB, no binary — seen with linux-armv7
+# in v0.28.0), so every archive must exceed 1MB before staging.
+.PHONY: release
+release:
+	@if [ -z "$(TAG)" ]; then \
+		echo "❌ TAG is required."; \
+		echo "Usage: make release TAG=vX.Y.Z"; \
+		exit 1; \
+	fi
+	@$(MAKE) release-prepare VERSION=$(TAG)
+	@echo "🔎 Archive sanity gate (>1MB each, else failed platform build)..."
+	@set -e; \
+	cd $(DIST_DIR); \
+	found=0; \
+	for f in $(BINARY_NAME)-*.tar.gz $(BINARY_NAME)-*.zip; do \
+		[ -e "$$f" ] || continue; \
+		found=1; \
+		size=$$(stat -f %z "$$f" 2>/dev/null || stat -c %s "$$f"); \
+		if [ "$$size" -lt 1048576 ]; then \
+			echo "❌ Archive $$f is only $$size bytes (<1MB) — failed platform build, refusing to stage"; \
+			exit 1; \
+		fi; \
+		echo "  ✅ $$f ($$size bytes)"; \
+	done; \
+	if [ "$$found" -eq 0 ]; then \
+		echo "❌ No $(BINARY_NAME)-*.tar.gz|zip archives found in $(DIST_DIR)/"; \
+		exit 1; \
+	fi
+	@echo "📦 Staging $(DIST_DIR)/upload/..."
+	@rm -rf $(DIST_DIR)/upload
+	@mkdir -p $(DIST_DIR)/upload
+	@cd $(DIST_DIR); \
+	for f in $(BINARY_NAME)-*.tar.gz $(BINARY_NAME)-*.zip; do \
+		[ -e "$$f" ] && cp "$$f" upload/ || true; \
+	done
+	@cd $(DIST_DIR)/upload && shasum -a 256 $(BINARY_NAME)-$(TAG)-* > checksums-sha256.txt
+	@echo "🔐 Checksums written: $(DIST_DIR)/upload/checksums-sha256.txt"
+	@echo ""
+	@echo "🚀 Release $(TAG) is staged and ready. Publish it yourself with:"
+	@echo ""
+	@echo "  gh release create $(TAG) dist/upload/* --repo CosmoLabs-org/cosmoflare --title $(TAG) --notes-file $$(ls docs/release-notes/$(BINARY_NAME)-$(TAG)-ReleaseNotes*.md 2>/dev/null | head -1 || echo "docs/release-notes/$(BINARY_NAME)-$(TAG)-ReleaseNotes.md")"
+	@echo ""
+	@echo "⚠️  Not run automatically — publishing is operator-gated by policy (local releases, no CI)."
+
 # Version management
 .PHONY: version
 version:
@@ -428,6 +482,7 @@ help:
 	@echo ""
 	@echo "Release:"
 	@echo "  release-prepare Prepare full release with builds and dists"
+	@echo "  release        Stage a release and print the publish command: make release TAG=vX.Y.Z"
 	@echo "  checksums     Create SHA256 checksums for release files"
 	@echo "  deb           Create DEB package (Ubuntu/Debian)"
 	@echo "  rpm           Create RPM package (RHEL/Fedora)"
