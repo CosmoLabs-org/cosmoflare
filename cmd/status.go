@@ -82,84 +82,28 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		svc, err := getZoneService()
-		if err != nil {
-			addError(fmt.Sprintf("zones: %v", err))
-			report.Zones.Error = err.Error()
-			return
-		}
-		zones, err := svc.List(ctx)
-		if err != nil {
-			addError(fmt.Sprintf("zones: %v", err))
-			report.Zones.Error = err.Error()
-			return
-		}
-		report.Zones.Count = len(zones)
-
-		for _, z := range zones {
-			if z.Status == "active" {
-				report.SSL.Active++
-			} else {
-				report.SSL.Inactive++
-			}
-		}
+		collectStatusZones(ctx, report, addError)
 	}()
 
 	// Query workers
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		svc, err := getWorkerService()
-		if err != nil {
-			addError(fmt.Sprintf("workers: %v", err))
-			report.Workers.Error = err.Error()
-			return
-		}
-		workers, err := svc.List(ctx)
-		if err != nil {
-			addError(fmt.Sprintf("workers: %v", err))
-			report.Workers.Error = err.Error()
-			return
-		}
-		report.Workers.Count = len(workers)
+		collectStatusWorkers(ctx, report, addError)
 	}()
 
 	// Query KV namespaces
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		svc, err := getKVService()
-		if err != nil {
-			addError(fmt.Sprintf("kv: %v", err))
-			report.KV.Error = err.Error()
-			return
-		}
-		namespaces, err := svc.ListNamespaces(ctx)
-		if err != nil {
-			addError(fmt.Sprintf("kv: %v", err))
-			report.KV.Error = err.Error()
-			return
-		}
-		report.KV.Count = len(namespaces)
+		collectStatusKV(ctx, report, addError)
 	}()
 
 	// Query R2 buckets
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		client, err := getR2ClientForStatus()
-		if err != nil {
-			addError(fmt.Sprintf("r2: %v", err))
-			report.Buckets.Error = err.Error()
-			return
-		}
-		buckets, err := client.ListBuckets(ctx)
-		if err != nil {
-			addError(fmt.Sprintf("r2: %v", err))
-			report.Buckets.Error = err.Error()
-			return
-		}
-		report.Buckets.Count = len(buckets)
+		collectStatusR2(ctx, report, addError)
 	}()
 
 	wg.Wait()
@@ -171,6 +115,86 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	return outResult(report, func() {
 		printStatusDashboard(report)
 	})
+}
+
+// collectStatusZones fills the zones section of the report (and the SSL
+// counters derived from zone status). TASK-009: extracted from runStatus.
+func collectStatusZones(ctx context.Context, report *StatusReport, addError func(string)) {
+	svc, err := getZoneService()
+	if err != nil {
+		addError(fmt.Sprintf("zones: %v", err))
+		report.Zones.Error = err.Error()
+		return
+	}
+	zones, err := svc.List(ctx)
+	if err != nil {
+		addError(fmt.Sprintf("zones: %v", err))
+		report.Zones.Error = err.Error()
+		return
+	}
+	report.Zones.Count = len(zones)
+
+	for _, z := range zones {
+		if z.Status == "active" {
+			report.SSL.Active++
+		} else {
+			report.SSL.Inactive++
+		}
+	}
+}
+
+// collectStatusWorkers fills the workers section of the report.
+// TASK-009: extracted from runStatus.
+func collectStatusWorkers(ctx context.Context, report *StatusReport, addError func(string)) {
+	svc, err := getWorkerService()
+	if err != nil {
+		addError(fmt.Sprintf("workers: %v", err))
+		report.Workers.Error = err.Error()
+		return
+	}
+	workers, err := svc.List(ctx)
+	if err != nil {
+		addError(fmt.Sprintf("workers: %v", err))
+		report.Workers.Error = err.Error()
+		return
+	}
+	report.Workers.Count = len(workers)
+}
+
+// collectStatusKV fills the KV namespaces section of the report.
+// TASK-009: extracted from runStatus.
+func collectStatusKV(ctx context.Context, report *StatusReport, addError func(string)) {
+	svc, err := getKVService()
+	if err != nil {
+		addError(fmt.Sprintf("kv: %v", err))
+		report.KV.Error = err.Error()
+		return
+	}
+	namespaces, err := svc.ListNamespaces(ctx)
+	if err != nil {
+		addError(fmt.Sprintf("kv: %v", err))
+		report.KV.Error = err.Error()
+		return
+	}
+	report.KV.Count = len(namespaces)
+}
+
+// collectStatusR2 fills the R2 buckets section of the report.
+// TASK-009: extracted from runStatus.
+func collectStatusR2(ctx context.Context, report *StatusReport, addError func(string)) {
+	client, err := getR2ClientForStatus()
+	if err != nil {
+		addError(fmt.Sprintf("r2: %v", err))
+		report.Buckets.Error = err.Error()
+		return
+	}
+	buckets, err := client.ListBuckets(ctx)
+	if err != nil {
+		addError(fmt.Sprintf("r2: %v", err))
+		report.Buckets.Error = err.Error()
+		return
+	}
+	report.Buckets.Count = len(buckets)
 }
 
 func printStatusDashboard(r *StatusReport) {
