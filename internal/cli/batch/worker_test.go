@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -146,68 +147,88 @@ func TestFindSubstring(t *testing.T) {
 // parseCopyOptions
 // ---------------------------------------------------------------------------
 
-func TestParseCopyOptions(t *testing.T) {
-	queue := make(chan *Operation, 10)
-	results := make(chan *Operation, 10)
-	w := NewWorker(1, queue, results, nil)
+// parseCopyFlagCase is one single-key scenario for parseCopyOptions.
+type parseCopyFlagCase struct {
+	name string
+	opts map[string]interface{}
+	// want asserts the effect of the single option on the parsed result.
+	want func(t *testing.T, o *operations.CopyOptions)
+}
 
+// assertCopyOptionsDefaults asserts the values parseCopyOptions falls back to
+// when no options are supplied.
+func assertCopyOptionsDefaults(t *testing.T, opts *operations.CopyOptions) {
+	t.Helper()
+	require.NotNil(t, opts)
+	assert.False(t, opts.Resume)
+	assert.True(t, opts.Verify)
+	assert.False(t, opts.Overwrite)
+	assert.True(t, opts.Preserve)
+	assert.False(t, opts.Quiet)
+	assert.Equal(t, int64(8*1024*1024), opts.ChunkSize)
+	assert.Equal(t, 3, opts.Retries)
+}
+
+// runParseCopyOptionsDefaultsTests covers the nil and empty-map fallbacks.
+func runParseCopyOptionsDefaultsTests(t *testing.T, w *Worker) {
 	t.Run("nil options returns defaults", func(t *testing.T) {
-		opts := w.parseCopyOptions(nil)
-		require.NotNil(t, opts)
-		assert.False(t, opts.Resume)
-		assert.True(t, opts.Verify)
-		assert.False(t, opts.Overwrite)
-		assert.True(t, opts.Preserve)
-		assert.False(t, opts.Quiet)
-		assert.Equal(t, int64(8*1024*1024), opts.ChunkSize)
-		assert.Equal(t, 3, opts.Retries)
+		assertCopyOptionsDefaults(t, w.parseCopyOptions(nil))
 	})
 
 	t.Run("empty map returns defaults", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{})
-		require.NotNil(t, opts)
-		assert.False(t, opts.Resume)
-		assert.True(t, opts.Verify)
-		assert.False(t, opts.Overwrite)
-		assert.True(t, opts.Preserve)
-		assert.False(t, opts.Quiet)
+		assertCopyOptionsDefaults(t, w.parseCopyOptions(map[string]interface{}{}))
 	})
+}
 
-	t.Run("resume sets Resume", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"resume": true})
-		assert.True(t, opts.Resume)
-	})
+// runParseCopyOptionsFlagTests covers each recognized option key in isolation.
+func runParseCopyOptionsFlagTests(t *testing.T, w *Worker) {
+	cases := []parseCopyFlagCase{
+		{
+			name: "resume sets Resume",
+			opts: map[string]interface{}{"resume": true},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.True(t, o.Resume) },
+		},
+		{
+			name: "verify sets Verify",
+			opts: map[string]interface{}{"verify": true},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.True(t, o.Verify) },
+		},
+		{
+			name: "overwrite sets Overwrite",
+			opts: map[string]interface{}{"overwrite": true},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.True(t, o.Overwrite) },
+		},
+		{
+			name: "preserve sets Preserve",
+			opts: map[string]interface{}{"preserve": true},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.True(t, o.Preserve) },
+		},
+		{
+			name: "quiet sets Quiet",
+			opts: map[string]interface{}{"quiet": true},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.True(t, o.Quiet) },
+		},
+		{
+			name: "chunk_size float64 sets ChunkSize",
+			opts: map[string]interface{}{"chunk_size": 100.0},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.Equal(t, int64(100), o.ChunkSize) },
+		},
+		{
+			name: "retries float64 sets Retries",
+			opts: map[string]interface{}{"retries": 5.0},
+			want: func(t *testing.T, o *operations.CopyOptions) { assert.Equal(t, 5, o.Retries) },
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.want(t, w.parseCopyOptions(tc.opts))
+		})
+	}
+}
 
-	t.Run("verify sets Verify", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"verify": true})
-		assert.True(t, opts.Verify)
-	})
-
-	t.Run("overwrite sets Overwrite", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"overwrite": true})
-		assert.True(t, opts.Overwrite)
-	})
-
-	t.Run("preserve sets Preserve", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"preserve": true})
-		assert.True(t, opts.Preserve)
-	})
-
-	t.Run("quiet sets Quiet", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"quiet": true})
-		assert.True(t, opts.Quiet)
-	})
-
-	t.Run("chunk_size float64 sets ChunkSize", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"chunk_size": 100.0})
-		assert.Equal(t, int64(100), opts.ChunkSize)
-	})
-
-	t.Run("retries float64 sets Retries", func(t *testing.T) {
-		opts := w.parseCopyOptions(map[string]interface{}{"retries": 5.0})
-		assert.Equal(t, 5, opts.Retries)
-	})
-
+// runParseCopyOptionsRobustnessTests covers wrong-typed values being ignored
+// and all options parsed together.
+func runParseCopyOptionsRobustnessTests(t *testing.T, w *Worker) {
 	t.Run("wrong type for resume is ignored", func(t *testing.T) {
 		opts := w.parseCopyOptions(map[string]interface{}{"resume": "yes"})
 		assert.False(t, opts.Resume)
@@ -236,6 +257,16 @@ func TestParseCopyOptions(t *testing.T) {
 		assert.Equal(t, int64(1024), opts.ChunkSize)
 		assert.Equal(t, 10, opts.Retries)
 	})
+}
+
+func TestParseCopyOptions(t *testing.T) {
+	queue := make(chan *Operation, 10)
+	results := make(chan *Operation, 10)
+	w := NewWorker(1, queue, results, nil)
+
+	t.Run("defaults", func(t *testing.T) { runParseCopyOptionsDefaultsTests(t, w) })
+	t.Run("flags", func(t *testing.T) { runParseCopyOptionsFlagTests(t, w) })
+	t.Run("robustness", func(t *testing.T) { runParseCopyOptionsRobustnessTests(t, w) })
 }
 
 // ---------------------------------------------------------------------------

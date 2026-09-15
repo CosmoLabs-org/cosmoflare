@@ -505,21 +505,22 @@ func TestCreateAlertEvent(t *testing.T) {
 // ParseWebhookSignature
 // ---------------------------------------------------------------------------
 
-// TestParseWebhookSignature is the parameterized surface for signature
-// verification. It covers the happy path plus every tampering/replay edge
-// case that a receiver must reject, each as a named subtest.
-func TestParseWebhookSignature(t *testing.T) {
-	t.Parallel()
-	standardPayload := []byte(`{"event":"test","timestamp":"2025-01-01T00:00:00Z"}`)
+// webhookSignatureCase is one parameterized scenario for ParseWebhookSignature.
+type webhookSignatureCase struct {
+	name      string
+	payload   []byte
+	signature string
+	secret    string
+	wantOK    bool   // expected verification result when err == nil
+	wantErr   string // non-empty => an error containing this text is required
+}
 
-	cases := []struct {
-		name      string
-		payload   []byte
-		signature string
-		secret    string
-		wantOK    bool   // expected verification result when err == nil
-		wantErr   string // non-empty => an error containing this text is required
-	}{
+// webhookSignatureCases returns the full signature-verification scenario
+// table: the happy path plus every tampering/replay edge case that a receiver
+// must reject.
+func webhookSignatureCases() []webhookSignatureCase {
+	standardPayload := []byte(`{"event":"test","timestamp":"2025-01-01T00:00:00Z"}`)
+	return []webhookSignatureCase{
 		{
 			name:      "correct signature verifies",
 			payload:   standardPayload,
@@ -592,7 +593,14 @@ func TestParseWebhookSignature(t *testing.T) {
 			wantOK:    true,
 		},
 	}
-	for _, tc := range cases {
+}
+
+// TestParseWebhookSignature is the parameterized surface for signature
+// verification. It covers the happy path plus every tampering/replay edge
+// case that a receiver must reject, each as a named subtest.
+func TestParseWebhookSignature(t *testing.T) {
+	t.Parallel()
+	for _, tc := range webhookSignatureCases() {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ok, err := ParseWebhookSignature(tc.payload, tc.signature, tc.secret)

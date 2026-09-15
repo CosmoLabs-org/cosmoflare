@@ -107,9 +107,9 @@ func TestNewCircularProgressBar(t *testing.T) {
 // EnhancedProgressBar.Update
 // ---------------------------------------------------------------------------
 
-func TestEnhancedProgressBar_Update(t *testing.T) {
-	t.Parallel()
-
+// runProgressBarUpdateBasicTests covers percentage/current/total accounting
+// across normal, degenerate, and extreme values.
+func runProgressBarUpdateBasicTests(t *testing.T) {
 	t.Run("normal progress", func(t *testing.T) {
 		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: true}
 		bar := NewProgressBar(cfg)
@@ -120,40 +120,6 @@ func TestEnhancedProgressBar_Update(t *testing.T) {
 		assert.Equal(t, int64(100), info.Total)
 		assert.InDelta(t, 50.0, info.Percentage, 0.01)
 		assert.False(t, info.LastUpdate.IsZero())
-	})
-
-	t.Run("calculates speed and ETA", func(t *testing.T) {
-		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: true}
-		bar := NewProgressBar(cfg)
-		// Type-assert to access internal fields
-		enhanced := bar.(*EnhancedProgressBar)
-		// Manually set start time in the past so speed calculation works
-		enhanced.info.StartTime = time.Now().Add(-1 * time.Second)
-		bar.Update(1024*1024, 10*1024*1024) // 1MB of 10MB in 1 second = ~1 MB/s
-
-		info := bar.GetInfo()
-		assert.Greater(t, info.Speed, 0.0, "speed should be calculated")
-		assert.Greater(t, info.ETA, 0*time.Nanosecond, "ETA should be calculated")
-	})
-
-	t.Run("speed zero when start time is zero", func(t *testing.T) {
-		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: true}
-		bar := NewProgressBar(cfg)
-		enhanced := bar.(*EnhancedProgressBar)
-		enhanced.info.StartTime = time.Time{} // zero value
-		bar.Update(50, 100)
-
-		info := bar.GetInfo()
-		assert.Equal(t, 0.0, info.Speed)
-	})
-
-	t.Run("no speed when showSpeed is false", func(t *testing.T) {
-		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: false}
-		bar := NewProgressBar(cfg)
-		bar.Update(1024*1024, 10*1024*1024)
-
-		info := bar.GetInfo()
-		assert.Equal(t, 0.0, info.Speed)
 	})
 
 	t.Run("zero total", func(t *testing.T) {
@@ -202,7 +168,51 @@ func TestEnhancedProgressBar_Update(t *testing.T) {
 		info := bar.GetInfo()
 		assert.InDelta(t, 50.0, info.Percentage, 0.01)
 	})
+}
 
+// runProgressBarUpdateSpeedTests covers speed/ETA calculation and its
+// guards: zero start time and disabled ShowSpeed.
+func runProgressBarUpdateSpeedTests(t *testing.T) {
+	t.Run("calculates speed and ETA", func(t *testing.T) {
+		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: true}
+		bar := NewProgressBar(cfg)
+		// Type-assert to access internal fields
+		enhanced := bar.(*EnhancedProgressBar)
+		// Manually set start time in the past so speed calculation works
+		enhanced.info.StartTime = time.Now().Add(-1 * time.Second)
+		bar.Update(1024*1024, 10*1024*1024) // 1MB of 10MB in 1 second = ~1 MB/s
+
+		info := bar.GetInfo()
+		assert.Greater(t, info.Speed, 0.0, "speed should be calculated")
+		assert.Greater(t, info.ETA, 0*time.Nanosecond, "ETA should be calculated")
+	})
+
+	t.Run("speed zero when start time is zero", func(t *testing.T) {
+		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: true}
+		bar := NewProgressBar(cfg)
+		enhanced := bar.(*EnhancedProgressBar)
+		enhanced.info.StartTime = time.Time{} // zero value
+		bar.Update(50, 100)
+
+		info := bar.GetInfo()
+		assert.Equal(t, 0.0, info.Speed)
+	})
+
+	t.Run("no speed when showSpeed is false", func(t *testing.T) {
+		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false, ShowSpeed: false}
+		bar := NewProgressBar(cfg)
+		bar.Update(1024*1024, 10*1024*1024)
+
+		info := bar.GetInfo()
+		assert.Equal(t, 0.0, info.Speed)
+	})
+}
+
+func TestEnhancedProgressBar_Update(t *testing.T) {
+	t.Parallel()
+
+	t.Run("basic", func(t *testing.T) { runProgressBarUpdateBasicTests(t) })
+	t.Run("speed", func(t *testing.T) { runProgressBarUpdateSpeedTests(t) })
 	t.Run("updates last update timestamp", func(t *testing.T) {
 		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false}
 		bar := NewProgressBar(cfg)
@@ -565,9 +575,9 @@ func TestProgressWriter(t *testing.T) {
 // MultiProgress
 // ---------------------------------------------------------------------------
 
-func TestMultiProgress(t *testing.T) {
-	t.Parallel()
-
+// runMultiProgressRegistrationTests covers Add/Update registration and
+// propagation, including lookups on unknown ids.
+func runMultiProgressRegistrationTests(t *testing.T) {
 	t.Run("Add and GetAllInfo", func(t *testing.T) {
 		mp := NewMultiProgress()
 		require.NotNil(t, mp)
@@ -607,7 +617,11 @@ func TestMultiProgress(t *testing.T) {
 			mp.Update("nonexistent", 50, 100)
 		})
 	})
+}
 
+// runMultiProgressLifecycleTests covers Complete/Error state propagation and
+// their no-panic behavior on unknown ids.
+func runMultiProgressLifecycleTests(t *testing.T) {
 	t.Run("Complete propagates", func(t *testing.T) {
 		mp := NewMultiProgress()
 		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false}
@@ -646,7 +660,11 @@ func TestMultiProgress(t *testing.T) {
 			mp.Error("nonexistent", fmt.Errorf("test"))
 		})
 	})
+}
 
+// runMultiProgressSnapshotTests covers GetAllInfo snapshot semantics and the
+// empty-registry case.
+func runMultiProgressSnapshotTests(t *testing.T) {
 	t.Run("GetAllInfo returns copy of map", func(t *testing.T) {
 		mp := NewMultiProgress()
 		cfg := &ProgressBarConfig{HideCursor: false, ColorOutput: false}
@@ -667,6 +685,14 @@ func TestMultiProgress(t *testing.T) {
 		all := mp.GetAllInfo()
 		assert.Empty(t, all)
 	})
+}
+
+func TestMultiProgress(t *testing.T) {
+	t.Parallel()
+
+	t.Run("registration", func(t *testing.T) { runMultiProgressRegistrationTests(t) })
+	t.Run("lifecycle", func(t *testing.T) { runMultiProgressLifecycleTests(t) })
+	t.Run("snapshots", func(t *testing.T) { runMultiProgressSnapshotTests(t) })
 }
 
 // ---------------------------------------------------------------------------
