@@ -110,67 +110,47 @@ func (te *TerraformExporter) Export(ctx context.Context, opts ...TerraformExport
 
 	// Workers
 	if exportAll || serviceFilter["workers"] {
-		hcl, imports, count, err := te.exportWorkers(ctx)
+		count, err := te.exportGroup(ctx, result, "workers.tf", te.exportWorkers)
 		if err != nil {
 			return nil, fmt.Errorf("exporting workers: %w", err)
 		}
-		if count > 0 {
-			result.Files["workers.tf"] = hcl
-			result.Imports = append(result.Imports, imports...)
-			result.Summary.Workers = count
-		}
+		result.Summary.Workers = count
 	}
 
 	// DNS records (requires zones)
 	if exportAll || serviceFilter["dns"] {
-		hcl, imports, count, err := te.exportDNS(ctx)
+		count, err := te.exportGroup(ctx, result, "dns.tf", te.exportDNS)
 		if err != nil {
 			return nil, fmt.Errorf("exporting dns: %w", err)
 		}
-		if count > 0 {
-			result.Files["dns.tf"] = hcl
-			result.Imports = append(result.Imports, imports...)
-			result.Summary.DNSRecords = count
-		}
+		result.Summary.DNSRecords = count
 	}
 
 	// R2 Buckets
 	if exportAll || serviceFilter["r2"] {
-		hcl, imports, count, err := te.exportR2(ctx)
+		count, err := te.exportGroup(ctx, result, "r2.tf", te.exportR2)
 		if err != nil {
 			return nil, fmt.Errorf("exporting r2: %w", err)
 		}
-		if count > 0 {
-			result.Files["r2.tf"] = hcl
-			result.Imports = append(result.Imports, imports...)
-			result.Summary.R2Buckets = count
-		}
+		result.Summary.R2Buckets = count
 	}
 
 	// KV Namespaces
 	if exportAll || serviceFilter["kv"] {
-		hcl, imports, count, err := te.exportKV(ctx)
+		count, err := te.exportGroup(ctx, result, "kv.tf", te.exportKV)
 		if err != nil {
 			return nil, fmt.Errorf("exporting kv: %w", err)
 		}
-		if count > 0 {
-			result.Files["kv.tf"] = hcl
-			result.Imports = append(result.Imports, imports...)
-			result.Summary.KVSpaces = count
-		}
+		result.Summary.KVSpaces = count
 	}
 
 	// Zones
 	if exportAll || serviceFilter["zones"] {
-		hcl, imports, count, err := te.exportZones(ctx)
+		count, err := te.exportGroup(ctx, result, "zones.tf", te.exportZones)
 		if err != nil {
 			return nil, fmt.Errorf("exporting zones: %w", err)
 		}
-		if count > 0 {
-			result.Files["zones.tf"] = hcl
-			result.Imports = append(result.Imports, imports...)
-			result.Summary.Zones = count
-		}
+		result.Summary.Zones = count
 	}
 
 	// Generate import.tf
@@ -191,6 +171,26 @@ func (te *TerraformExporter) GenerateImportBlocks(ctx context.Context, opts ...T
 		return nil, err
 	}
 	return result.Imports, nil
+}
+
+// exportGroup runs one resource-group export phase and merges its HCL file
+// and import blocks into the result when the group produced resources. It
+// returns the exported resource count.
+func (te *TerraformExporter) exportGroup(
+	ctx context.Context,
+	result *TerraformExportResult,
+	file string,
+	export func(context.Context) (string, []TerraformImportBlock, int, error),
+) (int, error) {
+	hcl, imports, count, err := export(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if count > 0 {
+		result.Files[file] = hcl
+		result.Imports = append(result.Imports, imports...)
+	}
+	return count, nil
 }
 
 // --- Internal export helpers ---

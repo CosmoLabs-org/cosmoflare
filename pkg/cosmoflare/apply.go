@@ -346,79 +346,12 @@ func (a *ApplyService) applyWorkerChanges(ctx context.Context, cfg *CosmoflareCo
 	for _, op := range ops {
 		switch op.Action {
 		case ApplyCreate:
-			wc, exists := cfg.Workers[op.Resource]
-			if !exists {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("worker %q not found in config", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			scriptReader, err := openWorkerScript(wc.Script)
-			if err != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("failed to read script %q: %v", wc.Script, err)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			var wopts []WorkerOption
-			if wc.CompatibilityDate != "" {
-				wopts = append(wopts, WithWorkerCompatibilityDate(wc.CompatibilityDate))
-			}
-			if wc.Module {
-				wopts = append(wopts, WithWorkerModule(true))
-			}
-			_, deployErr := ws.Deploy(ctx, op.Resource, scriptReader, wopts...)
-			scriptReader.Close()
-			if deployErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = deployErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("deployed worker %q", op.Resource)
-			}
-
+			op = a.applyWorkerCreate(ctx, ws, cfg, op)
 		case ApplyDelete:
-			if delErr := ws.Delete(ctx, op.Resource); delErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = delErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("deleted worker %q", op.Resource)
-			}
-
+			op = a.applyWorkerDelete(ctx, ws, op)
 		case ApplyUpdate:
 			// For workers, update means re-deploy with new config
-			wc, exists := cfg.Workers[op.Resource]
-			if !exists {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("worker %q not found in config for update", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			scriptReader, err := openWorkerScript(wc.Script)
-			if err != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("failed to read script %q: %v", wc.Script, err)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			var wopts []WorkerOption
-			if wc.CompatibilityDate != "" {
-				wopts = append(wopts, WithWorkerCompatibilityDate(wc.CompatibilityDate))
-			}
-			if wc.Module {
-				wopts = append(wopts, WithWorkerModule(true))
-			}
-			_, deployErr := ws.Deploy(ctx, op.Resource, scriptReader, wopts...)
-			scriptReader.Close()
-			if deployErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = deployErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("updated worker %q", op.Resource)
-			}
-
+			op = a.applyWorkerUpdate(ctx, ws, cfg, op)
 		default:
 			op.Status = ApplyStatusSkipped
 		}
@@ -427,6 +360,93 @@ func (a *ApplyService) applyWorkerChanges(ctx context.Context, cfg *CosmoflareCo
 	}
 
 	return result, nil
+}
+
+// applyWorkerCreate deploys a new worker per the config entry for op.Resource
+// and returns the operation with its outcome recorded.
+func (a *ApplyService) applyWorkerCreate(
+	ctx context.Context, ws *WorkerService, cfg *CosmoflareConfig, op ApplyOperation,
+) ApplyOperation {
+	wc, exists := cfg.Workers[op.Resource]
+	if !exists {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("worker %q not found in config", op.Resource)
+		return op
+	}
+	scriptReader, err := openWorkerScript(wc.Script)
+	if err != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("failed to read script %q: %v", wc.Script, err)
+		return op
+	}
+	wopts := workerDeployOptions(wc)
+	_, deployErr := ws.Deploy(ctx, op.Resource, scriptReader, wopts...)
+	scriptReader.Close()
+	if deployErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = deployErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("deployed worker %q", op.Resource)
+	}
+	return op
+}
+
+// applyWorkerDelete deletes the worker named by op.Resource and returns the
+// operation with its outcome recorded.
+func (a *ApplyService) applyWorkerDelete(
+	ctx context.Context, ws *WorkerService, op ApplyOperation,
+) ApplyOperation {
+	if delErr := ws.Delete(ctx, op.Resource); delErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = delErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("deleted worker %q", op.Resource)
+	}
+	return op
+}
+
+// applyWorkerUpdate re-deploys the worker named by op.Resource with its new
+// config and returns the operation with its outcome recorded.
+func (a *ApplyService) applyWorkerUpdate(
+	ctx context.Context, ws *WorkerService, cfg *CosmoflareConfig, op ApplyOperation,
+) ApplyOperation {
+	wc, exists := cfg.Workers[op.Resource]
+	if !exists {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("worker %q not found in config for update", op.Resource)
+		return op
+	}
+	scriptReader, err := openWorkerScript(wc.Script)
+	if err != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("failed to read script %q: %v", wc.Script, err)
+		return op
+	}
+	wopts := workerDeployOptions(wc)
+	_, deployErr := ws.Deploy(ctx, op.Resource, scriptReader, wopts...)
+	scriptReader.Close()
+	if deployErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = deployErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("updated worker %q", op.Resource)
+	}
+	return op
+}
+
+// workerDeployOptions builds the deploy options for a configured worker.
+func workerDeployOptions(wc WorkerConfig) []WorkerOption {
+	var wopts []WorkerOption
+	if wc.CompatibilityDate != "" {
+		wopts = append(wopts, WithWorkerCompatibilityDate(wc.CompatibilityDate))
+	}
+	if wc.Module {
+		wopts = append(wopts, WithWorkerModule(true))
+	}
+	return wopts
 }
 
 func (a *ApplyService) applyR2Changes(ctx context.Context, _ *CosmoflareConfig, dr *DiffResult, dryRun bool) (*ApplyResult, error) {
@@ -603,77 +623,15 @@ func (a *ApplyService) applyDNSChanges(ctx context.Context, cfg *CosmoflareConfi
 	}
 
 	for _, op := range ops {
+		dctx := &applyDNSContext{dnsSvc: dnsSvc, liveMap: liveMap, configMap: configMap}
 		switch op.Action {
 		case ApplyCreate:
 			// Parse resource back to type+name+content
-			rec, found := findConfigRecordFromResource(op.Resource, configMap)
-			if !found {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("record %q not found in config", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			var dopts []DNSOption
-			if rec.TTL != 0 {
-				dopts = append(dopts, WithDNSTTL(rec.TTL))
-			}
-			dopts = append(dopts, WithDNSProxied(rec.Proxied))
-
-			_, createErr := dnsSvc.Create(ctx, rec.Type, rec.Name, rec.Content, dopts...)
-			if createErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = createErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("created %s record %q -> %q", rec.Type, rec.Name, rec.Content)
-			}
-
+			op = a.applyDNSRecordCreate(ctx, dctx, op)
 		case ApplyDelete:
-			liveRec := findLiveRecordFromResource(op.Resource, liveMap)
-			if liveRec == nil {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("record %q not found in live state for deletion", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			if delErr := dnsSvc.Delete(ctx, liveRec.ID); delErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = delErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("deleted %s record %q", liveRec.Type, liveRec.Name)
-			}
-
+			op = a.applyDNSRecordDelete(ctx, dctx, op)
 		case ApplyUpdate:
-			liveRec := findLiveRecordFromResource(op.Resource, liveMap)
-			if liveRec == nil {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("record %q not found in live state for update", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			rec, found := findConfigRecordFromResource(op.Resource, configMap)
-			if !found {
-				op.Status = ApplyStatusFailed
-				op.Error = fmt.Sprintf("record %q not found in config for update", op.Resource)
-				result.Operations = append(result.Operations, op)
-				continue
-			}
-			var dopts []DNSOption
-			if rec.TTL != 0 {
-				dopts = append(dopts, WithDNSTTL(rec.TTL))
-			}
-			dopts = append(dopts, WithDNSProxied(rec.Proxied))
-
-			_, updateErr := dnsSvc.Update(ctx, liveRec.ID, dopts...)
-			if updateErr != nil {
-				op.Status = ApplyStatusFailed
-				op.Error = updateErr.Error()
-			} else {
-				op.Status = ApplyStatusSuccess
-				op.Detail = fmt.Sprintf("updated %s record %q", rec.Type, rec.Name)
-			}
-
+			op = a.applyDNSRecordUpdate(ctx, dctx, op)
 		default:
 			op.Status = ApplyStatusSkipped
 		}
@@ -682,6 +640,99 @@ func (a *ApplyService) applyDNSChanges(ctx context.Context, cfg *CosmoflareConfi
 	}
 
 	return result, nil
+}
+
+// applyDNSContext carries the DNS service and the live/config record
+// lookups shared by the per-record operation handlers.
+type applyDNSContext struct {
+	dnsSvc    *DNSService
+	liveMap   map[applyDNSKey]*DNSRecord
+	configMap map[applyDNSKey]DNSRecordConfig
+}
+
+// applyDNSRecordCreate creates the DNS record described by op.Resource from
+// config and returns the operation with its outcome recorded.
+func (a *ApplyService) applyDNSRecordCreate(
+	ctx context.Context, dctx *applyDNSContext, op ApplyOperation,
+) ApplyOperation {
+	rec, found := findConfigRecordFromResource(op.Resource, dctx.configMap)
+	if !found {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("record %q not found in config", op.Resource)
+		return op
+	}
+	dopts := dnsRecordOptions(rec)
+
+	_, createErr := dctx.dnsSvc.Create(ctx, rec.Type, rec.Name, rec.Content, dopts...)
+	if createErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = createErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("created %s record %q -> %q", rec.Type, rec.Name, rec.Content)
+	}
+	return op
+}
+
+// applyDNSRecordDelete deletes the live DNS record described by op.Resource
+// and returns the operation with its outcome recorded.
+func (a *ApplyService) applyDNSRecordDelete(
+	ctx context.Context, dctx *applyDNSContext, op ApplyOperation,
+) ApplyOperation {
+	liveRec := findLiveRecordFromResource(op.Resource, dctx.liveMap)
+	if liveRec == nil {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("record %q not found in live state for deletion", op.Resource)
+		return op
+	}
+	if delErr := dctx.dnsSvc.Delete(ctx, liveRec.ID); delErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = delErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("deleted %s record %q", liveRec.Type, liveRec.Name)
+	}
+	return op
+}
+
+// applyDNSRecordUpdate updates the live DNS record described by op.Resource
+// with its config values and returns the operation with its outcome recorded.
+func (a *ApplyService) applyDNSRecordUpdate(
+	ctx context.Context, dctx *applyDNSContext, op ApplyOperation,
+) ApplyOperation {
+	liveRec := findLiveRecordFromResource(op.Resource, dctx.liveMap)
+	if liveRec == nil {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("record %q not found in live state for update", op.Resource)
+		return op
+	}
+	rec, found := findConfigRecordFromResource(op.Resource, dctx.configMap)
+	if !found {
+		op.Status = ApplyStatusFailed
+		op.Error = fmt.Sprintf("record %q not found in config for update", op.Resource)
+		return op
+	}
+	dopts := dnsRecordOptions(rec)
+
+	_, updateErr := dctx.dnsSvc.Update(ctx, liveRec.ID, dopts...)
+	if updateErr != nil {
+		op.Status = ApplyStatusFailed
+		op.Error = updateErr.Error()
+	} else {
+		op.Status = ApplyStatusSuccess
+		op.Detail = fmt.Sprintf("updated %s record %q", rec.Type, rec.Name)
+	}
+	return op
+}
+
+// dnsRecordOptions builds the DNS options for a configured record.
+func dnsRecordOptions(rec DNSRecordConfig) []DNSOption {
+	var dopts []DNSOption
+	if rec.TTL != 0 {
+		dopts = append(dopts, WithDNSTTL(rec.TTL))
+	}
+	dopts = append(dopts, WithDNSProxied(rec.Proxied))
+	return dopts
 }
 
 // openWorkerScript opens a worker script file for reading.
