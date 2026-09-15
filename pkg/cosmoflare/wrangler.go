@@ -193,7 +193,17 @@ func parseEnvConfig(data interface{}) (*WranglerEnvConfig, error) {
 	}
 
 	cfg := &WranglerEnvConfig{}
+	parseEnvWorkerFields(envMap, cfg)
+	cfg.KVNamespaces = parseEnvKVNamespaces(envMap)
+	cfg.R2Buckets = parseEnvR2Buckets(envMap)
+	cfg.D1Databases = parseEnvD1Databases(envMap)
 
+	return cfg, nil
+}
+
+// parseEnvWorkerFields copies the scalar fields, routes, and vars from a raw
+// env map onto cfg.
+func parseEnvWorkerFields(envMap map[string]interface{}, cfg *WranglerEnvConfig) {
 	if v, ok := envMap["name"].(string); ok {
 		cfg.Name = v
 	}
@@ -219,8 +229,11 @@ func parseEnvConfig(data interface{}) (*WranglerEnvConfig, error) {
 			cfg.Vars[k] = fmt.Sprintf("%v", v)
 		}
 	}
+}
 
-	// Parse kv_namespaces
+// parseEnvKVNamespaces parses the kv_namespaces env entries, if present.
+func parseEnvKVNamespaces(envMap map[string]interface{}) []WranglerKVNamespace {
+	var out []WranglerKVNamespace
 	if kvList, ok := envMap["kv_namespaces"].([]interface{}); ok {
 		for _, item := range kvList {
 			if m, ok := item.(map[string]interface{}); ok {
@@ -234,12 +247,16 @@ func parseEnvConfig(data interface{}) (*WranglerEnvConfig, error) {
 				if v, ok := m["preview_id"].(string); ok {
 					ns.PreviewID = v
 				}
-				cfg.KVNamespaces = append(cfg.KVNamespaces, ns)
+				out = append(out, ns)
 			}
 		}
 	}
+	return out
+}
 
-	// Parse r2_buckets
+// parseEnvR2Buckets parses the r2_buckets env entries, if present.
+func parseEnvR2Buckets(envMap map[string]interface{}) []WranglerR2Bucket {
+	var out []WranglerR2Bucket
 	if r2List, ok := envMap["r2_buckets"].([]interface{}); ok {
 		for _, item := range r2List {
 			if m, ok := item.(map[string]interface{}); ok {
@@ -250,12 +267,16 @@ func parseEnvConfig(data interface{}) (*WranglerEnvConfig, error) {
 				if v, ok := m["bucket_name"].(string); ok {
 					b.BucketName = v
 				}
-				cfg.R2Buckets = append(cfg.R2Buckets, b)
+				out = append(out, b)
 			}
 		}
 	}
+	return out
+}
 
-	// Parse d1_databases
+// parseEnvD1Databases parses the d1_databases env entries, if present.
+func parseEnvD1Databases(envMap map[string]interface{}) []WranglerD1Database {
+	var out []WranglerD1Database
 	if d1List, ok := envMap["d1_databases"].([]interface{}); ok {
 		for _, item := range d1List {
 			if m, ok := item.(map[string]interface{}); ok {
@@ -269,12 +290,11 @@ func parseEnvConfig(data interface{}) (*WranglerEnvConfig, error) {
 				if v, ok := m["database_id"].(string); ok {
 					db.DatabaseID = v
 				}
-				cfg.D1Databases = append(cfg.D1Databases, db)
+				out = append(out, db)
 			}
 		}
 	}
-
-	return cfg, nil
+	return out
 }
 
 // ConvertToConfig transforms a WranglerConfig into a WranglerImportResult
@@ -287,6 +307,22 @@ func (ws *WranglerService) ConvertToConfig(wc *WranglerConfig) *WranglerImportRe
 	}
 
 	// Main worker
+	cc.Workers["main"] = convertWranglerMainWorker(wc)
+
+	// Top-level resources
+	cc.KV = convertWranglerKV(wc.KVNamespaces)
+	cc.R2 = convertWranglerR2(wc.R2Buckets)
+	cc.D1 = convertWranglerD1(wc.D1Databases)
+
+	// Environment profiles
+	cc.Profiles = convertWranglerProfiles(wc.Env)
+
+	return cc
+}
+
+// convertWranglerMainWorker builds the "main" worker entry from the
+// top-level wrangler.toml settings.
+func convertWranglerMainWorker(wc *WranglerConfig) WranglerWorkerYAML {
 	mainWorker := WranglerWorkerYAML{
 		Name:              wc.Name,
 		Script:            wc.Main,
@@ -304,32 +340,39 @@ func (ws *WranglerService) ConvertToConfig(wc *WranglerConfig) *WranglerImportRe
 	if len(wc.Vars) > 0 {
 		mainWorker.Vars = wc.Vars
 	}
+	if bindings := convertWranglerBindings(wc.KVNamespaces, wc.R2Buckets, wc.D1Databases); bindings != nil {
+		mainWorker.Bindings = bindings
+	}
+	return mainWorker
+}
 
-	// Attach bindings to the main worker
+// convertWranglerBindings assembles the KV/R2/D1 binding refs for a worker,
+// returning nil when no bindings are present.
+func convertWranglerBindings(kvNamespaces []WranglerKVNamespace, r2Buckets []WranglerR2Bucket, d1Databases []WranglerD1Database) *WranglerBindingsYAML {
 	bindings := &WranglerBindingsYAML{}
 	hasBindings := false
 
-	if len(wc.KVNamespaces) > 0 {
+	if len(kvNamespaces) > 0 {
 		hasBindings = true
-		for _, kv := range wc.KVNamespaces {
+		for _, kv := range kvNamespaces {
 			bindings.KV = append(bindings.KV, WranglerBindingRef{
 				Binding: kv.Binding,
 				ID:      kv.ID,
 			})
 		}
 	}
-	if len(wc.R2Buckets) > 0 {
+	if len(r2Buckets) > 0 {
 		hasBindings = true
-		for _, r2 := range wc.R2Buckets {
+		for _, r2 := range r2Buckets {
 			bindings.R2 = append(bindings.R2, WranglerBindingRef{
 				Binding: r2.Binding,
 				Name:    r2.BucketName,
 			})
 		}
 	}
-	if len(wc.D1Databases) > 0 {
+	if len(d1Databases) > 0 {
 		hasBindings = true
-		for _, d1 := range wc.D1Databases {
+		for _, d1 := range d1Databases {
 			bindings.D1 = append(bindings.D1, WranglerBindingRef{
 				Binding: d1.Binding,
 				ID:      d1.DatabaseID,
@@ -337,124 +380,121 @@ func (ws *WranglerService) ConvertToConfig(wc *WranglerConfig) *WranglerImportRe
 			})
 		}
 	}
-	if hasBindings {
-		mainWorker.Bindings = bindings
+	if !hasBindings {
+		return nil
 	}
+	return bindings
+}
 
-	cc.Workers["main"] = mainWorker
-
-	// KV namespaces (top-level)
-	if len(wc.KVNamespaces) > 0 {
-		cc.KV = &WranglerKVYAML{}
-		for _, kv := range wc.KVNamespaces {
-			cc.KV.Namespaces = append(cc.KV.Namespaces, WranglerKVNamespaceYAML{
-				Binding:   kv.Binding,
-				ID:        kv.ID,
-				PreviewID: kv.PreviewID,
-			})
-		}
+// convertWranglerKV builds the top-level KV section, or nil when absent.
+func convertWranglerKV(kvNamespaces []WranglerKVNamespace) *WranglerKVYAML {
+	if len(kvNamespaces) == 0 {
+		return nil
 	}
-
-	// R2 buckets (top-level)
-	if len(wc.R2Buckets) > 0 {
-		cc.R2 = &WranglerR2YAML{}
-		for _, r2 := range wc.R2Buckets {
-			cc.R2.Buckets = append(cc.R2.Buckets, WranglerR2BucketYAML{
-				Binding:    r2.Binding,
-				BucketName: r2.BucketName,
-			})
-		}
+	kv := &WranglerKVYAML{}
+	for _, ns := range kvNamespaces {
+		kv.Namespaces = append(kv.Namespaces, WranglerKVNamespaceYAML{
+			Binding:   ns.Binding,
+			ID:        ns.ID,
+			PreviewID: ns.PreviewID,
+		})
 	}
+	return kv
+}
 
-	// D1 databases (top-level)
-	if len(wc.D1Databases) > 0 {
-		cc.D1 = &WranglerD1YAML{}
-		for _, d1 := range wc.D1Databases {
-			cc.D1.Databases = append(cc.D1.Databases, WranglerD1DatabaseYAML{
-				Binding:      d1.Binding,
-				DatabaseName: d1.DatabaseName,
-				DatabaseID:   d1.DatabaseID,
-			})
-		}
+// convertWranglerR2 builds the top-level R2 section, or nil when absent.
+func convertWranglerR2(r2Buckets []WranglerR2Bucket) *WranglerR2YAML {
+	if len(r2Buckets) == 0 {
+		return nil
 	}
-
-	// Environment profiles
-	if len(wc.Env) > 0 {
-		cc.Profiles = make(map[string]*WranglerProfileYAML)
-		envNames := make([]string, 0, len(wc.Env))
-		for name := range wc.Env {
-			envNames = append(envNames, name)
-		}
-		sort.Strings(envNames)
-
-		for _, envName := range envNames {
-			env := wc.Env[envName]
-			profile := &WranglerProfileYAML{
-				Worker: &WranglerWorkerYAML{},
-			}
-			if env.Name != "" {
-				profile.Worker.Name = env.Name
-			}
-			if env.Main != "" {
-				profile.Worker.Script = env.Main
-			}
-			if env.CompatibilityDate != "" {
-				profile.Worker.CompatibilityDate = env.CompatibilityDate
-			}
-			if env.Route != "" {
-				profile.Worker.Route = env.Route
-			}
-			if len(env.Routes) > 0 {
-				profile.Worker.Routes = env.Routes
-			}
-			if len(env.Vars) > 0 {
-				profile.Worker.Vars = env.Vars
-			}
-
-			// Env-specific bindings
-			envBindings := &WranglerBindingsYAML{}
-			hasEnvBindings := false
-			if len(env.KVNamespaces) > 0 {
-				hasEnvBindings = true
-				for _, kv := range env.KVNamespaces {
-					envBindings.KV = append(envBindings.KV, WranglerBindingRef{
-						Binding: kv.Binding,
-						ID:      kv.ID,
-					})
-				}
-			}
-			if len(env.R2Buckets) > 0 {
-				hasEnvBindings = true
-				for _, r2 := range env.R2Buckets {
-					envBindings.R2 = append(envBindings.R2, WranglerBindingRef{
-						Binding: r2.Binding,
-						Name:    r2.BucketName,
-					})
-				}
-			}
-			if len(env.D1Databases) > 0 {
-				hasEnvBindings = true
-				for _, d1 := range env.D1Databases {
-					envBindings.D1 = append(envBindings.D1, WranglerBindingRef{
-						Binding: d1.Binding,
-						ID:      d1.DatabaseID,
-						Name:    d1.DatabaseName,
-					})
-				}
-			}
-			if hasEnvBindings {
-				profile.Worker.Bindings = envBindings
-			}
-
-			cc.Profiles[envName] = profile
-		}
+	r2 := &WranglerR2YAML{}
+	for _, b := range r2Buckets {
+		r2.Buckets = append(r2.Buckets, WranglerR2BucketYAML{
+			Binding:    b.Binding,
+			BucketName: b.BucketName,
+		})
 	}
+	return r2
+}
 
-	return cc
+// convertWranglerD1 builds the top-level D1 section, or nil when absent.
+func convertWranglerD1(d1Databases []WranglerD1Database) *WranglerD1YAML {
+	if len(d1Databases) == 0 {
+		return nil
+	}
+	d1 := &WranglerD1YAML{}
+	for _, db := range d1Databases {
+		d1.Databases = append(d1.Databases, WranglerD1DatabaseYAML{
+			Binding:      db.Binding,
+			DatabaseName: db.DatabaseName,
+			DatabaseID:   db.DatabaseID,
+		})
+	}
+	return d1
+}
+
+// convertWranglerProfiles builds the environment profile map (in sorted env
+// name order), or nil when no envs are present.
+func convertWranglerProfiles(envs map[string]*WranglerEnvConfig) map[string]*WranglerProfileYAML {
+	if len(envs) == 0 {
+		return nil
+	}
+	profiles := make(map[string]*WranglerProfileYAML)
+	envNames := make([]string, 0, len(envs))
+	for name := range envs {
+		envNames = append(envNames, name)
+	}
+	sort.Strings(envNames)
+
+	for _, envName := range envNames {
+		profile := &WranglerProfileYAML{
+			Worker: &WranglerWorkerYAML{},
+		}
+		convertWranglerEnvWorker(envs[envName], profile.Worker)
+		profiles[envName] = profile
+	}
+	return profiles
+}
+
+// convertWranglerEnvWorker copies an environment override onto a profile worker.
+func convertWranglerEnvWorker(env *WranglerEnvConfig, worker *WranglerWorkerYAML) {
+	if env.Name != "" {
+		worker.Name = env.Name
+	}
+	if env.Main != "" {
+		worker.Script = env.Main
+	}
+	if env.CompatibilityDate != "" {
+		worker.CompatibilityDate = env.CompatibilityDate
+	}
+	if env.Route != "" {
+		worker.Route = env.Route
+	}
+	if len(env.Routes) > 0 {
+		worker.Routes = env.Routes
+	}
+	if len(env.Vars) > 0 {
+		worker.Vars = env.Vars
+	}
+	if bindings := convertWranglerBindings(env.KVNamespaces, env.R2Buckets, env.D1Databases); bindings != nil {
+		worker.Bindings = bindings
+	}
 }
 
 // Validate checks a WranglerConfig for common issues and returns a list of warnings/errors.
 func (ws *WranglerService) Validate(wc *WranglerConfig) []WranglerValidationResult {
+	var results []WranglerValidationResult
+	results = append(results, validateWranglerBasics(wc)...)
+	results = append(results, validateWranglerKV(wc.KVNamespaces)...)
+	results = append(results, validateWranglerR2(wc.R2Buckets)...)
+	results = append(results, validateWranglerD1(wc.D1Databases)...)
+	results = append(results, validateWranglerDuplicateBindings(wc)...)
+	return results
+}
+
+// validateWranglerBasics checks the top-level name, main, and
+// compatibility_date fields.
+func validateWranglerBasics(wc *WranglerConfig) []WranglerValidationResult {
 	var results []WranglerValidationResult
 
 	if wc.Name == "" {
@@ -481,8 +521,14 @@ func (ws *WranglerService) Validate(wc *WranglerConfig) []WranglerValidationResu
 		})
 	}
 
-	// Validate KV namespaces
-	for i, kv := range wc.KVNamespaces {
+	return results
+}
+
+// validateWranglerKV checks each KV namespace for required fields.
+func validateWranglerKV(kvNamespaces []WranglerKVNamespace) []WranglerValidationResult {
+	var results []WranglerValidationResult
+
+	for i, kv := range kvNamespaces {
 		if kv.Binding == "" {
 			results = append(results, WranglerValidationResult{
 				Level:   "error",
@@ -499,8 +545,14 @@ func (ws *WranglerService) Validate(wc *WranglerConfig) []WranglerValidationResu
 		}
 	}
 
-	// Validate R2 buckets
-	for i, r2 := range wc.R2Buckets {
+	return results
+}
+
+// validateWranglerR2 checks each R2 bucket for required fields.
+func validateWranglerR2(r2Buckets []WranglerR2Bucket) []WranglerValidationResult {
+	var results []WranglerValidationResult
+
+	for i, r2 := range r2Buckets {
 		if r2.Binding == "" {
 			results = append(results, WranglerValidationResult{
 				Level:   "error",
@@ -517,8 +569,14 @@ func (ws *WranglerService) Validate(wc *WranglerConfig) []WranglerValidationResu
 		}
 	}
 
-	// Validate D1 databases
-	for i, d1 := range wc.D1Databases {
+	return results
+}
+
+// validateWranglerD1 checks each D1 database for required fields.
+func validateWranglerD1(d1Databases []WranglerD1Database) []WranglerValidationResult {
+	var results []WranglerValidationResult
+
+	for i, d1 := range d1Databases {
 		if d1.Binding == "" {
 			results = append(results, WranglerValidationResult{
 				Level:   "error",
@@ -535,7 +593,14 @@ func (ws *WranglerService) Validate(wc *WranglerConfig) []WranglerValidationResu
 		}
 	}
 
-	// Check for duplicate bindings
+	return results
+}
+
+// validateWranglerDuplicateBindings checks for binding names shared across
+// KV, R2, and D1 sections.
+func validateWranglerDuplicateBindings(wc *WranglerConfig) []WranglerValidationResult {
+	var results []WranglerValidationResult
+
 	seen := make(map[string]string) // binding -> source
 	for _, kv := range wc.KVNamespaces {
 		if prev, ok := seen[kv.Binding]; ok {
@@ -622,7 +687,19 @@ func (ws *WranglerService) DiffWranglerConfigs(wc *WranglerConfig, existing *Wra
 	converted := ws.ConvertToConfig(wc)
 	var diffs []WranglerDiffItem
 
-	// Compare main worker
+	diffs = append(diffs, diffWranglerWorker(converted, existing)...)
+	diffs = append(diffs, diffWranglerKV(converted, existing)...)
+	diffs = append(diffs, diffWranglerR2(converted, existing)...)
+	diffs = append(diffs, diffWranglerD1(converted, existing)...)
+	diffs = append(diffs, diffWranglerProfiles(converted, existing)...)
+
+	return diffs
+}
+
+// diffWranglerWorker compares the "main" worker entries of both configs.
+func diffWranglerWorker(converted, existing *WranglerImportResult) []WranglerDiffItem {
+	var diffs []WranglerDiffItem
+
 	cw, cwOk := converted.Workers["main"]
 	ew, ewOk := existing.Workers["main"]
 
@@ -668,7 +745,13 @@ func (ws *WranglerService) DiffWranglerConfigs(wc *WranglerConfig, existing *Wra
 		}
 	}
 
-	// Compare KV
+	return diffs
+}
+
+// diffWranglerKV compares the top-level KV sections of both configs.
+func diffWranglerKV(converted, existing *WranglerImportResult) []WranglerDiffItem {
+	var diffs []WranglerDiffItem
+
 	if converted.KV != nil && existing.KV == nil {
 		diffs = append(diffs, WranglerDiffItem{
 			Field:    "kv",
@@ -694,7 +777,13 @@ func (ws *WranglerService) DiffWranglerConfigs(wc *WranglerConfig, existing *Wra
 		}
 	}
 
-	// Compare R2
+	return diffs
+}
+
+// diffWranglerR2 compares the top-level R2 sections of both configs.
+func diffWranglerR2(converted, existing *WranglerImportResult) []WranglerDiffItem {
+	var diffs []WranglerDiffItem
+
 	if converted.R2 != nil && existing.R2 == nil {
 		diffs = append(diffs, WranglerDiffItem{
 			Field:    "r2",
@@ -720,7 +809,13 @@ func (ws *WranglerService) DiffWranglerConfigs(wc *WranglerConfig, existing *Wra
 		}
 	}
 
-	// Compare D1
+	return diffs
+}
+
+// diffWranglerD1 compares the top-level D1 sections of both configs.
+func diffWranglerD1(converted, existing *WranglerImportResult) []WranglerDiffItem {
+	var diffs []WranglerDiffItem
+
 	if converted.D1 != nil && existing.D1 == nil {
 		diffs = append(diffs, WranglerDiffItem{
 			Field:    "d1",
@@ -746,39 +841,47 @@ func (ws *WranglerService) DiffWranglerConfigs(wc *WranglerConfig, existing *Wra
 		}
 	}
 
-	// Compare profiles
-	if len(converted.Profiles) > 0 || len(existing.Profiles) > 0 {
-		allProfiles := make(map[string]bool)
-		for k := range converted.Profiles {
-			allProfiles[k] = true
-		}
-		for k := range existing.Profiles {
-			allProfiles[k] = true
-		}
-		profileNames := make([]string, 0, len(allProfiles))
-		for k := range allProfiles {
-			profileNames = append(profileNames, k)
-		}
-		sort.Strings(profileNames)
+	return diffs
+}
 
-		for _, name := range profileNames {
-			_, inWrangler := converted.Profiles[name]
-			_, inCosmo := existing.Profiles[name]
-			if inWrangler && !inCosmo {
-				diffs = append(diffs, WranglerDiffItem{
-					Field:    fmt.Sprintf("profiles.%s", name),
-					Wrangler: "present",
-					Cosmo:    "(missing)",
-					Status:   "added",
-				})
-			} else if !inWrangler && inCosmo {
-				diffs = append(diffs, WranglerDiffItem{
-					Field:    fmt.Sprintf("profiles.%s", name),
-					Wrangler: "(none)",
-					Cosmo:    "present",
-					Status:   "removed",
-				})
-			}
+// diffWranglerProfiles compares the environment profile maps of both configs.
+func diffWranglerProfiles(converted, existing *WranglerImportResult) []WranglerDiffItem {
+	var diffs []WranglerDiffItem
+
+	if len(converted.Profiles) == 0 && len(existing.Profiles) == 0 {
+		return diffs
+	}
+
+	allProfiles := make(map[string]bool)
+	for k := range converted.Profiles {
+		allProfiles[k] = true
+	}
+	for k := range existing.Profiles {
+		allProfiles[k] = true
+	}
+	profileNames := make([]string, 0, len(allProfiles))
+	for k := range allProfiles {
+		profileNames = append(profileNames, k)
+	}
+	sort.Strings(profileNames)
+
+	for _, name := range profileNames {
+		_, inWrangler := converted.Profiles[name]
+		_, inCosmo := existing.Profiles[name]
+		if inWrangler && !inCosmo {
+			diffs = append(diffs, WranglerDiffItem{
+				Field:    fmt.Sprintf("profiles.%s", name),
+				Wrangler: "present",
+				Cosmo:    "(missing)",
+				Status:   "added",
+			})
+		} else if !inWrangler && inCosmo {
+			diffs = append(diffs, WranglerDiffItem{
+				Field:    fmt.Sprintf("profiles.%s", name),
+				Wrangler: "(none)",
+				Cosmo:    "present",
+				Status:   "removed",
+			})
 		}
 	}
 
