@@ -95,6 +95,11 @@ func WithLogSince(t time.Time) LogOption {
 type WorkerService struct {
 	cf        *cloudflare.API
 	accountID string
+	// apiToken/apiBaseURL back the raw REST fallback (worker_versions.go):
+	// cloudflare-go v0.116 has no Workers versions API, so those calls are
+	// issued directly. Zero-value for NewWorkerService (no raw access).
+	apiToken   string
+	apiBaseURL string
 }
 
 // NewWorkerService creates a new Workers service client.
@@ -121,7 +126,12 @@ func NewWorkerServiceFromCreds(accountID, apiToken string) (*WorkerService, erro
 	if err != nil {
 		return nil, authError("NewWorkerService", "failed to create Cloudflare API client", err)
 	}
-	return &WorkerService{cf: cf, accountID: accountID}, nil
+	return &WorkerService{
+		cf:         cf,
+		accountID:  accountID,
+		apiToken:   apiToken,
+		apiBaseURL: "https://api.cloudflare.com/client/v4",
+	}, nil
 }
 
 // Deploy uploads or updates a Worker script.
