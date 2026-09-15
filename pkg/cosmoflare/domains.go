@@ -176,41 +176,72 @@ func (s *DomainService) GetDetail(ctx context.Context, zoneID string) (*DomainDe
 		RecordTypes: make(map[string]int),
 	}
 
-	if s.dns != nil {
-		records, err := s.dns.List(ctx)
-		if err == nil {
-			detail.RecordCount = len(records)
-			for _, r := range records {
-				detail.RecordTypes[r.Type]++
-			}
+	s.enrichDNSRecords(ctx, detail)
+	s.enrichSSLMode(ctx, detail)
+	s.enrichDoctorProbes(ctx, zone.Name, detail)
+	s.enrichRedirects(ctx, zoneID, detail)
+	s.enrichRegistrar(ctx, zone.Name, detail)
+
+	return detail, nil
+}
+
+// enrichDNSRecords fills the record count and per-type breakdown from the
+// DNS service. A nil service or a list failure leaves the counts zero.
+func (s *DomainService) enrichDNSRecords(ctx context.Context, detail *DomainDetail) {
+	if s.dns == nil {
+		return
+	}
+	records, err := s.dns.List(ctx)
+	if err == nil {
+		detail.RecordCount = len(records)
+		for _, r := range records {
+			detail.RecordTypes[r.Type]++
 		}
 	}
+}
 
-	if s.ssl != nil {
-		sslStatus, err := s.ssl.GetSSL(ctx)
-		if err == nil {
-			detail.SSLMode = sslStatus.Value
-		}
+// enrichSSLMode fills the zone SSL mode from the SSL service. A nil service
+// or a fetch failure leaves the field empty.
+func (s *DomainService) enrichSSLMode(ctx context.Context, detail *DomainDetail) {
+	if s.ssl == nil {
+		return
+	}
+	sslStatus, err := s.ssl.GetSSL(ctx)
+	if err == nil {
+		detail.SSLMode = sslStatus.Value
+	}
+}
+
+// enrichDoctorProbes runs the doctor's HTTP and SSL probes against the
+// domain to fill health, SSL status, response time, and SSL expiry. A nil
+// doctor leaves the defaults from GetDetail in place.
+func (s *DomainService) enrichDoctorProbes(ctx context.Context, zoneName string, detail *DomainDetail) {
+	if s.doctor == nil {
+		return
 	}
 
-	if s.doctor != nil {
-		httpResult, err := s.doctor.CheckHTTP(ctx, zone.Name)
-		if err == nil && httpResult.Error == "" {
-			detail.HealthStatus = "up"
-			detail.ResponseTime = fmt.Sprintf("%dms", httpResult.ResponseTimeMs)
-		} else {
-			detail.HealthStatus = "down"
-		}
-
-		sslResult, err := s.doctor.CheckSSL(ctx, zone.Name)
-		if err == nil && sslResult.Error == "" {
-			detail.SSLStatus = classifySSLStatus(sslResult.DaysLeft, sslResult.Valid)
-			if !sslResult.NotAfter.IsZero() {
-				detail.SSLExpiry = sslResult.NotAfter.Format("2006-01-02")
-			}
-		}
+	httpResult, err := s.doctor.CheckHTTP(ctx, zoneName)
+	if err == nil && httpResult.Error == "" {
+		detail.HealthStatus = "up"
+		detail.ResponseTime = fmt.Sprintf("%dms", httpResult.ResponseTimeMs)
+	} else {
+		detail.HealthStatus = "down"
 	}
 
+	sslResult, err := s.doctor.CheckSSL(ctx, zoneName)
+	if err == nil && sslResult.Error == "" {
+		detail.SSLStatus = classifySSLStatus(sslResult.DaysLeft, sslResult.Valid)
+		if !sslResult.NotAfter.IsZero() {
+			detail.SSLExpiry = sslResult.NotAfter.Format("2006-01-02")
+		}
+	}
+}
+
+// enrichRedirects attaches redirect rules to the detail — modern Redirect
+// Rules for the zone, then legacy forwarding_url Page Rules merged after
+// modern rules so redirect visibility is complete regardless of which
+// system created the rule. Failures skip rows silently.
+func (s *DomainService) enrichRedirects(ctx context.Context, zoneID string, detail *DomainDetail) {
 	// Optional redirect enrichment — modern Redirect Rules for the zone.
 	if s.redirects != nil {
 		if rules, err := s.redirects.List(ctx, zoneID); err == nil {
@@ -218,9 +249,7 @@ func (s *DomainService) GetDetail(ctx context.Context, zoneID string) (*DomainDe
 		}
 	}
 
-	// Optional legacy enrichment — forwarding_url Page Rules merged after
-	// modern rules so redirect visibility is complete regardless of which
-	// system created the rule. Failures skip legacy rows silently.
+	// Optional legacy enrichment — forwarding_url Page Rules.
 	if s.pageRules != nil {
 		if lister := s.pageRules(zoneID); lister != nil {
 			if legacy, err := lister.List(ctx); err == nil {
@@ -228,23 +257,24 @@ func (s *DomainService) GetDetail(ctx context.Context, zoneID string) (*DomainDe
 			}
 		}
 	}
+}
 
-	// Optional registrar enrichment — registration overlay keyed by domain name.
-	// A domain absent from the registrar map is registered elsewhere ("external").
-	// NOTE: RegistrarInfo.AutoRenew is always false (cloudflare-go v0.116.0 exposes
-	// no auto-renew flag on the read model) — display layers must not render it as
-	// "auto-renew off".
-	if s.registrar != nil {
-		if all, err := s.registrar.List(ctx); err == nil {
-			if info, ok := all[zone.Name]; ok {
-				detail.Registrar = &info
-			} else {
-				detail.Registrar = &RegistrarInfo{Registrar: "external"}
-			}
+// enrichRegistrar attaches the registration overlay keyed by domain name.
+// A domain absent from the registrar map is registered elsewhere ("external").
+// NOTE: RegistrarInfo.AutoRenew is always false (cloudflare-go v0.116.0 exposes
+// no auto-renew flag on the read model) — display layers must not render it as
+// "auto-renew off".
+func (s *DomainService) enrichRegistrar(ctx context.Context, zoneName string, detail *DomainDetail) {
+	if s.registrar == nil {
+		return
+	}
+	if all, err := s.registrar.List(ctx); err == nil {
+		if info, ok := all[zoneName]; ok {
+			detail.Registrar = &info
+		} else {
+			detail.Registrar = &RegistrarInfo{Registrar: "external"}
 		}
 	}
-
-	return detail, nil
 }
 
 // EnrichWithHealth runs lightweight probes on each domain status to fill in

@@ -206,15 +206,56 @@ type apiErrorItem struct {
 // the request may have already been processed. Both cases otherwise use
 // exponential backoff with jitter, up to maxRetries additional attempts.
 func (c *restClient) do(ctx context.Context, op, method, path string, body interface{}, out interface{}) error {
-	var bodyData []byte
-	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
-			return newError(op, "failed to encode request body", err)
-		}
-		bodyData = data
+	bodyData, err := marshalBody(op, body)
+	if err != nil {
+		return err
 	}
 
+	data, statusCode, err := c.sendWithRetry(ctx, op, method, path, bodyData)
+	if err != nil {
+		return err
+	}
+
+	return decodeEnvelope(op, data, statusCode, out)
+}
+
+// marshalBody encodes a JSON request body, returning nil for a nil body.
+func marshalBody(op string, body interface{}) ([]byte, error) {
+	if body == nil {
+		return nil, nil
+	}
+	data, err := json.Marshal(body)
+	if err != nil {
+		return nil, newError(op, "failed to encode request body", err)
+	}
+	return data, nil
+}
+
+// buildRequest constructs one authenticated request attempt from the
+// pre-marshalled body, applying the jurisdiction header when set.
+func (c *restClient) buildRequest(ctx context.Context, method, path string, bodyData []byte) (*http.Request, error) {
+	var reader io.Reader
+	if bodyData != nil {
+		reader = bytes.NewReader(bodyData)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reader)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+	if c.jurisdiction != "" {
+		req.Header.Set("cf-r2-jurisdiction", c.jurisdiction)
+	}
+	if bodyData != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return req, nil
+}
+
+// sendWithRetry performs the request attempt loop, returning the response
+// body and status of the final (non-retried) attempt. See do for the
+// retry policy.
+func (c *restClient) sendWithRetry(ctx context.Context, op, method, path string, bodyData []byte) ([]byte, int, error) {
 	sleepFn := c.sleepFn
 	if sleepFn == nil {
 		sleepFn = time.Sleep
@@ -227,25 +268,14 @@ func (c *restClient) do(ctx context.Context, op, method, path string, body inter
 	for {
 		attempt++
 
-		var reader io.Reader
-		if bodyData != nil {
-			reader = bytes.NewReader(bodyData)
-		}
-		req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reader)
+		req, err := c.buildRequest(ctx, method, path, bodyData)
 		if err != nil {
-			return newError(op, "failed to build request", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+c.apiToken)
-		if c.jurisdiction != "" {
-			req.Header.Set("cf-r2-jurisdiction", c.jurisdiction)
-		}
-		if bodyData != nil {
-			req.Header.Set("Content-Type", "application/json")
+			return nil, 0, newError(op, "failed to build request", err)
 		}
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {
-			return newError(op, "request failed", err)
+			return nil, 0, newError(op, "request failed", err)
 		}
 
 		// Always drain and close the body so the underlying connection is
@@ -253,7 +283,7 @@ func (c *restClient) do(ctx context.Context, op, method, path string, body inter
 		respData, readErr := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if readErr != nil {
-			return newError(op, "failed to read response body", readErr)
+			return nil, 0, newError(op, "failed to read response body", readErr)
 		}
 		data = respData
 		statusCode = resp.StatusCode
@@ -265,11 +295,16 @@ func (c *restClient) do(ctx context.Context, op, method, path string, body inter
 		}
 		if retryable {
 			elapsed := time.Since(start)
-			return newError(op, fmt.Sprintf("giving up after %d attempt(s) over %s: HTTP %d", attempt, elapsed, statusCode), nil)
+			return nil, 0, newError(op, fmt.Sprintf("giving up after %d attempt(s) over %s: HTTP %d", attempt, elapsed, statusCode), nil)
 		}
 		break
 	}
+	return data, statusCode, nil
+}
 
+// decodeEnvelope unmarshals the standard response envelope into out (when
+// non-nil), translating envelope failures into op-scoped errors.
+func decodeEnvelope(op string, data []byte, statusCode int, out interface{}) error {
 	var env apiEnvelope
 	if err := json.Unmarshal(data, &env); err != nil {
 		return newError(op, fmt.Sprintf("unexpected response (HTTP %d)", statusCode), err)
