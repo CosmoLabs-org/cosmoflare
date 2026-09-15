@@ -38,6 +38,9 @@ schema_version: 1
 status: COMPLETED
 tags: []
 title: FEAT-021 Workers Command Depth — Full Implementation
+implemented_commits:
+    - {sha: '326511a6d3cc', covers: [P-01, P-02, P-03, P-04]}
+    - {sha: 'a6e540456c68', covers: [P-05, P-06, P-07, P-08, P-09, P-10]}
 ---
 
 # FEAT-021 Workers Command Depth — Full Implementation
