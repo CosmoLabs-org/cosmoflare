@@ -14,42 +14,112 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
+
+// startupPerfTests defines performance targets for TUI startup stages.
+var startupPerfTests = []struct {
+	name        string
+	maxDuration time.Duration
+	description string
+}{
+	{
+		name:        "Initial model creation",
+		maxDuration: time.Millisecond * 50,
+		description: "Time to create initial dashboard model",
+	},
+	{
+		name:        "Theme initialization",
+		maxDuration: time.Millisecond * 20,
+		description: "Time to initialize color themes and styles",
+	},
+	{
+		name:        "Help system setup",
+		maxDuration: time.Millisecond * 30,
+		description: "Time to prepare help content and navigation",
+	},
+	{
+		name:        "First render",
+		maxDuration: time.Millisecond * 100,
+		description: "Time to render first complete view",
+	},
+}
+
+// renderingSpeedTests defines rendering operation performance targets.
+var renderingSpeedTests = []struct {
+	name        string
+	operations  int
+	maxDuration time.Duration
+	description string
+	contentSize int
+}{
+	{
+		name:        "Static view rendering",
+		operations:  1000,
+		maxDuration: time.Millisecond * 100,
+		description: "Render static dashboard views",
+		contentSize: 20, // Small content
+	},
+	{
+		name:        "Dynamic content rendering",
+		operations:  1000,
+		maxDuration: time.Millisecond * 200,
+		description: "Render views with dynamic data",
+		contentSize: 100, // Medium content
+	},
+	{
+		name:        "Large dataset rendering",
+		operations:  500,
+		maxDuration: time.Millisecond * 500,
+		description: "Render views with large datasets",
+		contentSize: 1000, // Large content
+	},
+	{
+		name:        "Rapid navigation rendering",
+		operations:  5000,
+		maxDuration: time.Millisecond * 200,
+		description: "Render during rapid navigation",
+		contentSize: 50, // Small but frequent
+	},
+}
+
+// updateCycleTests defines Bubble Tea update cycle performance targets.
+var updateCycleTests = []struct {
+	name        string
+	messageType string
+	updates     int
+	maxDuration time.Duration
+	description string
+}{
+	{
+		name:        "Window resize updates",
+		messageType: "WindowSizeMsg",
+		updates:     1000,
+		maxDuration: time.Millisecond * 50,
+		description: "Handle window resize messages",
+	},
+	{
+		name:        "Keyboard navigation updates",
+		messageType: "KeyMsg",
+		updates:     2000,
+		maxDuration: time.Millisecond * 100,
+		description: "Handle keyboard navigation",
+	},
+	{
+		name:        "Data update messages",
+		messageType: "CustomDataMsg",
+		updates:     500,
+		maxDuration: time.Millisecond * 200,
+		description: "Handle data update messages",
+	},
+}
 
 // TestRenderingPerformance tests TUI rendering performance characteristics
 func TestRenderingPerformance(t *testing.T) {
 	t.Run("Startup Performance", func(t *testing.T) {
 		// Test that the TUI starts up quickly
-		startupTests := []struct {
-			name        string
-			maxDuration time.Duration
-			description string
-		}{
-			{
-				name:        "Initial model creation",
-				maxDuration: time.Millisecond * 50,
-				description: "Time to create initial dashboard model",
-			},
-			{
-				name:        "Theme initialization",
-				maxDuration: time.Millisecond * 20,
-				description: "Time to initialize color themes and styles",
-			},
-			{
-				name:        "Help system setup",
-				maxDuration: time.Millisecond * 30,
-				description: "Time to prepare help content and navigation",
-			},
-			{
-				name:        "First render",
-				maxDuration: time.Millisecond * 100,
-				description: "Time to render first complete view",
-			},
-		}
-
-		for _, test := range startupTests {
+		for _, test := range startupPerfTests {
 			t.Run("Startup: "+test.name, func(t *testing.T) {
 				assert.NotEmpty(t, test.name, "Test name should not be empty")
 				assert.NotEmpty(t, test.description, "Description should not be empty")
@@ -76,11 +146,11 @@ func TestRenderingPerformance(t *testing.T) {
 				case "Theme initialization":
 					// Simulate theme setup
 					_ = map[string]string{
-						"primary":   "#5DADE2",
-						"success":   "#2ECC71",
-						"warning":   "#F39C12",
-						"error":     "#E74C3C",
-						"muted":     "#7F8C8D",
+						"primary": "#5DADE2",
+						"success": "#2ECC71",
+						"warning": "#F39C12",
+						"error":   "#E74C3C",
+						"muted":   "#7F8C8D",
 					}
 				case "Help system setup":
 					// Simulate help content preparation
@@ -103,44 +173,7 @@ func TestRenderingPerformance(t *testing.T) {
 
 	t.Run("Rendering Speed Tests", func(t *testing.T) {
 		// Test different types of rendering operations
-		renderingTests := []struct {
-			name         string
-			operations   int
-			maxDuration  time.Duration
-			description  string
-			contentSize  int
-		}{
-			{
-				name:        "Static view rendering",
-				operations:  1000,
-				maxDuration: time.Millisecond * 100,
-				description: "Render static dashboard views",
-				contentSize: 20, // Small content
-			},
-			{
-				name:        "Dynamic content rendering",
-				operations:  1000,
-				maxDuration: time.Millisecond * 200,
-				description: "Render views with dynamic data",
-				contentSize: 100, // Medium content
-			},
-			{
-				name:        "Large dataset rendering",
-				operations:  500,
-				maxDuration: time.Millisecond * 500,
-				description: "Render views with large datasets",
-				contentSize: 1000, // Large content
-			},
-			{
-				name:        "Rapid navigation rendering",
-				operations:  5000,
-				maxDuration: time.Millisecond * 200,
-				description: "Render during rapid navigation",
-				contentSize: 50, // Small but frequent
-			},
-		}
-
-		for _, test := range renderingTests {
+		for _, test := range renderingSpeedTests {
 			t.Run("Rendering: "+test.name, func(t *testing.T) {
 				assert.Greater(t, test.operations, 0, "Operations should be positive")
 				assert.Greater(t, test.maxDuration, time.Duration(0), "Max duration should be positive")
@@ -205,37 +238,7 @@ func TestRenderingPerformance(t *testing.T) {
 
 	t.Run("Update Cycle Performance", func(t *testing.T) {
 		// Test Bubble Tea update cycle performance
-		updateTests := []struct {
-			name          string
-			messageType   string
-			updates       int
-			maxDuration   time.Duration
-			description   string
-		}{
-			{
-				name:        "Window resize updates",
-				messageType: "WindowSizeMsg",
-				updates:     1000,
-				maxDuration: time.Millisecond * 50,
-				description: "Handle window resize messages",
-			},
-			{
-				name:        "Keyboard navigation updates",
-				messageType: "KeyMsg",
-				updates:     2000,
-				maxDuration: time.Millisecond * 100,
-				description: "Handle keyboard navigation",
-			},
-			{
-				name:        "Data update messages",
-				messageType: "CustomDataMsg",
-				updates:     500,
-				maxDuration: time.Millisecond * 200,
-				description: "Handle data update messages",
-			},
-		}
-
-		for _, test := range updateTests {
+		for _, test := range updateCycleTests {
 			t.Run("Update cycle: "+test.name, func(t *testing.T) {
 				assert.Greater(t, test.updates, 0, "Updates should be positive")
 				assert.Greater(t, test.maxDuration, time.Duration(0), "Max duration should be positive")
@@ -272,37 +275,65 @@ func TestRenderingPerformance(t *testing.T) {
 	})
 }
 
+// bucketCountTests defines performance targets for large bucket lists.
+var bucketCountTests = []struct {
+	count         int
+	maxLoadTime   time.Duration
+	maxRenderTime time.Duration
+	description   string
+}{
+	{
+		count:         100,
+		maxLoadTime:   time.Millisecond * 10,
+		maxRenderTime: time.Millisecond * 50,
+		description:   "Small bucket list",
+	},
+	{
+		count:         1000,
+		maxLoadTime:   time.Millisecond * 50,
+		maxRenderTime: time.Millisecond * 200,
+		description:   "Medium bucket list",
+	},
+	{
+		count:         5000,
+		maxLoadTime:   time.Millisecond * 200,
+		maxRenderTime: time.Millisecond * 1000,
+		description:   "Large bucket list",
+	},
+}
+
+// realtimeUpdateTests defines targets for frequent real-time updates.
+var realtimeUpdateTests = []struct {
+	interval    time.Duration
+	duration    time.Duration
+	maxLoad     float64 // CPU load percentage
+	description string
+}{
+	{
+		interval:    time.Millisecond * 100, // 10 Hz
+		duration:    time.Second * 10,
+		maxLoad:     5.0,
+		description: "Frequent updates",
+	},
+	{
+		interval:    time.Millisecond * 500, // 2 Hz
+		duration:    time.Second * 10,
+		maxLoad:     2.0,
+		description: "Regular updates",
+	},
+	{
+		interval:    time.Second * 1, // 1 Hz
+		duration:    time.Second * 10,
+		maxLoad:     1.0,
+		description: "Slow updates",
+	},
+}
+
 // TestLargeDatasetPerformance tests performance with large amounts of data
 func TestLargeDatasetPerformance(t *testing.T) {
 	t.Run("Bucket List Performance", func(t *testing.T) {
 		// Test performance with large bucket lists
-		bucketCounts := []struct {
-			count       int
-			maxLoadTime time.Duration
-			maxRenderTime time.Duration
-			description string
-		}{
-			{
-				count:          100,
-				maxLoadTime:    time.Millisecond * 10,
-				maxRenderTime:  time.Millisecond * 50,
-				description:    "Small bucket list",
-			},
-			{
-				count:          1000,
-				maxLoadTime:    time.Millisecond * 50,
-				maxRenderTime:  time.Millisecond * 200,
-				description:    "Medium bucket list",
-			},
-			{
-				count:          5000,
-				maxLoadTime:    time.Millisecond * 200,
-				maxRenderTime:  time.Millisecond * 1000,
-				description:    "Large bucket list",
-			},
-		}
-
-		for _, test := range bucketCounts {
+		for _, test := range bucketCountTests {
 			t.Run(fmt.Sprintf("Buckets: %d (%s)", test.count, test.description), func(t *testing.T) {
 				// Simulate loading bucket data
 				loadStart := time.Now()
@@ -368,7 +399,7 @@ func TestLargeDatasetPerformance(t *testing.T) {
 				duration := time.Since(start)
 
 				// Performance should degrade gracefully
-				maxDuration := time.Millisecond * 1000 + time.Duration(count/10)*time.Millisecond
+				maxDuration := time.Millisecond*1000 + time.Duration(count/10)*time.Millisecond
 				assert.Less(t, duration, maxDuration,
 					fmt.Sprintf("Rendering %d objects should complete within %v (actual: %v)",
 						count, maxDuration, duration))
@@ -380,33 +411,7 @@ func TestLargeDatasetPerformance(t *testing.T) {
 
 	t.Run("Real-time Update Performance", func(t *testing.T) {
 		// Test performance with frequent real-time updates
-		updateIntervals := []struct {
-			interval    time.Duration
-			duration    time.Duration
-			maxLoad     float64 // CPU load percentage
-			description string
-		}{
-			{
-				interval:    time.Millisecond * 100,  // 10 Hz
-				duration:    time.Second * 10,
-				maxLoad:     5.0,
-				description: "Frequent updates",
-			},
-			{
-				interval:    time.Millisecond * 500,  // 2 Hz
-				duration:    time.Second * 10,
-				maxLoad:     2.0,
-				description: "Regular updates",
-			},
-			{
-				interval:    time.Second * 1,         // 1 Hz
-				duration:    time.Second * 10,
-				maxLoad:     1.0,
-				description: "Slow updates",
-			},
-		}
-
-		for _, test := range updateIntervals {
+		for _, test := range realtimeUpdateTests {
 			t.Run("Real-time updates: "+test.description, func(t *testing.T) {
 				start := time.Now()
 				updateCount := 0
@@ -414,14 +419,14 @@ func TestLargeDatasetPerformance(t *testing.T) {
 				for time.Since(start) < test.duration {
 					// Simulate real-time update
 					_ = struct {
-						timestamp time.Time
-						uploadRate float64
-						downloadRate float64
+						timestamp      time.Time
+						uploadRate     float64
+						downloadRate   float64
 						requestsPerMin int
 					}{
-						timestamp:     time.Now(),
-						uploadRate:    float64(updateCount % 100),
-						downloadRate:  float64(updateCount % 50),
+						timestamp:      time.Now(),
+						uploadRate:     float64(updateCount % 100),
+						downloadRate:   float64(updateCount % 50),
 						requestsPerMin: 100 + updateCount%1000,
 					}
 
@@ -441,37 +446,65 @@ func TestLargeDatasetPerformance(t *testing.T) {
 	})
 }
 
+// concurrentNavTests defines concurrent navigation performance targets.
+var concurrentNavTests = []struct {
+	goroutines  int
+	operations  int
+	maxDuration time.Duration
+	description string
+}{
+	{
+		goroutines:  1,
+		operations:  1000,
+		maxDuration: time.Millisecond * 50,
+		description: "Single goroutine navigation",
+	},
+	{
+		goroutines:  5,
+		operations:  200,
+		maxDuration: time.Millisecond * 100,
+		description: "Concurrent navigation (5 goroutines)",
+	},
+	{
+		goroutines:  10,
+		operations:  100,
+		maxDuration: time.Millisecond * 200,
+		description: "High concurrency navigation (10 goroutines)",
+	},
+}
+
+// memoryAccessPatterns defines memory access pattern scenarios.
+var memoryAccessPatterns = []struct {
+	name     string
+	pattern  string
+	size     int
+	accesses int
+}{
+	{
+		name:     "Sequential access",
+		pattern:  "sequential",
+		size:     1000,
+		accesses: 5000,
+	},
+	{
+		name:     "Random access",
+		pattern:  "random",
+		size:     1000,
+		accesses: 5000,
+	},
+	{
+		name:     "Localized access",
+		pattern:  "localized",
+		size:     1000,
+		accesses: 5000,
+	},
+}
+
 // TestConcurrentRendering tests rendering under concurrent conditions
 func TestConcurrentRendering(t *testing.T) {
 	t.Run("Concurrent Navigation", func(t *testing.T) {
 		// Test handling rapid concurrent navigation
-		concurrentTests := []struct {
-			goroutines int
-			operations int
-			maxDuration time.Duration
-			description string
-		}{
-			{
-				goroutines:  1,
-				operations:  1000,
-				maxDuration: time.Millisecond * 50,
-				description: "Single goroutine navigation",
-			},
-			{
-				goroutines:  5,
-				operations:  200,
-				maxDuration: time.Millisecond * 100,
-				description: "Concurrent navigation (5 goroutines)",
-			},
-			{
-				goroutines:  10,
-				operations:  100,
-				maxDuration: time.Millisecond * 200,
-				description: "High concurrency navigation (10 goroutines)",
-			},
-		}
-
-		for _, test := range concurrentTests {
+		for _, test := range concurrentNavTests {
 			t.Run("Concurrent: "+test.description, func(t *testing.T) {
 				start := time.Now()
 				done := make(chan bool, test.goroutines)
@@ -508,33 +541,7 @@ func TestConcurrentRendering(t *testing.T) {
 
 	t.Run("Memory Access Patterns", func(t *testing.T) {
 		// Test memory access patterns during rendering
-		accessPatterns := []struct {
-			name     string
-			pattern  string
-			size     int
-			accesses int
-		}{
-			{
-				name:     "Sequential access",
-				pattern:  "sequential",
-				size:     1000,
-				accesses: 5000,
-			},
-			{
-				name:     "Random access",
-				pattern:  "random",
-				size:     1000,
-				accesses: 5000,
-			},
-			{
-				name:     "Localized access",
-				pattern:  "localized",
-				size:     1000,
-				accesses: 5000,
-			},
-		}
-
-		for _, test := range accessPatterns {
+		for _, test := range memoryAccessPatterns {
 			t.Run("Memory pattern: "+test.name, func(t *testing.T) {
 				// Create test data
 				data := make([]string, test.size)
@@ -552,7 +559,7 @@ func TestConcurrentRendering(t *testing.T) {
 					case "random":
 						index = (i * 31) % test.size // Simple pseudo-random
 					case "localized":
-						index = (i % 100) + ((i / 100) * 100) % test.size
+						index = (i % 100) + ((i/100)*100)%test.size
 					}
 
 					_ = data[index] // Access the data

@@ -11,12 +11,206 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"unicode/utf8"
 	"time"
+	"unicode/utf8"
 
-	"github.com/stretchr/testify/assert"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
+
+// expectedViewUIElements lists UI elements expected in rendered views.
+var expectedViewUIElements = []string{
+	"R2Go2 Dashboard",
+	"🎯",
+	"📍",
+	"📊",
+	"🪣",
+	"📈",
+	"⚙️",
+	"📚",
+	"F1",
+	"Help",
+}
+
+// viewSections lists the dashboard sections and their UI indicators.
+var viewSections = []struct {
+	name        string
+	description string
+	indicators  []string
+}{
+	{
+		name:        "Overview",
+		description: "Main dashboard with usage statistics",
+		indicators:  []string{"📊", "🪣", "🎯"},
+	},
+	{
+		name:        "Buckets",
+		description: "Bucket list and management",
+		indicators:  []string{"🪣", "📁", "✅"},
+	},
+	{
+		name:        "Objects",
+		description: "Object browsing interface",
+		indicators:  []string{"📁", "📤", "📥"},
+	},
+	{
+		name:        "Upload",
+		description: "File upload interface",
+		indicators:  []string{"📤", "⬆️", "⏳"},
+	},
+	{
+		name:        "Monitoring",
+		description: "Real-time statistics",
+		indicators:  []string{"📈", "🔥", "📝"},
+	},
+	{
+		name:        "Settings",
+		description: "Configuration interface",
+		indicators:  []string{"⚙️", "🎨", "🔐"},
+	},
+	{
+		name:        "Help",
+		description: "Help and documentation",
+		indicators:  []string{"📚", "❓", "ℹ️"},
+	},
+}
+
+// viewColorThemes lists supported color themes.
+var viewColorThemes = []struct {
+	name   string
+	colors []string
+}{
+	{
+		name:   "dark",
+		colors: []string{"#5DADE2", "#2ECC71", "#F39C12", "#E74C3C"},
+	},
+	{
+		name:   "light",
+		colors: []string{"#3498DB", "#2ECC71", "#F39C12", "#E74C3C"},
+	},
+}
+
+// viewTerminalSizes lists terminal sizes the layout must support.
+var viewTerminalSizes = []struct {
+	width  int
+	height int
+	valid  bool
+}{
+	{80, 24, true},  // Standard terminal
+	{100, 30, true}, // Wide terminal
+	{120, 40, true}, // Large terminal
+	{40, 10, false}, // Too small
+	{200, 60, true}, // Very large
+}
+
+// progressBarCharacters lists characters used to render progress bars.
+var progressBarCharacters = []string{
+	"█", // Filled
+	"░", // Empty
+	"▓", // Partial
+	"▒", // Partial
+}
+
+// progressBarPatterns lists progress bar render patterns (each 20 runes).
+var progressBarPatterns = []string{
+	"█░░░░░░░░░░░░░░░░░░░",
+	"████████████████████",
+	"██████████░░░░░░░░░░",
+	"░░░░░░░░░░░░░░░░░░░░",
+}
+
+// viewStatusIndicators maps statuses to their rendered indicators.
+var viewStatusIndicators = map[string]string{
+	"active":    "✅ Active",
+	"archived":  "🗄️ Archived",
+	"disabled":  "❌ Disabled",
+	"unknown":   "❓ Unknown",
+	"uploading": "⬆️",
+	"completed": "✅",
+	"failed":    "❌",
+	"queued":    "⏳",
+	"success":   "✅",
+	"error":     "❌",
+	"warning":   "⚠️",
+	"info":      "ℹ️",
+}
+
+// viewByteFormats lists expected byte formatting patterns.
+var viewByteFormats = []struct {
+	input    int64
+	expected string
+}{
+	{0, "0 B"},
+	{1024, "1.0 KB"},
+	{1024 * 1024, "1.0 MB"},
+	{1024 * 1024 * 1024, "1.0 GB"},
+	{1024 * 1024 * 1024 * 1024, "1.0 TB"},
+}
+
+// viewNumberFormats lists expected number formatting patterns.
+var viewNumberFormats = []struct {
+	input    int64
+	expected string
+}{
+	{0, "0"},
+	{500, "500"},
+	{1500, "1.5K"},
+	{1500000, "1.5M"},
+	{1500000000, "1.5B"},
+}
+
+// viewHelpSections lists the help screen sections and their content.
+var viewHelpSections = []struct {
+	title   string
+	content []string
+}{
+	{
+		title: "Navigation",
+		content: []string{
+			"↑/k, ↓/j",
+			"←/h, →/l",
+			"Enter, Space",
+			"Esc, q",
+		},
+	},
+	{
+		title: "Quick Actions",
+		content: []string{
+			"C", "U", "D", "M",
+			"S", "P", "L", "A",
+		},
+	},
+	{
+		title:   "Function Keys",
+		content: []string{"F1", "F5", "F10"},
+	},
+	{
+		title: "Sections",
+		content: []string{
+			"1. Overview",
+			"2. Buckets",
+			"3. Objects",
+			"4. Upload",
+			"5. Monitoring",
+			"6. Settings",
+		},
+	},
+}
+
+// viewLoadingFrames lists the loading animation frames.
+var viewLoadingFrames = []string{
+	"⠋", "⠙", "⠹", "⠸", "⠼",
+	"⠴", "⠦", "⠧", "⠇", "⠏",
+}
+
+// viewErrorMessages lists error messages rendered to the user.
+var viewErrorMessages = []string{
+	"No buckets found",
+	"Failed to load data",
+	"Upload failed",
+	"Connection error",
+	"Invalid configuration",
+}
 
 // TestViewRendering tests TUI view rendering functionality
 func TestViewRendering(t *testing.T) {
@@ -25,20 +219,7 @@ func TestViewRendering(t *testing.T) {
 		// Since we can't directly access the model, we test the expected output patterns
 
 		// Test for expected UI elements
-		expectedUIElements := []string{
-			"R2Go2 Dashboard",
-			"🎯",
-			"📍",
-			"📊",
-			"🪣",
-			"📈",
-			"⚙️",
-			"📚",
-			"F1",
-			"Help",
-		}
-
-		for _, element := range expectedUIElements {
+		for _, element := range expectedViewUIElements {
 			t.Run("UI Element: "+element, func(t *testing.T) {
 				assert.NotEmpty(t, element, "UI element should not be empty")
 				assert.True(t, len(element) > 0, "UI element should have content")
@@ -47,49 +228,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Section Rendering", func(t *testing.T) {
-		sections := []struct {
-			name        string
-			description string
-			indicators  []string
-		}{
-			{
-				name:        "Overview",
-				description: "Main dashboard with usage statistics",
-				indicators:  []string{"📊", "🪣", "🎯"},
-			},
-			{
-				name:        "Buckets",
-				description: "Bucket list and management",
-				indicators:  []string{"🪣", "📁", "✅"},
-			},
-			{
-				name:        "Objects",
-				description: "Object browsing interface",
-				indicators:  []string{"📁", "📤", "📥"},
-			},
-			{
-				name:        "Upload",
-				description: "File upload interface",
-				indicators:  []string{"📤", "⬆️", "⏳"},
-			},
-			{
-				name:        "Monitoring",
-				description: "Real-time statistics",
-				indicators:  []string{"📈", "🔥", "📝"},
-			},
-			{
-				name:        "Settings",
-				description: "Configuration interface",
-				indicators:  []string{"⚙️", "🎨", "🔐"},
-			},
-			{
-				name:        "Help",
-				description: "Help and documentation",
-				indicators:  []string{"📚", "❓", "ℹ️"},
-			},
-		}
-
-		for _, section := range sections {
+		for _, section := range viewSections {
 			t.Run("Section: "+section.name, func(t *testing.T) {
 				assert.NotEmpty(t, section.name, "Section name should not be empty")
 				assert.NotEmpty(t, section.description, "Section description should not be empty")
@@ -105,21 +244,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Color Theme Support", func(t *testing.T) {
-		themes := []struct {
-			name   string
-			colors []string
-		}{
-			{
-				name:   "dark",
-				colors: []string{"#5DADE2", "#2ECC71", "#F39C12", "#E74C3C"},
-			},
-			{
-				name:   "light",
-				colors: []string{"#3498DB", "#2ECC71", "#F39C12", "#E74C3C"},
-			},
-		}
-
-		for _, theme := range themes {
+		for _, theme := range viewColorThemes {
 			t.Run("Theme: "+theme.name, func(t *testing.T) {
 				assert.NotEmpty(t, theme.name, "Theme name should not be empty")
 				assert.NotEmpty(t, theme.colors, "Theme should have colors")
@@ -134,19 +259,7 @@ func TestViewRendering(t *testing.T) {
 
 	t.Run("Responsive Layout", func(t *testing.T) {
 		// Test different terminal sizes
-		terminalSizes := []struct {
-			width  int
-			height int
-			valid  bool
-		}{
-			{80, 24, true},   // Standard terminal
-			{100, 30, true},  // Wide terminal
-			{120, 40, true},  // Large terminal
-			{40, 10, false},  // Too small
-			{200, 60, true},  // Very large
-		}
-
-		for _, size := range terminalSizes {
+		for _, size := range viewTerminalSizes {
 			t.Run(fmt.Sprintf("Terminal %dx%d", size.width, size.height), func(t *testing.T) {
 				assert.Greater(t, size.width, 0, "Width should be positive")
 				assert.Greater(t, size.height, 0, "Height should be positive")
@@ -163,14 +276,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Progress Bars and Indicators", func(t *testing.T) {
-		progressCharacters := []string{
-			"█", // Filled
-			"░", // Empty
-			"▓", // Partial
-			"▒", // Partial
-		}
-
-		for _, char := range progressCharacters {
+		for _, char := range progressBarCharacters {
 			t.Run("Progress char: "+char, func(t *testing.T) {
 				assert.NotEmpty(t, char, "Progress character should not be empty")
 				assert.Equal(t, 1, utf8.RuneCountInString(char), "Should be single character")
@@ -178,14 +284,7 @@ func TestViewRendering(t *testing.T) {
 		}
 
 		// Test progress bar patterns (each should be exactly 20 runes)
-		progressPatterns := []string{
-			"█░░░░░░░░░░░░░░░░░░░",
-			"████████████████████",
-			"██████████░░░░░░░░░░",
-			"░░░░░░░░░░░░░░░░░░░░",
-		}
-
-		for _, pattern := range progressPatterns {
+		for _, pattern := range progressBarPatterns {
 			t.Run("Progress pattern", func(t *testing.T) {
 				assert.Equal(t, 20, utf8.RuneCountInString(pattern), "Progress bar should be 20 characters")
 				hasFilled := strings.Contains(pattern, "█")
@@ -196,22 +295,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Status Indicators", func(t *testing.T) {
-		statusIndicators := map[string]string{
-			"active":    "✅ Active",
-			"archived":  "🗄️ Archived",
-			"disabled":  "❌ Disabled",
-			"unknown":   "❓ Unknown",
-			"uploading": "⬆️",
-			"completed": "✅",
-			"failed":    "❌",
-			"queued":    "⏳",
-			"success":   "✅",
-			"error":     "❌",
-			"warning":   "⚠️",
-			"info":      "ℹ️",
-		}
-
-		for status, indicator := range statusIndicators {
+		for status, indicator := range viewStatusIndicators {
 			t.Run("Status: "+status, func(t *testing.T) {
 				assert.NotEmpty(t, status, "Status should not be empty")
 				assert.NotEmpty(t, indicator, "Indicator should not be empty")
@@ -222,18 +306,7 @@ func TestViewRendering(t *testing.T) {
 
 	t.Run("Data Formatting", func(t *testing.T) {
 		// Test byte formatting patterns
-		byteFormats := []struct {
-			input    int64
-			expected string
-		}{
-			{0, "0 B"},
-			{1024, "1.0 KB"},
-			{1024 * 1024, "1.0 MB"},
-			{1024 * 1024 * 1024, "1.0 GB"},
-			{1024 * 1024 * 1024 * 1024, "1.0 TB"},
-		}
-
-		for _, test := range byteFormats {
+		for _, test := range viewByteFormats {
 			t.Run(fmt.Sprintf("Bytes: %d", test.input), func(t *testing.T) {
 				assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
 				assert.NotEmpty(t, test.expected, "Expected format should not be empty")
@@ -242,18 +315,7 @@ func TestViewRendering(t *testing.T) {
 		}
 
 		// Test number formatting patterns
-		numberFormats := []struct {
-			input    int64
-			expected string
-		}{
-			{0, "0"},
-			{500, "500"},
-			{1500, "1.5K"},
-			{1500000, "1.5M"},
-			{1500000000, "1.5B"},
-		}
-
-		for _, test := range numberFormats {
+		for _, test := range viewNumberFormats {
 			t.Run(fmt.Sprintf("Number: %d", test.input), func(t *testing.T) {
 				assert.GreaterOrEqual(t, test.input, int64(0), "Input should be non-negative")
 				assert.NotEmpty(t, test.expected, "Expected format should not be empty")
@@ -262,44 +324,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Help Screen", func(t *testing.T) {
-		helpSections := []struct {
-			title   string
-			content []string
-		}{
-			{
-				title: "Navigation",
-				content: []string{
-					"↑/k, ↓/j",
-					"←/h, →/l",
-					"Enter, Space",
-					"Esc, q",
-				},
-			},
-			{
-				title: "Quick Actions",
-				content: []string{
-					"C", "U", "D", "M",
-					"S", "P", "L", "A",
-				},
-			},
-			{
-				title: "Function Keys",
-				content: []string{"F1", "F5", "F10"},
-			},
-			{
-				title: "Sections",
-				content: []string{
-					"1. Overview",
-					"2. Buckets",
-					"3. Objects",
-					"4. Upload",
-					"5. Monitoring",
-					"6. Settings",
-				},
-			},
-		}
-
-		for _, section := range helpSections {
+		for _, section := range viewHelpSections {
 			t.Run("Help: "+section.title, func(t *testing.T) {
 				assert.NotEmpty(t, section.title, "Help section title should not be empty")
 				assert.NotEmpty(t, section.content, "Help section should have content")
@@ -313,12 +338,7 @@ func TestViewRendering(t *testing.T) {
 
 	t.Run("Loading States", func(t *testing.T) {
 		// Test loading animation frames
-		loadingFrames := []string{
-			"⠋", "⠙", "⠹", "⠸", "⠼",
-			"⠴", "⠦", "⠧", "⠇", "⠏",
-		}
-
-		for _, frame := range loadingFrames {
+		for _, frame := range viewLoadingFrames {
 			t.Run("Loading frame: "+frame, func(t *testing.T) {
 				assert.NotEmpty(t, frame, "Loading frame should not be empty")
 				assert.Equal(t, 1, len([]rune(frame)), "Should be single rune")
@@ -332,15 +352,7 @@ func TestViewRendering(t *testing.T) {
 	})
 
 	t.Run("Error Messages", func(t *testing.T) {
-		errorMessages := []string{
-			"No buckets found",
-			"Failed to load data",
-			"Upload failed",
-			"Connection error",
-			"Invalid configuration",
-		}
-
-		for _, errorMsg := range errorMessages {
+		for _, errorMsg := range viewErrorMessages {
 			t.Run("Error: "+errorMsg, func(t *testing.T) {
 				assert.NotEmpty(t, errorMsg, "Error message should not be empty")
 				assert.Greater(t, len(errorMsg), 5, "Error message should be descriptive")
