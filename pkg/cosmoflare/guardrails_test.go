@@ -129,194 +129,200 @@ func TestCheckBucketAccess_DeniedReasonContent(t *testing.T) {
 
 // --- CheckUpload ---
 
-func TestCheckUpload(t *testing.T) {
-	tests := []struct {
-		name        string
-		cfg         *ProjectConfig
-		bucket      string
-		key         string
-		size        int64
-		wantAllowed bool
-		wantReasons int // minimum number of reasons expected on denial
-	}{
-		{
-			name:        "empty config — everything allowed",
-			cfg:         &ProjectConfig{},
-			bucket:      "any-bucket",
-			key:         "path/to/file.txt",
-			size:        1024,
-			wantAllowed: true,
-		},
-		// Bucket allowlist checks
-		{
-			name: "bucket in guardrails allowlist",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{
-					Enabled:        true,
-					AllowedBuckets: []string{"allowed"},
-				},
-			},
-			bucket:      "allowed",
-			key:         "file.txt",
-			size:        100,
-			wantAllowed: true,
-		},
-		{
-			name: "bucket NOT in guardrails allowlist",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{
-					Enabled:        true,
-					AllowedBuckets: []string{"allowed"},
-				},
-			},
-			bucket:      "forbidden",
-			key:         "file.txt",
-			size:        100,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		// Guardrails.MaxFileSize checks
-		{
-			name: "size exactly at guardrails max — allowed",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{MaxFileSize: 500},
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        500,
-			wantAllowed: true,
-		},
-		{
-			name: "size exceeds guardrails MaxFileSize",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{MaxFileSize: 100},
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        101,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		{
-			name: "size within guardrails MaxFileSize",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{MaxFileSize: 1000},
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        999,
-			wantAllowed: true,
-		},
-		// Top-level MaxFileSize checks
-		{
-			name: "size exceeds top-level MaxFileSize",
-			cfg: &ProjectConfig{
-				MaxFileSize: 256,
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        300,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		{
-			name: "size within top-level MaxFileSize",
-			cfg: &ProjectConfig{
-				MaxFileSize: 1024,
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        1024,
-			wantAllowed: true,
-		},
-		// Both MaxFileSize fields trigger
-		{
-			name: "size exceeds both guardrails and top-level MaxFileSize",
-			cfg: &ProjectConfig{
-				MaxFileSize: 100,
-				Guardrails:  GuardrailConfig{MaxFileSize: 50},
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        200,
-			wantAllowed: false,
-			wantReasons: 2,
-		},
-		// Blocked key patterns
-		{
-			name: "key matches blocked exact pattern",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{BlockedKeys: []string{"secrets/key.pem"}},
-			},
-			bucket:      "b",
-			key:         "secrets/key.pem",
-			size:        1,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		{
-			name: "key matches blocked prefix pattern",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{BlockedKeys: []string{"private/"}},
-			},
-			bucket:      "b",
-			key:         "private/secret.txt",
-			size:        1,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		{
-			name: "key matches blocked extension pattern",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{BlockedKeys: []string{"*.env"}},
-			},
-			bucket:      "b",
-			key:         "config.env",
-			size:        1,
-			wantAllowed: false,
-			wantReasons: 1,
-		},
-		{
-			name: "key does not match any blocked pattern",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{BlockedKeys: []string{"*.env", "private/"}},
-			},
-			bucket:      "b",
-			key:         "public/readme.txt",
-			size:        1,
-			wantAllowed: true,
-		},
-		// Multiple violations accumulate
-		{
-			name: "bucket denied AND size exceeded AND key blocked",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{
-					AllowedBuckets: []string{"only-this"},
-					MaxFileSize:    10,
-					BlockedKeys:    []string{"*.exe"},
-				},
-			},
-			bucket:      "wrong-bucket",
-			key:         "malware.exe",
-			size:        100,
-			wantAllowed: false,
-			wantReasons: 3,
-		},
-		// Zero-value MaxFileSize means unlimited
-		{
-			name: "zero MaxFileSize means no size limit",
-			cfg: &ProjectConfig{
-				Guardrails: GuardrailConfig{MaxFileSize: 0},
-				MaxFileSize: 0,
-			},
-			bucket:      "b",
-			key:         "f",
-			size:        1<<62 - 1,
-			wantAllowed: true,
-		},
-	}
+// checkUploadCase is one scenario for TestCheckUpload.
+type checkUploadCase struct {
+	name        string
+	cfg         *ProjectConfig
+	bucket      string
+	key         string
+	size        int64
+	wantAllowed bool
+	wantReasons int // minimum number of reasons expected on denial
+}
 
-	for _, tc := range tests {
+// checkUploadTestCases drives TestCheckUpload; it lives at package level so
+// the test function stays under the funlen limit. Coverage and assertions are
+// identical to the pre-split inline table.
+var checkUploadTestCases = []checkUploadCase{
+	{
+		name:        "empty config — everything allowed",
+		cfg:         &ProjectConfig{},
+		bucket:      "any-bucket",
+		key:         "path/to/file.txt",
+		size:        1024,
+		wantAllowed: true,
+	},
+	// Bucket allowlist checks
+	{
+		name: "bucket in guardrails allowlist",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{
+				Enabled:        true,
+				AllowedBuckets: []string{"allowed"},
+			},
+		},
+		bucket:      "allowed",
+		key:         "file.txt",
+		size:        100,
+		wantAllowed: true,
+	},
+	{
+		name: "bucket NOT in guardrails allowlist",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{
+				Enabled:        true,
+				AllowedBuckets: []string{"allowed"},
+			},
+		},
+		bucket:      "forbidden",
+		key:         "file.txt",
+		size:        100,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	// Guardrails.MaxFileSize checks
+	{
+		name: "size exactly at guardrails max — allowed",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{MaxFileSize: 500},
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        500,
+		wantAllowed: true,
+	},
+	{
+		name: "size exceeds guardrails MaxFileSize",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{MaxFileSize: 100},
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        101,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	{
+		name: "size within guardrails MaxFileSize",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{MaxFileSize: 1000},
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        999,
+		wantAllowed: true,
+	},
+	// Top-level MaxFileSize checks
+	{
+		name: "size exceeds top-level MaxFileSize",
+		cfg: &ProjectConfig{
+			MaxFileSize: 256,
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        300,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	{
+		name: "size within top-level MaxFileSize",
+		cfg: &ProjectConfig{
+			MaxFileSize: 1024,
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        1024,
+		wantAllowed: true,
+	},
+	// Both MaxFileSize fields trigger
+	{
+		name: "size exceeds both guardrails and top-level MaxFileSize",
+		cfg: &ProjectConfig{
+			MaxFileSize: 100,
+			Guardrails:  GuardrailConfig{MaxFileSize: 50},
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        200,
+		wantAllowed: false,
+		wantReasons: 2,
+	},
+	// Blocked key patterns
+	{
+		name: "key matches blocked exact pattern",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{BlockedKeys: []string{"secrets/key.pem"}},
+		},
+		bucket:      "b",
+		key:         "secrets/key.pem",
+		size:        1,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	{
+		name: "key matches blocked prefix pattern",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{BlockedKeys: []string{"private/"}},
+		},
+		bucket:      "b",
+		key:         "private/secret.txt",
+		size:        1,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	{
+		name: "key matches blocked extension pattern",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{BlockedKeys: []string{"*.env"}},
+		},
+		bucket:      "b",
+		key:         "config.env",
+		size:        1,
+		wantAllowed: false,
+		wantReasons: 1,
+	},
+	{
+		name: "key does not match any blocked pattern",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{BlockedKeys: []string{"*.env", "private/"}},
+		},
+		bucket:      "b",
+		key:         "public/readme.txt",
+		size:        1,
+		wantAllowed: true,
+	},
+	// Multiple violations accumulate
+	{
+		name: "bucket denied AND size exceeded AND key blocked",
+		cfg: &ProjectConfig{
+			Guardrails: GuardrailConfig{
+				AllowedBuckets: []string{"only-this"},
+				MaxFileSize:    10,
+				BlockedKeys:    []string{"*.exe"},
+			},
+		},
+		bucket:      "wrong-bucket",
+		key:         "malware.exe",
+		size:        100,
+		wantAllowed: false,
+		wantReasons: 3,
+	},
+	// Zero-value MaxFileSize means unlimited
+	{
+		name: "zero MaxFileSize means no size limit",
+		cfg: &ProjectConfig{
+			Guardrails:  GuardrailConfig{MaxFileSize: 0},
+			MaxFileSize: 0,
+		},
+		bucket:      "b",
+		key:         "f",
+		size:        1<<62 - 1,
+		wantAllowed: true,
+	},
+}
+
+func TestCheckUpload(t *testing.T) {
+	for _, tc := range checkUploadTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			gc := NewGuardrailChecker(tc.cfg)
 			result := gc.CheckUpload(tc.bucket, tc.key, tc.size)

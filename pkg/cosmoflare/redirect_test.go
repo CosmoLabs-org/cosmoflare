@@ -139,11 +139,12 @@ func TestRedirectService_List_Validation(t *testing.T) {
 	}
 }
 
-func TestRedirectService_Create(t *testing.T) {
-	const zoneID = "zone123"
-	var capturedBody map[string]any
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// redirectCreateTestServer serves the Create happy path: no existing redirect
+// phase on GET, and an echoing ruleset with a server-assigned rule ID on POST.
+// The submitted request body is decoded into capturedBody for later asserts.
+func redirectCreateTestServer(t *testing.T, zoneID string, capturedBody *map[string]any) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/zones/"+zoneID+"/rulesets":
@@ -156,8 +157,10 @@ func TestRedirectService_Create(t *testing.T) {
 			})
 		case r.Method == http.MethodPost && r.URL.Path == "/zones/"+zoneID+"/rulesets":
 			body, _ := io.ReadAll(r.Body)
-			if err := json.Unmarshal(body, &capturedBody); err != nil {
-				t.Fatalf("failed to decode create body: %v", err)
+			if err := json.Unmarshal(body, capturedBody); err != nil {
+				t.Errorf("failed to decode create body: %v", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
 			}
 			// Echo back a ruleset containing the submitted rule with a server ID.
 			json.NewEncoder(w).Encode(map[string]any{
@@ -188,24 +191,11 @@ func TestRedirectService_Create(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
-	defer server.Close()
+}
 
-	svc := NewRedirectService(redirectNewClient(t, server.URL), "account-test")
-
-	out, err := svc.Create(context.Background(), RedirectRuleInput{
-		ZoneID:      zoneID,
-		When:        `http.request.uri.path eq "/from"`,
-		Destination: "https://example.com/to",
-		StatusCode:  302,
-	})
-	if err != nil {
-		t.Fatalf("Create returned error: %v", err)
-	}
-
-	// Assert the request body carried destination + status.
-	if capturedBody == nil {
-		t.Fatal("create request body was never captured")
-	}
+// assertRedirectCreateRequestBody verifies the wire body Create sent.
+func assertRedirectCreateRequestBody(t *testing.T, capturedBody map[string]any) {
+	t.Helper()
 	rawRules, ok := capturedBody["rules"].([]any)
 	if !ok || len(rawRules) != 1 {
 		t.Fatalf("expected 1 rule in request body, got %#v", capturedBody["rules"])
@@ -232,17 +222,45 @@ func TestRedirectService_Create(t *testing.T) {
 	if target["value"] != "https://example.com/to" {
 		t.Errorf("expected destination https://example.com/to in body, got %v", target["value"])
 	}
+}
 
-	// Assert the returned RedirectRule echoes the created rule.
-	if out.ID != "new-rule-id" {
-		t.Errorf("expected returned ID new-rule-id, got %q", out.ID)
+func TestRedirectService_Create(t *testing.T) {
+	const zoneID = "zone123"
+	var capturedBody map[string]any
+
+	server := redirectCreateTestServer(t, zoneID, &capturedBody)
+	defer server.Close()
+
+	svc := NewRedirectService(redirectNewClient(t, server.URL), "account-test")
+
+	out, err := svc.Create(context.Background(), RedirectRuleInput{
+		ZoneID:      zoneID,
+		When:        `http.request.uri.path eq "/from"`,
+		Destination: "https://example.com/to",
+		StatusCode:  302,
+	})
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
 	}
-	if out.Destination != "https://example.com/to" {
-		t.Errorf("expected returned destination https://example.com/to, got %q", out.Destination)
-	}
-	if out.StatusCode != 302 {
-		t.Errorf("expected returned status code 302, got %d", out.StatusCode)
-	}
+
+	t.Run("request body carries destination and status", func(t *testing.T) {
+		if capturedBody == nil {
+			t.Fatal("create request body was never captured")
+		}
+		assertRedirectCreateRequestBody(t, capturedBody)
+	})
+
+	t.Run("returned rule echoes created rule", func(t *testing.T) {
+		if out.ID != "new-rule-id" {
+			t.Errorf("expected returned ID new-rule-id, got %q", out.ID)
+		}
+		if out.Destination != "https://example.com/to" {
+			t.Errorf("expected returned destination https://example.com/to, got %q", out.Destination)
+		}
+		if out.StatusCode != 302 {
+			t.Errorf("expected returned status code 302, got %d", out.StatusCode)
+		}
+	})
 }
 
 func TestRedirectService_Create_Validation(t *testing.T) {

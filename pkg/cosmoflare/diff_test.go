@@ -209,10 +209,10 @@ func TestLoadCosmoflareConfig_NotFound(t *testing.T) {
 	}
 }
 
-func TestLoadCosmoflareConfig_ValidFile(t *testing.T) {
-	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, ".cosmoflare.yaml")
-	content := `name: test-project
+// validFileConfigYAML is the full-featured config exercised by
+// TestLoadCosmoflareConfig_ValidFile; keeping it at package level keeps the
+// test function under the funlen limit without weakening assertions.
+const validFileConfigYAML = `name: test-project
 type: full
 
 workers:
@@ -239,7 +239,11 @@ dns:
       ttl: 300
       proxied: true
 `
-	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
+
+func TestLoadCosmoflareConfig_ValidFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, ".cosmoflare.yaml")
+	if err := os.WriteFile(configPath, []byte(validFileConfigYAML), 0644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -247,53 +251,68 @@ dns:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cfg.Name != "test-project" {
-		t.Errorf("Name = %q, want %q", cfg.Name, "test-project")
-	}
-	if cfg.Type != "full" {
-		t.Errorf("Type = %q, want %q", cfg.Type, "full")
-	}
-	if len(cfg.Workers) != 1 {
-		t.Fatalf("expected 1 worker, got %d", len(cfg.Workers))
-	}
-	w, ok := cfg.Workers["api"]
-	if !ok {
-		t.Fatal("expected worker 'api' in config")
-	}
-	if w.Script != "src/index.js" {
-		t.Errorf("Worker script = %q, want %q", w.Script, "src/index.js")
-	}
-	if !w.Module {
-		t.Error("expected Worker module to be true")
-	}
-	if len(cfg.R2.Buckets) != 1 {
-		t.Fatalf("expected 1 R2 bucket, got %d", len(cfg.R2.Buckets))
-	}
-	if cfg.R2.Buckets[0].Name != "assets" {
-		t.Errorf("R2 bucket name = %q, want %q", cfg.R2.Buckets[0].Name, "assets")
-	}
-	if len(cfg.KV.Namespaces) != 1 {
-		t.Fatalf("expected 1 KV namespace, got %d", len(cfg.KV.Namespaces))
-	}
-	if cfg.KV.Namespaces[0].Title != "MY_KV" {
-		t.Errorf("KV namespace title = %q, want %q", cfg.KV.Namespaces[0].Title, "MY_KV")
-	}
-	if cfg.DNS.ZoneID != "zone-abc123" {
-		t.Errorf("DNS zone ID = %q, want %q", cfg.DNS.ZoneID, "zone-abc123")
-	}
-	if len(cfg.DNS.Records) != 1 {
-		t.Fatalf("expected 1 DNS record, got %d", len(cfg.DNS.Records))
-	}
-	rec := cfg.DNS.Records[0]
-	if rec.Type != "A" || rec.Name != "www" || rec.Content != "1.2.3.4" {
-		t.Errorf("DNS record = %+v, want A www 1.2.3.4", rec)
-	}
-	if rec.TTL != 300 {
-		t.Errorf("DNS record TTL = %d, want 300", rec.TTL)
-	}
-	if !rec.Proxied {
-		t.Error("expected DNS record proxied to be true")
-	}
+
+	t.Run("top-level name and type", func(t *testing.T) {
+		if cfg.Name != "test-project" {
+			t.Errorf("Name = %q, want %q", cfg.Name, "test-project")
+		}
+		if cfg.Type != "full" {
+			t.Errorf("Type = %q, want %q", cfg.Type, "full")
+		}
+	})
+
+	t.Run("worker api", func(t *testing.T) {
+		if len(cfg.Workers) != 1 {
+			t.Fatalf("expected 1 worker, got %d", len(cfg.Workers))
+		}
+		w, ok := cfg.Workers["api"]
+		if !ok {
+			t.Fatal("expected worker 'api' in config")
+		}
+		if w.Script != "src/index.js" {
+			t.Errorf("Worker script = %q, want %q", w.Script, "src/index.js")
+		}
+		if !w.Module {
+			t.Error("expected Worker module to be true")
+		}
+	})
+
+	t.Run("r2 buckets", func(t *testing.T) {
+		if len(cfg.R2.Buckets) != 1 {
+			t.Fatalf("expected 1 R2 bucket, got %d", len(cfg.R2.Buckets))
+		}
+		if cfg.R2.Buckets[0].Name != "assets" {
+			t.Errorf("R2 bucket name = %q, want %q", cfg.R2.Buckets[0].Name, "assets")
+		}
+	})
+
+	t.Run("kv namespaces", func(t *testing.T) {
+		if len(cfg.KV.Namespaces) != 1 {
+			t.Fatalf("expected 1 KV namespace, got %d", len(cfg.KV.Namespaces))
+		}
+		if cfg.KV.Namespaces[0].Title != "MY_KV" {
+			t.Errorf("KV namespace title = %q, want %q", cfg.KV.Namespaces[0].Title, "MY_KV")
+		}
+	})
+
+	t.Run("dns zone and records", func(t *testing.T) {
+		if cfg.DNS.ZoneID != "zone-abc123" {
+			t.Errorf("DNS zone ID = %q, want %q", cfg.DNS.ZoneID, "zone-abc123")
+		}
+		if len(cfg.DNS.Records) != 1 {
+			t.Fatalf("expected 1 DNS record, got %d", len(cfg.DNS.Records))
+		}
+		rec := cfg.DNS.Records[0]
+		if rec.Type != "A" || rec.Name != "www" || rec.Content != "1.2.3.4" {
+			t.Errorf("DNS record = %+v, want A www 1.2.3.4", rec)
+		}
+		if rec.TTL != 300 {
+			t.Errorf("DNS record TTL = %d, want 300", rec.TTL)
+		}
+		if !rec.Proxied {
+			t.Error("expected DNS record proxied to be true")
+		}
+	})
 }
 
 func TestLoadCosmoflareConfig_EmptyWorkers(t *testing.T) {
