@@ -1,6 +1,7 @@
 ---
 title: "FEAT-021 Workers Command Depth — Design"
-created: 2026-09-15
+created: 2026-09-15T23:55:59+04:00
+updated: 2026-09-16T00:03:22+04:00
 status: COMPLETED
 related_issue: FEAT-021
 tags: [brainstorm, workers, cli]
@@ -31,12 +32,13 @@ deliverables:
 
 ## Problem
 
-`cmd/worker.go` ships 14 commands (deploy/list/get/delete/logs/settings) but
+`cmd/worker.go` ships 6 subcommands (deploy/list/get/delete/logs/settings) but
 none of the daily-loop surface wrangler users need: versions, deployments,
 rollback, secrets, routes, custom domains, workers.dev subdomain, cron
-triggers, bindings, tail, types. The competitive audit (agent-4) named this
-the top gap: "without these, the Workers majority of the Cloudflare market
-cannot daily-drive cosmoflare."
+triggers, bindings, tail, types. The competitive audit (agent-4,
+docs/audit/2026-09-13-cosmoflare/agent-4-competitive.md) named this the
+#2 gap in its top-5 list (priority: high): "Without these the Workers
+majority of the Cloudflare market cannot daily-drive it."
 
 ## Source of truth
 
@@ -68,7 +70,8 @@ funlen clean and merges conflict-free.
 
 cloudflare-go **v0.116.0** (pinned in go.mod) provides:
 secrets (Set/Delete/List), routes (CRUD, zone-scoped rc), custom domains
-(List/Attach/Detach/Get), subdomain (Get/Create), cron (List/Update), and
+(List/Attach/Detach/Get), subdomain (Get/Create), cron (List/Update),
+bindings (List), and
 the tail API. It does **NOT** ship script versions or deployments.
 
 Therefore:
@@ -131,5 +134,5 @@ Therefore:
   deployments+rollback — the daily loop.
 - **Wave 2:** domains, subdomain, cron, bindings, tail.
 - **Wave 3:** types generator + integration wiring + acceptance gates
-  (all 38 present with --json; rollback restores; tail streams; cron
-  round-trip).
+  (worker tree at 35 subcommands — 6 existing + 29 new — all with --json;
+  rollback restores; tail streams; cron round-trip).
