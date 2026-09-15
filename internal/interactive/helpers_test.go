@@ -305,22 +305,34 @@ func TestFormatProfileName(t *testing.T) {
 // ValidateAdvancedConfig
 // ---------------------------------------------------------------------------
 
-func TestValidateAdvancedConfig(t *testing.T) {
-	makeConfig := func(concurrency, retries int, region string) *AdvancedConfig {
-		return &AdvancedConfig{
-			Profile: &config.Profile{Name: "test"},
-			UploadSettings: UploadSettings{
-				Concurrency:   concurrency,
-				RetryAttempts: retries,
-			},
-			RegionSettings: RegionSettings{
-				Primary: region,
-			},
-		}
+func newValidateTestConfig(concurrency, retries int, region string) *AdvancedConfig {
+	return &AdvancedConfig{
+		Profile: &config.Profile{Name: "test"},
+		UploadSettings: UploadSettings{
+			Concurrency:   concurrency,
+			RetryAttempts: retries,
+		},
+		RegionSettings: RegionSettings{
+			Primary: region,
+		},
 	}
+}
 
+func TestValidateAdvancedConfig(t *testing.T) {
+	t.Run("field combinations", func(t *testing.T) {
+		testValidateAdvancedConfigFields(t)
+	})
+	t.Run("valid regions", func(t *testing.T) {
+		testValidateAdvancedConfigRegions(t)
+	})
+	t.Run("boundaries", func(t *testing.T) {
+		testValidateAdvancedConfigBoundaries(t)
+	})
+}
+
+func testValidateAdvancedConfigFields(t *testing.T) {
 	t.Run("valid config passes", func(t *testing.T) {
-		cfg := makeConfig(4, 3, "auto")
+		cfg := newValidateTestConfig(4, 3, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 			t.Errorf("expected nil error, got %v", err)
@@ -328,7 +340,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("concurrency zero fails", func(t *testing.T) {
-		cfg := makeConfig(0, 3, "auto")
+		cfg := newValidateTestConfig(0, 3, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err == nil {
 			t.Error("expected error for concurrency=0")
@@ -336,7 +348,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("concurrency 33 fails", func(t *testing.T) {
-		cfg := makeConfig(33, 3, "auto")
+		cfg := newValidateTestConfig(33, 3, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err == nil {
 			t.Error("expected error for concurrency=33")
@@ -344,7 +356,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("retries negative fails", func(t *testing.T) {
-		cfg := makeConfig(4, -1, "auto")
+		cfg := newValidateTestConfig(4, -1, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err == nil {
 			t.Error("expected error for retries=-1")
@@ -352,7 +364,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("retries 11 fails", func(t *testing.T) {
-		cfg := makeConfig(4, 11, "auto")
+		cfg := newValidateTestConfig(4, 11, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err == nil {
 			t.Error("expected error for retries=11")
@@ -360,18 +372,20 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("invalid region fails", func(t *testing.T) {
-		cfg := makeConfig(4, 3, "invalid-region")
+		cfg := newValidateTestConfig(4, 3, "invalid-region")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err == nil {
 			t.Error("expected error for invalid region")
 		}
 	})
+}
 
+func testValidateAdvancedConfigRegions(t *testing.T) {
 	t.Run("all valid regions pass", func(t *testing.T) {
 		validRegions := []string{"auto", "us-east-1", "eu-west-1", "ap-southeast-1"}
 		for _, region := range validRegions {
 			t.Run(region, func(t *testing.T) {
-				cfg := makeConfig(4, 3, region)
+				cfg := newValidateTestConfig(4, 3, region)
 				wizard := NewAdvancedConfigWizard(cfg.Profile)
 				if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 					t.Errorf("region %q should be valid, got error: %v", region, err)
@@ -379,9 +393,11 @@ func TestValidateAdvancedConfig(t *testing.T) {
 			})
 		}
 	})
+}
 
+func testValidateAdvancedConfigBoundaries(t *testing.T) {
 	t.Run("boundary concurrency=1 passes", func(t *testing.T) {
-		cfg := makeConfig(1, 3, "auto")
+		cfg := newValidateTestConfig(1, 3, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 			t.Errorf("concurrency=1 should be valid, got error: %v", err)
@@ -389,7 +405,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("boundary concurrency=32 passes", func(t *testing.T) {
-		cfg := makeConfig(32, 3, "auto")
+		cfg := newValidateTestConfig(32, 3, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 			t.Errorf("concurrency=32 should be valid, got error: %v", err)
@@ -397,7 +413,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("boundary retries=0 passes", func(t *testing.T) {
-		cfg := makeConfig(4, 0, "auto")
+		cfg := newValidateTestConfig(4, 0, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 			t.Errorf("retries=0 should be valid, got error: %v", err)
@@ -405,7 +421,7 @@ func TestValidateAdvancedConfig(t *testing.T) {
 	})
 
 	t.Run("boundary retries=10 passes", func(t *testing.T) {
-		cfg := makeConfig(4, 10, "auto")
+		cfg := newValidateTestConfig(4, 10, "auto")
 		wizard := NewAdvancedConfigWizard(cfg.Profile)
 		if err := wizard.ValidateAdvancedConfig(cfg); err != nil {
 			t.Errorf("retries=10 should be valid, got error: %v", err)
@@ -499,6 +515,15 @@ func TestAutoDetectAccessibilityFromHelpers(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAccessibilityManager(t *testing.T) {
+	t.Run("manager construction and composite modes", func(t *testing.T) {
+		testAccessibilityManagerModes(t)
+	})
+	t.Run("single-flag modes", func(t *testing.T) {
+		testAccessibilityManagerSingleFlags(t)
+	})
+}
+
+func testAccessibilityManagerModes(t *testing.T) {
 	t.Run("new manager is disabled", func(t *testing.T) {
 		am := NewAccessibilityManager()
 		if am.IsEnabled() {
@@ -569,7 +594,9 @@ func TestAccessibilityManager(t *testing.T) {
 			t.Error("AccessibilityNone should have IsEnabled=false")
 		}
 	})
+}
 
+func testAccessibilityManagerSingleFlags(t *testing.T) {
 	t.Run("SetMode HighContrast sets correct flags", func(t *testing.T) {
 		am := NewAccessibilityManager()
 		am.SetMode(AccessibilityHighContrast)

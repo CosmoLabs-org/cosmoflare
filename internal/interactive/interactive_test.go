@@ -215,101 +215,126 @@ func TestEncryptDecryptBackupData(t *testing.T) {
 	}
 
 	t.Run("round-trip encrypt then decrypt", func(t *testing.T) {
-		encrypted, err := bm.encryptBackupData(data, "strong-password-123!")
-		require.NoError(t, err)
-		require.NotEmpty(t, encrypted)
-
-		// Encrypted data should not contain plaintext
-		assert.NotContains(t, string(encrypted), "abc123")
-		assert.NotContains(t, string(encrypted), "prod")
-
-		decrypted, err := bm.decryptBackupData(encrypted, "strong-password-123!")
-		require.NoError(t, err)
-		require.NotNil(t, decrypted)
-
-		assert.Equal(t, data.Version, decrypted.Version)
-		assert.Equal(t, data.Profiles["prod"].AccountID, decrypted.Profiles["prod"].AccountID)
-		assert.Equal(t, data.Profiles["prod"].Region, decrypted.Profiles["prod"].Region)
+		testEncryptDecryptRoundTrip(t, bm, data)
 	})
-
 	t.Run("wrong password fails to decrypt", func(t *testing.T) {
-		encrypted, err := bm.encryptBackupData(data, "correct-password")
-		require.NoError(t, err)
-
-		_, err = bm.decryptBackupData(encrypted, "wrong-password")
-		assert.Error(t, err)
+		testEncryptDecryptWrongPassword(t, bm, data)
 	})
-
 	t.Run("tampered data fails to decrypt", func(t *testing.T) {
-		encrypted, err := bm.encryptBackupData(data, "password")
-		require.NoError(t, err)
-
-		// Tamper with ciphertext (after salt)
-		if len(encrypted) > 20 {
-			encrypted[20] ^= 0xFF
-		}
-
-		_, err = bm.decryptBackupData(encrypted, "password")
-		assert.Error(t, err)
+		testEncryptDecryptTampered(t, bm, data)
 	})
-
 	t.Run("too short data", func(t *testing.T) {
-		_, err := bm.decryptBackupData([]byte("short"), "password")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid encrypted data")
+		testEncryptDecryptTooShort(t, bm)
 	})
-
 	t.Run("ciphertext too short for nonce", func(t *testing.T) {
-		// 16 bytes salt + tiny ciphertext
-		shortData := make([]byte, 17)
-		_, err := bm.decryptBackupData(shortData, "password")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "ciphertext too short")
+		testEncryptDecryptShortCiphertext(t, bm)
 	})
-
 	t.Run("different encryptions produce different output", func(t *testing.T) {
-		enc1, err := bm.encryptBackupData(data, "password")
-		require.NoError(t, err)
-
-		enc2, err := bm.encryptBackupData(data, "password")
-		require.NoError(t, err)
-
-		// Random salt + nonce means different output each time
-		assert.NotEqual(t, enc1, enc2)
+		testEncryptDecryptUniqueOutput(t, bm, data)
 	})
-
 	t.Run("empty profiles", func(t *testing.T) {
-		emptyData := &BackupData{
-			Version:  "1.0",
-			Profiles: map[string]BackupProfile{},
-		}
-
-		encrypted, err := bm.encryptBackupData(emptyData, "pass")
-		require.NoError(t, err)
-
-		decrypted, err := bm.decryptBackupData(encrypted, "pass")
-		require.NoError(t, err)
-		assert.Empty(t, decrypted.Profiles)
+		testEncryptDecryptEmptyProfiles(t, bm)
 	})
-
 	t.Run("multiple profiles", func(t *testing.T) {
-		multiData := &BackupData{
-			Version: "1.0",
-			Profiles: map[string]BackupProfile{
-				"prod":    {Name: "prod", AccountID: "id1"},
-				"staging": {Name: "staging", AccountID: "id2"},
-				"dev":     {Name: "dev", AccountID: "id3"},
-			},
-		}
-
-		encrypted, err := bm.encryptBackupData(multiData, "pass")
-		require.NoError(t, err)
-
-		decrypted, err := bm.decryptBackupData(encrypted, "pass")
-		require.NoError(t, err)
-		assert.Len(t, decrypted.Profiles, 3)
-		assert.Equal(t, "id2", decrypted.Profiles["staging"].AccountID)
+		testEncryptDecryptMultipleProfiles(t, bm)
 	})
+}
+
+func testEncryptDecryptRoundTrip(t *testing.T, bm *BackupManager, data *BackupData) {
+	encrypted, err := bm.encryptBackupData(data, "strong-password-123!")
+	require.NoError(t, err)
+	require.NotEmpty(t, encrypted)
+
+	// Encrypted data should not contain plaintext
+	assert.NotContains(t, string(encrypted), "abc123")
+	assert.NotContains(t, string(encrypted), "prod")
+
+	decrypted, err := bm.decryptBackupData(encrypted, "strong-password-123!")
+	require.NoError(t, err)
+	require.NotNil(t, decrypted)
+
+	assert.Equal(t, data.Version, decrypted.Version)
+	assert.Equal(t, data.Profiles["prod"].AccountID, decrypted.Profiles["prod"].AccountID)
+	assert.Equal(t, data.Profiles["prod"].Region, decrypted.Profiles["prod"].Region)
+}
+
+func testEncryptDecryptWrongPassword(t *testing.T, bm *BackupManager, data *BackupData) {
+	encrypted, err := bm.encryptBackupData(data, "correct-password")
+	require.NoError(t, err)
+
+	_, err = bm.decryptBackupData(encrypted, "wrong-password")
+	assert.Error(t, err)
+}
+
+func testEncryptDecryptTampered(t *testing.T, bm *BackupManager, data *BackupData) {
+	encrypted, err := bm.encryptBackupData(data, "password")
+	require.NoError(t, err)
+
+	// Tamper with ciphertext (after salt)
+	if len(encrypted) > 20 {
+		encrypted[20] ^= 0xFF
+	}
+
+	_, err = bm.decryptBackupData(encrypted, "password")
+	assert.Error(t, err)
+}
+
+func testEncryptDecryptTooShort(t *testing.T, bm *BackupManager) {
+	_, err := bm.decryptBackupData([]byte("short"), "password")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid encrypted data")
+}
+
+func testEncryptDecryptShortCiphertext(t *testing.T, bm *BackupManager) {
+	// 16 bytes salt + tiny ciphertext
+	shortData := make([]byte, 17)
+	_, err := bm.decryptBackupData(shortData, "password")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ciphertext too short")
+}
+
+func testEncryptDecryptUniqueOutput(t *testing.T, bm *BackupManager, data *BackupData) {
+	enc1, err := bm.encryptBackupData(data, "password")
+	require.NoError(t, err)
+
+	enc2, err := bm.encryptBackupData(data, "password")
+	require.NoError(t, err)
+
+	// Random salt + nonce means different output each time
+	assert.NotEqual(t, enc1, enc2)
+}
+
+func testEncryptDecryptEmptyProfiles(t *testing.T, bm *BackupManager) {
+	emptyData := &BackupData{
+		Version:  "1.0",
+		Profiles: map[string]BackupProfile{},
+	}
+
+	encrypted, err := bm.encryptBackupData(emptyData, "pass")
+	require.NoError(t, err)
+
+	decrypted, err := bm.decryptBackupData(encrypted, "pass")
+	require.NoError(t, err)
+	assert.Empty(t, decrypted.Profiles)
+}
+
+func testEncryptDecryptMultipleProfiles(t *testing.T, bm *BackupManager) {
+	multiData := &BackupData{
+		Version: "1.0",
+		Profiles: map[string]BackupProfile{
+			"prod":    {Name: "prod", AccountID: "id1"},
+			"staging": {Name: "staging", AccountID: "id2"},
+			"dev":     {Name: "dev", AccountID: "id3"},
+		},
+	}
+
+	encrypted, err := bm.encryptBackupData(multiData, "pass")
+	require.NoError(t, err)
+
+	decrypted, err := bm.decryptBackupData(encrypted, "pass")
+	require.NoError(t, err)
+	assert.Len(t, decrypted.Profiles, 3)
+	assert.Equal(t, "id2", decrypted.Profiles["staging"].AccountID)
 }
 
 func TestFindLatestBackup(t *testing.T) {
