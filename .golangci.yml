@@ -1,0 +1,17 @@
+# golangci-lint v2 configuration (TASK-009: adopt funlen=80)
+# Start minimal: funlen only, to hold the god-function line. Additional
+# linters can be adopted deliberately later.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - funlen
+  settings:
+    funlen:
+      lines: 80
+      statements: 50
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
