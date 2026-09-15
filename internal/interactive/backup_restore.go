@@ -124,24 +124,64 @@ func (bm *BackupManager) CreateEncryptedBackup() error {
 	}
 
 	// Get password
+	password, err := bm.promptBackupPassword()
+	if err != nil {
+		return err
+	}
+
+	// Create backup data
+	backupData := bm.collectBackupPayload(profiles)
+
+	// Generate filename
+	timestamp := time.Now().Format("2006-01-02")
+	filename := fmt.Sprintf(".cosmoflare-backup-%s.enc", timestamp)
+	homeDir, _ := os.UserHomeDir()
+	filepath := filepath.Join(homeDir, filename)
+
+	// Encrypt and save
+	ShowSpinner("Creating encrypted backup...", 2*Second)
+
+	encryptedData, err := bm.encryptBackupData(backupData, password)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt backup: %w", err)
+	}
+
+	if err := os.WriteFile(filepath, encryptedData, 0600); err != nil {
+		return fmt.Errorf("failed to write backup file: %w", err)
+	}
+
+	PrintSuccess("✅ Backup completed successfully!")
+	fmt.Printf("Backup saved to: %s\n", Info(filepath))
+	PrintWarning("⚠️  Remember your password - it cannot be recovered!")
+
+	return nil
+}
+
+// promptBackupPassword reads and confirms the backup password interactively.
+func (bm *BackupManager) promptBackupPassword() (string, error) {
 	fmt.Print("Enter backup password: ")
 	password, err := readPasswordWithReader(bm.Input)
 	if err != nil {
-		return fmt.Errorf("failed to read password: %w", err)
+		return "", fmt.Errorf("failed to read password: %w", err)
 	}
 
 	fmt.Print("Confirm password: ")
 	confirmPassword, err := readPasswordWithReader(bm.Input)
 	if err != nil {
-		return fmt.Errorf("failed to read confirmation password: %w", err)
+		return "", fmt.Errorf("failed to read confirmation password: %w", err)
 	}
 
 	if password != confirmPassword {
 		PrintError("Passwords do not match.")
-		return fmt.Errorf("password mismatch")
+		return "", fmt.Errorf("password mismatch")
 	}
 
-	// Create backup data
+	return password, nil
+}
+
+// collectBackupPayload builds the backup data for the given profiles,
+// excluding sensitive fields (API tokens and secret keys).
+func (bm *BackupManager) collectBackupPayload(profiles []string) *BackupData {
 	backupData := &BackupData{
 		Version:     "1.0",
 		CreatedAt:   time.Now(),
@@ -170,29 +210,7 @@ func (bm *BackupManager) CreateEncryptedBackup() error {
 		}
 	}
 
-	// Generate filename
-	timestamp := time.Now().Format("2006-01-02")
-	filename := fmt.Sprintf(".cosmoflare-backup-%s.enc", timestamp)
-	homeDir, _ := os.UserHomeDir()
-	filepath := filepath.Join(homeDir, filename)
-
-	// Encrypt and save
-	ShowSpinner("Creating encrypted backup...", 2*Second)
-
-	encryptedData, err := bm.encryptBackupData(backupData, password)
-	if err != nil {
-		return fmt.Errorf("failed to encrypt backup: %w", err)
-	}
-
-	if err := os.WriteFile(filepath, encryptedData, 0600); err != nil {
-		return fmt.Errorf("failed to write backup file: %w", err)
-	}
-
-	PrintSuccess("✅ Backup completed successfully!")
-	fmt.Printf("Backup saved to: %s\n", Info(filepath))
-	PrintWarning("⚠️  Remember your password - it cannot be recovered!")
-
-	return nil
+	return backupData
 }
 
 // CreatePlainBackup creates a plain JSON backup
@@ -431,6 +449,39 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 		fmt.Printf("  • %s %s\n", FormatProfileName(name, profile.Description), getProfileIcon(profile.Description))
 	}
 
+	profilesToRestore, err := bm.selectRestoreProfiles(backupData)
+	if err != nil {
+		return err
+	}
+
+	if len(profilesToRestore) == 0 {
+		PrintInfo("No profiles selected for restore.")
+		return nil
+	}
+
+	fmt.Println()
+	fmt.Printf("Will restore %d profile(s): %s\n", len(profilesToRestore), strings.Join(profilesToRestore, ", "))
+
+	if !ConfirmWithReader("Continue with restore?", true, bm.Input) {
+		return nil
+	}
+
+	// Restore profiles
+	bm.restoreProfiles(profilesToRestore, backupData, hasTokens)
+
+	fmt.Println()
+	PrintSuccess("🎉 Restore completed successfully!")
+
+	if !hasTokens {
+		PrintInfo("💡 Remember to test your restored profiles with 'cosmoflare bucket list'")
+	}
+
+	return nil
+}
+
+// selectRestoreProfiles prompts the user to choose which profiles to restore
+// and returns the selected profile names.
+func (bm *BackupManager) selectRestoreProfiles(backupData *BackupData) ([]string, error) {
 	fmt.Println()
 	fmt.Println("Select restore option:")
 	fmt.Println("  [1] All profiles")
@@ -472,22 +523,15 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 
 	default:
 		PrintError("Invalid selection.")
-		return fmt.Errorf("invalid choice")
+		return nil, fmt.Errorf("invalid choice")
 	}
 
-	if len(profilesToRestore) == 0 {
-		PrintInfo("No profiles selected for restore.")
-		return nil
-	}
+	return profilesToRestore, nil
+}
 
-	fmt.Println()
-	fmt.Printf("Will restore %d profile(s): %s\n", len(profilesToRestore), strings.Join(profilesToRestore, ", "))
-
-	if !ConfirmWithReader("Continue with restore?", true, bm.Input) {
-		return nil
-	}
-
-	// Restore profiles
+// restoreProfiles restores the selected profiles, prompting for API tokens
+// when the backup does not include them.
+func (bm *BackupManager) restoreProfiles(profilesToRestore []string, backupData *BackupData, hasTokens bool) {
 	ShowSpinner("Restoring profiles...", 2*Second)
 
 	for _, name := range profilesToRestore {
@@ -533,15 +577,6 @@ func (bm *BackupManager) processRestoreData(backupData *BackupData, filepath str
 
 		PrintSuccess("✅ Restored profile: %s", name)
 	}
-
-	fmt.Println()
-	PrintSuccess("🎉 Restore completed successfully!")
-
-	if !hasTokens {
-		PrintInfo("💡 Remember to test your restored profiles with 'cosmoflare bucket list'")
-	}
-
-	return nil
 }
 
 // Helper functions
