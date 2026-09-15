@@ -21,9 +21,9 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/spf13/cobra"
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 // objectCmd represents the object command
@@ -279,7 +279,7 @@ func init() {
 	objectCmd.AddCommand(objectHeadCmd)
 	objectCmd.AddCommand(objectSearchCmd)
 	objectCmd.AddCommand(objectBatchCmd)
-		objectCmd.AddCommand(objectPresignCmd)
+	objectCmd.AddCommand(objectPresignCmd)
 
 	// Flags for object list
 	objectListCmd.Flags().StringVar(&objectPrefix, "prefix", "", "Object key prefix filter")
@@ -369,13 +369,10 @@ func runObjectList(cmd *cobra.Command, args []string) error {
 	})
 }
 
-func runObjectGet(cmd *cobra.Command, args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf("bucket name and object key are required")
-	}
-	bucketName := args[0]
-	objectKey := args[1]
-
+// objectGetOutput resolves the download destination: an explicit "-" (or no
+// --output flag while stdout is not a terminal) writes to stdout, otherwise a
+// local file path (defaulting to the object's base name).
+func objectGetOutput(cmd *cobra.Command, objectKey string) (string, bool) {
 	output, _ := cmd.Flags().GetString("output")
 
 	// Determine if we should write to stdout
@@ -385,42 +382,12 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	if output == "" && !writeToStdout {
 		output = filepath.Base(objectKey)
 	}
+	return output, writeToStdout
+}
 
-	if !writeToStdout {
-		printInfo("⬇️  Downloading object: %s/%s", bucketName, objectKey)
-	}
-
-	// Create client
-	client, err := getAPIClient()
-	if err != nil {
-		return outErr("failed to create API client", err)
-	}
-
-	// Get object
-	obj, err := client.GetObject(context.Background(), bucketName, objectKey)
-	if err != nil {
-		return fmt.Errorf("failed to get object: %w", err)
-	}
-	defer obj.Content.Close()
-
-	defer obj.Content.Close()
-
-	if writeToStdout {
-		// Write directly to stdout (no progress bar, no file creation)
-		_, err := io.Copy(os.Stdout, obj.Content)
-		if err != nil {
-			return fmt.Errorf("failed to write to stdout: %w", err)
-		}
-		return nil
-	}
-
-	// Create output file
-	file, err := os.Create(output)
-	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
-	}
-	defer file.Close()
-
+// objectGetCopy streams the object body into file with an optional progress
+// bar. The returned error is the raw io.Copy error; callers wrap it.
+func objectGetCopy(file *os.File, obj *cosmoflare.DownloadResult) (int64, error) {
 	if Verbose {
 		printInfo("Size: %s", utils.FormatBytes(obj.Size))
 	}
@@ -457,6 +424,54 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	if done != nil {
 		close(done)
 	}
+	return size, err
+}
+
+func runObjectGet(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		return fmt.Errorf("bucket name and object key are required")
+	}
+	bucketName := args[0]
+	objectKey := args[1]
+
+	output, writeToStdout := objectGetOutput(cmd, objectKey)
+
+	if !writeToStdout {
+		printInfo("⬇️  Downloading object: %s/%s", bucketName, objectKey)
+	}
+
+	// Create client
+	client, err := getAPIClient()
+	if err != nil {
+		return outErr("failed to create API client", err)
+	}
+
+	// Get object
+	obj, err := client.GetObject(context.Background(), bucketName, objectKey)
+	if err != nil {
+		return fmt.Errorf("failed to get object: %w", err)
+	}
+	defer obj.Content.Close()
+
+	defer obj.Content.Close()
+
+	if writeToStdout {
+		// Write directly to stdout (no progress bar, no file creation)
+		_, err := io.Copy(os.Stdout, obj.Content)
+		if err != nil {
+			return fmt.Errorf("failed to write to stdout: %w", err)
+		}
+		return nil
+	}
+
+	// Create output file
+	file, err := os.Create(output)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer file.Close()
+
+	size, err := objectGetCopy(file, obj)
 	if err != nil {
 		return outErr("failed to download object", err)
 	}
@@ -473,62 +488,38 @@ func runObjectGet(cmd *cobra.Command, args []string) error {
 	})
 }
 
+// objectPutParams carries the flags and positional arguments shared by the
+// runObjectPut phase helpers.
+type objectPutParams struct {
+	bucketName   string
+	localPath    string
+	key          string
+	contentType  string
+	cacheControl string
+	metadata     []string
+}
+
 func runObjectPut(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and local path are required")
 	}
-	bucketName := args[0]
-	localPath := args[1]
-
-	key, _ := cmd.Flags().GetString("key")
-	contentType, _ := cmd.Flags().GetString("content-type")
-	cacheControl, _ := cmd.Flags().GetString("cache-control")
-	metadata, _ := cmd.Flags().GetStringSlice("metadata")
-
-	// Stdin support: use "-" to read from stdin
-	if localPath == "-" {
-		if key == "" {
-			return fmt.Errorf("--key is required when reading from stdin")
-		}
-		printInfo("⬆️  Uploading from stdin -> %s/%s", bucketName, key)
-
-		metadataMap, err := parseKeyValuePairs(metadata)
-		if err != nil {
-			return fmt.Errorf("failed to parse metadata: %w", err)
-		}
-
-		client, err := getAPIClient()
-		if err != nil {
-			return outErr("failed to create API client", err)
-		}
-
-		opts := []cosmoflare.UploadOption{}
-		if contentType != "" {
-			opts = append(opts, cosmoflare.WithContentType(contentType))
-		}
-		if cacheControl != "" {
-			opts = append(opts, cosmoflare.WithUploadCacheControl(cacheControl))
-		}
-		if len(metadataMap) > 0 {
-			opts = append(opts, cosmoflare.WithMetadata(metadataMap))
-		}
-
-		result, err := client.Upload(context.Background(), bucketName, key, os.Stdin, 0, opts...)
-		if err != nil {
-			return outErr("failed to upload object", err)
-		}
-
-		return outPayload("Upload successful", func() any {
-			return result
-		}, func() {
-			printSuccess("✅ Uploaded successfully!")
-			printInfo("Key: %s", result.Key)
-			printInfo("ETag: %s", result.ETag)
-		})
+	p := &objectPutParams{
+		bucketName: args[0],
+		localPath:  args[1],
 	}
 
-	if key == "" {
-		key = filepath.Base(localPath)
+	p.key, _ = cmd.Flags().GetString("key")
+	p.contentType, _ = cmd.Flags().GetString("content-type")
+	p.cacheControl, _ = cmd.Flags().GetString("cache-control")
+	p.metadata, _ = cmd.Flags().GetStringSlice("metadata")
+
+	// Stdin support: use "-" to read from stdin
+	if p.localPath == "-" {
+		return objectPutStdin(p)
+	}
+
+	if p.key == "" {
+		p.key = filepath.Base(p.localPath)
 	}
 
 	// Parse part size
@@ -542,101 +533,22 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 
 	// Handle --resume: attempt to resume a previous upload
 	if objectResume {
-		state, err := cosmoflare.LoadUploadState(bucketName, key)
-		if err != nil {
-			return fmt.Errorf("failed to load upload state: %w", err)
-		}
-		if state == nil {
-			return fmt.Errorf("no interrupted upload found for %s/%s; start a new upload instead", bucketName, key)
-		}
-
-		printInfo("⬆️  Resuming upload: %s -> %s/%s", localPath, bucketName, key)
-		printInfo("  Upload ID: %s", state.UploadID)
-		printInfo("  Progress: %d/%d parts completed (%s/%s)",
-			len(state.CompletedParts), state.TotalParts,
-			utils.FormatBytes(state.CompletedBytes()),
-			utils.FormatBytes(state.TotalSize))
-
-		file, err := os.Open(localPath)
-		if err != nil {
-			return fmt.Errorf("failed to open local file: %w", err)
-		}
-		defer file.Close()
-
-		client, err := getAPIClient()
-		if err != nil {
-			return outErr("failed to create API client", err)
-		}
-
-		opts := []cosmoflare.UploadOption{}
-		if objectProgress && !JSONOutput {
-			progress := utils.NewTransferProgress(state.TotalSize)
-			opts = append(opts, cosmoflare.WithProgressCallback(func(uploaded, total int64) {
-				fmt.Printf("\r  %s", progress.FormatBar())
-			}))
-		}
-
-		result, err := client.ResumeMultipartUpload(context.Background(), bucketName, key, file, state.TotalSize, opts...)
-		if err != nil {
-			return outErr("failed to resume upload", err)
-		}
-
-		if objectProgress && !JSONOutput {
-			fmt.Println() // newline after progress bar
-		}
-
-		return outPayload("Upload resumed and completed", func() any {
-			return result
-		}, func() {
-			printSuccess("Upload resumed and completed!")
-			printInfo("Key: %s", result.Key)
-			printInfo("Size: %s", utils.FormatBytes(result.Size))
-			printInfo("ETag: %s", result.ETag)
-			if result.Parts > 0 {
-				printInfo("Parts: %d", result.Parts)
-			}
-		})
+		return objectPutResume(p)
 	}
 
-	printInfo("⬆️  Uploading: %s -> %s/%s", localPath, bucketName, key)
+	return objectPutFile(p, partSize)
+}
 
-	file, err := os.Open(localPath)
-	if err != nil {
-		return fmt.Errorf("failed to open local file: %w", err)
+// objectPutStdin uploads the body piped on stdin (localPath "-").
+func objectPutStdin(p *objectPutParams) error {
+	if p.key == "" {
+		return fmt.Errorf("--key is required when reading from stdin")
 	}
-	defer file.Close()
+	printInfo("⬆️  Uploading from stdin -> %s/%s", p.bucketName, p.key)
 
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return fmt.Errorf("failed to access local file: %w", err)
-	}
-
-	metadataMap, err := parseKeyValuePairs(metadata)
+	metadataMap, err := parseKeyValuePairs(p.metadata)
 	if err != nil {
 		return fmt.Errorf("failed to parse metadata: %w", err)
-	}
-
-	if DryRun {
-		printInfo("DRY RUN: Would upload file")
-		printInfo("  Bucket: %s", bucketName)
-		printInfo("  Key: %s", key)
-		printInfo("  Size: %s", utils.FormatBytes(fileInfo.Size()))
-		if contentType != "" {
-			printInfo("  Content-Type: %s", contentType)
-		}
-		if cacheControl != "" {
-			printInfo("  Cache-Control: %s", cacheControl)
-		}
-		if len(metadataMap) > 0 {
-			printInfo("  Metadata: %v", metadataMap)
-		}
-		useMultipart := !objectNoMultipart && cosmoflare.ShouldUseMultipart(fileInfo.Size(), 0)
-		if useMultipart {
-			printInfo("  Multipart: yes (part-size: %s, concurrency: %d)", objectPartSize, objectConcurrency)
-		} else {
-			printInfo("  Multipart: no")
-		}
-		return nil
 	}
 
 	client, err := getAPIClient()
@@ -644,6 +556,24 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create API client", err)
 	}
 
+	opts := objectPutBaseOpts(p.contentType, p.cacheControl, metadataMap)
+
+	result, err := client.Upload(context.Background(), p.bucketName, p.key, os.Stdin, 0, opts...)
+	if err != nil {
+		return outErr("failed to upload object", err)
+	}
+
+	return outPayload("Upload successful", func() any {
+		return result
+	}, func() {
+		printSuccess("✅ Uploaded successfully!")
+		printInfo("Key: %s", result.Key)
+		printInfo("ETag: %s", result.ETag)
+	})
+}
+
+// objectPutBaseOpts builds the upload options common to stdin and file uploads.
+func objectPutBaseOpts(contentType, cacheControl string, metadataMap map[string]string) []cosmoflare.UploadOption {
 	opts := []cosmoflare.UploadOption{}
 	if contentType != "" {
 		opts = append(opts, cosmoflare.WithContentType(contentType))
@@ -654,6 +584,121 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	if len(metadataMap) > 0 {
 		opts = append(opts, cosmoflare.WithMetadata(metadataMap))
 	}
+	return opts
+}
+
+// objectPutResume resumes a previously interrupted multipart upload (--resume).
+func objectPutResume(p *objectPutParams) error {
+	state, err := cosmoflare.LoadUploadState(p.bucketName, p.key)
+	if err != nil {
+		return fmt.Errorf("failed to load upload state: %w", err)
+	}
+	if state == nil {
+		return fmt.Errorf("no interrupted upload found for %s/%s; start a new upload instead", p.bucketName, p.key)
+	}
+
+	printInfo("⬆️  Resuming upload: %s -> %s/%s", p.localPath, p.bucketName, p.key)
+	printInfo("  Upload ID: %s", state.UploadID)
+	printInfo("  Progress: %d/%d parts completed (%s/%s)",
+		len(state.CompletedParts), state.TotalParts,
+		utils.FormatBytes(state.CompletedBytes()),
+		utils.FormatBytes(state.TotalSize))
+
+	file, err := os.Open(p.localPath)
+	if err != nil {
+		return fmt.Errorf("failed to open local file: %w", err)
+	}
+	defer file.Close()
+
+	client, err := getAPIClient()
+	if err != nil {
+		return outErr("failed to create API client", err)
+	}
+
+	opts := []cosmoflare.UploadOption{}
+	if objectProgress && !JSONOutput {
+		progress := utils.NewTransferProgress(state.TotalSize)
+		opts = append(opts, cosmoflare.WithProgressCallback(func(uploaded, total int64) {
+			fmt.Printf("\r  %s", progress.FormatBar())
+		}))
+	}
+
+	result, err := client.ResumeMultipartUpload(context.Background(), p.bucketName, p.key, file, state.TotalSize, opts...)
+	if err != nil {
+		return outErr("failed to resume upload", err)
+	}
+
+	if objectProgress && !JSONOutput {
+		fmt.Println() // newline after progress bar
+	}
+
+	return outPayload("Upload resumed and completed", func() any {
+		return result
+	}, func() {
+		printSuccess("Upload resumed and completed!")
+		printInfo("Key: %s", result.Key)
+		printInfo("Size: %s", utils.FormatBytes(result.Size))
+		printInfo("ETag: %s", result.ETag)
+		if result.Parts > 0 {
+			printInfo("Parts: %d", result.Parts)
+		}
+	})
+}
+
+// objectPutDryRun prints what a file upload would do without contacting the API.
+func objectPutDryRun(p *objectPutParams, fileInfo os.FileInfo, metadataMap map[string]string) {
+	printInfo("DRY RUN: Would upload file")
+	printInfo("  Bucket: %s", p.bucketName)
+	printInfo("  Key: %s", p.key)
+	printInfo("  Size: %s", utils.FormatBytes(fileInfo.Size()))
+	if p.contentType != "" {
+		printInfo("  Content-Type: %s", p.contentType)
+	}
+	if p.cacheControl != "" {
+		printInfo("  Cache-Control: %s", p.cacheControl)
+	}
+	if len(metadataMap) > 0 {
+		printInfo("  Metadata: %v", metadataMap)
+	}
+	useMultipart := !objectNoMultipart && cosmoflare.ShouldUseMultipart(fileInfo.Size(), 0)
+	if useMultipart {
+		printInfo("  Multipart: yes (part-size: %s, concurrency: %d)", objectPartSize, objectConcurrency)
+	} else {
+		printInfo("  Multipart: no")
+	}
+}
+
+// objectPutFile performs a regular (file-backed) upload, honoring dry-run mode.
+func objectPutFile(p *objectPutParams, partSize int64) error {
+	printInfo("⬆️  Uploading: %s -> %s/%s", p.localPath, p.bucketName, p.key)
+
+	file, err := os.Open(p.localPath)
+	if err != nil {
+		return fmt.Errorf("failed to open local file: %w", err)
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to access local file: %w", err)
+	}
+
+	metadataMap, err := parseKeyValuePairs(p.metadata)
+	if err != nil {
+		return fmt.Errorf("failed to parse metadata: %w", err)
+	}
+
+	if DryRun {
+		objectPutDryRun(p, fileInfo, metadataMap)
+		return nil
+	}
+
+	client, err := getAPIClient()
+	if err != nil {
+		return outErr("failed to create API client", err)
+	}
+
+	opts := objectPutBaseOpts(p.contentType, p.cacheControl, metadataMap)
 	opts = append(opts, cosmoflare.WithPartSize(partSize))
 	opts = append(opts, cosmoflare.WithConcurrency(objectConcurrency))
 	if objectProgress && !JSONOutput && fileInfo.Size() > 0 {
@@ -666,9 +711,9 @@ func runObjectPut(cmd *cobra.Command, args []string) error {
 	var result *cosmoflare.UploadResult
 	if objectNoMultipart {
 		// Force single-part upload regardless of file size
-		result, err = client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+		result, err = client.Upload(context.Background(), p.bucketName, p.key, file, fileInfo.Size(), opts...)
 	} else {
-		result, err = client.Upload(context.Background(), bucketName, key, file, fileInfo.Size(), opts...)
+		result, err = client.Upload(context.Background(), p.bucketName, p.key, file, fileInfo.Size(), opts...)
 	}
 	if err != nil {
 		return outErr("failed to upload object", err)
@@ -901,6 +946,92 @@ func runObjectSearch(cmd *cobra.Command, args []string) error {
 	})
 }
 
+// batchRunner carries the client, target bucket, error policy and result
+// counters across the per-operation batch helpers.
+type batchRunner struct {
+	client        cosmoflare.R2Client
+	bucketName    string
+	continueOnErr bool
+	successCount  int
+	errorCount    int
+}
+
+// opFailed records a failed operation: it prints the error, bumps the error
+// counter, and returns err unless --continue is set.
+func (b *batchRunner) opFailed(err error, format string, args ...interface{}) error {
+	printError(format, args...)
+	b.errorCount++
+	if !b.continueOnErr {
+		return err
+	}
+	return nil
+}
+
+func (b *batchRunner) upload(op BatchOperation) error {
+	if op.LocalPath == "" || op.ObjectKey == "" {
+		printError("Upload operation requires local_path and object_key")
+		b.errorCount++
+		return nil
+	}
+	file, err := os.Open(op.LocalPath)
+	if err != nil {
+		return b.opFailed(err, "Failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	info, _ := file.Stat()
+	_, err = b.client.Upload(context.Background(), b.bucketName, op.ObjectKey, file, info.Size())
+	if err != nil {
+		return b.opFailed(err, "Upload failed: %v", err)
+	}
+	printSuccess("Uploaded: %s", op.ObjectKey)
+	b.successCount++
+	return nil
+}
+
+func (b *batchRunner) delete(op BatchOperation) error {
+	if op.ObjectKey == "" {
+		printError("Delete operation requires object_key")
+		b.errorCount++
+		return nil
+	}
+	err := b.client.DeleteObject(context.Background(), b.bucketName, op.ObjectKey)
+	if err != nil {
+		return b.opFailed(err, "Delete failed: %v", err)
+	}
+	printSuccess("Deleted: %s", op.ObjectKey)
+	b.successCount++
+	return nil
+}
+
+func (b *batchRunner) copy(op BatchOperation) error {
+	if op.ObjectKey == "" || op.DestinationKey == "" {
+		printError("Copy operation requires object_key and destination_key")
+		b.errorCount++
+		return nil
+	}
+	_, err := b.client.CopyObject(context.Background(), b.bucketName, op.ObjectKey, b.bucketName, op.DestinationKey)
+	if err != nil {
+		return b.opFailed(err, "Copy failed: %v", err)
+	}
+	printSuccess("Copied: %s -> %s", op.ObjectKey, op.DestinationKey)
+	b.successCount++
+	return nil
+}
+
+func (b *batchRunner) run(op BatchOperation) error {
+	switch op.Action {
+	case "upload":
+		return b.upload(op)
+	case "delete":
+		return b.delete(op)
+	case "copy":
+		return b.copy(op)
+	default:
+		return b.opFailed(fmt.Errorf("invalid operation: %s", op.Action), "Unknown operation: %s", op.Action)
+	}
+}
+
 func runObjectBatch(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and spec file are required")
@@ -927,93 +1058,28 @@ func runObjectBatch(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create API client", err)
 	}
 
-	successCount := 0
-	errorCount := 0
+	b := &batchRunner{
+		client:        client,
+		bucketName:    bucketName,
+		continueOnErr: continueOnError,
+	}
 
 	for i, op := range spec.Operations {
 		printInfo("Operation %d/%d: %s", i+1, len(spec.Operations), op.Action)
 
 		if DryRun {
 			printInfo("DRY RUN: Would execute operation")
-			successCount++
+			b.successCount++
 			continue
 		}
 
-		switch op.Action {
-		case "upload":
-			if op.LocalPath == "" || op.ObjectKey == "" {
-				printError("Upload operation requires local_path and object_key")
-				errorCount++
-				continue
-			}
-			file, err := os.Open(op.LocalPath)
-			if err != nil {
-				printError("Failed to open file: %v", err)
-				errorCount++
-				if !continueOnError {
-					return err
-				}
-				continue
-			}
-			defer file.Close()
-
-			info, _ := file.Stat()
-			_, err = client.Upload(context.Background(), bucketName, op.ObjectKey, file, info.Size())
-			if err != nil {
-				printError("Upload failed: %v", err)
-				errorCount++
-				if !continueOnError {
-					return err
-				}
-				continue
-			}
-			printSuccess("Uploaded: %s", op.ObjectKey)
-			successCount++
-
-		case "delete":
-			if op.ObjectKey == "" {
-				printError("Delete operation requires object_key")
-				errorCount++
-				continue
-			}
-			err := client.DeleteObject(context.Background(), bucketName, op.ObjectKey)
-			if err != nil {
-				printError("Delete failed: %v", err)
-				errorCount++
-				if !continueOnError {
-					return err
-				}
-				continue
-			}
-			printSuccess("Deleted: %s", op.ObjectKey)
-			successCount++
-
-		case "copy":
-			if op.ObjectKey == "" || op.DestinationKey == "" {
-				printError("Copy operation requires object_key and destination_key")
-				errorCount++
-				continue
-			}
-			_, err := client.CopyObject(context.Background(), bucketName, op.ObjectKey, bucketName, op.DestinationKey)
-			if err != nil {
-				printError("Copy failed: %v", err)
-				errorCount++
-				if !continueOnError {
-					return err
-				}
-				continue
-			}
-			printSuccess("Copied: %s -> %s", op.ObjectKey, op.DestinationKey)
-			successCount++
-
-		default:
-			printError("Unknown operation: %s", op.Action)
-			errorCount++
-			if !continueOnError {
-				return fmt.Errorf("invalid operation: %s", op.Action)
-			}
+		if err := b.run(op); err != nil {
+			return err
 		}
 	}
+
+	successCount := b.successCount
+	errorCount := b.errorCount
 
 	return outPayload("Batch operations complete", func() any {
 		return map[string]interface{}{
