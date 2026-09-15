@@ -1,0 +1,22 @@
+id: TASK-010
+type: task
+created_at: 2026-09-15T05:34:03.521602+04:00
+updated_at: 2026-09-15T05:34:03.527137+04:00
+source: local
+ulid: 01M2HB6887E6M4J4ZMNTBZ3X0M
+status: open
+labels:
+    - audit
+    - seo-content
+title: cosmolabs.org/cosmoflare product page
+description: |-
+    # cosmolabs.org/cosmoflare product page
+
+    Homepage never mentions Cosmoflare — dead conversion path. Ship product page with meta/OG tags, JSON-LD SoftwareApplication schema, install CTA. Evidence: agent-6-seo-content.md
+
+    ## Additional context
+
+    cosmolabs.org homepage never mentions Cosmoflare — dead conversion path. Ship a product page with meta/OG tags, JSON-LD SoftwareApplication schema, and install CTA. Feeds ROAD-096 launch program. Evidence: audit agent-6-seo-content.md.
+
+    Origin: audit-agent-6-seo-content
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-6-seo-content.md
