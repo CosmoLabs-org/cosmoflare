@@ -1,12 +1,13 @@
 id: ROAD-091
 created_at: 2026-09-08T13:26:17.669567+04:00
-updated_at: 2026-09-15T23:57:05.934287+04:00
+updated_at: 2026-09-16T02:34:05.400762+04:00
 title: Agentic-surface completeness — Durable Objects, Workflows, Queues depth, Workers AI, MCP parity
 description: 'Cover the Cloudflare surface an AI agent runs on or talks to: Durable Objects (missing entirely), Cloudflare Workflows product (missing), Queues depth beyond basics, Workers AI/AI Gateway depth, Browser Rendering (missing), R2 event notifications + lifecycle policies (missing), Workers routes/bindings/tail depth, MCP parity (auto-generate MCP tools from the cobra tree, mutations gated by guardrails — audit Phase 2 item 5). Reference: Cloudflare official cf CLI + MCP expose ~2,500 endpoints; our moat is agent-safety (guardrails, audit trail, deterministic errors), not endpoint count. Deprecation watch: Page Rules -> Rulesets migration touches cmd/pagerules.go + pkg/cosmoflare/pagerules.go.'
 status: captured
 notes:
     - 'Advanced 2026-09-08: R2 event notifications + lifecycle landed (merges fc1bc81, 524039f). Remaining: Durable Objects, Workflows, Queues depth, MCP parity, Page Rules→Rulesets migration.'
     - 'Session 2026 progress: D1 depth (FEAT-022), Pages depth (FEAT-023), Queues producer (FEAT-024), DO live-state (FEAT-034), Vectorize CRUD (FEAT-027) all merged. Remaining: Workers depth (FEAT-021), MCP parity (awaiting MCP-ecosystem research).'
+    - 'FEAT-021 closed 2026-09-16: workers block complete (35-command tree). Remaining agentic-surface gaps tracked by the corpus sections beyond workers.'
 refs:
     - type: plan
       path: docs/planning-mode/2026-09-15-feat021-workers-depth.md
