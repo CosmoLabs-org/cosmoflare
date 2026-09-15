@@ -424,7 +424,18 @@ func TestCreateEnvironmentBackup(t *testing.T) {
 // ===================================================================
 
 func TestShowRestoreInterface(t *testing.T) {
+	t.Run("empty path handling", func(t *testing.T) {
+		testShowRestoreInterfaceEmptyPath(t)
+	})
+	t.Run("explicit file dispatch", func(t *testing.T) {
+		testShowRestoreInterfaceExplicitFiles(t)
+	})
+	t.Run("unsupported and missing files", func(t *testing.T) {
+		testShowRestoreInterfaceBadFiles(t)
+	})
+}
 
+func testShowRestoreInterfaceEmptyPath(t *testing.T) {
 	t.Run("empty path and no backups returns error", func(t *testing.T) {
 		disableAnim(t)
 		bm, _ := newTestBackupManager(t, "")
@@ -468,7 +479,9 @@ func TestShowRestoreInterface(t *testing.T) {
 		err := bm.ShowRestoreInterface()
 		require.NoError(t, err) // cancelled, not error
 	})
+}
 
+func testShowRestoreInterfaceExplicitFiles(t *testing.T) {
 	t.Run("explicit .json file restores from JSON", func(t *testing.T) {
 		disableAnim(t)
 		bm, tmpDir := newTestBackupManager(t, "1", "y") // "1" all profiles, "y" confirm
@@ -529,7 +542,9 @@ func TestShowRestoreInterface(t *testing.T) {
 		err := bm.ShowRestoreInterface()
 		require.NoError(t, err)
 	})
+}
 
+func testShowRestoreInterfaceBadFiles(t *testing.T) {
 	t.Run("unsupported format returns error", func(t *testing.T) {
 		disableAnim(t)
 		bm, tmpDir := newTestBackupManager(t)
@@ -669,7 +684,21 @@ func TestRestoreFromEncrypted(t *testing.T) {
 // ===================================================================
 
 func TestProcessRestoreData(t *testing.T) {
+	t.Run("choice selection", func(t *testing.T) {
+		testProcessRestoreDataChoices(t)
+	})
+	t.Run("invalid input and cancel", func(t *testing.T) {
+		testProcessRestoreDataInvalidAndCancel(t)
+	})
+	t.Run("existing profile overwrite", func(t *testing.T) {
+		testProcessRestoreDataOverwrite(t)
+	})
+	t.Run("token prompting and empty data", func(t *testing.T) {
+		testProcessRestoreDataTokens(t)
+	})
+}
 
+func testProcessRestoreDataChoices(t *testing.T) {
 	t.Run("choice 1 restores all profiles", func(t *testing.T) {
 		disableAnim(t)
 		bm, _ := newTestBackupManager(t, "1", "y")
@@ -720,7 +749,9 @@ func TestProcessRestoreData(t *testing.T) {
 		err := bm.processRestoreData(backupData, "/tmp/test.json", true)
 		require.NoError(t, err)
 	})
+}
 
+func testProcessRestoreDataInvalidAndCancel(t *testing.T) {
 	t.Run("choice 2 with invalid numbers selects nothing", func(t *testing.T) {
 		disableAnim(t)
 		bm, _ := newTestBackupManager(t, "2", "99,abc")
@@ -769,7 +800,9 @@ func TestProcessRestoreData(t *testing.T) {
 		err := bm.processRestoreData(backupData, "/tmp/test.json", true)
 		require.NoError(t, err)
 	})
+}
 
+func testProcessRestoreDataOverwrite(t *testing.T) {
 	t.Run("existing profile overwrite declined skips it", func(t *testing.T) {
 		disableAnim(t)
 		bm, _ := newTestBackupManager(t, "1", "y", "n") // "n" don't overwrite
@@ -811,7 +844,9 @@ func TestProcessRestoreData(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "updated description", p.Description)
 	})
+}
 
+func testProcessRestoreDataTokens(t *testing.T) {
 	t.Run("hasTokens false prompts for API token", func(t *testing.T) {
 		disableAnim(t)
 		// "1" all, "y" confirm restore, "y" overwrite existing, then token input
