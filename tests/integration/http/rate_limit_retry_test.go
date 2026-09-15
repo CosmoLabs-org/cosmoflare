@@ -26,11 +26,11 @@ import (
 // RateLimitRetrySuite provides comprehensive rate limiting and retry testing
 type RateLimitRetrySuite struct {
 	suite.Suite
-	server      *httptest.Server
-	client      *http.Client
-	testConfig  helpers.TestConfig
-	requests    map[string]int // Track requests by endpoint
-	mu          sync.Mutex
+	server     *httptest.Server
+	client     *http.Client
+	testConfig helpers.TestConfig
+	requests   map[string]int // Track requests by endpoint
+	mu         sync.Mutex
 }
 
 // SetupSuite sets up the rate limiting and retry test suite
@@ -184,101 +184,113 @@ func (suite *RateLimitRetrySuite) TestRateLimitDetection() {
 	})
 }
 
+// retryTransientFailureScenario exercises the retry loop against the
+// /api/v1/retry-after endpoint (503 responses that eventually succeed).
+func (suite *RateLimitRetrySuite) retryTransientFailureScenario() {
+	// Reset request count
+	suite.mu.Lock()
+	suite.requests = make(map[string]int)
+	suite.mu.Unlock()
+
+	// Implement simple retry logic
+	var lastErr error
+	maxRetries := 5
+	retryDelay := 100 * time.Millisecond
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequest("GET", suite.server.URL+"/api/v1/retry-after", nil)
+		require.NoError(suite.T(), err)
+
+		resp, err := suite.client.Do(req)
+		if err != nil {
+			lastErr = err
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+				retryDelay *= 2 // Exponential backoff
+				continue
+			}
+			break
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			resp.Body.Close()
+			assert.Equal(suite.T(), 4, attempt+1, "Should succeed after 3 retries")
+			return // Success
+		}
+
+		// Check for retry-able status codes
+		if resp.StatusCode == http.StatusServiceUnavailable {
+			resp.Body.Close()
+			lastErr = fmt.Errorf("service unavailable (attempt %d)", attempt+1)
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+				retryDelay *= 2
+				continue
+			}
+		}
+		resp.Body.Close()
+		break
+	}
+
+	suite.T().Errorf("Should have succeeded after retries, last error: %v", lastErr)
+}
+
+// retryServerErrorScenario exercises the retry loop against the
+// /api/v1/server-error endpoint (5xx responses that eventually succeed).
+func (suite *RateLimitRetrySuite) retryServerErrorScenario() {
+	// Reset request count
+	suite.mu.Lock()
+	suite.requests = make(map[string]int)
+	suite.mu.Unlock()
+
+	var lastErr error
+	maxRetries := 3
+	retryDelay := 50 * time.Millisecond
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequest("GET", suite.server.URL+"/api/v1/server-error", nil)
+		require.NoError(suite.T(), err)
+
+		resp, err := suite.client.Do(req)
+		if err != nil {
+			lastErr = err
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+				continue
+			}
+			break
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			resp.Body.Close()
+			assert.Equal(suite.T(), 3, attempt+1, "Should succeed after 2 retries")
+			return // Success
+		}
+
+		if resp.StatusCode >= 500 {
+			resp.Body.Close()
+			lastErr = fmt.Errorf("server error: %d (attempt %d)", resp.StatusCode, attempt+1)
+			if attempt < maxRetries {
+				time.Sleep(retryDelay)
+				retryDelay *= 2
+				continue
+			}
+		}
+		resp.Body.Close()
+		break
+	}
+
+	suite.T().Errorf("Should have succeeded after retries, last error: %v", lastErr)
+}
+
 // TestRetryMechanism tests retry logic for various failure scenarios
 func (suite *RateLimitRetrySuite) TestRetryMechanism() {
 	suite.Run("Retry Transient Failures", func() {
-		// Reset request count
-		suite.mu.Lock()
-		suite.requests = make(map[string]int)
-		suite.mu.Unlock()
-
-		// Implement simple retry logic
-		var lastErr error
-		maxRetries := 5
-		retryDelay := 100 * time.Millisecond
-
-		for attempt := 0; attempt <= maxRetries; attempt++ {
-			req, err := http.NewRequest("GET", suite.server.URL+"/api/v1/retry-after", nil)
-			require.NoError(suite.T(), err)
-
-			resp, err := suite.client.Do(req)
-			if err != nil {
-				lastErr = err
-				if attempt < maxRetries {
-					time.Sleep(retryDelay)
-					retryDelay *= 2 // Exponential backoff
-					continue
-				}
-				break
-			}
-
-			if resp.StatusCode == http.StatusOK {
-				resp.Body.Close()
-				assert.Equal(suite.T(), 4, attempt+1, "Should succeed after 3 retries")
-				return // Success
-			}
-
-			// Check for retry-able status codes
-			if resp.StatusCode == http.StatusServiceUnavailable {
-				resp.Body.Close()
-				lastErr = fmt.Errorf("service unavailable (attempt %d)", attempt+1)
-				if attempt < maxRetries {
-					time.Sleep(retryDelay)
-					retryDelay *= 2
-					continue
-				}
-			}
-			resp.Body.Close()
-			break
-		}
-
-		suite.T().Errorf("Should have succeeded after retries, last error: %v", lastErr)
+		suite.retryTransientFailureScenario()
 	})
 
 	suite.Run("Retry Server Errors", func() {
-		// Reset request count
-		suite.mu.Lock()
-		suite.requests = make(map[string]int)
-		suite.mu.Unlock()
-
-		var lastErr error
-		maxRetries := 3
-		retryDelay := 50 * time.Millisecond
-
-		for attempt := 0; attempt <= maxRetries; attempt++ {
-			req, err := http.NewRequest("GET", suite.server.URL+"/api/v1/server-error", nil)
-			require.NoError(suite.T(), err)
-
-			resp, err := suite.client.Do(req)
-			if err != nil {
-				lastErr = err
-				if attempt < maxRetries {
-					time.Sleep(retryDelay)
-					continue
-				}
-				break
-			}
-
-			if resp.StatusCode == http.StatusOK {
-				resp.Body.Close()
-				assert.Equal(suite.T(), 3, attempt+1, "Should succeed after 2 retries")
-				return // Success
-			}
-
-			if resp.StatusCode >= 500 {
-				resp.Body.Close()
-				lastErr = fmt.Errorf("server error: %d (attempt %d)", resp.StatusCode, attempt+1)
-				if attempt < maxRetries {
-					time.Sleep(retryDelay)
-					retryDelay *= 2
-					continue
-				}
-			}
-			resp.Body.Close()
-			break
-		}
-
-		suite.T().Errorf("Should have succeeded after retries, last error: %v", lastErr)
+		suite.retryServerErrorScenario()
 	})
 
 	suite.Run("No Retry on Client Errors", func() {
