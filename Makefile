@@ -13,7 +13,11 @@ GOMOD=$(GOCMD) mod
 # Binary info
 BINARY_NAME=cosmoflare
 BINARY_UNIX=$(BINARY_NAME)_unix
-VERSION=$(shell ccs version --short 2>/dev/null | sed 's/ .*//' || grep -o '"version":"[^"]*"' .version-registry.json 2>/dev/null | head -1 | cut -d'"' -f4 || echo "dev")
+# Read from the registry directly. The old `ccs version --short | sed ... || fallback`
+# chain NEVER fell back: `--short` is an unknown flag (empty stdout, exit 0 through
+# the pipe), so every build since shipped with VERSION="" — double-dash archive
+# names and an empty cobra Version string (no --version flag in the binaries).
+VERSION=$(shell v=$$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' .version-registry.json 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$$/\1/'); echo $${v:-dev})
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-ldflags "-X github.com/CosmoLabs-org/cosmoflare/cmd.AppVersion=$(VERSION) -X github.com/CosmoLabs-org/cosmoflare/cmd.BuildTime=$(BUILD_TIME) -X github.com/CosmoLabs-org/cosmoflare/cmd.GitCommit=$(GIT_COMMIT)"
@@ -23,7 +27,10 @@ BUILD_DIR=build
 DIST_DIR=dist
 
 # Cross-compilation targets
-PLATFORMS=linux/amd64 linux/arm64 linux/armv7 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64
+PLATFORMS=linux/amd64 linux/arm64 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64
+# linux/armv7 removed 2026-09-15: its cross-build fails silently and packs a docs-only
+# tarball (no binary); the release sanity gate refuses to stage it. Re-add only with a
+# working GOARM build. Never shipped in any release.
 PLATFORMS_MAP=linux_amd64:linux-x86_64 linux_arm64:linux-aarch64 linux_armv7:linux-armv7 windows_amd64:windows-x86_64 windows_arm64:windows-aarch64 darwin_amd64:darwin-x86_64 darwin_arm64:darwin-aarch64
 
 # Docker settings
@@ -375,12 +382,12 @@ release:
 		echo "Usage: make release TAG=vX.Y.Z"; \
 		exit 1; \
 	fi
-	@$(MAKE) release-prepare
+	@$(MAKE) release-prepare VERSION=$(TAG)
 	@echo "🔎 Archive sanity gate (>1MB each, else failed platform build)..."
 	@set -e; \
 	cd $(DIST_DIR); \
 	found=0; \
-	for f in $(BINARY_NAME)-$(VERSION)-*.tar.gz $(BINARY_NAME)-$(VERSION)-*.zip; do \
+	for f in $(BINARY_NAME)-*.tar.gz $(BINARY_NAME)-*.zip; do \
 		[ -e "$$f" ] || continue; \
 		found=1; \
 		size=$$(stat -f %z "$$f" 2>/dev/null || stat -c %s "$$f"); \
@@ -391,17 +398,17 @@ release:
 		echo "  ✅ $$f ($$size bytes)"; \
 	done; \
 	if [ "$$found" -eq 0 ]; then \
-		echo "❌ No $(BINARY_NAME)-$(VERSION)-*.tar.gz|zip archives found in $(DIST_DIR)/"; \
+		echo "❌ No $(BINARY_NAME)-*.tar.gz|zip archives found in $(DIST_DIR)/"; \
 		exit 1; \
 	fi
 	@echo "📦 Staging $(DIST_DIR)/upload/..."
 	@rm -rf $(DIST_DIR)/upload
 	@mkdir -p $(DIST_DIR)/upload
 	@cd $(DIST_DIR); \
-	for f in $(BINARY_NAME)-$(VERSION)-*.tar.gz $(BINARY_NAME)-$(VERSION)-*.zip; do \
+	for f in $(BINARY_NAME)-*.tar.gz $(BINARY_NAME)-*.zip; do \
 		[ -e "$$f" ] && cp "$$f" upload/ || true; \
 	done
-	@cd $(DIST_DIR)/upload && shasum -a 256 $(BINARY_NAME)-$(VERSION)-* > checksums-sha256.txt
+	@cd $(DIST_DIR)/upload && shasum -a 256 $(BINARY_NAME)-$(TAG)-* > checksums-sha256.txt
 	@echo "🔐 Checksums written: $(DIST_DIR)/upload/checksums-sha256.txt"
 	@echo ""
 	@echo "🚀 Release $(TAG) is staged and ready. Publish it yourself with:"
