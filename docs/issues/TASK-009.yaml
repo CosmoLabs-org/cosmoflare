@@ -1,0 +1,22 @@
+id: TASK-009
+type: task
+created_at: 2026-09-15T05:34:00.371247+04:00
+updated_at: 2026-09-15T05:34:00.378701+04:00
+source: local
+ulid: 01M2HB655T8AZGF0E33VE6N68T
+status: open
+labels:
+    - audit
+    - code-quality
+title: Split 45 god functions; enforce funlen=80
+description: |-
+    # Split 45 god functions; enforce funlen=80
+
+    45 functions over 80 lines, worst 238 (internal/tui/update.go handleKeyMsg). Split runObjectPut/handleKeyMsg/loadBuiltinThemes into per-path helpers; adopt golangci-lint funlen=80. Evidence: agent-1-code-quality.md
+
+    ## Additional context
+
+    45 functions exceed 80 lines (worst: internal/tui/update.go handleKeyMsg at 238). Split runObjectPut, handleKeyMsg, loadBuiltinThemes into per-path helpers; adopt golangci-lint funlen=80 to hold the line. Mechanical, file-by-file — suited to GLM agent waves. Evidence: audit agent-1-code-quality.md.
+
+    Origin: audit-agent-1-code-quality
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-1-code-quality.md
