@@ -124,6 +124,19 @@ func ClassifyError(err error) *ErrorInfo {
 		Context:    make(map[string]interface{}),
 	}
 
+	classifyNetworkError(errStr, info)
+	classifyPermissionError(errStr, info)
+	classifyStorageError(errStr, info)
+	classifyAuthenticationError(errStr, info)
+	classifyQuotaError(errStr, info)
+	classifyTimeoutError(errStr, info)
+	classifyFileSystemError(errStr, info)
+
+	return info
+}
+
+// classifyNetworkError sets the classification for network errors
+func classifyNetworkError(errStr string, info *ErrorInfo) {
 	// Network errors
 	if containsAny(errStr, []string{
 		"connection refused", "connection reset", "network unreachable",
@@ -136,7 +149,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Check network connection and try again"
 		info.ErrorCode = "NETWORK_ERROR"
 	}
+}
 
+// classifyPermissionError sets the classification for permission errors
+func classifyPermissionError(errStr string, info *ErrorInfo) {
 	// Permission errors
 	if containsAny(errStr, []string{
 		"permission denied", "access denied", "operation not permitted",
@@ -147,7 +163,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Check file permissions and user privileges"
 		info.ErrorCode = "PERMISSION_ERROR"
 	}
+}
 
+// classifyStorageError sets the classification for storage errors
+func classifyStorageError(errStr string, info *ErrorInfo) {
 	// Storage errors
 	if containsAny(errStr, []string{
 		"no space left", "disk full", "storage quota exceeded",
@@ -158,7 +177,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Free up disk space and try again"
 		info.ErrorCode = "STORAGE_ERROR"
 	}
+}
 
+// classifyAuthenticationError sets the classification for authentication errors
+func classifyAuthenticationError(errStr string, info *ErrorInfo) {
 	// Authentication errors
 	if containsAny(errStr, []string{
 		"authentication failed", "invalid credentials", "unauthorized",
@@ -169,7 +191,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Check authentication credentials and API tokens"
 		info.ErrorCode = "AUTH_ERROR"
 	}
+}
 
+// classifyQuotaError sets the classification for quota errors
+func classifyQuotaError(errStr string, info *ErrorInfo) {
 	// Quota errors
 	if containsAny(errStr, []string{
 		"quota exceeded", "rate limit exceeded", "too many requests",
@@ -180,7 +205,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Wait for quota reset or upgrade your plan"
 		info.ErrorCode = "QUOTA_ERROR"
 	}
+}
 
+// classifyTimeoutError sets the classification for timeout errors
+func classifyTimeoutError(errStr string, info *ErrorInfo) {
 	// Timeout errors
 	if containsAny(errStr, []string{
 		"timeout", "deadline exceeded", "operation timed out",
@@ -191,7 +219,10 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Increase timeout or try again later"
 		info.ErrorCode = "TIMEOUT_ERROR"
 	}
+}
 
+// classifyFileSystemError sets the classification for file system errors
+func classifyFileSystemError(errStr string, info *ErrorInfo) {
 	// File system errors
 	if containsAny(errStr, []string{
 		"file not found", "no such file or directory", "file exists",
@@ -203,8 +234,6 @@ func ClassifyError(err error) *ErrorInfo {
 		info.Suggestion = "Check file paths and permissions"
 		info.ErrorCode = "FILESYSTEM_ERROR"
 	}
-
-	return info
 }
 
 // RetryWithStrategy retries an operation using the specified strategy

@@ -214,70 +214,100 @@ func parseConfirmationInput(input string, confType ConfirmationType) (answer, al
 
 	switch confType {
 	case ConfirmationTypeYesNo:
-		return input == "y" || input == "yes", false, false
+		return parseYesNoInput(input)
 
 	case ConfirmationTypeYesNoAll:
-		switch input {
-		case "y", "yes":
-			return true, false, false
-		case "n", "no":
-			return false, false, false
-		case "a", "all":
-			return true, true, false
-		case "l", "less":
-			return false, false, false
-		default:
-			return false, false, false
-		}
+		return parseYesNoAllInput(input)
 
 	case ConfirmationTypeYesNoCancel:
-		switch input {
-		case "y", "yes":
-			return true, false, false
-		case "n", "no":
-			return false, false, false
-		case "c", "cancel":
-			return false, false, true
-		default:
-			return false, false, false
-		}
+		return parseYesNoCancelInput(input)
 
 	case ConfirmationTypeContinue:
-		switch input {
-		case "continue", "c":
-			return true, false, false
-		case "cancel":
-			return false, false, true
-		default:
-			return false, false, false
-		}
+		return parseContinueInput(input)
 
 	case ConfirmationTypeRetry:
-		switch input {
-		case "retry", "r":
-			return true, false, false
-		case "cancel":
-			return false, false, true
-		default:
-			return false, false, false
-		}
+		return parseRetryInput(input)
 
 	case ConfirmationTypeOverwrite:
-		switch input {
-		case "y", "yes":
-			return true, false, false
-		case "n", "no":
-			return false, false, false
-		case "o", "overwrite":
-			return true, false, false
-		case "s", "skip":
-			return false, false, false
-		default:
-			return false, false, false
-		}
+		return parseOverwriteInput(input)
 
 	default:
 		return input == "y" || input == "yes", false, false
+	}
+}
+
+// parseYesNoInput parses input for yes/no confirmations
+func parseYesNoInput(input string) (answer, all, cancelled bool) {
+	return input == "y" || input == "yes", false, false
+}
+
+// parseYesNoAllInput parses input for yes/no/all confirmations
+func parseYesNoAllInput(input string) (answer, all, cancelled bool) {
+	switch input {
+	case "y", "yes":
+		return true, false, false
+	case "n", "no":
+		return false, false, false
+	case "a", "all":
+		return true, true, false
+	case "l", "less":
+		return false, false, false
+	default:
+		return false, false, false
+	}
+}
+
+// parseYesNoCancelInput parses input for yes/no/cancel confirmations
+func parseYesNoCancelInput(input string) (answer, all, cancelled bool) {
+	switch input {
+	case "y", "yes":
+		return true, false, false
+	case "n", "no":
+		return false, false, false
+	case "c", "cancel":
+		return false, false, true
+	default:
+		return false, false, false
+	}
+}
+
+// parseContinueInput parses input for continue/cancel confirmations
+func parseContinueInput(input string) (answer, all, cancelled bool) {
+	switch input {
+	case "continue", "c":
+		return true, false, false
+	case "cancel":
+		return false, false, true
+	default:
+		return false, false, false
+	}
+}
+
+// parseRetryInput parses input for retry/cancel confirmations
+func parseRetryInput(input string) (answer, all, cancelled bool) {
+	switch input {
+	case "retry", "r":
+		return true, false, false
+	case "cancel":
+		return false, false, true
+	default:
+		return false, false, false
+	}
+}
+
+// parseOverwriteInput parses input for overwrite/skip confirmations
+func parseOverwriteInput(input string) (answer, all, cancelled bool) {
+	switch input {
+	case "y", "yes":
+		return true, false, false
+	case "n", "no":
+		return false, false, false
+	case "o", "overwrite":
+		return true, false, false
+	case "s", "skip":
+		return false, false, false
+	default:
+		return false, false, false
 	}
 }
 
