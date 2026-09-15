@@ -6,8 +6,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var cacheCmd = &cobra.Command{
@@ -31,14 +31,14 @@ Examples:
 }
 
 var (
-	cachePurgeAll    bool
-	cachePurgeForce  bool
-	cachePurgeURLs   []string
-	cachePurgeTags   []string
-	cachePurgeHosts  []string
-	cacheBrowserTTL  int
-	cacheDevMode     bool
-	cacheCacheLevel  string
+	cachePurgeAll   bool
+	cachePurgeForce bool
+	cachePurgeURLs  []string
+	cachePurgeTags  []string
+	cachePurgeHosts []string
+	cacheBrowserTTL int
+	cacheDevMode    bool
+	cacheCacheLevel string
 )
 
 var cachePurgeCmd = &cobra.Command{
@@ -150,93 +150,109 @@ func runCachePurge(cmd *cobra.Command, args []string) error {
 
 	// Purge all
 	if cachePurgeAll {
-		if DryRun {
-			return outPayload("DRY RUN: Would purge all cache", func() any {
-				return map[string]string{"zone_id": zoneID}
-			}, func() {
-				printInfo("DRY RUN: Would purge all cached content for zone '%s'", zoneID)
-			})
-		}
-
-		result, err := svc.PurgeAll(ctx)
-		if err != nil {
-			return outErr("failed to purge cache", err)
-		}
-
-		return outPayload("Cache purged successfully", func() any {
-			return result
-		}, func() {
-			printSuccess("All cached content purged for zone '%s'", zoneID)
-		})
+		return purgeCacheAll(svc, ctx, zoneID)
 	}
 
 	// Purge by URLs
 	if len(cachePurgeURLs) > 0 {
-		if DryRun {
-			return outPayload("DRY RUN: Would purge URLs", func() any {
-				return map[string]interface{}{"zone_id": zoneID, "urls": cachePurgeURLs}
-			}, func() {
-				printInfo("DRY RUN: Would purge %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
-			})
-		}
-
-		result, err := svc.PurgeByURLs(ctx, cachePurgeURLs)
-		if err != nil {
-			return outErr("failed to purge URLs", err)
-		}
-
-		return outPayload("URLs purged successfully", func() any {
-			return result
-		}, func() {
-			printSuccess("Purged %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
-		})
+		return purgeCacheByURLs(svc, ctx, zoneID)
 	}
 
 	// Purge by tags
 	if len(cachePurgeTags) > 0 {
-		if DryRun {
-			return outPayload("DRY RUN: Would purge tags", func() any {
-				return map[string]interface{}{"zone_id": zoneID, "tags": cachePurgeTags}
-			}, func() {
-				printInfo("DRY RUN: Would purge %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
-			})
-		}
-
-		result, err := svc.PurgeByTags(ctx, cachePurgeTags)
-		if err != nil {
-			return outErr("failed to purge tags", err)
-		}
-
-		return outPayload("Tags purged successfully", func() any {
-			return result
-		}, func() {
-			printSuccess("Purged %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
-		})
+		return purgeCacheByTags(svc, ctx, zoneID)
 	}
 
 	// Purge by hosts
 	if len(cachePurgeHosts) > 0 {
-		if DryRun {
-			return outPayload("DRY RUN: Would purge hosts", func() any {
-				return map[string]interface{}{"zone_id": zoneID, "hosts": cachePurgeHosts}
-			}, func() {
-				printInfo("DRY RUN: Would purge %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
-			})
-		}
-
-		result, err := svc.PurgeByHosts(ctx, cachePurgeHosts)
-		if err != nil {
-			return outErr("failed to purge hosts", err)
-		}
-
-		return outPayload("Hosts purged successfully", func() any {
-			return result
-		}, func() {
-			printSuccess("Purged %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
-		})
+		return purgeCacheByHosts(svc, ctx, zoneID)
 	}
 
 	return nil
+}
+
+func purgeCacheAll(svc *cosmoflare.CacheService, ctx context.Context, zoneID string) error {
+	if DryRun {
+		return outPayload("DRY RUN: Would purge all cache", func() any {
+			return map[string]string{"zone_id": zoneID}
+		}, func() {
+			printInfo("DRY RUN: Would purge all cached content for zone '%s'", zoneID)
+		})
+	}
+
+	result, err := svc.PurgeAll(ctx)
+	if err != nil {
+		return outErr("failed to purge cache", err)
+	}
+
+	return outPayload("Cache purged successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("All cached content purged for zone '%s'", zoneID)
+	})
+}
+
+func purgeCacheByURLs(svc *cosmoflare.CacheService, ctx context.Context, zoneID string) error {
+	if DryRun {
+		return outPayload("DRY RUN: Would purge URLs", func() any {
+			return map[string]interface{}{"zone_id": zoneID, "urls": cachePurgeURLs}
+		}, func() {
+			printInfo("DRY RUN: Would purge %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
+		})
+	}
+
+	result, err := svc.PurgeByURLs(ctx, cachePurgeURLs)
+	if err != nil {
+		return outErr("failed to purge URLs", err)
+	}
+
+	return outPayload("URLs purged successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("Purged %d URL(s) from zone '%s'", len(cachePurgeURLs), zoneID)
+	})
+}
+
+func purgeCacheByTags(svc *cosmoflare.CacheService, ctx context.Context, zoneID string) error {
+	if DryRun {
+		return outPayload("DRY RUN: Would purge tags", func() any {
+			return map[string]interface{}{"zone_id": zoneID, "tags": cachePurgeTags}
+		}, func() {
+			printInfo("DRY RUN: Would purge %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
+		})
+	}
+
+	result, err := svc.PurgeByTags(ctx, cachePurgeTags)
+	if err != nil {
+		return outErr("failed to purge tags", err)
+	}
+
+	return outPayload("Tags purged successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("Purged %d tag(s) from zone '%s'", len(cachePurgeTags), zoneID)
+	})
+}
+
+func purgeCacheByHosts(svc *cosmoflare.CacheService, ctx context.Context, zoneID string) error {
+	if DryRun {
+		return outPayload("DRY RUN: Would purge hosts", func() any {
+			return map[string]interface{}{"zone_id": zoneID, "hosts": cachePurgeHosts}
+		}, func() {
+			printInfo("DRY RUN: Would purge %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
+		})
+	}
+
+	result, err := svc.PurgeByHosts(ctx, cachePurgeHosts)
+	if err != nil {
+		return outErr("failed to purge hosts", err)
+	}
+
+	return outPayload("Hosts purged successfully", func() any {
+		return result
+	}, func() {
+		printSuccess("Purged %d host(s) from zone '%s'", len(cachePurgeHosts), zoneID)
+	})
 }
 
 func runCacheSettings(cmd *cobra.Command, args []string) error {

@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -58,14 +59,31 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create API client", err)
 	}
 
+	srcMap, dstMap, err := compareListBuckets(client, srcBucket, dstBucket)
+	if err != nil {
+		return err
+	}
+
+	result := compareDiffBuckets(srcMap, dstMap)
+
+	return outPayload("Comparison complete", func() any {
+		return result
+	}, func() {
+		renderCompareResult(result, srcMap, dstMap)
+	})
+}
+
+// compareListBuckets lists both buckets (filtered by the compare prefix) and
+// returns key→size maps for the source and destination.
+func compareListBuckets(client cosmoflare.R2Client, srcBucket, dstBucket string) (map[string]int64, map[string]int64, error) {
 	srcResult, err := client.ListObjects(context.Background(), srcBucket, comparePrefix, "", 0, "")
 	if err != nil {
-		return outErr("failed to list source bucket", err)
+		return nil, nil, outErr("failed to list source bucket", err)
 	}
 
 	dstResult, err := client.ListObjects(context.Background(), dstBucket, comparePrefix, "", 0, "")
 	if err != nil {
-		return outErr("failed to list destination bucket", err)
+		return nil, nil, outErr("failed to list destination bucket", err)
 	}
 
 	srcMap := make(map[string]int64, len(srcResult.Items))
@@ -78,6 +96,12 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		dstMap[obj.Key] = obj.Size
 	}
 
+	return srcMap, dstMap, nil
+}
+
+// compareDiffBuckets classifies keys as only-in-source, only-in-dest,
+// different-size, or same.
+func compareDiffBuckets(srcMap, dstMap map[string]int64) CompareResult {
 	result := CompareResult{}
 
 	for key, srcSize := range srcMap {
@@ -97,38 +121,39 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return outPayload("Comparison complete", func() any {
-		return result
-	}, func() {
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	return result
+}
 
-		if len(result.OnlyInSource) > 0 {
-			fmt.Fprintln(w, "ONLY IN SOURCE\tSIZE")
-			for _, key := range result.OnlyInSource {
-				fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(srcMap[key]))
-			}
-			fmt.Fprintln(w)
+// renderCompareResult prints the tabular comparison report and summary line.
+func renderCompareResult(result CompareResult, srcMap, dstMap map[string]int64) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	if len(result.OnlyInSource) > 0 {
+		fmt.Fprintln(w, "ONLY IN SOURCE\tSIZE")
+		for _, key := range result.OnlyInSource {
+			fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(srcMap[key]))
 		}
+		fmt.Fprintln(w)
+	}
 
-		if len(result.OnlyInDest) > 0 {
-			fmt.Fprintln(w, "ONLY IN DEST\tSIZE")
-			for _, key := range result.OnlyInDest {
-				fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(dstMap[key]))
-			}
-			fmt.Fprintln(w)
+	if len(result.OnlyInDest) > 0 {
+		fmt.Fprintln(w, "ONLY IN DEST\tSIZE")
+		for _, key := range result.OnlyInDest {
+			fmt.Fprintf(w, "%s\t%s\n", key, utils.FormatBytes(dstMap[key]))
 		}
+		fmt.Fprintln(w)
+	}
 
-		if len(result.DifferentSize) > 0 {
-			fmt.Fprintln(w, "DIFFERENT SIZE\tSOURCE\tDEST")
-			for _, d := range result.DifferentSize {
-				fmt.Fprintf(w, "%s\t%s\t%s\n", d.Key, utils.FormatBytes(d.SourceSize), utils.FormatBytes(d.DestSize))
-			}
-			fmt.Fprintln(w)
+	if len(result.DifferentSize) > 0 {
+		fmt.Fprintln(w, "DIFFERENT SIZE\tSOURCE\tDEST")
+		for _, d := range result.DifferentSize {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", d.Key, utils.FormatBytes(d.SourceSize), utils.FormatBytes(d.DestSize))
 		}
+		fmt.Fprintln(w)
+	}
 
-		w.Flush()
+	w.Flush()
 
-		printInfo("Summary: %d only in source, %d only in dest, %d different size, %d same",
-			len(result.OnlyInSource), len(result.OnlyInDest), len(result.DifferentSize), len(result.Same))
-	})
+	printInfo("Summary: %d only in source, %d only in dest, %d different size, %d same",
+		len(result.OnlyInSource), len(result.OnlyInDest), len(result.DifferentSize), len(result.Same))
 }
