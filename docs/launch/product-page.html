@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  TASK-010 artifact: /cosmoflare product page for cosmolabs.org.
+  DRAFT — integrate into the cosmolabs.org site (adapt classes/framework
+  to the site's design system; all head metadata, JSON-LD, and copy are
+  final unless the operator edits). Served at https://cosmolabs.org/cosmoflare
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Cosmoflare — The whole Cloudflare platform in one Go binary</title>
+  <meta name="description" content="Open-source CLI and Go library for the full Cloudflare developer platform: R2, DNS, Zones, SSL, WAF, D1, KV, Queues and more. Single static binary, --json on every command, built-in MCP server that is read-only by default.">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CosmoLabs">
+  <meta property="og:title" content="Cosmoflare — The whole Cloudflare platform in one Go binary">
+  <meta property="og:description" content="Open-source CLI + Go library for 22 Cloudflare services. No Node.js. JSON on every command. Agent-safe MCP by default.">
+  <meta property="og:url" content="https://cosmolabs.org/cosmoflare">
+  <!-- TODO(site): 1200x630 social card at /img/cosmoflare-og.png (repo social preview can be reused) -->
+  <meta property="og:image" content="https://cosmolabs.org/img/cosmoflare-og.png">
+
+  <!-- Twitter/X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cosmoflare — The whole Cloudflare platform in one Go binary">
+  <meta name="twitter:description" content="Open-source CLI + Go library for 22 Cloudflare services. No Node.js. JSON everywhere. Agent-safe MCP.">
+  <meta name="twitter:image" content="https://cosmolabs.org/img/cosmoflare-og.png">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://cosmolabs.org/cosmoflare">
+
+  <!-- JSON-LD: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Cosmoflare",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Linux, Windows",
+    "softwareVersion": "0.28.0",
+    "description": "Open-source CLI and Go library for the full Cloudflare developer platform: R2, DNS, Zones, SSL/TLS, Cache, WAF, D1, KV, Queues, Images, Stream and more. Single static Go binary with JSON output on every command and a built-in, read-only-by-default MCP server.",
+    "url": "https://cosmolabs.org/cosmoflare",
+    "downloadUrl": "https://github.com/CosmoLabs-org/cosmoflare/releases",
+    "codeRepository": "https://github.com/CosmoLabs-org/cosmoflare",
+    "programmingLanguage": "Go",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "CosmoLabs", "url": "https://cosmolabs.org" }
+  }
+  </script>
+
+  <!-- JSON-LD: Breadcrumb -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "CosmoLabs", "item": "https://cosmolabs.org" },
+      { "@type": "ListItem", "position": 2, "name": "Cosmoflare", "item": "https://cosmolabs.org/cosmoflare" }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Cosmoflare</h1>
+      <p class="tagline">The whole Cloudflare platform in one Go binary.</p>
+      <p>
+        Open-source CLI and library for R2, DNS, Zones, SSL/TLS, Cache, WAF,
+        D1, KV, Queues, Pages, Images, Stream and 10+ more services.
+        No Node.js. <code>--json</code> on every command. A built-in MCP
+        server that is read-only until you say otherwise.
+      </p>
+      <p class="cta">
+        <code>go install github.com/CosmoLabs-org/cosmoflare@latest</code>
+      </p>
+      <p class="cta-links">
+        <a href="https://github.com/CosmoLabs-org/cosmoflare">GitHub</a> ·
+        <a href="https://github.com/CosmoLabs-org/cosmoflare/blob/master/docs/USAGE.md">Docs</a> ·
+        <a href="https://github.com/CosmoLabs-org/cosmoflare/blob/master/docs/vs-wrangler.md">vs Wrangler</a>
+      </p>
+    </section>
+
+    <section class="features">
+      <h2>Why Cosmoflare</h2>
+      <ul>
+        <li><strong>Full platform, one binary.</strong> 22 Cloudflare services from a single ~37&nbsp;MB static executable — zero runtime dependencies.</li>
+        <li><strong>Scriptable by design.</strong> JSON output with one envelope shape and deterministic exit codes on every command.</li>
+        <li><strong>Agent-safe.</strong> The built-in MCP server exposes 140+ tools, read-only by default; mutations need an explicit allow switch, and uploads can be capped by bucket allowlist, key patterns and size limits.</li>
+        <li><strong>Actionable errors.</strong> An embedded knowledge layer decodes Cloudflare API errors into causes and fixes.</li>
+        <li><strong>Migrates both ways.</strong> Import your <code>wrangler.toml</code>; export Terraform for the road to IaC.</li>
+        <li><strong>A library underneath.</strong> <code>pkg/cosmoflare</code> is a stable public Go API — the CLI, the MCP server and our desktop app all wrap it.</li>
+      </ul>
+    </section>
+
+    <section class="quickstart">
+      <h2>Quick start</h2>
+      <pre><code>export CLOUDFLARE_API_TOKEN="your-token"
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+
+cosmoflare zone list --json
+cosmoflare dns create ZONE_ID --type A --name app --content 1.2.3.4
+cosmoflare object put my-bucket ./file.txt --key uploads/file.txt
+cosmoflare object presign my-bucket uploads/file.txt --expires 1h</code></pre>
+    </section>
+
+    <section class="license">
+      <h2>Free and open source</h2>
+      <p>
+        The CLI and Go library are MIT-licensed. A desktop dashboard and a
+        mobile companion app — built on the same core — are in development.
+      </p>
+    </section>
+  </main>
+  <footer>
+    <p>Built by <a href="https://cosmolabs.org">CosmoLabs</a>. Not affiliated with Cloudflare.</p>
+  </footer>
+</body>
+</html>
