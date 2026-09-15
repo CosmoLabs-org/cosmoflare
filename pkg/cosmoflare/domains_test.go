@@ -126,35 +126,45 @@ func TestClassifySSLStatus(t *testing.T) {
 // FormatDomainTable
 // ---------------------------------------------------------------------------
 
-func TestFormatDomainTable(t *testing.T) {
-	t.Run("nil input returns sentinel string", func(t *testing.T) {
-		got := FormatDomainTable(nil)
-		if got != "No domains found" {
-			t.Errorf("FormatDomainTable(nil) = %q; want %q", got, "No domains found")
-		}
-	})
+const (
+	// domainTableLongName exceeds the 25-char truncation threshold.
+	domainTableLongName = "this-is-a-very-long-domain-name-that-exceeds-25-chars.example.com"
+	// domainTableExact25 is exactly 25 chars and must NOT be truncated.
+	domainTableExact25 = "1234567890123456789012345"
+)
 
-	t.Run("empty slice returns sentinel string", func(t *testing.T) {
-		got := FormatDomainTable([]*DomainStatus{})
-		if got != "No domains found" {
-			t.Errorf("FormatDomainTable([]) = %q; want %q", got, "No domains found")
-		}
-	})
-
-	t.Run("output contains all header columns", func(t *testing.T) {
-		domains := []*DomainStatus{
+// formatDomainTableTests drives TestFormatDomainTable; it lives at package
+// level so the test function stays under the funlen limit. Coverage and
+// assertions are identical to the pre-split inline subtests.
+var formatDomainTableTests = []struct {
+	name        string
+	domains     []*DomainStatus
+	contains    []string
+	notContains []string
+}{
+	{
+		name:        "nil input returns sentinel string",
+		domains:     nil,
+		contains:    []string{"No domains found"},
+		notContains: nil,
+	},
+	{
+		name:        "empty slice returns sentinel string",
+		domains:     []*DomainStatus{},
+		contains:    []string{"No domains found"},
+		notContains: nil,
+	},
+	{
+		name: "output contains all header columns",
+		domains: []*DomainStatus{
 			{Zone: &Zone{Name: "example.com", Status: "active"}, NSStatus: "cloudflare"},
-		}
-		got := FormatDomainTable(domains)
-		for _, col := range []string{"DOMAIN", "STATUS", "DNS", "SSL", "HEALTH", "RECORDS", "NS"} {
-			if !strings.Contains(got, col) {
-				t.Errorf("expected header column %q in output:\n%s", col, got)
-			}
-		}
-	})
-
-	t.Run("output contains domain data values", func(t *testing.T) {
-		domains := []*DomainStatus{
+		},
+		contains:    []string{"DOMAIN", "STATUS", "DNS", "SSL", "HEALTH", "RECORDS", "NS"},
+		notContains: nil,
+	},
+	{
+		name: "output contains domain data values",
+		domains: []*DomainStatus{
 			{
 				Zone:         &Zone{Name: "example.com", Status: "active"},
 				DNSStatus:    "ok",
@@ -163,295 +173,248 @@ func TestFormatDomainTable(t *testing.T) {
 				RecordCount:  42,
 				NSStatus:     "cloudflare",
 			},
-		}
-		got := FormatDomainTable(domains)
-		for _, val := range []string{"example.com", "active", "ok", "valid", "up", "42", "cloudflare"} {
-			if !strings.Contains(got, val) {
-				t.Errorf("expected value %q in output:\n%s", val, got)
-			}
-		}
-	})
-
-	t.Run("paused zone shows paused status overriding zone status", func(t *testing.T) {
-		domains := []*DomainStatus{
+		},
+		contains:    []string{"example.com", "active", "ok", "valid", "up", "42", "cloudflare"},
+		notContains: nil,
+	},
+	{
+		name: "paused zone shows paused status overriding zone status",
+		domains: []*DomainStatus{
 			{
 				Zone:     &Zone{Name: "paused.com", Status: "active", Paused: true},
 				NSStatus: "external",
 			},
-		}
-		got := FormatDomainTable(domains)
-		if !strings.Contains(got, "paused") {
-			t.Errorf("expected 'paused' status for paused zone in output:\n%s", got)
-		}
-	})
-
-	t.Run("multiple domains all appear in output", func(t *testing.T) {
-		domains := []*DomainStatus{
+		},
+		contains:    []string{"paused"},
+		notContains: nil,
+	},
+	{
+		name: "multiple domains all appear in output",
+		domains: []*DomainStatus{
 			{Zone: &Zone{Name: "alpha.com", Status: "active"}, NSStatus: "cloudflare"},
 			{Zone: &Zone{Name: "beta.org", Status: "active"}, NSStatus: "external"},
 			{Zone: &Zone{Name: "gamma.io", Status: "inactive"}, NSStatus: "external"},
-		}
-		got := FormatDomainTable(domains)
-		for _, name := range []string{"alpha.com", "beta.org", "gamma.io"} {
-			if !strings.Contains(got, name) {
-				t.Errorf("expected domain %q in output:\n%s", name, got)
-			}
-		}
-	})
-
-	t.Run("domain name longer than 25 chars is truncated with ellipsis", func(t *testing.T) {
-		longName := "this-is-a-very-long-domain-name-that-exceeds-25-chars.example.com"
-		domains := []*DomainStatus{
-			{Zone: &Zone{Name: longName, Status: "active"}, NSStatus: "external"},
-		}
-		got := FormatDomainTable(domains)
-		if strings.Contains(got, longName) {
-			t.Errorf("expected long domain name to be truncated, but full name appears in:\n%s", got)
-		}
-		if !strings.Contains(got, "...") {
-			t.Errorf("expected '...' truncation marker in:\n%s", got)
-		}
-	})
-
-	t.Run("domain name of exactly 25 chars is not truncated", func(t *testing.T) {
-		name := "1234567890123456789012345" // exactly 25 chars
-		domains := []*DomainStatus{
-			{Zone: &Zone{Name: name, Status: "active"}, NSStatus: "external"},
-		}
-		got := FormatDomainTable(domains)
-		if !strings.Contains(got, name) {
-			t.Errorf("25-char name should not be truncated, output:\n%s", got)
-		}
-	})
-
-	t.Run("record count of zero is rendered", func(t *testing.T) {
-		domains := []*DomainStatus{
+		},
+		contains:    []string{"alpha.com", "beta.org", "gamma.io"},
+		notContains: nil,
+	},
+	{
+		name: "domain name longer than 25 chars is truncated with ellipsis",
+		domains: []*DomainStatus{
+			{Zone: &Zone{Name: domainTableLongName, Status: "active"}, NSStatus: "external"},
+		},
+		contains:    []string{"..."},
+		notContains: []string{domainTableLongName},
+	},
+	{
+		name: "domain name of exactly 25 chars is not truncated",
+		domains: []*DomainStatus{
+			{Zone: &Zone{Name: domainTableExact25, Status: "active"}, NSStatus: "external"},
+		},
+		contains:    []string{domainTableExact25},
+		notContains: nil,
+	},
+	{
+		name: "record count of zero is rendered",
+		domains: []*DomainStatus{
 			{
 				Zone:        &Zone{Name: "empty.com", Status: "active"},
 				RecordCount: 0,
 				NSStatus:    "external",
 			},
+		},
+		contains:    []string{"0"},
+		notContains: nil,
+	},
+}
+
+// assertFormattedOutput checks every want string is present and every banned
+// string is absent, with the same failure messages the inline subtests used.
+func assertFormattedOutput(t *testing.T, got string, contains, notContains []string) {
+	t.Helper()
+	for _, want := range contains {
+		if !strings.Contains(got, want) {
+			t.Errorf("expected %q in output:\n%s", want, got)
 		}
-		got := FormatDomainTable(domains)
-		if !strings.Contains(got, "0") {
-			t.Errorf("expected '0' record count in output:\n%s", got)
+	}
+	for _, banned := range notContains {
+		if strings.Contains(got, banned) {
+			t.Errorf("unexpected %q in output:\n%s", banned, got)
 		}
-	})
+	}
+}
+
+func TestFormatDomainTable(t *testing.T) {
+	for _, tt := range formatDomainTableTests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertFormattedOutput(t, FormatDomainTable(tt.domains), tt.contains, tt.notContains)
+		})
+	}
 }
 
 // ---------------------------------------------------------------------------
 // FormatDomainDetail
 // ---------------------------------------------------------------------------
 
-func TestFormatDomainDetail(t *testing.T) {
-	t.Run("zone name and status are always present", func(t *testing.T) {
-		d := &DomainDetail{
+// formatDomainDetailTests drives TestFormatDomainDetail; it lives at package
+// level so the test function stays under the funlen limit. Coverage and
+// assertions are identical to the pre-split inline subtests.
+var formatDomainDetailTests = []struct {
+	name        string
+	detail      *DomainDetail
+	contains    []string
+	notContains []string
+}{
+	{
+		name: "zone name and status are always present",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "example.com") {
-			t.Errorf("expected zone name in output: %q", got)
-		}
-		if !strings.Contains(got, "active") {
-			t.Errorf("expected zone status in output: %q", got)
-		}
-	})
-
-	t.Run("nameservers line shown when present", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"example.com", "active"},
+		notContains: nil,
+	},
+	{
+		name: "nameservers line shown when present",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			NameServers: []string{"anita.ns.cloudflare.com", "bob.ns.cloudflare.com"},
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "Nameservers") {
-			t.Errorf("expected 'Nameservers' label in output: %q", got)
-		}
-		if !strings.Contains(got, "anita.ns.cloudflare.com") {
-			t.Errorf("expected first nameserver in output: %q", got)
-		}
-		if !strings.Contains(got, "bob.ns.cloudflare.com") {
-			t.Errorf("expected second nameserver in output: %q", got)
-		}
-	})
-
-	t.Run("nameservers line absent when nil", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"Nameservers", "anita.ns.cloudflare.com", "bob.ns.cloudflare.com"},
+		notContains: nil,
+	},
+	{
+		name: "nameservers line absent when nil",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			NameServers: nil,
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "Nameservers") {
-			t.Errorf("expected no 'Nameservers' line when nil, got: %q", got)
-		}
-	})
-
-	t.Run("nameservers line absent when empty slice", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"Nameservers"},
+	},
+	{
+		name: "nameservers line absent when empty slice",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			NameServers: []string{},
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "Nameservers") {
-			t.Errorf("expected no 'Nameservers' line when empty slice, got: %q", got)
-		}
-	})
-
-	t.Run("records line shows count and types when map has entries", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"Nameservers"},
+	},
+	{
+		name: "records line shows count and types when map has entries",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone:        &Zone{Name: "example.com", Status: "active"},
 				RecordCount: 15,
 			},
 			RecordTypes: map[string]int{"A": 10, "CNAME": 5},
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "Records") {
-			t.Errorf("expected 'Records' label in output: %q", got)
-		}
-		if !strings.Contains(got, "15") {
-			t.Errorf("expected total record count '15' in output: %q", got)
-		}
-		if !strings.Contains(got, "A") {
-			t.Errorf("expected record type 'A' in output: %q", got)
-		}
-		if !strings.Contains(got, "CNAME") {
-			t.Errorf("expected record type 'CNAME' in output: %q", got)
-		}
-	})
-
-	t.Run("records line absent when map is empty", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"Records", "15", "A", "CNAME"},
+		notContains: nil,
+	},
+	{
+		name: "records line absent when map is empty",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			RecordTypes: map[string]int{},
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "Records") {
-			t.Errorf("expected no 'Records' line when map is empty, got: %q", got)
-		}
-	})
-
-	t.Run("records line absent when map is nil", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"Records"},
+	},
+	{
+		name: "records line absent when map is nil",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			RecordTypes: nil,
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "Records") {
-			t.Errorf("expected no 'Records' line when map is nil, got: %q", got)
-		}
-	})
-
-	t.Run("SSL line shown when SSLMode set", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"Records"},
+	},
+	{
+		name: "SSL line shown when SSLMode set",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			SSLMode: "full_strict",
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "SSL") {
-			t.Errorf("expected 'SSL' label in output: %q", got)
-		}
-		if !strings.Contains(got, "full_strict") {
-			t.Errorf("expected SSL mode value in output: %q", got)
-		}
-	})
-
-	t.Run("SSL line absent when SSLMode is empty", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"SSL", "full_strict"},
+		notContains: nil,
+	},
+	{
+		name: "SSL line absent when SSLMode is empty",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			SSLMode: "",
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "SSL:") {
-			t.Errorf("expected no SSL line when mode empty, got: %q", got)
-		}
-	})
-
-	t.Run("SSL expiry date rendered when set", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"SSL:"},
+	},
+	{
+		name: "SSL expiry date rendered when set",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			SSLMode:   "full",
 			SSLExpiry: "2099-12-31",
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "2099-12-31") {
-			t.Errorf("expected SSL expiry date '2099-12-31' in output: %q", got)
-		}
-		if !strings.Contains(got, "expires") {
-			t.Errorf("expected 'expires' text in output: %q", got)
-		}
-	})
-
-	t.Run("SSL line without expiry when SSLExpiry empty", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"2099-12-31", "expires"},
+		notContains: nil,
+	},
+	{
+		name: "SSL line without expiry when SSLExpiry empty",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone: &Zone{Name: "example.com", Status: "active"},
 			},
 			SSLMode:   "flexible",
 			SSLExpiry: "",
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "flexible") {
-			t.Errorf("expected SSL mode 'flexible' in output: %q", got)
-		}
-		if strings.Contains(got, "expires") {
-			t.Errorf("expected no 'expires' text when SSLExpiry empty, got: %q", got)
-		}
-	})
-
-	t.Run("health line shown when ResponseTime set", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"flexible"},
+		notContains: []string{"expires"},
+	},
+	{
+		name: "health line shown when ResponseTime set",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone:         &Zone{Name: "example.com", Status: "active"},
 				HealthStatus: "up",
 			},
 			ResponseTime: "42ms",
-		}
-		got := FormatDomainDetail(d)
-		if !strings.Contains(got, "Health") {
-			t.Errorf("expected 'Health' label in output: %q", got)
-		}
-		if !strings.Contains(got, "up") {
-			t.Errorf("expected health status 'up' in output: %q", got)
-		}
-		if !strings.Contains(got, "42ms") {
-			t.Errorf("expected response time '42ms' in output: %q", got)
-		}
-	})
-
-	t.Run("health line absent when ResponseTime empty", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    []string{"Health", "up", "42ms"},
+		notContains: nil,
+	},
+	{
+		name: "health line absent when ResponseTime empty",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone:         &Zone{Name: "example.com", Status: "active"},
 				HealthStatus: "unknown",
 			},
 			ResponseTime: "",
-		}
-		got := FormatDomainDetail(d)
-		if strings.Contains(got, "Health:") {
-			t.Errorf("expected no Health line when ResponseTime empty, got: %q", got)
-		}
-	})
-
-	t.Run("full detail with all fields populates complete output", func(t *testing.T) {
-		d := &DomainDetail{
+		},
+		contains:    nil,
+		notContains: []string{"Health:"},
+	},
+	{
+		name: "full detail with all fields populates complete output",
+		detail: &DomainDetail{
 			DomainStatus: DomainStatus{
 				Zone:         &Zone{Name: "full.example.com", Status: "active"},
 				HealthStatus: "up",
@@ -462,20 +425,24 @@ func TestFormatDomainDetail(t *testing.T) {
 			SSLMode:      "full",
 			SSLExpiry:    time.Now().AddDate(0, 3, 0).Format("2006-01-02"),
 			ResponseTime: "142ms",
-		}
-		got := FormatDomainDetail(d)
-		for _, want := range []string{
+		},
+		contains: []string{
 			"full.example.com", "active",
 			"Nameservers", "anna.ns.cloudflare.com",
 			"Records", "8",
 			"SSL", "full",
 			"Health", "up", "142ms",
-		} {
-			if !strings.Contains(got, want) {
-				t.Errorf("expected %q in full detail output:\n%s", want, got)
-			}
-		}
-	})
+		},
+		notContains: nil,
+	},
+}
+
+func TestFormatDomainDetail(t *testing.T) {
+	for _, tt := range formatDomainDetailTests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertFormattedOutput(t, FormatDomainDetail(tt.detail), tt.contains, tt.notContains)
+		})
+	}
 }
 
 // ---------------------------------------------------------------------------
