@@ -11,51 +11,124 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
+
+// firstRunSteps describes the sequence a new user experiences on first launch.
+var firstRunSteps = []struct {
+	step        string
+	description string
+	keyAction   string
+	expected    string
+	timeout     time.Duration
+}{
+	{
+		step:        "Initial startup",
+		description: "Dashboard shows with welcome state",
+		keyAction:   "none",
+		expected:    "Loading R2Go2 Dashboard",
+		timeout:     time.Second * 3,
+	},
+	{
+		step:        "Help discovery",
+		description: "User discovers help via F1",
+		keyAction:   "F1",
+		expected:    "R2Go2 Dashboard Help",
+		timeout:     time.Millisecond * 500,
+	},
+	{
+		step:        "Help navigation",
+		description: "User reads through help content",
+		keyAction:   "↓",
+		expected:    "Navigation:",
+		timeout:     time.Millisecond * 100,
+	},
+	{
+		step:        "Help dismissal",
+		description: "User dismisses help to return to dashboard",
+		keyAction:   "Esc",
+		expected:    "Dashboard view",
+		timeout:     time.Millisecond * 200,
+	},
+}
+
+// emptyStateScenarios describes how the application handles empty states.
+var emptyStateScenarios = []struct {
+	state      string
+	component  string
+	message    string
+	actionable bool
+}{
+	{
+		state:      "No buckets configured",
+		component:  "Bucket list",
+		message:    "No buckets found. Press 'C' to create your first bucket.",
+		actionable: true,
+	},
+	{
+		state:      "No objects in bucket",
+		component:  "Object list",
+		message:    "No bucket selected or bucket is empty",
+		actionable: true,
+	},
+	{
+		state:      "No upload queue",
+		component:  "Upload interface",
+		message:    "No files in upload queue",
+		actionable: true,
+	},
+	{
+		state:      "No recent activity",
+		component:  "Monitoring",
+		message:    "No recent activity",
+		actionable: false,
+	},
+}
+
+// progressiveFeatures describes how complexity is revealed progressively.
+var progressiveFeatures = []struct {
+	feature    string
+	discovery  string
+	complexity string
+	required   bool
+}{
+	{
+		feature:    "Basic navigation",
+		discovery:  "Immediate - visible on first load",
+		complexity: "Simple - arrow keys and enter",
+		required:   true,
+	},
+	{
+		feature:    "Section switching",
+		discovery:  "Immediate - number keys 1-6",
+		complexity: "Simple - direct access to sections",
+		required:   true,
+	},
+	{
+		feature:    "Quick actions",
+		discovery:  "Discoverable - keyboard shortcuts",
+		complexity: "Medium - multiple key combinations",
+		required:   false,
+	},
+	{
+		feature:    "Advanced search",
+		discovery:  "Discoverable - '/' key",
+		complexity: "Advanced - filtering and sorting",
+		required:   false,
+	},
+	{
+		feature:    "Theme customization",
+		discovery:  "Discoverable - settings menu",
+		complexity: "Advanced - multiple configuration options",
+		required:   false,
+	},
+}
 
 // TestFirstRunExperience tests the complete first-time user experience
 func TestFirstRunExperience(t *testing.T) {
 	t.Run("Fresh Installation Flow", func(t *testing.T) {
 		// Test the sequence a new user would experience
-		firstRunSteps := []struct {
-			step        string
-			description string
-			keyAction   string
-			expected    string
-			timeout     time.Duration
-		}{
-			{
-				step:        "Initial startup",
-				description: "Dashboard shows with welcome state",
-				keyAction:   "none",
-				expected:    "Loading R2Go2 Dashboard",
-				timeout:     time.Second * 3,
-			},
-			{
-				step:        "Help discovery",
-				description: "User discovers help via F1",
-				keyAction:   "F1",
-				expected:    "R2Go2 Dashboard Help",
-				timeout:     time.Millisecond * 500,
-			},
-			{
-				step:        "Help navigation",
-				description: "User reads through help content",
-				keyAction:   "↓",
-				expected:    "Navigation:",
-				timeout:     time.Millisecond * 100,
-			},
-			{
-				step:        "Help dismissal",
-				description: "User dismisses help to return to dashboard",
-				keyAction:   "Esc",
-				expected:    "Dashboard view",
-				timeout:     time.Millisecond * 200,
-			},
-		}
-
 		for _, step := range firstRunSteps {
 			t.Run("Step: "+step.step, func(t *testing.T) {
 				assert.NotEmpty(t, step.step, "Step should have name")
@@ -84,38 +157,6 @@ func TestFirstRunExperience(t *testing.T) {
 
 	t.Run("Empty State Handling", func(t *testing.T) {
 		// Test how the application handles empty states
-		emptyStateScenarios := []struct {
-			state      string
-			component  string
-			message    string
-			actionable bool
-		}{
-			{
-				state:      "No buckets configured",
-				component:  "Bucket list",
-				message:    "No buckets found. Press 'C' to create your first bucket.",
-				actionable: true,
-			},
-			{
-				state:      "No objects in bucket",
-				component:  "Object list",
-				message:    "No bucket selected or bucket is empty",
-				actionable: true,
-			},
-			{
-				state:      "No upload queue",
-				component:  "Upload interface",
-				message:    "No files in upload queue",
-				actionable: true,
-			},
-			{
-				state:      "No recent activity",
-				component:  "Monitoring",
-				message:    "No recent activity",
-				actionable: false,
-			},
-		}
-
 		for _, scenario := range emptyStateScenarios {
 			t.Run("Empty state: "+scenario.state, func(t *testing.T) {
 				assert.NotEmpty(t, scenario.state, "State description should not be empty")
@@ -132,44 +173,6 @@ func TestFirstRunExperience(t *testing.T) {
 
 	t.Run("Progressive Disclosure", func(t *testing.T) {
 		// Test that complexity is revealed progressively
-		progressiveFeatures := []struct {
-			feature      string
-			discovery    string
-			complexity   string
-			required     bool
-		}{
-			{
-				feature:    "Basic navigation",
-				discovery:  "Immediate - visible on first load",
-				complexity: "Simple - arrow keys and enter",
-				required:   true,
-			},
-			{
-				feature:    "Section switching",
-				discovery:  "Immediate - number keys 1-6",
-				complexity: "Simple - direct access to sections",
-				required:   true,
-			},
-			{
-				feature:    "Quick actions",
-				discovery:  "Discoverable - keyboard shortcuts",
-				complexity: "Medium - multiple key combinations",
-				required:   false,
-			},
-			{
-				feature:    "Advanced search",
-				discovery:  "Discoverable - '/' key",
-				complexity: "Advanced - filtering and sorting",
-				required:   false,
-			},
-			{
-				feature:    "Theme customization",
-				discovery:  "Discoverable - settings menu",
-				complexity: "Advanced - multiple configuration options",
-				required:   false,
-			},
-		}
-
 		for _, feature := range progressiveFeatures {
 			t.Run("Progressive: "+feature.feature, func(t *testing.T) {
 				assert.NotEmpty(t, feature.feature, "Feature should have name")
@@ -186,42 +189,97 @@ func TestFirstRunExperience(t *testing.T) {
 	})
 }
 
+// helpContexts describes contextually relevant help per section.
+var helpContexts = []struct {
+	section     string
+	helpContent string
+	relevant    bool
+	actions     []string
+}{
+	{
+		section:     "Overview",
+		helpContent: "Dashboard summary and quick actions",
+		relevant:    true,
+		actions:     []string{"Create bucket", "Monitor mode", "Settings"},
+	},
+	{
+		section:     "Buckets",
+		helpContent: "Bucket management operations",
+		relevant:    true,
+		actions:     []string{"Create", "Delete", "Select", "View details"},
+	},
+	{
+		section:     "Upload",
+		helpContent: "File upload instructions",
+		relevant:    true,
+		actions:     []string{"Add files", "Start upload", "Monitor progress"},
+	},
+	{
+		section:     "Monitoring",
+		helpContent: "Real-time statistics interpretation",
+		relevant:    true,
+		actions:     []string{"View metrics", "Export data", "Set alerts"},
+	},
+}
+
+// errorGuidanceScenarios describes error messages with clear guidance.
+var errorGuidanceScenarios = []struct {
+	errorType   string
+	userMessage string
+	guidances   []string
+	recovery    string
+}{
+	{
+		errorType:   "Connection timeout",
+		userMessage: "Failed to connect to Cloudflare R2",
+		guidances:   []string{"Check internet connection", "Verify credentials", "Try again"},
+		recovery:    "Press F5 to retry or Esc to continue",
+	},
+	{
+		errorType:   "Invalid credentials",
+		userMessage: "Authentication failed",
+		guidances:   []string{"Check API token", "Verify account ID", "Run setup wizard"},
+		recovery:    "Press 'P' to configure profiles",
+	},
+	{
+		errorType:   "File upload failed",
+		userMessage: "Upload interrupted",
+		guidances:   []string{"Check file size limits", "Verify file permissions", "Check storage space"},
+		recovery:    "Press 'U' to retry upload",
+	},
+}
+
+// helpLevels describes help detail per user experience level.
+var helpLevels = []struct {
+	experience  string
+	helpDepth   string
+	features    []string
+	assumptions []string
+}{
+	{
+		experience:  "First-time user",
+		helpDepth:   "Basic - essential functions only",
+		features:    []string{"Navigation", "Basic operations", "Help access"},
+		assumptions: []string{"No prior TUI experience", "Needs clear instructions"},
+	},
+	{
+		experience:  "Intermediate user",
+		helpDepth:   "Standard - commonly used features",
+		features:    []string{"Shortcuts", "Advanced navigation", "Basic configuration"},
+		assumptions: []string{"Familiar with TUI concepts", "Knows basic operations"},
+	},
+	{
+		experience:  "Advanced user",
+		helpDepth:   "Comprehensive - all features and tips",
+		features:    []string{"Advanced configuration", "Automation", "Performance tips"},
+		assumptions: []string{"Experienced with CLI tools", "Seeks efficiency"},
+	},
+}
+
 // TestUserGuidance tests user guidance and help systems
 func TestUserGuidance(t *testing.T) {
 	t.Run("Help System Integration", func(t *testing.T) {
 		// Test that help is contextually relevant
-		helpContexts := []struct {
-			section      string
-			helpContent  string
-			relevant     bool
-			actions      []string
-		}{
-			{
-				section:     "Overview",
-				helpContent: "Dashboard summary and quick actions",
-				relevant:    true,
-				actions:     []string{"Create bucket", "Monitor mode", "Settings"},
-			},
-			{
-				section:     "Buckets",
-				helpContent: "Bucket management operations",
-				relevant:    true,
-				actions:     []string{"Create", "Delete", "Select", "View details"},
-			},
-			{
-				section:     "Upload",
-				helpContent: "File upload instructions",
-				relevant:    true,
-				actions:     []string{"Add files", "Start upload", "Monitor progress"},
-			},
-			{
-				section:     "Monitoring",
-				helpContent: "Real-time statistics interpretation",
-				relevant:    true,
-				actions:     []string{"View metrics", "Export data", "Set alerts"},
-			},
-		}
-
 		for _, context := range helpContexts {
 			t.Run("Help context: "+context.section, func(t *testing.T) {
 				assert.NotEmpty(t, context.section, "Section should not be empty")
@@ -239,33 +297,7 @@ func TestUserGuidance(t *testing.T) {
 
 	t.Run("Error Message Guidance", func(t *testing.T) {
 		// Test that error messages provide clear guidance
-		errorScenarios := []struct {
-			errorType      string
-			userMessage    string
-			 guidances      []string
-			recovery       string
-		}{
-			{
-				errorType:   "Connection timeout",
-				userMessage: "Failed to connect to Cloudflare R2",
-				guidances:   []string{"Check internet connection", "Verify credentials", "Try again"},
-				recovery:    "Press F5 to retry or Esc to continue",
-			},
-			{
-				errorType:   "Invalid credentials",
-				userMessage: "Authentication failed",
-				guidances:   []string{"Check API token", "Verify account ID", "Run setup wizard"},
-				recovery:    "Press 'P' to configure profiles",
-			},
-			{
-				errorType:   "File upload failed",
-				userMessage: "Upload interrupted",
-				guidances:   []string{"Check file size limits", "Verify file permissions", "Check storage space"},
-				recovery:    "Press 'U' to retry upload",
-			},
-		}
-
-		for _, scenario := range errorScenarios {
+		for _, scenario := range errorGuidanceScenarios {
 			t.Run("Error guidance: "+scenario.errorType, func(t *testing.T) {
 				assert.NotEmpty(t, scenario.errorType, "Error type should not be empty")
 				assert.NotEmpty(t, scenario.userMessage, "User message should not be empty")
@@ -281,32 +313,6 @@ func TestUserGuidance(t *testing.T) {
 
 	t.Run("Progressive Help", func(t *testing.T) {
 		// Test that help becomes more detailed with user experience
-		helpLevels := []struct {
-			experience   string
-			helpDepth    string
-			features     []string
-			assumptions  []string
-		}{
-			{
-				experience: "First-time user",
-				helpDepth:  "Basic - essential functions only",
-				features:   []string{"Navigation", "Basic operations", "Help access"},
-				assumptions: []string{"No prior TUI experience", "Needs clear instructions"},
-			},
-			{
-				experience: "Intermediate user",
-				helpDepth:  "Standard - commonly used features",
-				features:   []string{"Shortcuts", "Advanced navigation", "Basic configuration"},
-				assumptions: []string{"Familiar with TUI concepts", "Knows basic operations"},
-			},
-			{
-				experience: "Advanced user",
-				helpDepth:  "Comprehensive - all features and tips",
-				features:   []string{"Advanced configuration", "Automation", "Performance tips"},
-				assumptions: []string{"Experienced with CLI tools", "Seeks efficiency"},
-			},
-		}
-
 		for _, level := range helpLevels {
 			t.Run("Help level: "+level.experience, func(t *testing.T) {
 				assert.NotEmpty(t, level.experience, "Experience level should not be empty")
@@ -322,48 +328,109 @@ func TestUserGuidance(t *testing.T) {
 	})
 }
 
+// productiveSteps describes the complete path from new user to productive user.
+var productiveSteps = []struct {
+	step          string
+	duration      time.Duration
+	description   string
+	successMetric string
+}{
+	{
+		step:          "Initial dashboard load",
+		duration:      time.Second * 3,
+		description:   "User sees initial dashboard",
+		successMetric: "Dashboard renders without errors",
+	},
+	{
+		step:          "Help discovery",
+		duration:      time.Second * 10,
+		description:   "User discovers help system",
+		successMetric: "User can access and navigate help",
+	},
+	{
+		step:          "First navigation",
+		duration:      time.Second * 15,
+		description:   "User navigates between sections",
+		successMetric: "User can reach all 6 sections",
+	},
+	{
+		step:          "Action discovery",
+		duration:      time.Second * 20,
+		description:   "User discovers quick actions",
+		successMetric: "User identifies at least 3 actions",
+	},
+	{
+		step:          "Productive task completion",
+		duration:      time.Minute,
+		description:   "User completes first meaningful task",
+		successMetric: "User successfully creates or manages a bucket",
+	},
+}
+
+// returningUserSteps describes the experience for returning users.
+var returningUserSteps = []struct {
+	step      string
+	fast      bool
+	shortcut  string
+	skippable bool
+}{
+	{
+		step:      "Quick status check",
+		fast:      true,
+		shortcut:  "Overview dashboard",
+		skippable: false,
+	},
+	{
+		step:      "Recent activity review",
+		fast:      true,
+		shortcut:  "Monitoring section",
+		skippable: true,
+	},
+	{
+		step:      "Quick action execution",
+		fast:      true,
+		shortcut:  "Quick action keys",
+		skippable: false,
+	},
+	{
+		step:      "Settings adjustment",
+		fast:      false,
+		shortcut:  "Settings menu",
+		skippable: true,
+	},
+}
+
+// migrationScenarios describes users migrating from other tools.
+var migrationScenarios = []struct {
+	source     string
+	challenges []string
+	features   []string
+	guidance   string
+}{
+	{
+		source:     "AWS S3 CLI",
+		challenges: []string{"Different command structure", "No bulk operations"},
+		features:   []string{"Visual dashboard", "Quick navigation", "Progress tracking"},
+		guidance:   "AWS S3 users will appreciate the visual interface and real-time feedback",
+	},
+	{
+		source:     "Web-based consoles",
+		challenges: []string{"No keyboard shortcuts", "Learning TUI paradigms"},
+		features:   []string{"Keyboard efficiency", "Terminal integration", "Scriptable workflows"},
+		guidance:   "Web console users gain efficiency through keyboard-first interface",
+	},
+	{
+		source:     "Other TUI tools",
+		challenges: []string{"Different keybindings", "Unique workflows"},
+		features:   []string{"Customizable themes", "Section-based navigation", "Help system"},
+		guidance:   "Experienced TUI users will benefit from comprehensive help and customization",
+	},
+}
+
 // TestOnboardingFlows tests various onboarding scenarios
 func TestOnboardingFlows(t *testing.T) {
 	t.Run("Zero-to-Productive Flow", func(t *testing.T) {
 		// Test the complete path from new user to productive user
-		productiveSteps := []struct {
-			step         string
-			duration     time.Duration
-			description  string
-			successMetric string
-		}{
-			{
-				step:          "Initial dashboard load",
-				duration:      time.Second * 3,
-				description:   "User sees initial dashboard",
-				successMetric: "Dashboard renders without errors",
-			},
-			{
-				step:          "Help discovery",
-				duration:      time.Second * 10,
-				description:   "User discovers help system",
-				successMetric: "User can access and navigate help",
-			},
-			{
-				step:          "First navigation",
-				duration:      time.Second * 15,
-				description:   "User navigates between sections",
-				successMetric: "User can reach all 6 sections",
-			},
-			{
-				step:          "Action discovery",
-				duration:      time.Second * 20,
-				description:   "User discovers quick actions",
-				successMetric: "User identifies at least 3 actions",
-			},
-			{
-				step:          "Productive task completion",
-				duration:      time.Minute,
-				description:   "User completes first meaningful task",
-				successMetric: "User successfully creates or manages a bucket",
-			},
-		}
-
 		totalOnboardingTime := time.Duration(0)
 		for _, step := range productiveSteps {
 			totalOnboardingTime += step.duration
@@ -385,38 +452,6 @@ func TestOnboardingFlows(t *testing.T) {
 
 	t.Run("Returning User Experience", func(t *testing.T) {
 		// Test the experience for users returning to the application
-		returningUserSteps := []struct {
-			step        string
-			fast        bool
-			shortcut    string
-			skippable   bool
-		}{
-			{
-				step:      "Quick status check",
-				fast:      true,
-				shortcut:  "Overview dashboard",
-				skippable: false,
-			},
-			{
-				step:      "Recent activity review",
-				fast:      true,
-				shortcut:  "Monitoring section",
-				skippable: true,
-			},
-			{
-				step:      "Quick action execution",
-				fast:      true,
-				shortcut:  "Quick action keys",
-				skippable: false,
-			},
-			{
-				step:      "Settings adjustment",
-				fast:      false,
-				shortcut:  "Settings menu",
-				skippable: true,
-			},
-		}
-
 		for _, step := range returningUserSteps {
 			t.Run("Returning: "+step.step, func(t *testing.T) {
 				assert.NotEmpty(t, step.step, "Step should have name")
@@ -436,32 +471,6 @@ func TestOnboardingFlows(t *testing.T) {
 
 	t.Run("Migration Scenarios", func(t *testing.T) {
 		// Test scenarios where users are migrating from other tools
-		migrationScenarios := []struct {
-			source      string
-			challenges  []string
-			features    []string
-			guidance    string
-		}{
-			{
-				source:     "AWS S3 CLI",
-				challenges: []string{"Different command structure", "No bulk operations"},
-				features:   []string{"Visual dashboard", "Quick navigation", "Progress tracking"},
-				guidance:   "AWS S3 users will appreciate the visual interface and real-time feedback",
-			},
-			{
-				source:     "Web-based consoles",
-				challenges: []string{"No keyboard shortcuts", "Learning TUI paradigms"},
-				features:   []string{"Keyboard efficiency", "Terminal integration", "Scriptable workflows"},
-				guidance:   "Web console users gain efficiency through keyboard-first interface",
-			},
-			{
-				source:     "Other TUI tools",
-				challenges: []string{"Different keybindings", "Unique workflows"},
-				features:   []string{"Customizable themes", "Section-based navigation", "Help system"},
-				guidance:   "Experienced TUI users will benefit from comprehensive help and customization",
-			},
-		}
-
 		for _, scenario := range migrationScenarios {
 			t.Run("Migration from: "+scenario.source, func(t *testing.T) {
 				assert.NotEmpty(t, scenario.source, "Source tool should not be empty")

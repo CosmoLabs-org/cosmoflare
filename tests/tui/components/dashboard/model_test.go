@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tea "github.com/charmbracelet/bubbletea"
 
 	r2tui "github.com/CosmoLabs-org/cosmoflare/internal/tui"
 )
@@ -129,25 +129,63 @@ func TestDashboardMessageHandling(t *testing.T) {
 	}
 }
 
+// dashboardNavKeys lists all expected keyboard navigation keys.
+var dashboardNavKeys = []struct {
+	key         tea.KeyType
+	description string
+}{
+	{tea.KeyUp, "Move up in lists"},
+	{tea.KeyDown, "Move down in lists"},
+	{tea.KeyLeft, "Move to previous section"},
+	{tea.KeyRight, "Move to next section"},
+	{tea.KeyHome, "Jump to beginning"},
+	{tea.KeyEnd, "Jump to end"},
+	{tea.KeyPgUp, "Page up"},
+	{tea.KeyPgDown, "Page down"},
+}
+
+// dashboardCharKeys lists character-based navigation keys.
+var dashboardCharKeys = []struct {
+	char        string
+	description string
+}{
+	{"1", "Jump to Overview"},
+	{"2", "Jump to Buckets"},
+	{"3", "Jump to Objects"},
+	{"4", "Jump to Upload"},
+	{"5", "Jump to Monitoring"},
+	{"6", "Jump to Settings"},
+	{"c", "Create bucket"},
+	{"u", "Upload file"},
+	{"d", "Delete bucket"},
+	{"m", "Start monitoring"},
+	{"s", "Settings"},
+	{"p", "Profiles"},
+	{"/", "Start search"},
+	{"q", "Quit"},
+	{"h", "Help (left navigation)"},
+	{"j", "Down navigation"},
+	{"k", "Up navigation"},
+	{"l", "Right navigation"},
+	{"?", "Toggle help"},
+}
+
+// dashboardFuncKeys lists function keys used for navigation.
+var dashboardFuncKeys = []struct {
+	key         tea.KeyType
+	description string
+}{
+	{tea.KeyF1, "Toggle help"},
+	{tea.KeyRunes, "Jump to section 2"},
+	{tea.KeyF5, "Refresh data"},
+	{tea.KeyF10, "Open settings"},
+}
+
 // TestDashboardNavigation tests navigation patterns
 func TestDashboardNavigation(t *testing.T) {
 	t.Run("Keyboard Navigation Patterns", func(t *testing.T) {
 		// Test all expected navigation keys
-		navigationKeys := []struct {
-			key         tea.KeyType
-			description string
-		}{
-			{tea.KeyUp, "Move up in lists"},
-			{tea.KeyDown, "Move down in lists"},
-			{tea.KeyLeft, "Move to previous section"},
-			{tea.KeyRight, "Move to next section"},
-			{tea.KeyHome, "Jump to beginning"},
-			{tea.KeyEnd, "Jump to end"},
-			{tea.KeyPgUp, "Page up"},
-			{tea.KeyPgDown, "Page down"},
-		}
-
-		for _, nav := range navigationKeys {
+		for _, nav := range dashboardNavKeys {
 			t.Run(nav.description, func(t *testing.T) {
 				keyMsg := tea.KeyMsg{Type: nav.key}
 				assert.NotNil(t, keyMsg, "Key message should be valid")
@@ -158,32 +196,7 @@ func TestDashboardNavigation(t *testing.T) {
 
 	t.Run("Character Input Navigation", func(t *testing.T) {
 		// Test character-based navigation
-		charKeys := []struct {
-			char        string
-			description string
-		}{
-			{"1", "Jump to Overview"},
-			{"2", "Jump to Buckets"},
-			{"3", "Jump to Objects"},
-			{"4", "Jump to Upload"},
-			{"5", "Jump to Monitoring"},
-			{"6", "Jump to Settings"},
-			{"c", "Create bucket"},
-			{"u", "Upload file"},
-			{"d", "Delete bucket"},
-			{"m", "Start monitoring"},
-			{"s", "Settings"},
-			{"p", "Profiles"},
-			{"/", "Start search"},
-			{"q", "Quit"},
-			{"h", "Help (left navigation)"},
-			{"j", "Down navigation"},
-			{"k", "Up navigation"},
-			{"l", "Right navigation"},
-			{"?", "Toggle help"},
-		}
-
-		for _, key := range charKeys {
+		for _, key := range dashboardCharKeys {
 			t.Run(key.description, func(t *testing.T) {
 				require.Len(t, key.char, 1, "Character should be single")
 				keyMsg := tea.KeyMsg{
@@ -198,17 +211,7 @@ func TestDashboardNavigation(t *testing.T) {
 
 	t.Run("Function Key Navigation", func(t *testing.T) {
 		// Test function keys
-		funcKeys := []struct {
-			key         tea.KeyType
-			description string
-		}{
-			{tea.KeyF1, "Toggle help"},
-			{tea.KeyRunes, "Jump to section 2"},
-			{tea.KeyF5, "Refresh data"},
-			{tea.KeyF10, "Open settings"},
-		}
-
-		for _, fk := range funcKeys {
+		for _, fk := range dashboardFuncKeys {
 			t.Run(fk.description, func(t *testing.T) {
 				keyMsg := tea.KeyMsg{Type: fk.key}
 				assert.Equal(t, fk.key, keyMsg.Type, "Function key should match")
@@ -338,10 +341,10 @@ func TestDashboardErrorHandling(t *testing.T) {
 			height int
 			valid  bool
 		}{
-			{80, 24, true},   // Standard terminal size
-			{0, 0, false},    // Invalid zero size
-			{-1, -1, false},  // Negative dimensions
-			{1, 1, true},     // Minimum valid size
+			{80, 24, true},     // Standard terminal size
+			{0, 0, false},      // Invalid zero size
+			{-1, -1, false},    // Negative dimensions
+			{1, 1, true},       // Minimum valid size
 			{1000, 1000, true}, // Large but valid size
 		}
 
@@ -366,9 +369,9 @@ func TestDashboardErrorHandling(t *testing.T) {
 		// Test handling of unusual key combinations
 		testCases := []tea.KeyMsg{
 			{Type: tea.KeyRunes, Runes: []rune{}},           // Empty runes
-			{Type: tea.KeyRunes, Runes: []rune{'\x00'}},    // Null character
+			{Type: tea.KeyRunes, Runes: []rune{'\x00'}},     // Null character
 			{Type: tea.KeyRunes, Runes: []rune{'\n', '\r'}}, // Newlines
-			{Type: 999},                                     // Invalid key type
+			{Type: 999}, // Invalid key type
 		}
 
 		for i, keyMsg := range testCases {
