@@ -35,6 +35,12 @@ func disableAnimations(t *testing.T) {
 func TestConfigureBucketSettings(t *testing.T) {
 	disableAnimations(t)
 
+	t.Run("bucket type", testBucketSettingsType)
+	t.Run("retention days", testBucketSettingsRetention)
+	t.Run("custom endpoint", testBucketSettingsEndpoint)
+}
+
+func testBucketSettingsType(t *testing.T) {
 	t.Run("empty input sets standard type and no endpoint", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "")
 		var bs BucketSettings
@@ -76,7 +82,9 @@ func TestConfigureBucketSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "standard", bs.Type)
 	})
+}
 
+func testBucketSettingsRetention(t *testing.T) {
 	t.Run("valid retention days", func(t *testing.T) {
 		acw, _ := newTestWizard("", "90", "")
 		var bs BucketSettings
@@ -108,7 +116,9 @@ func TestConfigureBucketSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 30, bs.RetentionDays)
 	})
+}
 
+func testBucketSettingsEndpoint(t *testing.T) {
 	t.Run("custom endpoint is stored", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "https://custom.example.com")
 		var bs BucketSettings
@@ -133,6 +143,14 @@ func TestConfigureBucketSettings(t *testing.T) {
 func TestConfigureUploadSettings(t *testing.T) {
 	disableAnimations(t)
 
+	t.Run("defaults", testUploadSettingsDefaults)
+	t.Run("concurrency", testUploadSettingsConcurrency)
+	t.Run("chunk size", testUploadSettingsChunkSize)
+	t.Run("retry attempts", testUploadSettingsRetries)
+	t.Run("checksum", testUploadSettingsChecksum)
+}
+
+func testUploadSettingsDefaults(t *testing.T) {
 	t.Run("empty inputs leave values unchanged, checksum defaults to true", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "", "")
 		us := UploadSettings{Concurrency: 4, ChunkSize: "8MB", RetryAttempts: 3}
@@ -143,7 +161,9 @@ func TestConfigureUploadSettings(t *testing.T) {
 		assert.Equal(t, 3, us.RetryAttempts)
 		assert.True(t, us.ChecksumEnabled) // ConfirmWithReader default=true
 	})
+}
 
+func testUploadSettingsConcurrency(t *testing.T) {
 	t.Run("valid concurrency 8", func(t *testing.T) {
 		acw, _ := newTestWizard("8", "", "", "")
 		var us UploadSettings
@@ -191,7 +211,9 @@ func TestConfigureUploadSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 4, us.Concurrency)
 	})
+}
 
+func testUploadSettingsChunkSize(t *testing.T) {
 	t.Run("valid chunk size 16", func(t *testing.T) {
 		acw, _ := newTestWizard("", "16", "", "")
 		var us UploadSettings
@@ -239,7 +261,9 @@ func TestConfigureUploadSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "8MB", us.ChunkSize)
 	})
+}
 
+func testUploadSettingsRetries(t *testing.T) {
 	t.Run("valid retries 5", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "5", "")
 		var us UploadSettings
@@ -287,7 +311,9 @@ func TestConfigureUploadSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 3, us.RetryAttempts)
 	})
+}
 
+func testUploadSettingsChecksum(t *testing.T) {
 	t.Run("checksum yes", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "", "y")
 		var us UploadSettings
@@ -383,6 +409,12 @@ func TestConfigureRegionSettings(t *testing.T) {
 func TestConfigureAdditionalOptions(t *testing.T) {
 	disableAnimations(t)
 
+	t.Run("theme", testAdditionalOptionsTheme)
+	t.Run("analytics", testAdditionalOptionsAnalytics)
+	t.Run("accessibility", testAdditionalOptionsAccessibility)
+}
+
+func testAdditionalOptionsTheme(t *testing.T) {
 	t.Run("empty input defaults to cosmic theme, analytics off, accessibility off", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "")
 		cfg := &AdvancedConfig{}
@@ -440,7 +472,9 @@ func TestConfigureAdditionalOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "cosmic", cfg.Theme)
 	})
+}
 
+func testAdditionalOptionsAnalytics(t *testing.T) {
 	t.Run("analytics yes", func(t *testing.T) {
 		acw, _ := newTestWizard("", "y", "")
 		cfg := &AdvancedConfig{}
@@ -456,7 +490,9 @@ func TestConfigureAdditionalOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, cfg.AnalyticsEnabled)
 	})
+}
 
+func testAdditionalOptionsAccessibility(t *testing.T) {
 	t.Run("accessibility yes", func(t *testing.T) {
 		acw, _ := newTestWizard("", "", "y")
 		cfg := &AdvancedConfig{}
@@ -674,6 +710,13 @@ func TestSaveAdvancedConfig(t *testing.T) {
 // ──────────────────────────────────────────────
 
 func TestValidateAdvancedConfig_Boundaries(t *testing.T) {
+	t.Run("valid configurations", testValidateBoundariesValid)
+	t.Run("boundaries", testValidateBoundariesEdges)
+	t.Run("concurrency errors", testValidateBoundariesConcurrency)
+	t.Run("retry and region errors", testValidateBoundariesRetryRegion)
+}
+
+func testValidateBoundariesValid(t *testing.T) {
 	t.Run("valid config passes", func(t *testing.T) {
 		acw, _ := newTestWizard()
 		cfg := &AdvancedConfig{
@@ -687,81 +730,6 @@ func TestValidateAdvancedConfig_Boundaries(t *testing.T) {
 		}
 		err := acw.ValidateAdvancedConfig(cfg)
 		assert.NoError(t, err)
-	})
-
-	t.Run("concurrency too low", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{Concurrency: 0},
-			RegionSettings: RegionSettings{Primary: "auto"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "concurrency")
-	})
-
-	t.Run("concurrency too high", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{Concurrency: 33},
-			RegionSettings: RegionSettings{Primary: "auto"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "concurrency")
-	})
-
-	t.Run("negative concurrency", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{Concurrency: -1},
-			RegionSettings: RegionSettings{Primary: "auto"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "concurrency")
-	})
-
-	t.Run("retry attempts too high", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{
-				Concurrency:   4,
-				RetryAttempts: 11,
-			},
-			RegionSettings: RegionSettings{Primary: "auto"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "retry")
-	})
-
-	t.Run("negative retry attempts", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{
-				Concurrency:   4,
-				RetryAttempts: -1,
-			},
-			RegionSettings: RegionSettings{Primary: "auto"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "retry")
-	})
-
-	t.Run("invalid region", func(t *testing.T) {
-		acw, _ := newTestWizard()
-		cfg := &AdvancedConfig{
-			UploadSettings: UploadSettings{
-				Concurrency:   4,
-				RetryAttempts: 3,
-			},
-			RegionSettings: RegionSettings{Primary: "invalid-region"},
-		}
-		err := acw.ValidateAdvancedConfig(cfg)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid region")
 	})
 
 	t.Run("all valid regions pass", func(t *testing.T) {
@@ -779,7 +747,9 @@ func TestValidateAdvancedConfig_Boundaries(t *testing.T) {
 			assert.NoError(t, err, "region %s should be valid", region)
 		}
 	})
+}
 
+func testValidateBoundariesEdges(t *testing.T) {
 	t.Run("concurrency boundary 1 is valid", func(t *testing.T) {
 		acw, _ := newTestWizard()
 		cfg := &AdvancedConfig{
@@ -824,6 +794,85 @@ func TestValidateAdvancedConfig_Boundaries(t *testing.T) {
 		}
 		err := acw.ValidateAdvancedConfig(cfg)
 		assert.NoError(t, err)
+	})
+}
+
+func testValidateBoundariesConcurrency(t *testing.T) {
+	t.Run("concurrency too low", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{Concurrency: 0},
+			RegionSettings: RegionSettings{Primary: "auto"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "concurrency")
+	})
+
+	t.Run("concurrency too high", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{Concurrency: 33},
+			RegionSettings: RegionSettings{Primary: "auto"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "concurrency")
+	})
+
+	t.Run("negative concurrency", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{Concurrency: -1},
+			RegionSettings: RegionSettings{Primary: "auto"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "concurrency")
+	})
+}
+
+func testValidateBoundariesRetryRegion(t *testing.T) {
+	t.Run("retry attempts too high", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{
+				Concurrency:   4,
+				RetryAttempts: 11,
+			},
+			RegionSettings: RegionSettings{Primary: "auto"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "retry")
+	})
+
+	t.Run("negative retry attempts", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{
+				Concurrency:   4,
+				RetryAttempts: -1,
+			},
+			RegionSettings: RegionSettings{Primary: "auto"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "retry")
+	})
+
+	t.Run("invalid region", func(t *testing.T) {
+		acw, _ := newTestWizard()
+		cfg := &AdvancedConfig{
+			UploadSettings: UploadSettings{
+				Concurrency:   4,
+				RetryAttempts: 3,
+			},
+			RegionSettings: RegionSettings{Primary: "invalid-region"},
+		}
+		err := acw.ValidateAdvancedConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid region")
 	})
 }
 
