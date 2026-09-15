@@ -1,10 +1,10 @@
 id: FEAT-042
 type: feature
 created_at: 2026-09-15T05:33:57.563443+04:00
-updated_at: 2026-09-15T05:33:59.728636+04:00
+updated_at: 2026-09-15T22:12:59.762297+04:00
 source: local
 ulid: 01M2HB62E0P61C07P3X1S0S3FV
-status: open
+status: closed
 labels:
     - audit
     - api-design
@@ -23,3 +23,10 @@ description: |-
 
     Origin: audit-agent-7-api-design
     Context file: docs/audit/2026-09-13-cosmoflare/agent-7-api-design.md
+resolution:
+    notes: 'All acceptance met: internal/server ServeSource + MetricsSnapshot return concrete types (1944979); tygo-generated TS types committed with make wire-types-check gating release-prepare; cmd/ coverage 47.2% -> 60.5% (4079a69).'
+    resolved_at: 2026-09-15T22:12:59.761527+04:00
+revisions:
+    - date: "2026-09-15"
+      action: closed
+      context: 'All acceptance met: internal/server ServeSource + MetricsSnapshot return concrete types (1944979); tygo-generated TS types committed with make wire-types-check gating release-prepare; cmd/ coverage 47.2% -> 60.5% (4079a69).'

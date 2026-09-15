@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-15T20:17:37.54228+04:00
+last_updated: 2026-09-15T22:12:59.764967+04:00
 next_bug_id: 52
 next_feat_id: 43
 next_task_id: 11
@@ -524,7 +524,7 @@ issues:
       created_at: 2026-09-15T05:33:54.414913+04:00
     - id: FEAT-042
       type: feature
-      status: open
+      status: closed
       title: Typed daemon wire contract + TS codegen
       created_at: 2026-09-15T05:33:57.563443+04:00
     - id: TASK-001

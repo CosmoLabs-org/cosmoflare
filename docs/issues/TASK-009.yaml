@@ -1,7 +1,7 @@
 id: TASK-009
 type: task
 created_at: 2026-09-15T05:34:00.371247+04:00
-updated_at: 2026-09-15T20:17:37.539548+04:00
+updated_at: 2026-09-15T22:12:59.595572+04:00
 source: local
 ulid: 01M2HB655T8AZGF0E33VE6N68T
 status: closed
@@ -23,6 +23,12 @@ description: |-
 
     Origin: audit-agent-1-code-quality
     Context file: docs/audit/2026-09-13-cosmoflare/agent-1-code-quality.md
+resolution:
+    notes: 'All acceptance met on master: golangci-lint funlen=80 exits 0 (0 offenders repo-wide), full go test ./... green (35 pkgs), zero functions >80 lines. 85 functions split via 21 agent waves + hand follow-ups; .golangci.yml adopted at 5a39ea4.'
+    resolved_at: 2026-09-15T22:12:59.594713+04:00
 revisions:
     - date: "2026-09-15"
       action: closed
+    - date: "2026-09-15"
+      action: closed
+      context: 'All acceptance met on master: golangci-lint funlen=80 exits 0 (0 offenders repo-wide), full go test ./... green (35 pkgs), zero functions >80 lines. 85 functions split via 21 agent waves + hand follow-ups; .golangci.yml adopted at 5a39ea4.'

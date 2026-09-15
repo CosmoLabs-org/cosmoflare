@@ -4,3 +4,53 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
       updated: 2026-09-14T19:10:57.711192+04:00
+    - brief_hash: a1b38a819dab4205
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:25:23.853265+04:00
+    - brief_hash: 12e231fdeb5f264c
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:25:36.558815+04:00
+    - brief_hash: e3f57f055ec0a0f4
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:25:43.196871+04:00
+    - brief_hash: a3553e6baf1f5563
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:25:49.748445+04:00
+    - brief_hash: 1a62d56ba1f0c9dd
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:56:47.118636+04:00
+    - brief_hash: 48c9f886d48a9f96
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:57:10.072836+04:00
+    - brief_hash: 12f04ff735cac30b
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T19:57:17.770864+04:00
+    - brief_hash: c7293bacdff0eb93
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T20:00:04.05359+04:00
+    - brief_hash: b27426256197a637
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T20:00:27.302127+04:00
+    - brief_hash: 84bc48f0fc5c65f0
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-15T20:00:35.884836+04:00
