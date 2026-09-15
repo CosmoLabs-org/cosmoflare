@@ -160,36 +160,9 @@ func formatCertExpiry(days *int) string {
 }
 
 func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, target string) error {
-	domain := target
-	var expectedNS []string
-
-	// If the target looks like a zone ID, resolve it to a domain name.
-	if zoneIDPattern.MatchString(target) {
-		zoneSvc, err := getZoneService()
-		if err != nil {
-			return outErr("failed to create zone service", err)
-		}
-		zone, err := zoneSvc.Get(ctx, target)
-		if err != nil {
-			return outErr(fmt.Sprintf("failed to resolve zone ID %s", target), err)
-		}
-		domain = zone.Name
-		expectedNS = zone.NameServers
-	} else {
-		// Try to get expected nameservers from the Cloudflare API.
-		// This is best-effort — if it fails, we just skip the NS check.
-		zoneSvc, zoneErr := getZoneService()
-		if zoneErr == nil {
-			zones, listErr := zoneSvc.List(ctx)
-			if listErr == nil {
-				for _, z := range zones {
-					if z.Name == domain {
-						expectedNS = z.NameServers
-						break
-					}
-				}
-			}
-		}
+	domain, expectedNS, err := resolveDoctorTarget(ctx, target)
+	if err != nil {
+		return err
 	}
 
 	report, err := doctor.RunDiagnostics(ctx, domain, expectedNS)
@@ -197,10 +170,67 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 		return outErr(fmt.Sprintf("diagnostics failed for %s", domain), err)
 	}
 
-	// Redirect-target section (opt-in by having redirects): fetch the
-	// domain's destinations via DomainService (CF API), probe them with the
-	// stdlib RedirectProber, attach to the report. DoctorService itself
-	// stays credential-free — the cmd layer supplies the data.
+	enrichDoctorReport(ctx, report, domain)
+
+	p := NewPresenter()
+
+	if err := p.Result(report, func() {
+		printDoctorReport(report)
+	}); err != nil {
+		return err
+	}
+
+	// The critical-score exit signal is a plain-mode concern in the legacy
+	// code: JSON mode returns the payload and exits 0 regardless of score.
+	if !p.IsJSON() && report.Score == "critical" {
+		return fmt.Errorf("domain health is critical")
+	}
+	return nil
+}
+
+// resolveDoctorTarget maps a doctor target (domain or zone ID) to a domain
+// name plus the zone's expected nameservers, when available.
+func resolveDoctorTarget(ctx context.Context, target string) (string, []string, error) {
+	domain := target
+	var expectedNS []string
+
+	// If the target looks like a zone ID, resolve it to a domain name.
+	if zoneIDPattern.MatchString(target) {
+		zoneSvc, err := getZoneService()
+		if err != nil {
+			return "", nil, outErr("failed to create zone service", err)
+		}
+		zone, err := zoneSvc.Get(ctx, target)
+		if err != nil {
+			return "", nil, outErr(fmt.Sprintf("failed to resolve zone ID %s", target), err)
+		}
+		return zone.Name, zone.NameServers, nil
+	}
+
+	// Try to get expected nameservers from the Cloudflare API.
+	// This is best-effort — if it fails, we just skip the NS check.
+	zoneSvc, zoneErr := getZoneService()
+	if zoneErr == nil {
+		zones, listErr := zoneSvc.List(ctx)
+		if listErr == nil {
+			for _, z := range zones {
+				if z.Name == domain {
+					expectedNS = z.NameServers
+					break
+				}
+			}
+		}
+	}
+	return domain, expectedNS, nil
+}
+
+// enrichDoctorReport attaches the redirect-target section to the report
+// (opt-in by having redirects): fetch the domain's destinations via
+// DomainService (CF API), probe them with the stdlib RedirectProber, and
+// attach to the report. DoctorService itself stays credential-free — the
+// cmd layer supplies the data. All failures are silently ignored (best
+// effort), matching the original inline logic.
+func enrichDoctorReport(ctx context.Context, report *cosmoflare.DiagnosticReport, domain string) {
 	if zoneSvc, err := getZoneService(); err == nil {
 		if domSvc, err := cosmoflare.NewDomainService(zoneSvc, nil, nil, nil); err == nil {
 			if rs, err := cosmoflare.NewRedirectServiceFromCreds(AccountID, APIToken); err == nil {
@@ -237,21 +267,6 @@ func runDoctorSingle(ctx context.Context, doctor *cosmoflare.DoctorService, targ
 			}
 		}
 	}
-
-	p := NewPresenter()
-
-	if err := p.Result(report, func() {
-		printDoctorReport(report)
-	}); err != nil {
-		return err
-	}
-
-	// The critical-score exit signal is a plain-mode concern in the legacy
-	// code: JSON mode returns the payload and exits 0 regardless of score.
-	if !p.IsJSON() && report.Score == "critical" {
-		return fmt.Errorf("domain health is critical")
-	}
-	return nil
 }
 
 // printDoctorReport renders a human-readable diagnostic report.
