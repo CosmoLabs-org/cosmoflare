@@ -2,9 +2,14 @@ package cmd
 
 import (
 	"bytes"
+	"context"
+	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -1768,5 +1773,420 @@ func TestObjectCmd_SubcommandCount(t *testing.T) {
 	got := len(objectCmd.Commands())
 	if got != want {
 		t.Errorf("objectCmd has %d subcommands, want %d", got, want)
+	}
+}
+
+// --- Run-function and local-helper coverage (FEAT-042) ---
+
+// objectRunGlobals snapshots and restores the package-level globals the
+// object run helpers read, so tests cannot leak state.
+func objectRunGlobals(t *testing.T) {
+	t.Helper()
+	oldProgress, oldNoMP := objectProgress, objectNoMultipart
+	oldPart, oldConc := objectPartSize, objectConcurrency
+	oldJSON, oldDry, oldVerbose := JSONOutput, DryRun, Verbose
+	t.Cleanup(func() {
+		objectProgress, objectNoMultipart = oldProgress, oldNoMP
+		objectPartSize, objectConcurrency = oldPart, oldConc
+		JSONOutput, DryRun, Verbose = oldJSON, oldDry, oldVerbose
+	})
+}
+
+// objectRunResetOutputFlag restores the object get --output flag to its
+// pristine unset state before each case.
+func objectRunResetOutputFlag() {
+	if f := objectGetCmd.Flags().Lookup("output"); f != nil {
+		f.Changed = false
+		_ = f.Value.Set("")
+	}
+}
+
+// TestObjectGetOutput verifies output-destination resolution: an explicit
+// "-", an explicit path, an explicitly-empty flag (falls back to base name),
+// and an unset flag with piped stdout (writes to stdout).
+func TestObjectGetOutput(t *testing.T) {
+	if isTerminal(os.Stdout) {
+		t.Skip("stdout is a terminal; unset-flag case is not deterministic")
+	}
+	cases := []struct {
+		name        string
+		flagValue   string
+		flagChanged bool
+		key         string
+		wantOutput  string
+		wantStdout  bool
+	}{
+		{"explicit dash", "-", true, "dir/file.txt", "-", true},
+		{"explicit path", "out.bin", true, "dir/file.txt", "out.bin", false},
+		{"explicit empty", "", true, "dir/file.txt", "file.txt", false},
+		{"unset non-tty", "", false, "dir/file.txt", "", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			objectRunResetOutputFlag()
+			if tc.flagChanged {
+				if err := objectGetCmd.Flags().Set("output", tc.flagValue); err != nil {
+					t.Fatalf("failed to set output flag: %v", err)
+				}
+			}
+			got, stdout := objectGetOutput(objectGetCmd, tc.key)
+			if got != tc.wantOutput {
+				t.Errorf("output = %q, want %q", got, tc.wantOutput)
+			}
+			if stdout != tc.wantStdout {
+				t.Errorf("writeToStdout = %v, want %v", stdout, tc.wantStdout)
+			}
+		})
+	}
+}
+
+// TestObjectGetCopy_Plain verifies the no-progress copy path returns the
+// streamed byte count and writes the body to the file.
+func TestObjectGetCopy_Plain(t *testing.T) {
+	objectRunGlobals(t)
+	objectProgress = false
+	JSONOutput = true
+
+	file, err := os.CreateTemp(t.TempDir(), "getcopy-*")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer file.Close()
+
+	obj := &cosmoflare.DownloadResult{
+		Size:    int64(len("hello world")),
+		Content: io.NopCloser(strings.NewReader("hello world")),
+	}
+	size, err := objectGetCopy(file, obj)
+	if err != nil {
+		t.Fatalf("objectGetCopy returned error: %v", err)
+	}
+	if size != 11 {
+		t.Errorf("size = %d, want 11", size)
+	}
+	data, _ := os.ReadFile(file.Name())
+	if string(data) != "hello world" {
+		t.Errorf("file content = %q, want %q", data, "hello world")
+	}
+}
+
+// TestObjectGetCopy_Progress verifies the progress-bar path (progress on,
+// JSON off, nonzero size) still streams the full body.
+func TestObjectGetCopy_Progress(t *testing.T) {
+	objectRunGlobals(t)
+	objectProgress = true
+	JSONOutput = false
+
+	file, err := os.CreateTemp(t.TempDir(), "getcopy-*")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer file.Close()
+
+	obj := &cosmoflare.DownloadResult{
+		Size:    5,
+		Content: io.NopCloser(strings.NewReader("abcde")),
+	}
+	size, err := objectGetCopy(file, obj)
+	if err != nil {
+		t.Fatalf("objectGetCopy returned error: %v", err)
+	}
+	if size != 5 {
+		t.Errorf("size = %d, want 5", size)
+	}
+	data, _ := os.ReadFile(file.Name())
+	if string(data) != "abcde" {
+		t.Errorf("file content = %q, want %q", data, "abcde")
+	}
+}
+
+// TestObjectPutBaseOpts verifies option construction from flags: empty flags
+// yield no options; each set flag appends exactly one option.
+func TestObjectPutBaseOpts(t *testing.T) {
+	cases := []struct {
+		name         string
+		contentType  string
+		cacheControl string
+		metadata     map[string]string
+		want         int
+	}{
+		{"none set", "", "", nil, 0},
+		{"content-type only", "text/plain", "", nil, 1},
+		{"cache-control only", "", "max-age=60", nil, 1},
+		{"metadata only", "", "", map[string]string{"a": "1"}, 1},
+		{"all set", "text/plain", "max-age=60", map[string]string{"a": "1"}, 3},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := objectPutBaseOpts(tc.contentType, tc.cacheControl, tc.metadata)
+			if len(opts) != tc.want {
+				t.Errorf("len(opts) = %d, want %d", len(opts), tc.want)
+			}
+		})
+	}
+}
+
+// objectRunFakeClient stubs the R2Client methods the batch runner touches;
+// the embedded interface keeps the remaining methods uncompilable-if-called.
+type objectRunFakeClient struct {
+	cosmoflare.R2Client
+	uploadErr error
+	deleteErr error
+	copyErr   error
+	uploaded  []string
+	deleted   []string
+	copied    []string
+}
+
+func (f *objectRunFakeClient) Upload(ctx context.Context, bucket, key string, reader io.Reader, size int64, opts ...cosmoflare.UploadOption) (*cosmoflare.UploadResult, error) {
+	f.uploaded = append(f.uploaded, key)
+	return &cosmoflare.UploadResult{}, f.uploadErr
+}
+
+func (f *objectRunFakeClient) DeleteObject(ctx context.Context, bucket, key string) error {
+	f.deleted = append(f.deleted, key)
+	return f.deleteErr
+}
+
+func (f *objectRunFakeClient) CopyObject(ctx context.Context, srcBucket, srcKey, dstBucket, dstKey string) (*cosmoflare.CopyResult, error) {
+	f.copied = append(f.copied, srcKey+"->"+dstKey)
+	return &cosmoflare.CopyResult{}, f.copyErr
+}
+
+// TestBatchRunner_UploadValidation covers the offline upload guards: missing
+// fields bump errorCount without failing, and an unopenable local file either
+// aborts the batch or is swallowed under --continue.
+func TestBatchRunner_UploadValidation(t *testing.T) {
+	cases := []struct {
+		name          string
+		op            BatchOperation
+		continueOnErr bool
+		wantErr       string
+		wantErrCount  int
+	}{
+		{"missing object_key", BatchOperation{Action: "upload", LocalPath: "/tmp/x"}, false, "", 1},
+		{"missing local_path", BatchOperation{Action: "upload", ObjectKey: "k"}, false, "", 1},
+		{"bad file aborts", BatchOperation{Action: "upload", LocalPath: "/nonexistent/file", ObjectKey: "k"}, false, "no such file or directory", 1},
+		{"bad file continues", BatchOperation{Action: "upload", LocalPath: "/nonexistent/file", ObjectKey: "k"}, true, "", 1},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			b := &batchRunner{client: &objectRunFakeClient{}, bucketName: "bkt", continueOnErr: tc.continueOnErr}
+			err := b.upload(tc.op)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("expected error containing %q, got %v", tc.wantErr, err)
+			}
+			if b.errorCount != tc.wantErrCount {
+				t.Errorf("errorCount = %d, want %d", b.errorCount, tc.wantErrCount)
+			}
+			if b.successCount != 0 {
+				t.Errorf("successCount = %d, want 0", b.successCount)
+			}
+		})
+	}
+}
+
+// TestBatchRunner_UploadSuccess verifies a well-formed upload over a real
+// temp file counts as a success.
+func TestBatchRunner_UploadSuccess(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "upload.txt")
+	if err := os.WriteFile(path, []byte("data"), 0o600); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	fc := &objectRunFakeClient{}
+	b := &batchRunner{client: fc, bucketName: "bkt"}
+	if err := b.upload(BatchOperation{Action: "upload", LocalPath: path, ObjectKey: "k"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if b.successCount != 1 || b.errorCount != 0 {
+		t.Errorf("success=%d error=%d, want 1/0", b.successCount, b.errorCount)
+	}
+	if len(fc.uploaded) != 1 || fc.uploaded[0] != "k" {
+		t.Errorf("uploaded = %v, want [k]", fc.uploaded)
+	}
+}
+
+// TestBatchRunner_UploadClientError verifies the abort-vs-continue behavior
+// when the client rejects an upload.
+func TestBatchRunner_UploadClientError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "upload.txt")
+	if err := os.WriteFile(path, []byte("data"), 0o600); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	op := BatchOperation{Action: "upload", LocalPath: path, ObjectKey: "k"}
+
+	b := &batchRunner{client: &objectRunFakeClient{uploadErr: context.Canceled}, bucketName: "bkt"}
+	err := b.upload(op)
+	if err == nil || !strings.Contains(err.Error(), "context canceled") {
+		t.Fatalf("expected context-canceled error, got %v", err)
+	}
+	if b.errorCount != 1 || b.successCount != 0 {
+		t.Errorf("success=%d error=%d, want 0/1", b.successCount, b.errorCount)
+	}
+
+	b2 := &batchRunner{client: &objectRunFakeClient{uploadErr: context.Canceled}, bucketName: "bkt", continueOnErr: true}
+	if err := b2.upload(op); err != nil {
+		t.Fatalf("expected nil under --continue, got %v", err)
+	}
+	if b2.errorCount != 1 || b2.successCount != 0 {
+		t.Errorf("success=%d error=%d, want 0/1", b2.successCount, b2.errorCount)
+	}
+}
+
+// TestBatchRunner_Delete covers the delete guard, success, and the
+// abort-vs-continue behavior on client errors.
+func TestBatchRunner_Delete(t *testing.T) {
+	cases := []struct {
+		name          string
+		op            BatchOperation
+		deleteErr     error
+		continueOnErr bool
+		wantErr       string
+		wantSuccess   int
+		wantErrCount  int
+	}{
+		{"missing key", BatchOperation{Action: "delete"}, nil, false, "", 0, 1},
+		{"success", BatchOperation{Action: "delete", ObjectKey: "k"}, nil, false, "", 1, 0},
+		{"client error aborts", BatchOperation{Action: "delete", ObjectKey: "k"}, context.DeadlineExceeded, false, "context deadline exceeded", 0, 1},
+		{"client error continues", BatchOperation{Action: "delete", ObjectKey: "k"}, context.DeadlineExceeded, true, "", 0, 1},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fc := &objectRunFakeClient{deleteErr: tc.deleteErr}
+			b := &batchRunner{client: fc, bucketName: "bkt", continueOnErr: tc.continueOnErr}
+			err := b.delete(tc.op)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("expected error containing %q, got %v", tc.wantErr, err)
+			}
+			if b.successCount != tc.wantSuccess {
+				t.Errorf("successCount = %d, want %d", b.successCount, tc.wantSuccess)
+			}
+			if b.errorCount != tc.wantErrCount {
+				t.Errorf("errorCount = %d, want %d", b.errorCount, tc.wantErrCount)
+			}
+		})
+	}
+}
+
+// TestBatchRunner_Copy covers the copy guard, success, and the
+// abort-vs-continue behavior on client errors.
+func TestBatchRunner_Copy(t *testing.T) {
+	cases := []struct {
+		name          string
+		op            BatchOperation
+		copyErr       error
+		continueOnErr bool
+		wantErr       string
+		wantSuccess   int
+		wantErrCount  int
+	}{
+		{"missing destination", BatchOperation{Action: "copy", ObjectKey: "k"}, nil, false, "", 0, 1},
+		{"missing key", BatchOperation{Action: "copy", DestinationKey: "d"}, nil, false, "", 0, 1},
+		{"success", BatchOperation{Action: "copy", ObjectKey: "k", DestinationKey: "d"}, nil, false, "", 1, 0},
+		{"client error aborts", BatchOperation{Action: "copy", ObjectKey: "k", DestinationKey: "d"}, context.Canceled, false, "context canceled", 0, 1},
+		{"client error continues", BatchOperation{Action: "copy", ObjectKey: "k", DestinationKey: "d"}, context.Canceled, true, "", 0, 1},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fc := &objectRunFakeClient{copyErr: tc.copyErr}
+			b := &batchRunner{client: fc, bucketName: "bkt", continueOnErr: tc.continueOnErr}
+			err := b.copy(tc.op)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("expected error containing %q, got %v", tc.wantErr, err)
+			}
+			if b.successCount != tc.wantSuccess {
+				t.Errorf("successCount = %d, want %d", b.successCount, tc.wantSuccess)
+			}
+			if b.errorCount != tc.wantErrCount {
+				t.Errorf("errorCount = %d, want %d", b.errorCount, tc.wantErrCount)
+			}
+		})
+	}
+}
+
+// TestBatchRunner_Run_UnknownAction verifies run dispatches to the default
+// branch for an unrecognized action and fails without --continue.
+func TestBatchRunner_Run_UnknownAction(t *testing.T) {
+	b := &batchRunner{client: &objectRunFakeClient{}, bucketName: "bkt"}
+	err := b.run(BatchOperation{Action: "frobnicate"})
+	if err == nil || !strings.Contains(err.Error(), "invalid operation: frobnicate") {
+		t.Fatalf("expected invalid-operation error, got %v", err)
+	}
+	if b.errorCount != 1 {
+		t.Errorf("errorCount = %d, want 1", b.errorCount)
+	}
+
+	b2 := &batchRunner{client: &objectRunFakeClient{}, bucketName: "bkt", continueOnErr: true}
+	if err := b2.run(BatchOperation{Action: "frobnicate"}); err != nil {
+		t.Fatalf("expected nil under --continue, got %v", err)
+	}
+}
+
+// TestBatchRunner_RunDispatch verifies run routes each known action to its
+// handler by observing the fake client's recorded calls.
+func TestBatchRunner_RunDispatch(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "d.txt")
+	if err := os.WriteFile(path, []byte("x"), 0o600); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	fc := &objectRunFakeClient{}
+	b := &batchRunner{client: fc, bucketName: "bkt"}
+
+	if err := b.run(BatchOperation{Action: "upload", LocalPath: path, ObjectKey: "up-key"}); err != nil {
+		t.Fatalf("upload dispatch error: %v", err)
+	}
+	if err := b.run(BatchOperation{Action: "delete", ObjectKey: "del-key"}); err != nil {
+		t.Fatalf("delete dispatch error: %v", err)
+	}
+	if err := b.run(BatchOperation{Action: "copy", ObjectKey: "src", DestinationKey: "dst"}); err != nil {
+		t.Fatalf("copy dispatch error: %v", err)
+	}
+	if len(fc.deleted) != 1 || fc.deleted[0] != "del-key" {
+		t.Errorf("deleted = %v, want [del-key]", fc.deleted)
+	}
+	if len(fc.copied) != 1 || fc.copied[0] != "src->dst" {
+		t.Errorf("copied = %v, want [src->dst]", fc.copied)
+	}
+	if b.successCount != 3 || b.errorCount != 0 {
+		t.Errorf("success=%d error=%d, want 3/0", b.successCount, b.errorCount)
+	}
+}
+
+// TestIsTerminal_RegularFile verifies a plain file is not reported as a
+// terminal.
+func TestIsTerminal_RegularFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "not-a-tty")
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer f.Close()
+	if isTerminal(f) {
+		t.Error("isTerminal(regular file) = true, want false")
+	}
+}
+
+// TestObjectPutStdin_InvalidMetadata verifies the stdin upload path rejects
+// malformed metadata before any client is constructed.
+func TestObjectPutStdin_InvalidMetadata(t *testing.T) {
+	err := objectPutStdin(&objectPutParams{
+		bucketName: "my-bucket",
+		key:        "stdin-key",
+		metadata:   []string{"no-equals-sign"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "failed to parse metadata") {
+		t.Fatalf("expected metadata parse error, got %v", err)
 	}
 }
