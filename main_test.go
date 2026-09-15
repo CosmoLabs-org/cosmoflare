@@ -109,19 +109,27 @@ func runMainInSubprocess(t *testing.T, argv []string, dropCreds bool, extraEnv [
 // Success here means cmd.Execute() returned nil and main() returned normally;
 // failure paths cover both the error branch of main() and the credential
 // guards enforced before command execution.
-func TestMainFunction(t *testing.T) {
+// mainFunctionCase describes one scenario exercised by TestMainFunction:
+// the argv to run main() with in a subprocess, optional credential
+// stripping/injection, and the expected exit code and output fragments.
+type mainFunctionCase struct {
+	name             string
+	argv             []string
+	dropCreds        bool
+	extraEnv         []string
+	wantExit         int
+	wantStdout       string
+	wantStderr       string
+	minStderrRepeats map[string]int
+}
+
+// mainFunctionCases returns the scenario table for TestMainFunction: the
+// version/help/no-arg banners, unknown command and flag errors, and the
+// missing-credential guards.
+func mainFunctionCases() []mainFunctionCase {
 	const unknownCommand = "definitely-not-a-real-cosmoflare-command"
 
-	tests := []struct {
-		name        string
-		argv        []string
-		dropCreds   bool
-		extraEnv    []string
-		wantExit    int
-		wantStdout  string
-		wantStderr  string
-		minStderrRepeats map[string]int
-	}{
+	return []mainFunctionCase{
 		{
 			name:       "version flag prints banner and exits zero",
 			argv:       []string{"cosmoflare", "--version"},
@@ -141,8 +149,8 @@ func TestMainFunction(t *testing.T) {
 			wantStdout: "Cosmoflare manages the full Cloudflare developer platform",
 		},
 		{
-			name: "unknown command exits one and prints error on stderr",
-			argv: []string{"cosmoflare", unknownCommand},
+			name:     "unknown command exits one and prints error on stderr",
+			argv:     []string{"cosmoflare", unknownCommand},
 			wantExit: 1,
 			// Cobra prints the error once and main() prints it a second time
 			// via its "Error: %v" branch, so the message must appear twice.
@@ -163,8 +171,8 @@ func TestMainFunction(t *testing.T) {
 			wantStdout: "Cloudflare API token is required",
 		},
 		{
-			name: "command with token but no account ID exits one",
-			argv: []string{"cosmoflare", "bucket", "list"},
+			name:      "command with token but no account ID exits one",
+			argv:      []string{"cosmoflare", "bucket", "list"},
 			dropCreds: true,
 			extraEnv: []string{
 				// Long enough to pass the basic token length check so the
@@ -175,8 +183,10 @@ func TestMainFunction(t *testing.T) {
 			wantStdout: "Cloudflare Account ID is required",
 		},
 	}
+}
 
-	for _, tt := range tests {
+func TestMainFunction(t *testing.T) {
+	for _, tt := range mainFunctionCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			exitCode, stdout, stderr := runMainInSubprocess(t, tt.argv, tt.dropCreds, tt.extraEnv)
 

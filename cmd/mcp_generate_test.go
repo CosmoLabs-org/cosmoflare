@@ -41,10 +41,27 @@ func mcpTestRoot(t *testing.T) (*cobra.Command, *[]mcpInvocation) {
 	t.Helper()
 	invocations := &[]mcpInvocation{}
 
-	root := &cobra.Command{Use: "cftest"}
 	var jsonFlag bool
+	root := &cobra.Command{Use: "cftest"}
 	root.PersistentFlags().BoolVar(&jsonFlag, "json", false, "Output in JSON format")
 
+	root.AddCommand(
+		mcpTestReadCmd(t, invocations, &jsonFlag),
+		mcpTestDeleteCmd(t, invocations),
+		mcpTestStubCmd("upload [file]", "Upload a thing", "uploaded", false),
+		mcpTestStubCmd("secret [x]", "Hidden thing", "secret", true),
+		mcpTestMcpLikeCmd(),
+		mcpTestGroupCmd(),
+		mcpTestBrokenCmd(),
+	)
+	return root, invocations
+}
+
+// mcpTestReadCmd builds the flag-rich read-only command: it records every
+// invocation (args, resolved flags, and the persistent --json state) and
+// echoes its arguments back inside its JSON envelope.
+func mcpTestReadCmd(t *testing.T, invocations *[]mcpInvocation, jsonFlag *bool) *cobra.Command {
+	t.Helper()
 	var readFormat string
 	var readLimit int
 	var readVerbose bool
@@ -60,7 +77,7 @@ func mcpTestRoot(t *testing.T) (*cobra.Command, *[]mcpInvocation) {
 			*invocations = append(*invocations, mcpInvocation{
 				Args:    args,
 				Flags:   map[string]string{"format": format, "limit": fmt.Sprint(limit), "verbose": fmt.Sprint(verbose), "tags": strings.Join(tags, ",")},
-				JSONSet: jsonFlag,
+				JSONSet: *jsonFlag,
 			})
 			return printTestEnvelope("read ok", map[string]interface{}{"read": args})
 		},
@@ -69,7 +86,13 @@ func mcpTestRoot(t *testing.T) (*cobra.Command, *[]mcpInvocation) {
 	readCmd.Flags().IntVar(&readLimit, "limit", 10, "Maximum rows")
 	readCmd.Flags().BoolVar(&readVerbose, "verbose", false, "Verbose output")
 	readCmd.Flags().StringSliceVar(&readTags, "tags", nil, "Tags to filter")
+	return readCmd
+}
 
+// mcpTestDeleteCmd builds the mutating delete command: it records each
+// invocation together with the resolved --force flag.
+func mcpTestDeleteCmd(t *testing.T, invocations *[]mcpInvocation) *cobra.Command {
+	t.Helper()
 	var delForce bool
 	deleteCmd := &cobra.Command{
 		Use:   "delete [name]",
@@ -84,34 +107,33 @@ func mcpTestRoot(t *testing.T) (*cobra.Command, *[]mcpInvocation) {
 		},
 	}
 	deleteCmd.Flags().BoolVar(&delForce, "force", false, "Skip confirmation")
+	return deleteCmd
+}
 
-	uploadCmd := &cobra.Command{
-		Use:   "upload [file]",
-		Short: "Upload a thing",
+// mcpTestStubCmd returns a plain command that always replies with a fixed
+// envelope message and no payload; hidden controls cobra visibility.
+func mcpTestStubCmd(use, short, message string, hidden bool) *cobra.Command {
+	return &cobra.Command{
+		Use:    use,
+		Short:  short,
+		Hidden: hidden,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return printTestEnvelope("uploaded", nil)
+			return printTestEnvelope(message, nil)
 		},
 	}
+}
 
-	hiddenCmd := &cobra.Command{
-		Use:    "secret [x]",
-		Short:  "Hidden thing",
-		Hidden: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return printTestEnvelope("secret", nil)
-		},
-	}
-
+// mcpTestMcpLikeCmd builds the "mcp serve" subtree that MCP generation must
+// exclude from the generated tool list.
+func mcpTestMcpLikeCmd() *cobra.Command {
 	mcpLikeCmd := &cobra.Command{Use: "mcp", Short: "MCP server"}
-	mcpServeLikeCmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Serve",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return printTestEnvelope("served", nil)
-		},
-	}
-	mcpLikeCmd.AddCommand(mcpServeLikeCmd)
+	mcpLikeCmd.AddCommand(mcpTestStubCmd("serve", "Serve", "served", false))
+	return mcpLikeCmd
+}
 
+// mcpTestGroupCmd builds the "grp leaf" subtree; the leaf echoes its
+// arguments back inside its JSON envelope.
+func mcpTestGroupCmd() *cobra.Command {
 	groupCmd := &cobra.Command{Use: "grp", Short: "Group"}
 	leafCmd := &cobra.Command{
 		Use:   "leaf [id]",
@@ -121,17 +143,18 @@ func mcpTestRoot(t *testing.T) (*cobra.Command, *[]mcpInvocation) {
 		},
 	}
 	groupCmd.AddCommand(leafCmd)
+	return groupCmd
+}
 
-	brokenCmd := &cobra.Command{
+// mcpTestBrokenCmd returns a command whose RunE always fails.
+func mcpTestBrokenCmd() *cobra.Command {
+	return &cobra.Command{
 		Use:   "broken <req>",
 		Short: "Always fails",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("command failed on purpose")
 		},
 	}
-
-	root.AddCommand(readCmd, deleteCmd, uploadCmd, hiddenCmd, mcpLikeCmd, groupCmd, brokenCmd)
-	return root, invocations
 }
 
 // printTestEnvelope prints an OutputResponse-shaped JSON envelope to stdout,

@@ -202,112 +202,131 @@ func TestRunConfigShow(t *testing.T) {
 // TestRunConfigSet verifies set's guards, validation, persistence, and
 // merging of unspecified fields from an existing profile.
 func TestRunConfigSet(t *testing.T) {
-	t.Run("profile name required", func(t *testing.T) {
-		configRunEnv(t)
-		err := runConfigSet(configSetCmd, nil)
-		if err == nil || !strings.Contains(err.Error(), "profile name is required") {
-			t.Fatalf("expected name-required error, got %v", err)
+	t.Run("profile name required", configSetRequiresProfileName)
+	t.Run("validation failure surfaces", configSetValidationFailure)
+	t.Run("persists a valid profile", configSetPersistsValidProfile)
+	t.Run("merges unspecified fields from existing profile", configSetMergesUnspecifiedFields)
+}
+
+// configSetRequiresProfileName covers the "profile name required" subtest of
+// TestRunConfigSet: invoking set without arguments must fail.
+func configSetRequiresProfileName(t *testing.T) {
+	configRunEnv(t)
+	err := runConfigSet(configSetCmd, nil)
+	if err == nil || !strings.Contains(err.Error(), "profile name is required") {
+		t.Fatalf("expected name-required error, got %v", err)
+	}
+}
+
+// configSetValidationFailure covers the "validation failure surfaces"
+// subtest of TestRunConfigSet: a malformed account ID must surface the
+// underlying profile validation error.
+func configSetValidationFailure(t *testing.T) {
+	configRunEnv(t)
+	if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
+		t.Fatalf("setting interactive=false failed: %v", err)
+	}
+	t.Cleanup(func() {
+		configSetCmd.Flags().Set("interactive", "true")
+		if f := configSetCmd.Flags().Lookup("interactive"); f != nil {
+			f.Changed = false
 		}
 	})
-	t.Run("validation failure surfaces", func(t *testing.T) {
-		configRunEnv(t)
-		if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
-			t.Fatalf("setting interactive=false failed: %v", err)
-		}
-		t.Cleanup(func() {
-			configSetCmd.Flags().Set("interactive", "true")
-			if f := configSetCmd.Flags().Lookup("interactive"); f != nil {
+	if err := configSetCmd.Flags().Set("account-id", "tooshort"); err != nil {
+		t.Fatalf("setting account-id failed: %v", err)
+	}
+
+	err := runConfigSet(configSetCmd, []string{"bad"})
+	if err == nil || !strings.Contains(err.Error(), "profile validation failed") {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+// configSetPersistsValidProfile covers the "persists a valid profile"
+// subtest of TestRunConfigSet: a fully specified non-interactive set must
+// write every field to disk.
+func configSetPersistsValidProfile(t *testing.T) {
+	configRunEnv(t)
+	if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
+		t.Fatalf("setting interactive=false failed: %v", err)
+	}
+	t.Cleanup(func() {
+		configSetCmd.Flags().Set("interactive", "true")
+		// Reset value flags so later subtests do not inherit them
+		// (runConfigSet applies any non-empty flag value).
+		configSetCmd.Flags().Set("account-id", "")
+		configSetCmd.Flags().Set("api-token", "")
+		configSetCmd.Flags().Set("description", "")
+		for _, name := range []string{"interactive", "account-id", "api-token", "description"} {
+			if f := configSetCmd.Flags().Lookup(name); f != nil {
 				f.Changed = false
 			}
-		})
-		if err := configSetCmd.Flags().Set("account-id", "tooshort"); err != nil {
-			t.Fatalf("setting account-id failed: %v", err)
-		}
-
-		err := runConfigSet(configSetCmd, []string{"bad"})
-		if err == nil || !strings.Contains(err.Error(), "profile validation failed") {
-			t.Fatalf("expected validation error, got %v", err)
 		}
 	})
-	t.Run("persists a valid profile", func(t *testing.T) {
-		configRunEnv(t)
-		if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
-			t.Fatalf("setting interactive=false failed: %v", err)
-		}
-		t.Cleanup(func() {
-			configSetCmd.Flags().Set("interactive", "true")
-			// Reset value flags so later subtests do not inherit them
-			// (runConfigSet applies any non-empty flag value).
-			configSetCmd.Flags().Set("account-id", "")
-			configSetCmd.Flags().Set("api-token", "")
-			configSetCmd.Flags().Set("description", "")
-			for _, name := range []string{"interactive", "account-id", "api-token", "description"} {
-				if f := configSetCmd.Flags().Lookup(name); f != nil {
-					f.Changed = false
-				}
-			}
-		})
-		if err := configSetCmd.Flags().Set("account-id", "123456789012345678901234567890ab"); err != nil {
-			t.Fatalf("setting account-id failed: %v", err)
-		}
-		if err := configSetCmd.Flags().Set("api-token", "fresh-token-1234567890"); err != nil {
-			t.Fatalf("setting api-token failed: %v", err)
-		}
-		if err := configSetCmd.Flags().Set("description", "from test"); err != nil {
-			t.Fatalf("setting description failed: %v", err)
-		}
+	if err := configSetCmd.Flags().Set("account-id", "123456789012345678901234567890ab"); err != nil {
+		t.Fatalf("setting account-id failed: %v", err)
+	}
+	if err := configSetCmd.Flags().Set("api-token", "fresh-token-1234567890"); err != nil {
+		t.Fatalf("setting api-token failed: %v", err)
+	}
+	if err := configSetCmd.Flags().Set("description", "from test"); err != nil {
+		t.Fatalf("setting description failed: %v", err)
+	}
 
-		if err := runConfigSet(configSetCmd, []string{"fresh"}); err != nil {
-			t.Fatalf("set should succeed: %v", err)
-		}
+	if err := runConfigSet(configSetCmd, []string{"fresh"}); err != nil {
+		t.Fatalf("set should succeed: %v", err)
+	}
 
-		cm, err := config.NewConfigManager()
-		if err != nil {
-			t.Fatalf("reloading config failed: %v", err)
-		}
-		p, err := cm.GetProfile("fresh")
-		if err != nil {
-			t.Fatalf("saved profile missing: %v", err)
-		}
-		if p.AccountID != "123456789012345678901234567890ab" || p.APIToken != "fresh-token-1234567890" || p.Description != "from test" {
-			t.Errorf("saved profile mismatch: %+v", p)
+	cm, err := config.NewConfigManager()
+	if err != nil {
+		t.Fatalf("reloading config failed: %v", err)
+	}
+	p, err := cm.GetProfile("fresh")
+	if err != nil {
+		t.Fatalf("saved profile missing: %v", err)
+	}
+	if p.AccountID != "123456789012345678901234567890ab" || p.APIToken != "fresh-token-1234567890" || p.Description != "from test" {
+		t.Errorf("saved profile mismatch: %+v", p)
+	}
+}
+
+// configSetMergesUnspecifiedFields covers the "merges unspecified fields
+// from existing profile" subtest of TestRunConfigSet: rotating only the API
+// token must preserve the existing account ID.
+func configSetMergesUnspecifiedFields(t *testing.T) {
+	configRunEnv(t)
+	configRunSeedProfile(t, "keep")
+	if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
+		t.Fatalf("setting interactive=false failed: %v", err)
+	}
+	t.Cleanup(func() {
+		configSetCmd.Flags().Set("interactive", "true")
+		if f := configSetCmd.Flags().Lookup("interactive"); f != nil {
+			f.Changed = false
 		}
 	})
-	t.Run("merges unspecified fields from existing profile", func(t *testing.T) {
-		configRunEnv(t)
-		configRunSeedProfile(t, "keep")
-		if err := configSetCmd.Flags().Set("interactive", "false"); err != nil {
-			t.Fatalf("setting interactive=false failed: %v", err)
-		}
-		t.Cleanup(func() {
-			configSetCmd.Flags().Set("interactive", "true")
-			if f := configSetCmd.Flags().Lookup("interactive"); f != nil {
-				f.Changed = false
-			}
-		})
-		if err := configSetCmd.Flags().Set("api-token", "rotated-token-1234567890"); err != nil {
-			t.Fatalf("setting api-token failed: %v", err)
-		}
+	if err := configSetCmd.Flags().Set("api-token", "rotated-token-1234567890"); err != nil {
+		t.Fatalf("setting api-token failed: %v", err)
+	}
 
-		if err := runConfigSet(configSetCmd, []string{"keep"}); err != nil {
-			t.Fatalf("set should succeed: %v", err)
-		}
+	if err := runConfigSet(configSetCmd, []string{"keep"}); err != nil {
+		t.Fatalf("set should succeed: %v", err)
+	}
 
-		cm, err := config.NewConfigManager()
-		if err != nil {
-			t.Fatalf("reloading config failed: %v", err)
-		}
-		p, err := cm.GetProfile("keep")
-		if err != nil {
-			t.Fatalf("profile missing after update: %v", err)
-		}
-		if p.AccountID != "12345678901234567890123456789012" {
-			t.Errorf("account ID should be preserved, got %q", p.AccountID)
-		}
-		if p.APIToken != "rotated-token-1234567890" {
-			t.Errorf("api token should be rotated, got %q", p.APIToken)
-		}
-	})
+	cm, err := config.NewConfigManager()
+	if err != nil {
+		t.Fatalf("reloading config failed: %v", err)
+	}
+	p, err := cm.GetProfile("keep")
+	if err != nil {
+		t.Fatalf("profile missing after update: %v", err)
+	}
+	if p.AccountID != "12345678901234567890123456789012" {
+		t.Errorf("account ID should be preserved, got %q", p.AccountID)
+	}
+	if p.APIToken != "rotated-token-1234567890" {
+		t.Errorf("api token should be rotated, got %q", p.APIToken)
+	}
 }
 
 // TestRunConfigDelete verifies delete guards and the dry-run no-op.
