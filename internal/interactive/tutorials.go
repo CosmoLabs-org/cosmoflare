@@ -55,13 +55,13 @@ type TutorialManager struct {
 
 // TutorialConfig holds tutorial configuration
 type TutorialConfig struct {
-	AutoStart     bool
-	AllowSkip     bool
-	SaveProgress  bool
-	Timeout       time.Duration
-	ShowHints     bool
-	VerboseMode   bool
-	Interactive   bool
+	AutoStart    bool
+	AllowSkip    bool
+	SaveProgress bool
+	Timeout      time.Duration
+	ShowHints    bool
+	VerboseMode  bool
+	Interactive  bool
 }
 
 // NewTutorialManager creates a new tutorial manager
@@ -78,13 +78,13 @@ func NewTutorialManager() *TutorialManager {
 			StartTime:     time.Now(),
 		},
 		config: &TutorialConfig{
-			AutoStart:     true,
-			AllowSkip:     true,
-			SaveProgress:  true,
-			Timeout:       5 * time.Minute,
-			ShowHints:     true,
-			VerboseMode:   false,
-			Interactive:   true,
+			AutoStart:    true,
+			AllowSkip:    true,
+			SaveProgress: true,
+			Timeout:      5 * time.Minute,
+			ShowHints:    true,
+			VerboseMode:  false,
+			Interactive:  true,
 		},
 	}
 }
@@ -92,185 +92,210 @@ func NewTutorialManager() *TutorialManager {
 // createDefaultTutorials creates the default tutorial lessons
 func createDefaultTutorials() []Tutorial {
 	return []Tutorial{
-		{
-			ID:          1,
-			Title:       "Understanding Profiles",
-			Description: "Learn how profiles work and why they're important",
-			Content: []string{
-				"Profiles store your Cloudflare account information securely.",
-				"",
-				"Each profile contains:",
-				"• Account ID for your Cloudflare account",
-				"• API token for authentication",
-				"• Region preferences",
-				"• Custom settings",
-				"",
-				"You can have multiple profiles for different accounts or environments.",
-				"This is perfect for separating work and personal projects!",
-			},
-			Actions: []TutorialAction{
-				{
-					ID:          "view_profiles",
-					Label:       "View Your Profiles",
-					Description: "List all configured profiles",
-					SkipAllowed: true,
-				},
-				{
-					ID:          "create_profile",
-					Label:       "Practice Creating",
-					Description: "Try creating a test profile",
-					SkipAllowed: true,
-				},
-			},
-			Interactive: true,
-			Required:    true,
+		tutorialUnderstandingProfiles(),
+		tutorialFirstBucket(),
+		tutorialUploadingFiles(),
+		tutorialManagingObjects(),
+		tutorialAdvancedTips(),
+	}
+}
+
+// tutorialUnderstandingProfiles returns the "Understanding Profiles" lesson
+func tutorialUnderstandingProfiles() Tutorial {
+	return Tutorial{
+		ID:          1,
+		Title:       "Understanding Profiles",
+		Description: "Learn how profiles work and why they're important",
+		Content: []string{
+			"Profiles store your Cloudflare account information securely.",
+			"",
+			"Each profile contains:",
+			"• Account ID for your Cloudflare account",
+			"• API token for authentication",
+			"• Region preferences",
+			"• Custom settings",
+			"",
+			"You can have multiple profiles for different accounts or environments.",
+			"This is perfect for separating work and personal projects!",
 		},
-		{
-			ID:          2,
-			Title:       "Your First Bucket",
-			Description: "Learn about R2 buckets and how to create them",
-			Content: []string{
-				"Buckets are containers for your files in Cloudflare R2.",
-				"",
-				"Think of them like folders in the cloud:",
-				"• Organize files by project or type",
-				"• Set access permissions",
-				"• Configure custom domains",
-				"• Monitor storage usage",
-				"",
-				"Best practices:",
-				"• Use descriptive names",
-				"• Keep related files together",
-				"• Regular cleanup of old files",
+		Actions: []TutorialAction{
+			{
+				ID:          "view_profiles",
+				Label:       "View Your Profiles",
+				Description: "List all configured profiles",
+				SkipAllowed: true,
 			},
-			Actions: []TutorialAction{
-				{
-					ID:          "list_buckets",
-					Label:       "List Buckets",
-					Description: "See your existing buckets",
-					SkipAllowed: true,
-				},
-				{
-					ID:          "create_bucket",
-					Label:       "Create Test Bucket",
-					Description: "Practice creating a bucket",
-					SkipAllowed: true,
-				},
+			{
+				ID:          "create_profile",
+				Label:       "Practice Creating",
+				Description: "Try creating a test profile",
+				SkipAllowed: true,
 			},
-			Interactive: true,
-			Required:    true,
 		},
-		{
-			ID:          3,
-			Title:       "Uploading Files",
-			Description: "Learn how to upload files to your buckets",
-			Content: []string{
-				"Uploading files is easy with R2Go2!",
-				"",
-				"Upload features:",
-				"• Single file uploads",
-				"• Batch directory uploads",
-				"• Progress tracking",
-				"• Automatic retries",
-				"• Checksum verification",
-				"",
-				"Common upload patterns:",
-				"• Website assets (images, CSS, JS)",
-				"• Application binaries",
-				"• Data backups",
-				"• Media files",
-			},
-			Actions: []TutorialAction{
-				{
-					ID:          "upload_file",
-					Label:       "Upload Test File",
-					Description: "Try uploading a file",
-					SkipAllowed: true,
-				},
-				{
-					ID:          "view_upload_help",
-					Label:       "View Upload Help",
-					Description: "Learn upload options",
-					SkipAllowed: true,
-				},
-			},
-			Interactive: true,
-			Required:    true,
+		Interactive: true,
+		Required:    true,
+	}
+}
+
+// tutorialFirstBucket returns the "Your First Bucket" lesson
+func tutorialFirstBucket() Tutorial {
+	return Tutorial{
+		ID:          2,
+		Title:       "Your First Bucket",
+		Description: "Learn about R2 buckets and how to create them",
+		Content: []string{
+			"Buckets are containers for your files in Cloudflare R2.",
+			"",
+			"Think of them like folders in the cloud:",
+			"• Organize files by project or type",
+			"• Set access permissions",
+			"• Configure custom domains",
+			"• Monitor storage usage",
+			"",
+			"Best practices:",
+			"• Use descriptive names",
+			"• Keep related files together",
+			"• Regular cleanup of old files",
 		},
-		{
-			ID:          4,
-			Title:       "Managing Objects",
-			Description: "Learn to manage files (objects) in your buckets",
-			Content: []string{
-				"Objects are individual files stored in your buckets.",
-				"",
-				"Object operations:",
-				"• List and search objects",
-				"• Download files",
-				"• Delete objects",
-				"• Copy between buckets",
-				"• Generate signed URLs",
-				"",
-				"Advanced features:",
-				"• Metadata management",
-				"• Object versioning",
-				"• Lifecycle policies",
-				"• Access control",
+		Actions: []TutorialAction{
+			{
+				ID:          "list_buckets",
+				Label:       "List Buckets",
+				Description: "See your existing buckets",
+				SkipAllowed: true,
 			},
-			Actions: []TutorialAction{
-				{
-					ID:          "list_objects",
-					Label:       "List Objects",
-					Description: "Browse files in a bucket",
-					SkipAllowed: true,
-				},
-				{
-					ID:          "object_info",
-					Label:       "Object Details",
-					Description: "View file information",
-					SkipAllowed: true,
-				},
+			{
+				ID:          "create_bucket",
+				Label:       "Create Test Bucket",
+				Description: "Practice creating a bucket",
+				SkipAllowed: true,
 			},
-			Interactive: true,
-			Required:    false,
 		},
-		{
-			ID:          5,
-			Title:       "Advanced Tips & Tricks",
-			Description: "Learn advanced R2Go2 features",
-			Content: []string{
-				"Take your R2Go2 skills to the next level!",
-				"",
-				"Advanced features:",
-				"• Profile switching and management",
-				"• Backup and restore configurations",
-				"• Custom themes and accessibility",
-				"• Command completion",
-				"• Output formatting (JSON, table)",
-				"",
-				"Productivity tips:",
-				"• Use shell aliases for frequent commands",
-				"• Create bash functions for complex workflows",
-				"• Enable verbose output for debugging",
-				"• Use profiles for different environments",
-			},
-			Actions: []TutorialAction{
-				{
-					ID:          "try_switching",
-					Label:       "Try Profile Switching",
-					Description: "Practice switching profiles",
-					SkipAllowed: true,
-				},
-				{
-					ID:          "view_help",
-					Label:       "Explore Help",
-					Description: "Browse help topics",
-					SkipAllowed: true,
-				},
-			},
-			Interactive: true,
-			Required:    false,
+		Interactive: true,
+		Required:    true,
+	}
+}
+
+// tutorialUploadingFiles returns the "Uploading Files" lesson
+func tutorialUploadingFiles() Tutorial {
+	return Tutorial{
+		ID:          3,
+		Title:       "Uploading Files",
+		Description: "Learn how to upload files to your buckets",
+		Content: []string{
+			"Uploading files is easy with R2Go2!",
+			"",
+			"Upload features:",
+			"• Single file uploads",
+			"• Batch directory uploads",
+			"• Progress tracking",
+			"• Automatic retries",
+			"• Checksum verification",
+			"",
+			"Common upload patterns:",
+			"• Website assets (images, CSS, JS)",
+			"• Application binaries",
+			"• Data backups",
+			"• Media files",
 		},
+		Actions: []TutorialAction{
+			{
+				ID:          "upload_file",
+				Label:       "Upload Test File",
+				Description: "Try uploading a file",
+				SkipAllowed: true,
+			},
+			{
+				ID:          "view_upload_help",
+				Label:       "View Upload Help",
+				Description: "Learn upload options",
+				SkipAllowed: true,
+			},
+		},
+		Interactive: true,
+		Required:    true,
+	}
+}
+
+// tutorialManagingObjects returns the "Managing Objects" lesson
+func tutorialManagingObjects() Tutorial {
+	return Tutorial{
+		ID:          4,
+		Title:       "Managing Objects",
+		Description: "Learn to manage files (objects) in your buckets",
+		Content: []string{
+			"Objects are individual files stored in your buckets.",
+			"",
+			"Object operations:",
+			"• List and search objects",
+			"• Download files",
+			"• Delete objects",
+			"• Copy between buckets",
+			"• Generate signed URLs",
+			"",
+			"Advanced features:",
+			"• Metadata management",
+			"• Object versioning",
+			"• Lifecycle policies",
+			"• Access control",
+		},
+		Actions: []TutorialAction{
+			{
+				ID:          "list_objects",
+				Label:       "List Objects",
+				Description: "Browse files in a bucket",
+				SkipAllowed: true,
+			},
+			{
+				ID:          "object_info",
+				Label:       "Object Details",
+				Description: "View file information",
+				SkipAllowed: true,
+			},
+		},
+		Interactive: true,
+		Required:    false,
+	}
+}
+
+// tutorialAdvancedTips returns the "Advanced Tips & Tricks" lesson
+func tutorialAdvancedTips() Tutorial {
+	return Tutorial{
+		ID:          5,
+		Title:       "Advanced Tips & Tricks",
+		Description: "Learn advanced R2Go2 features",
+		Content: []string{
+			"Take your R2Go2 skills to the next level!",
+			"",
+			"Advanced features:",
+			"• Profile switching and management",
+			"• Backup and restore configurations",
+			"• Custom themes and accessibility",
+			"• Command completion",
+			"• Output formatting (JSON, table)",
+			"",
+			"Productivity tips:",
+			"• Use shell aliases for frequent commands",
+			"• Create bash functions for complex workflows",
+			"• Enable verbose output for debugging",
+			"• Use profiles for different environments",
+		},
+		Actions: []TutorialAction{
+			{
+				ID:          "try_switching",
+				Label:       "Try Profile Switching",
+				Description: "Practice switching profiles",
+				SkipAllowed: true,
+			},
+			{
+				ID:          "view_help",
+				Label:       "Explore Help",
+				Description: "Browse help topics",
+				SkipAllowed: true,
+			},
+		},
+		Interactive: true,
+		Required:    false,
 	}
 }
 

@@ -45,9 +45,9 @@ type Theme struct {
 
 // ThemeSpacing defines spacing for the theme
 type ThemeSpacing struct {
-	LineSpacing   int
-	SectionGap    int
-	IndentSize    int
+	LineSpacing      int
+	SectionGap       int
+	IndentSize       int
 	ProgressBarWidth int
 }
 
@@ -61,10 +61,10 @@ type ThemeIcons struct {
 
 // ThemeAnimations defines animation settings
 type ThemeAnimations struct {
-	Enabled      bool
-	Speed        int // milliseconds
-	Easing       string
-	Transitions  bool
+	Enabled     bool
+	Speed       int // milliseconds
+	Easing      string
+	Transitions bool
 }
 
 // ThemeManager manages theme loading and application
@@ -78,8 +78,8 @@ type ThemeManager struct {
 // NewThemeManager creates a new theme manager
 func NewThemeManager() *ThemeManager {
 	manager := &ThemeManager{
-		themes:    make(map[string]*Theme),
-		Input:     DefaultInput(),
+		themes: make(map[string]*Theme),
+		Input:  DefaultInput(),
 	}
 	manager.themePath = manager.getThemePath()
 
@@ -103,23 +103,35 @@ func (tm *ThemeManager) getThemePath() string {
 
 // loadBuiltinThemes loads the built-in themes
 func (tm *ThemeManager) loadBuiltinThemes() {
-	// Cosmic Theme (default)
-	tm.themes["cosmic"] = &Theme{
+	for _, theme := range []*Theme{
+		builtinThemeCosmic(),
+		builtinThemeForest(),
+		builtinThemeOcean(),
+		builtinThemeSunset(),
+		builtinThemeMonochrome(),
+	} {
+		tm.themes[theme.ID] = theme
+	}
+}
+
+// builtinThemeCosmic returns the Cosmic theme (default)
+func builtinThemeCosmic() *Theme {
+	return &Theme{
 		ID:          "cosmic",
 		Name:        "Cosmic",
 		Description: "🌌 Purple and blue gradients",
 		Colors: ColorScheme{
 			Name:        "cosmic",
 			Description: "Purple and blue gradient theme",
-			Primary:     "\033[38;5;147m",  // Light purple
-			Secondary:   "\033[38;5;75m",   // Light blue
-			Success:     "\033[38;5;84m",   // Green
-			Warning:     "\033[38;5;221m",  // Yellow
-			Error:       "\033[38;5;203m",  // Red
-			Info:        "\033[38;5;123m",  // Cyan
-			Accent:      "\033[38;5;177m",  // Pink
-			Background:  "\033[48;5;235m",  // Dark background
-			Foreground:  "\033[38;5;255m",  // White
+			Primary:     "\033[38;5;147m", // Light purple
+			Secondary:   "\033[38;5;75m",  // Light blue
+			Success:     "\033[38;5;84m",  // Green
+			Warning:     "\033[38;5;221m", // Yellow
+			Error:       "\033[38;5;203m", // Red
+			Info:        "\033[38;5;123m", // Cyan
+			Accent:      "\033[38;5;177m", // Pink
+			Background:  "\033[48;5;235m", // Dark background
+			Foreground:  "\033[38;5;255m", // White
 			Emoji: map[string]string{
 				"success": "✨",
 				"error":   "💫",
@@ -129,16 +141,16 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			},
 		},
 		Spacing: ThemeSpacing{
-			LineSpacing:        1,
-			SectionGap:         2,
-			IndentSize:         2,
-			ProgressBarWidth:   40,
+			LineSpacing:      1,
+			SectionGap:       2,
+			IndentSize:       2,
+			ProgressBarWidth: 40,
 		},
 		Icons: ThemeIcons{
-			UseEmojis:    true,
-			SpinnerChars: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+			UseEmojis:     true,
+			SpinnerChars:  []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
 			ProgressChars: "█",
-			BulletChars:  []string{"•", "◦", "○"},
+			BulletChars:   []string{"•", "◦", "○"},
 		},
 		Animations: ThemeAnimations{
 			Enabled:     true,
@@ -147,24 +159,26 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			Transitions: true,
 		},
 	}
+}
 
-	// Forest Theme
-	tm.themes["forest"] = &Theme{
+// builtinThemeForest returns the Forest theme
+func builtinThemeForest() *Theme {
+	return &Theme{
 		ID:          "forest",
 		Name:        "Forest",
 		Description: "🌲 Green and earth tones",
 		Colors: ColorScheme{
 			Name:        "forest",
 			Description: "Nature-inspired green theme",
-			Primary:     "\033[38;5;106m",  // Green
-			Secondary:   "\033[38;5;100m",  // Olive
-			Success:     "\033[38;5;112m",  // Bright green
-			Warning:     "\033[38;5;172m",  // Orange
-			Error:       "\033[38;5;124m",  // Red
-			Info:        "\033[38;5;108m",  // Cyan-green
-			Accent:      "\033[38;5;143m",  // Brown
-			Background:  "\033[48;5;234m",  // Dark green background
-			Foreground:  "\033[38;5;255m",  // White
+			Primary:     "\033[38;5;106m", // Green
+			Secondary:   "\033[38;5;100m", // Olive
+			Success:     "\033[38;5;112m", // Bright green
+			Warning:     "\033[38;5;172m", // Orange
+			Error:       "\033[38;5;124m", // Red
+			Info:        "\033[38;5;108m", // Cyan-green
+			Accent:      "\033[38;5;143m", // Brown
+			Background:  "\033[48;5;234m", // Dark green background
+			Foreground:  "\033[38;5;255m", // White
 			Emoji: map[string]string{
 				"success": "🌿",
 				"error":   "🍂",
@@ -174,16 +188,16 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			},
 		},
 		Spacing: ThemeSpacing{
-			LineSpacing:        1,
-			SectionGap:         2,
-			IndentSize:         2,
-			ProgressBarWidth:   40,
+			LineSpacing:      1,
+			SectionGap:       2,
+			IndentSize:       2,
+			ProgressBarWidth: 40,
 		},
 		Icons: ThemeIcons{
-			UseEmojis:    true,
-			SpinnerChars: []string{"🌲", "🌳", "🌴", "🎋"},
+			UseEmojis:     true,
+			SpinnerChars:  []string{"🌲", "🌳", "🌴", "🎋"},
 			ProgressChars: "▓",
-			BulletChars:  []string{"🍃", "🌱", "🌿"},
+			BulletChars:   []string{"🍃", "🌱", "🌿"},
 		},
 		Animations: ThemeAnimations{
 			Enabled:     true,
@@ -192,24 +206,26 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			Transitions: true,
 		},
 	}
+}
 
-	// Ocean Theme
-	tm.themes["ocean"] = &Theme{
+// builtinThemeOcean returns the Ocean theme
+func builtinThemeOcean() *Theme {
+	return &Theme{
 		ID:          "ocean",
 		Name:        "Ocean",
 		Description: "🌊 Deep blues and teals",
 		Colors: ColorScheme{
 			Name:        "ocean",
 			Description: "Ocean-inspired blue theme",
-			Primary:     "\033[38;5;39m",   // Blue
-			Secondary:   "\033[38;5;80m",   // Cyan
-			Success:     "\033[38;5;43m",   // Aqua
-			Warning:     "\033[38;5;220m",  // Gold
-			Error:       "\033[38;5;196m",  // Red
-			Info:        "\033[38;5;51m",   // Light blue
-			Accent:      "\033[38;5;225m",  // Light cyan
-			Background:  "\033[48;5;236m",  // Dark blue background
-			Foreground:  "\033[38;5;255m",  // White
+			Primary:     "\033[38;5;39m",  // Blue
+			Secondary:   "\033[38;5;80m",  // Cyan
+			Success:     "\033[38;5;43m",  // Aqua
+			Warning:     "\033[38;5;220m", // Gold
+			Error:       "\033[38;5;196m", // Red
+			Info:        "\033[38;5;51m",  // Light blue
+			Accent:      "\033[38;5;225m", // Light cyan
+			Background:  "\033[48;5;236m", // Dark blue background
+			Foreground:  "\033[38;5;255m", // White
 			Emoji: map[string]string{
 				"success": "🐚",
 				"error":   "🌊",
@@ -219,16 +235,16 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			},
 		},
 		Spacing: ThemeSpacing{
-			LineSpacing:        1,
-			SectionGap:         2,
-			IndentSize:         2,
-			ProgressBarWidth:   40,
+			LineSpacing:      1,
+			SectionGap:       2,
+			IndentSize:       2,
+			ProgressBarWidth: 40,
 		},
 		Icons: ThemeIcons{
-			UseEmojis:    true,
-			SpinnerChars: []string{"🌊", "🌊", "💧", "💦", "🌊"},
+			UseEmojis:     true,
+			SpinnerChars:  []string{"🌊", "🌊", "💧", "💦", "🌊"},
 			ProgressChars: "▓",
-			BulletChars:  []string{"🐚", "🦀", "⚓"},
+			BulletChars:   []string{"🐚", "🦀", "⚓"},
 		},
 		Animations: ThemeAnimations{
 			Enabled:     true,
@@ -237,24 +253,26 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			Transitions: true,
 		},
 	}
+}
 
-	// Sunset Theme
-	tm.themes["sunset"] = &Theme{
+// builtinThemeSunset returns the Sunset theme
+func builtinThemeSunset() *Theme {
+	return &Theme{
 		ID:          "sunset",
 		Name:        "Sunset",
 		Description: "🌅 Warm oranges and reds",
 		Colors: ColorScheme{
 			Name:        "sunset",
 			Description: "Sunset-inspired warm theme",
-			Primary:     "\033[38;5;208m",  // Orange
-			Secondary:   "\033[38;5;196m",  // Red
-			Success:     "\033[38;5;214m",  // Gold
-			Warning:     "\033[38;5;226m",  // Yellow
-			Error:       "\033[38;5;160m",  // Dark red
-			Info:        "\033[38;5;179m",  // Peach
-			Accent:      "\033[38;5;203m",  // Pink
-			Background:  "\033[48;5;94m",   // Warm background
-			Foreground:  "\033[38;5;255m",  // White
+			Primary:     "\033[38;5;208m", // Orange
+			Secondary:   "\033[38;5;196m", // Red
+			Success:     "\033[38;5;214m", // Gold
+			Warning:     "\033[38;5;226m", // Yellow
+			Error:       "\033[38;5;160m", // Dark red
+			Info:        "\033[38;5;179m", // Peach
+			Accent:      "\033[38;5;203m", // Pink
+			Background:  "\033[48;5;94m",  // Warm background
+			Foreground:  "\033[38;5;255m", // White
 			Emoji: map[string]string{
 				"success": "🌅",
 				"error":   "🌆",
@@ -264,16 +282,16 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			},
 		},
 		Spacing: ThemeSpacing{
-			LineSpacing:        1,
-			SectionGap:         2,
-			IndentSize:         2,
-			ProgressBarWidth:   40,
+			LineSpacing:      1,
+			SectionGap:       2,
+			IndentSize:       2,
+			ProgressBarWidth: 40,
 		},
 		Icons: ThemeIcons{
-			UseEmojis:    true,
-			SpinnerChars: []string{"🌅", "🌆", "🌇", "🌄"},
+			UseEmojis:     true,
+			SpinnerChars:  []string{"🌅", "🌆", "🌇", "🌄"},
 			ProgressChars: "█",
-			BulletChars:  []string{"🔥", "✨", "💫"},
+			BulletChars:   []string{"🔥", "✨", "💫"},
 		},
 		Animations: ThemeAnimations{
 			Enabled:     true,
@@ -282,9 +300,11 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			Transitions: true,
 		},
 	}
+}
 
-	// Monochrome Theme
-	tm.themes["monochrome"] = &Theme{
+// builtinThemeMonochrome returns the Monochrome theme
+func builtinThemeMonochrome() *Theme {
+	return &Theme{
 		ID:          "monochrome",
 		Name:        "Monochrome",
 		Description: "⚪ Black and white only",
@@ -309,16 +329,16 @@ func (tm *ThemeManager) loadBuiltinThemes() {
 			},
 		},
 		Spacing: ThemeSpacing{
-			LineSpacing:        1,
-			SectionGap:         1,
-			IndentSize:         4,
-			ProgressBarWidth:   50,
+			LineSpacing:      1,
+			SectionGap:       1,
+			IndentSize:       4,
+			ProgressBarWidth: 50,
 		},
 		Icons: ThemeIcons{
-			UseEmojis:    false,
-			SpinnerChars: []string{"|", "/", "-", "\\"},
+			UseEmojis:     false,
+			SpinnerChars:  []string{"|", "/", "-", "\\"},
 			ProgressChars: "=",
-			BulletChars:  []string{"•", "◦", "○"},
+			BulletChars:   []string{"•", "◦", "○"},
 		},
 		Animations: ThemeAnimations{
 			Enabled:     false,
