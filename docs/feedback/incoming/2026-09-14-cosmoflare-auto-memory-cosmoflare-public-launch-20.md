@@ -10,7 +10,7 @@ from_path: /Users/gabstudio/PROJECTS/cosmoflare
 to_project: cosmoflare
 to_target: self
 created: "2026-09-14T04:06:04.854326+04:00"
-updated: "2026-09-14T04:06:04.854326+04:00"
+updated: "2026-09-15T04:24:33.430904+04:00"
 suggested_conversion: feature
 converted_to: null
 related_issues: []
@@ -24,7 +24,7 @@ response:
   implemented: null
   rejected: null
   rejection_reason: null
-  notes: ""
+    notes: "[2026-09-15 04:24] Triage 2026-09-15: valid request, execution blocked by cosmohooks cross-project-guard misfire (it blocks this project's OWN memory dir at ~/.claude/projects/-Users-gabstudio-PROJECTS-cosmoflare/memory/). Root cause filed to ClaudeCodeSetup (incoming: 2026-09-15-cosmoflare-cross-project-guard-blocks-a-projects-o.md). Item stays OPEN until the guard is fixed and the memory file exists."
 ---
 
 # FB-p26FGWZ: Auto-memory: cosmoflare public launch 2026-09-13
