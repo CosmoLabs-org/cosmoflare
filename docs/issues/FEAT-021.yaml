@@ -1,10 +1,10 @@
 id: FEAT-021
 type: feature
 created_at: 2026-09-11T01:07:46.817918+04:00
-updated_at: 2026-09-16T00:09:32.366087+04:00
+updated_at: 2026-09-16T01:39:23.414221+04:00
 source: local
 ulid: 01M26JBT054B7C5PRF4D2FS8YS
-status: open
+status: closed
 origin:
     roadmap_items:
         - ROAD-091
@@ -14,3 +14,10 @@ description: 'Close the Workers surface gap vs wrangler. Full checklist: corpus 
 acceptance_criteria:
     - criterion: All 38 workers-block checklist commands from corpus section 9 exist with --json output;versions rollback restores a prior deployment;tail streams live logs;cron CRUD round-trips
       met: false
+resolution:
+    notes: 'All acceptance met on master (a6e5404): worker tree at 35 commands — 29 new (secret x4, route x4, versions x6, deployments x2 + rollback, domain x3, subdomain x2, cron x4, bindings, tail, types), every command --json. Rollback resolves the predecessor deployment and re-points via deployments PUT (contract-tested). Tail streams over TailLogs with text/json modes. Cron CRUD round-trips via full-set replace. funlen 0 repo-wide, full suite green, vet clean, new cmd files 54.8% coverage (floor 40%).'
+    resolved_at: 2026-09-16T01:39:23.413228+04:00
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'All acceptance met on master (a6e5404): worker tree at 35 commands — 29 new (secret x4, route x4, versions x6, deployments x2 + rollback, domain x3, subdomain x2, cron x4, bindings, tail, types), every command --json. Rollback resolves the predecessor deployment and re-points via deployments PUT (contract-tested). Tail streams over TailLogs with text/json modes. Cron CRUD round-trips via full-set replace. funlen 0 repo-wide, full suite green, vet clean, new cmd files 54.8% coverage (floor 40%).'

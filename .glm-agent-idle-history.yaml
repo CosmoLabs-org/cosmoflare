@@ -54,3 +54,18 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
       updated: 2026-09-15T20:00:35.884836+04:00
+    - brief_hash: cf08a2ddec7655be
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-16T00:01:57.417234+04:00
+    - brief_hash: c47873e44446a907
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-16T00:01:57.702142+04:00
+    - brief_hash: f52d8e3d8d14b632
+      model: glm-5.3-flash
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T00:55:53.196084+04:00

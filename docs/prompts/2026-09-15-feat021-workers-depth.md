@@ -1,6 +1,7 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-15-feat021-workers-depth.md
 branch: master
+completed: "2026-09-16T01:39:23+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -24,16 +25,21 @@ covers_plan_deliverables:
     - P-09
     - P-10
 created: "2026-09-15T23:55:40+04:00"
+goals_completed: 14
+goals_total: 14
 id: P-2026-09-15-feat021-workers-depth
 plan_ref: docs/planning-mode/2026-09-15-feat021-workers-depth.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-15-feat021-workers-depth.md
     - docs/planning-mode/2026-09-15-feat021-workers-depth.md
 schema_version: 1
-status: PENDING
+status: COMPLETED
+tags: []
 title: FEAT-021 Workers Command Depth — Full Implementation
 ---
+
 # FEAT-021 Workers Command Depth — Full Implementation
 
 ## BEFORE Starting — Required Reading
@@ -53,34 +59,34 @@ _Describe the session context._
 
 ## Goals
 
-### [ ] G-01 worker_secrets.go: Put/Delete/List/Bulk + tests + 4 commands
+### [x] G-01 worker_secrets.go: Put/Delete/List/Bulk + tests + 4 commands
 Covers P-01.
 
-### [ ] G-02 worker_routes.go: zone-scoped CRUD + tests + 4 commands
+### [x] G-02 worker_routes.go: zone-scoped CRUD + tests + 4 commands
 Covers P-02.
 
-### [ ] G-03 worker_versions.go: raw-REST versions client + tests + 6 commands
+### [x] G-03 worker_versions.go: raw-REST versions client + tests + 6 commands
 Covers P-03.
 
-### [ ] G-04 worker_deployments.go: list/view/rollback + tests + 3 commands
+### [x] G-04 worker_deployments.go: list/view/rollback + tests + 3 commands
 Covers P-04.
 
-### [ ] G-05 worker_domains.go: attach/detach/list + tests + 3 commands
+### [x] G-05 worker_domains.go: attach/detach/list + tests + 3 commands
 Covers P-05.
 
-### [ ] G-06 worker_subdomain.go: get/set + tests + 2 commands
+### [x] G-06 worker_subdomain.go: get/set + tests + 2 commands
 Covers P-06.
 
-### [ ] G-07 worker_cron.go: CRUD via Update + tests + 4 commands
+### [x] G-07 worker_cron.go: CRUD via Update + tests + 4 commands
 Covers P-07.
 
-### [ ] G-08 bindings list + tail commands (library reuse)
+### [x] G-08 bindings list + tail commands (library reuse)
 Covers P-08.
 
-### [ ] G-09 worker types: .d.ts generator (pure) + command + tests
+### [x] G-09 worker types: .d.ts generator (pure) + command + tests
 Covers P-09.
 
-### [ ] G-10 Integration: cmd/worker.go wiring, --help sweep, acceptance gates
+### [x] G-10 Integration: cmd/worker.go wiring, --help sweep, acceptance gates
 Covers P-10.
 
 ## Related
@@ -104,13 +110,13 @@ GLM manifest: `docs/prompts/2026-09-15-feat021-workers-depth-glm-tasks.yaml`
 
 ## Goals
 
-### [ ] 1. Wave 1 — secrets + routes + versions + deployments/rollback (P-01..P-04)
+### [x] 1. Wave 1 — secrets + routes + versions + deployments/rollback (P-01..P-04)
 Acceptance: manifest tasks 1-4 merged through the S334 gate; go test ./... green; funlen 0 for new files
-### [ ] 2. Wave 2 — domains + subdomain + cron + bindings + tail (P-05..P-08)
+### [x] 2. Wave 2 — domains + subdomain + cron + bindings + tail (P-05..P-08)
 Acceptance: same shape as wave 1, per plan tasks 5-8; tail streams via existing TailLogs
-### [ ] 3. Wave 3 — worker types .d.ts generator (P-09)
+### [x] 3. Wave 3 — worker types .d.ts generator (P-09)
 Acceptance: pure GenerateWorkerTypes(settings) string; tests cover every binding kind; worker types NAME command
-### [ ] 4. Integration + acceptance (P-10, Opus-side)
+### [x] 4. Integration + acceptance (P-10, Opus-side)
 Acceptance: all register funcs wired in cmd/worker.go; every command answers --help and --json arg-validation offline; golangci funlen 0; go test ./... green; USAGE.md Workers section updated; coverage of new cmd files >= 40%
 
 ## Execution Strategy

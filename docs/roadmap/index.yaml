@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-15T22:19:25.627235+04:00
+last_updated: 2026-09-15T23:57:05.955418+04:00
 next_id: 100
 items:
     - id: BASE-001
@@ -777,6 +777,7 @@ items:
     - id: ROAD-091
       title: Agentic-surface completeness — Durable Objects, Workflows, Queues depth, Workers AI, MCP parity
       status: captured
+      has_plan: true
       linked_issues:
         - FEAT-021
         - FEAT-022
