@@ -1,6 +1,7 @@
 ---
 title: "FEAT-021 Workers Command Depth — Implementation Plan"
 created: 2026-09-15
+updated: 2026-09-16T00:02:19+04:00
 status: IN_PROGRESS
 branch: master
 brainstorm_ref: docs/brainstorming/2026-09-15-feat021-workers-depth.md
@@ -30,7 +31,8 @@ deliverables:
 
 # FEAT-021 Implementation Plan
 
-Goal: all 38 corpus workers-block commands exist with `--json`, library-first,
+Goal: full corpus workers-block coverage — the `worker` tree reaches 35
+subcommands (6 existing + 29 new), all with `--json`, library-first,
 behavior gated by tests. Design: see
 `docs/brainstorming/2026-09-15-feat021-workers-depth.md` (transport split,
 registration-func isolation, rollback semantics).
@@ -55,7 +57,8 @@ Files: `pkg/cosmoflare/worker_secrets.go`, `..._test.go`,
 `cmd/worker_secrets.go`, `cmd/worker_secrets_run_test.go`.
 - `SecretPut(ctx, name, key, value)`, `SecretDelete(ctx, name, key)`,
   `SecretList(ctx, name) ([]SecretInfo, error)` (names only),
-  `SecretsBulk(ctx, name, map[string]string) (results, error)`.
+  `SecretsBulk(ctx, name, map[string]string) ([]SecretBulkResult, error)`
+  (one entry per key: name + error).
 - cloudflare-go: `SetWorkersSecret`/`DeleteWorkersSecret`/
   `ListWorkersSecrets`. Bulk loops Put, collects per-key errors.
 - Commands: `worker secret put KEY [--value | stdin]`, `secret delete KEY`,
@@ -77,11 +80,16 @@ run tests.
 ### Task 3 (P-03) — Versions (raw REST)
 Files: `pkg/cosmoflare/worker_versions.go` + tests,
 `cmd/worker_versions.go` + run tests.
-- Adds to WorkerService (in this NEW file only): unexported `apiToken` /
-  `apiBaseURL` fields SET VIA constructor changes — construction edits go in
-  THIS task: `NewWorkerServiceFromCreds` stores the token;
-  `NewWorkerService` keeps zero token (raw REST unavailable → typed error
-  "raw API requires credentials-based construction").
+- Struct fields are the one `worker.go` edit (Go cannot declare struct
+  fields in a second file): add unexported `apiToken string` /
+  `apiBaseURL string` to the `WorkerService` struct declaration in
+  `worker.go`; all raw-REST *methods* stay in the NEW file only.
+  Constructors, same task: `NewWorkerServiceFromCreds` stores the token and
+  defaults `apiBaseURL` to `https://api.cloudflare.com/client/v4`;
+  `NewWorkerService` leaves both zero (raw REST unavailable → typed error
+  "raw API requires credentials-based construction"). Existing
+  `NewWorkerService` callers/tests are unaffected (fields are additive and
+  unexported).
 - `rawRequest(ctx, method, path string, body any, out any) error`:
   Bearer auth, 30s timeout, CF error-envelope unwrap, typed errors.
 - `VersionUpload(ctx, name, script io.Reader, opts ...WorkerOption)`,
@@ -91,12 +99,20 @@ Files: `pkg/cosmoflare/worker_versions.go` + tests,
   deploy with rollback reporting.
 - Endpoints: `accounts/{id}/workers/scripts/{name}/versions`,
   `.../versions/{vid}`, `.../deployments` (pointer PUT).
+- `VersionUpload` sends `multipart/form-data` (metadata JSON part + script
+  part), NOT JSON — the real API rejects a JSON body; contract mocks must
+  assert the request content type.
 - Tests inject `httptest.NewServer` as apiBaseURL.
 - Commands: `worker versions upload|list|view|deploy|delete|rollback`.
 
 ### Task 4 (P-04) — Deployments + rollback
 Files: `pkg/cosmoflare/worker_deployments.go` + tests,
 `cmd/worker_deployments.go` + run tests.
+- DEPENDS ON Task 3 (must land after it): all three methods go over Task
+  3's `rawRequest`/`apiToken`/`apiBaseURL` — cloudflare-go v0.116.0 ships
+  no workers-deployments API (verified; only Pages deployments exist). If
+  dispatched before Task 3 merges, those symbols are undefined: STOP and
+  re-run after Task 3 — never re-implement `rawRequest` in this task.
 - `DeploymentList(ctx, name)`, `DeploymentGet(ctx, name, id)`,
   `Rollback(ctx, name, deploymentID)` (resolves the deployment's version and
   re-points, raw REST).
@@ -117,10 +133,14 @@ streaming over existing `TailLogs`.
 ## Phase 3 — Wave 3
 
 ### Task 9 (P-09) — `worker types NAME [--out FILE]`:
+Files: `pkg/cosmoflare/worker_types.go` + `worker_types_test.go`,
+`cmd/worker_types.go` + `cmd/worker_types_run_test.go`.
 pure `GenerateWorkerTypes(settings WorkerSettings) string` producing
 `worker-configuration.d.ts` (Env interface; KVNamespace/R2Bucket/
 D1Database/Queue/Fetcher/secret_string mapping). Tests assert generated
-text for every binding kind. Command prints or writes.
+text for every binding kind — name them `TestGenerateWorkerTypes*`
+(`worker_test.go:105` already defines `TestWorkerTypes`; a duplicate name
+breaks compilation). Command prints or writes.
 ### Task 10 (P-10) — Integration (Opus): wire all register funcs into
 `cmd/worker.go`; `--help` example sweep; acceptance gates:
 - every command runs with `--json` (smoke via `--help` + arg validation),
@@ -131,17 +151,26 @@ text for every binding kind. Command prints or writes.
 
 ## Verification (per task, non-negotiable)
 
+Name all new tests `TestWorker<Group>*` (e.g. `TestWorkerSecretsPut`) so
+the patterns below select only the new suites — bare stems like 'Domain'
+or 'Deployment' over-match existing tests (`TestBucketDomain*`,
+`TestPages*Deployment*`, `TestRootCmd_VersionTemplate`, ...).
+
 ```
-go test ./pkg/cosmoflare/ -run '<Group>' -count=1
-go test ./cmd/ -run '<Group>' -count=1
-golangci-lint run ./pkg/cosmoflare/ ./cmd/   # zero funlen
+go test ./pkg/cosmoflare/ -run 'TestWorker<Group>' -count=1
+go test ./cmd/ -run 'TestWorker<Group>' -count=1
+golangci-lint run ./pkg/cosmoflare/ ./cmd/   # zero funlen hits
 go build ./...
 ```
 
+Funlen gate (TASK-009, `.golangci.yml`): every function ≤ 80 lines and
+≤ 50 statements. Never disable or raise it to make a task pass.
+
 ## File Scope (planned)
 
-pkg/cosmoflare/worker_{secrets,routes,versions,deployments,domains,subdomain,cron}.go
-(+ _test.go each), pkg/cosmoflare/worker.go (FromCreds token capture only),
+pkg/cosmoflare/worker_{secrets,routes,versions,deployments,domains,subdomain,cron,types}.go
+(+ _test.go each), pkg/cosmoflare/worker.go (apiToken/apiBaseURL struct
+fields + FromCreds token capture; Task 3 only),
 cmd/worker_{secrets,routes,versions,deployments,domains,subdomain,cron,bindings,tail,types}.go
 (+ _run_test.go each), cmd/worker.go (registration wiring only, Opus),
 docs/USAGE.md (Workers section).
