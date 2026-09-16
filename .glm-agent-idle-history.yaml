@@ -69,3 +69,33 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
       updated: 2026-09-16T00:55:53.196084+04:00
+    - brief_hash: 4e8a612ba48ca859
+      model: glm-5.3-flash
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T13:10:42.16953+04:00
+    - brief_hash: e74ba7f7900adb12
+      model: glm-5.3-flash
+      idle_timeouts: 2
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T18:49:41.888465+04:00
+    - brief_hash: f71dbb82c1e1aed6
+      model: glm-5.3-flash
+      idle_timeouts: 2
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T18:49:57.681122+04:00
+    - brief_hash: a536adf90f5b6034
+      model: glm-5.3-flash
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T18:52:12.951921+04:00
+    - brief_hash: 7d6fbc866b0b2d24
+      model: glm-5.3-flash
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3-flash","query_source":"sdk"}'
+      updated: 2026-09-16T18:52:22.400674+04:00
+    - brief_hash: 9a0c06955ba3d33d
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-17T03:33:30.406708+04:00

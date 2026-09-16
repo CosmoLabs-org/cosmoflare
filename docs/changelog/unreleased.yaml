@@ -4,7 +4,25 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: redact-safe token retrieval (FEAT-029 part 1)
+          source: 927da244
+          date: 2026-09-17T00:12:09.025625+04:00
+        - description: permission catalog pack + 10405 scope decode (FEAT-011)
+          source: c949271b
+          date: 2026-09-17T00:12:09.026179+04:00
+        - description: opt-in env-gated update check (COSMOFLARE_UPDATE_CHECK, default off) (FEAT-043)
+          source: manual
+          date: 2026-09-17T00:12:19.339982+04:00
+        - description: 'named environment profiles part 1: --env flag, profile plan_tier/resource_prefix, limits plan-tier awareness (FEAT-026)'
+          source: manual
+          date: 2026-09-17T00:12:19.382223+04:00
+        - description: SSL custom hostnames (SaaS) CRUD + verification status verbs (FEAT-031)
+          source: manual
+          date: 2026-09-17T00:12:28.921269+04:00
+        - description: WAF lists CRUD + items add/replace + managed-rulesets update (FEAT-032)
+          source: manual
+          date: 2026-09-17T00:12:28.965289+04:00
     fixed: []
     changed: []
     deprecated: []
