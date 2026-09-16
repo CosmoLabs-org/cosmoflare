@@ -8,12 +8,14 @@ License: MIT
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/updatecheck"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -118,6 +120,14 @@ Examples:
 		if Verbose {
 			printInfo("Cosmoflare version: %s", AppVersion)
 			printInfo("Account ID: %s", utils.MaskAccountID(AccountID))
+		}
+
+		// Opt-in, env-gated update check (FEAT-043). Inert unless
+		// COSMOFLARE_UPDATE_CHECK=1; writes at most one line to stderr and
+		// never exits. The MCP server must stay silent (its stdout is the
+		// protocol channel), so it is explicitly excluded.
+		if cmd.Name() != "mcp" {
+			updatecheck.MaybePrintNotice(context.Background(), AppVersion, os.Stderr)
 		}
 	},
 }
