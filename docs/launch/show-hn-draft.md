@@ -31,18 +31,19 @@ maintained single-binary tool. So:
   errors into causes + fixes, a monthly cost estimator, wrangler.toml import,
   and Terraform export for migration in the other direction.
 
-Honest limits: `cosmoflare dev` is a proxy, not a workerd runtime, and there
-is no `worker secret`/versions/rollback yet — if your daily loop is
-`wrangler dev`, keep Wrangler for that. The comparison table [2] says exactly
-where each tool wins.
+Honest limits: `cosmoflare dev` is a proxy, not a workerd runtime — if your
+daily loop is `wrangler dev`, keep Wrangler for that. The rest of the
+Workers lifecycle (secrets, versions, deployments with rollback, custom
+domains) shipped in v0.28.2. The comparison table [2] says exactly where
+each tool wins.
 
-Install: `go install github.com/CosmoLabs-org/cosmoflare@latest` (Homebrew
-tap coming). Docs: USAGE.md is a 2900-line agent-friendly reference [3].
-The CLI is the free tier; a desktop dashboard and mobile app wrap the same
-Go library.
+Install: `go install github.com/CosmoLabs-org/cosmoflare@latest` or
+`brew install CosmoLabs-org/cosmoflare/cosmoflare`. Docs: USAGE.md is a
+2900-line agent-friendly reference [3]. The CLI is the free tier; a desktop
+dashboard and mobile app wrap the same Go library.
 
-What we'd love feedback on: the MCP mutation-gating model, and which
-Workers lifecycle features (secrets, versions, rollback) matter most to you.
+What we'd love feedback on: the MCP mutation-gating model, and what else
+belongs in a single-binary Cloudflare tool.
 
 [1] https://github.com/CosmoLabs-org/cosmoflare
 [2] https://github.com/CosmoLabs-org/cosmoflare/blob/master/docs/vs-wrangler.md

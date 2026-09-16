@@ -30,11 +30,12 @@ Things r/Cloudflare folks might care about:
 - `cosmoflare wrangler` imports your existing wrangler.toml;
   `cosmoflare terraform` exports live state if you're heading to IaC
 
-What it does NOT do (yet): local workerd dev runtime, `worker secret`,
-versions/rollback. If you live in `wrangler dev`, this isn't replacing that
-— comparison here [2].
+What it does NOT do: local workerd dev runtime (`cosmoflare dev` is a
+proxy). The rest of the Workers lifecycle — secrets, versions, deployments
+with rollback, custom domains — landed in v0.28.2. Comparison here [2].
 
-Install: `go install github.com/CosmoLabs-org/cosmoflare@latest`.
+Install: `go install github.com/CosmoLabs-org/cosmoflare@latest` or
+`brew install CosmoLabs-org/cosmoflare/cosmoflare`.
 
 If you manage Cloudflare for a project: what's missing from your current
 tooling? That's the roadmap input I care about most.

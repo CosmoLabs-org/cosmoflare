@@ -28,6 +28,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [v0.28.2] - 2026-09-16
+
+### Added
+- wire wave 2-3 groups + USAGE.md Workers section (FEAT-021) (a6e54045)
+- worker types .d.ts generator (FEAT-021) (b32e4801)
+- bindings list + live tail commands (FEAT-021) (9ea29030)
+- workers.dev subdomain get/set (FEAT-021) (be2101b4)
+- custom domain attach/detach/list (FEAT-021) (1dcbe2dd)
+- deployments list/view/rollback + wave-1 wiring (FEAT-021) (326511a6)
+
+### Fixed
+- go install via proxy.golang.org failed for v0.28.0/v0.28.1 (emoji-named path in the tagged tree); directory removed, release gate now rejects non-ASCII paths (BUG-052) (b2d4eaf5)
+- zero AccountID/APIToken in cron globals helper — full-suite order dependence (3282e614)
+- route list flag check uses LocalFlags — cobra merges inherited persistent flags on root Execute, making Flags() order-dependent (6613958f)
+
 ## [0.28.1] - 2026-09-15
 
 ### Added

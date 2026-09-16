@@ -25,9 +25,10 @@ for humans.**
 
 ## When to pick which
 
-**Use Wrangler when** you develop Workers locally all day: `wrangler dev`
-runs real workerd, and `secret put` / versions / rollback are part of the
-daily loop. Nothing here replaces that yet.
+**Use Wrangler when** you want `wrangler dev`'s real workerd runtime for
+local iteration — Cosmoflare's `dev` is a proxy, not a runtime. The rest of
+the Workers daily loop — secrets, versions, deployments with rollback,
+custom domains — is in Cosmoflare as of v0.28.2.
 
 **Use Cosmoflare when** you:
 
