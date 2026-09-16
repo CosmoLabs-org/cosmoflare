@@ -699,6 +699,24 @@ JSON output:
 {"success":true,"data":{"zone_id":"zone-abc123","certificate_status":"active","issuer":"DigiCert","expires_on":"2027-01-15T00:00:00Z"}}
 ```
 
+### Custom hostnames (SSL for SaaS)
+
+Manage custom hostnames for a zone so customers can point their own hostnames
+at your zone. All verbs are zone-scoped and require a zone ID.
+
+```bash
+cosmoflare ssl custom-hostname list <zone-id>
+cosmoflare ssl custom-hostname list <zone-id> --hostname customer.com --json
+cosmoflare ssl custom-hostname create <zone-id> app.customer.com --origin origin.example.com
+cosmoflare ssl custom-hostname get <zone-id> <hostname-id>        # full verification state
+cosmoflare ssl custom-hostname update <zone-id> <hostname-id> --origin new-origin.example.com
+cosmoflare ssl custom-hostname delete <zone-id> <hostname-id> --json
+```
+
+`get` is the way to check verification status: it reports the hostname status,
+verification status, verification type, SSL status, and any verification
+errors. `list --hostname` filters by hostname substring.
+
 ## Cache Commands
 
 Cache management is zone-scoped. Purge cached content and configure caching behavior.
