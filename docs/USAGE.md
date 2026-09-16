@@ -14,11 +14,17 @@ export CLOUDFLARE_API_TOKEN="your-api-token"
 
 Or pass via flags: `--account-id` and `--api-token`.
 
-Optional behavior flags (environment):
+Environment variable reference:
 
 | Variable | Default | Effect |
 |----------|---------|--------|
+| `CLOUDFLARE_API_TOKEN` | unset (required) | Cloudflare API token for all commands. Or pass `--api-token`. |
+| `CLOUDFLARE_ACCOUNT_ID` | unset (required) | Cloudflare account ID for all commands. Or pass `--account-id`. |
 | `COSMOFLARE_UPDATE_CHECK` | unset (off) | Set to `1` to check GitHub Releases for a newer version on each command. Off by default — zero network calls unless enabled. When enabled and a newer release exists, prints one line to stderr (never stdout, so `--json` output stays clean; never blocks a command beyond 2s; skipped for `cosmoflare mcp`). |
+| `COSMOFLARE_NO_KEYCHAIN` | unset | Set to `1` to skip the OS keychain and store credentials in the file-based fallback store instead. |
+| `R2GO2_SKIP_FIRST_RUN` | unset | Set to `true` to skip the first-run setup wizard (legacy `r2go2` name, still honored). |
+| `R2_ENDPOINT` | unset | Custom endpoint for S3-compatible R2 access. |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` | unset | S3-compatible credential set used when accessing R2 via the S3 API. |
 
 ## Global Flags
 

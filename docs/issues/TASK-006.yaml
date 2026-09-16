@@ -1,10 +1,10 @@
 id: TASK-006
 type: task
 created_at: 2026-09-13T17:05:35.099172+04:00
-updated_at: 2026-09-13T17:05:38.779652+04:00
+updated_at: 2026-09-16T18:40:17.711774+04:00
 source: local
 ulid: 01M2DDZ1C0N5JX7BGWXSKMWNNC
-status: open
+status: closed
 labels:
     - audit
     - infrastructure
@@ -19,3 +19,10 @@ description: |-
 
     Origin: audit-agent-9-infrastructure
     Context file: docs/audit/2026-09-13-cosmoflare/agent-9-infrastructure.md
+resolution:
+    notes: 'Verified done: Makefile:372 vulncheck target (installs govulncheck on demand, runs as release security gate) wired into release-prepare (Makefile:396). It gates every make release — exercised in today''s v0.28.2 release run.'
+    resolved_at: 2026-09-16T18:40:17.708275+04:00
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'Verified done: Makefile:372 vulncheck target (installs govulncheck on demand, runs as release security gate) wired into release-prepare (Makefile:396). It gates every make release — exercised in today''s v0.28.2 release run.'

@@ -1,10 +1,10 @@
 id: TASK-008
 type: task
 created_at: 2026-09-14T06:06:17.157093+04:00
-updated_at: 2026-09-14T06:06:19.222751+04:00
+updated_at: 2026-09-16T18:40:49.367487+04:00
 source: local
 ulid: 01M2ETMHJBWDTMKEGS5W82BFQY
-status: open
+status: closed
 labels:
     - audit
     - documentation
@@ -19,3 +19,10 @@ description: |-
 
     Origin: audit-agent-10-documentation
     Context file: docs/audit/2026-09-13-cosmoflare/agent-10-documentation.md
+resolution:
+    notes: 'Verified done: CONTRIBUTING.md exists in repo root; complete CLI environment-variable reference table added to docs/USAGE.md Setup section (CLOUDFLARE_*, COSMOFLARE_UPDATE_CHECK, COSMOFLARE_NO_KEYCHAIN, R2GO2_SKIP_FIRST_RUN, R2_/AWS_* S3 vars — enumerated from os.Getenv scan of cmd/internal/pkg).'
+    resolved_at: 2026-09-16T18:40:49.366509+04:00
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'Verified done: CONTRIBUTING.md exists in repo root; complete CLI environment-variable reference table added to docs/USAGE.md Setup section (CLOUDFLARE_*, COSMOFLARE_UPDATE_CHECK, COSMOFLARE_NO_KEYCHAIN, R2GO2_SKIP_FIRST_RUN, R2_/AWS_* S3 vars — enumerated from os.Getenv scan of cmd/internal/pkg).'
