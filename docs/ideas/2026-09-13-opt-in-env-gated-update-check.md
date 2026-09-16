@@ -2,7 +2,7 @@
 ulid: 01M2CB4ETV38DCVNZ4HTKK97A3
 title: Opt-in env-gated update check
 created: "2026-09-13T06:56:52.571915+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 53
@@ -11,7 +11,10 @@ origin:
 tags:
     - audit
     - competitive
+promoted_to: FEAT-043
 ---
+
+# Opt-in env-gated update check
 
 # Opt-in env-gated update check
 

@@ -20,7 +20,7 @@ for humans.**
 | Config | One `.cosmoflare.yaml`; declarative `diff`/`apply` for workers, DNS, KV, R2 | `wrangler.toml` (per-project deploy) |
 | Migration bridges | **Import** wrangler.toml; **export** Terraform `.tf` + import blocks (5 services) | — |
 | Local Workers dev | Proxy only (no workerd runtime) | Full workerd runtime, hot-reload |
-| Workers lifecycle | deploy/list/get/delete/logs/settings | + secrets, versions, rollback, gradual deploys |
+| Workers lifecycle | deploy/list/get/delete/logs/settings, secrets, versions, deployments with rollback, custom domains | + gradual deploys |
 | Library | Public Go API (`pkg/cosmoflare`) reused by CLI, MCP, and a desktop app | n/a |
 
 ## When to pick which

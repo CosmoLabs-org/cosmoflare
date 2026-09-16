@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-16T05:03:11.881497+04:00
+last_updated: 2026-09-16T13:02:22.797929+04:00
 next_bug_id: 53
-next_feat_id: 43
+next_feat_id: 44
 next_task_id: 11
 next_imp_id: 1
 issues:
@@ -317,7 +317,7 @@ issues:
       created_at: 2026-09-13T15:39:24.912959+04:00
     - id: BUG-052
       type: bug
-      status: open
+      status: closed
       title: Emoji-named directory committed in v0.28.x tags poisons proxy.golang.org module zips
       severity: high
       component: release
@@ -535,6 +535,11 @@ issues:
       status: closed
       title: Typed daemon wire contract + TS codegen
       created_at: 2026-09-15T05:33:57.563443+04:00
+    - id: FEAT-043
+      type: feature
+      status: open
+      title: Opt-in env-gated update check
+      created_at: 2026-09-16T13:02:22.793721+04:00
     - id: TASK-001
       type: task
       status: closed

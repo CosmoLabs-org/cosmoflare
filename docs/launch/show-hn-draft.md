@@ -39,7 +39,7 @@ each tool wins.
 
 Install: `go install github.com/CosmoLabs-org/cosmoflare@latest` or
 `brew install CosmoLabs-org/cosmoflare/cosmoflare`. Docs: USAGE.md is a
-2900-line agent-friendly reference [3]. The CLI is the free tier; a desktop
+3000-line agent-friendly reference [3]. The CLI is the free tier; a desktop
 dashboard and mobile app wrap the same Go library.
 
 What we'd love feedback on: the MCP mutation-gating model, and what else

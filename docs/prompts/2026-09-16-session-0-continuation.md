@@ -4,8 +4,12 @@ created: 2026-09-15
 status: PENDING
 branch: master
 goals_total: 4
-goals_completed: 0
+goals_completed: 2
 supersedes: "docs/prompts/2026-09-15-session-0-continuation.md"
+requires_reading:
+    - docs/launch/product-page.html
+    - docs/prompts/2026-09-15-session-0-continuation.md
+schema_version: 1
 ---
 
 ## Context
@@ -14,7 +18,7 @@ v0.28.1 published with installable archives; Homebrew tap live and brew-verified
 
 ## Goals
 
-### [ ] 1. G3: verify pkg.go.dev re-indexed
+### [x] G-03: verify pkg.go.dev re-indexed
 Acceptance: landing text reads 'Package cosmoflare provides', not 'Package r2go2'
 ### [ ] 2. TASK-010: product page live on cosmolabs.org
 Acceptance: docs/launch/product-page.html integrated at /cosmoflare with OG + JSON-LD
@@ -22,7 +26,7 @@ Acceptance: docs/launch/product-page.html integrated at /cosmoflare with OG + JS
 Acceptance: Show HN + r/Cloudflare drafts from docs/launch/ reviewed and posted by operator
 
 
-### [ ] G-04 Verify pkg.go.dev re-indexed v0.28.0 (carried from docs/prompts/2026-09-15-session-0-continuation.md G-03)
+### [x] G-04 Verify pkg.go.dev re-indexed v0.28.0 (carried from docs/prompts/2026-09-15-session-0-continuation.md G-03)
 ## Carry-Over
 
 G3 pkg.go.dev re-index is Google-side latency; v0.28.1's publish is a fresh trigger. TASK-010 needs a cosmolabs.org repo session (cross-project). Launch posts are draft-only by design until the operator voices them. Next FEATs by priority: FEAT-011 (token permission names, small), FEAT-029 (auth modernization), FEAT-026 (named env profiles); breadth items FEAT-035/036/037/030/031/032 remain; FEAT-041 tracked but unscheduled.
