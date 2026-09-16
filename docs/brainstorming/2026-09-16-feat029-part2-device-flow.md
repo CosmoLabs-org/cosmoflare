@@ -34,11 +34,27 @@ matters for first-run UX (FEAT-017 wizard) and for headless/SSH setups.
 
 # Open questions
 
-- **OQ-1**: Cloudflare's device flow returns an OAuth access token; the CLI
-  ecosystem needs an API token for `cloudflare-go`. Verify the exchange step
-  (device access token → scoped API token creation, as wrangler does) against
-  current developers.cloudflare.com docs BEFORE implementation; adjust D2/D3
-  accordingly. Research subtask, not a design fork.
+- **OQ-1 — RESOLVED 2026-09-17** (research note:
+  `docs/research/2026-09-17-feat029-device-flow-oq1.md`, agent-verified
+  against wrangler source + current docs):
+  - Device endpoint `POST https://dash.cloudflare.com/oauth2/device/auth`
+    (form-encoded `client_id` + `scope`, colon-format scopes); user page
+    `https://dash.cloudflare.com/oauth2/device`.
+  - Token endpoint `POST https://dash.cloudflare.com/oauth2/token`, grant
+    `urn:ietf:params:oauth:grant-type:device_code`; poll errors
+    `authorization_pending` / `slow_down` (+5s) / `access_denied` /
+    `expired_token`; interval honored, 1s floor, 300s cap.
+  - **No exchange step exists** — wrangler passes the OAuth access token
+    straight through as the bearer for `api.cloudflare.com`; cloudflare-go
+    consumes it directly. The original premise ("create a scoped API token
+    the way wrangler does") was a misconception.
+  - Refresh: `grant_type=refresh_token` needs `offline_access` at request
+    time; cloudflare-go has NO refresh support — caller refreshes
+    out-of-band and rebuilds the client.
+  - **D1 IS INFEASIBLE**: current docs state third-party OAuth clients
+    support authorization-code ONLY; the device grant is first-party
+    (wrangler/cf CLI). Cosmoflare cannot register its own device-flow
+    client_id. → strategy decision reopened; see D6.
 
 # Alternatives rejected
 
