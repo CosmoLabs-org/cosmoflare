@@ -48,6 +48,8 @@ func wafListsRoute(w http.ResponseWriter, r *http.Request, listItems []map[strin
 		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{
 			"id": "list-new", "name": "blocked-ips", "kind": "ip", "num_items": 0,
 		}))
+	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && strings.HasSuffix(path, "/items"):
+		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{"operation_id": "op-1"}))
 	case r.Method == http.MethodPut && strings.Contains(path, "/rules/lists/"):
 		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{
 			"id": "list-1", "name": "blocked-ips", "kind": "ip", "description": "updated",
@@ -56,8 +58,6 @@ func wafListsRoute(w http.ResponseWriter, r *http.Request, listItems []map[strin
 		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{"id": "list-1"}))
 	case r.Method == http.MethodGet && strings.Contains(path, "/bulk_operations/"):
 		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{"status": "completed"}))
-	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && strings.HasSuffix(path, "/items"):
-		wafListsWriteJSON(w, wafListsEnvelope(map[string]interface{}{"operation_id": "op-1"}))
 	case r.Method == http.MethodGet && strings.HasSuffix(path, "/items"):
 		wafListsWriteJSON(w, wafListsEnvelope(listItems))
 	default:
