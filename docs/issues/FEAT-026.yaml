@@ -1,7 +1,7 @@
 id: FEAT-026
 type: feature
 created_at: 2026-09-11T03:29:37.578741+04:00
-updated_at: 2026-09-11T03:29:40.236419+04:00
+updated_at: 2026-09-16T19:35:26.617486+04:00
 source: local
 ulid: 01M26TFH9P3ZWWBRPCRWTTK0CQ
 status: open
@@ -18,3 +18,9 @@ acceptance_criteria:
       met: false
     - criterion: workers command groups;d1 execute supports --local and --remote against the active profile;limits command reports the active profile's plan tier;config validation errors on unknown --env
       met: false
+resolution:
+    notes: 'Part 1 (--env core) merged (4047a3c, agent 0252): Profile gains plan_tier + resource_prefix, ValidateEnv with known-profiles error listing, root --env persistent flag with per-invocation credential scoping, limits reflects profile plan tier. Part 2 (d1/kv/r2/workers profile scoping, d1 execute --local/--remote) remains open — next wave.'
+delegation:
+    delegated_to: "0252"
+    delegated_at: 2026-09-16T18:43:38.59489+04:00
+    delegated_engine: glm-agent

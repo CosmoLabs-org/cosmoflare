@@ -1,10 +1,10 @@
 id: FEAT-031
 type: feature
 created_at: 2026-09-12T04:09:58.051122+04:00
-updated_at: 2026-09-12T04:10:00.359578+04:00
+updated_at: 2026-09-16T19:35:26.211619+04:00
 source: local
 ulid: 01M29F6418GTFWN7SPTNQ75SMK
-status: open
+status: closed
 origin:
     idea_slug: 2026-09-11-ssl-custom-hostnames-saas-crud-verification-status
     session: 51
@@ -19,3 +19,14 @@ description: |-
     Cloudflare for SaaS custom hostnames: list/create/update/delete + verification status polling. Types carry the verification lifecycle (pending/active/renewal states). Library service + CLI verbs + tests + USAGE. Anchor: pkg/cosmoflare/ssl.go (no custom-hostname surface exists today — verified). Feeds the FEAT-006 Domain Center remaining waves (domain onboarding engine). Corpus ref: docs/research/2026-09-10-cf-limits-corpus/qwen-results-commands.md sections 2.13/5.13 + checklist ssl block.
 
     Origin: Qwen corpus section 9 coverage diff
+resolution:
+    notes: 'Implemented + merged (0c1ee48, agent 0250 GLM-5.3-flash): SSLCustomHostnameService (List/Create/Get/Update/Delete + FromCreds), cmd ssl custom-hostname verbs, both test files, USAGE section. Session review 8/0; pkg+cmd suites re-run by orchestrator, green.'
+    resolved_at: 2026-09-16T19:35:26.210072+04:00
+delegation:
+    delegated_to: "0250"
+    delegated_at: 2026-09-16T18:42:10.698164+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'Implemented + merged (0c1ee48, agent 0250 GLM-5.3-flash): SSLCustomHostnameService (List/Create/Get/Update/Delete + FromCreds), cmd ssl custom-hostname verbs, both test files, USAGE section. Session review 8/0; pkg+cmd suites re-run by orchestrator, green.'

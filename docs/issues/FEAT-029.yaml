@@ -1,7 +1,7 @@
 id: FEAT-029
 type: feature
 created_at: 2026-09-11T15:39:33.659318+04:00
-updated_at: 2026-09-11T15:39:35.83739+04:00
+updated_at: 2026-09-16T19:35:26.670477+04:00
 source: local
 ulid: 01M28482X0X8KR55G9DEZ6H5DT
 status: open
@@ -12,3 +12,9 @@ description: 'Two auth upgrades citing live changelogs (see docs/research/2026-0
 acceptance_criteria:
     - criterion: auth token emits the current token per store conventions with explicit consent flag;auth login --device completes the device flow and stores credentials;both have --json and rich help
       met: false
+resolution:
+    notes: 'Part 1 (auth token, redact-safe + --reveal) merged (f2d3c7e, agent 0253). Part 2 (auth login --device) decided: register own OAuth client; brainplan docs in progress this session.'
+delegation:
+    delegated_to: "0253"
+    delegated_at: 2026-09-16T18:45:24.538134+04:00
+    delegated_engine: glm-agent

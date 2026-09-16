@@ -1,10 +1,10 @@
 id: FEAT-032
 type: feature
 created_at: 2026-09-12T04:10:03.927446+04:00
-updated_at: 2026-09-12T04:10:05.905274+04:00
+updated_at: 2026-09-16T19:35:26.43083+04:00
 source: local
 ulid: 01M29F69RV9TPQNG1MMEX8QSN4
-status: open
+status: closed
 origin:
     idea_slug: 2026-09-11-waf-lists-crud-managed-rulesets-update
     session: 51
@@ -19,3 +19,14 @@ description: |-
     WAF lists (account rules/lists): list/create/update/delete + items add/remove; managed-rulesets update. Library + CLI verbs + tests + USAGE. Anchor: cmd/waf.go (lists surface absent today — verified). Uniform CRUD over the rules/lists API. Corpus ref: qwen-results-commands.md sections 2.16/5.12 + checklist waf block.
 
     Origin: Qwen corpus section 9 coverage diff
+resolution:
+    notes: 'Implemented + merged (018b429, agent 0251): WAFListService (lists CRUD, items add/replace, UpdateManagedRuleset via phase entrypoint), cmd waf list/item/managed-ruleset verbs, tests, USAGE. Orchestrator fixed one mock-route-order fixture bug before merge (PUT items shadowed by list-update case); full suites re-run green.'
+    resolved_at: 2026-09-16T19:35:26.429978+04:00
+delegation:
+    delegated_to: "0251"
+    delegated_at: 2026-09-16T18:42:20.135645+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'Implemented + merged (018b429, agent 0251): WAFListService (lists CRUD, items add/replace, UpdateManagedRuleset via phase entrypoint), cmd waf list/item/managed-ruleset verbs, tests, USAGE. Orchestrator fixed one mock-route-order fixture bug before merge (PUT items shadowed by list-update case); full suites re-run green.'
