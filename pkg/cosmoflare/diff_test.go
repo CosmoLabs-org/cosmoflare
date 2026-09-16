@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -454,5 +455,282 @@ func TestIndexKVByTitle_UniqueTitles(t *testing.T) {
 	}
 	if idx["prod-cache"] != "ns-aaa" || idx["staging-cache"] != "ns-bbb" {
 		t.Errorf("index = %v, want title->ID mapping", idx)
+	}
+}
+
+// --- dnsKeyOf / dnsLiveIndex / dnsLocalIndex (pure helpers) ---
+
+func TestDnsKeyOf(t *testing.T) {
+	rec := DNSRecordConfig{Type: "A", Name: "www.example.com", Content: "1.2.3.4", TTL: 300, Proxied: true}
+	key := dnsKeyOf(rec)
+	if key.Type != "A" || key.Name != "www.example.com" || key.Content != "1.2.3.4" {
+		t.Errorf("key = %+v, want {A www.example.com 1.2.3.4}", key)
+	}
+}
+
+func TestDnsLiveIndex(t *testing.T) {
+	records := []*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"},
+		{Type: "AAAA", Name: "aaaa.example.com", Content: "::1"},
+	}
+	idx := dnsLiveIndex(records)
+	if len(idx) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(idx))
+	}
+	if idx[dnsKey{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}] == nil {
+		t.Error("expected A record indexed")
+	}
+}
+
+func TestDnsLiveIndex_Empty(t *testing.T) {
+	idx := dnsLiveIndex(nil)
+	if len(idx) != 0 {
+		t.Errorf("expected empty index, got %d entries", len(idx))
+	}
+}
+
+func TestDnsLocalIndex(t *testing.T) {
+	local := []DNSRecordConfig{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"},
+		{Type: "CNAME", Name: "blog.example.com", Content: "example.com"},
+	}
+	idx := dnsLocalIndex(local)
+	if len(idx) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(idx))
+	}
+	rec, ok := idx[dnsKey{Type: "CNAME", Name: "blog.example.com", Content: "example.com"}]
+	if !ok {
+		t.Fatal("expected CNAME record indexed")
+	}
+	if rec.Name != "blog.example.com" {
+		t.Errorf("Name = %q, want %q", rec.Name, "blog.example.com")
+	}
+}
+
+// --- dnsDiffAdditions / dnsDiffDeletions / dnsDiffModifications (pure helpers) ---
+
+func TestDnsDiffAdditions(t *testing.T) {
+	local := []DNSRecordConfig{
+		{Type: "A", Name: "new.example.com", Content: "1.2.3.4"},
+		{Type: "A", Name: "existing.example.com", Content: "5.6.7.8"},
+	}
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "existing.example.com", Content: "5.6.7.8"}: {Type: "A", Name: "existing.example.com", Content: "5.6.7.8"},
+	}
+	result := &DiffResult{}
+	dnsDiffAdditions(result, local, liveMap)
+	if len(result.Additions) != 1 {
+		t.Fatalf("expected 1 addition, got %d", len(result.Additions))
+	}
+	if result.Additions[0].Resource != "A new.example.com 1.2.3.4" {
+		t.Errorf("Resource = %q, want %q", result.Additions[0].Resource, "A new.example.com 1.2.3.4")
+	}
+	if result.Additions[0].Action != DiffAdd {
+		t.Errorf("Action = %q, want %q", result.Additions[0].Action, DiffAdd)
+	}
+}
+
+func TestDnsDiffAdditions_NoneWhenAllLive(t *testing.T) {
+	local := []DNSRecordConfig{{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}}
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1"},
+	}
+	result := &DiffResult{}
+	dnsDiffAdditions(result, local, liveMap)
+	if len(result.Additions) != 0 {
+		t.Errorf("expected 0 additions, got %d", len(result.Additions))
+	}
+}
+
+func TestDnsDiffDeletions(t *testing.T) {
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "stray.example.com", Content: "9.9.9.9"}: {Type: "A", Name: "stray.example.com", Content: "9.9.9.9"},
+		{Type: "A", Name: "kept.example.com", Content: "1.1.1.1"}:  {Type: "A", Name: "kept.example.com", Content: "1.1.1.1"},
+	}
+	localMap := map[dnsKey]DNSRecordConfig{
+		{Type: "A", Name: "kept.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "kept.example.com", Content: "1.1.1.1"},
+	}
+	result := &DiffResult{}
+	dnsDiffDeletions(result, liveMap, localMap)
+	if len(result.Deletions) != 1 {
+		t.Fatalf("expected 1 deletion, got %d", len(result.Deletions))
+	}
+	if result.Deletions[0].Resource != "A stray.example.com 9.9.9.9" {
+		t.Errorf("Resource = %q, want %q", result.Deletions[0].Resource, "A stray.example.com 9.9.9.9")
+	}
+	if result.Deletions[0].Action != DiffRemove {
+		t.Errorf("Action = %q, want %q", result.Deletions[0].Action, DiffRemove)
+	}
+}
+
+func TestDnsDiffDeletions_NoneWhenAllLocal(t *testing.T) {
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1"},
+	}
+	localMap := map[dnsKey]DNSRecordConfig{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1"},
+	}
+	result := &DiffResult{}
+	dnsDiffDeletions(result, liveMap, localMap)
+	if len(result.Deletions) != 0 {
+		t.Errorf("expected 0 deletions, got %d", len(result.Deletions))
+	}
+}
+
+func TestDnsDiffModifications_TTLChange(t *testing.T) {
+	local := []DNSRecordConfig{{Type: "A", Name: "a.example.com", Content: "1.1.1.1", TTL: 600}}
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1", TTL: 300},
+	}
+	result := &DiffResult{}
+	dnsDiffModifications(result, local, liveMap)
+	if len(result.Changes) != 1 {
+		t.Fatalf("expected 1 change, got %d", len(result.Changes))
+	}
+	if !strings.Contains(result.Changes[0].Detail, "ttl: 300 -> 600") {
+		t.Errorf("Detail = %q, want ttl change mentioned", result.Changes[0].Detail)
+	}
+}
+
+func TestDnsDiffModifications_ProxiedChange(t *testing.T) {
+	local := []DNSRecordConfig{{Type: "A", Name: "a.example.com", Content: "1.1.1.1", Proxied: true}}
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1", Proxied: false},
+	}
+	result := &DiffResult{}
+	dnsDiffModifications(result, local, liveMap)
+	if len(result.Changes) != 1 {
+		t.Fatalf("expected 1 change, got %d", len(result.Changes))
+	}
+	if !strings.Contains(result.Changes[0].Detail, "proxied: false -> true") {
+		t.Errorf("Detail = %q, want proxied change mentioned", result.Changes[0].Detail)
+	}
+}
+
+func TestDnsDiffModifications_NoneWhenUnchanged(t *testing.T) {
+	local := []DNSRecordConfig{{Type: "A", Name: "a.example.com", Content: "1.1.1.1", TTL: 300, Proxied: true}}
+	liveMap := map[dnsKey]*DNSRecord{
+		{Type: "A", Name: "a.example.com", Content: "1.1.1.1"}: {Type: "A", Name: "a.example.com", Content: "1.1.1.1", TTL: 300, Proxied: true},
+	}
+	result := &DiffResult{}
+	dnsDiffModifications(result, local, liveMap)
+	if len(result.Changes) != 0 {
+		t.Errorf("expected 0 changes, got %d", len(result.Changes))
+	}
+}
+
+func TestDnsDiffModifications_NotLive(t *testing.T) {
+	local := []DNSRecordConfig{{Type: "A", Name: "ghost.example.com", Content: "9.9.9.9", TTL: 300}}
+	result := &DiffResult{}
+	dnsDiffModifications(result, local, map[dnsKey]*DNSRecord{})
+	if len(result.Changes) != 0 {
+		t.Errorf("expected 0 changes for record not live, got %d", len(result.Changes))
+	}
+}
+
+// --- CompareAll / CompareWorkers / CompareR2 / CompareKV / CompareDNS ---
+//
+// DiffService always constructs its own live client from credentials, with
+// no seam for a mock server. An empty config short-circuits CompareAll
+// without touching the network. An already-canceled context makes the
+// underlying HTTP/AWS SDK calls fail immediately (no real network I/O) so
+// the remaining Compare* functions can be exercised deterministically.
+
+func TestCompareAll_EmptyConfig(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	summary, err := d.CompareAll(context.Background(), &CosmoflareConfig{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if summary == nil {
+		t.Fatal("expected non-nil summary")
+	}
+	if len(summary.Results) != 0 {
+		t.Errorf("expected 0 results for empty config, got %d", len(summary.Results))
+	}
+	if summary.HasChanges {
+		t.Error("expected HasChanges=false for empty config")
+	}
+}
+
+func diffCanceledContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return ctx
+}
+
+func TestCompareAll_WorkersErrorPropagates(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cfg := &CosmoflareConfig{Workers: map[string]WorkerConfig{"api": {Script: "w.js"}}}
+	_, err = d.CompareAll(diffCanceledContext(), cfg)
+	if err == nil {
+		t.Fatal("expected error when workers diff fails")
+	}
+	if !strings.Contains(err.Error(), "workers diff failed") {
+		t.Errorf("error = %v, want prefix about workers diff failure", err)
+	}
+}
+
+func TestCompareWorkers_NetworkError(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = d.CompareWorkers(diffCanceledContext(), map[string]WorkerConfig{"api": {Script: "w.js"}})
+	if err == nil {
+		t.Fatal("expected error when listing live workers fails")
+	}
+}
+
+func TestCompareR2_NetworkError(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = d.CompareR2(diffCanceledContext(), R2Config{Buckets: []R2BucketConfig{{Name: "assets"}}})
+	if err == nil {
+		t.Fatal("expected error when listing live buckets fails")
+	}
+}
+
+func TestCompareKV_NetworkError(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = d.CompareKV(diffCanceledContext(), KVConfig{Namespaces: []KVNamespaceConfig{{Title: "MY_KV"}}})
+	if err == nil {
+		t.Fatal("expected error when listing live namespaces fails")
+	}
+}
+
+func TestCompareDNS_ZoneIDRequired(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = d.CompareDNS(context.Background(), DNSConfig{})
+	if err == nil {
+		t.Fatal("expected error when zone_id is missing")
+	}
+}
+
+func TestCompareDNS_NetworkError(t *testing.T) {
+	d, err := NewDiffService("acc-123", "tok-123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = d.CompareDNS(diffCanceledContext(), DNSConfig{ZoneID: "zone-1"})
+	if err == nil {
+		t.Fatal("expected error when listing live DNS records fails")
+	}
+	if !strings.Contains(err.Error(), "failed to list live DNS records") {
+		t.Errorf("error = %v, want prefix about failed live-record listing", err)
 	}
 }
