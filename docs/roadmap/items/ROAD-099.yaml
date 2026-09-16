@@ -1,11 +1,13 @@
 id: ROAD-099
 created_at: 2026-09-13T15:38:34.286655+04:00
-updated_at: 2026-09-13T15:38:36.939301+04:00
+updated_at: 2026-09-17T00:10:13.794267+04:00
 title: Production-evidence reliability loop
 description: 'Convert production friction into tracked reliability work: MyCarGuide D1 batch-push/deploy-verify/parity (FEAT-018), token permission-name drift (FEAT-011), serve limits-snapshot cadence caching (FEAT-014 — premise updated, snapshot wired at cmd/serve.go:238). Source: audit 2026-09-13 agent-12-roadmap-health.md'
 status: captured
 tags:
     - audit-hydrated
+notes:
+    - '2026-09-16: FEAT-011 seed wave merged (8529017) — permissions knowledge pack (pack #2) with Zone WAF Edit mappings + 10405/10000 scope-decode; docs updated. Qwen full-permission dataset still pending (issue open).'
 linked_issues:
     - FEAT-018
     - FEAT-011
