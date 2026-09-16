@@ -1,0 +1,22 @@
+id: FEAT-043
+type: feature
+created_at: 2026-09-16T13:02:22.793721+04:00
+updated_at: 2026-09-16T13:02:22.799705+04:00
+source: local
+ulid: 01M2MQ7W2F4P4S4DPSQKJTB5R7
+status: open
+labels:
+    - audit
+    - competitive
+title: Opt-in env-gated update check
+description: |-
+    # Opt-in env-gated update check
+
+    No growth instrumentation exists. Env-gated opt-in update check against GitHub Releases (default off). Evidence: agent-4-competitive.md
+
+    ## Additional context
+
+    Env-gated opt-in update check against GitHub Releases (default OFF; COSMOFLARE_UPDATE_CHECK=1 to enable). One-line stderr notice when a newer release exists; never blocks, never fails the command; 2s timeout; silent under --json unless a new version exists (then stderr note only, JSON payload untouched). No telemetry beyond the GitHub API request itself. Ships in the next minor release.
+
+    Origin: audit-agent-4-competitive
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-4-competitive.md
