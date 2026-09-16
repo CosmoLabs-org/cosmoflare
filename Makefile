@@ -405,6 +405,9 @@ release-prepare: clean deps test vulncheck build-all dist checksums sbom wire-ty
 # no CI (project policy). A platform build that fails mid-way still packs a
 # docs-only archive (README/LICENSE, ~4KB, no binary — seen with linux-armv7
 # in v0.28.0), so every archive must exceed 1MB before staging.
+# Tree path gate (BUG-052): proxy.golang.org refuses module zips containing
+# non-ASCII paths — an emoji-named dir committed in v0.28.0/v0.28.1 permanently
+# broke both versions on the proxy. Scan tracked paths BEFORE building.
 .PHONY: release
 release:
 	@if [ -z "$(TAG)" ]; then \
@@ -412,6 +415,16 @@ release:
 		echo "Usage: make release TAG=vX.Y.Z"; \
 		exit 1; \
 	fi
+	@echo "🔎 Tree path gate (non-ASCII paths break proxy.golang.org zips — BUG-052)..."
+	@set -e; \
+	bad=$$(git -c core.quotepath=off ls-files | LC_ALL=C grep '[^ -~]' || true); \
+	if [ -n "$$bad" ]; then \
+		echo "❌ Non-ASCII path(s) tracked — a tagged module zip would be rejected by proxy.golang.org:"; \
+		echo "$$bad" | sed 's/^/  /'; \
+		echo "   git rm / git mv them before cutting a release."; \
+		exit 1; \
+	fi; \
+	echo "  ✅ all tracked paths are ASCII"
 	@$(MAKE) release-prepare VERSION=$(TAG)
 	@echo "🔎 Archive sanity gate (>1MB each, else failed platform build)..."
 	@set -e; \
