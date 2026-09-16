@@ -1,5 +1,6 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-16-feat029-part2-device-flow.md
+completed: "2026-09-17T03:50:16+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
@@ -11,16 +12,22 @@ covers_plan_deliverables:
     - P-03
     - P-04
 created: "2026-09-16T19:38:33+04:00"
+goals_completed: 0
+goals_total: 4
 id: P-2026-09-16-feat029-part2-device-flow
 plan_ref: docs/planning-mode/2026-09-16-feat029-part2-device-flow.md
 priority: medium
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-16-feat029-part2-device-flow.md
     - docs/planning-mode/2026-09-16-feat029-part2-device-flow.md
 schema_version: 1
-status: PENDING
-title: ""
+status: ABANDONED
+abandoned_reason: "OQ-1 research invalidated the design premise: CF device grant is first-party only (third-party clients = authorization-code only), own-client registration infeasible, wrangler client reuse declined by operator. Part 2 deferred; verified contract preserved in docs/research/2026-09-17-feat029-device-flow-oq1.md."
+tags: []
+title: Continuation
 ---
+
 # Continuation
 
 ## BEFORE Starting — Required Reading

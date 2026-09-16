@@ -1,7 +1,7 @@
 ---
 title: "FEAT-029 part 2 — auth login --device (OAuth Device Authorization Grant)"
 created: 2026-09-16T00:00:00+04:00
-status: DRAFT
+status: DEFERRED
 issue: FEAT-029
 deliverables:
     - id: BR-01
@@ -55,6 +55,12 @@ matters for first-run UX (FEAT-017 wizard) and for headless/SSH setups.
     support authorization-code ONLY; the device grant is first-party
     (wrangler/cf CLI). Cosmoflare cannot register its own device-flow
     client_id. → strategy decision reopened; see D6.
+
+# Decisions (post-research)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D6 | **DEFER part 2** (operator, 2026-09-17) | D1 infeasible (first-party-only grant); D-reuse of wrangler's client_id declined; auth-code pivot violates the issue's no-local-server constraint. Revisit when Cloudflare opens the device grant to third-party clients — the verified contract (endpoints, poll errors, refresh semantics, direct cloudflare-go use) is preserved in the research note, so implementation is spec-ready the day policy changes. |
 
 # Alternatives rejected
 

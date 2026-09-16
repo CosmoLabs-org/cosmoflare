@@ -1,7 +1,7 @@
 id: FEAT-029
 type: feature
 created_at: 2026-09-11T15:39:33.659318+04:00
-updated_at: 2026-09-16T19:35:26.670477+04:00
+updated_at: 2026-09-17T03:49:55.161135+04:00
 source: local
 ulid: 01M28482X0X8KR55G9DEZ6H5DT
 status: open
@@ -13,7 +13,7 @@ acceptance_criteria:
     - criterion: auth token emits the current token per store conventions with explicit consent flag;auth login --device completes the device flow and stores credentials;both have --json and rich help
       met: false
 resolution:
-    notes: 'Part 1 (auth token, redact-safe + --reveal) merged (f2d3c7e, agent 0253). Part 2 (auth login --device) decided: register own OAuth client; brainplan docs in progress this session.'
+    notes: 'Part 2 DEFERRED by operator (2026-09-17): OQ-1 research (docs/research/2026-09-17-feat029-device-flow-oq1.md) shows the device grant is first-party only — third-party clients are authorization-code only, so ''register own client'' is infeasible and wrangler client_id reuse was declined. Part 1 (auth token) shipped in v0.28.2+. Revisit if Cloudflare opens the device grant to third-party clients; the verified endpoint/poll/refresh contract is preserved in the research note, so implementation is spec-ready the day policy changes.'
 delegation:
     delegated_to: "0253"
     delegated_at: 2026-09-16T18:45:24.538134+04:00
