@@ -32,6 +32,7 @@ Commands:
   rotate    Rotate API tokens
   status    Show current authentication status
   logout    Clear current authentication
+  token     Print the stored API token (redacted by default)
 
 R2Go2 supports multiple authentication methods:
 - API Token authentication (recommended)
@@ -104,6 +105,29 @@ Profile configurations remain stored in ~/.cosmoflare/config.yaml`,
 	RunE: runAuthLogout,
 }
 
+// authTokenCmd represents the auth token command
+var authTokenCmd = &cobra.Command{
+	Use:   "token",
+	Short: "Print the stored API token (redacted by default)",
+	Long: `Retrieve the stored Cloudflare API token.
+
+By default the token is shown REDACTED (last 4 characters only), along with
+the account ID and the credential store backend in use. The full token is
+never printed without --reveal.
+
+WARNING: --reveal prints the full secret token to stdout. The token is a
+live credential and will be visible in your terminal, scrollback, and shell
+history. Prefer piping it directly into the tool that needs it:
+
+Example:
+  cosmoflare auth token --reveal | docker login registry.example.com --username __token__ --password-stdin
+
+  cosmoflare auth token                     # redacted view
+  cosmoflare auth token --json              # redacted view as JSON
+  cosmoflare auth token --reveal --json     # full token inside the JSON envelope`,
+	RunE: runAuthToken,
+}
+
 var (
 	authProfile     string
 	authToken       string
@@ -112,6 +136,7 @@ var (
 	authMethod      string
 	authInteractive bool
 	authScope       string
+	authReveal      bool
 )
 
 func init() {
@@ -122,6 +147,7 @@ func init() {
 	authCmd.AddCommand(authRotateCmd)
 	authCmd.AddCommand(authStatusCmd)
 	authCmd.AddCommand(authLogoutCmd)
+	authCmd.AddCommand(authTokenCmd)
 
 	// Flags for auth login
 	authLoginCmd.Flags().StringVar(&authProfile, "profile", "", "Save credentials to this profile")
@@ -135,6 +161,9 @@ func init() {
 	// Flags for auth rotate
 	authRotateCmd.Flags().StringVar(&authProfile, "profile", "", "Profile to rotate token for")
 	authRotateCmd.Flags().Bool("revoke-old", false, "Revoke the old token after rotation")
+
+	// Flags for auth token
+	authTokenCmd.Flags().BoolVar(&authReveal, "reveal", false, "Print the FULL token (WARNING: prints a live secret to stdout)")
 }
 
 func runAuthLogin(cmd *cobra.Command, args []string) error {
@@ -321,6 +350,89 @@ func runAuthLogout(cmd *cobra.Command, args []string) error {
 	printInfo("Use 'cosmoflare auth login' to re-authenticate")
 
 	return nil
+}
+
+func runAuthToken(cmd *cobra.Command, args []string) error {
+	reveal, _ := cmd.Flags().GetBool("reveal")
+
+	token, accountID, backend, err := resolveStoredCredentials()
+	if err != nil {
+		return err
+	}
+
+	// Plain --reveal mode: the full token is the ONLY stdout line so the
+	// output can be piped straight into another tool.
+	if reveal && !JSONOutput {
+		fmt.Println(token)
+		return nil
+	}
+
+	redacted := redactTokenTail(token)
+	if reveal {
+		redacted = token
+	}
+
+	if JSONOutput {
+		return printSuccessJSON("token retrieved", map[string]interface{}{
+			"token":      redacted,
+			"account_id": utils.MaskAccountID(accountID),
+			"backend":    backend,
+			"revealed":   reveal,
+		})
+	}
+
+	printInfo("🔑 API Token (redacted): %s", redactTokenTail(token))
+	printInfo("Account ID: %s", utils.MaskAccountID(accountID))
+	printInfo("Credential store: %s", backend)
+	printInfo("Use --reveal to print the full token, e.g. cosmoflare auth token --reveal | <tool> --password-stdin")
+
+	return nil
+}
+
+// resolveStoredCredentials locates the stored API token for display.
+// Environment variables win over the current profile, mirroring how
+// newClientFromEnv resolves credentials. The returned backend is the
+// credential store in use: "environment", "keychain", or "file".
+func resolveStoredCredentials() (token, accountID, backend string, err error) {
+	token = os.Getenv("CLOUDFLARE_API_TOKEN")
+	accountID = os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+	if token != "" && accountID != "" {
+		return token, accountID, "environment", nil
+	}
+
+	mgr, mgrErr := getConfigManager()
+	if mgrErr != nil {
+		return "", "", "", fmt.Errorf("failed to create config manager: %w", mgrErr)
+	}
+	backend = "file"
+	if mgr.KeychainAvailable() {
+		backend = "keychain"
+	}
+
+	profile, profileErr := mgr.GetCurrent()
+	if profileErr != nil {
+		return "", "", "", fmt.Errorf("no stored credentials found: %s. Fix: run 'cosmoflare auth login' to authenticate, or set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID", profileErr)
+	}
+	if token == "" {
+		token = profile.APIToken
+	}
+	if accountID == "" {
+		accountID = profile.AccountID
+	}
+	if token == "" {
+		return "", "", "", fmt.Errorf("no API token stored for profile '%s'. Fix: run 'cosmoflare auth login' to authenticate", profile.Name)
+	}
+	return token, accountID, backend, nil
+}
+
+// redactTokenTail returns a redacted view of a token: four masked characters
+// followed by the token's last four characters. Tokens of four or fewer
+// characters are fully masked so no fragment of a short secret leaks.
+func redactTokenTail(token string) string {
+	if len(token) <= 4 {
+		return "****"
+	}
+	return "****" + token[len(token)-4:]
 }
 
 // Helper types and functions

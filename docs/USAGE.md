@@ -1767,6 +1767,21 @@ cosmoflare auth status
 cosmoflare auth status --json
 ```
 
+### Retrieve stored token
+```bash
+cosmoflare auth token                     # Redacted view (last 4 characters only)
+cosmoflare auth token --json              # Redacted view as JSON
+cosmoflare auth token --reveal            # Print the FULL token (prints a secret!)
+cosmoflare auth token --reveal | docker login registry.example.com --username __token__ --password-stdin
+```
+
+| Flag | Description |
+|------|-------------|
+| `--reveal` | Print the full API token instead of the redacted view. ⚠️ Prints a live secret to stdout — prefer piping it directly into the tool that needs it |
+| `--json` | Output in JSON format (`--reveal` puts the full token inside the envelope under `"token"`) |
+
+The default view shows the token's last 4 characters only, plus the account ID and the credential store backend (`keychain` vs `file`). Credentials must already exist — run `cosmoflare auth login` first.
+
 ### Logout
 ```bash
 cosmoflare auth logout
