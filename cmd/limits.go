@@ -58,6 +58,21 @@ func sortRowsByPercent(rows []cosmoflare.LimitRow) []cosmoflare.LimitRow {
 	return out
 }
 
+// effectiveFlagPlan returns the Workers plan tier to pass as the limits
+// --plan override: the --plan flag when given, otherwise the active --env
+// profile's PlanTier (FEAT-026) so `limits --env prod` reflects the prod
+// profile's tier. Empty when neither source is present; the limits service
+// normalizes unknown values itself.
+func effectiveFlagPlan() string {
+	if limitsPlan != "" {
+		return limitsPlan
+	}
+	if ActiveProfile != nil {
+		return ActiveProfile.PlanTier
+	}
+	return ""
+}
+
 func runLimits(cmd *cobra.Command, args []string) error {
 	printInfo("Collecting plan limits...")
 
@@ -89,7 +104,7 @@ func runLimits(cmd *cobra.Command, args []string) error {
 		cosmoflare.WithLimitsDomains(domainsSvc),
 		cosmoflare.WithLimitsAnalytics(analyticsSvc),
 		cosmoflare.WithLimitsConfigPlan(configPlan),
-		cosmoflare.WithLimitsFlagPlan(limitsPlan),
+		cosmoflare.WithLimitsFlagPlan(effectiveFlagPlan()),
 	)
 
 	snap, err := svc.Snapshot(context.Background(), limitsBucket)

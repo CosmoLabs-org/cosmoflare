@@ -896,3 +896,149 @@ func TestDeleteProfileRemovesKeychainSecrets(t *testing.T) {
 		t.Error("keychain secret should have been deleted with the profile")
 	}
 }
+
+// envTestProfiles seeds cm with a small set of named environment profiles.
+func envTestProfiles(cm *ConfigManager) {
+	cm.config.Profiles["prod"] = &Profile{
+		Name:      "prod",
+		AccountID: "12345678901234567890123456789012",
+		APIToken:  "tok-prod-abcdef1234567890",
+		PlanTier:  "paid",
+	}
+	cm.config.Profiles["dev"] = &Profile{
+		Name:           "dev",
+		AccountID:      "abcdef1234567890abcdef1234567890",
+		APIToken:       "tok-dev-abcdef1234567890",
+		PlanTier:       "free",
+		ResourcePrefix: "dev-",
+	}
+}
+
+// TestValidateEnv_Known verifies that ValidateEnv returns the named profile.
+func TestValidateEnv_Known(t *testing.T) {
+	t.Parallel()
+	cm := newTestConfigManager(t)
+	envTestProfiles(cm)
+
+	got, err := cm.ValidateEnv("prod")
+	if err != nil {
+		t.Fatalf("ValidateEnv(prod) failed: %v", err)
+	}
+	if got.AccountID != "12345678901234567890123456789012" {
+		t.Errorf("AccountID = %q, want prod account", got.AccountID)
+	}
+	if got.PlanTier != "paid" {
+		t.Errorf("PlanTier = %q, want %q", got.PlanTier, "paid")
+	}
+}
+
+// TestValidateEnv_UnknownListsKnown verifies the actionable error message
+// includes every known environment name.
+func TestValidateEnv_UnknownListsKnown(t *testing.T) {
+	t.Parallel()
+	cm := newTestConfigManager(t)
+	envTestProfiles(cm)
+
+	_, err := cm.ValidateEnv("staging")
+	if err == nil {
+		t.Fatal("expected error for unknown environment")
+	}
+	want := `unknown environment "staging": known environments are`
+	if !strings.Contains(err.Error(), want) {
+		t.Fatalf("error %q missing prefix %q", err.Error(), want)
+	}
+	for _, name := range []string{"prod", "dev"} {
+		if !strings.Contains(err.Error(), name) {
+			t.Errorf("error %q should list known environment %q", err.Error(), name)
+		}
+	}
+}
+
+// TestValidateEnv_PlanTier verifies free/paid pass and anything else fails.
+func TestValidateEnv_PlanTier(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		tier    string
+		wantErr bool
+	}{
+		{"free", false},
+		{"paid", false},
+		{"enterprise", true},
+		{"", false}, // unset is allowed
+	}
+	for _, tc := range cases {
+		cm := newTestConfigManager(t)
+		cm.config.Profiles["env"] = &Profile{
+			Name:      "env",
+			AccountID: "12345678901234567890123456789012",
+			APIToken:  "tok-env-abcdef1234567890",
+			PlanTier:  tc.tier,
+		}
+		_, err := cm.ValidateEnv("env")
+		if gotErr := err != nil; gotErr != tc.wantErr {
+			t.Errorf("PlanTier %q: err = %v, wantErr %v", tc.tier, err, tc.wantErr)
+		}
+	}
+}
+
+// TestValidateEnv_ResourcePrefix verifies the reserved field: set values must
+// be non-empty and whitespace-free; unset is allowed.
+func TestValidateEnv_ResourcePrefix(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		prefix  string
+		wantErr bool
+	}{
+		{"dev-", false},
+		{"", false}, // unset is allowed
+		{"   ", true},
+		{"has space", true},
+		{"tab\there", true},
+	}
+	for _, tc := range cases {
+		cm := newTestConfigManager(t)
+		cm.config.Profiles["env"] = &Profile{
+			Name:           "env",
+			AccountID:      "12345678901234567890123456789012",
+			APIToken:       "tok-env-abcdef1234567890",
+			ResourcePrefix: tc.prefix,
+		}
+		_, err := cm.ValidateEnv("env")
+		if gotErr := err != nil; gotErr != tc.wantErr {
+			t.Errorf("ResourcePrefix %q: err = %v, wantErr %v", tc.prefix, err, tc.wantErr)
+		}
+	}
+}
+
+// TestValidateEnv_NewFieldsRoundTrip verifies PlanTier and ResourcePrefix
+// survive a Save followed by a fresh load from disk.
+func TestValidateEnv_NewFieldsRoundTrip(t *testing.T) {
+	t.Parallel()
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	cm := newTestConfigManagerAt(t, path)
+	cm.config.Profiles["prod"] = &Profile{
+		Name:           "prod",
+		AccountID:      "12345678901234567890123456789012",
+		APIToken:       "tok-prod-abcdef1234567890",
+		PlanTier:       "paid",
+		ResourcePrefix: "prod-",
+	}
+	if err := cm.Save(); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+
+	fresh := newTestConfigManagerAt(t, path)
+	if err := fresh.load(); err != nil {
+		t.Fatalf("load failed: %v", err)
+	}
+	got, err := fresh.ValidateEnv("prod")
+	if err != nil {
+		t.Fatalf("ValidateEnv after reload failed: %v", err)
+	}
+	if got.PlanTier != "paid" {
+		t.Errorf("PlanTier = %q, want %q", got.PlanTier, "paid")
+	}
+	if got.ResourcePrefix != "prod-" {
+		t.Errorf("ResourcePrefix = %q, want %q", got.ResourcePrefix, "prod-")
+	}
+}

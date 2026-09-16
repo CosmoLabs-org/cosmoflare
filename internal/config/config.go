@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -38,6 +39,30 @@ type Profile struct {
 	AccessKey string `json:"access_key,omitempty" yaml:"access_key,omitempty" mapstructure:"access_key,omitempty"`
 	SecretKey string `json:"secret_key,omitempty" yaml:"secret_key,omitempty" mapstructure:"secret_key,omitempty"`
 	Region    string `json:"region,omitempty" yaml:"region,omitempty" mapstructure:"region,omitempty"`
+	// PlanTier is the Workers plan tier for this environment: "free" or
+	// "paid" — the same values pkg/cosmoflare limits resolution accepts.
+	// Empty means "not specified".
+	PlanTier string `json:"plan_tier,omitempty" yaml:"plan_tier,omitempty" mapstructure:"plan_tier,omitempty"`
+	// ResourcePrefix is reserved for resource scoping in a follow-up wave.
+	// This wave only stores and validates it: non-empty, no whitespace.
+	ResourcePrefix string `json:"resource_prefix,omitempty" yaml:"resource_prefix,omitempty" mapstructure:"resource_prefix,omitempty"`
+}
+
+// Plan tier values accepted in Profile.PlanTier. These mirror the tiers
+// pkg/cosmoflare's limits resolution normalizes to ("free" | "paid");
+// anything else is a validation error.
+const (
+	PlanTierFree = "free"
+	PlanTierPaid = "paid"
+)
+
+// validPlanTier reports whether s is a recognized Workers plan tier.
+func validPlanTier(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case PlanTierFree, PlanTierPaid:
+		return true
+	}
+	return false
 }
 
 // Secrets abstracts credential storage for testability.
@@ -218,6 +243,37 @@ func (cm *ConfigManager) GetCurrent() (*Profile, error) {
 		return nil, fmt.Errorf("no current profile set")
 	}
 	return cm.GetProfile(cm.config.Current)
+}
+
+// ValidateEnv resolves a named environment profile for --env selection.
+// It returns the named profile (secrets hydrated) or an actionable error
+// listing the known profile names. The profile's PlanTier and ResourcePrefix
+// are validated here so an invalid value fails before any command runs.
+// Unlike SetCurrent, ValidateEnv never changes the current profile.
+func (cm *ConfigManager) ValidateEnv(name string) (*Profile, error) {
+	profile, exists := cm.config.Profiles[name]
+	if !exists {
+		known := cm.ListProfiles()
+		sort.Strings(known)
+		return nil, fmt.Errorf("unknown environment %q: known environments are %s",
+			name, strings.Join(known, ", "))
+	}
+
+	if profile.PlanTier != "" && !validPlanTier(profile.PlanTier) {
+		return nil, fmt.Errorf(
+			"environment %q has invalid plan_tier %q: must be %q or %q",
+			name, profile.PlanTier, PlanTierFree, PlanTierPaid)
+	}
+
+	if prefix := profile.ResourcePrefix; prefix != "" {
+		if strings.TrimSpace(prefix) == "" || strings.ContainsAny(prefix, " \t\n\r") {
+			return nil, fmt.Errorf(
+				"environment %q has invalid resource_prefix %q: must be non-empty with no whitespace",
+				name, prefix)
+		}
+	}
+
+	return cm.hydrateSecrets(profile), nil
 }
 
 // GetSecretStore returns the underlying secret store for direct access.

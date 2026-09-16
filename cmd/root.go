@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/updatecheck"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/spf13/cobra"
@@ -30,6 +31,13 @@ var (
 	DryRun     bool
 	JSONOutput bool
 	Verbose    bool
+	// EnvProfile holds the --env flag value: the named environment profile
+	// selected for this invocation (does not change the current profile).
+	EnvProfile string
+	// ActiveProfile is the resolved --env profile for this invocation, or
+	// nil when no --env was given. Other commands read it via the
+	// accessor semantics of this package-level variable (FEAT-026).
+	ActiveProfile *config.Profile
 )
 
 // SetBuildInfo sets the build information
@@ -91,6 +99,15 @@ Examples:
 			return
 		}
 
+		// --env named environment profile (FEAT-026). Resolved before the
+		// ambient-env fallback so the profile's credentials rank between an
+		// explicit flag and the environment variables, and so validation
+		// below sees the effective token.
+		if err := resolveActiveEnv(); err != nil {
+			emitConfigError("Configuration error: %v", err)
+			os.Exit(1)
+		}
+
 		// Get API token from flag first, then environment
 		if APIToken == "" {
 			APIToken = os.Getenv("CLOUDFLARE_API_TOKEN")
@@ -148,6 +165,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&DryRun, "dry-run", false, "Show what would happen without executing")
 	rootCmd.PersistentFlags().BoolVar(&JSONOutput, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Enable verbose output")
+	rootCmd.PersistentFlags().StringVar(&EnvProfile, "env", "", "select a named environment profile for this invocation (does not change the current profile)")
 
 	// NOTE: Commands are registered via their own init() functions in each cmd/*.go file
 	// Legacy commands for backward compatibility are added here only
@@ -157,6 +175,40 @@ func init() {
 
 	// Add completion command
 	rootCmd.AddCommand(completionCmd)
+}
+
+// resolveActiveEnv resolves the --env flag against the named environment
+// profiles stored in ~/.cosmoflare/config.yaml (FEAT-026). On success the
+// resolved profile is stored in ActiveProfile for other commands and its
+// AccountID/APIToken — when set — take precedence over the ambient
+// CLOUDFLARE_* environment variables for this invocation only, the same way
+// profile switching applies credentials. Explicit --account-id/--api-token
+// flags still outrank the profile: the profile only fills unset variables.
+// With no --env, ActiveProfile is reset to nil and nothing else changes.
+func resolveActiveEnv() error {
+	if EnvProfile == "" {
+		ActiveProfile = nil
+		return nil
+	}
+
+	cm, err := config.NewConfigManager()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration for --env: %w", err)
+	}
+
+	profile, err := cm.ValidateEnv(EnvProfile)
+	if err != nil {
+		return err
+	}
+
+	ActiveProfile = profile
+	if APIToken == "" && profile.APIToken != "" {
+		APIToken = profile.APIToken
+	}
+	if AccountID == "" && profile.AccountID != "" {
+		AccountID = profile.AccountID
+	}
+	return nil
 }
 
 // validateEnvironment checks that an API token is available and valid.
