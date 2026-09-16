@@ -1534,7 +1534,7 @@ The four codes the current pack decodes:
 
 | Code | Context | Cause | Fix |
 |------|---------|-------|-----|
-| `10405` | | Route not valid for this authentication scheme — usually the endpoint does not exist | Check the route against registered endpoints; e.g. `POST .../entrypoint/rules` does not exist — use `PUT` on the phase entrypoint |
+| `10405` | | Route not valid for this authentication scheme — usually the endpoint does not exist. On rulesets phase-entrypoint writes (`PUT .../entrypoint`), 10405 also means the token lacks `Zone > Zone WAF > Edit` (see FEAT-011) | Check the route against registered endpoints; e.g. `POST .../entrypoint/rules` does not exist — use `PUT` on the phase entrypoint. For rulesets phase-entrypoint writes, add `Zone > Zone WAF > Edit` to the API token |
 | `1000` | `phase-entrypoint` | Phase entrypoint ruleset missing on this zone | Create it with `PUT /zones/{id}/rulesets/phases/{phase}/entrypoint` |
 | `20155` | | Missing `cf.colo.id` in rate-limit characteristics | Add `cf.colo.id` to characteristics — ratelimit counting is processed at colocation level only |
 | `10000` | | Token missing the required scope for this endpoint | For rate-limit rule writes the token needs Zone > Zone WAF > Edit (the permission *named* "Rate Limiting" covers the dead classic API) |

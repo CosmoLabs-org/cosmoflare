@@ -1,0 +1,18 @@
+{
+  "product": "permissions",
+  "scopes": ["/user/tokens/permission_groups*"],
+  "endpoints": [
+    {"method": "GET", "path": "/user/tokens/permission_groups", "note": "machine-readable SSOT for current permission-group names — source catalog data here, not developers.cloudflare.com prose"},
+    {"method": "PUT", "path": "/zones/{zone_id}/rulesets/phases/http_ratelimit/entrypoint", "note": "requires token permission Zone > Zone WAF > Edit"},
+    {"method": "PUT", "path": "/zones/{zone_id}/rulesets/phases/http_request_firewall_custom/entrypoint", "note": "requires token permission Zone > Zone WAF > Edit"},
+    {"method": "GET", "path": "/zones/{zone_id}/rate_limits", "status": "deprecated-off", "note": "the permission NAMED 'Rate Limiting' covers only this dead classic API — never recommend it for rate-limiting rules"},
+    {"method": "POST", "path": "/zones/{zone_id}/rate_limits", "status": "deprecated-off", "note": "same as GET above"}
+  ],
+  "errors": [
+    {"code": 10405, "context": "rulesets-writes", "cause": "token missing Zone > Zone WAF > Edit — the error text mentions authentication scheme but the signal is a missing scope", "fix": "add Zone > Zone WAF > Edit to the API token (MyCarGuide evidence zone e586a1c5, 2026-09-09: same call succeeded after adding the permission)"},
+    {"code": 10000, "context": "classic-rate-limits", "cause": "token missing required scope or using the disabled classic API", "fix": "use Rulesets http_ratelimit phase writes; the token needs Zone > Zone WAF > Edit"}
+  ],
+  "plan_caps": [],
+  "invariants": [],
+  "traffic_classes": []
+}
