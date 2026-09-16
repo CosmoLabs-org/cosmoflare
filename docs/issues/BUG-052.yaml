@@ -1,0 +1,16 @@
+id: BUG-052
+type: bug
+created_at: 2026-09-16T05:03:11.874457+04:00
+updated_at: 2026-09-16T05:03:11.884061+04:00
+source: local
+ulid: 01M2KVTF0C73N9DRCR46JKAE36
+severity: high
+status: open
+component: release
+area: reliability
+title: Emoji-named directory committed in v0.28.x tags poisons proxy.golang.org module zips
+description: 'A directory named ''❓    TauriApp                             0001-01-01    0                   '' (Finder column-view paste) containing post.json is committed on master and tagged in v0.28.0/v0.28.1. proxy.golang.org rejects module zips whose paths contain the ❓ char (U+2753), so create-zip fails for both versions: ''not found: create zip: ... malformed file path ... invalid char''. Expected: go install github.com/CosmoLabs-org/cosmoflare@latest resolves the newest release and pkg.go.dev documents it. Actual: @latest pinned to v0.27.0, pkg.go.dev frozen at v0.27.0 showing the outdated ''Package r2go2'' doc, v0.28.0/v0.28.1 uninstallable via the Go module proxy. GitHub release archives and Homebrew unaffected (different distribution path). Proxy caches the zip-creation failure, so v0.28.0/v0.28.1 are permanently un-buildable; only a new clean version (v0.28.2) restores module distribution.'
+fix_direction: '1) git rm -r the emoji-named directory from master. 2) Add a sanity-gate check to ''make release'' that scans the tagged tree for non-ASCII/emoji paths and fails fast (red on v0.28.1 tree, green after rm). 3) Cut v0.28.2 — the only remedy for the poisoned versions. 4) Post-publish: request proxy @v endpoints and the pkg.go.dev page to trigger re-index; acceptance is landing text ''Package cosmoflare provides''.'
+affected_files:
+    - ❓    TauriApp                             0001-01-01    0                   /post.json
+    - Makefile
