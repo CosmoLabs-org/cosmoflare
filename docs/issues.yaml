@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-16T13:02:22.797929+04:00
+last_updated: 2026-09-16T13:20:45.257047+04:00
 next_bug_id: 53
 next_feat_id: 44
 next_task_id: 11
@@ -378,6 +378,7 @@ issues:
       status: open
       title: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off
       priority: 50
+      delegated_to: "0244"
     - id: FEAT-012
       type: feature
       status: closed
@@ -537,8 +538,9 @@ issues:
       created_at: 2026-09-15T05:33:57.563443+04:00
     - id: FEAT-043
       type: feature
-      status: open
+      status: closed
       title: Opt-in env-gated update check
+      delegated_to: "0243"
       created_at: 2026-09-16T13:02:22.793721+04:00
     - id: TASK-001
       type: task

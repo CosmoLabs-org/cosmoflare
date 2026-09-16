@@ -2,7 +2,7 @@
 id: FEAT-011
 type: feature
 created: "2026-09-09"
-updated: "2026-09-13T15:38:36.906739+04:00"
+updated: "2026-09-16T13:20:58.696236+04:00"
 priority: 50
 status: open
 origin:
@@ -13,6 +13,12 @@ origin:
     received: "2026-09-09"
     converted: "2026-09-09"
 title: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off
+resolution:
+    notes: 'Seed wave merged (8529017, agent 0244 GLM-5.3-flash): permissions.json pack (pack #2 — unblocks the held knowledge-Transport wiring idea), 10405 rulesets-writes scope decode in ratelimit pack + USAGE.md row. Acceptance 1-3 met; criterion 4 (Qwen dataset structured into catalog) remains open — issue stays open until the dataset lands.'
+delegation:
+    delegated_to: "0244"
+    delegated_at: 2026-09-16T13:05:49.496856+04:00
+    delegated_engine: glm-agent
 
 ---
 

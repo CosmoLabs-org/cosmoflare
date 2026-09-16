@@ -14,6 +14,12 @@ export CLOUDFLARE_API_TOKEN="your-api-token"
 
 Or pass via flags: `--account-id` and `--api-token`.
 
+Optional behavior flags (environment):
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `COSMOFLARE_UPDATE_CHECK` | unset (off) | Set to `1` to check GitHub Releases for a newer version on each command. Off by default — zero network calls unless enabled. When enabled and a newer release exists, prints one line to stderr (never stdout, so `--json` output stays clean; never blocks a command beyond 2s; skipped for `cosmoflare mcp`). |
+
 ## Global Flags
 
 | Flag | Description |

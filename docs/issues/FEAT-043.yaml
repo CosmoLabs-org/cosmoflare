@@ -1,10 +1,10 @@
 id: FEAT-043
 type: feature
 created_at: 2026-09-16T13:02:22.793721+04:00
-updated_at: 2026-09-16T13:02:25.164238+04:00
+updated_at: 2026-09-16T13:20:45.253404+04:00
 source: local
 ulid: 01M2MQ7W2F4P4S4DPSQKJTB5R7
-status: open
+status: closed
 labels:
     - audit
     - competitive
@@ -23,3 +23,14 @@ description: |-
 
     Origin: audit-agent-4-competitive
     Context file: docs/audit/2026-09-13-cosmoflare/agent-4-competitive.md
+resolution:
+    notes: 'Implemented and merged (56479ae, agent 0243 GLM-5.3-flash, salvage path): internal/updatecheck package + root PersistentPreRun wiring. Session review score 8, issues 0; go test ./internal/updatecheck/ ./cmd/ green. Env-gated default-off, stderr-only notice, 2s timeout, MCP-skip. USAGE.md env table documents COSMOFLARE_UPDATE_CHECK. Ships in next release after v0.28.2.'
+    resolved_at: 2026-09-16T13:20:45.252563+04:00
+delegation:
+    delegated_to: "0243"
+    delegated_at: 2026-09-16T13:05:39.805966+04:00
+    delegated_engine: glm-agent
+revisions:
+    - date: "2026-09-16"
+      action: closed
+      context: 'Implemented and merged (56479ae, agent 0243 GLM-5.3-flash, salvage path): internal/updatecheck package + root PersistentPreRun wiring. Session review score 8, issues 0; go test ./internal/updatecheck/ ./cmd/ green. Env-gated default-off, stderr-only notice, 2s timeout, MCP-skip. USAGE.md env table documents COSMOFLARE_UPDATE_CHECK. Ships in next release after v0.28.2.'
