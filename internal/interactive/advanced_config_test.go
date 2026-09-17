@@ -32,6 +32,7 @@ func disableAnimations(t *testing.T) {
 // configureBucketSettings
 // ──────────────────────────────────────────────
 
+// TestConfigureBucketSettings verifies configureBucketSettings behavior, one t.Run subtest per...
 func TestConfigureBucketSettings(t *testing.T) {
 	disableAnimations(t)
 
@@ -140,6 +141,7 @@ func testBucketSettingsEndpoint(t *testing.T) {
 // configureUploadSettings
 // ──────────────────────────────────────────────
 
+// TestConfigureUploadSettings verifies configureUploadSettings behavior, one t.Run subtest per...
 func TestConfigureUploadSettings(t *testing.T) {
 	disableAnimations(t)
 
@@ -335,6 +337,7 @@ func testUploadSettingsChecksum(t *testing.T) {
 // configureRegionSettings
 // ──────────────────────────────────────────────
 
+// TestConfigureRegionSettings verifies configureRegionSettings behavior, one t.Run subtest per...
 func TestConfigureRegionSettings(t *testing.T) {
 	disableAnimations(t)
 
@@ -406,6 +409,7 @@ func TestConfigureRegionSettings(t *testing.T) {
 // configureAdditionalOptions
 // ──────────────────────────────────────────────
 
+// TestConfigureAdditionalOptions verifies configureAdditionalOptions behavior, one t.Run subtest...
 func TestConfigureAdditionalOptions(t *testing.T) {
 	disableAnimations(t)
 
@@ -514,6 +518,7 @@ func testAdditionalOptionsAccessibility(t *testing.T) {
 // ShowAdvancedConfig (full walkthrough)
 // ──────────────────────────────────────────────
 
+// TestShowAdvancedConfig verifies ShowAdvancedConfig behavior, one t.Run subtest per scenario.
 func TestShowAdvancedConfig(t *testing.T) {
 	disableAnimations(t)
 
@@ -576,6 +581,7 @@ func TestShowAdvancedConfig(t *testing.T) {
 // ShowConfigurationSummary
 // ──────────────────────────────────────────────
 
+// TestShowConfigurationSummary verifies ShowConfigurationSummary behavior, one t.Run subtest per...
 func TestShowConfigurationSummary(t *testing.T) {
 	disableAnimations(t)
 
@@ -639,6 +645,7 @@ func TestShowConfigurationSummary(t *testing.T) {
 // SaveAdvancedConfig
 // ──────────────────────────────────────────────
 
+// TestSaveAdvancedConfig verifies SaveAdvancedConfig behavior, one t.Run subtest per scenario.
 func TestSaveAdvancedConfig(t *testing.T) {
 	disableAnimations(t)
 
@@ -709,6 +716,7 @@ func TestSaveAdvancedConfig(t *testing.T) {
 // ValidateAdvancedConfig
 // ──────────────────────────────────────────────
 
+// TestValidateAdvancedConfig_Boundaries verifies ValidateAdvancedConfig behavior for the...
 func TestValidateAdvancedConfig_Boundaries(t *testing.T) {
 	t.Run("valid configurations", testValidateBoundariesValid)
 	t.Run("boundaries", testValidateBoundariesEdges)
@@ -880,6 +888,7 @@ func testValidateBoundariesRetryRegion(t *testing.T) {
 // NewAdvancedConfigWizard constructor
 // ──────────────────────────────────────────────
 
+// TestNewAdvancedConfigWizard verifies NewAdvancedConfigWizard behavior, one t.Run subtest per...
 func TestNewAdvancedConfigWizard(t *testing.T) {
 	t.Run("sets profile and default input", func(t *testing.T) {
 		profile := &config.Profile{Name: "my-profile"}
@@ -893,6 +902,7 @@ func TestNewAdvancedConfigWizard(t *testing.T) {
 // ShowAdvancedConfig full flow (77.8% gap)
 // ---------------------------------------------------------------------------
 
+// TestAdvancedConfigWizard_ShowAdvancedConfig_AllDefaults verifies that AdvancedConfigWizard...
 func TestAdvancedConfigWizard_ShowAdvancedConfig_AllDefaults(t *testing.T) {
 	disableAnimations(t)
 	profile := &config.Profile{Name: "test-profile", Description: "test", Region: "auto"}
@@ -934,6 +944,7 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_AllDefaults(t *testing.T) {
 	assert.False(t, cfg.AnalyticsEnabled)
 }
 
+// TestAdvancedConfigWizard_ShowAdvancedConfig_CustomBucket verifies that AdvancedConfigWizard...
 func TestAdvancedConfigWizard_ShowAdvancedConfig_CustomBucket(t *testing.T) {
 	disableAnimations(t)
 
@@ -975,6 +986,7 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_CustomBucket(t *testing.T) {
 	assert.True(t, cfg.AccessibilityEnabled)
 }
 
+// TestAdvancedConfigWizard_ShowAdvancedConfig_InvalidInputs verifies that AdvancedConfigWizard...
 func TestAdvancedConfigWizard_ShowAdvancedConfig_InvalidInputs(t *testing.T) {
 	disableAnimations(t)
 
@@ -1012,6 +1024,7 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_InvalidInputs(t *testing.T) {
 	assert.Equal(t, "cosmic", cfg.Theme)
 }
 
+// TestAdvancedConfigWizard_ShowAdvancedConfig_CostOptimized verifies that AdvancedConfigWizard...
 func TestAdvancedConfigWizard_ShowAdvancedConfig_CostOptimized(t *testing.T) {
 	disableAnimations(t)
 
@@ -1051,6 +1064,7 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_CostOptimized(t *testing.T) {
 // ShowConfigurationSummary
 // ---------------------------------------------------------------------------
 
+// TestAdvancedConfigWizard_ShowConfigurationSummary verifies that AdvancedConfigWizard handles the...
 func TestAdvancedConfigWizard_ShowConfigurationSummary(t *testing.T) {
 	disableAnimations(t)
 	profile := &config.Profile{Name: "summary-test", Description: "test", Region: "auto"}
@@ -1089,6 +1103,7 @@ func TestAdvancedConfigWizard_ShowConfigurationSummary(t *testing.T) {
 	assert.Contains(t, buf.String(), "performance")
 }
 
+// TestAdvancedConfigWizard_ShowConfigurationSummary_WithEndpoint verifies that...
 func TestAdvancedConfigWizard_ShowConfigurationSummary_WithEndpoint(t *testing.T) {
 	disableAnimations(t)
 	profile := &config.Profile{Name: "ep-test", Description: "test", Region: "auto"}
@@ -1128,6 +1143,7 @@ func TestAdvancedConfigWizard_ShowConfigurationSummary_WithEndpoint(t *testing.T
 // ValidateAdvancedConfig
 // ---------------------------------------------------------------------------
 
+// TestAdvancedConfigWizard_ValidateAdvancedConfig_Valid verifies that AdvancedConfigWizard handles...
 func TestAdvancedConfigWizard_ValidateAdvancedConfig_Valid(t *testing.T) {
 	profile := &config.Profile{Name: "test"}
 	acw := NewAdvancedConfigWizard(profile)
@@ -1146,6 +1162,7 @@ func TestAdvancedConfigWizard_ValidateAdvancedConfig_Valid(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidConcurrency verifies that...
 func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidConcurrency(t *testing.T) {
 	profile := &config.Profile{Name: "test"}
 	acw := NewAdvancedConfigWizard(profile)
@@ -1165,6 +1182,7 @@ func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidConcurrency(t *testi
 	assert.Contains(t, err.Error(), "concurrency")
 }
 
+// TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRetries verifies that...
 func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRetries(t *testing.T) {
 	profile := &config.Profile{Name: "test"}
 	acw := NewAdvancedConfigWizard(profile)
@@ -1184,6 +1202,7 @@ func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRetries(t *testing.T
 	assert.Contains(t, err.Error(), "retry")
 }
 
+// TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRegion verifies that AdvancedConfigWizard...
 func TestAdvancedConfigWizard_ValidateAdvancedConfig_InvalidRegion(t *testing.T) {
 	profile := &config.Profile{Name: "test"}
 	acw := NewAdvancedConfigWizard(profile)

@@ -15,6 +15,7 @@ import (
 // Easing functions
 // ---------------------------------------------------------------------------
 
+// TestEaseInOutCubic verifies easeInOutCubic behavior, one t.Run subtest per scenario.
 func TestEaseInOutCubic(t *testing.T) {
 	t.Run("t=0 returns 0", func(t *testing.T) {
 		result := easeInOutCubic(0)
@@ -59,6 +60,7 @@ func TestEaseInOutCubic(t *testing.T) {
 	})
 }
 
+// TestEaseOutQuad verifies easeOutQuad behavior, one t.Run subtest per scenario.
 func TestEaseOutQuad(t *testing.T) {
 	t.Run("t=0 returns 0", func(t *testing.T) {
 		result := easeOutQuad(0)
@@ -77,6 +79,7 @@ func TestEaseOutQuad(t *testing.T) {
 	})
 }
 
+// TestEaseInQuad verifies easeInQuad behavior, one t.Run subtest per scenario.
 func TestEaseInQuad(t *testing.T) {
 	t.Run("t=0 returns 0", func(t *testing.T) {
 		result := easeInQuad(0)
@@ -99,6 +102,7 @@ func TestEaseInQuad(t *testing.T) {
 // Animator creation
 // ---------------------------------------------------------------------------
 
+// TestNewAnimator verifies the documented behavior of NewAnimator.
 func TestNewAnimator(t *testing.T) {
 	a := NewAnimator()
 	assert.NotNil(t, a)
@@ -112,6 +116,7 @@ func TestNewAnimator(t *testing.T) {
 // ShowSpinner (disabled mode for testability)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowSpinner_Disabled verifies that Animator handles the show spinner case and...
 func TestAnimator_ShowSpinner_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -122,6 +127,7 @@ func TestAnimator_ShowSpinner_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowSpinner_VeryShortDuration verifies that Animator handles the show spinner case...
 func TestAnimator_ShowSpinner_VeryShortDuration(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true // Disable to avoid actual animation in tests
@@ -135,6 +141,7 @@ func TestAnimator_ShowSpinner_VeryShortDuration(t *testing.T) {
 // ShowProgress (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowProgress_Disabled verifies that Animator handles the show progress case and...
 func TestAnimator_ShowProgress_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -146,6 +153,7 @@ func TestAnimator_ShowProgress_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowProgress_EmptySteps verifies that Animator handles the show progress case and...
 func TestAnimator_ShowProgress_EmptySteps(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -155,6 +163,7 @@ func TestAnimator_ShowProgress_EmptySteps(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowProgress_SingleStep verifies that Animator handles the show progress case and...
 func TestAnimator_ShowProgress_SingleStep(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -168,6 +177,7 @@ func TestAnimator_ShowProgress_SingleStep(t *testing.T) {
 // drawProgressBar
 // ---------------------------------------------------------------------------
 
+// TestAnimator_DrawProgressBar verifies Animator behavior for the draw progress bar case, one...
 func TestAnimator_DrawProgressBar(t *testing.T) {
 	a := NewAnimator()
 	style := ProgressBarCharacters["standard"]
@@ -203,6 +213,7 @@ func TestAnimator_DrawProgressBar(t *testing.T) {
 // AnimateTransition (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_AnimateTransition_Disabled verifies that Animator handles the animate transition...
 func TestAnimator_AnimateTransition_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -212,6 +223,7 @@ func TestAnimator_AnimateTransition_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_AnimateTransition_ZeroDuration verifies that Animator handles the animate...
 func TestAnimator_AnimateTransition_ZeroDuration(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -225,6 +237,7 @@ func TestAnimator_AnimateTransition_ZeroDuration(t *testing.T) {
 // mixTexts
 // ---------------------------------------------------------------------------
 
+// TestAnimator_MixTexts verifies Animator behavior for the mix texts case, one t.Run subtest per...
 func TestAnimator_MixTexts(t *testing.T) {
 	a := NewAnimator()
 
@@ -262,6 +275,7 @@ func TestAnimator_MixTexts(t *testing.T) {
 // ShowLoadingSkeleton (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowLoadingSkeleton_Disabled verifies that Animator handles the show loading...
 func TestAnimator_ShowLoadingSkeleton_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -273,6 +287,7 @@ func TestAnimator_ShowLoadingSkeleton_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowLoadingSkeleton_EmptyLines verifies that Animator handles the show loading...
 func TestAnimator_ShowLoadingSkeleton_EmptyLines(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -286,6 +301,7 @@ func TestAnimator_ShowLoadingSkeleton_EmptyLines(t *testing.T) {
 // TypewriterEffect (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_TypewriterEffect_Disabled verifies that Animator handles the typewriter effect case...
 func TestAnimator_TypewriterEffect_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -295,6 +311,7 @@ func TestAnimator_TypewriterEffect_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_TypewriterEffect_EmptyString verifies that Animator handles the typewriter effect...
 func TestAnimator_TypewriterEffect_EmptyString(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -304,6 +321,7 @@ func TestAnimator_TypewriterEffect_EmptyString(t *testing.T) {
 	})
 }
 
+// TestAnimator_TypewriterEffect_Unicode verifies that Animator handles the typewriter effect case...
 func TestAnimator_TypewriterEffect_Unicode(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -317,6 +335,7 @@ func TestAnimator_TypewriterEffect_Unicode(t *testing.T) {
 // PulseText (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_PulseText_Disabled verifies that Animator handles the pulse text case and behaves...
 func TestAnimator_PulseText_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -326,6 +345,7 @@ func TestAnimator_PulseText_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_PulseText_ZeroPulses verifies that Animator handles the pulse text case and handles...
 func TestAnimator_PulseText_ZeroPulses(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -335,6 +355,7 @@ func TestAnimator_PulseText_ZeroPulses(t *testing.T) {
 	})
 }
 
+// TestAnimator_PulseText_MultiplePulses verifies that Animator handles the pulse text case and...
 func TestAnimator_PulseText_MultiplePulses(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -348,6 +369,7 @@ func TestAnimator_PulseText_MultiplePulses(t *testing.T) {
 // ShowStepTransition (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowStepTransition_Disabled verifies that Animator handles the show step transition...
 func TestAnimator_ShowStepTransition_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -357,6 +379,7 @@ func TestAnimator_ShowStepTransition_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowStepTransition_EdgeCases verifies that Animator handles the show step...
 func TestAnimator_ShowStepTransition_EdgeCases(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -371,6 +394,7 @@ func TestAnimator_ShowStepTransition_EdgeCases(t *testing.T) {
 // ShowSuccessAnimation (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowSuccessAnimation_Disabled verifies that Animator handles the show success...
 func TestAnimator_ShowSuccessAnimation_Disabled(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -380,6 +404,7 @@ func TestAnimator_ShowSuccessAnimation_Disabled(t *testing.T) {
 	})
 }
 
+// TestAnimator_ShowSuccessAnimation_EmptyMessage verifies that Animator handles the show success...
 func TestAnimator_ShowSuccessAnimation_EmptyMessage(t *testing.T) {
 	a := NewAnimator()
 	a.Disabled = true
@@ -393,6 +418,7 @@ func TestAnimator_ShowSuccessAnimation_EmptyMessage(t *testing.T) {
 // SetStyle
 // ---------------------------------------------------------------------------
 
+// TestAnimator_SetStyle verifies Animator behavior for the set style case, one t.Run subtest per...
 func TestAnimator_SetStyle(t *testing.T) {
 	a := NewAnimator()
 
@@ -423,6 +449,7 @@ func TestAnimator_SetStyle(t *testing.T) {
 // max helper
 // ---------------------------------------------------------------------------
 
+// TestMax verifies max behavior, one t.Run subtest per scenario.
 func TestMax(t *testing.T) {
 	tests := []struct {
 		a, b     int
@@ -447,6 +474,7 @@ func TestMax(t *testing.T) {
 // Global functions
 // ---------------------------------------------------------------------------
 
+// TestSetAnimationStyle verifies the documented behavior of SetAnimationStyle.
 func TestSetAnimationStyle(t *testing.T) {
 	originalSpeed := globalAnimator.Speed
 	originalDisabled := globalAnimator.Disabled
@@ -467,6 +495,7 @@ func TestSetAnimationStyle(t *testing.T) {
 // ProgressBarCharacters
 // ---------------------------------------------------------------------------
 
+// TestProgressBarCharacters verifies progress bar characters behavior, one t.Run subtest per scenario.
 func TestProgressBarCharacters(t *testing.T) {
 	t.Run("standard style exists", func(t *testing.T) {
 		style, ok := ProgressBarCharacters["standard"]
@@ -504,6 +533,7 @@ func TestProgressBarCharacters(t *testing.T) {
 // SpinnerCharacters
 // ---------------------------------------------------------------------------
 
+// TestSpinnerCharacters verifies the documented behavior of spinner characters.
 func TestSpinnerCharacters(t *testing.T) {
 	assert.NotEmpty(t, SpinnerCharacters)
 	assert.Greater(t, len(SpinnerCharacters), 5)
@@ -519,6 +549,7 @@ func TestSpinnerCharacters(t *testing.T) {
 	}
 }
 
+// TestDotsSpinnerCharacters verifies the documented behavior of dots spinner characters.
 func TestDotsSpinnerCharacters(t *testing.T) {
 	assert.NotEmpty(t, DotsSpinnerCharacters)
 	assert.Greater(t, len(DotsSpinnerCharacters), 3)
@@ -537,6 +568,7 @@ func TestDotsSpinnerCharacters(t *testing.T) {
 // Constants
 // ---------------------------------------------------------------------------
 
+// TestAnimationConstants verifies the documented behavior of animation constants.
 func TestAnimationConstants(t *testing.T) {
 	assert.Equal(t, 60*time.Millisecond, DefaultFrameRate)
 	assert.Equal(t, 30*time.Millisecond, FastFrameRate)
@@ -547,6 +579,7 @@ func TestAnimationConstants(t *testing.T) {
 // AnimationState
 // ---------------------------------------------------------------------------
 
+// TestAnimationState verifies the documented behavior of AnimationState.
 func TestAnimationState(t *testing.T) {
 	state := AnimationState{
 		Progress: 0.5,
@@ -568,6 +601,7 @@ func TestAnimationState(t *testing.T) {
 // drawPulsedText
 // ---------------------------------------------------------------------------
 
+// TestAnimator_DrawPulsedText verifies Animator behavior for the draw pulsed text case, one t.Run...
 func TestAnimator_DrawPulsedText(t *testing.T) {
 	a := NewAnimator()
 
@@ -607,6 +641,7 @@ func TestAnimator_DrawPulsedText(t *testing.T) {
 // drawSkeleton
 // ---------------------------------------------------------------------------
 
+// TestAnimator_DrawSkeleton verifies Animator behavior for the draw skeleton case, one t.Run...
 func TestAnimator_DrawSkeleton(t *testing.T) {
 	a := NewAnimator()
 
@@ -638,6 +673,7 @@ func TestAnimator_DrawSkeleton(t *testing.T) {
 // Enabled-path animation tests (stdout capture)
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowSpinner_Enabled verifies that Animator handles the show spinner case and...
 func TestAnimator_ShowSpinner_Enabled(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 10 * time.Millisecond
@@ -656,6 +692,7 @@ func TestAnimator_ShowSpinner_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Loading")
 }
 
+// TestAnimator_ShowProgress_Enabled verifies that Animator handles the show progress case and...
 func TestAnimator_ShowProgress_Enabled(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 1 * time.Millisecond
@@ -676,6 +713,7 @@ func TestAnimator_ShowProgress_Enabled(t *testing.T) {
 	assert.Contains(t, output, "Step 1")
 }
 
+// TestAnimator_ShowProgress_Enabled_MultipleSteps verifies that Animator handles the show progress...
 func TestAnimator_ShowProgress_Enabled_MultipleSteps(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 1 * time.Millisecond
@@ -694,6 +732,7 @@ func TestAnimator_ShowProgress_Enabled_MultipleSteps(t *testing.T) {
 	assert.Contains(t, buf.String(), "Multi")
 }
 
+// TestAnimator_AnimateTransition_Enabled verifies that Animator handles the animate transition...
 func TestAnimator_AnimateTransition_Enabled(t *testing.T) {
 	a := NewAnimator()
 
@@ -711,6 +750,7 @@ func TestAnimator_AnimateTransition_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "To")
 }
 
+// TestAnimator_AnimateTransition_Enabled_DifferentLengths verifies that Animator handles the...
 func TestAnimator_AnimateTransition_Enabled_DifferentLengths(t *testing.T) {
 	a := NewAnimator()
 
@@ -728,6 +768,7 @@ func TestAnimator_AnimateTransition_Enabled_DifferentLengths(t *testing.T) {
 	assert.Contains(t, buf.String(), "LongerText")
 }
 
+// TestAnimator_ShowLoadingSkeleton_Enabled verifies that Animator handles the show loading...
 func TestAnimator_ShowLoadingSkeleton_Enabled(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 1 * time.Millisecond
@@ -746,6 +787,7 @@ func TestAnimator_ShowLoadingSkeleton_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Loading")
 }
 
+// TestAnimator_ShowLoadingSkeleton_Enabled_MultipleLines verifies that Animator handles the show...
 func TestAnimator_ShowLoadingSkeleton_Enabled_MultipleLines(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 1 * time.Millisecond
@@ -764,6 +806,7 @@ func TestAnimator_ShowLoadingSkeleton_Enabled_MultipleLines(t *testing.T) {
 	assert.Contains(t, buf.String(), "Line")
 }
 
+// TestAnimator_TypewriterEffect_Enabled verifies that Animator handles the typewriter effect case...
 func TestAnimator_TypewriterEffect_Enabled(t *testing.T) {
 	a := NewAnimator()
 
@@ -781,6 +824,7 @@ func TestAnimator_TypewriterEffect_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Hi")
 }
 
+// TestAnimator_TypewriterEffect_Enabled_LongText verifies that Animator handles the typewriter...
 func TestAnimator_TypewriterEffect_Enabled_LongText(t *testing.T) {
 	a := NewAnimator()
 
@@ -798,6 +842,7 @@ func TestAnimator_TypewriterEffect_Enabled_LongText(t *testing.T) {
 	assert.Contains(t, buf.String(), "Hello")
 }
 
+// TestAnimator_PulseText_Enabled verifies that Animator handles the pulse text case and behaves...
 func TestAnimator_PulseText_Enabled(t *testing.T) {
 	a := NewAnimator()
 
@@ -815,6 +860,7 @@ func TestAnimator_PulseText_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Test")
 }
 
+// TestAnimator_ShowStepTransition_Enabled verifies that Animator handles the show step transition...
 func TestAnimator_ShowStepTransition_Enabled(t *testing.T) {
 	a := NewAnimator()
 
@@ -832,6 +878,7 @@ func TestAnimator_ShowStepTransition_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Step")
 }
 
+// TestAnimator_ShowSuccessAnimation_Enabled verifies that Animator handles the show success...
 func TestAnimator_ShowSuccessAnimation_Enabled(t *testing.T) {
 	a := NewAnimator()
 
@@ -849,6 +896,7 @@ func TestAnimator_ShowSuccessAnimation_Enabled(t *testing.T) {
 	assert.Contains(t, buf.String(), "Done")
 }
 
+// TestAnimator_ShowSuccessAnimation_Enabled_SpecialChars verifies that Animator handles the show...
 func TestAnimator_ShowSuccessAnimation_Enabled_SpecialChars(t *testing.T) {
 	a := NewAnimator()
 
@@ -870,6 +918,7 @@ func TestAnimator_ShowSuccessAnimation_Enabled_SpecialChars(t *testing.T) {
 // Global convenience function tests
 // ---------------------------------------------------------------------------
 
+// TestShowSpinner_GlobalCapture verifies that ShowSpinner captures output through the...
 func TestShowSpinner_GlobalCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	origSpeed := globalAnimator.Speed
@@ -893,6 +942,7 @@ func TestShowSpinner_GlobalCapture(t *testing.T) {
 	assert.Contains(t, buf.String(), "Global spinner")
 }
 
+// TestShowProgress_GlobalCapture verifies that ShowProgress captures output through the...
 func TestShowProgress_GlobalCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -912,6 +962,7 @@ func TestShowProgress_GlobalCapture(t *testing.T) {
 	assert.Contains(t, buf.String(), "Global progress")
 }
 
+// TestAnimateTransition_GlobalCapture verifies that AnimateTransition captures output through the...
 func TestAnimateTransition_GlobalCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -935,6 +986,7 @@ func TestAnimateTransition_GlobalCapture(t *testing.T) {
 // mixTexts additional edge cases
 // ---------------------------------------------------------------------------
 
+// TestAnimator_MixTexts_EdgeCases verifies Animator behavior for the mix texts case and edge cases...
 func TestAnimator_MixTexts_EdgeCases(t *testing.T) {
 	a := NewAnimator()
 
@@ -958,6 +1010,7 @@ func TestAnimator_MixTexts_EdgeCases(t *testing.T) {
 // drawProgressBar additional cases
 // ---------------------------------------------------------------------------
 
+// TestAnimator_DrawProgressBar_AllStyles verifies Animator behavior for the draw progress bar case...
 func TestAnimator_DrawProgressBar_AllStyles(t *testing.T) {
 	a := NewAnimator()
 
@@ -974,6 +1027,7 @@ func TestAnimator_DrawProgressBar_AllStyles(t *testing.T) {
 // ShowSpinner and ShowProgress with empty messages
 // ---------------------------------------------------------------------------
 
+// TestAnimator_ShowSpinner_Enabled_EmptyMessage verifies that Animator handles the show spinner...
 func TestAnimator_ShowSpinner_Enabled_EmptyMessage(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 10 * time.Millisecond
@@ -993,6 +1047,7 @@ func TestAnimator_ShowSpinner_Enabled_EmptyMessage(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestAnimator_ShowProgress_Enabled_EmptySteps verifies that Animator handles the show progress...
 func TestAnimator_ShowProgress_Enabled_EmptySteps(t *testing.T) {
 	a := NewAnimator()
 	a.Speed = 1 * time.Millisecond
@@ -1015,6 +1070,7 @@ func TestAnimator_ShowProgress_Enabled_EmptySteps(t *testing.T) {
 // StringsContains helper check
 // ---------------------------------------------------------------------------
 
+// TestStringsContains verifies the documented behavior of strings contains.
 func TestStringsContains(t *testing.T) {
 	assert.True(t, strings.Contains("hello world", "world"))
 	assert.False(t, strings.Contains("hello", "world"))

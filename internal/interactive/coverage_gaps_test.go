@@ -12,6 +12,7 @@ import (
 
 // --- Step2_APIToken ---
 
+// TestStep2_APIToken_EnvVarAccept verifies that the setup wizard step 2 (API token) handles the...
 func TestStep2_APIToken_EnvVarAccept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -25,6 +26,7 @@ func TestStep2_APIToken_EnvVarAccept(t *testing.T) {
 	assert.Equal(t, strings.Repeat("x", 30), token)
 }
 
+// TestStep2_APIToken_EnvVarReject verifies that the setup wizard step 2 (API token) handles the...
 func TestStep2_APIToken_EnvVarReject(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -39,6 +41,7 @@ func TestStep2_APIToken_EnvVarReject(t *testing.T) {
 	assert.Equal(t, strings.Repeat("a", 25), token)
 }
 
+// TestStep2_APIToken_NoEnv_ShortThenValid verifies that the setup wizard step 2 (API token)...
 func TestStep2_APIToken_NoEnv_ShortThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -53,6 +56,7 @@ func TestStep2_APIToken_NoEnv_ShortThenValid(t *testing.T) {
 	assert.Equal(t, strings.Repeat("b", 25), token)
 }
 
+// TestStep2_APIToken_NoEnv_ConfirmNo_Retry verifies that the setup wizard step 2 (API token)...
 func TestStep2_APIToken_NoEnv_ConfirmNo_Retry(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -69,6 +73,7 @@ func TestStep2_APIToken_NoEnv_ConfirmNo_Retry(t *testing.T) {
 
 // --- Step3_AccountInfo ---
 
+// TestStep3_AccountInfo_EnvVarAccept verifies that the setup wizard step 3 (account info) handles...
 func TestStep3_AccountInfo_EnvVarAccept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -83,6 +88,7 @@ func TestStep3_AccountInfo_EnvVarAccept(t *testing.T) {
 	assert.Equal(t, strings.Repeat("a", 32), accountID)
 }
 
+// TestStep3_AccountInfo_ManualValid verifies that the setup wizard step 3 (account info) handles...
 func TestStep3_AccountInfo_ManualValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -96,6 +102,7 @@ func TestStep3_AccountInfo_ManualValid(t *testing.T) {
 	assert.Equal(t, strings.Repeat("f", 32), accountID)
 }
 
+// TestStep3_AccountInfo_ManualEmptyThenValid verifies that the setup wizard step 3 (account info)...
 func TestStep3_AccountInfo_ManualEmptyThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -110,6 +117,7 @@ func TestStep3_AccountInfo_ManualEmptyThenValid(t *testing.T) {
 	assert.Equal(t, strings.Repeat("e", 32), accountID)
 }
 
+// TestStep3_AccountInfo_ManualInvalidLength verifies that the setup wizard step 3 (account info)...
 func TestStep3_AccountInfo_ManualInvalidLength(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -129,6 +137,7 @@ func TestStep3_AccountInfo_ManualInvalidLength(t *testing.T) {
 
 // --- CreateCustomTheme ---
 
+// TestCreateCustomTheme_EmptyName verifies that CreateCustomTheme handles the empty name case.
 func TestCreateCustomTheme_EmptyName(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -141,6 +150,7 @@ func TestCreateCustomTheme_EmptyName(t *testing.T) {
 	assert.Contains(t, err.Error(), "empty")
 }
 
+// TestCreateCustomTheme_Valid verifies that CreateCustomTheme accepts valid input.
 func TestCreateCustomTheme_Valid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -156,6 +166,7 @@ func TestCreateCustomTheme_Valid(t *testing.T) {
 
 // --- customizeTheme ---
 
+// TestCustomizeTheme_DisableAnimations verifies that customizeTheme handles the disable animations...
 func TestCustomizeTheme_DisableAnimations(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -184,6 +195,7 @@ func newTestProfileManager(t *testing.T, input ...string) *ProfileManager {
 	return pm
 }
 
+// TestShowProfileSwitcher_NoProfiles verifies that ShowProfileSwitcher handles the no profiles case.
 func TestShowProfileSwitcher_NoProfiles(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -193,6 +205,7 @@ func TestShowProfileSwitcher_NoProfiles(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestShowProfileSwitcher_SelectProfile verifies that ShowProfileSwitcher handles the select...
 func TestShowProfileSwitcher_SelectProfile(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -207,6 +220,7 @@ func TestShowProfileSwitcher_SelectProfile(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestShowProfileSwitcher_InvalidInput verifies that ShowProfileSwitcher handles the invalid input...
 func TestShowProfileSwitcher_InvalidInput(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -222,6 +236,7 @@ func TestShowProfileSwitcher_InvalidInput(t *testing.T) {
 
 // --- DeleteProfileInteractive ---
 
+// TestDeleteProfileInteractive_NoProfiles verifies that DeleteProfileInteractive handles the no...
 func TestDeleteProfileInteractive_NoProfiles(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -231,6 +246,7 @@ func TestDeleteProfileInteractive_NoProfiles(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestDeleteProfileInteractive_InvalidSelection verifies that DeleteProfileInteractive handles the...
 func TestDeleteProfileInteractive_InvalidSelection(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -244,6 +260,7 @@ func TestDeleteProfileInteractive_InvalidSelection(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// TestDeleteProfileInteractive_CancelDelete verifies that DeleteProfileInteractive handles the...
 func TestDeleteProfileInteractive_CancelDelete(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -267,6 +284,7 @@ func TestDeleteProfileInteractive_CancelDelete(t *testing.T) {
 
 // --- createNewProfileFromSwitcher ---
 
+// TestCreateNewProfileFromSwitcher_EmptyThenValid verifies that createNewProfileFromSwitcher...
 func TestCreateNewProfileFromSwitcher_EmptyThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -278,6 +296,7 @@ func TestCreateNewProfileFromSwitcher_EmptyThenValid(t *testing.T) {
 	assert.True(t, pm.configMgr.ProfileExists("newprofile"))
 }
 
+// TestCreateNewProfileFromSwitcher_Duplicate verifies that createNewProfileFromSwitcher handles...
 func TestCreateNewProfileFromSwitcher_Duplicate(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -294,6 +313,7 @@ func TestCreateNewProfileFromSwitcher_Duplicate(t *testing.T) {
 
 // --- SelectFromList wrapper ---
 
+// TestSelectFromList_Wrapper verifies that SelectFromList handles the wrapper case.
 func TestSelectFromList_Wrapper(t *testing.T) {
 	// Just verify the wrapper function calls through correctly
 	// This is a thin wrapper around SelectFromListWithReader
@@ -305,6 +325,7 @@ func TestSelectFromList_Wrapper(t *testing.T) {
 
 // --- ShowFirstRunWelcome ---
 
+// TestShowFirstRunWelcome_RC verifies that ShowFirstRunWelcome handles the rc case.
 func TestShowFirstRunWelcome_RC(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -316,6 +337,7 @@ func TestShowFirstRunWelcome_RC(t *testing.T) {
 
 // --- ShowQuickStart (first_run.go) ---
 
+// TestShowQuickStart_RC verifies that ShowQuickStart handles the rc case.
 func TestShowQuickStart_RC(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -332,12 +354,14 @@ func TestShowQuickStart_RC(t *testing.T) {
 
 // --- autoDetectAccountInfo edge case ---
 
+// TestAutoDetectAccountInfo_EmptyToken verifies that autoDetectAccountInfo handles the empty token...
 func TestAutoDetectAccountInfo_EmptyToken(t *testing.T) {
 	id, name := autoDetectAccountInfo("")
 	assert.Equal(t, "", id)
 	assert.Equal(t, "", name)
 }
 
+// TestAutoDetectAccountInfo_ShortToken verifies that autoDetectAccountInfo handles the short token...
 func TestAutoDetectAccountInfo_ShortToken(t *testing.T) {
 	id, name := autoDetectAccountInfo("short")
 	assert.Equal(t, "", id)

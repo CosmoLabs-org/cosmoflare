@@ -67,6 +67,7 @@ func disableAnim(t *testing.T) {
 // readPasswordWithReader
 // ===================================================================
 
+// TestReadPasswordWithReader verifies readPasswordWithReader behavior, one t.Run subtest per scenario.
 func TestReadPasswordWithReader(t *testing.T) {
 	t.Parallel()
 
@@ -88,6 +89,7 @@ func TestReadPasswordWithReader(t *testing.T) {
 // encryptBackupData / decryptBackupData roundtrip
 // ===================================================================
 
+// TestEncryptDecryptRoundtrip verifies the documented behavior of encrypt decrypt roundtrip.
 func TestEncryptDecryptRoundtrip(t *testing.T) {
 	t.Parallel()
 
@@ -127,6 +129,7 @@ func TestEncryptDecryptRoundtrip(t *testing.T) {
 	assert.Equal(t, original.Profiles["prod"].Region, decrypted.Profiles["prod"].Region)
 }
 
+// TestDecryptWrongPassword verifies the documented behavior of decrypt wrong password.
 func TestDecryptWrongPassword(t *testing.T) {
 	t.Parallel()
 
@@ -145,6 +148,7 @@ func TestDecryptWrongPassword(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// TestDecryptInvalidData verifies the documented behavior of decrypt invalid data.
 func TestDecryptInvalidData(t *testing.T) {
 	t.Parallel()
 
@@ -156,6 +160,7 @@ func TestDecryptInvalidData(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid encrypted data")
 }
 
+// TestEncryptEmptyData verifies the documented behavior of encrypt empty data.
 func TestEncryptEmptyData(t *testing.T) {
 	t.Parallel()
 
@@ -181,6 +186,7 @@ func TestEncryptEmptyData(t *testing.T) {
 // findLatestBackup
 // ===================================================================
 
+// TestFindLatestBackup_FromBackupManager verifies findLatestBackup behavior for the from backup...
 func TestFindLatestBackup_FromBackupManager(t *testing.T) {
 	t.Parallel()
 
@@ -227,6 +233,7 @@ func TestFindLatestBackup_FromBackupManager(t *testing.T) {
 // ShowBackupInterface
 // ===================================================================
 
+// TestShowBackupInterface verifies ShowBackupInterface behavior, one t.Run subtest per scenario.
 func TestShowBackupInterface(t *testing.T) {
 
 	t.Run("option 1 dispatches to encrypted backup", func(t *testing.T) {
@@ -272,6 +279,7 @@ func TestShowBackupInterface(t *testing.T) {
 // CreateEncryptedBackup
 // ===================================================================
 
+// TestCreateEncryptedBackup verifies CreateEncryptedBackup behavior, one t.Run subtest per scenario.
 func TestCreateEncryptedBackup(t *testing.T) {
 
 	t.Run("no profiles shows warning", func(t *testing.T) {
@@ -334,6 +342,7 @@ func TestCreateEncryptedBackup(t *testing.T) {
 // CreatePlainBackup
 // ===================================================================
 
+// TestCreatePlainBackup verifies CreatePlainBackup behavior, one t.Run subtest per scenario.
 func TestCreatePlainBackup(t *testing.T) {
 
 	t.Run("no profiles creates empty backup file", func(t *testing.T) {
@@ -384,6 +393,7 @@ func TestCreatePlainBackup(t *testing.T) {
 // CreateEnvironmentBackup
 // ===================================================================
 
+// TestCreateEnvironmentBackup verifies CreateEnvironmentBackup behavior, one t.Run subtest per...
 func TestCreateEnvironmentBackup(t *testing.T) {
 
 	t.Run("user declines confirmation returns nil", func(t *testing.T) {
@@ -423,6 +433,7 @@ func TestCreateEnvironmentBackup(t *testing.T) {
 // ShowRestoreInterface
 // ===================================================================
 
+// TestShowRestoreInterface verifies ShowRestoreInterface behavior, one t.Run subtest per scenario.
 func TestShowRestoreInterface(t *testing.T) {
 	t.Run("empty path handling", func(t *testing.T) {
 		testShowRestoreInterfaceEmptyPath(t)
@@ -572,6 +583,7 @@ func testShowRestoreInterfaceBadFiles(t *testing.T) {
 // restoreFromShell
 // ===================================================================
 
+// TestRestoreFromShell verifies restoreFromShell behavior, one t.Run subtest per scenario.
 func TestRestoreFromShell(t *testing.T) {
 
 	t.Run("returns nil with info message", func(t *testing.T) {
@@ -586,6 +598,7 @@ func TestRestoreFromShell(t *testing.T) {
 // restoreFromJSON
 // ===================================================================
 
+// TestRestoreFromJSON verifies restoreFromJSON behavior, one t.Run subtest per scenario.
 func TestRestoreFromJSON(t *testing.T) {
 
 	t.Run("invalid JSON returns error", func(t *testing.T) {
@@ -629,6 +642,7 @@ func TestRestoreFromJSON(t *testing.T) {
 // restoreFromEncrypted
 // ===================================================================
 
+// TestRestoreFromEncrypted verifies restoreFromEncrypted behavior, one t.Run subtest per scenario.
 func TestRestoreFromEncrypted(t *testing.T) {
 
 	t.Run("wrong password returns error", func(t *testing.T) {
@@ -683,6 +697,7 @@ func TestRestoreFromEncrypted(t *testing.T) {
 // processRestoreData
 // ===================================================================
 
+// TestProcessRestoreData verifies processRestoreData behavior, one t.Run subtest per scenario.
 func TestProcessRestoreData(t *testing.T) {
 	t.Run("choice selection", func(t *testing.T) {
 		testProcessRestoreDataChoices(t)
@@ -903,6 +918,7 @@ func testProcessRestoreDataTokens(t *testing.T) {
 // NewBackupManager
 // ===================================================================
 
+// TestNewBackupManager verifies NewBackupManager behavior, one t.Run subtest per scenario.
 func TestNewBackupManager(t *testing.T) {
 
 	t.Run("creates manager with valid HOME", func(t *testing.T) {
@@ -927,6 +943,7 @@ func TestNewBackupManager(t *testing.T) {
 // Additional edge cases for coverage
 // ===================================================================
 
+// TestCreateEncryptedBackup_PasswordReadEOF verifies that CreateEncryptedBackup handles the...
 func TestCreateEncryptedBackup_PasswordReadEOF(t *testing.T) {
 	disableAnim(t)
 	// "y" confirm, then EOF on password read
@@ -937,6 +954,7 @@ func TestCreateEncryptedBackup_PasswordReadEOF(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to read password")
 }
 
+// TestCreateEncryptedBackup_ConfirmPasswordEOF verifies that CreateEncryptedBackup handles the...
 func TestCreateEncryptedBackup_ConfirmPasswordEOF(t *testing.T) {
 	disableAnim(t)
 	// "y" confirm, "mypass", then EOF on confirm read
@@ -947,6 +965,7 @@ func TestCreateEncryptedBackup_ConfirmPasswordEOF(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to read confirmation password")
 }
 
+// TestRestoreFromEncrypted_PasswordEOF verifies that restoreFromEncrypted handles the password eof...
 func TestRestoreFromEncrypted_PasswordEOF(t *testing.T) {
 	disableAnim(t)
 	bm, _ := newTestBackupManager(t) // no inputs -> EOF immediately
@@ -955,6 +974,7 @@ func TestRestoreFromEncrypted_PasswordEOF(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to read password")
 }
 
+// TestRestoreFromEncrypted_FileReadError verifies that restoreFromEncrypted handles the file read...
 func TestRestoreFromEncrypted_FileReadError(t *testing.T) {
 	disableAnim(t)
 	bm, _ := newTestBackupManager(t, "testpw")
@@ -963,6 +983,7 @@ func TestRestoreFromEncrypted_FileReadError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to read backup file")
 }
 
+// TestRestoreFromJSON_FileReadError verifies that restoreFromJSON handles the file read error case.
 func TestRestoreFromJSON_FileReadError(t *testing.T) {
 	disableAnim(t)
 	bm, _ := newTestBackupManager(t)
@@ -971,6 +992,7 @@ func TestRestoreFromJSON_FileReadError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to read backup file")
 }
 
+// TestDecryptBackupData_CiphertextTooShort verifies that decryptBackupData handles the ciphertext...
 func TestDecryptBackupData_CiphertextTooShort(t *testing.T) {
 	disableAnim(t)
 	bm := &BackupManager{Input: newMockReader()}
@@ -982,6 +1004,7 @@ func TestDecryptBackupData_CiphertextTooShort(t *testing.T) {
 	assert.Contains(t, err.Error(), "ciphertext too short")
 }
 
+// TestDecryptBackupData_InvalidJSON verifies that decryptBackupData degrades gracefully on...
 func TestDecryptBackupData_InvalidJSON(t *testing.T) {
 	disableAnim(t)
 	bm := &BackupManager{Input: newMockReader()}
@@ -1006,6 +1029,7 @@ func TestDecryptBackupData_InvalidJSON(t *testing.T) {
 	require.NoError(t, err) // decryption succeeds but we still get a BackupData with zero fields
 }
 
+// TestProcessRestoreData_SetProfileError verifies that processRestoreData handles the set profile...
 func TestProcessRestoreData_SetProfileError(t *testing.T) {
 	disableAnim(t)
 	// Use a profile with empty name to trigger SetProfile error
@@ -1023,6 +1047,7 @@ func TestProcessRestoreData_SetProfileError(t *testing.T) {
 	require.NoError(t, err) // processRestoreData itself doesn't return error for individual failures
 }
 
+// TestProcessRestoreData_Choose2_MultipleSelections verifies that processRestoreData handles the...
 func TestProcessRestoreData_Choose2_MultipleSelections(t *testing.T) {
 	disableAnim(t)
 	bm, _ := newTestBackupManager(t, "2", "1,3", "y") // select #1 and #3
@@ -1041,6 +1066,7 @@ func TestProcessRestoreData_Choose2_MultipleSelections(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestCreateEncryptedBackup_WriteError verifies that CreateEncryptedBackup handles the write error...
 func TestCreateEncryptedBackup_WriteError(t *testing.T) {
 	disableAnim(t)
 	// This is hard to trigger without mocking os.WriteFile,

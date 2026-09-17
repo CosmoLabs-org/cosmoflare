@@ -13,6 +13,7 @@ import (
 // applySettings - test each mode's effect on globals
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ApplySettings verifies the accessibility deep-path helpers behavior for...
 func TestAccessibilityDeep_ApplySettings(t *testing.T) {
 	// Save and restore global animator state
 	origDisabled := globalAnimator.Disabled
@@ -77,6 +78,7 @@ func TestAccessibilityDeep_ApplySettings(t *testing.T) {
 // showCurrentSettings - just verify no panic for each mode
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ShowCurrentSettings verifies the accessibility deep-path helpers behavior...
 func TestAccessibilityDeep_ShowCurrentSettings(t *testing.T) {
 	modes := []AccessibilityMode{
 		AccessibilityScreenReader,
@@ -98,6 +100,7 @@ func TestAccessibilityDeep_ShowCurrentSettings(t *testing.T) {
 	}
 }
 
+// TestAccessibilityDeep_ShowCurrentSettings_ContainsModeName verifies that the accessibility...
 func TestAccessibilityDeep_ShowCurrentSettings_ContainsModeName(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityScreenReader)
@@ -121,6 +124,7 @@ func TestAccessibilityDeep_ShowCurrentSettings_ContainsModeName(t *testing.T) {
 // PrintAccessible - all modes, no panic
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_PrintAccessible_NoPanic verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_PrintAccessible_NoPanic(t *testing.T) {
 	modes := []AccessibilityMode{
 		AccessibilityNone,
@@ -141,6 +145,7 @@ func TestAccessibilityDeep_PrintAccessible_NoPanic(t *testing.T) {
 	}
 }
 
+// TestAccessibilityDeep_PrintAccessible_ScreenReaderAnnounces verifies that the accessibility...
 func TestAccessibilityDeep_PrintAccessible_ScreenReaderAnnounces(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityScreenReader)
@@ -164,6 +169,7 @@ func TestAccessibilityDeep_PrintAccessible_ScreenReaderAnnounces(t *testing.T) {
 // PrintAccessibleSuccess - no panic for all modes
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_PrintAccessibleSuccess_NoPanic verifies the accessibility deep-path...
 func TestAccessibilityDeep_PrintAccessibleSuccess_NoPanic(t *testing.T) {
 	modes := []AccessibilityMode{
 		AccessibilityNone,
@@ -183,6 +189,7 @@ func TestAccessibilityDeep_PrintAccessibleSuccess_NoPanic(t *testing.T) {
 	}
 }
 
+// TestAccessibilityDeep_PrintAccessibleSuccess_ScreenReader verifies that the accessibility...
 func TestAccessibilityDeep_PrintAccessibleSuccess_ScreenReader(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityScreenReader)
@@ -202,6 +209,7 @@ func TestAccessibilityDeep_PrintAccessibleSuccess_ScreenReader(t *testing.T) {
 	assert.Contains(t, got, "Success: it worked")
 }
 
+// TestAccessibilityDeep_PrintAccessibleSuccess_VerboseFormat verifies that the accessibility...
 func TestAccessibilityDeep_PrintAccessibleSuccess_VerboseFormat(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityLargeText) // Verbose=true
@@ -225,6 +233,7 @@ func TestAccessibilityDeep_PrintAccessibleSuccess_VerboseFormat(t *testing.T) {
 // PrintAccessibleError - no panic for all modes
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_PrintAccessibleError_NoPanic verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_PrintAccessibleError_NoPanic(t *testing.T) {
 	modes := []AccessibilityMode{
 		AccessibilityNone,
@@ -244,6 +253,7 @@ func TestAccessibilityDeep_PrintAccessibleError_NoPanic(t *testing.T) {
 	}
 }
 
+// TestAccessibilityDeep_PrintAccessibleError_ScreenReader verifies that the accessibility...
 func TestAccessibilityDeep_PrintAccessibleError_ScreenReader(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityScreenReader)
@@ -263,6 +273,7 @@ func TestAccessibilityDeep_PrintAccessibleError_ScreenReader(t *testing.T) {
 	assert.Contains(t, got, "Error: failure")
 }
 
+// TestAccessibilityDeep_PrintAccessibleError_VerboseFormat verifies that the accessibility...
 func TestAccessibilityDeep_PrintAccessibleError_VerboseFormat(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityLargeText) // Verbose=true
@@ -286,6 +297,7 @@ func TestAccessibilityDeep_PrintAccessibleError_VerboseFormat(t *testing.T) {
 // announceToScreenReader - direct call
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_AnnounceToScreenReader verifies that the accessibility deep-path helpers...
 func TestAccessibilityDeep_AnnounceToScreenReader(t *testing.T) {
 	am := NewAccessibilityManager()
 
@@ -309,6 +321,7 @@ func TestAccessibilityDeep_AnnounceToScreenReader(t *testing.T) {
 // AccessibilityConfig zero value
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ZeroValueConfig verifies that the accessibility deep-path helpers...
 func TestAccessibilityDeep_ZeroValueConfig(t *testing.T) {
 	var cfg AccessibilityConfig
 	assert.Equal(t, AccessibilityMode(0), cfg.Mode)
@@ -327,6 +340,7 @@ func TestAccessibilityDeep_ZeroValueConfig(t *testing.T) {
 // AccessibilityMode constants
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ModeConstants verifies that the accessibility deep-path helpers handles...
 func TestAccessibilityDeep_ModeConstants(t *testing.T) {
 	assert.Equal(t, AccessibilityMode(0), AccessibilityNone)
 	assert.Equal(t, AccessibilityMode(1), AccessibilityScreenReader)
@@ -340,6 +354,7 @@ func TestAccessibilityDeep_ModeConstants(t *testing.T) {
 // SetMode idempotency
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_SetMode_Idempotent verifies that the accessibility deep-path helpers...
 func TestAccessibilityDeep_SetMode_Idempotent(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityFull)
@@ -356,6 +371,7 @@ func TestAccessibilityDeep_SetMode_Idempotent(t *testing.T) {
 // SetMode overrides flags correctly
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_SetMode_OverridesPreviousFlags verifies that the accessibility deep-path...
 func TestAccessibilityDeep_SetMode_OverridesPreviousFlags(t *testing.T) {
 	am := NewAccessibilityManager()
 
@@ -372,6 +388,7 @@ func TestAccessibilityDeep_SetMode_OverridesPreviousFlags(t *testing.T) {
 // ShowAccessibleMenu - verify dispatch logic (no stdin blocking)
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ShowAccessibleMenu_Dispatch verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_ShowAccessibleMenu_Dispatch(t *testing.T) {
 	t.Run("ScreenReader sets ScreenReader flag", func(t *testing.T) {
 		am := NewAccessibilityManager()
@@ -400,6 +417,7 @@ func TestAccessibilityDeep_ShowAccessibleMenu_Dispatch(t *testing.T) {
 // GetAccessibleInput - verify no panic (stdin will get EOF from pipe)
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_GetAccessibleInput_NoPanic verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_GetAccessibleInput_NoPanic(t *testing.T) {
 	t.Run("non-sensitive", func(t *testing.T) {
 		ah := NewAccessibilityHelper()
@@ -429,6 +447,7 @@ func TestAccessibilityDeep_GetAccessibleInput_NoPanic(t *testing.T) {
 // ConfirmAccessibleYesNo - verify no panic
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ConfirmAccessibleYesNo_NoPanic verifies the accessibility deep-path...
 func TestAccessibilityDeep_ConfirmAccessibleYesNo_NoPanic(t *testing.T) {
 	t.Run("defaultYes true", func(t *testing.T) {
 		ah := NewAccessibilityHelper()
@@ -467,6 +486,7 @@ func TestAccessibilityDeep_ConfirmAccessibleYesNo_NoPanic(t *testing.T) {
 // ShowAccessibleProgress - additional edge cases
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_ShowAccessibleProgress_ZeroTotal verifies that the accessibility deep-path...
 func TestAccessibilityDeep_ShowAccessibleProgress_ZeroTotal(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	assert.NotPanics(t, func() {
@@ -474,6 +494,7 @@ func TestAccessibilityDeep_ShowAccessibleProgress_ZeroTotal(t *testing.T) {
 	})
 }
 
+// TestAccessibilityDeep_ShowAccessibleProgress_ScreenReaderMode verifies that the accessibility...
 func TestAccessibilityDeep_ShowAccessibleProgress_ScreenReaderMode(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -493,6 +514,7 @@ func TestAccessibilityDeep_ShowAccessibleProgress_ScreenReaderMode(t *testing.T)
 	assert.Contains(t, got, "3 of 10 complete")
 }
 
+// TestAccessibilityDeep_ShowAccessibleProgress_NonVerbose verifies that the accessibility...
 func TestAccessibilityDeep_ShowAccessibleProgress_NonVerbose(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityReducedMotion)
@@ -515,6 +537,7 @@ func TestAccessibilityDeep_ShowAccessibleProgress_NonVerbose(t *testing.T) {
 // AccessibilityHelper zero value
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_HelperZeroValue verifies that the accessibility deep-path helpers handles...
 func TestAccessibilityDeep_HelperZeroValue(t *testing.T) {
 	var ah AccessibilityHelper
 	assert.Nil(t, ah.manager)
@@ -524,6 +547,7 @@ func TestAccessibilityDeep_HelperZeroValue(t *testing.T) {
 // IsEnabled for all modes
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_IsEnabled_AllModes verifies the accessibility deep-path helpers behavior...
 func TestAccessibilityDeep_IsEnabled_AllModes(t *testing.T) {
 	tests := []struct {
 		mode    AccessibilityMode
@@ -550,6 +574,7 @@ func TestAccessibilityDeep_IsEnabled_AllModes(t *testing.T) {
 // AutoDetectAccessibility - Full mode via env vars
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_AutoDetect_FullMode verifies that the accessibility deep-path helpers...
 func TestAccessibilityDeep_AutoDetect_FullMode(t *testing.T) {
 	os.Setenv("TERM_PROGRAM", "vscode")
 	os.Setenv("ACCESSIBILITY", "1")
@@ -563,6 +588,7 @@ func TestAccessibilityDeep_AutoDetect_FullMode(t *testing.T) {
 	assert.True(t, am.IsEnabled())
 }
 
+// TestAccessibilityDeep_AutoDetect_Precedence verifies that the accessibility deep-path helpers...
 func TestAccessibilityDeep_AutoDetect_Precedence(t *testing.T) {
 	os.Setenv("SCREEN_READER", "1")
 	os.Setenv("HIGH_CONTRAST", "1")
@@ -579,6 +605,7 @@ func TestAccessibilityDeep_AutoDetect_Precedence(t *testing.T) {
 // formatBool output
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_FormatBool_ContainsKeywords verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_FormatBool_ContainsKeywords(t *testing.T) {
 	t.Run("true contains Enabled", func(t *testing.T) {
 		got := formatBool(true)
@@ -595,6 +622,7 @@ func TestAccessibilityDeep_FormatBool_ContainsKeywords(t *testing.T) {
 // getModeName full coverage
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityDeep_GetModeName_FullCoverage verifies the accessibility deep-path helpers...
 func TestAccessibilityDeep_GetModeName_FullCoverage(t *testing.T) {
 	am := NewAccessibilityManager()
 

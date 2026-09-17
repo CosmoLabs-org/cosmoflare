@@ -29,6 +29,7 @@ func newMockReader(inputs ...string) *mockReader {
 
 // --- SetupWizard with InputReader ---
 
+// TestSetupWizard_Step1_AuthMethod verifies SetupWizard behavior for the step1 case and auth...
 func TestSetupWizard_Step1_AuthMethod(t *testing.T) {
 	t.Run("default selection returns api_token", func(t *testing.T) {
 		w := NewSetupWizard()
@@ -78,6 +79,7 @@ func TestSetupWizard_Step1_AuthMethod(t *testing.T) {
 
 // --- PromptWithDefault with InputReader ---
 
+// TestPromptWithReader verifies PromptWithReader behavior, one t.Run subtest per scenario.
 func TestPromptWithReader(t *testing.T) {
 	t.Run("returns user input", func(t *testing.T) {
 		reader := newMockReader("hello")
@@ -96,6 +98,7 @@ func TestPromptWithReader(t *testing.T) {
 
 // --- SelectFromList with InputReader ---
 
+// TestSelectFromListWithReader verifies SelectFromListWithReader behavior, one t.Run subtest per...
 func TestSelectFromListWithReader(t *testing.T) {
 	options := []string{"Apple", "Banana", "Cherry"}
 
@@ -123,6 +126,7 @@ func TestSelectFromListWithReader(t *testing.T) {
 
 // --- ConfirmYesNo with InputReader ---
 
+// TestConfirmWithReader verifies ConfirmWithReader behavior, one t.Run subtest per scenario.
 func TestConfirmWithReader(t *testing.T) {
 	t.Run("empty input returns default yes", func(t *testing.T) {
 		reader := newMockReader("")

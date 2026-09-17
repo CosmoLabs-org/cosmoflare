@@ -12,6 +12,7 @@ import (
 // NewProfileManager
 // ---------------------------------------------------------------------------
 
+// TestNewProfileManager verifies the documented behavior of NewProfileManager.
 func TestNewProfileManager(t *testing.T) {
 	pm, err := NewProfileManager()
 	if err != nil {
@@ -25,6 +26,7 @@ func TestNewProfileManager(t *testing.T) {
 // FormatProfileName
 // ---------------------------------------------------------------------------
 
+// TestFormatProfileName_VariousInputs verifies FormatProfileName behavior for the various inputs...
 func TestFormatProfileName_VariousInputs(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -54,6 +56,7 @@ func TestFormatProfileName_VariousInputs(t *testing.T) {
 // formatRegion
 // ---------------------------------------------------------------------------
 
+// TestFormatRegion_VariousInputs verifies formatRegion behavior for the various inputs case, one...
 func TestFormatRegion_VariousInputs(t *testing.T) {
 	tests := []struct {
 		region string
@@ -80,6 +83,7 @@ func TestFormatRegion_VariousInputs(t *testing.T) {
 // formatTokenStatus
 // ---------------------------------------------------------------------------
 
+// TestFormatTokenStatus_VariousInputs verifies formatTokenStatus behavior for the various inputs...
 func TestFormatTokenStatus_VariousInputs(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -135,6 +139,7 @@ func TestFormatTokenStatus_VariousInputs(t *testing.T) {
 // formatAccountIDStatus
 // ---------------------------------------------------------------------------
 
+// TestFormatAccountIDStatus_VariousInputs verifies formatAccountIDStatus behavior for the various...
 func TestFormatAccountIDStatus_VariousInputs(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -190,6 +195,7 @@ func TestFormatAccountIDStatus_VariousInputs(t *testing.T) {
 // getProfileIcon
 // ---------------------------------------------------------------------------
 
+// TestGetProfileIcon_VariousDescriptions verifies getProfileIcon behavior for the various...
 func TestGetProfileIcon_VariousDescriptions(t *testing.T) {
 	tests := []struct {
 		description string
@@ -224,6 +230,7 @@ func TestGetProfileIcon_VariousDescriptions(t *testing.T) {
 // getProfileDescription
 // ---------------------------------------------------------------------------
 
+// TestGetProfileDescription_VariousInputs verifies getProfileDescription behavior for the various...
 func TestGetProfileDescription_VariousInputs(t *testing.T) {
 	tests := []struct {
 		description string
@@ -249,6 +256,7 @@ func TestGetProfileDescription_VariousInputs(t *testing.T) {
 // getProfileDescription edge cases
 // ---------------------------------------------------------------------------
 
+// TestGetProfileDescription_EdgeCases verifies getProfileDescription behavior for the edge cases...
 func TestGetProfileDescription_EdgeCases(t *testing.T) {
 	t.Run("exactly 30 chars", func(t *testing.T) {
 		input := strings.Repeat("a", 30)
@@ -280,6 +288,7 @@ func TestGetProfileDescription_EdgeCases(t *testing.T) {
 // ProfileManager with mock operations (if available)
 // ---------------------------------------------------------------------------
 
+// TestProfileManager_ShowProfileDetails verifies ProfileManager behavior for the show profile...
 func TestProfileManager_ShowProfileDetails(t *testing.T) {
 	pm, err := NewProfileManager()
 	if err != nil {
@@ -296,6 +305,7 @@ func TestProfileManager_ShowProfileDetails(t *testing.T) {
 // ProfileManager edge cases
 // ---------------------------------------------------------------------------
 
+// TestProfileManager_EdgeCases verifies ProfileManager behavior for the edge cases case, one t.Run...
 func TestProfileManager_EdgeCases(t *testing.T) {
 	pm, err := NewProfileManager()
 	if err != nil {
@@ -323,6 +333,7 @@ func TestProfileManager_EdgeCases(t *testing.T) {
 // FormatProfileName with unicode
 // ---------------------------------------------------------------------------
 
+// TestFormatProfileName_Unicode verifies FormatProfileName behavior for the unicode case, one...
 func TestFormatProfileName_Unicode(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -347,6 +358,7 @@ func TestFormatProfileName_Unicode(t *testing.T) {
 // FormatProfileName with very long description
 // ---------------------------------------------------------------------------
 
+// TestFormatProfileName_LongDescription verifies that FormatProfileName handles the long...
 func TestFormatProfileName_LongDescription(t *testing.T) {
 	longDesc := strings.Repeat("very long description ", 100)
 	result := FormatProfileName("profile", longDesc)
@@ -358,6 +370,7 @@ func TestFormatProfileName_LongDescription(t *testing.T) {
 // formatRegion edge cases
 // ---------------------------------------------------------------------------
 
+// TestFormatRegion_EdgeCases verifies formatRegion behavior for the edge cases case, one t.Run...
 func TestFormatRegion_EdgeCases(t *testing.T) {
 	tests := []struct {
 		region string
@@ -383,6 +396,7 @@ func TestFormatRegion_EdgeCases(t *testing.T) {
 // formatTokenStatus security edge cases
 // ---------------------------------------------------------------------------
 
+// TestFormatTokenStatus_Security verifies formatTokenStatus behavior for the security case, one...
 func TestFormatTokenStatus_Security(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -407,6 +421,7 @@ func TestFormatTokenStatus_Security(t *testing.T) {
 // formatAccountIDStatus edge cases
 // ---------------------------------------------------------------------------
 
+// TestFormatAccountIDStatus_EdgeCases verifies formatAccountIDStatus behavior for the edge cases...
 func TestFormatAccountIDStatus_EdgeCases(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -432,6 +447,7 @@ func TestFormatAccountIDStatus_EdgeCases(t *testing.T) {
 // getProfileIcon case sensitivity
 // ---------------------------------------------------------------------------
 
+// TestGetProfileIcon_CaseSensitivity verifies getProfileIcon behavior for the case sensitivity...
 func TestGetProfileIcon_CaseSensitivity(t *testing.T) {
 	tests := []struct {
 		description string
@@ -463,6 +479,7 @@ func TestGetProfileIcon_CaseSensitivity(t *testing.T) {
 // getProfileIcon multiple keywords
 // ---------------------------------------------------------------------------
 
+// TestGetProfileIcon_MultipleKeywords verifies getProfileIcon behavior for the multiple keywords...
 func TestGetProfileIcon_MultipleKeywords(t *testing.T) {
 	// Should match first matching keyword in the switch statement order
 	// Order: prod/production, stag/dev, test, personal, work/company
@@ -489,6 +506,7 @@ func TestGetProfileIcon_MultipleKeywords(t *testing.T) {
 // getProfileIcon substring matches
 // ---------------------------------------------------------------------------
 
+// TestGetProfileIcon_SubstringMatches verifies getProfileIcon behavior for the substring matches...
 func TestGetProfileIcon_SubstringMatches(t *testing.T) {
 	tests := []struct {
 		description string
@@ -515,6 +533,7 @@ func TestGetProfileIcon_SubstringMatches(t *testing.T) {
 // ProfileManager with temporary config directory
 // ---------------------------------------------------------------------------
 
+// TestProfileManager_WithTempDir verifies that ProfileManager handles the with temp dir case.
 func TestProfileManager_WithTempDir(t *testing.T) {
 	// Create a temp directory for testing
 	tempDir := t.TempDir()

@@ -36,6 +36,7 @@ func pipeStdin(t *testing.T, input string) (*os.File, func()) {
 
 // --- NewTutorialManager ---
 
+// TestNewTutorialManager verifies the documented behavior of NewTutorialManager.
 func TestNewTutorialManager(t *testing.T) {
 	tm := NewTutorialManager()
 	require.NotNil(t, tm)
@@ -44,6 +45,7 @@ func TestNewTutorialManager(t *testing.T) {
 	require.NotNil(t, tm.tutorials)
 }
 
+// TestNewTutorialManager_DefaultState verifies that NewTutorialManager handles the default state case.
 func TestNewTutorialManager_DefaultState(t *testing.T) {
 	tm := NewTutorialManager()
 	assert.Equal(t, 0, tm.state.CurrentLesson)
@@ -54,6 +56,7 @@ func TestNewTutorialManager_DefaultState(t *testing.T) {
 	assert.False(t, tm.state.StartTime.IsZero())
 }
 
+// TestNewTutorialManager_DefaultConfig verifies that NewTutorialManager handles the default config...
 func TestNewTutorialManager_DefaultConfig(t *testing.T) {
 	tm := NewTutorialManager()
 	assert.True(t, tm.config.AutoStart)
@@ -67,11 +70,13 @@ func TestNewTutorialManager_DefaultConfig(t *testing.T) {
 
 // --- createDefaultTutorials ---
 
+// TestCreateDefaultTutorials verifies the documented behavior of createDefaultTutorials.
 func TestCreateDefaultTutorials(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	require.Len(t, tutorials, 5)
 }
 
+// TestCreateDefaultTutorials_FirstTutorial verifies that createDefaultTutorials handles the first...
 func TestCreateDefaultTutorials_FirstTutorial(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	first := tutorials[0]
@@ -83,6 +88,7 @@ func TestCreateDefaultTutorials_FirstTutorial(t *testing.T) {
 	assert.True(t, first.Required)
 }
 
+// TestCreateDefaultTutorials_LastTutorial verifies that createDefaultTutorials handles the last...
 func TestCreateDefaultTutorials_LastTutorial(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	last := tutorials[len(tutorials)-1]
@@ -92,6 +98,7 @@ func TestCreateDefaultTutorials_LastTutorial(t *testing.T) {
 	assert.False(t, last.Required)
 }
 
+// TestCreateDefaultTutorials_AllHaveContent verifies that createDefaultTutorials handles the all...
 func TestCreateDefaultTutorials_AllHaveContent(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	for i, tut := range tutorials {
@@ -102,6 +109,7 @@ func TestCreateDefaultTutorials_AllHaveContent(t *testing.T) {
 	}
 }
 
+// TestCreateDefaultTutorials_RequiredTutorials verifies that createDefaultTutorials handles the...
 func TestCreateDefaultTutorials_RequiredTutorials(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	count := 0
@@ -113,6 +121,7 @@ func TestCreateDefaultTutorials_RequiredTutorials(t *testing.T) {
 	assert.Equal(t, 3, count)
 }
 
+// TestCreateDefaultTutorials_ActionsHaveSkipAllowed verifies that createDefaultTutorials handles...
 func TestCreateDefaultTutorials_ActionsHaveSkipAllowed(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	for _, tut := range tutorials {
@@ -124,6 +133,7 @@ func TestCreateDefaultTutorials_ActionsHaveSkipAllowed(t *testing.T) {
 	}
 }
 
+// TestCreateDefaultTutorials_ActionIDs verifies that createDefaultTutorials handles the action ids...
 func TestCreateDefaultTutorials_ActionIDs(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	expectedIDs := map[int][]string{
@@ -145,12 +155,14 @@ func TestCreateDefaultTutorials_ActionIDs(t *testing.T) {
 
 // --- shouldSkipTutorial ---
 
+// TestShouldSkipTutorial_NotCompleted verifies that shouldSkipTutorial handles the not completed case.
 func TestShouldSkipTutorial_NotCompleted(t *testing.T) {
 	tm := NewTutorialManager()
 	assert.False(t, tm.shouldSkipTutorial(1))
 	assert.False(t, tm.shouldSkipTutorial(5))
 }
 
+// TestShouldSkipTutorial_AlreadyCompleted verifies that shouldSkipTutorial handles the already...
 func TestShouldSkipTutorial_AlreadyCompleted(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.Completed = []int{1, 2, 3}
@@ -158,6 +170,7 @@ func TestShouldSkipTutorial_AlreadyCompleted(t *testing.T) {
 	assert.False(t, tm.shouldSkipTutorial(4))
 }
 
+// TestShouldSkipTutorial_NonexistentID verifies that shouldSkipTutorial handles the nonexistent id...
 func TestShouldSkipTutorial_NonexistentID(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.Completed = []int{99}
@@ -167,6 +180,7 @@ func TestShouldSkipTutorial_NonexistentID(t *testing.T) {
 
 // --- updateProgress ---
 
+// TestUpdateProgress verifies the documented behavior of updateProgress.
 func TestUpdateProgress(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.TotalLessons = 5
@@ -175,6 +189,7 @@ func TestUpdateProgress(t *testing.T) {
 	assert.InDelta(t, 0.6, tm.state.Progress, 0.001)
 }
 
+// TestUpdateProgress_NoneCompleted verifies that updateProgress handles the none completed case.
 func TestUpdateProgress_NoneCompleted(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.TotalLessons = 5
@@ -183,6 +198,7 @@ func TestUpdateProgress_NoneCompleted(t *testing.T) {
 	assert.Equal(t, 0.0, tm.state.Progress)
 }
 
+// TestUpdateProgress_AllCompleted verifies that updateProgress handles the all completed case.
 func TestUpdateProgress_AllCompleted(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.TotalLessons = 5
@@ -191,6 +207,7 @@ func TestUpdateProgress_AllCompleted(t *testing.T) {
 	assert.InDelta(t, 1.0, tm.state.Progress, 0.001)
 }
 
+// TestUpdateProgress_ZeroTotalLessons verifies that updateProgress handles the zero total lessons...
 func TestUpdateProgress_ZeroTotalLessons(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.TotalLessons = 0
@@ -200,6 +217,7 @@ func TestUpdateProgress_ZeroTotalLessons(t *testing.T) {
 
 // --- executeAction ---
 
+// TestExecuteAction_AllActionIDs verifies executeAction behavior for the all action ids case, one...
 func TestExecuteAction_AllActionIDs(t *testing.T) {
 	ids := []string{
 		"view_profiles", "create_profile", "list_buckets", "create_bucket",
@@ -217,6 +235,7 @@ func TestExecuteAction_AllActionIDs(t *testing.T) {
 
 // --- showTutorialCompletion ---
 
+// TestShowTutorialCompletion verifies showTutorialCompletion behavior, one t.Run subtest per scenario.
 func TestShowTutorialCompletion(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -244,6 +263,7 @@ func TestShowTutorialCompletion(t *testing.T) {
 
 // --- ShowQuickStart ---
 
+// TestShowQuickStart_Tutorials verifies that ShowQuickStart handles the tutorials case.
 func TestShowQuickStart_Tutorials(t *testing.T) {
 	tm := NewTutorialManager()
 	globalAnimator.Disabled = true
@@ -253,6 +273,7 @@ func TestShowQuickStart_Tutorials(t *testing.T) {
 
 // --- StartTutorial with stdin ---
 
+// TestStartTutorial_AllLessons verifies that StartTutorial handles the all lessons case.
 func TestStartTutorial_AllLessons(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -265,6 +286,7 @@ func TestStartTutorial_AllLessons(t *testing.T) {
 	assert.InDelta(t, 1.0, tm.state.Progress, 0.001)
 }
 
+// TestStartTutorial_SkipOptional verifies that StartTutorial handles the skip optional case.
 func TestStartTutorial_SkipOptional(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -276,6 +298,7 @@ func TestStartTutorial_SkipOptional(t *testing.T) {
 	assert.Len(t, tm.state.Skipped, 2)
 }
 
+// TestStartTutorial_SelectAction2 verifies that StartTutorial handles the select action2 case.
 func TestStartTutorial_SelectAction2(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -288,6 +311,7 @@ func TestStartTutorial_SelectAction2(t *testing.T) {
 
 // --- showTutorialIntro with stdin ---
 
+// TestShowTutorialIntro_Accept verifies that showTutorialIntro handles the accept case.
 func TestShowTutorialIntro_Accept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -296,6 +320,7 @@ func TestShowTutorialIntro_Accept(t *testing.T) {
 	assert.NotPanics(t, func() { tm.showTutorialIntro() })
 }
 
+// TestShowTutorialIntro_AllowSkipFalse verifies that showTutorialIntro handles the allow skip...
 func TestShowTutorialIntro_AllowSkipFalse(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -307,6 +332,7 @@ func TestShowTutorialIntro_AllowSkipFalse(t *testing.T) {
 
 // --- showTutorialLesson with stdin ---
 
+// TestShowTutorialLesson_InteractiveSelectAction1 verifies that showTutorialLesson handles the...
 func TestShowTutorialLesson_InteractiveSelectAction1(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -326,6 +352,7 @@ func TestShowTutorialLesson_InteractiveSelectAction1(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestShowTutorialLesson_InteractiveDefaultAction verifies that showTutorialLesson handles the...
 func TestShowTutorialLesson_InteractiveDefaultAction(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -342,6 +369,7 @@ func TestShowTutorialLesson_InteractiveDefaultAction(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestShowTutorialLesson_InteractiveSkip verifies that showTutorialLesson handles the interactive...
 func TestShowTutorialLesson_InteractiveSkip(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -358,6 +386,7 @@ func TestShowTutorialLesson_InteractiveSkip(t *testing.T) {
 	assert.Equal(t, ErrTutorialSkipped, err)
 }
 
+// TestShowTutorialLesson_NonInteractive verifies that showTutorialLesson handles the non...
 func TestShowTutorialLesson_NonInteractive(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -373,6 +402,7 @@ func TestShowTutorialLesson_NonInteractive(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestShowTutorialLesson_VerboseMode verifies that showTutorialLesson handles the verbose mode case.
 func TestShowTutorialLesson_VerboseMode(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -392,6 +422,7 @@ func TestShowTutorialLesson_VerboseMode(t *testing.T) {
 
 // --- handleTutorialActions with stdin ---
 
+// TestHandleTutorialActions_DefaultAction verifies that handleTutorialActions handles the default...
 func TestHandleTutorialActions_DefaultAction(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -408,6 +439,7 @@ func TestHandleTutorialActions_DefaultAction(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestHandleTutorialActions_SelectAction2 verifies that handleTutorialActions handles the select...
 func TestHandleTutorialActions_SelectAction2(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -427,6 +459,7 @@ func TestHandleTutorialActions_SelectAction2(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestHandleTutorialActions_Skip verifies that handleTutorialActions handles the skip case.
 func TestHandleTutorialActions_Skip(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -444,6 +477,7 @@ func TestHandleTutorialActions_Skip(t *testing.T) {
 	assert.Equal(t, ErrTutorialSkipped, err)
 }
 
+// TestHandleTutorialActions_InvalidThenValid verifies that handleTutorialActions re-prompts on...
 func TestHandleTutorialActions_InvalidThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -460,6 +494,7 @@ func TestHandleTutorialActions_InvalidThenValid(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestHandleTutorialActions_NoActions verifies that handleTutorialActions handles the no actions case.
 func TestHandleTutorialActions_NoActions(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -476,6 +511,7 @@ func TestHandleTutorialActions_NoActions(t *testing.T) {
 
 // --- Struct tests ---
 
+// TestTutorialState_Fields verifies that TutorialState handles the fields case.
 func TestTutorialState_Fields(t *testing.T) {
 	now := time.Now()
 	state := TutorialState{
@@ -490,6 +526,7 @@ func TestTutorialState_Fields(t *testing.T) {
 	assert.Equal(t, now, state.StartTime)
 }
 
+// TestTutorialAction_Handler verifies that TutorialAction handles the handler case.
 func TestTutorialAction_Handler(t *testing.T) {
 	called := false
 	action := TutorialAction{
@@ -501,6 +538,7 @@ func TestTutorialAction_Handler(t *testing.T) {
 	assert.True(t, called)
 }
 
+// TestTutorialAction_HandlerError verifies that TutorialAction handles the handler error case.
 func TestTutorialAction_HandlerError(t *testing.T) {
 	action := TutorialAction{
 		ID: "failing", Label: "Failing",
@@ -509,12 +547,14 @@ func TestTutorialAction_HandlerError(t *testing.T) {
 	assert.Equal(t, "boom", action.Handler().Error())
 }
 
+// TestErrTutorialSkipped verifies the documented behavior of err tutorial skipped.
 func TestErrTutorialSkipped(t *testing.T) {
 	assert.Equal(t, "tutorial skipped", ErrTutorialSkipped.Error())
 }
 
 // --- State mutation ---
 
+// TestTutorialManager_CompleteAll verifies that TutorialManager handles the complete all case.
 func TestTutorialManager_CompleteAll(t *testing.T) {
 	tm := NewTutorialManager()
 	tm.state.TotalLessons = 5
@@ -530,6 +570,7 @@ func TestTutorialManager_CompleteAll(t *testing.T) {
 
 // --- Content security ---
 
+// TestTutorialContent_NoANSIEscapeSequences verifies that tutorial content handles the no...
 func TestTutorialContent_NoANSIEscapeSequences(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	for _, tut := range tutorials {
@@ -539,6 +580,7 @@ func TestTutorialContent_NoANSIEscapeSequences(t *testing.T) {
 	}
 }
 
+// TestTutorialContent_ActionLabelsNotEmpty verifies that tutorial content handles the action...
 func TestTutorialContent_ActionLabelsNotEmpty(t *testing.T) {
 	tutorials := createDefaultTutorials()
 	for _, tut := range tutorials {
@@ -552,6 +594,7 @@ func TestTutorialContent_ActionLabelsNotEmpty(t *testing.T) {
 // Accessibility tests (stdin-mocked)
 // ===========================================================================
 
+// TestShowAccessibilityMenu_Options verifies ShowAccessibilityMenu behavior for the options case,...
 func TestShowAccessibilityMenu_Options(t *testing.T) {
 	tests := []struct {
 		input   string
@@ -578,6 +621,7 @@ func TestShowAccessibilityMenu_Options(t *testing.T) {
 	}
 }
 
+// TestApplySettings_AllModes verifies applySettings behavior for the all modes case, one t.Run...
 func TestApplySettings_AllModes(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -598,12 +642,14 @@ func TestApplySettings_AllModes(t *testing.T) {
 	}
 }
 
+// TestShowCurrentSettings verifies the documented behavior of showCurrentSettings.
 func TestShowCurrentSettings(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.SetMode(AccessibilityFull)
 	assert.NotPanics(t, func() { am.showCurrentSettings() })
 }
 
+// TestPrintAccessible_Modes verifies PrintAccessible behavior for the modes case, one t.Run...
 func TestPrintAccessible_Modes(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -626,11 +672,13 @@ func TestPrintAccessible_Modes(t *testing.T) {
 	}
 }
 
+// TestAnnounceToScreenReader verifies the documented behavior of announceToScreenReader.
 func TestAnnounceToScreenReader(t *testing.T) {
 	am := NewAccessibilityManager()
 	assert.NotPanics(t, func() { am.announceToScreenReader("hello") })
 }
 
+// TestShowAccessibleMenu_StandardDefault verifies that ShowAccessibleMenu handles the standard...
 func TestShowAccessibleMenu_StandardDefault(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
@@ -639,6 +687,7 @@ func TestShowAccessibleMenu_StandardDefault(t *testing.T) {
 	assert.Equal(t, 0, got)
 }
 
+// TestShowAccessibleMenu_StandardSelect verifies that ShowAccessibleMenu handles the standard...
 func TestShowAccessibleMenu_StandardSelect(t *testing.T) {
 	_, cleanup := pipeStdin(t, "2\n")
 	defer cleanup()
@@ -647,6 +696,7 @@ func TestShowAccessibleMenu_StandardSelect(t *testing.T) {
 	assert.Equal(t, 1, got)
 }
 
+// TestShowAccessibleMenu_ScreenReaderMode verifies that ShowAccessibleMenu handles the screen...
 func TestShowAccessibleMenu_ScreenReaderMode(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
@@ -656,6 +706,7 @@ func TestShowAccessibleMenu_ScreenReaderMode(t *testing.T) {
 	assert.Equal(t, 0, got)
 }
 
+// TestShowAccessibleMenu_LargeTextMode verifies that ShowAccessibleMenu handles the large text...
 func TestShowAccessibleMenu_LargeTextMode(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
@@ -665,6 +716,7 @@ func TestShowAccessibleMenu_LargeTextMode(t *testing.T) {
 	assert.Equal(t, 1, got)
 }
 
+// TestGetAccessibleInput_NonSensitive verifies that GetAccessibleInput handles the non sensitive case.
 func TestGetAccessibleInput_NonSensitive(t *testing.T) {
 	_, cleanup := pipeStdin(t, "hello\n")
 	defer cleanup()
@@ -672,6 +724,7 @@ func TestGetAccessibleInput_NonSensitive(t *testing.T) {
 	assert.Equal(t, "hello", ah.GetAccessibleInput("Name:", false))
 }
 
+// TestGetAccessibleInput_Sensitive verifies that GetAccessibleInput handles the sensitive case.
 func TestGetAccessibleInput_Sensitive(t *testing.T) {
 	_, cleanup := pipeStdin(t, "secret\n")
 	defer cleanup()
@@ -679,6 +732,7 @@ func TestGetAccessibleInput_Sensitive(t *testing.T) {
 	assert.Equal(t, "secret", ah.GetAccessibleInput("Password:", true))
 }
 
+// TestGetAccessibleInput_ScreenReader verifies that GetAccessibleInput routes output through the...
 func TestGetAccessibleInput_ScreenReader(t *testing.T) {
 	_, cleanup := pipeStdin(t, "val\n")
 	defer cleanup()
@@ -687,6 +741,7 @@ func TestGetAccessibleInput_ScreenReader(t *testing.T) {
 	assert.Equal(t, "val", ah.GetAccessibleInput("Enter:", false))
 }
 
+// TestGetAccessibleInput_Empty verifies that GetAccessibleInput handles the empty case.
 func TestGetAccessibleInput_Empty(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
@@ -694,6 +749,7 @@ func TestGetAccessibleInput_Empty(t *testing.T) {
 	assert.Equal(t, "", ah.GetAccessibleInput("Enter:", false))
 }
 
+// TestConfirmAccessibleYesNo verifies ConfirmAccessibleYesNo behavior, one t.Run subtest per scenario.
 func TestConfirmAccessibleYesNo(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -728,6 +784,7 @@ func TestConfirmAccessibleYesNo(t *testing.T) {
 // Helpers stdin-mocked tests
 // ===========================================================================
 
+// TestConfirmYesNo verifies ConfirmYesNo behavior, one t.Run subtest per scenario.
 func TestConfirmYesNo(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -752,18 +809,21 @@ func TestConfirmYesNo(t *testing.T) {
 	}
 }
 
+// TestPauseAndWait verifies the documented behavior of PauseAndWait.
 func TestPauseAndWait(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
 	assert.NotPanics(t, func() { PauseAndWait("Press Enter...") })
 }
 
+// TestPauseAndWait_DefaultMessage verifies that PauseAndWait handles the default message case.
 func TestPauseAndWait_DefaultMessage(t *testing.T) {
 	_, cleanup := pipeStdin(t, "\n")
 	defer cleanup()
 	assert.NotPanics(t, func() { PauseAndWait("") })
 }
 
+// TestCheckFirstRun exercises CheckFirstRun and asserts it completes without panicking.
 func TestCheckFirstRun(t *testing.T) {
 	isFirst, err := CheckFirstRun()
 	if err != nil {
@@ -772,12 +832,14 @@ func TestCheckFirstRun(t *testing.T) {
 	_ = isFirst
 }
 
+// TestShowWelcomeForNewUser_Accept verifies that ShowWelcomeForNewUser handles the accept case.
 func TestShowWelcomeForNewUser_Accept(t *testing.T) {
 	_, cleanup := pipeStdin(t, "y\n")
 	defer cleanup()
 	assert.NotPanics(t, func() { ShowWelcomeForNewUser() })
 }
 
+// TestShowWelcomeForNewUser_Decline verifies that ShowWelcomeForNewUser handles the decline case.
 func TestShowWelcomeForNewUser_Decline(t *testing.T) {
 	_, cleanup := pipeStdin(t, "n\n")
 	defer cleanup()
@@ -788,24 +850,28 @@ func TestShowWelcomeForNewUser_Decline(t *testing.T) {
 // Animation global functions
 // ===========================================================================
 
+// TestShowSpinner_Global verifies that ShowSpinner exercises the package-global instance safely.
 func TestShowSpinner_Global(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
 	assert.NotPanics(t, func() { ShowSpinner("Loading...", 1*time.Millisecond) })
 }
 
+// TestShowProgress_Global verifies that ShowProgress exercises the package-global instance safely.
 func TestShowProgress_Global(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
 	assert.NotPanics(t, func() { ShowProgress("Steps", []string{"s1", "s2"}) })
 }
 
+// TestAnimateTransition_Global verifies that AnimateTransition exercises the package-global...
 func TestAnimateTransition_Global(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
 	assert.NotPanics(t, func() { AnimateTransition("from", "to", 1*time.Millisecond) })
 }
 
+// TestSetAnimationStyle_Global verifies that SetAnimationStyle exercises the package-global...
 func TestSetAnimationStyle_Global(t *testing.T) {
 	globalAnimator.Speed = DefaultFrameRate
 	globalAnimator.Disabled = false
@@ -829,6 +895,7 @@ func TestSetAnimationStyle_Global(t *testing.T) {
 // Setup stdin-mocked
 // ===========================================================================
 
+// TestPromptWithDefault_Stdin verifies PromptWithDefault behavior for the stdin case, one t.Run...
 func TestPromptWithDefault_Stdin(t *testing.T) {
 	tests := []struct {
 		name  string

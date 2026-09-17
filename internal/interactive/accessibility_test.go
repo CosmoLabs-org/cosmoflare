@@ -15,6 +15,7 @@ import (
 // NewAccessibilityHelper
 // ---------------------------------------------------------------------------
 
+// TestNewAccessibilityHelper verifies the documented behavior of NewAccessibilityHelper.
 func TestNewAccessibilityHelper(t *testing.T) {
 	helper := NewAccessibilityHelper()
 	if helper == nil {
@@ -32,6 +33,7 @@ func TestNewAccessibilityHelper(t *testing.T) {
 // AccessibilityManager.getModeName (unexported, tested from same package)
 // ---------------------------------------------------------------------------
 
+// TestGetModeName verifies getModeName behavior, one t.Run subtest per scenario.
 func TestGetModeName(t *testing.T) {
 	tests := []struct {
 		name string
@@ -63,6 +65,7 @@ func TestGetModeName(t *testing.T) {
 // formatBool (unexported, tested from same package)
 // ---------------------------------------------------------------------------
 
+// TestFormatBool verifies formatBool behavior, one t.Run subtest per scenario.
 func TestFormatBool(t *testing.T) {
 	t.Run("true contains Enabled", func(t *testing.T) {
 		got := formatBool(true)
@@ -91,6 +94,7 @@ func TestFormatBool(t *testing.T) {
 // ShowAccessibleProgress (verbose path)
 // ---------------------------------------------------------------------------
 
+// TestShowAccessibleProgressVerbose verifies that ShowAccessibleProgress handles the verbose case.
 func TestShowAccessibleProgressVerbose(t *testing.T) {
 	// Capture stdout
 	old := os.Stdout
@@ -122,6 +126,7 @@ func TestShowAccessibleProgressVerbose(t *testing.T) {
 	}
 }
 
+// TestShowAccessibleProgressCompletion verifies that ShowAccessibleProgress handles the completion...
 func TestShowAccessibleProgressCompletion(t *testing.T) {
 	// When current == total, a newline should be printed at the end.
 	old := os.Stdout
@@ -148,6 +153,7 @@ func TestShowAccessibleProgressCompletion(t *testing.T) {
 	}
 }
 
+// TestShowAccessibleProgressScreenReader verifies that ShowAccessibleProgress handles the screen...
 func TestShowAccessibleProgressScreenReader(t *testing.T) {
 	old := os.Stdout
 	r, w, _ := os.Pipe()
@@ -176,6 +182,7 @@ func TestShowAccessibleProgressScreenReader(t *testing.T) {
 // EnableAccessibilityMode / IsAccessibilityEnabled (global state)
 // ---------------------------------------------------------------------------
 
+// TestEnableAccessibilityModeAndIsEnabled verifies EnableAccessibilityMode behavior for the and is...
 func TestEnableAccessibilityModeAndIsEnabled(t *testing.T) {
 	// Save and restore global state
 	origMode := globalAccessibilityManager.config.Mode
@@ -219,6 +226,7 @@ func TestEnableAccessibilityModeAndIsEnabled(t *testing.T) {
 // GetAccessibilityManager
 // ---------------------------------------------------------------------------
 
+// TestGetAccessibilityManager verifies the documented behavior of GetAccessibilityManager.
 func TestGetAccessibilityManager(t *testing.T) {
 	am := GetAccessibilityManager()
 	if am == nil {
@@ -235,6 +243,7 @@ func TestGetAccessibilityManager(t *testing.T) {
 // TransitionType constants
 // ---------------------------------------------------------------------------
 
+// TestTransitionTypeConstants verifies transition type constants behavior, one t.Run subtest per...
 func TestTransitionTypeConstants(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -257,6 +266,7 @@ func TestTransitionTypeConstants(t *testing.T) {
 	}
 }
 
+// TestTransitionTypeStringValues verifies the documented behavior of transition type string values.
 func TestTransitionTypeStringValues(t *testing.T) {
 	// All transition types should have distinct values
 	types := []TransitionType{TransitionFade, TransitionSlide, TransitionWipe, TransitionZoom, TransitionReplace}
@@ -277,6 +287,7 @@ func TestTransitionTypeStringValues(t *testing.T) {
 // NewSetupWizardTransition
 // ---------------------------------------------------------------------------
 
+// TestNewSetupWizardTransition verifies the documented behavior of NewSetupWizardTransition.
 func TestNewSetupWizardTransition(t *testing.T) {
 	swt := NewSetupWizardTransition()
 	if swt == nil {
@@ -293,6 +304,7 @@ func TestNewSetupWizardTransition(t *testing.T) {
 	}
 }
 
+// TestSetupWizardTransitionAddStep verifies the documented behavior of setup wizard transition add...
 func TestSetupWizardTransitionAddStep(t *testing.T) {
 	swt := NewSetupWizardTransition()
 	swt.AddStep("Step 1", []string{"line1", "line2"})
@@ -315,6 +327,7 @@ func TestSetupWizardTransitionAddStep(t *testing.T) {
 // ErrorType constants
 // ---------------------------------------------------------------------------
 
+// TestErrorTypeIotaValues verifies error type iota values behavior, one t.Run subtest per scenario.
 func TestErrorTypeIotaValues(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -344,6 +357,7 @@ func TestErrorTypeIotaValues(t *testing.T) {
 // ErrorContext struct
 // ---------------------------------------------------------------------------
 
+// TestErrorContextFields verifies error context fields behavior, one t.Run subtest per scenario.
 func TestErrorContextFields(t *testing.T) {
 	t.Run("struct creation with all fields", func(t *testing.T) {
 		err := fmt.Errorf("test error")
@@ -402,6 +416,7 @@ func TestErrorContextFields(t *testing.T) {
 // Error factory functions (pure logic: return ErrorContext structs)
 // ---------------------------------------------------------------------------
 
+// TestNetworkErrorFactory verifies that NetworkError handles the factory case.
 func TestNetworkErrorFactory(t *testing.T) {
 	err := fmt.Errorf("connection refused")
 	ctx := NetworkError("upload", err)
@@ -423,6 +438,7 @@ func TestNetworkErrorFactory(t *testing.T) {
 	}
 }
 
+// TestAuthErrorFactory verifies that AuthError handles the factory case.
 func TestAuthErrorFactory(t *testing.T) {
 	err := fmt.Errorf("invalid token")
 	ctx := AuthError("authenticate", err)
@@ -438,6 +454,7 @@ func TestAuthErrorFactory(t *testing.T) {
 	}
 }
 
+// TestConfigErrorFactory verifies that ConfigError handles the factory case.
 func TestConfigErrorFactory(t *testing.T) {
 	ctx := ConfigError("load config", fmt.Errorf("missing file"))
 
@@ -449,6 +466,7 @@ func TestConfigErrorFactory(t *testing.T) {
 	}
 }
 
+// TestInputErrorFactory verifies that InputError handles the factory case.
 func TestInputErrorFactory(t *testing.T) {
 	ctx := InputError("parse bucket name", fmt.Errorf("empty string"))
 
@@ -457,6 +475,7 @@ func TestInputErrorFactory(t *testing.T) {
 	}
 }
 
+// TestPermissionErrorFactory verifies that PermissionError handles the factory case.
 func TestPermissionErrorFactory(t *testing.T) {
 	ctx := PermissionError("delete bucket", fmt.Errorf("forbidden"))
 
@@ -468,6 +487,7 @@ func TestPermissionErrorFactory(t *testing.T) {
 	}
 }
 
+// TestNotFoundErrorFactory verifies that NotFoundError handles the factory case.
 func TestNotFoundErrorFactory(t *testing.T) {
 	ctx := NotFoundError("get bucket", fmt.Errorf("not found"))
 
@@ -476,6 +496,7 @@ func TestNotFoundErrorFactory(t *testing.T) {
 	}
 }
 
+// TestValidationErrorFactory verifies that ValidationError handles the factory case.
 func TestValidationErrorFactory(t *testing.T) {
 	ctx := ValidationError("validate input", fmt.Errorf("bad format"))
 
@@ -491,6 +512,7 @@ func TestValidationErrorFactory(t *testing.T) {
 // TransitionState struct
 // ---------------------------------------------------------------------------
 
+// TestTransitionState verifies the documented behavior of TransitionState.
 func TestTransitionState(t *testing.T) {
 	state := TransitionState{
 		Title:       "Test Title",
@@ -521,6 +543,7 @@ func TestTransitionState(t *testing.T) {
 // ShowAccessibleMenu - screen reader mode (showScreenReaderMenu: 75%)
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader verifies that AccessibilityHelper...
 func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -541,6 +564,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader(t *testing.T) {
 	assert.Contains(t, buf.String(), "Test Menu")
 }
 
+// TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_Default verifies that...
 func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_Default(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -560,6 +584,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_Default(t *testing.
 	assert.Equal(t, 1, result) // returns defaultIndex
 }
 
+// TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_InvalidThenValid verifies that...
 func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_InvalidThenValid(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -583,6 +608,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_ScreenReader_InvalidThenValid(t 
 // ShowAccessibleMenu - large text mode (showLargeTextMenu: 73.7%)
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_ShowAccessibleMenu_LargeText verifies that AccessibilityHelper handles...
 func TestAccessibilityHelper_ShowAccessibleMenu_LargeText(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityLargeText)
@@ -603,6 +629,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_LargeText(t *testing.T) {
 	assert.Contains(t, buf.String(), "Large Menu")
 }
 
+// TestAccessibilityHelper_ShowAccessibleMenu_LargeText_Default verifies that AccessibilityHelper...
 func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_Default(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityLargeText)
@@ -622,6 +649,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_Default(t *testing.T) 
 	assert.Equal(t, 1, result)
 }
 
+// TestAccessibilityHelper_ShowAccessibleMenu_LargeText_InvalidThenValid verifies that...
 func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_InvalidThenValid(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityLargeText)
@@ -645,6 +673,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_LargeText_InvalidThenValid(t *te
 // ShowAccessibleMenu - standard mode (showStandardMenu: 88.2%)
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_ShowAccessibleMenu_Standard_InvalidThenValid verifies that...
 func TestAccessibilityHelper_ShowAccessibleMenu_Standard_InvalidThenValid(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityNone)
@@ -668,6 +697,7 @@ func TestAccessibilityHelper_ShowAccessibleMenu_Standard_InvalidThenValid(t *tes
 // GetAccessibleInput
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_GetAccessibleInput verifies that AccessibilityHelper handles the get...
 func TestAccessibilityHelper_GetAccessibleInput(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.Input = newMockReader("test input")
@@ -686,6 +716,7 @@ func TestAccessibilityHelper_GetAccessibleInput(t *testing.T) {
 	assert.Equal(t, "test input", result)
 }
 
+// TestAccessibilityHelper_GetAccessibleInput_Sensitive verifies that AccessibilityHelper handles...
 func TestAccessibilityHelper_GetAccessibleInput_Sensitive(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.Input = newMockReader("secret123")
@@ -708,6 +739,7 @@ func TestAccessibilityHelper_GetAccessibleInput_Sensitive(t *testing.T) {
 // ConfirmAccessibleYesNo
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_ConfirmAccessibleYesNo verifies AccessibilityHelper behavior for the...
 func TestAccessibilityHelper_ConfirmAccessibleYesNo(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -748,6 +780,7 @@ func TestAccessibilityHelper_ConfirmAccessibleYesNo(t *testing.T) {
 // ShowAccessibleProgress
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityHelper_ShowAccessibleProgress verifies that AccessibilityHelper handles the...
 func TestAccessibilityHelper_ShowAccessibleProgress(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -766,6 +799,7 @@ func TestAccessibilityHelper_ShowAccessibleProgress(t *testing.T) {
 	assert.Contains(t, buf.String(), "Loading")
 }
 
+// TestAccessibilityHelper_ShowAccessibleProgress_Complete verifies that AccessibilityHelper...
 func TestAccessibilityHelper_ShowAccessibleProgress_Complete(t *testing.T) {
 	ah := NewAccessibilityHelper()
 	ah.manager.SetMode(AccessibilityScreenReader)
@@ -788,6 +822,7 @@ func TestAccessibilityHelper_ShowAccessibleProgress_Complete(t *testing.T) {
 // AutoDetectAccessibility
 // ---------------------------------------------------------------------------
 
+// TestAutoDetectAccessibility_ScreenReaderEnv verifies that AutoDetectAccessibility handles the...
 func TestAutoDetectAccessibility_ScreenReaderEnv(t *testing.T) {
 	t.Setenv("SCREEN_READER", "1")
 	mgr := AutoDetectAccessibility()
@@ -795,6 +830,7 @@ func TestAutoDetectAccessibility_ScreenReaderEnv(t *testing.T) {
 	assert.True(t, mgr.config.ScreenReader)
 }
 
+// TestAutoDetectAccessibility_HighContrastEnv verifies that AutoDetectAccessibility handles the...
 func TestAutoDetectAccessibility_HighContrastEnv(t *testing.T) {
 	t.Setenv("HIGH_CONTRAST", "1")
 	mgr := AutoDetectAccessibility()
@@ -802,6 +838,7 @@ func TestAutoDetectAccessibility_HighContrastEnv(t *testing.T) {
 	assert.True(t, mgr.config.HighContrast)
 }
 
+// TestAutoDetectAccessibility_LargeTextEnv verifies that AutoDetectAccessibility handles the large...
 func TestAutoDetectAccessibility_LargeTextEnv(t *testing.T) {
 	t.Setenv("LARGE_TEXT", "1")
 	mgr := AutoDetectAccessibility()
@@ -809,6 +846,7 @@ func TestAutoDetectAccessibility_LargeTextEnv(t *testing.T) {
 	assert.True(t, mgr.config.LargeText)
 }
 
+// TestAutoDetectAccessibility_ReducedMotionEnv verifies that AutoDetectAccessibility handles the...
 func TestAutoDetectAccessibility_ReducedMotionEnv(t *testing.T) {
 	t.Setenv("REDUCED_MOTION", "1")
 	mgr := AutoDetectAccessibility()
@@ -816,6 +854,7 @@ func TestAutoDetectAccessibility_ReducedMotionEnv(t *testing.T) {
 	assert.True(t, mgr.config.ReducedMotion)
 }
 
+// TestAutoDetectAccessibility_VSCodeFull verifies that AutoDetectAccessibility handles the vscode...
 func TestAutoDetectAccessibility_VSCodeFull(t *testing.T) {
 	t.Setenv("TERM_PROGRAM", "vscode")
 	t.Setenv("ACCESSIBILITY", "1")
@@ -823,6 +862,7 @@ func TestAutoDetectAccessibility_VSCodeFull(t *testing.T) {
 	assert.Equal(t, AccessibilityFull, mgr.config.Mode)
 }
 
+// TestAutoDetectAccessibility_NoEnvs verifies that AutoDetectAccessibility handles the no envs case.
 func TestAutoDetectAccessibility_NoEnvs(t *testing.T) {
 	mgr := AutoDetectAccessibility()
 	assert.False(t, mgr.IsEnabled())
@@ -832,6 +872,7 @@ func TestAutoDetectAccessibility_NoEnvs(t *testing.T) {
 // Global accessibility functions
 // ---------------------------------------------------------------------------
 
+// TestEnableAccessibilityMode verifies the documented behavior of EnableAccessibilityMode.
 func TestEnableAccessibilityMode(t *testing.T) {
 	origMode := globalAccessibilityManager.config.Mode
 	defer func() { globalAccessibilityManager.config.Mode = origMode }()
@@ -844,6 +885,7 @@ func TestEnableAccessibilityMode(t *testing.T) {
 // PrintAccessible methods
 // ---------------------------------------------------------------------------
 
+// TestPrintAccessible_Verbose verifies that PrintAccessible handles the verbose case.
 func TestPrintAccessible_Verbose(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.config.Verbose = true
@@ -862,6 +904,7 @@ func TestPrintAccessible_Verbose(t *testing.T) {
 	assert.Contains(t, buf.String(), "Test message")
 }
 
+// TestPrintAccessibleSuccess verifies the documented behavior of PrintAccessibleSuccess.
 func TestPrintAccessibleSuccess(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.config.ScreenReader = true
@@ -881,6 +924,7 @@ func TestPrintAccessibleSuccess(t *testing.T) {
 	assert.Contains(t, buf.String(), "It worked")
 }
 
+// TestPrintAccessibleError verifies the documented behavior of PrintAccessibleError.
 func TestPrintAccessibleError(t *testing.T) {
 	am := NewAccessibilityManager()
 	am.config.ScreenReader = true

@@ -12,6 +12,7 @@ import (
 
 // --- Validation tests ---
 
+// TestValidateAccountID verifies ValidateAccountID behavior, one t.Run subtest per scenario.
 func TestValidateAccountID(t *testing.T) {
 	t.Run("valid 32-char hex ID", func(t *testing.T) {
 		err := ValidateAccountID("abcdef0123456789abcdef0123456789")
@@ -46,6 +47,7 @@ func TestValidateAccountID(t *testing.T) {
 	})
 }
 
+// TestValidateAPIToken verifies ValidateAPIToken behavior, one t.Run subtest per scenario.
 func TestValidateAPIToken(t *testing.T) {
 	t.Run("token too short", func(t *testing.T) {
 		info, err := ValidateAPIToken("short")
@@ -91,6 +93,7 @@ func TestValidateAPIToken(t *testing.T) {
 
 // --- Error types tests ---
 
+// TestErrorType verifies the documented behavior of ErrorType.
 func TestErrorType(t *testing.T) {
 	assert.Equal(t, ErrorType(0), ErrorTypeNetwork)
 	assert.Equal(t, ErrorType(1), ErrorTypeAuth)
@@ -102,6 +105,7 @@ func TestErrorType(t *testing.T) {
 	assert.Equal(t, ErrorType(7), ErrorTypeUnknown)
 }
 
+// TestErrorContext verifies the documented behavior of ErrorContext.
 func TestErrorContext(t *testing.T) {
 	ctx := ErrorContext{
 		Error:      assert.AnError,
@@ -117,6 +121,7 @@ func TestErrorContext(t *testing.T) {
 	assert.Len(t, ctx.Troubleshoot, 2)
 }
 
+// TestHandleError verifies the documented behavior of HandleError.
 func TestHandleError(t *testing.T) {
 	// HandleError just prints to stdout, verify it doesn't panic
 	errorTypes := []ErrorType{
@@ -137,6 +142,7 @@ func TestHandleError(t *testing.T) {
 	}
 }
 
+// TestHandleErrorWithDetails verifies that HandleError handles the with details case.
 func TestHandleErrorWithDetails(t *testing.T) {
 	ctx := ErrorContext{
 		Error:      assert.AnError,
@@ -156,6 +162,7 @@ func TestHandleErrorWithDetails(t *testing.T) {
 	})
 }
 
+// TestSuccessMessage verifies the documented behavior of SuccessMessage.
 func TestSuccessMessage(t *testing.T) {
 	assert.NotPanics(t, func() {
 		SuccessMessage("Upload completed", "File: test.txt")
@@ -165,6 +172,7 @@ func TestSuccessMessage(t *testing.T) {
 	})
 }
 
+// TestWarningMessage verifies the documented behavior of WarningMessage.
 func TestWarningMessage(t *testing.T) {
 	assert.NotPanics(t, func() {
 		WarningMessage("Rate limited", "Retry in 30s")
@@ -176,6 +184,7 @@ func TestWarningMessage(t *testing.T) {
 
 // --- Helpers tests ---
 
+// TestPrintFunctions verifies the documented behavior of print functions.
 func TestPrintFunctions(t *testing.T) {
 	assert.NotPanics(t, func() {
 		PrintSuccess("test %s", "message")
@@ -185,6 +194,7 @@ func TestPrintFunctions(t *testing.T) {
 	})
 }
 
+// TestBoldDimReset verifies the documented behavior of bold dim reset.
 func TestBoldDimReset(t *testing.T) {
 	// Bold and Dim are SprintFunc values
 	result := Bold("test text")
@@ -199,6 +209,7 @@ func TestBoldDimReset(t *testing.T) {
 
 // --- Encryption tests (security-critical) ---
 
+// TestEncryptDecryptBackupData verifies encrypt decrypt backup data behavior, one t.Run subtest...
 func TestEncryptDecryptBackupData(t *testing.T) {
 	bm := &BackupManager{} // nil configMgr is fine for encrypt/decrypt
 
@@ -337,6 +348,7 @@ func testEncryptDecryptMultipleProfiles(t *testing.T, bm *BackupManager) {
 	assert.Equal(t, "id2", decrypted.Profiles["staging"].AccountID)
 }
 
+// TestFindLatestBackup verifies findLatestBackup behavior, one t.Run subtest per scenario.
 func TestFindLatestBackup(t *testing.T) {
 	bm := &BackupManager{}
 
@@ -354,6 +366,7 @@ func TestFindLatestBackup(t *testing.T) {
 
 // --- TokenInfo struct tests ---
 
+// TestTokenInfo verifies the documented behavior of TokenInfo.
 func TestTokenInfo(t *testing.T) {
 	info := &TokenInfo{
 		AccountID:   "acct-123",
@@ -367,6 +380,7 @@ func TestTokenInfo(t *testing.T) {
 	assert.True(t, info.Valid)
 }
 
+// TestBackupData verifies the documented behavior of BackupData.
 func TestBackupData(t *testing.T) {
 	data := &BackupData{
 		Version:     "1.0",
