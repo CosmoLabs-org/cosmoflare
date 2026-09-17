@@ -580,6 +580,946 @@ permissions:
     verified: 2026-09-18
 ```
 
+### ASK 1 continuation (part 2 — pasted 2026-09-18 after "Please continue")
+
+```yaml
+permissions_continued:
+  # --- ACCOUNT SCOPE (Remaining) ---
+  - scope: account
+    group: "Access: Apps"
+    name: "Access: Apps"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Apps"
+    name: "Access: Apps"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Apps"
+    name: "Access: Apps"
+    access: revoke
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Audit Logs"
+    name: "Access: Audit Logs"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Custom Pages"
+    name: "Access: Custom Pages"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Custom Pages"
+    name: "Access: Custom Pages"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Device Posture"
+    name: "Access: Device Posture"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Device Posture"
+    name: "Access: Device Posture"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Groups"
+    name: "Access: Groups"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Groups"
+    name: "Access: Groups"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Identity Providers"
+    name: "Access: Identity Providers"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Identity Providers"
+    name: "Access: Identity Providers"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Keys"
+    name: "Access: Keys"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Keys"
+    name: "Access: Keys"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Mutual TLS Certificates"
+    name: "Access: Mutual TLS Certificates"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Mutual TLS Certificates"
+    name: "Access: Mutual TLS Certificates"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations"
+    name: "Access: Organizations"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations"
+    name: "Access: Organizations"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations"
+    name: "Access: Organizations"
+    access: revoke
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations, Identity Providers, and Groups"
+    name: "Access: Organizations, Identity Providers, and Groups"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations, Identity Providers, and Groups"
+    name: "Access: Organizations, Identity Providers, and Groups"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Organizations, Identity Providers, and Groups"
+    name: "Access: Organizations, Identity Providers, and Groups"
+    access: revoke
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Policies"
+    name: "Access: Policies"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Policies"
+    name: "Access: Policies"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Policy Test"
+    name: "Access: Policy Test"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Policy Test"
+    name: "Access: Policy Test"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Population"
+    name: "Access: Population"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Population"
+    name: "Access: Population"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: SCIM Logs"
+    name: "Access: SCIM Logs"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Service Tokens"
+    name: "Access: Service Tokens"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Service Tokens"
+    name: "Access: Service Tokens"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: SSH Auditing"
+    name: "Access: SSH Auditing"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: SSH Auditing"
+    name: "Access: SSH Auditing"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Tags"
+    name: "Access: Tags"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Tags"
+    name: "Access: Tags"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Users"
+    name: "Access: Users"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Access: Users"
+    name: "Access: Users"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Analytics"
+    name: "Account Analytics"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Custom Pages"
+    name: "Account Custom Pages"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Custom Pages"
+    name: "Account Custom Pages"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Filter Lists"
+    name: "Account Filter Lists"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Also listed as 'Account Rule Lists' in API tabs."
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Filter Lists"
+    name: "Account Filter Lists"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Also listed as 'Account Rule Lists' in API tabs."
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Firewall Access Rules"
+    name: "Account Firewall Access Rules"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Firewall Access Rules"
+    name: "Account Firewall Access Rules"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Security Center Insights"
+    name: "Account Security Center Insights"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account Security Center Insights"
+    name: "Account Security Center Insights"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account: SSL and Certificates"
+    name: "Account: SSL and Certificates"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Account: SSL and Certificates"
+    name: "Account: SSL and Certificates"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Address Maps"
+    name: "Address Maps"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Address Maps"
+    name: "Address Maps"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "AI Gateway"
+    name: "AI Gateway"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "AI Gateway"
+    name: "AI Gateway"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "AI Gateway"
+    name: "AI Gateway Run"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Grants run access to Non-realtime WebSockets API"
+    verified: 2026-09-18
+  - scope: account
+    group: "Allow Request Tracer"
+    name: "Allow Request Tracer"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Bulk URL Redirects"
+    name: "Bulk URL Redirects"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Also listed as 'Mass URL Redirects'"
+    verified: 2026-09-18
+  - scope: account
+    group: "Bulk URL Redirects"
+    name: "Bulk URL Redirects"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Also listed as 'Mass URL Redirects'"
+    verified: 2026-09-18
+  - scope: account
+    group: "China Network Steering"
+    name: "China Network Steering"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "China Network Steering"
+    name: "China Network Steering"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudchamber"
+    name: "Cloudchamber"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudchamber"
+    name: "Cloudchamber"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare CASB"
+    name: "Cloudflare CASB"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare CASB"
+    name: "Cloudflare CASB"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare DEX"
+    name: "Cloudflare DEX"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare DEX"
+    name: "Cloudflare DEX"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connector: cloudflared"
+    name: "Cloudflare One Connector: cloudflared"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connector: cloudflared"
+    name: "Cloudflare One Connector: cloudflared"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connector: WARP"
+    name: "Cloudflare One Connector: WARP"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connector: WARP"
+    name: "Cloudflare One Connector: WARP"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connectors"
+    name: "Cloudflare One Connectors"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Connectors"
+    name: "Cloudflare One Connectors"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Networks"
+    name: "Cloudflare One Networks"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare One Networks"
+    name: "Cloudflare One Networks"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare Realtime"
+    name: "Cloudflare Realtime"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudflare Realtime"
+    name: "Cloudflare Realtime"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudforce One"
+    name: "Cloudforce One"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Cloudforce One"
+    name: "Cloudforce One"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Constellation"
+    name: "Constellation"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Constellation"
+    name: "Constellation"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Containers"
+    name: "Containers"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Containers"
+    name: "Containers"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "DDoS Botnet Feed"
+    name: "DDoS Botnet Feed"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "DDoS Botnet Feed"
+    name: "DDoS Botnet Feed"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "DDoS Protection"
+    name: "DDoS Protection"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "DDoS Protection"
+    name: "DDoS Protection"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Email Routing Addresses"
+    name: "Email Routing Addresses"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Email Routing Addresses"
+    name: "Email Routing Addresses"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Email Security"
+    name: "Email Security"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Email Security"
+    name: "Email Security"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Intel"
+    name: "Intel"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Intel"
+    name: "Intel"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Integration"
+    name: "Integration"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IOT"
+    name: "IOT"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IOT"
+    name: "IOT"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IP Prefixes"
+    name: "IP Prefixes"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IP Prefixes"
+    name: "IP Prefixes"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IP Prefixes: BGP On Demand"
+    name: "IP Prefixes: BGP On Demand"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "IP Prefixes: BGP On Demand"
+    name: "IP Prefixes: BGP On Demand"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "L3/4 DDoS Managed Ruleset"
+    name: "L3/4 DDoS Managed Ruleset"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "L3/4 DDoS Managed Ruleset"
+    name: "L3/4 DDoS Managed Ruleset"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Magic Firewall Packet Captures"
+    name: "Magic Firewall Packet Captures"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Magic Firewall Packet Captures"
+    name: "Magic Firewall Packet Captures"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Magic Network Monitoring"
+    name: "Magic Network Monitoring"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Magic Network Monitoring"
+    name: "Magic Network Monitoring"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Notifications"
+    name: "Notifications"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Notifications"
+    name: "Notifications"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Rule Policies"
+    name: "Rule Policies"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Rule Policies"
+    name: "Rule Policies"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "URL Scanner"
+    name: "URL Scanner"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "URL Scanner"
+    name: "URL Scanner"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Workers CI"
+    name: "Workers CI"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Workers CI"
+    name: "Workers CI"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Workers Pipelines"
+    name: "Workers Pipelines"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Workers Pipelines"
+    name: "Workers Pipelines"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Workers Tail"
+    name: "Workers Tail"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Grants `wrangler tail` read permissions."
+    verified: 2026-09-18
+  - scope: account
+    group: "Zero Trust"
+    name: "Zero Trust"
+    access: report
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Zero Trust: PII"
+    name: "Zero Trust: PII"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: account
+    group: "Zero Trust: Seats"
+    name: "Zero Trust: Seats"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+
+  # --- ZONE SCOPE (Remaining) ---
+  - scope: zone
+    group: "Access: Apps and Policies"
+    name: "Access: Apps and Policies"
+    access: revoke
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Apps"
+    name: "Apps"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    notes: "Deprecated, refer to Workers instead"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Bot Management Feedback"
+    name: "Bot Management Feedback"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Bot Management Feedback"
+    name: "Bot Management Feedback"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Cache"
+    name: "Cache Purge"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Cloud Connector"
+    name: "Cloud Connector"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Cloud Connector"
+    name: "Cloud Connector"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Config Rules"
+    name: "Config Rules"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Config Rules"
+    name: "Config Rules"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Custom Error Rules"
+    name: "Custom Error Rules"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Custom Error Rules"
+    name: "Custom Error Rules"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Custom Pages"
+    name: "Custom Pages"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Custom Pages"
+    name: "Custom Pages"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Dmarc Management"
+    name: "Dmarc Management"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Dmarc Management"
+    name: "Dmarc Management"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Email Routing Rules"
+    name: "Email Routing Rules"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Email Routing Rules"
+    name: "Email Routing Rules"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "HTTP DDoS Managed Ruleset"
+    name: "HTTP DDoS Managed Ruleset"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "HTTP DDoS Managed Ruleset"
+    name: "HTTP DDoS Managed Ruleset"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Managed Headers"
+    name: "Managed Headers"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Managed Headers"
+    name: "Managed Headers"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Response Compression"
+    name: "Response Compression"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Response Compression"
+    name: "Response Compression"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Sanitize"
+    name: "Sanitize"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Sanitize"
+    name: "Sanitize"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Single Redirect"
+    name: "Single Redirect"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Single Redirect"
+    name: "Single Redirect"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Web3 Hostnames"
+    name: "Web3 Hostnames"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Web3 Hostnames"
+    name: "Web3 Hostnames"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zaraz"
+    name: "Zaraz"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zaraz"
+    name: "Zaraz"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Management"
+    name: "Zone"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Management"
+    name: "Zone"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Security Center Insights"
+    name: "Zone Security Center Insights"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Security Center Insights"
+    name: "Zone Security Center Insights"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Versioning"
+    name: "Zone Versioning"
+    access: read
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+  - scope: zone
+    group: "Zone Versioning"
+    name: "Zone Versioning"
+    access: edit
+    docs: "https://developers.cloudflare.com/fundamentals/api/reference/permissions/"
+    verified: 2026-09-18
+```
+
 ```yaml
 errors:
   - code: 10405
