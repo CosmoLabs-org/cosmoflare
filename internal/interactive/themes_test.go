@@ -14,6 +14,7 @@ import (
 // NewThemeManager
 // ---------------------------------------------------------------------------
 
+// TestNewThemeManager verifies the documented behavior of NewThemeManager.
 func TestNewThemeManager(t *testing.T) {
 	tm := NewThemeManager()
 	assert.NotNil(t, tm)
@@ -26,6 +27,7 @@ func TestNewThemeManager(t *testing.T) {
 // getThemePath
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_GetThemePath verifies that ThemeManager handles the get theme path case.
 func TestThemeManager_GetThemePath(t *testing.T) {
 	tm := NewThemeManager()
 	path := tm.GetThemePath()
@@ -38,6 +40,7 @@ func TestThemeManager_GetThemePath(t *testing.T) {
 // loadBuiltinThemes
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_LoadBuiltinThemes verifies that ThemeManager handles the load builtin themes case.
 func TestThemeManager_LoadBuiltinThemes(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -55,6 +58,7 @@ func TestThemeManager_LoadBuiltinThemes(t *testing.T) {
 // SetTheme
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_SetTheme verifies ThemeManager behavior for the set theme case, one t.Run...
 func TestThemeManager_SetTheme(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -99,6 +103,7 @@ func TestThemeManager_SetTheme(t *testing.T) {
 // GetCurrentTheme
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_GetCurrentTheme verifies that ThemeManager handles the get current theme case.
 func TestThemeManager_GetCurrentTheme(t *testing.T) {
 	tm := NewThemeManager()
 	theme := tm.GetCurrentTheme()
@@ -111,6 +116,7 @@ func TestThemeManager_GetCurrentTheme(t *testing.T) {
 // ListThemes
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ListThemes verifies that ThemeManager handles the list themes case.
 func TestThemeManager_ListThemes(t *testing.T) {
 	tm := NewThemeManager()
 	themes := tm.ListThemes()
@@ -133,6 +139,7 @@ func TestThemeManager_ListThemes(t *testing.T) {
 // Theme structure validation
 // ---------------------------------------------------------------------------
 
+// TestTheme_Structure verifies Theme behavior for the structure case, one t.Run subtest per scenario.
 func TestTheme_Structure(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -174,6 +181,7 @@ func TestTheme_Structure(t *testing.T) {
 // Cosmic theme specifics
 // ---------------------------------------------------------------------------
 
+// TestTheme_Cosmic verifies that Theme handles the cosmic case.
 func TestTheme_Cosmic(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("cosmic")
@@ -192,6 +200,7 @@ func TestTheme_Cosmic(t *testing.T) {
 // Forest theme specifics
 // ---------------------------------------------------------------------------
 
+// TestTheme_Forest verifies that Theme handles the forest case.
 func TestTheme_Forest(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("forest")
@@ -209,6 +218,7 @@ func TestTheme_Forest(t *testing.T) {
 // Ocean theme specifics
 // ---------------------------------------------------------------------------
 
+// TestTheme_Ocean verifies that Theme handles the ocean case.
 func TestTheme_Ocean(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("ocean")
@@ -225,6 +235,7 @@ func TestTheme_Ocean(t *testing.T) {
 // Sunset theme specifics
 // ---------------------------------------------------------------------------
 
+// TestTheme_Sunset verifies that Theme handles the sunset case.
 func TestTheme_Sunset(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("sunset")
@@ -241,6 +252,7 @@ func TestTheme_Sunset(t *testing.T) {
 // Monochrome theme specifics
 // ---------------------------------------------------------------------------
 
+// TestTheme_Monochrome verifies that Theme handles the monochrome case.
 func TestTheme_Monochrome(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("monochrome")
@@ -261,6 +273,7 @@ func TestTheme_Monochrome(t *testing.T) {
 // applyTheme
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ApplyTheme verifies ThemeManager behavior for the apply theme case, one t.Run...
 func TestThemeManager_ApplyTheme(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -282,6 +295,7 @@ func TestThemeManager_ApplyTheme(t *testing.T) {
 // showProgressBar (internal function)
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ShowProgressBar verifies ThemeManager behavior for the show progress bar case,...
 func TestThemeManager_ShowProgressBar(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -321,6 +335,7 @@ func TestThemeManager_ShowProgressBar(t *testing.T) {
 // showSpinnerDemo
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ShowSpinnerDemo verifies ThemeManager behavior for the show spinner demo case,...
 func TestThemeManager_ShowSpinnerDemo(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -353,6 +368,7 @@ func TestThemeManager_ShowSpinnerDemo(t *testing.T) {
 // ColorScheme
 // ---------------------------------------------------------------------------
 
+// TestColorScheme verifies the documented behavior of ColorScheme.
 func TestColorScheme(t *testing.T) {
 	tm := NewThemeManager()
 	theme := tm.GetCurrentTheme()
@@ -376,6 +392,7 @@ func TestColorScheme(t *testing.T) {
 // ThemeSpacing
 // ---------------------------------------------------------------------------
 
+// TestThemeSpacing verifies the documented behavior of ThemeSpacing.
 func TestThemeSpacing(t *testing.T) {
 	tm := NewThemeManager()
 	theme := tm.GetCurrentTheme()
@@ -391,6 +408,7 @@ func TestThemeSpacing(t *testing.T) {
 // ThemeIcons
 // ---------------------------------------------------------------------------
 
+// TestThemeIcons verifies the documented behavior of ThemeIcons.
 func TestThemeIcons(t *testing.T) {
 	tm := NewThemeManager()
 	theme := tm.GetCurrentTheme()
@@ -412,6 +430,7 @@ func TestThemeIcons(t *testing.T) {
 // ThemeAnimations
 // ---------------------------------------------------------------------------
 
+// TestThemeAnimations verifies ThemeAnimations behavior, one t.Run subtest per scenario.
 func TestThemeAnimations(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -438,6 +457,7 @@ func TestThemeAnimations(t *testing.T) {
 // Emoji mapping
 // ---------------------------------------------------------------------------
 
+// TestTheme_EmojiMapping verifies Theme behavior for the emoji mapping case, one t.Run subtest per...
 func TestTheme_EmojiMapping(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -466,6 +486,7 @@ func TestTheme_EmojiMapping(t *testing.T) {
 // loadCustomThemes
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_LoadCustomThemes verifies that ThemeManager handles the load custom themes case.
 func TestThemeManager_LoadCustomThemes(t *testing.T) {
 	tm := NewThemeManager()
 	assert.NotPanics(t, func() {
@@ -477,6 +498,7 @@ func TestThemeManager_LoadCustomThemes(t *testing.T) {
 // SaveTheme and LoadTheme (stub implementations)
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_SaveTheme verifies that ThemeManager handles the save theme case.
 func TestThemeManager_SaveTheme(t *testing.T) {
 	tm := NewThemeManager()
 	theme := tm.GetCurrentTheme()
@@ -486,6 +508,7 @@ func TestThemeManager_SaveTheme(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestThemeManager_LoadTheme verifies that ThemeManager handles the load theme case.
 func TestThemeManager_LoadTheme(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -498,6 +521,7 @@ func TestThemeManager_LoadTheme(t *testing.T) {
 // CreateCustomTheme edge cases
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_CreateCustomTheme_EdgeCases verifies ThemeManager behavior for the create...
 func TestThemeManager_CreateCustomTheme_EdgeCases(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -524,6 +548,7 @@ func TestThemeManager_CreateCustomTheme_EdgeCases(t *testing.T) {
 // Theme ID uniqueness
 // ---------------------------------------------------------------------------
 
+// TestTheme_IDUniqueness verifies that Theme handles the iduniqueness case.
 func TestTheme_IDUniqueness(t *testing.T) {
 	tm := NewThemeManager()
 	themes := tm.ListThemes()
@@ -539,6 +564,7 @@ func TestTheme_IDUniqueness(t *testing.T) {
 // Theme Name uniqueness
 // ---------------------------------------------------------------------------
 
+// TestTheme_NameUniqueness verifies that Theme handles the name uniqueness case.
 func TestTheme_NameUniqueness(t *testing.T) {
 	tm := NewThemeManager()
 	themes := tm.ListThemes()
@@ -554,6 +580,7 @@ func TestTheme_NameUniqueness(t *testing.T) {
 // Bullet chars uniqueness
 // ---------------------------------------------------------------------------
 
+// TestTheme_BulletCharsUniqueness verifies Theme behavior for the bullet chars uniqueness case,...
 func TestTheme_BulletCharsUniqueness(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -572,6 +599,7 @@ func TestTheme_BulletCharsUniqueness(t *testing.T) {
 // ShowThemeMenu (0% coverage - biggest theme gap)
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ShowThemeMenu_SelectFirst verifies that ThemeManager handles the show theme...
 func TestThemeManager_ShowThemeMenu_SelectFirst(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -595,6 +623,7 @@ func TestThemeManager_ShowThemeMenu_SelectFirst(t *testing.T) {
 	assert.Contains(t, buf.String(), "Theme")
 }
 
+// TestThemeManager_ShowThemeMenu_SelectEmpty verifies that ThemeManager handles the show theme...
 func TestThemeManager_ShowThemeMenu_SelectEmpty(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -617,6 +646,7 @@ func TestThemeManager_ShowThemeMenu_SelectEmpty(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestThemeManager_ShowThemeMenu_InvalidThenValid verifies that ThemeManager handles the show...
 func TestThemeManager_ShowThemeMenu_InvalidThenValid(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -640,6 +670,7 @@ func TestThemeManager_ShowThemeMenu_InvalidThenValid(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestThemeManager_ShowThemeMenu_NonNumeric verifies that ThemeManager handles the show theme menu...
 func TestThemeManager_ShowThemeMenu_NonNumeric(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -666,11 +697,13 @@ func TestThemeManager_ShowThemeMenu_NonNumeric(t *testing.T) {
 // GetCurrentThemeName edge cases
 // ---------------------------------------------------------------------------
 
+// TestGetCurrentThemeName_Default verifies that GetCurrentThemeName handles the default case.
 func TestGetCurrentThemeName_Default(t *testing.T) {
 	name := GetCurrentThemeName()
 	assert.Equal(t, "Cosmic", name)
 }
 
+// TestGetCurrentThemeName_NilTheme verifies that GetCurrentThemeName handles a zero-value theme...
 func TestGetCurrentThemeName_NilTheme(t *testing.T) {
 	orig := globalThemeManager.currentTheme
 	globalThemeManager.currentTheme = nil
@@ -684,6 +717,7 @@ func TestGetCurrentThemeName_NilTheme(t *testing.T) {
 // ApplyThemeSettings edge cases
 // ---------------------------------------------------------------------------
 
+// TestApplyThemeSettings_NilTheme verifies that ApplyThemeSettings handles a zero-value theme...
 func TestApplyThemeSettings_NilTheme(t *testing.T) {
 	orig := globalThemeManager.currentTheme
 	globalThemeManager.currentTheme = nil
@@ -694,6 +728,7 @@ func TestApplyThemeSettings_NilTheme(t *testing.T) {
 	})
 }
 
+// TestApplyThemeSettings_DisabledAnimations verifies that ApplyThemeSettings handles the disabled...
 func TestApplyThemeSettings_DisabledAnimations(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	defer func() { globalAnimator.Disabled = origDisabled }()
@@ -705,6 +740,7 @@ func TestApplyThemeSettings_DisabledAnimations(t *testing.T) {
 	assert.True(t, globalAnimator.Disabled)
 }
 
+// TestApplyThemeSettings_EnabledAnimations exercises ApplyThemeSettings for the enabled animations...
 func TestApplyThemeSettings_EnabledAnimations(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	defer func() { globalAnimator.Disabled = origDisabled }()
@@ -716,6 +752,7 @@ func TestApplyThemeSettings_EnabledAnimations(t *testing.T) {
 // applyTheme edge cases
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ApplyTheme_NilTheme verifies that ThemeManager handles the apply theme case and...
 func TestThemeManager_ApplyTheme_NilTheme(t *testing.T) {
 	tm := NewThemeManager()
 	tm.currentTheme = nil
@@ -724,6 +761,7 @@ func TestThemeManager_ApplyTheme_NilTheme(t *testing.T) {
 	})
 }
 
+// TestThemeManager_ApplyTheme_FastSpeed verifies that ThemeManager handles the apply theme case...
 func TestThemeManager_ApplyTheme_FastSpeed(t *testing.T) {
 	origSpeed := globalAnimator.Speed
 	defer func() { globalAnimator.Speed = origSpeed }()
@@ -745,6 +783,7 @@ func TestThemeManager_ApplyTheme_FastSpeed(t *testing.T) {
 	assert.Equal(t, FastFrameRate, globalAnimator.Speed)
 }
 
+// TestThemeManager_ApplyTheme_SlowSpeed verifies that ThemeManager handles the apply theme case...
 func TestThemeManager_ApplyTheme_SlowSpeed(t *testing.T) {
 	origSpeed := globalAnimator.Speed
 	defer func() { globalAnimator.Speed = origSpeed }()
@@ -754,6 +793,7 @@ func TestThemeManager_ApplyTheme_SlowSpeed(t *testing.T) {
 	assert.Equal(t, SlowFrameRate, globalAnimator.Speed)
 }
 
+// TestThemeManager_ApplyTheme_NormalSpeed verifies that ThemeManager handles the apply theme case...
 func TestThemeManager_ApplyTheme_NormalSpeed(t *testing.T) {
 	origSpeed := globalAnimator.Speed
 	defer func() { globalAnimator.Speed = origSpeed }()
@@ -768,6 +808,7 @@ func TestThemeManager_ApplyTheme_NormalSpeed(t *testing.T) {
 // CreateCustomTheme duplicate name
 // ---------------------------------------------------------------------------
 
+// TestCreateCustomTheme_DuplicateName verifies that CreateCustomTheme handles the duplicate name case.
 func TestCreateCustomTheme_DuplicateName(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -785,6 +826,7 @@ func TestCreateCustomTheme_DuplicateName(t *testing.T) {
 // SetTheme error case
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_SetTheme_NotFound verifies that ThemeManager handles the set theme case and...
 func TestThemeManager_SetTheme_NotFound(t *testing.T) {
 	tm := NewThemeManager()
 	err := tm.SetTheme("nonexistent")
@@ -796,6 +838,7 @@ func TestThemeManager_SetTheme_NotFound(t *testing.T) {
 // showThemePreview (tested via ShowThemeMenu)
 // ---------------------------------------------------------------------------
 
+// TestThemeManager_ShowThemePreview verifies that ThemeManager handles the show theme preview case.
 func TestThemeManager_ShowThemePreview(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -818,6 +861,7 @@ func TestThemeManager_ShowThemePreview(t *testing.T) {
 	assert.Contains(t, buf.String(), "Preview")
 }
 
+// TestThemeManager_ShowThemePreview_NoEmojis verifies that ThemeManager handles the show theme...
 func TestThemeManager_ShowThemePreview_NoEmojis(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -844,11 +888,13 @@ func TestThemeManager_ShowThemePreview_NoEmojis(t *testing.T) {
 // GetThemeManager / SetGlobalTheme
 // ---------------------------------------------------------------------------
 
+// TestGetThemeManager verifies the documented behavior of GetThemeManager.
 func TestGetThemeManager(t *testing.T) {
 	tm := GetThemeManager()
 	assert.NotNil(t, tm)
 }
 
+// TestSetGlobalTheme_Valid verifies that SetGlobalTheme accepts valid input.
 func TestSetGlobalTheme_Valid(t *testing.T) {
 	err := SetGlobalTheme("ocean")
 	assert.NoError(t, err)
@@ -856,6 +902,7 @@ func TestSetGlobalTheme_Valid(t *testing.T) {
 	SetGlobalTheme("cosmic")
 }
 
+// TestSetGlobalTheme_Invalid verifies that SetGlobalTheme rejects invalid input.
 func TestSetGlobalTheme_Invalid(t *testing.T) {
 	err := SetGlobalTheme("nonexistent")
 	assert.Error(t, err)

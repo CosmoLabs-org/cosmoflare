@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// TestHandleError_AllTypes verifies HandleError behavior for the all types case, one t.Run subtest...
 func TestHandleError_AllTypes(t *testing.T) {
 	types := []struct {
 		name     string
@@ -36,6 +37,7 @@ func TestHandleError_AllTypes(t *testing.T) {
 	}
 }
 
+// TestHandleError_AllFields exercises HandleError for the all fields case and asserts it completes...
 func TestHandleError_AllFields(t *testing.T) {
 	ctx := ErrorContext{
 		Error:        errors.New("detailed error"),
@@ -48,6 +50,7 @@ func TestHandleError_AllFields(t *testing.T) {
 	HandleError(ctx)
 }
 
+// TestHandleError_NilError exercises HandleError for the nil error case and asserts it completes...
 func TestHandleError_NilError(t *testing.T) {
 	ctx := ErrorContext{
 		Error:     nil,
@@ -57,6 +60,7 @@ func TestHandleError_NilError(t *testing.T) {
 	HandleError(ctx)
 }
 
+// TestHandleError_EmptyFields exercises HandleError for the empty fields case and asserts it...
 func TestHandleError_EmptyFields(t *testing.T) {
 	ctx := ErrorContext{
 		Error:        errors.New("err"),
@@ -69,6 +73,7 @@ func TestHandleError_EmptyFields(t *testing.T) {
 	HandleError(ctx)
 }
 
+// TestErrorConstructors verifies error constructors behavior, one t.Run subtest per scenario.
 func TestErrorConstructors(t *testing.T) {
 	constructors := []struct {
 		name string
@@ -104,6 +109,7 @@ func TestErrorConstructors(t *testing.T) {
 	}
 }
 
+// TestErrorConstructors_NilError verifies the error constructor helpers behavior for the nil error...
 func TestErrorConstructors_NilError(t *testing.T) {
 	constructors := []struct {
 		name string
@@ -130,6 +136,7 @@ func TestErrorConstructors_NilError(t *testing.T) {
 	}
 }
 
+// TestErrorPackage_SuccessMessage verifies the error package message helpers behavior for the...
 func TestErrorPackage_SuccessMessage(t *testing.T) {
 	t.Run("with details", func(t *testing.T) {
 		SuccessMessage("upload", "3 files uploaded")
@@ -144,6 +151,7 @@ func TestErrorPackage_SuccessMessage(t *testing.T) {
 	})
 }
 
+// TestErrorPackage_WarningMessage verifies the error package message helpers behavior for the...
 func TestErrorPackage_WarningMessage(t *testing.T) {
 	t.Run("with details", func(t *testing.T) {
 		WarningMessage("deprecated", "Use new-method instead")
@@ -154,6 +162,7 @@ func TestErrorPackage_WarningMessage(t *testing.T) {
 	})
 }
 
+// TestErrorType_String verifies that ErrorType handles the string case.
 func TestErrorType_String(t *testing.T) {
 	types := map[ErrorType]bool{
 		ErrorTypeNetwork:    true,
@@ -170,6 +179,7 @@ func TestErrorType_String(t *testing.T) {
 	}
 }
 
+// TestErrorContext_Security verifies ErrorContext behavior for the security case, one t.Run...
 func TestErrorContext_Security(t *testing.T) {
 	t.Run("error messages should not contain secrets", func(t *testing.T) {
 		secret := "super-secret-api-token-12345678"

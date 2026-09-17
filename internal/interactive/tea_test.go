@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// TestTextInputModel verifies text input model behavior, one t.Run subtest per scenario.
 func TestTextInputModel(t *testing.T) {
 	t.Run("init creates a model", func(t *testing.T) {
 		m := newTextInputModel("Enter name", "default")
@@ -47,6 +48,7 @@ func TestTextInputModel(t *testing.T) {
 	})
 }
 
+// TestSelectModel verifies select model behavior, one t.Run subtest per scenario.
 func TestSelectModel(t *testing.T) {
 	options := []string{"Alpha", "Beta", "Gamma"}
 
@@ -105,6 +107,7 @@ func TestSelectModel(t *testing.T) {
 	})
 }
 
+// TestConfirmModel verifies Confirm behavior for the model case, one t.Run subtest per scenario.
 func TestConfirmModel(t *testing.T) {
 	t.Run("y confirms", func(t *testing.T) {
 		m := newConfirmModel("Continue?", false)

@@ -13,6 +13,7 @@ import (
 // NewSetupWizard
 // ---------------------------------------------------------------------------
 
+// TestNewSetupWizard verifies the documented behavior of NewSetupWizard.
 func TestNewSetupWizard(t *testing.T) {
 	w := NewSetupWizard()
 	assert.NotNil(t, w)
@@ -26,6 +27,7 @@ func TestNewSetupWizard(t *testing.T) {
 // Welcome (quiet mode)
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_Welcome_Quiet verifies that SetupWizard handles the welcome case and handles the...
 func TestSetupWizard_Welcome_Quiet(t *testing.T) {
 	w := NewSetupWizard()
 	w.Quiet = true
@@ -39,6 +41,7 @@ func TestSetupWizard_Welcome_Quiet(t *testing.T) {
 // showProgress
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_ShowProgress verifies SetupWizard behavior for the show progress case, one t.Run...
 func TestSetupWizard_ShowProgress(t *testing.T) {
 	t.Run("step 0", func(t *testing.T) {
 		w := NewSetupWizard()
@@ -76,6 +79,7 @@ func TestSetupWizard_ShowProgress(t *testing.T) {
 // Step4_ProfileSetup with InputReader
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_Step4_ProfileSetup_WithReader verifies SetupWizard behavior for the step4 case...
 func TestSetupWizard_Step4_ProfileSetup_WithReader(t *testing.T) {
 	t.Run("default profile name", func(t *testing.T) {
 		w := NewSetupWizard()
@@ -126,6 +130,7 @@ func TestSetupWizard_Step4_ProfileSetup_WithReader(t *testing.T) {
 // Complete
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_Complete verifies that SetupWizard reports completion correctly.
 func TestSetupWizard_Complete(t *testing.T) {
 	w := NewSetupWizard()
 	w.Quiet = true
@@ -135,6 +140,7 @@ func TestSetupWizard_Complete(t *testing.T) {
 	})
 }
 
+// TestSetupWizard_Complete_NoAccountName verifies that SetupWizard reports completion correctly...
 func TestSetupWizard_Complete_NoAccountName(t *testing.T) {
 	w := NewSetupWizard()
 	w.Quiet = true
@@ -148,6 +154,7 @@ func TestSetupWizard_Complete_NoAccountName(t *testing.T) {
 // clearScreen
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_ClearScreen verifies SetupWizard behavior for the clear screen case, one t.Run...
 func TestSetupWizard_ClearScreen(t *testing.T) {
 	t.Run("quiet mode does not clear", func(t *testing.T) {
 		w := NewSetupWizard()
@@ -170,6 +177,7 @@ func TestSetupWizard_ClearScreen(t *testing.T) {
 // maskToken
 // ---------------------------------------------------------------------------
 
+// TestMaskToken verifies maskToken behavior, one t.Run subtest per scenario.
 func TestMaskToken(t *testing.T) {
 	t.Run("token shorter than 8 chars", func(t *testing.T) {
 		result := maskToken("short")
@@ -213,6 +221,7 @@ func TestMaskToken(t *testing.T) {
 // ShowProgressBar
 // ---------------------------------------------------------------------------
 
+// TestShowProgressBar verifies ShowProgressBar behavior, one t.Run subtest per scenario.
 func TestShowProgressBar(t *testing.T) {
 	t.Run("zero progress", func(t *testing.T) {
 		assert.NotPanics(t, func() {
@@ -255,6 +264,7 @@ func TestShowProgressBar(t *testing.T) {
 // PromptWithDefault and SelectFromList
 // ---------------------------------------------------------------------------
 
+// TestPromptWithDefault verifies PromptWithDefault behavior, one t.Run subtest per scenario.
 func TestPromptWithDefault(t *testing.T) {
 	// Note: PromptWithDefault uses DefaultInput() which reads from stdin
 	// We can't easily test it without mocking stdin at package level
@@ -266,6 +276,7 @@ func TestPromptWithDefault(t *testing.T) {
 	})
 }
 
+// TestSelectFromList verifies SelectFromList behavior, one t.Run subtest per scenario.
 func TestSelectFromList(t *testing.T) {
 	// Note: SelectFromList uses DefaultInput() which reads from stdin
 	// We can't easily test it without mocking stdin at package level
@@ -281,6 +292,7 @@ func TestSelectFromList(t *testing.T) {
 // SetupWizard edge cases
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_EdgeCases verifies SetupWizard behavior for the edge cases case, one t.Run...
 func TestSetupWizard_EdgeCases(t *testing.T) {
 	t.Run("zero total steps", func(t *testing.T) {
 		w := NewSetupWizard()
@@ -314,6 +326,7 @@ func TestSetupWizard_EdgeCases(t *testing.T) {
 // readPassword error handling
 // ---------------------------------------------------------------------------
 
+// TestReadPassword_Error verifies that read password handles the error case.
 func TestReadPassword_Error(t *testing.T) {
 	// readPassword uses golang.org/x/term/ReadPassword which is hard to test
 	// This test verifies the error path is handled
@@ -328,6 +341,7 @@ func TestReadPassword_Error(t *testing.T) {
 // Complete with various inputs
 // ---------------------------------------------------------------------------
 
+// TestSetupWizard_Complete_VariousInputs verifies SetupWizard behavior for the complete case and...
 func TestSetupWizard_Complete_VariousInputs(t *testing.T) {
 	tests := []struct {
 		profileName string
@@ -354,6 +368,7 @@ func TestSetupWizard_Complete_VariousInputs(t *testing.T) {
 // Step3_AccountInfo additional paths (73.0% gap)
 // ---------------------------------------------------------------------------
 
+// TestStep3_AccountInfo_AutoDetectAccept verifies that the setup wizard step 3 (account info)...
 func TestStep3_AccountInfo_AutoDetectAccept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -368,6 +383,7 @@ func TestStep3_AccountInfo_AutoDetectAccept(t *testing.T) {
 	assert.Equal(t, strings.Repeat("a", 32), accountID)
 }
 
+// TestStep3_AccountInfo_EnvVarReject verifies that the setup wizard step 3 (account info) handles...
 func TestStep3_AccountInfo_EnvVarReject(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -385,6 +401,7 @@ func TestStep3_AccountInfo_EnvVarReject(t *testing.T) {
 // Step2_APIToken additional paths
 // ---------------------------------------------------------------------------
 
+// TestStep2_APIToken_EnvVarDefaultAccept verifies that the setup wizard step 2 (API token) handles...
 func TestStep2_APIToken_EnvVarDefaultAccept(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -398,6 +415,7 @@ func TestStep2_APIToken_EnvVarDefaultAccept(t *testing.T) {
 	assert.Equal(t, strings.Repeat("x", 30), token)
 }
 
+// TestStep2_APIToken_EmptyThenValid verifies that the setup wizard step 2 (API token) handles the...
 func TestStep2_APIToken_EmptyThenValid(t *testing.T) {
 	globalAnimator.Disabled = true
 	defer func() { globalAnimator.Disabled = false }()
@@ -416,6 +434,7 @@ func TestStep2_APIToken_EmptyThenValid(t *testing.T) {
 // maskToken
 // ---------------------------------------------------------------------------
 
+// TestMaskTokenCoverage verifies mask token coverage behavior, one t.Run subtest per scenario.
 func TestMaskTokenCoverage(t *testing.T) {
 	t.Run("short token masked completely", func(t *testing.T) {
 		result := maskToken("short")

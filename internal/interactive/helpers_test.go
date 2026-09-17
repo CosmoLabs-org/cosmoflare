@@ -13,6 +13,7 @@ import (
 // CenterText
 // ---------------------------------------------------------------------------
 
+// TestCenterText verifies CenterText behavior, one t.Run subtest per scenario.
 func TestCenterText(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -96,6 +97,7 @@ func TestCenterText(t *testing.T) {
 // BoxText
 // ---------------------------------------------------------------------------
 
+// TestBoxText verifies BoxText behavior, one t.Run subtest per scenario.
 func TestBoxText(t *testing.T) {
 	t.Run("single line", func(t *testing.T) {
 		result := BoxText("hello")
@@ -165,6 +167,7 @@ func TestBoxText(t *testing.T) {
 // TruncateText
 // ---------------------------------------------------------------------------
 
+// TestTruncateText verifies TruncateText behavior, one t.Run subtest per scenario.
 func TestTruncateText(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -242,6 +245,7 @@ func TestTruncateText(t *testing.T) {
 // FormatFileSize
 // ---------------------------------------------------------------------------
 
+// TestFormatFileSize verifies FormatFileSize behavior, one t.Run subtest per scenario.
 func TestFormatFileSize(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -275,6 +279,7 @@ func TestFormatFileSize(t *testing.T) {
 // FormatProfileName
 // ---------------------------------------------------------------------------
 
+// TestFormatProfileName verifies FormatProfileName behavior, one t.Run subtest per scenario.
 func TestFormatProfileName(t *testing.T) {
 	t.Run("with description", func(t *testing.T) {
 		got := FormatProfileName("prod", "Production account")
@@ -318,6 +323,7 @@ func newValidateTestConfig(concurrency, retries int, region string) *AdvancedCon
 	}
 }
 
+// TestValidateAdvancedConfig verifies ValidateAdvancedConfig behavior, one t.Run subtest per scenario.
 func TestValidateAdvancedConfig(t *testing.T) {
 	t.Run("field combinations", func(t *testing.T) {
 		testValidateAdvancedConfigFields(t)
@@ -433,6 +439,7 @@ func testValidateAdvancedConfigBoundaries(t *testing.T) {
 // AutoDetectAccessibility - renamed to avoid conflict with accessibility_deep_test.go
 // ---------------------------------------------------------------------------
 
+// TestAutoDetectAccessibilityFromHelpers verifies AutoDetectAccessibility behavior for the from...
 func TestAutoDetectAccessibilityFromHelpers(t *testing.T) {
 	t.Run("no env vars returns none", func(t *testing.T) {
 		// Clear all relevant env vars
@@ -514,6 +521,7 @@ func TestAutoDetectAccessibilityFromHelpers(t *testing.T) {
 // AccessibilityManager
 // ---------------------------------------------------------------------------
 
+// TestAccessibilityManager verifies AccessibilityManager behavior, one t.Run subtest per scenario.
 func TestAccessibilityManager(t *testing.T) {
 	t.Run("manager construction and composite modes", func(t *testing.T) {
 		testAccessibilityManagerModes(t)
@@ -635,6 +643,7 @@ func testAccessibilityManagerSingleFlags(t *testing.T) {
 // ThemeManager
 // ---------------------------------------------------------------------------
 
+// TestThemeManager verifies ThemeManager behavior, one t.Run subtest per scenario.
 func TestThemeManager(t *testing.T) {
 	t.Run("new manager has cosmic default", func(t *testing.T) {
 		tm := NewThemeManager()
@@ -718,6 +727,7 @@ func TestThemeManager(t *testing.T) {
 // getProfileIcon (unexported)
 // ---------------------------------------------------------------------------
 
+// TestGetProfileIcon verifies getProfileIcon behavior, one t.Run subtest per scenario.
 func TestGetProfileIcon(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -750,6 +760,7 @@ func TestGetProfileIcon(t *testing.T) {
 // getProfileDescription (unexported)
 // ---------------------------------------------------------------------------
 
+// TestGetProfileDescription verifies getProfileDescription behavior, one t.Run subtest per scenario.
 func TestGetProfileDescription(t *testing.T) {
 	t.Run("empty description returns no description", func(t *testing.T) {
 		got := getProfileDescription("")
@@ -787,6 +798,7 @@ func TestGetProfileDescription(t *testing.T) {
 // formatRegion (unexported)
 // ---------------------------------------------------------------------------
 
+// TestFormatRegion verifies formatRegion behavior, one t.Run subtest per scenario.
 func TestFormatRegion(t *testing.T) {
 	tests := []struct {
 		region string
@@ -813,6 +825,7 @@ func TestFormatRegion(t *testing.T) {
 // formatTokenStatus (unexported)
 // ---------------------------------------------------------------------------
 
+// TestFormatTokenStatus verifies formatTokenStatus behavior, one t.Run subtest per scenario.
 func TestFormatTokenStatus(t *testing.T) {
 	t.Run("empty token returns Not set", func(t *testing.T) {
 		got := formatTokenStatus("")
@@ -847,6 +860,7 @@ func TestFormatTokenStatus(t *testing.T) {
 // formatAccountIDStatus (unexported)
 // ---------------------------------------------------------------------------
 
+// TestFormatAccountIDStatus verifies formatAccountIDStatus behavior, one t.Run subtest per scenario.
 func TestFormatAccountIDStatus(t *testing.T) {
 	t.Run("empty returns Not set", func(t *testing.T) {
 		got := formatAccountIDStatus("")
@@ -875,6 +889,7 @@ func TestFormatAccountIDStatus(t *testing.T) {
 // PrintSuccess
 // ---------------------------------------------------------------------------
 
+// TestPrintSuccess verifies PrintSuccess behavior, one t.Run subtest per scenario.
 func TestPrintSuccess(t *testing.T) {
 	tests := []struct {
 		name string
@@ -899,6 +914,7 @@ func TestPrintSuccess(t *testing.T) {
 // PrintError
 // ---------------------------------------------------------------------------
 
+// TestPrintError verifies PrintError behavior, one t.Run subtest per scenario.
 func TestPrintError(t *testing.T) {
 	tests := []struct {
 		name string
@@ -923,6 +939,7 @@ func TestPrintError(t *testing.T) {
 // PrintWarning
 // ---------------------------------------------------------------------------
 
+// TestPrintWarning verifies PrintWarning behavior, one t.Run subtest per scenario.
 func TestPrintWarning(t *testing.T) {
 	tests := []struct {
 		name string
@@ -947,6 +964,7 @@ func TestPrintWarning(t *testing.T) {
 // PrintInfo
 // ---------------------------------------------------------------------------
 
+// TestPrintInfo verifies PrintInfo behavior, one t.Run subtest per scenario.
 func TestPrintInfo(t *testing.T) {
 	tests := []struct {
 		name string
@@ -971,12 +989,14 @@ func TestPrintInfo(t *testing.T) {
 // ClearScreen
 // ---------------------------------------------------------------------------
 
+// TestClearScreen verifies the documented behavior of ClearScreen.
 func TestClearScreen(t *testing.T) {
 	assert.NotPanics(t, func() {
 		ClearScreen()
 	})
 }
 
+// TestClearScreen_MultipleCalls verifies that ClearScreen handles the multiple calls case.
 func TestClearScreen_MultipleCalls(t *testing.T) {
 	assert.NotPanics(t, func() {
 		for i := 0; i < 5; i++ {
@@ -989,6 +1009,7 @@ func TestClearScreen_MultipleCalls(t *testing.T) {
 // GetConfigManager
 // ---------------------------------------------------------------------------
 
+// TestGetConfigManager verifies the documented behavior of GetConfigManager.
 func TestGetConfigManager(t *testing.T) {
 	mgr, err := GetConfigManager()
 	if err != nil {
@@ -1003,6 +1024,7 @@ func TestGetConfigManager(t *testing.T) {
 // ShowCommandTip
 // ---------------------------------------------------------------------------
 
+// TestShowCommandTip verifies ShowCommandTip behavior, one t.Run subtest per scenario.
 func TestShowCommandTip(t *testing.T) {
 	t.Run("single tip", func(t *testing.T) {
 		assert.NotPanics(t, func() {
@@ -1033,6 +1055,7 @@ func TestShowCommandTip(t *testing.T) {
 // ExitWithError
 // ---------------------------------------------------------------------------
 
+// TestExitWithError_PanicRecovery verifies that ExitWithError handles the panic recovery case.
 func TestExitWithError_PanicRecovery(t *testing.T) {
 	// ExitWithError calls os.Exit, which we cannot test directly.
 	// We verify the function exists and the error formatting works.
@@ -1049,6 +1072,7 @@ func TestExitWithError_PanicRecovery(t *testing.T) {
 // Color helper functions (verify they produce output without panicking)
 // ---------------------------------------------------------------------------
 
+// TestColorHelpers verifies the documented behavior of color helpers.
 func TestColorHelpers(t *testing.T) {
 	input := "test text"
 	assert.NotEmpty(t, Bold(input))
@@ -1067,6 +1091,7 @@ func TestColorHelpers(t *testing.T) {
 	assert.NotEmpty(t, White(input))
 }
 
+// TestColorHelpers_EmptyInput verifies that color helpers handles the empty input case.
 func TestColorHelpers_EmptyInput(t *testing.T) {
 	// Color functions should not panic on empty input
 	assert.NotPanics(t, func() { Bold("") })
@@ -1082,6 +1107,7 @@ func TestColorHelpers_EmptyInput(t *testing.T) {
 // Reset constant
 // ---------------------------------------------------------------------------
 
+// TestResetConstant verifies the documented behavior of reset constant.
 func TestResetConstant(t *testing.T) {
 	assert.NotEmpty(t, Reset)
 	assert.Contains(t, Reset, "\033")
@@ -1091,6 +1117,7 @@ func TestResetConstant(t *testing.T) {
 // stdinReader
 // ---------------------------------------------------------------------------
 
+// TestStdinReader_ImplementsInputReader verifies that stdin reader handles the implements input...
 func TestStdinReader_ImplementsInputReader(t *testing.T) {
 	var reader InputReader = &stdinReader{}
 	assert.NotNil(t, reader)
@@ -1100,6 +1127,7 @@ func TestStdinReader_ImplementsInputReader(t *testing.T) {
 // FormatFileSize additional edge cases
 // ---------------------------------------------------------------------------
 
+// TestFormatFileSize_LargeValues verifies FormatFileSize behavior for the large values case, one...
 func TestFormatFileSize_LargeValues(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -1122,6 +1150,7 @@ func TestFormatFileSize_LargeValues(t *testing.T) {
 // TruncateText edge cases
 // ---------------------------------------------------------------------------
 
+// TestTruncateText_NegativeMaxLength verifies that TruncateText handles the negative max length case.
 func TestTruncateText_NegativeMaxLength(t *testing.T) {
 	// TruncateText panics on negative maxLength in Go 1.26+ due to strings.Repeat
 	assert.Panics(t, func() {

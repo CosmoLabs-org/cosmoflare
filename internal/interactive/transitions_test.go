@@ -15,6 +15,7 @@ import (
 // TransitionManager creation
 // ---------------------------------------------------------------------------
 
+// TestNewTransitionManager verifies the documented behavior of NewTransitionManager.
 func TestNewTransitionManager(t *testing.T) {
 	tm := NewTransitionManager()
 	assert.NotNil(t, tm)
@@ -27,6 +28,7 @@ func TestNewTransitionManager(t *testing.T) {
 // SetTheme
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_SetTheme verifies TransitionManager behavior for the set theme case, one...
 func TestTransitionManager_SetTheme(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -55,6 +57,7 @@ func TestTransitionManager_SetTheme(t *testing.T) {
 // Disable
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_Disable verifies that TransitionManager handles the disable case.
 func TestTransitionManager_Disable(t *testing.T) {
 	tm := NewTransitionManager()
 	assert.False(t, tm.Disabled)
@@ -70,6 +73,7 @@ func TestTransitionManager_Disable(t *testing.T) {
 // Execute (disabled mode)
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_Execute_Disabled verifies TransitionManager behavior for the execute case...
 func TestTransitionManager_Execute_Disabled(t *testing.T) {
 	tm := NewTransitionManager()
 	tm.Disable()
@@ -105,6 +109,7 @@ func TestTransitionManager_Execute_Disabled(t *testing.T) {
 // Execute with unknown transition type
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_Execute_UnknownType verifies that TransitionManager handles the execute...
 func TestTransitionManager_Execute_UnknownType(t *testing.T) {
 	tm := NewTransitionManager()
 	tm.Disable()
@@ -121,6 +126,7 @@ func TestTransitionManager_Execute_UnknownType(t *testing.T) {
 // renderInstant
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderInstant verifies that TransitionManager handles the render instant case.
 func TestTransitionManager_RenderInstant(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -136,6 +142,7 @@ func TestTransitionManager_RenderInstant(t *testing.T) {
 	})
 }
 
+// TestTransitionManager_RenderInstant_NoProgress verifies that TransitionManager handles the...
 func TestTransitionManager_RenderInstant_NoProgress(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -149,6 +156,7 @@ func TestTransitionManager_RenderInstant_NoProgress(t *testing.T) {
 	})
 }
 
+// TestTransitionManager_RenderInstant_EmptyContent verifies that TransitionManager handles the...
 func TestTransitionManager_RenderInstant_EmptyContent(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -166,6 +174,7 @@ func TestTransitionManager_RenderInstant_EmptyContent(t *testing.T) {
 // renderWithAlpha
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderWithAlpha verifies TransitionManager behavior for the render with...
 func TestTransitionManager_RenderWithAlpha(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -189,6 +198,7 @@ func TestTransitionManager_RenderWithAlpha(t *testing.T) {
 // renderSlide
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderSlide verifies TransitionManager behavior for the render slide case,...
 func TestTransitionManager_RenderSlide(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -217,6 +227,7 @@ func TestTransitionManager_RenderSlide(t *testing.T) {
 // renderWipe
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderWipe verifies TransitionManager behavior for the render wipe case,...
 func TestTransitionManager_RenderWipe(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -245,6 +256,7 @@ func TestTransitionManager_RenderWipe(t *testing.T) {
 // renderWithScale
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderWithScale verifies TransitionManager behavior for the render with...
 func TestTransitionManager_RenderWithScale(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -268,6 +280,7 @@ func TestTransitionManager_RenderWithScale(t *testing.T) {
 // renderWithOffset
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderWithOffset verifies TransitionManager behavior for the render with...
 func TestTransitionManager_RenderWithOffset(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -291,6 +304,7 @@ func TestTransitionManager_RenderWithOffset(t *testing.T) {
 // renderHeader
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderHeader verifies TransitionManager behavior for the render header...
 func TestTransitionManager_RenderHeader(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -324,6 +338,7 @@ func TestTransitionManager_RenderHeader(t *testing.T) {
 // renderContent
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderContent verifies TransitionManager behavior for the render content...
 func TestTransitionManager_RenderContent(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -357,6 +372,7 @@ func TestTransitionManager_RenderContent(t *testing.T) {
 // renderProgress
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_RenderProgress verifies TransitionManager behavior for the render progress...
 func TestTransitionManager_RenderProgress(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -395,6 +411,7 @@ func TestTransitionManager_RenderProgress(t *testing.T) {
 // scaleText
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_ScaleText verifies TransitionManager behavior for the scale text case, one...
 func TestTransitionManager_ScaleText(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -434,6 +451,7 @@ func TestTransitionManager_ScaleText(t *testing.T) {
 // SetupStepTransition
 // ---------------------------------------------------------------------------
 
+// TestNewSetupStepTransition verifies the documented behavior of NewSetupStepTransition.
 func TestNewSetupStepTransition(t *testing.T) {
 	sst := NewSetupStepTransition(5)
 	assert.NotNil(t, sst.Manager)
@@ -442,6 +460,7 @@ func TestNewSetupStepTransition(t *testing.T) {
 	assert.Equal(t, 5, sst.Total)
 }
 
+// TestSetupStepTransition_NextStep verifies SetupStepTransition behavior for the next step case,...
 func TestSetupStepTransition_NextStep(t *testing.T) {
 	sst := NewSetupStepTransition(3)
 	sst.Manager.Disable() // Disable for testing
@@ -468,6 +487,7 @@ func TestSetupStepTransition_NextStep(t *testing.T) {
 	})
 }
 
+// TestSetupStepTransition_CompleteStep verifies that SetupStepTransition handles the complete step...
 func TestSetupStepTransition_CompleteStep(t *testing.T) {
 	sst := NewSetupStepTransition(3)
 	sst.Manager.Disable() // Disable for testing
@@ -481,6 +501,7 @@ func TestSetupStepTransition_CompleteStep(t *testing.T) {
 // fadeTransition
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_FadeTransition verifies that TransitionManager handles the fade transition...
 func TestTransitionManager_FadeTransition(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -503,6 +524,7 @@ func TestTransitionManager_FadeTransition(t *testing.T) {
 // slideTransition
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_SlideTransition verifies that TransitionManager handles the slide...
 func TestTransitionManager_SlideTransition(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -525,6 +547,7 @@ func TestTransitionManager_SlideTransition(t *testing.T) {
 // wipeTransition
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_WipeTransition verifies that TransitionManager handles the wipe transition...
 func TestTransitionManager_WipeTransition(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -547,6 +570,7 @@ func TestTransitionManager_WipeTransition(t *testing.T) {
 // zoomTransition
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_ZoomTransition verifies that TransitionManager handles the zoom transition...
 func TestTransitionManager_ZoomTransition(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -569,6 +593,7 @@ func TestTransitionManager_ZoomTransition(t *testing.T) {
 // replaceTransition
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_ReplaceTransition verifies that TransitionManager handles the replace...
 func TestTransitionManager_ReplaceTransition(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -591,6 +616,7 @@ func TestTransitionManager_ReplaceTransition(t *testing.T) {
 // SetupWizardTransition
 // ---------------------------------------------------------------------------
 
+// TestSetupWizardTransition_Next verifies SetupWizardTransition behavior for the next case, one...
 func TestSetupWizardTransition_Next(t *testing.T) {
 	globalTransitionManager.Disable()
 
@@ -624,6 +650,7 @@ func TestSetupWizardTransition_Next(t *testing.T) {
 	})
 }
 
+// TestSetupWizardTransition_Show verifies SetupWizardTransition behavior for the show case, one...
 func TestSetupWizardTransition_Show(t *testing.T) {
 	globalTransitionManager.Disable()
 
@@ -666,6 +693,7 @@ func TestSetupWizardTransition_Show(t *testing.T) {
 // TransitionState
 // ---------------------------------------------------------------------------
 
+// TestTransitionState_Creation verifies that TransitionState handles the creation case.
 func TestTransitionState_Creation(t *testing.T) {
 	state := TransitionState{
 		Title:       "Test State",
@@ -682,6 +710,7 @@ func TestTransitionState_Creation(t *testing.T) {
 	assert.Equal(t, "cosmic", state.Theme)
 }
 
+// TestTransitionState_ZeroValue verifies that TransitionState handles the zero value case.
 func TestTransitionState_ZeroValue(t *testing.T) {
 	var state TransitionState
 
@@ -696,6 +725,7 @@ func TestTransitionState_ZeroValue(t *testing.T) {
 // Transition
 // ---------------------------------------------------------------------------
 
+// TestTransition_Creation verifies that Transition handles the creation case.
 func TestTransition_Creation(t *testing.T) {
 	from := TransitionState{Title: "From"}
 	to := TransitionState{Title: "To"}
@@ -719,6 +749,7 @@ func TestTransition_Creation(t *testing.T) {
 // Global transition manager
 // ---------------------------------------------------------------------------
 
+// TestGlobalTransitionManager verifies the documented behavior of global transition manager.
 func TestGlobalTransitionManager(t *testing.T) {
 	assert.NotNil(t, globalTransitionManager)
 	assert.NotNil(t, globalTransitionManager.animator)
@@ -728,6 +759,7 @@ func TestGlobalTransitionManager(t *testing.T) {
 // Edge cases and error handling
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_EdgeCases verifies TransitionManager behavior for the edge cases case, one...
 func TestTransitionManager_EdgeCases(t *testing.T) {
 	tm := NewTransitionManager()
 
@@ -775,6 +807,7 @@ func TestTransitionManager_EdgeCases(t *testing.T) {
 // Execute enabled-path tests with stdout capture
 // ---------------------------------------------------------------------------
 
+// TestTransitionManager_Execute_AllTypes_DisabledCapture verifies TransitionManager behavior for...
 func TestTransitionManager_Execute_AllTypes_DisabledCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -812,6 +845,7 @@ func TestTransitionManager_Execute_AllTypes_DisabledCapture(t *testing.T) {
 	}
 }
 
+// TestTransitionManager_Execute_FullFadeAnimation verifies that TransitionManager handles the...
 func TestTransitionManager_Execute_FullFadeAnimation(t *testing.T) {
 	tm := NewTransitionManager()
 	from := TransitionState{Title: "From"}
@@ -836,6 +870,7 @@ func TestTransitionManager_Execute_FullFadeAnimation(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestTransitionManager_Execute_FullSlideAnimation verifies that TransitionManager handles the...
 func TestTransitionManager_Execute_FullSlideAnimation(t *testing.T) {
 	tm := NewTransitionManager()
 	from := TransitionState{Title: "SlideFrom", Content: []string{"C1"}}
@@ -860,6 +895,7 @@ func TestTransitionManager_Execute_FullSlideAnimation(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestTransitionManager_Execute_FullWipeAnimation verifies that TransitionManager handles the...
 func TestTransitionManager_Execute_FullWipeAnimation(t *testing.T) {
 	tm := NewTransitionManager()
 	from := TransitionState{Title: "WipeFrom"}
@@ -884,6 +920,7 @@ func TestTransitionManager_Execute_FullWipeAnimation(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestTransitionManager_Execute_FullZoomAnimation verifies that TransitionManager handles the...
 func TestTransitionManager_Execute_FullZoomAnimation(t *testing.T) {
 	tm := NewTransitionManager()
 	from := TransitionState{Title: "ZoomFrom", Content: []string{"X"}}
@@ -908,6 +945,7 @@ func TestTransitionManager_Execute_FullZoomAnimation(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestTransitionManager_Execute_FullReplaceAnimation verifies that TransitionManager handles the...
 func TestTransitionManager_Execute_FullReplaceAnimation(t *testing.T) {
 	tm := NewTransitionManager()
 	from := TransitionState{Title: "ReplaceFrom"}
@@ -936,6 +974,7 @@ func TestTransitionManager_Execute_FullReplaceAnimation(t *testing.T) {
 // SetupStepTransition NextStep and CompleteStep
 // ---------------------------------------------------------------------------
 
+// TestSetupStepTransition_NextStepCapture verifies that SetupStepTransition handles the next step...
 func TestSetupStepTransition_NextStepCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -958,6 +997,7 @@ func TestSetupStepTransition_NextStepCapture(t *testing.T) {
 	assert.Equal(t, 1, sst.Current)
 }
 
+// TestSetupStepTransition_CompleteStepCapture verifies that SetupStepTransition handles the...
 func TestSetupStepTransition_CompleteStepCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -983,6 +1023,7 @@ func TestSetupStepTransition_CompleteStepCapture(t *testing.T) {
 // SetupWizardTransition
 // ---------------------------------------------------------------------------
 
+// TestSetupWizardTransition_AddAndShowCapture verifies that SetupWizardTransition handles the add...
 func TestSetupWizardTransition_AddAndShowCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -1006,6 +1047,7 @@ func TestSetupWizardTransition_AddAndShowCapture(t *testing.T) {
 	assert.Contains(t, buf.String(), "Step 1")
 }
 
+// TestSetupWizardTransition_NextCapture verifies that SetupWizardTransition handles the next...
 func TestSetupWizardTransition_NextCapture(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -1030,6 +1072,7 @@ func TestSetupWizardTransition_NextCapture(t *testing.T) {
 	assert.True(t, buf.Len() > 0)
 }
 
+// TestSetupWizardTransition_Show_InvalidIndexCapture verifies that SetupWizardTransition handles...
 func TestSetupWizardTransition_Show_InvalidIndexCapture(t *testing.T) {
 	swt := NewSetupWizardTransition()
 	swt.AddStep("Step 1", []string{"C1"})
@@ -1040,6 +1083,7 @@ func TestSetupWizardTransition_Show_InvalidIndexCapture(t *testing.T) {
 	})
 }
 
+// TestSetupWizardTransition_Next_NoStepsCapture verifies that SetupWizardTransition handles the...
 func TestSetupWizardTransition_Next_NoStepsCapture(t *testing.T) {
 	swt := NewSetupWizardTransition()
 	assert.NotPanics(t, func() {

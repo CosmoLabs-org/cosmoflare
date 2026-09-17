@@ -16,6 +16,7 @@ import (
 // ApplyThemeSettings
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_GetThemeManager verifies that the theme deep-path helpers handles the get theme...
 func TestThemeDeep_GetThemeManager(t *testing.T) {
 	tm := GetThemeManager()
 	assert.NotNil(t, tm)
@@ -23,6 +24,7 @@ func TestThemeDeep_GetThemeManager(t *testing.T) {
 	assert.Same(t, tm, GetThemeManager())
 }
 
+// TestThemeDeep_SetGlobalTheme verifies the theme deep-path helpers behavior for the set global...
 func TestThemeDeep_SetGlobalTheme(t *testing.T) {
 	// Save and restore
 	origName := GetCurrentThemeName()
@@ -48,12 +50,14 @@ func TestThemeDeep_SetGlobalTheme(t *testing.T) {
 	})
 }
 
+// TestThemeDeep_GetCurrentThemeName verifies that the theme deep-path helpers handles the get...
 func TestThemeDeep_GetCurrentThemeName(t *testing.T) {
 	name := GetCurrentThemeName()
 	assert.NotEmpty(t, name)
 	assert.NotEqual(t, "unknown", name)
 }
 
+// TestThemeDeep_GetCurrentThemeName_NilTheme verifies that the theme deep-path helpers handles the...
 func TestThemeDeep_GetCurrentThemeName_NilTheme(t *testing.T) {
 	// When currentTheme is nil on the global, the function should return "unknown"
 	// We can't set the global's currentTheme to nil through public API,
@@ -63,6 +67,7 @@ func TestThemeDeep_GetCurrentThemeName_NilTheme(t *testing.T) {
 	})
 }
 
+// TestThemeDeep_ApplyThemeSettings verifies the theme deep-path helpers behavior for the apply...
 func TestThemeDeep_ApplyThemeSettings(t *testing.T) {
 	// Should not panic even when animations disabled
 	assert.NotPanics(t, func() {
@@ -84,6 +89,7 @@ func TestThemeDeep_ApplyThemeSettings(t *testing.T) {
 // applyTheme - cover all switch branches
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ApplyTheme_AllSpeeds verifies the theme deep-path helpers behavior for the apply...
 func TestThemeDeep_ApplyTheme_AllSpeeds(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -112,6 +118,7 @@ func TestThemeDeep_ApplyTheme_AllSpeeds(t *testing.T) {
 	}
 }
 
+// TestThemeDeep_ApplyTheme_NilCurrent verifies that the theme deep-path helpers handles the apply...
 func TestThemeDeep_ApplyTheme_NilCurrent(t *testing.T) {
 	tm := &ThemeManager{
 		themes:    make(map[string]*Theme),
@@ -128,6 +135,7 @@ func TestThemeDeep_ApplyTheme_NilCurrent(t *testing.T) {
 // showThemePreview - capture stdout, verify output
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ShowThemePreview verifies the theme deep-path helpers behavior for the show theme...
 func TestThemeDeep_ShowThemePreview(t *testing.T) {
 	tm := NewThemeManager()
 
@@ -171,6 +179,7 @@ func TestThemeDeep_ShowThemePreview(t *testing.T) {
 // showProgressBar - various percentages
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ShowProgressBar_AllThemes verifies the theme deep-path helpers behavior for the...
 func TestThemeDeep_ShowProgressBar_AllThemes(t *testing.T) {
 	tm := NewThemeManager()
 	for _, theme := range tm.ListThemes() {
@@ -188,6 +197,7 @@ func TestThemeDeep_ShowProgressBar_AllThemes(t *testing.T) {
 // SaveTheme / LoadTheme - stubs, just ensure no panic
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_SaveTheme_AllThemes verifies the theme deep-path helpers behavior for the save...
 func TestThemeDeep_SaveTheme_AllThemes(t *testing.T) {
 	tm := NewThemeManager()
 	for _, theme := range tm.ListThemes() {
@@ -198,6 +208,7 @@ func TestThemeDeep_SaveTheme_AllThemes(t *testing.T) {
 	}
 }
 
+// TestThemeDeep_LoadTheme_AllThemes verifies the theme deep-path helpers behavior for the load...
 func TestThemeDeep_LoadTheme_AllThemes(t *testing.T) {
 	tm := NewThemeManager()
 	for _, theme := range tm.ListThemes() {
@@ -212,6 +223,7 @@ func TestThemeDeep_LoadTheme_AllThemes(t *testing.T) {
 // loadCustomThemes - with empty path
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_LoadCustomThemes_EmptyPath verifies that the theme deep-path helpers handles the...
 func TestThemeDeep_LoadCustomThemes_EmptyPath(t *testing.T) {
 	tm := &ThemeManager{
 		themes:    make(map[string]*Theme),
@@ -227,6 +239,7 @@ func TestThemeDeep_LoadCustomThemes_EmptyPath(t *testing.T) {
 // Theme structure edge cases
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_EmbeddedTypes verifies the theme deep-path helpers behavior for the embedded types...
 func TestThemeDeep_EmbeddedTypes(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("cosmic")
@@ -256,6 +269,7 @@ func TestThemeDeep_EmbeddedTypes(t *testing.T) {
 // Theme zero-value edge cases
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ZeroValueTheme verifies that the theme deep-path helpers handles the zero value...
 func TestThemeDeep_ZeroValueTheme(t *testing.T) {
 	var theme Theme
 	assert.Empty(t, theme.ID)
@@ -266,6 +280,7 @@ func TestThemeDeep_ZeroValueTheme(t *testing.T) {
 	assert.False(t, theme.Animations.Enabled)
 }
 
+// TestThemeDeep_ZeroValueColorScheme verifies that the theme deep-path helpers handles the zero...
 func TestThemeDeep_ZeroValueColorScheme(t *testing.T) {
 	var cs ColorScheme
 	assert.Empty(t, cs.Name)
@@ -273,12 +288,14 @@ func TestThemeDeep_ZeroValueColorScheme(t *testing.T) {
 	assert.Nil(t, cs.Emoji)
 }
 
+// TestThemeDeep_ZeroValueSpacing verifies that the theme deep-path helpers handles the zero value...
 func TestThemeDeep_ZeroValueSpacing(t *testing.T) {
 	var s ThemeSpacing
 	assert.Equal(t, 0, s.LineSpacing)
 	assert.Equal(t, 0, s.ProgressBarWidth)
 }
 
+// TestThemeDeep_ZeroValueIcons verifies that the theme deep-path helpers handles the zero value...
 func TestThemeDeep_ZeroValueIcons(t *testing.T) {
 	var i ThemeIcons
 	assert.False(t, i.UseEmojis)
@@ -286,6 +303,7 @@ func TestThemeDeep_ZeroValueIcons(t *testing.T) {
 	assert.Empty(t, i.ProgressChars)
 }
 
+// TestThemeDeep_ZeroValueAnimations verifies that the theme deep-path helpers handles the zero...
 func TestThemeDeep_ZeroValueAnimations(t *testing.T) {
 	var a ThemeAnimations
 	assert.False(t, a.Enabled)
@@ -298,6 +316,7 @@ func TestThemeDeep_ZeroValueAnimations(t *testing.T) {
 // Theme emoji map operations
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_EmojiMapLookup verifies the theme deep-path helpers behavior for the emoji map...
 func TestThemeDeep_EmojiMapLookup(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("cosmic")
@@ -313,6 +332,7 @@ func TestThemeDeep_EmojiMapLookup(t *testing.T) {
 	})
 }
 
+// TestThemeDeep_MonochromeUsesTextNotEmoji verifies that the theme deep-path helpers handles the...
 func TestThemeDeep_MonochromeUsesTextNotEmoji(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("monochrome")
@@ -327,6 +347,7 @@ func TestThemeDeep_MonochromeUsesTextNotEmoji(t *testing.T) {
 // Theme description content
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_AllThemesHaveDescriptions verifies the theme deep-path helpers behavior for the...
 func TestThemeDeep_AllThemesHaveDescriptions(t *testing.T) {
 	tm := NewThemeManager()
 	for _, theme := range tm.ListThemes() {
@@ -340,6 +361,7 @@ func TestThemeDeep_AllThemesHaveDescriptions(t *testing.T) {
 // GetThemePath
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_GetThemePath_ContainsR2Go2 verifies that the theme deep-path helpers handles the...
 func TestThemeDeep_GetThemePath_ContainsR2Go2(t *testing.T) {
 	tm := NewThemeManager()
 	path := tm.GetThemePath()
@@ -351,6 +373,7 @@ func TestThemeDeep_GetThemePath_ContainsR2Go2(t *testing.T) {
 // fmt.Stringer / interface compliance
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ThemeManagerInterface verifies that the theme deep-path helpers handles the theme...
 func TestThemeDeep_ThemeManagerInterface(t *testing.T) {
 	tm := NewThemeManager()
 	// Verify it implements the expected behavior
@@ -361,6 +384,7 @@ func TestThemeDeep_ThemeManagerInterface(t *testing.T) {
 // Error formatting for SetTheme
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_SetTheme_ErrorFormatting verifies that the theme deep-path helpers handles the set...
 func TestThemeDeep_SetTheme_ErrorFormatting(t *testing.T) {
 	tm := NewThemeManager()
 	err := tm.SetTheme("")
@@ -376,6 +400,7 @@ func TestThemeDeep_SetTheme_ErrorFormatting(t *testing.T) {
 // Verify theme consistency
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_OceanSpinnerDuplicates verifies that the theme deep-path helpers handles the ocean...
 func TestThemeDeep_OceanSpinnerDuplicates(t *testing.T) {
 	// Ocean theme intentionally has duplicate spinner chars - verify they exist
 	tm := NewThemeManager()
@@ -386,6 +411,7 @@ func TestThemeDeep_OceanSpinnerDuplicates(t *testing.T) {
 	assert.Equal(t, "🌊", spinner[1])
 }
 
+// TestThemeDeep_MonochromeSpinnerChars verifies that the theme deep-path helpers handles the...
 func TestThemeDeep_MonochromeSpinnerChars(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("monochrome")
@@ -397,6 +423,7 @@ func TestThemeDeep_MonochromeSpinnerChars(t *testing.T) {
 // ApplyThemeSettings - with nil currentTheme on global
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ApplyThemeSettings_GlobalNilTheme verifies that the theme deep-path helpers...
 func TestThemeDeep_ApplyThemeSettings_GlobalNilTheme(t *testing.T) {
 	// This tests the nil guard in ApplyThemeSettings
 	// We can't set the global's currentTheme to nil directly through public API,
@@ -410,6 +437,7 @@ func TestThemeDeep_ApplyThemeSettings_GlobalNilTheme(t *testing.T) {
 // showThemePreview output verification
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ShowThemePreview_VerboseOutput verifies that the theme deep-path helpers handles...
 func TestThemeDeep_ShowThemePreview_VerboseOutput(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("cosmic")
@@ -436,6 +464,7 @@ func TestThemeDeep_ShowThemePreview_VerboseOutput(t *testing.T) {
 	assert.Contains(t, got, fmt.Sprintf("Description: %s", theme.Description))
 }
 
+// TestThemeDeep_ShowThemePreview_NoEmojiForMonochrome verifies that the theme deep-path helpers...
 func TestThemeDeep_ShowThemePreview_NoEmojiForMonochrome(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("monochrome")
@@ -461,6 +490,7 @@ func TestThemeDeep_ShowThemePreview_NoEmojiForMonochrome(t *testing.T) {
 // showSpinnerDemo output
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ShowSpinnerDemo_Output verifies that the theme deep-path helpers handles the show...
 func TestThemeDeep_ShowSpinnerDemo_Output(t *testing.T) {
 	tm := NewThemeManager()
 	tm.SetTheme("forest")
@@ -486,6 +516,7 @@ func TestThemeDeep_ShowSpinnerDemo_Output(t *testing.T) {
 // ThemeProgressChars uniqueness per theme
 // ---------------------------------------------------------------------------
 
+// TestThemeDeep_ProgressCharsPerTheme exercises the theme deep-path helpers for the progress chars...
 func TestThemeDeep_ProgressCharsPerTheme(t *testing.T) {
 	tm := NewThemeManager()
 	progressChars := map[string]string{}

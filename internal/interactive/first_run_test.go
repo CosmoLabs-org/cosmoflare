@@ -15,6 +15,7 @@ import (
 // NewFirstRunDetector
 // ---------------------------------------------------------------------------
 
+// TestNewFirstRunDetector verifies the documented behavior of NewFirstRunDetector.
 func TestNewFirstRunDetector(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -28,6 +29,7 @@ func TestNewFirstRunDetector(t *testing.T) {
 // IsFirstRun
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_IsFirstRun verifies that FirstRunDetector handles the is first run case.
 func TestFirstRunDetector_IsFirstRun(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -44,6 +46,7 @@ func TestFirstRunDetector_IsFirstRun(t *testing.T) {
 // AutoTriggerSetup with skip env var
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_AutoTriggerSetup_SkipEnv verifies that FirstRunDetector handles the auto...
 func TestFirstRunDetector_AutoTriggerSetup_SkipEnv(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -69,6 +72,7 @@ func TestFirstRunDetector_AutoTriggerSetup_SkipEnv(t *testing.T) {
 // AutoTriggerSetup with R2GO2_SKIP_FIRST_RUN=false
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_AutoTriggerSetup_NoSkip verifies that FirstRunDetector handles the auto...
 func TestFirstRunDetector_AutoTriggerSetup_NoSkip(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -87,6 +91,7 @@ func TestFirstRunDetector_AutoTriggerSetup_NoSkip(t *testing.T) {
 // ShowQuickStart
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_ShowQuickStart verifies that FirstRunDetector handles the show quick start...
 func TestFirstRunDetector_ShowQuickStart(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -103,6 +108,7 @@ func TestFirstRunDetector_ShowQuickStart(t *testing.T) {
 // DetectAndSetup
 // ---------------------------------------------------------------------------
 
+// TestDetectAndSetup exercises DetectAndSetup and asserts it completes without panicking.
 func TestDetectAndSetup(t *testing.T) {
 	// This is a package-level function that creates a detector
 	// Just verify it exists and can be called
@@ -120,6 +126,7 @@ func TestDetectAndSetup(t *testing.T) {
 // ShowFirstRunWelcome
 // ---------------------------------------------------------------------------
 
+// TestShowFirstRunWelcome verifies the documented behavior of ShowFirstRunWelcome.
 func TestShowFirstRunWelcome(t *testing.T) {
 	// This function reads from stdin via ConfirmYesNo
 	// We can't easily test it without mocking
@@ -134,6 +141,7 @@ func TestShowFirstRunWelcome(t *testing.T) {
 // FirstRunDetector edge cases
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_EdgeCases verifies FirstRunDetector behavior for the edge cases case, one...
 func TestFirstRunDetector_EdgeCases(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -155,6 +163,7 @@ func TestFirstRunDetector_EdgeCases(t *testing.T) {
 // AutoTriggerSetup with various env states
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_AutoTriggerSetup_EnvStates verifies FirstRunDetector behavior for the auto...
 func TestFirstRunDetector_AutoTriggerSetup_EnvStates(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -188,6 +197,7 @@ func TestFirstRunDetector_AutoTriggerSetup_EnvStates(t *testing.T) {
 // Constants
 // ---------------------------------------------------------------------------
 
+// TestFirstRunConstants verifies the documented behavior of first run constants.
 func TestFirstRunConstants(t *testing.T) {
 	assert.Equal(t, time.Second, Second)
 }
@@ -196,6 +206,7 @@ func TestFirstRunConstants(t *testing.T) {
 // FirstRunDetector creation errors
 // ---------------------------------------------------------------------------
 
+// TestNewFirstRunDetector_ErrorHandling verifies that NewFirstRunDetector handles the error...
 func TestNewFirstRunDetector_ErrorHandling(t *testing.T) {
 	// We can't easily test error cases without mocking os.UserHomeDir
 	// but we can verify the function returns an error type
@@ -210,6 +221,7 @@ func TestNewFirstRunDetector_ErrorHandling(t *testing.T) {
 // ShowQuickStart content verification
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_ShowQuickStart_Content verifies that FirstRunDetector handles the show...
 func TestFirstRunDetector_ShowQuickStart_Content(t *testing.T) {
 	// Verify the function is defined - we can't test output without stdin
 	// but we can check the function signature matches expectations
@@ -227,6 +239,7 @@ func TestFirstRunDetector_ShowQuickStart_Content(t *testing.T) {
 // ShowFirstRunWelcome content
 // ---------------------------------------------------------------------------
 
+// TestShowFirstRunWelcome_Content exercises ShowFirstRunWelcome for the content case and asserts...
 func TestShowFirstRunWelcome_Content(t *testing.T) {
 	// This is a package-level function
 	// We can verify it's defined and would output the expected content
@@ -240,6 +253,7 @@ func TestShowFirstRunWelcome_Content(t *testing.T) {
 // AutoDetectAccountInfo integration
 // ---------------------------------------------------------------------------
 
+// TestAutoDetectAccountInfo_Integration verifies autoDetectAccountInfo behavior for the...
 func TestAutoDetectAccountInfo_Integration(t *testing.T) {
 	// autoDetectAccountInfo is tested via ValidateAPIToken tests
 	// This just verifies the integration works
@@ -266,6 +280,7 @@ func TestAutoDetectAccountInfo_Integration(t *testing.T) {
 // FirstRunDetector with empty profiles
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_EmptyProfiles exercises FirstRunDetector for the empty profiles case and...
 func TestFirstRunDetector_EmptyProfiles(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -282,6 +297,7 @@ func TestFirstRunDetector_EmptyProfiles(t *testing.T) {
 // FirstRunDetector structure
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_Structure verifies that FirstRunDetector handles the structure case.
 func TestFirstRunDetector_Structure(t *testing.T) {
 	frd, err := NewFirstRunDetector()
 	if err != nil {
@@ -297,6 +313,7 @@ func TestFirstRunDetector_Structure(t *testing.T) {
 // DetectAndSetup function
 // ---------------------------------------------------------------------------
 
+// TestDetectAndSetup_Function verifies that DetectAndSetup handles the function case.
 func TestDetectAndSetup_Function(t *testing.T) {
 	// Verify DetectAndSetup is a function that returns error
 	// We can't call it without mocking stdin
@@ -315,6 +332,7 @@ func TestDetectAndSetup_Function(t *testing.T) {
 // ShowFirstRunWelcome with stdin mock (enabled path)
 // ---------------------------------------------------------------------------
 
+// TestShowFirstRunWelcome_UserSaysYes verifies that ShowFirstRunWelcome handles the user says yes...
 func TestShowFirstRunWelcome_UserSaysYes(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -348,6 +366,7 @@ func TestShowFirstRunWelcome_UserSaysYes(t *testing.T) {
 // ShowQuickStart with stdin mock
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_ShowQuickStart_WithInput verifies that FirstRunDetector handles the show...
 func TestFirstRunDetector_ShowQuickStart_WithInput(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -386,6 +405,7 @@ func TestFirstRunDetector_ShowQuickStart_WithInput(t *testing.T) {
 // AutoTriggerSetup with first-run and user says yes
 // ---------------------------------------------------------------------------
 
+// TestFirstRunDetector_AutoTriggerSetup_FirstRunYes verifies that FirstRunDetector handles the...
 func TestFirstRunDetector_AutoTriggerSetup_FirstRunYes(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true
@@ -433,6 +453,7 @@ func TestFirstRunDetector_AutoTriggerSetup_FirstRunYes(t *testing.T) {
 // DetectAndSetup with first run
 // ---------------------------------------------------------------------------
 
+// TestDetectAndSetup_FirstRunPath exercises DetectAndSetup for the first run path case and asserts...
 func TestDetectAndSetup_FirstRunPath(t *testing.T) {
 	origDisabled := globalAnimator.Disabled
 	globalAnimator.Disabled = true

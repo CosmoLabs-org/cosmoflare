@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// BenchmarkEncryptBackupData measures the throughput of encryptBackupData.
 func BenchmarkEncryptBackupData(b *testing.B) {
 	bm := &BackupManager{}
 	data := &BackupData{
@@ -21,6 +22,7 @@ func BenchmarkEncryptBackupData(b *testing.B) {
 	}
 }
 
+// BenchmarkDecryptBackupData measures the throughput of decryptBackupData.
 func BenchmarkDecryptBackupData(b *testing.B) {
 	bm := &BackupManager{}
 	data := &BackupData{
@@ -39,6 +41,7 @@ func BenchmarkDecryptBackupData(b *testing.B) {
 	}
 }
 
+// BenchmarkValidateAccountID measures the throughput of ValidateAccountID.
 func BenchmarkValidateAccountID(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
