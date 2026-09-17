@@ -146,6 +146,17 @@ func newS3Fixture(t *testing.T, objects []S3Object, paginated bool) *s3Fixture {
 	return f
 }
 
+// newFailingS3Server starts a server that answers every request with a 500,
+// wrapped as an s3Fixture so s3ClientFor can target it.
+func newFailingS3Server(t *testing.T) *s3Fixture {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error":"boom"}`, http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+	return &s3Fixture{server: server}
+}
+
 // s3ClientFor returns an s3.Client pointed at the fixture. listS3Objects,
 // scanPhase and runTransfer all accept the client as a parameter, so tests
 // inject the fixture-backed client directly.
@@ -169,6 +180,20 @@ func testObjects() []S3Object {
 	}
 }
 
+// listTestObjects lists testObjects() through a fixture-backed client with
+// the given filter, failing the test on transport errors so callers only
+// assert on the returned object set.
+func listTestObjects(t *testing.T, filter string, paginated bool) []*S3Object {
+	t.Helper()
+	f := newS3Fixture(t, testObjects(), paginated)
+	m := &S3Migration{S3Bucket: "src-bucket", Filter: filter}
+	objs, err := m.listS3Objects(s3ClientFor(f))
+	if err != nil {
+		t.Fatalf("listS3Objects failed: %v", err)
+	}
+	return objs
+}
+
 // withTestHome isolates checkpointDir() inside a temp dir.
 func withTestHome(t *testing.T) string {
 	t.Helper()
@@ -187,80 +212,149 @@ func withTestAWSEnv(t *testing.T, url string) {
 	t.Setenv("AWS_ENDPOINT_URL_S3", url)
 }
 
+// withS3ExecuteEnv combines HOME isolation with fixture-pointed AWS env
+// config so Execute (which builds its own client) hits the fake S3. It
+// returns the temp home for checkpoint-path assertions. Tests using it
+// cannot run in parallel because t.Setenv is incompatible with t.Parallel.
+func withS3ExecuteEnv(t *testing.T, url string) string {
+	t.Helper()
+	home := withTestHome(t)
+	withTestAWSEnv(t, url)
+	return home
+}
+
+// checkpointPathInTestHome isolates checkpointDir() in a temp HOME, ensures
+// the migrations directory exists (saveCheckpoint would create it, but the
+// corrupt-file fixture writes directly), and returns the checkpoint path for
+// the src/dst/no-filter migration identity shared by the
+// loadOrCreateCheckpoint tests.
+func checkpointPathInTestHome(t *testing.T) string {
+	t.Helper()
+	t.Setenv("HOME", t.TempDir())
+	dir := checkpointDir()
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatalf("failed to create checkpoint dir: %v", err)
+	}
+	return checkpointPathIn(dir, "src", "dst", "")
+}
+
+// newFinalizeCheckpoint returns an empty checkpoint plus its on-disk path in
+// a temp dir — the shared fixture of the finalizeMigration tests.
+func newFinalizeCheckpoint(t *testing.T) (*Checkpoint, string) {
+	t.Helper()
+	cpPath := filepath.Join(t.TempDir(), "cp.json")
+	return &Checkpoint{Version: 1, Completed: map[string]int64{}}, cpPath
+}
+
 // --- pure helpers -----------------------------------------------------------
 
+// TestS3FormatBytes verifies FormatBytes renders byte counts in B/KB/MB/GB,
+// switching to one decimal place once the 1 KB threshold is crossed.
 func TestS3FormatBytes(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
+		name string
 		in   int64
 		want string
 	}{
-		{0, "0 B"},
-		{512, "512 B"},
-		{1023, "1023 B"},
-		{1024, "1.0 KB"},
-		{1536, "1.5 KB"},
-		{1048576, "1.0 MB"},
-		{5 * 1024 * 1024 * 1024, "5.0 GB"},
+		{"zero", 0, "0 B"},
+		{"sub-KB stays in bytes", 512, "512 B"},
+		{"1023 B stays in bytes", 1023, "1023 B"},
+		{"exactly 1 KB", 1024, "1.0 KB"},
+		{"1.5 KB rounds to one decimal", 1536, "1.5 KB"},
+		{"1 MB", 1048576, "1.0 MB"},
+		{"5 GB", 5 * 1024 * 1024 * 1024, "5.0 GB"},
 	}
 	for _, c := range cases {
-		if got := FormatBytes(c.in); got != c.want {
-			t.Errorf("FormatBytes(%d) = %q, want %q", c.in, got, c.want)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if got := FormatBytes(c.in); got != c.want {
+				t.Errorf("FormatBytes(%d) = %q, want %q", c.in, got, c.want)
+			}
+		})
 	}
 }
 
+// TestS3GetFilterPrefix verifies getFilterPrefix derives the S3 list prefix
+// from a filter: glob filters keep their directory, exact keys are used
+// verbatim, and a bare "*" lists everything.
 func TestS3GetFilterPrefix(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
+		name   string
 		filter string
 		want   string
 	}{
-		{"", ""},
-		{"logs/*", "logs/"},
-		{"logs/", "logs/"},
-		{"exact.txt", "exact.txt"},
-		{"*", ""},
+		{"empty filter lists everything", "", ""},
+		{"glob keeps its directory", "logs/*", "logs/"},
+		{"trailing slash is kept as-is", "logs/", "logs/"},
+		{"exact key is its own prefix", "exact.txt", "exact.txt"},
+		{"lone star lists everything", "*", ""},
 	}
 	for _, c := range cases {
-		m := &S3Migration{Filter: c.filter}
-		if got := m.getFilterPrefix(); got != c.want {
-			t.Errorf("getFilterPrefix(%q) = %q, want %q", c.filter, got, c.want)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			m := &S3Migration{Filter: c.filter}
+			if got := m.getFilterPrefix(); got != c.want {
+				t.Errorf("getFilterPrefix(%q) = %q, want %q", c.filter, got, c.want)
+			}
+		})
 	}
 }
 
+// TestS3MatchesFilter verifies matchesFilter applies glob semantics under a
+// prefix while treating non-glob filters as exact-key matches.
 func TestS3MatchesFilter(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
+		name   string
 		filter string
 		key    string
 		want   bool
 	}{
-		{"", "anything.bin", true},
-		{"logs/*", "logs/2025/a.log", true},
-		{"logs/*", "other/a.log", false},
-		{"exact.txt", "exact.txt", true},
-		{"exact.txt", "other.txt", false},
+		{"empty filter matches any key", "", "anything.bin", true},
+		{"glob matches keys under its prefix", "logs/*", "logs/2025/a.log", true},
+		{"glob rejects keys under other prefixes", "logs/*", "other/a.log", false},
+		{"exact filter matches the exact key", "exact.txt", "exact.txt", true},
+		{"exact filter rejects other keys", "exact.txt", "other.txt", false},
 	}
 	for _, c := range cases {
-		m := &S3Migration{Filter: c.filter}
-		if got := m.matchesFilter(c.key); got != c.want {
-			t.Errorf("matchesFilter(filter=%q, key=%q) = %v, want %v", c.filter, c.key, got, c.want)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			m := &S3Migration{Filter: c.filter}
+			if got := m.matchesFilter(c.key); got != c.want {
+				t.Errorf("matchesFilter(filter=%q, key=%q) = %v, want %v", c.filter, c.key, got, c.want)
+			}
+		})
 	}
 }
 
+// TestS3GetTotalSize verifies getTotalSize sums object sizes and treats a
+// nil object list as zero bytes.
 func TestS3GetTotalSize(t *testing.T) {
+	t.Parallel()
 	m := &S3Migration{}
-	objs := []*S3Object{{Size: 10}, {Size: 20}, {Size: 32}}
-	if got := m.getTotalSize(objs); got != 62 {
-		t.Errorf("getTotalSize = %d, want 62", got)
-	}
-	if got := m.getTotalSize(nil); got != 0 {
-		t.Errorf("getTotalSize(nil) = %d, want 0", got)
-	}
+
+	t.Run("sums sizes across objects", func(t *testing.T) {
+		t.Parallel()
+		objs := []*S3Object{{Size: 10}, {Size: 20}, {Size: 32}}
+		if got := m.getTotalSize(objs); got != 62 {
+			t.Errorf("getTotalSize = %d, want 62", got)
+		}
+	})
+	t.Run("nil object list is zero", func(t *testing.T) {
+		t.Parallel()
+		if got := m.getTotalSize(nil); got != 0 {
+			t.Errorf("getTotalSize(nil) = %d, want 0", got)
+		}
+	})
 }
 
+// TestS3PrintHelpersAndSummary exercises the print helpers and both summary
+// shapes (full result and zero-duration result); they write to stdout, so
+// the test guards against panics in formatting paths.
 func TestS3PrintHelpersAndSummary(t *testing.T) {
-	// These write to stdout; calling them verifies they do not panic.
+	t.Parallel()
 	printInfo("hello %s", "world")
 	printSuccess("done")
 	printWarning("careful")
@@ -277,7 +371,10 @@ func TestS3PrintHelpersAndSummary(t *testing.T) {
 
 // --- performDryRun ----------------------------------------------------------
 
+// TestS3PerformDryRun verifies a dry run counts every object and reports the
+// would-be transferred size without touching R2.
 func TestS3PerformDryRun(t *testing.T) {
+	t.Parallel()
 	m := &S3Migration{}
 	objs := []*S3Object{{Key: "a", Size: 100}, {Key: "b", Size: 200}}
 	res, err := m.performDryRun(objs)
@@ -292,7 +389,10 @@ func TestS3PerformDryRun(t *testing.T) {
 	}
 }
 
+// TestS3PerformDryRunMoreThanFive verifies the dry-run listing path taken
+// when the object set exceeds five entries ("... and N more").
 func TestS3PerformDryRunMoreThanFive(t *testing.T) {
+	t.Parallel()
 	m := &S3Migration{}
 	objs := make([]*S3Object, 7)
 	for i := range objs {
@@ -309,14 +409,20 @@ func TestS3PerformDryRunMoreThanFive(t *testing.T) {
 
 // --- saveManifest -----------------------------------------------------------
 
+// TestS3SaveManifestSkipsWhenEmpty verifies saveManifest is a no-op (no
+// error, no file written) when ManifestFile is unset.
 func TestS3SaveManifestSkipsWhenEmpty(t *testing.T) {
+	t.Parallel()
 	m := &S3Migration{}
 	if err := m.saveManifest(&MigrationManifest{}); err != nil {
 		t.Errorf("saveManifest with no ManifestFile should be a no-op, got %v", err)
 	}
 }
 
+// TestS3SaveManifestWritesJSON verifies saveManifest creates the target
+// directory and writes the manifest as JSON with the expected bucket fields.
 func TestS3SaveManifestWritesJSON(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	path := filepath.Join(dir, "nested", "manifest.json")
 	m := &S3Migration{ManifestFile: path}
@@ -333,7 +439,10 @@ func TestS3SaveManifestWritesJSON(t *testing.T) {
 	}
 }
 
+// TestS3SaveManifestMkdirError verifies saveManifest reports an error when
+// the manifest's parent directory cannot be created.
 func TestS3SaveManifestMkdirError(t *testing.T) {
+	t.Parallel()
 	// Reason: parent "dir" is a regular file, so MkdirAll fails.
 	base := filepath.Join(t.TempDir(), "file")
 	if err := os.WriteFile(base, []byte("x"), 0644); err != nil {
@@ -347,6 +456,8 @@ func TestS3SaveManifestMkdirError(t *testing.T) {
 
 // --- createS3Client ---------------------------------------------------------
 
+// TestS3CreateS3Client verifies a client can be constructed from static test
+// credentials and an explicit region. Not parallel: mutates AWS env vars.
 func TestS3CreateS3Client(t *testing.T) {
 	t.Setenv("AWS_ACCESS_KEY_ID", "test")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "test")
@@ -363,13 +474,11 @@ func TestS3CreateS3Client(t *testing.T) {
 
 // --- listS3Objects ----------------------------------------------------------
 
+// TestS3ListObjectsAll verifies a single-page listing returns every object
+// with key, size, ETag, storage class and LastModified populated.
 func TestS3ListObjectsAll(t *testing.T) {
-	f := newS3Fixture(t, testObjects(), false)
-	m := &S3Migration{S3Bucket: "src-bucket"}
-	objs, err := m.listS3Objects(s3ClientFor(f))
-	if err != nil {
-		t.Fatalf("listS3Objects failed: %v", err)
-	}
+	t.Parallel()
+	objs := listTestObjects(t, "", false)
 	if len(objs) != 3 {
 		t.Fatalf("got %d objects, want 3", len(objs))
 	}
@@ -384,72 +493,59 @@ func TestS3ListObjectsAll(t *testing.T) {
 	}
 }
 
+// TestS3ListObjectsPaginated verifies the paginator loop concatenates pages
+// across continuation tokens.
 func TestS3ListObjectsPaginated(t *testing.T) {
-	// Reason: covers the paginator loop across continuation-token pages.
-	f := newS3Fixture(t, testObjects(), true)
-	m := &S3Migration{S3Bucket: "src-bucket"}
-	objs, err := m.listS3Objects(s3ClientFor(f))
-	if err != nil {
-		t.Fatalf("listS3Objects failed: %v", err)
-	}
+	t.Parallel()
+	objs := listTestObjects(t, "", true)
 	if len(objs) != 3 {
 		t.Errorf("paginated listing should yield 3 objects, got %d", len(objs))
 	}
 }
 
+// TestS3ListObjectsFilterApplied verifies an exact-key filter keeps only the
+// matching object from the listing.
 func TestS3ListObjectsFilterApplied(t *testing.T) {
-	f := newS3Fixture(t, testObjects(), false)
-	m := &S3Migration{S3Bucket: "src-bucket", Filter: "a.jpg"}
-	objs, err := m.listS3Objects(s3ClientFor(f))
-	if err != nil {
-		t.Fatalf("listS3Objects failed: %v", err)
-	}
+	t.Parallel()
+	objs := listTestObjects(t, "a.jpg", false)
 	if len(objs) != 1 || objs[0].Key != "a.jpg" {
 		t.Errorf("exact filter should keep only a.jpg, got %d objects", len(objs))
 	}
 }
 
+// TestS3ListObjectsPrefixFilter verifies a prefix glob ("b*") keeps only the
+// keys starting with that prefix.
 func TestS3ListObjectsPrefixFilter(t *testing.T) {
-	// Reason: "logs/*"-style prefix filters are the supported glob form.
-	f := newS3Fixture(t, testObjects(), false)
-	m := &S3Migration{S3Bucket: "src-bucket", Filter: "b*"}
-	objs, err := m.listS3Objects(s3ClientFor(f))
-	if err != nil {
-		t.Fatalf("listS3Objects failed: %v", err)
-	}
+	t.Parallel()
+	objs := listTestObjects(t, "b*", false)
 	if len(objs) != 1 || objs[0].Key != "b.jpg" {
 		t.Errorf("prefix filter should keep only b.jpg, got %d objects", len(objs))
 	}
 }
 
+// TestS3ListObjectsSuffixGlobFilterMatchesNothing documents the behavior of
+// suffix globs in listS3Objects.
 func TestS3ListObjectsSuffixGlobFilterMatchesNothing(t *testing.T) {
+	t.Parallel()
 	// BUG (not fixed, exercising current behavior): a suffix glob like
 	// "*.jpg" turns into the literal prefix "*." in getFilterPrefix /
 	// matchesFilter, so it matches nothing. Users would expect it to mean
 	// "ends with .jpg". Callers must use prefix globs ("logs/*") instead.
-	f := newS3Fixture(t, testObjects(), false)
-	m := &S3Migration{S3Bucket: "src-bucket", Filter: "*.jpg"}
-	objs, err := m.listS3Objects(s3ClientFor(f))
-	if err != nil {
-		t.Fatalf("listS3Objects failed: %v", err)
-	}
+	objs := listTestObjects(t, "*.jpg", false)
 	if len(objs) != 0 {
 		t.Errorf("current behavior: suffix glob filter matches nothing, got %d", len(objs))
 	}
 }
 
+// TestS3ListObjectsServerErrorsAfterRetries verifies listing surfaces a
+// wrapped error once the SDK retryer exhausts its budget against an
+// always-failing backend.
 func TestS3ListObjectsServerErrorsAfterRetries(t *testing.T) {
-	// Reason: backend returns 500 on every attempt; the SDK retryer exhausts
-	// its budget and listS3Objects must propagate the error.
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, `{"error":"boom"}`, http.StatusInternalServerError)
-	})
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	t.Parallel()
 	m := &S3Migration{S3Bucket: "src-bucket"}
-	_, err := m.listS3Objects(s3ClientFor(&s3Fixture{server: server}))
+	_, err := m.listS3Objects(s3ClientFor(newFailingS3Server(t)))
 	if err == nil {
-		t.Error("expected error when S3 listing always fails")
+		t.Fatal("expected error when S3 listing always fails")
 	}
 	if !strings.Contains(err.Error(), "failed to list S3 objects") {
 		t.Errorf("error should mention list failure, got: %v", err)
@@ -458,23 +554,36 @@ func TestS3ListObjectsServerErrorsAfterRetries(t *testing.T) {
 
 // --- remainingObjects -------------------------------------------------------
 
+// TestS3RemainingObjects verifies remainingObjects drops keys already in the
+// checkpoint's Completed map and keeps everything on a fresh checkpoint.
 func TestS3RemainingObjects(t *testing.T) {
+	t.Parallel()
 	objs := []*S3Object{{Key: "a"}, {Key: "b"}, {Key: "c"}}
-	cp := &Checkpoint{Completed: map[string]int64{"b": 1}}
-	remaining := remainingObjects(objs, cp)
-	if len(remaining) != 2 {
-		t.Fatalf("got %d remaining, want 2", len(remaining))
-	}
-	if remaining[0].Key != "a" || remaining[1].Key != "c" {
-		t.Errorf("remaining = [%s,%s], want [a,c]", remaining[0].Key, remaining[1].Key)
-	}
-	if got := remainingObjects(objs, &Checkpoint{Completed: map[string]int64{}}); len(got) != 3 {
-		t.Errorf("fresh checkpoint should leave all 3, got %d", len(got))
-	}
+
+	t.Run("drops completed objects in order", func(t *testing.T) {
+		t.Parallel()
+		cp := &Checkpoint{Completed: map[string]int64{"b": 1}}
+		remaining := remainingObjects(objs, cp)
+		if len(remaining) != 2 {
+			t.Fatalf("got %d remaining, want 2", len(remaining))
+		}
+		if remaining[0].Key != "a" || remaining[1].Key != "c" {
+			t.Errorf("remaining = [%s,%s], want [a,c]", remaining[0].Key, remaining[1].Key)
+		}
+	})
+	t.Run("fresh checkpoint keeps all objects", func(t *testing.T) {
+		t.Parallel()
+		if got := remainingObjects(objs, &Checkpoint{Completed: map[string]int64{}}); len(got) != 3 {
+			t.Errorf("fresh checkpoint should leave all 3, got %d", len(got))
+		}
+	})
 }
 
 // --- loadOrCreateCheckpoint -------------------------------------------------
 
+// TestS3LoadOrCreateCheckpointFresh verifies that with no prior checkpoint a
+// new one is initialized with the migration identity, object totals and an
+// empty Completed map. Not parallel: mutates HOME.
 func TestS3LoadOrCreateCheckpointFresh(t *testing.T) {
 	withTestHome(t)
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", Filter: "*.jpg"}
@@ -495,11 +604,11 @@ func TestS3LoadOrCreateCheckpointFresh(t *testing.T) {
 	}
 }
 
+// TestS3LoadOrCreateCheckpointResume verifies Resume=true loads the existing
+// checkpoint from disk, preserving completed objects and its own path. Not
+// parallel: mutates HOME.
 func TestS3LoadOrCreateCheckpointResume(t *testing.T) {
-	// Reason: Resume=true with a valid checkpoint on disk must load it.
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	path := checkpointPathIn(checkpointDir(), "src", "dst", "")
+	path := checkpointPathInTestHome(t)
 	existing := &Checkpoint{
 		Version:      1,
 		S3Bucket:     "src",
@@ -523,12 +632,14 @@ func TestS3LoadOrCreateCheckpointResume(t *testing.T) {
 	}
 }
 
+// TestS3LoadOrCreateCheckpointResumeCorrupt verifies Resume=true with a
+// corrupt checkpoint file falls back to a fresh one. Not parallel: mutates
+// HOME.
 func TestS3LoadOrCreateCheckpointResumeCorrupt(t *testing.T) {
-	// Reason: Resume=true with a corrupt checkpoint falls back to fresh.
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	path := checkpointPathIn(checkpointDir(), "src", "dst", "")
-	os.WriteFile(path, []byte("{invalid"), 0644)
+	path := checkpointPathInTestHome(t)
+	if err := os.WriteFile(path, []byte("{invalid"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", Resume: true}
 	cp := m.loadOrCreateCheckpoint(path, time.Now(), []*S3Object{{Key: "a"}}, 1)
 	if cp == nil {
@@ -539,11 +650,11 @@ func TestS3LoadOrCreateCheckpointResumeCorrupt(t *testing.T) {
 	}
 }
 
+// TestS3LoadOrCreateCheckpointStaleWarning verifies that without --resume an
+// existing checkpoint is ignored (fresh start) rather than silently reused.
+// Not parallel: mutates HOME.
 func TestS3LoadOrCreateCheckpointStaleWarning(t *testing.T) {
-	// Reason: Resume=false with an existing checkpoint warns and starts fresh.
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	path := checkpointPathIn(checkpointDir(), "src", "dst", "")
+	path := checkpointPathInTestHome(t)
 	existing := &Checkpoint{Version: 1, Completed: map[string]int64{"old": 1}}
 	if err := saveCheckpoint(existing, path); err != nil {
 		t.Fatal(err)
@@ -560,7 +671,10 @@ func TestS3LoadOrCreateCheckpointStaleWarning(t *testing.T) {
 
 // --- verifyTransfers / finalizeMigration ------------------------------------
 
+// TestS3VerifyTransfers verifies the ETag comparison completes over matched,
+// mismatched and missing objects without panicking.
 func TestS3VerifyTransfers(t *testing.T) {
+	t.Parallel()
 	objs := []*S3Object{
 		{Key: "match", ETag: `"same"`},
 		{Key: "mismatch", ETag: `"s3etag"`},
@@ -582,12 +696,14 @@ func TestS3VerifyTransfers(t *testing.T) {
 	m.verifyTransfers(nil, r2, objs, &MigrationResult{})
 }
 
+// TestS3FinalizeMigrationSuccess verifies a clean run deletes the checkpoint
+// from disk and finalizeMigration returns nil.
 func TestS3FinalizeMigrationSuccess(t *testing.T) {
-	// Reason: clean run deletes the checkpoint.
-	dir := t.TempDir()
-	cpPath := filepath.Join(dir, "cp.json")
-	cp := &Checkpoint{Version: 1, Completed: map[string]int64{}}
-	saveCheckpoint(cp, cpPath)
+	t.Parallel()
+	cp, cpPath := newFinalizeCheckpoint(t)
+	if err := saveCheckpoint(cp, cpPath); err != nil {
+		t.Fatal(err)
+	}
 	m := &S3Migration{R2Bucket: "dst"}
 	result := &MigrationResult{}
 	err := m.finalizeMigration(nil, newFakeR2(), cpPath, cp, nil, result, newAtomicFalse())
@@ -599,11 +715,12 @@ func TestS3FinalizeMigrationSuccess(t *testing.T) {
 	}
 }
 
+// TestS3FinalizeMigrationInterrupted verifies that when the stopping flag is
+// set, finalize reports "migration interrupted" and keeps the checkpoint for
+// a later --resume.
 func TestS3FinalizeMigrationInterrupted(t *testing.T) {
-	// Reason: stopping flag set means finalize reports and returns an error.
-	dir := t.TempDir()
-	cpPath := filepath.Join(dir, "cp.json")
-	cp := &Checkpoint{Version: 1, Completed: map[string]int64{}}
+	t.Parallel()
+	cp, cpPath := newFinalizeCheckpoint(t)
 	cp.path = cpPath
 	m := &S3Migration{R2Bucket: "dst"}
 	stopping := newAtomicTrue()
@@ -619,12 +736,11 @@ func TestS3FinalizeMigrationInterrupted(t *testing.T) {
 	}
 }
 
+// TestS3FinalizeMigrationWithErrors verifies that failed objects keep the
+// checkpoint (for --resume) while finalizeMigration itself does not error.
 func TestS3FinalizeMigrationWithErrors(t *testing.T) {
-	// Reason: failed objects keep the checkpoint (for --resume) but finalize
-	// itself does not error.
-	dir := t.TempDir()
-	cpPath := filepath.Join(dir, "cp.json")
-	cp := &Checkpoint{Version: 1, Completed: map[string]int64{}}
+	t.Parallel()
+	cp, cpPath := newFinalizeCheckpoint(t)
 	cp.path = cpPath
 	m := &S3Migration{R2Bucket: "dst"}
 	result := &MigrationResult{ErrorCount: 2}
@@ -637,12 +753,14 @@ func TestS3FinalizeMigrationWithErrors(t *testing.T) {
 	}
 }
 
+// TestS3FinalizeMigrationVerifyPath verifies Verify=true on a clean run
+// triggers the verification pass (all ETags match) before deletion.
 func TestS3FinalizeMigrationVerifyPath(t *testing.T) {
-	// Reason: Verify=true on a clean run triggers verifyTransfers (all match).
-	dir := t.TempDir()
-	cpPath := filepath.Join(dir, "cp.json")
-	cp := &Checkpoint{Version: 1, Completed: map[string]int64{}}
-	saveCheckpoint(cp, cpPath)
+	t.Parallel()
+	cp, cpPath := newFinalizeCheckpoint(t)
+	if err := saveCheckpoint(cp, cpPath); err != nil {
+		t.Fatal(err)
+	}
 	objs := []*S3Object{{Key: "a", ETag: `"e1"`}}
 	r2 := newFakeR2()
 	r2.headFn = func(key string) (*cosmoflare.HeadResult, error) {
@@ -656,16 +774,11 @@ func TestS3FinalizeMigrationVerifyPath(t *testing.T) {
 
 // --- Execute (end-to-end against fake S3) -----------------------------------
 
+// TestS3ExecuteScanError verifies Execute fails fast with a nil result when
+// the scan phase cannot list the bucket. Not parallel: mutates HOME/AWS env.
 func TestS3ExecuteScanError(t *testing.T) {
-	// Reason: the fake S3 always 500s listing, so Execute fails fast in
-	// scanPhase without transferring anything.
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, `{"error":"boom"}`, http.StatusInternalServerError)
-	})
-	server := httptest.NewServer(handler)
-	defer server.Close()
-	withTestHome(t)
-	withTestAWSEnv(t, server.URL)
+	f := newFailingS3Server(t)
+	withS3ExecuteEnv(t, f.server.URL)
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", Concurrency: 2}
 	res, err := m.Execute(newFakeR2())
 	if err == nil {
@@ -676,10 +789,12 @@ func TestS3ExecuteScanError(t *testing.T) {
 	}
 }
 
+// TestS3ExecuteDryRun verifies Execute in dry-run mode reports object counts
+// and sizes without transferring anything. Not parallel: mutates HOME/AWS
+// env.
 func TestS3ExecuteDryRun(t *testing.T) {
 	f := newS3Fixture(t, testObjects(), false)
-	withTestHome(t)
-	withTestAWSEnv(t, f.server.URL)
+	withS3ExecuteEnv(t, f.server.URL)
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", DryRun: true, Concurrency: 2}
 	res, err := m.Execute(newFakeR2())
 	if err != nil {
@@ -693,11 +808,11 @@ func TestS3ExecuteDryRun(t *testing.T) {
 	}
 }
 
+// TestS3ExecuteEmptyBucket verifies Execute returns early with a zero result
+// when the source bucket has no objects. Not parallel: mutates HOME/AWS env.
 func TestS3ExecuteEmptyBucket(t *testing.T) {
-	// Reason: no objects means Execute returns early with a zero result.
 	f := newS3Fixture(t, nil, false)
-	withTestHome(t)
-	withTestAWSEnv(t, f.server.URL)
+	withS3ExecuteEnv(t, f.server.URL)
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", Concurrency: 2}
 	res, err := m.Execute(newFakeR2())
 	if err != nil {
@@ -708,10 +823,12 @@ func TestS3ExecuteEmptyBucket(t *testing.T) {
 	}
 }
 
+// TestS3ExecuteHappyPath verifies a full migration transfers every object
+// once, reports correct totals, and deletes the checkpoint on clean
+// completion. Not parallel: mutates HOME/AWS env.
 func TestS3ExecuteHappyPath(t *testing.T) {
 	f := newS3Fixture(t, testObjects(), false)
-	home := withTestHome(t)
-	withTestAWSEnv(t, f.server.URL)
+	home := withS3ExecuteEnv(t, f.server.URL)
 	r2 := newFakeR2()
 	m := &S3Migration{S3Bucket: "src", R2Bucket: "dst", Concurrency: 2}
 	res, err := m.Execute(r2)
@@ -741,12 +858,12 @@ func TestS3ExecuteHappyPath(t *testing.T) {
 	}
 }
 
+// TestS3ExecuteResumeAllComplete verifies that when the checkpoint says
+// everything is done, Execute reports success without transferring and
+// deletes the checkpoint. Not parallel: mutates HOME/AWS env.
 func TestS3ExecuteResumeAllComplete(t *testing.T) {
-	// Reason: when the checkpoint says everything is done, Execute reports
-	// success without transferring and deletes the checkpoint.
 	f := newS3Fixture(t, testObjects(), false)
-	home := withTestHome(t)
-	withTestAWSEnv(t, f.server.URL)
+	home := withS3ExecuteEnv(t, f.server.URL)
 	cpDir := filepath.Join(home, ".cosmoflare", "migrations")
 	path := checkpointPathIn(cpDir, "src", "dst", "")
 	cp := &Checkpoint{
