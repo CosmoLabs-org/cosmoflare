@@ -75,23 +75,11 @@ func execLocalD1(database, query string, params []string) ([]*cosmoflare.D1Query
 func execLocalStmt(db *sql.DB, stmt string, args []any) (*cosmoflare.D1QueryResult, error) {
 	start := time.Now()
 
-	prepared, err := db.Prepare(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer prepared.Close()
-
-	if prepared.NumInput() == 0 {
-		args = nil
-	} else if prepared.NumInput() != len(args) {
-		return nil, fmt.Errorf("statement expects %d parameter(s), got %d", prepared.NumInput(), len(args))
-	}
-
 	if isReadStatement(stmt) {
-		return queryLocalStmt(prepared, args, start)
+		return queryLocalStmt(db, stmt, args, start)
 	}
 
-	res, err := prepared.Exec(args...)
+	res, err := db.Exec(stmt, args...)
 	if err != nil {
 		return nil, err
 	}
