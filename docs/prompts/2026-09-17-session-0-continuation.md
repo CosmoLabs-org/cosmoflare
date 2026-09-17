@@ -4,7 +4,7 @@ created: 2026-09-17
 status: PENDING
 branch: master
 goals_total: 6
-goals_completed: 1
+goals_completed: 2
 supersedes: "docs/prompts/2026-09-16-session-0-continuation.md"
 requires_reading:
     - docs/prompts/2026-09-16-session-0-continuation.md
@@ -23,7 +23,7 @@ v0.28.2 is live on GitHub, brew, and the Go module proxy; pkg.go.dev documents t
 Acceptance: https://cosmolabs.org/cosmoflare serves the page with OG + JSON-LD intact; TASK-010 closed with the live URL
 ### [ ] 2. G-03: Publish launch posts (operator voice)
 Acceptance: Show HN + r/Cloudflare posts from docs/launch/ drafts are live; ROAD-096 note records the URLs
-### [ ] 3. Cut v0.29.0 with the staged feature set
+### [x] 3. Cut v0.29.0 with the staged feature set
 Acceptance: make release TAG=v0.29.0 passes all gates; changelog 6 staged entries finalized; tap bumped; proxy serves v0.29.0
 ### [x] 4. FEAT-026 part 2: profile scoping across d1/kv/r2/workers + --profile/--env reconciliation
 Acceptance: --env resolves a named profile across the four groups; d1 execute supports --local/--remote; dev --profile reconciled per the FEAT-026 flag note
