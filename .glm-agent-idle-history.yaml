@@ -104,3 +104,33 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
       updated: 2026-09-17T05:23:07.332633+04:00
+    - brief_hash: bcb7878c31e8f1e9
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:40.920525+04:00
+    - brief_hash: 9abfbe60a2278eaa
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:42.001852+04:00
+    - brief_hash: 4f3c41655fea506a
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:42.168432+04:00
+    - brief_hash: 78bc35faf86d2cf5
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:42.384341+04:00
+    - brief_hash: 505488cd954bb631
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:43.996324+04:00
+    - brief_hash: 25017cdb4309fee5
+      model: glm-5.3
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
+      updated: 2026-09-18T00:32:45.125481+04:00

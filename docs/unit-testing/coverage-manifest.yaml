@@ -1,65 +1,50 @@
 schema_version: 1
-last_analyzed: "2026-09-10T15:34:41+04:00"
-analyzed_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+last_analyzed: "2026-09-18T01:45:05+04:00"
+analyzed_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
 project_type: go
 packages:
     cmd:
         risk_tier: medium
         risk_signals:
             - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     cmd/installer_tui:
         risk_tier: low
         risk_signals:
             - name:tui
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
-    internal/config:
-        risk_tier: medium
-        risk_signals:
-            - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     internal/interactive:
         risk_tier: medium
         risk_signals:
             - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     internal/migration:
         risk_tier: high
         risk_signals:
             - name:migration
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     internal/tui:
         risk_tier: low
         risk_signals:
             - name:tui
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     internal/webhook:
         risk_tier: medium
         risk_signals:
             - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     pkg/cosmoflare:
         risk_tier: medium
         risk_signals:
             - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     pkg/cosmoflare/knowledge:
         risk_tier: medium
         risk_signals:
             - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
-    tests/fixtures:
-        risk_tier: medium
-        risk_signals:
-            - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
-    tests/helpers:
-        risk_tier: medium
-        risk_signals:
-            - default
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
     tests/tui:
         risk_tier: low
         risk_signals:
             - name:tui
-        classified_at_sha: 79a2e0b0c52a9a0cd3de2e75bf8ef444abcea4e9
+        classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
