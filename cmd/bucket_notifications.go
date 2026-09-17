@@ -142,7 +142,7 @@ func runBucketNotificationsList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	svc := getBucketNotificationService()
 	queues, err := svc.List(context.Background(), bucket)
@@ -181,7 +181,7 @@ func runBucketNotificationsCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	actionsRaw, _ := cmd.Flags().GetStringArray("action")
 	eventType, _ := cmd.Flags().GetString("event-type")
@@ -241,7 +241,7 @@ func runBucketNotificationsGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	if queueID == "" {
 		return fmt.Errorf("--queue-id is required")
@@ -278,7 +278,7 @@ func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	ruleIDs, _ := cmd.Flags().GetStringArray("rule-id")
 	all, _ := cmd.Flags().GetBool("all")

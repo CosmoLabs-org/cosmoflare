@@ -67,7 +67,7 @@ func getBucketPolicyService() *cosmoflare.BucketPolicyService {
 }
 
 func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	svc := getBucketPolicyService()
 	policy, err := svc.GetBucketPolicy(cmd.Context(), bucket)
@@ -81,7 +81,7 @@ func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
 }
 
 func runBucketPolicySet(cmd *cobra.Command, args []string) error {
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	if bucketPolicyFile == "" {
 		return fmt.Errorf("--file is required")

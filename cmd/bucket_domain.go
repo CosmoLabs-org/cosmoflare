@@ -167,7 +167,7 @@ func runBucketDomainAttach(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 	domain, _ := cmd.Flags().GetString("domain")
 	zoneID, _ := cmd.Flags().GetString("zone-id")
 	minTLS, _ := cmd.Flags().GetString("min-tls")
@@ -213,7 +213,7 @@ func runBucketDomainList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	svc := getBucketDomainService()
 	domains, err := svc.List(context.Background(), bucket)
@@ -246,7 +246,7 @@ func runBucketDomainGet(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := args[0], args[1]
+	bucket, domain := applyResourcePrefix(args[0]), args[1]
 
 	svc := getBucketDomainService()
 	d, err := svc.Get(context.Background(), bucket, domain)
@@ -279,7 +279,7 @@ func runBucketDomainVerify(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := args[0], args[1]
+	bucket, domain := applyResourcePrefix(args[0]), args[1]
 
 	timeoutStr, _ := cmd.Flags().GetString("timeout")
 	timeout, err := time.ParseDuration(timeoutStr)
@@ -311,7 +311,7 @@ func runBucketDomainUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := args[0], args[1]
+	bucket, domain := applyResourcePrefix(args[0]), args[1]
 
 	enabledSet, _ := cmd.Flags().GetBool("enabled")
 	disabledSet, _ := cmd.Flags().GetBool("disabled")
@@ -355,7 +355,7 @@ func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := args[0], args[1]
+	bucket, domain := applyResourcePrefix(args[0]), args[1]
 	force, _ := cmd.Flags().GetBool("force")
 
 	if !force && !DryRun && !ux.Confirm(fmt.Sprintf("Detach domain '%s' from bucket '%s'?", domain, bucket)) {

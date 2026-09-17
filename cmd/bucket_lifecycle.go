@@ -154,7 +154,7 @@ func runBucketLifecycleGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	svc := getBucketLifecycleService()
 	rules, err := svc.Get(cmd.Context(), bucket)
@@ -245,7 +245,7 @@ func runBucketLifecycleSet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 
 	file, _ := cmd.Flags().GetString("file")
 	force, _ := cmd.Flags().GetBool("force")
@@ -302,7 +302,7 @@ func runBucketLifecycleClear(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := args[0]
+	bucket := applyResourcePrefix(args[0])
 	force, _ := cmd.Flags().GetBool("force")
 
 	if !confirmBucketLifecycleReplace(bucket, "clear all lifecycle rules", force) {
