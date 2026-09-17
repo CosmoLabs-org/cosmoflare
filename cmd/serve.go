@@ -198,7 +198,7 @@ func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertM
 	// Limits snapshots move on an hours timescale — cache one per account
 	// for 30 minutes instead of re-collecting every alert tick (FEAT-014:
 	// ~45 calls/cycle → ~45 calls/half-hour on a 41-zone account).
-	limitsCache := webhook.NewLimitsSnapshotCache(nil, "", 30*time.Minute)
+	limitsCache := webhook.NewLimitsSnapshotCache(30 * time.Minute)
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()

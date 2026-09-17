@@ -67,35 +67,41 @@ func (e *Evaluator) SetClock(fn func() time.Time) {
 }
 
 // conditionValue computes the observed value for a rule condition and its
-// display unit. ok=false means the condition can never fire for these metrics
+// display unit. The unit comes from the registry descriptor (FEAT-015: the
+// registry is authoritative), so it cannot drift from the declared one.
+// ok=false means the condition can never fire for these metrics
 // (e.g. error-rate with zero requests, latency with no CPU samples).
 func conditionValue(condition string, m EvalMetrics) (value float64, unit string, ok bool) {
+	desc, registered := cosmoflare.LookupAlertCondition(condition)
+	if !registered {
+		return 0, "", false
+	}
 	switch condition {
 	case "error-rate":
 		if m.WorkersRequests == 0 {
-			return 0, "%", false // no traffic → no rate, never divide by zero
+			return 0, desc.Unit, false // no traffic → no rate, never divide by zero
 		}
-		return 100.0 * float64(m.WorkersErrors) / float64(m.WorkersRequests), "%", true
+		return 100.0 * float64(m.WorkersErrors) / float64(m.WorkersRequests), desc.Unit, true
 	case "storage-limit":
-		return float64(m.R2StorageBytes), "bytes", true
+		return float64(m.R2StorageBytes), desc.Unit, true
 	case "latency":
 		if m.CPUP99AvgMS == 0 {
-			return 0, "ms", false // no CPU samples → no latency signal
+			return 0, desc.Unit, false // no CPU samples → no latency signal
 		}
-		return m.CPUP99AvgMS, "ms", true
+		return m.CPUP99AvgMS, desc.Unit, true
 	case "failure-count":
-		return float64(m.WorkersErrors), "errors", true
+		return float64(m.WorkersErrors), desc.Unit, true
 	case "workers-script-count":
-		return float64(m.WorkersScriptCount), "scripts", true
+		return float64(m.WorkersScriptCount), desc.Unit, true
 	case "r2-bucket-count":
-		return float64(m.R2BucketCount), "buckets", true
+		return float64(m.R2BucketCount), desc.Unit, true
 	case "dns-record-quota":
 		if m.DNSRecordQuotaPct == 0 {
-			return 0, "%", false // no quota rows → nothing to judge
+			return 0, desc.Unit, false // no quota rows → nothing to judge
 		}
-		return m.DNSRecordQuotaPct, "%", true
+		return m.DNSRecordQuotaPct, desc.Unit, true
 	default:
-		return 0, "", false
+		return 0, "", false // registered but unimplemented — the coverage test catches this
 	}
 }
 

@@ -22,22 +22,19 @@ type LimitsSource interface {
 // daemon, but the current profile can change across ticks — a different
 // account invalidates immediately.
 type LimitsSnapshotCache struct {
+	ttl     time.Duration
+	mu      sync.Mutex
 	source  LimitsSource
 	account string
-	ttl     time.Duration
-
-	mu      sync.Mutex
 	snap    *cosmoflare.LimitsSnapshot
 	fetched time.Time
-	cached  string
 }
 
-// NewLimitsSnapshotCache wraps source with a TTL cache. The daemon resolves
-// credentials per tick, so the source is swappable (SetSource); the snapshot
-// is keyed by account and invalidated when it changes. ttl <= 0 disables
-// caching (every call fetches).
-func NewLimitsSnapshotCache(source LimitsSource, account string, ttl time.Duration) *LimitsSnapshotCache {
-	return &LimitsSnapshotCache{source: source, account: account, ttl: ttl}
+// NewLimitsSnapshotCache creates an empty cache with the given TTL; the
+// caller must SetSource before the first Snapshot (the daemon resolves
+// credentials per tick). ttl <= 0 disables caching (every call fetches).
+func NewLimitsSnapshotCache(ttl time.Duration) *LimitsSnapshotCache {
+	return &LimitsSnapshotCache{ttl: ttl}
 }
 
 // SetSource swaps the underlying source (per-tick credential resolution) and

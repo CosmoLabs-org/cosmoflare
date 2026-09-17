@@ -111,6 +111,18 @@ func testLimitServer(t *testing.T, handler http.HandlerFunc) (*LimitsService, *h
 	return NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL)), srv
 }
 
+// notFoundLimitServer builds a service whose every endpoint 404s, with the
+// given zones injected — the fixture for DNS static-fallback tests (the
+// endpoint is absent, which is NOT the 401/403 fail-fast class).
+func notFoundLimitServer(t *testing.T, zones ...*Zone) *LimitsService {
+	t.Helper()
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	})
+	WithLimitsZones(fakeZoneLister{zones: zones})(s)
+	return s
+}
+
 func TestResolveWorkersPlanAuto(t *testing.T) {
 	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/accounts/acct/subscriptions" {
@@ -210,14 +222,9 @@ func TestDNSUsageNullQuota(t *testing.T) {
 // live endpoint 404s and the Snapshot-level static table answers. (The pure
 // table itself is covered by TestDNSRecordsStaticLimit.)
 func TestDNSUsageFallbackToStatic(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	}))
-	t.Cleanup(srv.Close)
-	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
-		WithLimitsZones(fakeZoneLister{zones: []*Zone{
-			{ID: "z1", Name: "fallback.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
-		}}))
+	s := notFoundLimitServer(t,
+		&Zone{ID: "z1", Name: "fallback.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
+	)
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -432,14 +439,9 @@ func TestSnapshotDNSStaticFallback(t *testing.T) {
 	// Live DNS endpoint 404s (endpoint absent — NOT a permission failure, so
 	// FEAT-014 fail-fast does not trigger); zone is free + created 2025 →
 	// static 200.
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	}))
-	t.Cleanup(srv.Close)
-	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
-		WithLimitsZones(fakeZoneLister{zones: []*Zone{
-			{ID: "z1", Name: "new.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 2, 2, 0, 0, 0, 0, time.UTC)},
-		}}))
+	s := notFoundLimitServer(t,
+		&Zone{ID: "z1", Name: "new.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 2, 2, 0, 0, 0, 0, time.UTC)},
+	)
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -502,14 +504,9 @@ func TestSnapshotDNSUsageFailFastOn403(t *testing.T) {
 }
 
 func TestSnapshotDNSUsage404StillFallsBack(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r) // every endpoint 404s, including dns usage
-	}))
-	t.Cleanup(srv.Close)
-	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
-		WithLimitsZones(fakeZoneLister{zones: []*Zone{
-			{ID: "z1", Name: "nf.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
-		}}))
+	s := notFoundLimitServer(t,
+		&Zone{ID: "z1", Name: "nf.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
+	)
 
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {

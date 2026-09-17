@@ -97,24 +97,41 @@ func AlertConditions() []AlertConditionDescriptor {
 	return out
 }
 
+// alertConditionIndex and alertConditionJoined are derived once from the
+// registry — the registry stays the single definition site (FEAT-015).
+var (
+	alertConditionIndex = func() map[string]AlertConditionDescriptor {
+		m := make(map[string]AlertConditionDescriptor, len(alertConditionRegistry))
+		for _, c := range alertConditionRegistry {
+			m[c.Name] = c
+		}
+		return m
+	}()
+	alertConditionJoined = func() string {
+		names := make([]string, len(alertConditionRegistry))
+		for i, c := range alertConditionRegistry {
+			names[i] = c.Name
+		}
+		return strings.Join(names, ", ")
+	}()
+)
+
+// LookupAlertCondition returns the registered descriptor for name.
+func LookupAlertCondition(name string) (AlertConditionDescriptor, bool) {
+	c, ok := alertConditionIndex[name]
+	return c, ok
+}
+
 // AlertConditionList renders the registered condition names for error
 // messages and help text.
 func AlertConditionList() string {
-	names := make([]string, len(alertConditionRegistry))
-	for i, c := range alertConditionRegistry {
-		names[i] = c.Name
-	}
-	return strings.Join(names, ", ")
+	return alertConditionJoined
 }
 
 // validAlertCondition reports whether name is a registered condition.
 func validAlertCondition(name string) bool {
-	for _, c := range alertConditionRegistry {
-		if c.Name == name {
-			return true
-		}
-	}
-	return false
+	_, ok := alertConditionIndex[name]
+	return ok
 }
 
 // Valid actions for alert rules.

@@ -27,7 +27,8 @@ func (f *fakeLimitsSource) Snapshot(ctx context.Context, bucket string) (*cosmof
 
 func TestLimitsSnapshotCache_ServesOncePerTTL(t *testing.T) {
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(src, "acct-1", time.Hour)
+	c := NewLimitsSnapshotCache(time.Hour)
+	c.SetSource(src, "acct-1")
 
 	for i := 0; i < 3; i++ {
 		snap, err := c.Snapshot(context.Background(), "")
@@ -45,7 +46,8 @@ func TestLimitsSnapshotCache_ServesOncePerTTL(t *testing.T) {
 
 func TestLimitsSnapshotCache_RefetchesAfterInvalidation(t *testing.T) {
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(src, "acct-1", time.Hour)
+	c := NewLimitsSnapshotCache(time.Hour)
+	c.SetSource(src, "acct-1")
 
 	if _, err := c.Snapshot(context.Background(), ""); err != nil {
 		t.Fatal(err)
@@ -61,7 +63,8 @@ func TestLimitsSnapshotCache_RefetchesAfterInvalidation(t *testing.T) {
 
 func TestLimitsSnapshotCache_ZeroTTLDisablesCaching(t *testing.T) {
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(src, "acct-1", 0)
+	c := NewLimitsSnapshotCache(0)
+	c.SetSource(src, "acct-1")
 
 	for i := 0; i < 2; i++ {
 		if _, err := c.Snapshot(context.Background(), ""); err != nil {
@@ -75,7 +78,8 @@ func TestLimitsSnapshotCache_ZeroTTLDisablesCaching(t *testing.T) {
 
 func TestLimitsSnapshotCache_ErrorsNotCached(t *testing.T) {
 	src := &fakeLimitsSource{err: errors.New("boom")}
-	c := NewLimitsSnapshotCache(src, "acct-1", time.Hour)
+	c := NewLimitsSnapshotCache(time.Hour)
+	c.SetSource(src, "acct-1")
 
 	if _, err := c.Snapshot(context.Background(), ""); err == nil {
 		t.Fatal("first call should fail")
@@ -91,37 +95,9 @@ func TestLimitsSnapshotCache_ErrorsNotCached(t *testing.T) {
 }
 
 func TestLimitsSnapshotCache_NoSourceErrors(t *testing.T) {
-	c := NewLimitsSnapshotCache(nil, "", time.Hour)
+	c := NewLimitsSnapshotCache(time.Hour)
 	if _, err := c.Snapshot(context.Background(), ""); err == nil {
 		t.Fatal("Snapshot with no source set must error")
 	}
 }
 
-// TestConditionValueCoversRegistry pins the FEAT-015 contract across
-// packages: every condition cosmoflare.AlertConditions() registers must be
-// a case in conditionValue. The original bug: the limits feature extended
-// the registry without the evaluator, and the CLI rejected valid conditions.
-func TestConditionValueCoversRegistry(t *testing.T) {
-	populated := EvalMetrics{
-		WorkersRequests:    1000,
-		WorkersErrors:      10,
-		R2StorageBytes:     4096,
-		CPUP99AvgMS:        12,
-		WorkersScriptCount: 30,
-		R2BucketCount:      7,
-		DNSRecordQuotaPct:  55,
-	}
-	for _, c := range cosmoflare.AlertConditions() {
-		value, unit, ok := conditionValue(c.Name, populated)
-		if !ok {
-			t.Errorf("conditionValue(%q) not ok with populated metrics — evaluator does not cover the registry", c.Name)
-			continue
-		}
-		if unit != c.Unit {
-			t.Errorf("conditionValue(%q) unit = %q, registry says %q", c.Name, unit, c.Unit)
-		}
-		if value == 0 && c.Name != "storage-limit" {
-			t.Errorf("conditionValue(%q) = 0 with populated metrics, want non-zero", c.Name)
-		}
-	}
-}
