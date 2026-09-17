@@ -144,7 +144,7 @@ func runWorkerDomainAttach(cmd *cobra.Command, args []string) error {
 	if strings.TrimSpace(workerDomainZone) == "" {
 		return outErrf("zone ID is required (--zone)")
 	}
-	service, zoneID := workerDomainService, workerDomainZone
+	service, zoneID := applyResourcePrefix(strings.TrimSpace(workerDomainService)), workerDomainZone
 
 	svc, err := getWorkerService()
 	if err != nil {

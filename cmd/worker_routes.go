@@ -176,16 +176,17 @@ func runWorkerRouteCreate(cmd *cobra.Command, args []string) error {
 	if workerRouteScript == "" {
 		return fmt.Errorf("script is required (--script)")
 	}
+	script := applyResourcePrefix(workerRouteScript)
 
 	if DryRun {
 		return outPayload("DRY RUN: Would create worker route", func() any {
 			return map[string]string{
 				"zone_id": zoneID,
 				"pattern": workerRoutePattern,
-				"script":  workerRouteScript,
+				"script":  script,
 			}
 		}, func() {
-			printInfo("DRY RUN: Would create route %q -> %q in zone %s", workerRoutePattern, workerRouteScript, zoneID)
+			printInfo("DRY RUN: Would create route %q -> %q in zone %s", workerRoutePattern, script, zoneID)
 		})
 	}
 
@@ -194,7 +195,7 @@ func runWorkerRouteCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create worker service", err)
 	}
 
-	route, err := svc.RouteCreate(context.Background(), zoneID, workerRoutePattern, workerRouteScript)
+	route, err := svc.RouteCreate(context.Background(), zoneID, workerRoutePattern, script)
 	if err != nil {
 		return outErr("failed to create worker route", err)
 	}
@@ -225,6 +226,7 @@ func runWorkerRouteUpdate(cmd *cobra.Command, args []string) error {
 	if workerRouteScript == "" {
 		return fmt.Errorf("script is required (--script)")
 	}
+	script := applyResourcePrefix(workerRouteScript)
 
 	if DryRun {
 		return outPayload("DRY RUN: Would update worker route", func() any {
@@ -232,10 +234,10 @@ func runWorkerRouteUpdate(cmd *cobra.Command, args []string) error {
 				"zone_id":  zoneID,
 				"route_id": routeID,
 				"pattern":  workerRoutePattern,
-				"script":   workerRouteScript,
+				"script":   script,
 			}
 		}, func() {
-			printInfo("DRY RUN: Would update route %s in zone %s to %q -> %q", routeID, zoneID, workerRoutePattern, workerRouteScript)
+			printInfo("DRY RUN: Would update route %s in zone %s to %q -> %q", routeID, zoneID, workerRoutePattern, script)
 		})
 	}
 
@@ -244,7 +246,7 @@ func runWorkerRouteUpdate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create worker service", err)
 	}
 
-	route, err := svc.RouteUpdate(context.Background(), zoneID, routeID, workerRoutePattern, workerRouteScript)
+	route, err := svc.RouteUpdate(context.Background(), zoneID, routeID, workerRoutePattern, script)
 	if err != nil {
 		return outErr("failed to update worker route", err)
 	}

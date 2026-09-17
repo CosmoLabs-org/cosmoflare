@@ -151,7 +151,7 @@ func runWorkerSecretPut(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secret name is required")
 	}
-	worker, key := args[0], args[1]
+	worker, key := applyResourcePrefix(args[0]), args[1]
 
 	value := workerSecretValue
 	if value == "" {
@@ -196,7 +196,7 @@ func runWorkerSecretDelete(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secret name is required")
 	}
-	worker, key := args[0], args[1]
+	worker, key := applyResourcePrefix(args[0]), args[1]
 
 	if !workerSecretForce && !DryRun {
 		fmt.Printf("Are you sure you want to delete secret '%s' from worker '%s'? [y/N]: ", key, worker)
@@ -237,7 +237,7 @@ func runWorkerSecretList(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := args[0]
+	worker := applyResourcePrefix(args[0])
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -273,7 +273,7 @@ func runWorkerSecretBulk(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secrets file is required")
 	}
-	worker, file := args[0], args[1]
+	worker, file := applyResourcePrefix(args[0]), args[1]
 
 	// Read and validate the file before building the service so bad input
 	// fails fast offline (no credentials needed to see these errors).

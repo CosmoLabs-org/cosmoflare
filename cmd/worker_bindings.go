@@ -40,7 +40,7 @@ func runWorkerBindings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	svc, err := getWorkerService()
 	if err != nil {

@@ -53,7 +53,7 @@ func runWorkerTail(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	jsonMode := workerTailFormat == "json"
 	if workerTailFormat != "text" && workerTailFormat != "json" {

@@ -156,7 +156,7 @@ func workerVersionArgs(args []string, needVersion bool) (string, string, error) 
 	if len(args) < 1 || args[0] == "" {
 		return "", "", fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 	if !needVersion {
 		return name, "", nil
 	}

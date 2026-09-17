@@ -139,7 +139,7 @@ func runWorkerCronList(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := args[0]
+	worker := applyResourcePrefix(args[0])
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -166,7 +166,7 @@ func runWorkerCronCreate(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := args[0]
+	worker := applyResourcePrefix(args[0])
 	if workerCronExpr == "" {
 		return outErrf("cron expression is required (--expr)")
 	}
@@ -201,7 +201,7 @@ func runWorkerCronDelete(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := args[0]
+	worker := applyResourcePrefix(args[0])
 	if workerCronExpr == "" {
 		return outErrf("cron expression is required (--expr)")
 	}
@@ -238,7 +238,7 @@ func runWorkerCronUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := args[0]
+	worker := applyResourcePrefix(args[0])
 	if workerCronExpr == "" {
 		return outErrf("current cron expression is required (--expr)")
 	}

@@ -75,20 +75,21 @@ func runWorkerDeploymentsList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
+	name := applyResourcePrefix(args[0])
 	svc, err := getWorkerService()
 	if err != nil {
 		return outErr("failed to create worker service", err)
 	}
-	deployments, err := svc.DeploymentList(cmd.Context(), args[0])
+	deployments, err := svc.DeploymentList(cmd.Context(), name)
 	if err != nil {
-		return outErr(fmt.Sprintf("failed to list deployments for worker %q", args[0]), err)
+		return outErr(fmt.Sprintf("failed to list deployments for worker %q", name), err)
 	}
 	return outResult(deployments, func() {
 		if len(deployments) == 0 {
-			printInfo("No deployments found for worker %q", args[0])
+			printInfo("No deployments found for worker %q", name)
 			return
 		}
-		printInfo("Deployments for worker %q (newest first):", args[0])
+		printInfo("Deployments for worker %q (newest first):", name)
 		for _, d := range deployments {
 			printInfo("  %s  version=%s  created=%s", d.ID, d.VersionID, d.CreatedAt.Format(time.RFC3339))
 		}
@@ -100,7 +101,8 @@ func runWorkerDeploymentsView(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return outErr("failed to create worker service", err)
 	}
-	deployment, err := svc.DeploymentGet(cmd.Context(), args[0], args[1])
+	name := applyResourcePrefix(args[0])
+	deployment, err := svc.DeploymentGet(cmd.Context(), name, args[1])
 	if err != nil {
 		return outErr(fmt.Sprintf("failed to get deployment %s", args[1]), err)
 	}
@@ -126,13 +128,14 @@ func runWorkerRollback(cmd *cobra.Command, args []string) error {
 	if len(args) == 2 {
 		deploymentID = args[1]
 	}
-	deployment, err := svc.Rollback(cmd.Context(), args[0], deploymentID)
+	name := applyResourcePrefix(args[0])
+	deployment, err := svc.Rollback(cmd.Context(), name, deploymentID)
 	if err != nil {
-		return outErr(fmt.Sprintf("failed to roll back worker %q", args[0]), err)
+		return outErr(fmt.Sprintf("failed to roll back worker %q", name), err)
 	}
-	return outPayload(fmt.Sprintf("Rolled back worker %q to version %s", args[0], deployment.VersionID), func() any {
+	return outPayload(fmt.Sprintf("Rolled back worker %q to version %s", name, deployment.VersionID), func() any {
 		return deployment
 	}, func() {
-		printSuccess("Rolled back worker %q to version %s (deployment %s)", args[0], deployment.VersionID, deployment.ID)
+		printSuccess("Rolled back worker %q to version %s (deployment %s)", name, deployment.VersionID, deployment.ID)
 	})
 }

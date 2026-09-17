@@ -115,7 +115,7 @@ func runWorkerSubdomainSet(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("subdomain is required")
 	}
-	name := strings.TrimSpace(args[0])
+	name := applyResourcePrefix(strings.TrimSpace(args[0]))
 	if err := validateSubdomainName(name); err != nil {
 		return outErr("%s", err)
 	}
