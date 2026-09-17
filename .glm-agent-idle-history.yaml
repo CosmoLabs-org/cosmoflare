@@ -99,3 +99,8 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}'
       updated: 2026-09-17T03:33:30.406708+04:00
+    - brief_hash: 13ee5b6b0176be72
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
+      updated: 2026-09-17T05:23:07.332633+04:00

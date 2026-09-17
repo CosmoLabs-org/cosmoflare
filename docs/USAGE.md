@@ -33,6 +33,7 @@ Environment variable reference:
 | `--account-id` | Cloudflare Account ID |
 | `--api-token` | Cloudflare API token |
 | `--dry-run` | Show what would happen without executing |
+| `--env` | Select a named environment profile for this invocation |
 | `--json` | Output in JSON format |
 | `-v, --verbose` | Enable verbose output |
 
@@ -60,6 +61,49 @@ to every service built on it — no flag changes it, and `--json` output is
 unaffected (retries happen silently before a command returns its result or
 final error).
 
+## Environment Profiles (`--env`)
+
+Named environment profiles scope a command to dev/staging/prod without
+switching accounts. `--env <name>` selects a profile for one invocation —
+it never changes the current profile.
+
+```bash
+cosmoflare limits --env prod              # Report the prod profile's plan tier
+cosmoflare r2 bucket create assets --env staging
+cosmoflare sync up ./dist assets --env staging
+cosmoflare d1 execute my-db --env staging --local --sql="SELECT 1"
+```
+
+### Profile fields
+
+| Field | Effect |
+|-------|--------|
+| `account_id` / `api_token` | Credentials for the invocation, ranking between explicit flags and ambient environment variables |
+| `plan_tier` | `free` or `paid` — drives the limits layer's plan-aware numbers |
+| `resource_prefix` | Prepended to resource names (see below) |
+
+### Resource-prefix scoping
+
+When the active profile carries a `resource_prefix` (for example `stg-`),
+commands in the d1, kv, r2 (bucket), worker, sync, and watch groups apply
+it to resource-name arguments and filter list output to names that carry
+it:
+
+- `cosmoflare r2 bucket create assets --env staging` creates `stg-assets`
+- `cosmoflare sync up ./dist assets` targets the prefixed bucket
+- `cosmoflare r2 bucket list --env staging` shows only prefixed buckets
+- Prefixing is idempotent — an already-prefixed name passes through
+- Server-generated IDs (d1 database IDs, KV namespace IDs) are absolute
+  handles and are never prefixed
+
+### Local D1 execution
+
+`cosmoflare d1 execute` (alias of `d1 query`) accepts `--local` and
+`--remote` (default). `--local` runs the SQL against a per-environment
+SQLite state file at `.cosmoflare/state/d1/<env>/<database>.sqlite` in the
+working directory — no API call, no network. `--remote` runs against the
+Cloudflare API exactly as before.
+
 ## Dev Server
 
 Start a local development server scaffold.
@@ -76,7 +120,7 @@ Start a local development server scaffold.
 cosmoflare dev                          # All services on port 8787
 cosmoflare dev --port 3000              # Custom port
 cosmoflare dev --services r2,kv         # Only proxy R2 and KV
-cosmoflare dev --profile staging        # Use 'staging' credentials
+cosmoflare dev --env staging            # Use the 'staging' environment profile
 cosmoflare dev --watch=false            # Disable config hot-reload
 cosmoflare dev --json                   # Machine-readable startup events
 ```
@@ -88,7 +132,9 @@ cosmoflare dev --json                   # Machine-readable startup events
 | `--port` | `8787` | Local port to listen on (matches Wrangler convention) |
 | `--watch` | `true` | Watch `.cosmoflare.yaml` for changes and hot-reload |
 | `--services` | all | Comma-separated: `r2,kv,workers,dns,zones,ssl,cache,d1,pages,queues` |
-| `--profile` | active | Credential profile to use |
+
+The dev server takes no profile flag of its own — select a profile with the
+global `--env` flag (see [Environment profiles](#environment-profiles-env)).
 
 ### Health check
 ```bash
