@@ -1,5 +1,5 @@
 schema_version: 1
-last_analyzed: "2026-09-18T01:45:05+04:00"
+last_analyzed: "2026-09-18T01:48:26+04:00"
 analyzed_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
 project_type: go
 packages:
@@ -48,3 +48,6 @@ packages:
         risk_signals:
             - name:tui
         classified_at_sha: c1f5d30b118f601180069b0cac8ff5c8861ee8ea
+last_run:
+    timestamp: "2026-09-18T01:48:26.899181+04:00"
+    sha: 8e77ac2da94dd4d7c7270245ee1e4fd38cc28130

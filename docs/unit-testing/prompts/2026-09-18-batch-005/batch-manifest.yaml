@@ -1,0 +1,735 @@
+# wave_size: 3
+- task: |
+    # Unit Test Generation — cmd/part1 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runEmailRulesList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailRulesGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailRulesCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailRulesUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailRulesDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailDestList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailDestAdd` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailDestGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailDestDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailCatchall` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailCatchallUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailEnable` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runEmailDisable` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/email.go`
+    - `runObjectList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `objectPutStdin` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `objectPutResume` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `objectPutFile` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectCopy` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectHead` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectSearch` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runObjectPresign` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/object.go`
+    - `runDoctor` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `runDoctorAll` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `runDoctorSingle` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `resolveDoctorTarget` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `enrichDoctorReport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `printDNSSection` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `printSSLSection` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `printHTTPSection` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `printNSSection` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/doctor.go`
+    - `runVectorizeCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeQuery` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeUpsert` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeGetVector` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeDeleteVectors` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+    - `runVectorizeNamespaces` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/vectorize.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part2 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `getWAFListService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListLs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListItemLs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListItemAdd` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFListItemReplace` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runWAFManagedRulesetUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf_lists.go`
+    - `runStreamUpload` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamUploadByURL` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamToken` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamLiveCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamLiveList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `runStreamLiveDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/stream.go`
+    - `getBucketDomainService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `resolveZoneID` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainAttach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainVerify` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runBucketDomainDetach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_domain.go`
+    - `runSetup` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `runInteractiveSetup` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `setupWizardAuth` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `setupWizardAccountInfo` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `setupWizardTestConnection` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `setupWizardSaveProfile` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `printSetupNextSteps` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `runQuietSetup` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/setup.go`
+    - `runImagesUpload` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesUploadByURL` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesVariantsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesVariantsCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+    - `runImagesVariantsDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/images.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part3 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runAIModelsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIModelsGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIRun` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIGatewayList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIGatewayCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIGatewayDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runAIGatewayLogs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ai.go`
+    - `runDemo` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoProgress` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoRainbow` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoDashboard` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoTypewriter` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoPulse` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `demoRandom` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/demo.go`
+    - `runConfigInit` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runConfigValidate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runConfigShow` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runConfigSetConnectionTest` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runConfigDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runConfigExport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `fillProfileInteractively` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/config.go`
+    - `runKVNamespaceCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVNamespaceList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVNamespaceDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVPut` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runKVList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/kv.go`
+    - `runWorkerVersionUpload` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runWorkerVersionList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runWorkerVersionView` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runWorkerVersionDeploy` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runWorkerVersionDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `confirmWorkerVersionDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runWorkerVersionRollback` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_versions.go`
+    - `runBucketCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+    - `runBucketList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+    - `runBucketGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+    - `runBucketDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+    - `runBucketExists` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+    - `runBucketImport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part4 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `Execute` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go` (exported)
+    - `printSuccess` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go`
+    - `printWarning` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go`
+    - `printError` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go`
+    - `printErrorAndExit` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go`
+    - `getRelativePath` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/root.go`
+    - `runWatch` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `watchPrintHeader` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `syncUpload` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `syncDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `emitWatchEvent` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `emitWatchError` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/watch.go`
+    - `runWAFPackages` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `runWAFRules` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `runWAFRule` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `runWAFAccessList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `runWAFAccessCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `runWAFAccessDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/waf.go`
+    - `wranglerReportValidation` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `wranglerPrintWarnings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `wranglerImportDryRun` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `wranglerImportSuccess` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `runWranglerDiff` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `countByLevel` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/wrangler.go`
+    - `runD1Create` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `runD1List` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `runD1Get` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `runD1Delete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `runD1Query` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `printD1Results` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1.go`
+    - `runQueueCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `runQueueList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `runQueueGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `runQueueUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `runQueueDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `runQueueConsumers` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue.go`
+    - `getPageRuleService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+    - `runPageRulesList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+    - `runPageRulesGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+    - `runPageRulesCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+    - `runPageRulesUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+    - `runPageRulesDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pagerules.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part5 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runWorkerList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `runWorkerGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `runWorkerDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `runWorkerLogs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `runWorkerLogsFollow` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `runWorkerSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker.go`
+    - `getHyperdriveService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `runHyperdriveCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `runHyperdriveList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `runHyperdriveGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `runHyperdriveUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `runHyperdriveDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/hyperdrive.go`
+    - `purgeCacheAll` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cache.go`
+    - `purgeCacheByURLs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cache.go`
+    - `purgeCacheByTags` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cache.go`
+    - `purgeCacheByHosts` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cache.go`
+    - `runCacheSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cache.go`
+    - `runCHList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl_custom_hostnames.go`
+    - `runCHCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl_custom_hostnames.go`
+    - `runCHGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl_custom_hostnames.go`
+    - `runCHUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl_custom_hostnames.go`
+    - `runCHDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl_custom_hostnames.go`
+    - `runPagesCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages.go`
+    - `runPagesList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages.go`
+    - `runPagesGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages.go`
+    - `runPagesDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages.go`
+    - `runPagesDeployments` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages.go`
+    - `runDNSCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dns.go`
+    - `runDNSList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dns.go`
+    - `runDNSGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dns.go`
+    - `runDNSUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dns.go`
+    - `runDNSDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dns.go`
+    - `reportProbe` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ratelimit.go`
+    - `ratelimitServiceAndZone` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ratelimit.go`
+    - `probeAdvisory` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ratelimit.go`
+    - `zoneHostname` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ratelimit.go`
+    - `probeBurstDefault` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ratelimit.go`
+    - `runApplyAll` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/apply.go`
+    - `runApplyWorkers` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/apply.go`
+    - `runApplyDNS` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/apply.go`
+    - `runApplyKV` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/apply.go`
+    - `runApplyR2` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/apply.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part6 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runAuthStatus` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/auth.go`
+    - `selectAuthMethod` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/auth.go`
+    - `promptForAPIToken` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/auth.go`
+    - `promptForAccountID` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/auth.go`
+    - `promptForEmail` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/auth.go`
+    - `runZoneCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/zone.go`
+    - `runZoneList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/zone.go`
+    - `runZoneGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/zone.go`
+    - `runZoneSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/zone.go`
+    - `runZoneDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/zone.go`
+    - `runFirewallList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/firewall.go`
+    - `runFirewallGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/firewall.go`
+    - `runFirewallCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/firewall.go`
+    - `runFirewallUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/firewall.go`
+    - `runFirewallDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/firewall.go`
+    - `runPluginList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/plugin.go`
+    - `runPluginInstall` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/plugin.go`
+    - `runPluginRemove` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/plugin.go`
+    - `runPluginInit` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/plugin.go`
+    - `runPluginRun` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/plugin.go`
+    - `getBucketNotificationService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_notifications.go`
+    - `runBucketNotificationsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_notifications.go`
+    - `runBucketNotificationsCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_notifications.go`
+    - `runBucketNotificationsGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_notifications.go`
+    - `runBucketNotificationsDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_notifications.go`
+    - `runDiffAll` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/diff.go`
+    - `runDiffWorkers` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/diff.go`
+    - `runDiffDNS` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/diff.go`
+    - `runDiffKV` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/diff.go`
+    - `runDiffR2` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/diff.go`
+    - `runSyncUp` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/sync.go`
+    - `runSyncDown` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/sync.go`
+    - `printSyncPlan` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/sync.go`
+    - `printSyncResult` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/sync.go`
+    - `newR2StorageBackend` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/sync.go`
+    - `collectStatusZones` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/status.go`
+    - `collectStatusWorkers` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/status.go`
+    - `collectStatusKV` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/status.go`
+    - `collectStatusR2` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/status.go`
+    - `runAlertsCheck` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/alerts.go`
+    - `runAlertsUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/alerts.go`
+    - `runAlertsDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/alerts.go`
+    - `runAlertsHistory` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/alerts.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part7 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runSSLStatus` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl.go`
+    - `runSSLSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl.go`
+    - `runSSLUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl.go`
+    - `runSSLVerify` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/ssl.go`
+    - `runWorkerCronList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_cron.go`
+    - `runWorkerCronCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_cron.go`
+    - `runWorkerCronDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_cron.go`
+    - `runWorkerCronUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_cron.go`
+    - `runWorkerSecretPut` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_secrets.go`
+    - `runWorkerSecretDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_secrets.go`
+    - `runWorkerSecretList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_secrets.go`
+    - `runWorkerSecretBulk` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_secrets.go`
+    - `runWorkerRouteList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_routes.go`
+    - `runWorkerRouteCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_routes.go`
+    - `runWorkerRouteUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_routes.go`
+    - `runWorkerRouteDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_routes.go`
+    - `runServe` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/serve.go`
+    - `randomToken` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/serve.go`
+    - `runServeAlertEvalLoop` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/serve.go`
+    - `runServeAlertEvalCycle` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/serve.go`
+    - `getCORSService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cors.go`
+    - `runCORSSettings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cors.go`
+    - `runCORSSet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cors.go`
+    - `runCORSRemove` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/cors.go`
+    - `getDurableObjectsService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/durable_objects.go`
+    - `runDoNamespaces` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/durable_objects.go`
+    - `runDoObjects` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/durable_objects.go`
+    - `runDoInspect` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/durable_objects.go`
+    - `getTerraformExporter` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/terraform.go`
+    - `runTerraformExport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/terraform.go`
+    - `runTerraformImportBlock` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/terraform.go`
+    - `copyFile` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/copy.go`
+    - `copyDirectory` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/copy.go`
+    - `handleBatchCopy` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/copy.go`
+    - `newMCPCLIServer` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp.go`
+    - `runMCPServe` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp.go`
+    - `runMCPTools` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp.go`
+    - `confirmBucketLifecycleReplace` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_lifecycle.go`
+    - `runBucketLifecycleGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_lifecycle.go`
+    - `runBucketLifecycleClear` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_lifecycle.go`
+    - `runWorkerDomainList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_domains.go`
+    - `runWorkerDomainAttach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_domains.go`
+    - `runWorkerDomainDetach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_domains.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part8 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runAuditSearch` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/audit.go`
+    - `runAuditExport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/audit.go`
+    - `runAuditClear` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/audit.go`
+    - `runAnalytics` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/analytics.go`
+    - `runSingleBucketAnalytics` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/analytics.go`
+    - `runAllBucketsAnalytics` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/analytics.go`
+    - `runPagesDeploymentView` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_deployment.go`
+    - `runPagesDeploymentRetry` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_deployment.go`
+    - `runPagesDeploymentLogs` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_deployment.go`
+    - `runWorkerDeploymentsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_deployments.go`
+    - `runWorkerDeploymentsView` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_deployments.go`
+    - `runWorkerRollback` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_deployments.go`
+    - `getBucketPolicyService` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_policy.go`
+    - `runBucketPolicyGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_policy.go`
+    - `runBucketPolicySet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/bucket_policy.go`
+    - `mcpFormatArgValue` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp_generate.go`
+    - `mcpFormatFlagValue` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp_generate.go`
+    - `mcpParseCommandOutput` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/mcp_generate.go`
+    - `runCompare` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/compare.go`
+    - `compareListBuckets` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/compare.go`
+    - `compareDiffBuckets` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/compare.go`
+    - `runPagesEnvList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_env.go`
+    - `runPagesEnvSet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_env.go`
+    - `runPagesEnvDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_env.go`
+    - `runMetrics` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/metrics.go`
+    - `runMetricsJSON` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/metrics.go`
+    - `fetchZoneHTTP` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/metrics.go`
+    - `runPagesDomainList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_domain.go`
+    - `runPagesDomainAttach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_domain.go`
+    - `runPagesDomainDetach` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/pages_domain.go`
+    - `runQueueConsumerUpdate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue_dlq.go`
+    - `runQueueConsumerRemove` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue_dlq.go`
+    - `runQueueDlq` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue_dlq.go`
+    - `runD1MigrationsCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_migrations.go`
+    - `runD1MigrationsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_migrations.go`
+    - `runD1MigrationsApply` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_migrations.go`
+    - `runDomainsStats` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_stats.go`
+    - `printCountMap` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_stats.go`
+    - `checkDomainRedirects` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_stats.go`
+    - `printSubdomainInfo` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_subdomain.go`
+    - `runWorkerSubdomainGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_subdomain.go`
+    - `runWorkerSubdomainSet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_subdomain.go`
+    - `runRedirectsList` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/redirects.go`
+    - `runRedirectsCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/redirects.go`
+    - `runRedirectsDelete` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/redirects.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — cmd/part9 of 9 (risk tier: medium)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `cmd`.
+
+    ## Functions to Test
+
+    - `runD1QueryLocal` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_local.go`
+    - `splitSQLStatements` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_local.go`
+    - `runDomains` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains.go`
+    - `runDomainsDetail` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains.go`
+    - `runWorkerBindings` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_bindings.go`
+    - `printBindingsTable` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_bindings.go`
+    - `runTemplatesInfo` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/templates.go`
+    - `runTemplatesCreate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/templates.go`
+    - `runDomainsGet` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_get.go`
+    - `printDomainDetail` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_get.go`
+    - `d1ImportResumeOffset` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_import.go`
+    - `runD1Import` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_import.go`
+    - `runQueueSend` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue_send.go`
+    - `runQueueSendBatch` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/queue_send.go`
+    - `runInit` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/init.go`
+    - `detectTemplate` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/init.go`
+    - `executeImport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/import_cmd.go`
+    - `presentImportResult` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/import_cmd.go`
+    - `runWorkerTail` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_tail.go`
+    - `streamTailEntries` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_tail.go`
+    - `runDomainsTUI` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_tui.go`
+    - `printBucketsTable` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/list.go`
+    - `completeBucketNames` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/completion.go`
+    - `runD1Export` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_export.go`
+    - `createTheme` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/theme.go`
+    - `runWorkerTypes` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/worker_types.go`
+    - `runDomainsNS` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_ns.go`
+    - `runDev` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/dev.go`
+    - `runMigrateFromS3` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/migrate.go`
+    - `runSwitch` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/switch.go`
+    - `runD1TimeTravelRestore` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/d1_timetravel.go`
+    - `runBackup` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/backup.go`
+    - `runDomainsRedirects` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/domains_redirects.go`
+    - `outSuccess` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/output.go`
+    - `runExport` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/export.go`
+    - `runAccountVerify` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/account.go`
+    - `runLimits` in `/Users/gabstudio/PROJECTS/cosmoflare/cmd/limits.go`
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (medium)
+
+    This is a MEDIUM-risk package. Focus on algorithm correctness and edge cases.
+
+    - Algorithm correctness: verify outputs match expected results for representative inputs.
+    - Empty/nil/zero-value inputs must not panic or raise unhandled exceptions.
+    - Test at least one error path per exported function.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+- task: |
+    # Unit Test Generation — tests/tui (risk tier: low)
+
+    You are a Go test engineer. Your task is to write unit tests for the package `tests/tui`.
+
+    ## Functions to Test
+
+    - `NewTestModel` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 26) (exported)
+    - `BenchmarkNavigation` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 74) (exported)
+    - `BenchmarkUpdates` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 91) (exported)
+    - `AssertAccessibleNavigation` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 115) (exported)
+    - `AssertKeyboardOnly` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 134) (exported)
+    - `MeasureMemoryUsage` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 182) (exported)
+    - `CloneModel` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 192) (exported)
+    - `AssertModelState` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 199) (exported)
+    - `RunFullWorkflow` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 218) (exported)
+    - `RunConcurrentUpdates` in `/Users/gabstudio/PROJECTS/cosmoflare/tests/tui/test_harness.go` (line 277) (exported)
+
+    ## Test Style Requirements
+
+    - Use t.Run subtests for all functions with multiple cases.
+    - Each test case must have a descriptive name.
+    - Add GoDoc comments above each test function explaining what it validates.
+    - Test files follow the `*_test.go` convention.
+    - Prohibit: testing unexported internals via reflection, mocking without understanding dependencies.
+
+    ## Risk-Tier Instructions (low)
+
+    Focus on happy-path coverage and basic error handling.
+
+    ## Verification
+
+    After writing tests, verify they compile and pass:
+
+    ```
+    go test ./... -v -count=1
+    ```
+
+    Ensure `go test` exits 0 before submitting.
+
+      model: glm-5.3
+    - task: |
