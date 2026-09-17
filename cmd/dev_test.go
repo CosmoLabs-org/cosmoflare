@@ -34,7 +34,6 @@ func TestDevCmd_Flags(t *testing.T) {
 		{"port", "8787"},
 		{"watch", "true"},
 		{"services", ""},
-		{"profile", ""},
 	}
 
 	for _, f := range flags {
@@ -123,12 +122,12 @@ func TestDevCmd_ServicesFlagType(t *testing.T) {
 	}
 }
 
-func TestDevCmd_ProfileFlagType(t *testing.T) {
-	flag := devCmd.Flags().Lookup("profile")
-	if flag == nil {
-		t.Fatal("--profile flag not found")
-	}
-	if flag.Value.Type() != "string" {
-		t.Errorf("--profile type = %q, want %q", flag.Value.Type(), "string")
+// TestDevCmd_ProfileFlagRemoved pins the FEAT-026 reconciliation decision:
+// dev selects its profile through the global --env flag only. The legacy
+// per-command --profile flag must stay gone so the two-selector overlap
+// cannot silently return.
+func TestDevCmd_ProfileFlagRemoved(t *testing.T) {
+	if flag := devCmd.Flags().Lookup("profile"); flag != nil {
+		t.Fatal("--profile flag still registered on devCmd — dev must use the global --env selector (FEAT-026)")
 	}
 }

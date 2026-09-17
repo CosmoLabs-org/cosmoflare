@@ -18,7 +18,6 @@ var (
 	devPort      int
 	devWatch     bool
 	devServices  string
-	devProfile   string
 	devNotifyURL string
 )
 
@@ -38,13 +37,12 @@ Flags:
   --watch      Watch .cosmoflare.yaml for changes and hot-reload (default: true)
   --services   Comma-separated list of services to enable (default: all)
                Valid: r2,kv,workers,dns,zones,ssl,cache,d1,pages,queues
-  --profile    Credential profile to use (default: active profile)
 
 Examples:
   cosmoflare dev                          # Start with defaults (all services, port 8787)
   cosmoflare dev --port 3000              # Listen on port 3000
   cosmoflare dev --services r2,kv         # Only proxy R2 and KV
-  cosmoflare dev --profile staging        # Use 'staging' credentials
+  cosmoflare dev --env staging            # Use the 'staging' environment profile
   cosmoflare dev --json                   # Machine-readable startup events
   cosmoflare dev --watch=false            # Disable config hot-reload
   cosmoflare dev --notify                # POST lifecycle events to dev.notify_url
@@ -63,7 +61,6 @@ func init() {
 	devCmd.Flags().IntVar(&devPort, "port", 8787, "Local port to listen on")
 	devCmd.Flags().BoolVar(&devWatch, "watch", true, "Watch config for changes and hot-reload")
 	devCmd.Flags().StringVar(&devServices, "services", "", "Comma-separated services to enable (default: all)")
-	devCmd.Flags().StringVar(&devProfile, "profile", "", "Credential profile to use")
 	devCmd.Flags().StringVar(&devNotifyURL, "notify", "", "Webhook URL for lifecycle events (or set dev.notify_url in .cosmoflare.yaml)")
 }
 
@@ -81,8 +78,10 @@ func runDev(cmd *cobra.Command, args []string) error {
 		opts = append(opts, cosmoflare.WithDevServices(services))
 	}
 
-	if devProfile != "" {
-		opts = append(opts, cosmoflare.WithDevProfile(devProfile))
+	// The dev server follows the global --env selection (FEAT-026): the
+	// per-command --profile flag was dropped in favor of the single selector.
+	if ActiveProfile != nil {
+		opts = append(opts, cosmoflare.WithDevProfile(ActiveProfile.Name))
 	}
 
 	if devNotifyURL != "" {

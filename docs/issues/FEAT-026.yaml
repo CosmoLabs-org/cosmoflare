@@ -1,7 +1,7 @@
 id: FEAT-026
 type: feature
 created_at: 2026-09-11T03:29:37.578741+04:00
-updated_at: 2026-09-17T04:39:20.456182+04:00
+updated_at: 2026-09-17T05:12:27.261977+04:00
 source: local
 ulid: 01M26TFH9P3ZWWBRPCRWTTK0CQ
 status: open
@@ -19,7 +19,7 @@ acceptance_criteria:
     - criterion: workers command groups;d1 execute supports --local and --remote against the active profile;limits command reports the active profile's plan tier;config validation errors on unknown --env
       met: false
 resolution:
-    notes: 'Design flag for part 2: the dev server documents --profile staging (USAGE.md dev section) while the new global --env selects profiles — two overlapping selectors. Part 2 should reconcile: either --profile becomes an alias of --env or dev drops --profile in favor of the global flag.'
+    notes: 'Part 2 decision (operator, 2026-09-17): dev drops --profile in favor of the global --env — single selector everywhere, matches wrangler''s convention. --profile remains only in the account group (credential management).'
 delegation:
     delegated_to: "0252"
     delegated_at: 2026-09-16T18:43:38.59489+04:00
