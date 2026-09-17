@@ -6,6 +6,11 @@ branch: master
 goals_total: 6
 goals_completed: 0
 supersedes: "docs/prompts/2026-09-16-session-0-continuation.md"
+requires_reading:
+    - docs/prompts/2026-09-16-session-0-continuation.md
+    - docs/launch/task010-cosmolabs-org-handoff.md
+    - docs/research/2026-09-17-feat029-device-flow-oq1.md
+schema_version: 1
 ---
 
 ## Context
