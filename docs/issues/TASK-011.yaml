@@ -1,0 +1,10 @@
+id: TASK-011
+type: task
+created_at: 2026-09-17T20:08:27.316902+04:00
+updated_at: 2026-09-17T20:08:27.322275+04:00
+source: local
+ulid: 01M2R20RDTDM2F7PKNPTW3TFJB
+status: open
+category: refactor
+title: 'Env-profile prefixing: cobra Args-level mechanism instead of per-site wraps'
+description: 'Design follow-up from /simplify altitude review (2026-09-17): ~50 applyResourcePrefix(args[0]) wraps across 21 files, each a per-command convention a new command can forget silently. Proposal: declare name-vs-ID once at command definition via an Args wrapper (prefixedResourceArgs(cobra.ExactArgs(2))) rewriting args[0] idempotently before delegating to the validator, plus prefixedFlag(cmd, name) for the two flag-sourced names (worker routes --script, worker domains --service), plus a tree-walking coverage test. Runners then read args[0] bare; 50 sites collapse to ~25 declarations. CAUTION: flags carry names too — no single args-only seam covers both. Own refactor wave with the gate; pilot one command group first.'
