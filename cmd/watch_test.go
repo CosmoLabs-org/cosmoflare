@@ -3,6 +3,7 @@ package cmd
 import (
 	"testing"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -100,5 +101,30 @@ func TestWatchCmd_LongIncludesExamples(t *testing.T) {
 	// Long description should include usage examples
 	if len(watchCmd.Long) < 100 {
 		t.Error("Long description is too short, should include examples")
+	}
+}
+
+// --- Profile prefix scoping (FEAT-026) ---
+
+func TestScopedWatchBucket(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile *config.Profile
+		in      string
+		want    string
+	}{
+		{"prefix applied", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-bucket", "stg-my-bucket"},
+		{"already prefixed passes through", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "stg-my-bucket", "stg-my-bucket"},
+		{"nil profile is a no-op", nil, "my-bucket", "my-bucket"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ActiveProfile = tt.profile
+			defer func() { ActiveProfile = nil }()
+
+			if got := scopedWatchBucket(tt.in); got != tt.want {
+				t.Errorf("scopedWatchBucket(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
 	}
 }

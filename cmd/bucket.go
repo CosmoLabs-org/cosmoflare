@@ -184,11 +184,27 @@ func init() {
 	RegisterCompletionFlags()
 }
 
+// filterBuckets narrows buckets by the user's --prefix flag and by the active
+// profile's resource prefix (FEAT-026). Both filters are no-ops when unset.
+func filterBuckets(buckets []*cosmoflare.Bucket, namePrefix string) []*cosmoflare.Bucket {
+	var filtered []*cosmoflare.Bucket
+	for _, bucket := range buckets {
+		if namePrefix != "" && !strings.HasPrefix(bucket.Name, namePrefix) {
+			continue
+		}
+		if !matchesResourcePrefix(bucket.Name) {
+			continue
+		}
+		filtered = append(filtered, bucket)
+	}
+	return filtered
+}
+
 func runBucketCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := args[0]
+	bucketName := applyResourcePrefix(args[0])
 	printInfo("Creating bucket: %s", bucketName)
 
 	client, err := getAPIClient()
@@ -230,13 +246,7 @@ func runBucketList(cmd *cobra.Command, args []string) error {
 		return outErr("failed to list buckets", err)
 	}
 
-	var filtered []*cosmoflare.Bucket
-	for _, bucket := range buckets {
-		if prefix != "" && !strings.HasPrefix(bucket.Name, prefix) {
-			continue
-		}
-		filtered = append(filtered, bucket)
-	}
+	filtered := filterBuckets(buckets, prefix)
 
 	if JSONOutput || format == "json" {
 		return printJSON(filtered)
@@ -283,7 +293,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := args[0]
+	bucketName := applyResourcePrefix(args[0])
 	output, _ := cmd.Flags().GetString("output")
 	includeObjects, _ := cmd.Flags().GetBool("include-objects")
 
@@ -359,7 +369,7 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := args[0]
+	bucketName := applyResourcePrefix(args[0])
 	force, _ := cmd.Flags().GetBool("force")
 
 	printInfo("Deleting bucket: %s", bucketName)
@@ -403,7 +413,7 @@ func runBucketExists(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := args[0]
+	bucketName := applyResourcePrefix(args[0])
 
 	client, err := getAPIClient()
 	if err != nil {

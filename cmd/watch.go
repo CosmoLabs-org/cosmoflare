@@ -81,12 +81,19 @@ type watchState struct {
 	bucket   string
 }
 
+// scopedWatchBucket applies the active profile's resource prefix to the
+// watch bucket argument (FEAT-026). The bucket arg is a bare name here — the
+// R2 key prefix is a separate --prefix flag — so it is scoped whole.
+func scopedWatchBucket(arg string) string {
+	return applyResourcePrefix(arg)
+}
+
 func runWatch(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("bucket name is required\n\nUsage: cosmoflare watch <bucket> [directory]")
 	}
 
-	bucket := args[0]
+	bucket := scopedWatchBucket(args[0])
 	dir := "."
 	if len(args) >= 2 {
 		dir = args[1]

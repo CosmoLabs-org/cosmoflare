@@ -146,6 +146,17 @@ func parseBucketPrefix(input string) (bucket, prefix string) {
 	return
 }
 
+// scopeBucketRef applies the active profile's resource prefix to the bucket
+// part of a "bucket[/key-prefix]" reference (FEAT-026). Only the part before
+// the FIRST "/" is scoped — the key prefix is object-naming, not a resource
+// name. A bare bucket name (no "/") is prefixed whole.
+func scopeBucketRef(ref string) string {
+	if i := strings.Index(ref, "/"); i >= 0 {
+		return applyResourcePrefix(ref[:i]) + ref[i:]
+	}
+	return applyResourcePrefix(ref)
+}
+
 // scanLocalDir walks a directory and returns LocalFileInfo for each regular
 // file. Paths matching an exclude pattern are skipped: globs match the full
 // relative path or the filename, and a pattern ending in "/" skips everything
@@ -242,7 +253,7 @@ func runSyncUp(cmd *cobra.Command, args []string) error {
 	}
 
 	localDir := args[0]
-	bucket, prefix := parseBucketPrefix(args[1])
+	bucket, prefix := parseBucketPrefix(scopeBucketRef(args[1]))
 
 	// Validate local directory exists
 	dirInfo, err := os.Stat(localDir)
@@ -317,7 +328,7 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("local directory is required\n\nUsage: cosmoflare sync down <bucket>[/prefix] <local-dir>")
 	}
 
-	bucket, prefix := parseBucketPrefix(args[0])
+	bucket, prefix := parseBucketPrefix(scopeBucketRef(args[0]))
 	localDir := args[1]
 
 	// Scan local files if directory exists (same exclude semantics as sync up,

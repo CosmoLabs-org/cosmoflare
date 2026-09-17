@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -794,5 +797,97 @@ func TestWorkerSubcmds_ShortNotEmpty(t *testing.T) {
 		if c.Short == "" {
 			t.Errorf("%q Short is empty", c.Use)
 		}
+	}
+}
+
+// --- Profile prefix scoping (FEAT-026) ---
+
+// workerPrefixTestEnv snapshots the globals the prefix-scoping tests touch
+// and installs a staging profile with resource prefix "stg-".
+func workerPrefixTestEnv(profile *config.Profile) func() {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origProfile := ActiveProfile
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	ActiveProfile = profile
+	return func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		ActiveProfile = origProfile
+	}
+}
+
+func TestWorkerDeploy_PrefixScoping(t *testing.T) {
+	script := filepath.Join(t.TempDir(), "worker.js")
+	if err := os.WriteFile(script, []byte("export default {}"), 0o644); err != nil {
+		t.Fatalf("writing script: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		profile *config.Profile
+		arg     string
+		want    string
+	}{
+		{"prefix applied", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-worker", "stg-my-worker"},
+		{"already prefixed passes through", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "stg-my-worker", "stg-my-worker"},
+		{"nil profile is a no-op", nil, "my-worker", "my-worker"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			restore := workerPrefixTestEnv(tt.profile)
+			defer restore()
+			workerScript = script
+			defer func() { workerScript = "" }()
+
+			out := capturePrint(t, func() {
+				if err := runWorkerDeploy(workerDeployCmd, []string{tt.arg}); err != nil {
+					t.Errorf("runWorkerDeploy returned error: %v", err)
+				}
+			})
+			if !strings.Contains(out, tt.want) {
+				t.Errorf("dry-run output should mention %q, got: %q", tt.want, out)
+			}
+		})
+	}
+}
+
+func TestWorkerDelete_PrefixScoping(t *testing.T) {
+	restore := workerPrefixTestEnv(&config.Profile{Name: "staging", ResourcePrefix: "stg-"})
+	defer restore()
+
+	out := capturePrint(t, func() {
+		if err := runWorkerDelete(workerDeleteCmd, []string{"my-worker"}); err != nil {
+			t.Errorf("runWorkerDelete returned error: %v", err)
+		}
+	})
+	if !strings.Contains(out, "stg-my-worker") {
+		t.Errorf("dry-run output should mention %q, got: %q", "stg-my-worker", out)
+	}
+}
+
+func TestFilterWorkersByProfile(t *testing.T) {
+	workers := []*cosmoflare.Worker{
+		{Name: "stg-api"},
+		{Name: "prod-api"},
+	}
+
+	ActiveProfile = &config.Profile{Name: "staging", ResourcePrefix: "stg-"}
+	got := filterWorkersByProfile(workers)
+	if len(got) != 1 || got[0].Name != "stg-api" {
+		t.Errorf("filterWorkersByProfile with prefix = %v, want only stg-api", got)
+	}
+
+	ActiveProfile = nil
+	got = filterWorkersByProfile(workers)
+	if len(got) != 2 {
+		t.Errorf("filterWorkersByProfile with nil profile kept %d, want 2", len(got))
 	}
 }
