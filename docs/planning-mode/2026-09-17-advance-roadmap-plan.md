@@ -93,3 +93,17 @@ first).
 
 To dispatch: `/advance-roadmap --execute` (waves 1-3 + FEAT-014 after briefs)
 or copy item numbers to `/parallelize`.
+
+## Outcome (2026-09-17, executed sequentially in-session)
+
+- P-01 ✓ bucket sub-resources prefixed (wave A) — commit "feat(r2): env-profile prefix scoping on bucket sub-resources"
+- P-02 ✓ worker subcommands prefixed (wave B) — commit "feat(workers): env-profile prefix scoping on subcommands"
+- P-03 ✗ dropped with reason: d1 import/export/migrations/timetravel take
+  database-ID positionals only — the ID rule (server IDs are absolute
+  handles) leaves nothing to prefix; recorded on FEAT-026
+- P-04 ✓ FEAT-014 implemented + closed — LimitsSnapshotCache 30m TTL +
+  dnsUsage 401/403 fail-fast + R2Error.Status plumbing
+- P-05 ✓ FEAT-015 implemented + closed — AlertConditionDescriptor registry
+  deriving validation/errors/help; evaluator coverage pinned by test
+- FEAT-026 part 3 complete; changelog staged (4 entries); all suites green
+  (pkg 146s, webhook 6.8s, cmd 14-17s); master pushed through 8bd9bab
