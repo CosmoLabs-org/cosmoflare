@@ -1,16 +1,22 @@
 ---
 ulid: 01M21S2EKEEB8F1B0PDAKME0R5
 id: IDEA-056
-id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: Alert condition descriptor table — one registry for names, units, help
 created: "2026-09-09T04:28:48.110506+04:00"
-status: harvested
+status: withered
 source: agent
 origin:
     session: 45
     trigger: session-end altitude review of limits diff
 promoted_to: FEAT-015
+resolution:
+    reason: implemented
+    date: "2026-09-17T19:36:08.979697+04:00"
+    ref: FEAT-015
+    note: Resolved via FEAT-015 (implemented)
 ---
+
+# Alert condition descriptor table — one registry for names, units, help
 
 # Alert condition descriptor table — one registry for names, units, help
 

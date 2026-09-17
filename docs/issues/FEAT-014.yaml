@@ -2,9 +2,9 @@
 id: FEAT-014
 type: feature
 created: "2026-09-09"
-updated: "2026-09-13T15:38:36.946082+04:00"
+updated: "2026-09-17T19:27:53.005836+04:00"
 priority: 50
-status: open
+status: implemented
 origin:
     feedback_id: FB-4
     roadmap_items:
@@ -13,6 +13,13 @@ origin:
     received: "2026-09-09"
     converted: "2026-09-09"
 title: Serve limits-snapshot cadence too hot once wired
+resolution:
+    notes: 'Shipped 2026-09-17 same-session: LimitsSnapshotCache (30m TTL, account-keyed, swap-source for per-tick creds) wired into the serve alert cycle; R2Error.Status + ErrorStatus plumbed through decodeEnvelope; dnsUsage fail-fast on first 401/403 with one actionable source error (404 keeps static fallback). Acceptance 1-3 met; pkg+webhook+cmd suites green.'
+    resolved_at: 2026-09-17T19:27:53.004909+04:00
+revisions:
+    - date: "2026-09-17"
+      action: closed
+      context: 'Shipped 2026-09-17 same-session: LimitsSnapshotCache (30m TTL, account-keyed, swap-source for per-tick creds) wired into the serve alert cycle; R2Error.Status + ErrorStatus plumbed through decodeEnvelope; dnsUsage fail-fast on first 401/403 with one actionable source error (404 keeps static fallback). Acceptance 1-3 met; pkg+webhook+cmd suites green.'
 
 ---
 

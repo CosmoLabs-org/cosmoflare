@@ -8,7 +8,16 @@ entries:
         - description: 'named environment profiles part 2: resource-prefix scoping across d1/kv/r2/workers, d1 execute --local/--remote, dev --env reconciliation (FEAT-026)'
           source: manual
           date: 2026-09-17T05:43:10.001478+04:00
-    fixed: []
+        - description: 'env profiles part 3: prefix scoping on bucket sub-resources and worker subcommands (FEAT-026)'
+          source: manual
+          date: 2026-09-17T19:36:20.743699+04:00
+        - description: 'serve alert cycle: limits-snapshot 30m TTL cache + DNS usage 401/403 fail-fast (FEAT-014)'
+          source: manual
+          date: 2026-09-17T19:36:20.79213+04:00
+    fixed:
+        - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
+          source: manual
+          date: 2026-09-17T19:36:20.836203+04:00
     changed: []
     deprecated: []
     removed: []

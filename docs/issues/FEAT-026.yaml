@@ -1,7 +1,7 @@
 id: FEAT-026
 type: feature
 created_at: 2026-09-11T03:29:37.578741+04:00
-updated_at: 2026-09-17T05:43:32.06106+04:00
+updated_at: 2026-09-17T19:06:46.833862+04:00
 source: local
 ulid: 01M26TFH9P3ZWWBRPCRWTTK0CQ
 status: open
@@ -19,8 +19,4 @@ acceptance_criteria:
     - criterion: workers command groups;d1 execute supports --local and --remote against the active profile;limits command reports the active profile's plan tier;config validation errors on unknown --env
       met: false
 resolution:
-    notes: 'Part 2 shipped (2026-09-17): resource-prefix scoping live on d1 create/list, kv namespace create/list, r2 bucket create/get/delete/exists/list, worker deploy/get/delete/list, sync up/down, watch; d1 query gained execute alias + --local/--remote with per-env SQLite state (.cosmoflare/state/d1/<env>/); dev --profile dropped for the global --env (operator decision). Part 3 remains: sub-resource name surfaces (bucket domain/lifecycle/notifications/policy, worker routes/domains/secrets/versions/bindings/cron/subdomain/tail, d1 import/export/migrations/timetravel) — keep open until those carry the prefix or a follow-up issue replaces them.'
-delegation:
-    delegated_to: "0258"
-    delegated_at: 2026-09-17T05:19:26.260419+04:00
-    delegated_engine: glm-agent
+    notes: 'Part 3 shipped same-session (2026-09-17): bucket sub-resources (domain/lifecycle/notifications/policy) and worker subcommands (secrets/versions/bindings/cron/tail/types/deployments/routes --script/domains --service/subdomain set) all apply the active profile''s resource prefix; zone/route/deployment IDs and hostnames untouched. d1 extras (import/export/migrations/timetravel) take database-ID positionals only — out of scope by the ID rule, wave dropped. Remaining gap: none known — env scoping now covers all name surfaces.'

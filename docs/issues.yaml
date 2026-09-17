@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-17T05:19:26.265518+04:00
+last_updated: 2026-09-17T19:36:08.975051+04:00
 next_bug_id: 54
 next_feat_id: 44
 next_task_id: 11
@@ -396,12 +396,12 @@ issues:
       priority: 50
     - id: FEAT-014
       type: feature
-      status: open
+      status: implemented
       title: Serve limits-snapshot cadence too hot once wired
       priority: 50
     - id: FEAT-015
       type: feature
-      status: open
+      status: implemented
       title: Alert condition descriptor table — one registry for names, units, help
       created_at: 2026-09-10T02:05:44.582212+04:00
     - id: FEAT-016
@@ -459,7 +459,6 @@ issues:
       type: feature
       status: open
       title: Named environment profiles (dev/staging/prod) across all commands
-      delegated_to: "0258"
       created_at: 2026-09-11T03:29:37.578741+04:00
     - id: FEAT-027
       type: feature

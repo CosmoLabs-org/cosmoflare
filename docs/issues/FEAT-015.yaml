@@ -1,10 +1,10 @@
 id: FEAT-015
 type: feature
 created_at: 2026-09-10T02:05:44.582212+04:00
-updated_at: 2026-09-10T02:05:47.187433+04:00
+updated_at: 2026-09-17T19:36:08.970896+04:00
 source: local
 ulid: 01M243978CG4MXSRQTME2K5ZN7
-status: open
+status: implemented
 origin:
     idea_slug: 2026-09-09-alert-condition-descriptor-table-one-registry-for-names
     session: 45
@@ -19,3 +19,10 @@ description: |-
     SSOT refactor: the alert condition enum is duplicated across 5+ sites — validAlertConditions map (alerts.go:66), the hardcoded list inside the Update error message (alerts.go:234), a second error list, the AlertRule comment, cmd/alerts.go help strings (x3), and the evaluator switch (internal/webhook/evaluator.go). Session 45's limits feature extended exactly one site and the CLI rejected the new conditions until review caught it (also fixed in ede3069 'condition registry'). Build one descriptor table (name → unit, availability rule, data key, service tag) next to AlertRule; derive the registry, error lists, help text, and evaluator switch arms from it. Same pattern applies to limits resource names (workers.scripts etc. in tables, rows, evaluator). Article VII violation with a live bug on record.
 
     Origin: session-end altitude review of limits diff
+resolution:
+    notes: 'Shipped 2026-09-17 same-session: AlertConditionDescriptor registry (name/unit/help/fed-by/data-key/service) in pkg/cosmoflare/alerts.go derives validAlertCondition, both validation error messages, and the three CLI help strings via AlertConditionList(); TestConditionValueCoversRegistry pins evaluator coverage of every registry entry (the original drift bug). The limits-resource-name half of the issue (renames dropping metrics) noted separately — not in this wave.'
+    resolved_at: 2026-09-17T19:36:08.970053+04:00
+revisions:
+    - date: "2026-09-17"
+      action: closed
+      context: 'Shipped 2026-09-17 same-session: AlertConditionDescriptor registry (name/unit/help/fed-by/data-key/service) in pkg/cosmoflare/alerts.go derives validAlertCondition, both validation error messages, and the three CLI help strings via AlertConditionList(); TestConditionValueCoversRegistry pins evaluator coverage of every registry entry (the original drift bug). The limits-resource-name half of the issue (renames dropping metrics) noted separately — not in this wave.'
