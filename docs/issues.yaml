@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-17T19:36:08.975051+04:00
+last_updated: 2026-09-17T20:03:53.658497+04:00
 next_bug_id: 54
 next_feat_id: 44
 next_task_id: 11
@@ -457,7 +457,7 @@ issues:
       created_at: 2026-09-11T01:08:29.344245+04:00
     - id: FEAT-026
       type: feature
-      status: open
+      status: implemented
       title: Named environment profiles (dev/staging/prod) across all commands
       created_at: 2026-09-11T03:29:37.578741+04:00
     - id: FEAT-027
