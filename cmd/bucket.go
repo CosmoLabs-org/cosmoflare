@@ -360,7 +360,6 @@ func runBucketUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	_ = applyResourcePrefix(args[0])
 
 	msg := "bucket metadata updates are not supported by the Cloudflare R2 API. Use 'cosmoflare cors' for CORS settings or manage bucket configuration through the Cloudflare dashboard"
 	return outErrf("%s", msg)
