@@ -18,6 +18,7 @@ import (
 // time.Now().UnixNano() alone, which collided ~70% of the time in tight
 // loops. Collisions silently overwrote ID-keyed map entries (lost webhooks).
 func TestGenerateID_Uniqueness(t *testing.T) {
+	t.Parallel()
 	const n = 5000
 	seen := make(map[string]struct{}, n)
 	for i := 0; i < n; i++ {
@@ -32,6 +33,7 @@ func TestGenerateID_Uniqueness(t *testing.T) {
 // TestGenerateID_ConcurrentUniqueness ensures uniqueness holds under
 // concurrent creation — the webhook Manager must be safe for parallel use.
 func TestGenerateID_ConcurrentUniqueness(t *testing.T) {
+	t.Parallel()
 	const goroutines = 16
 	const perG = 1000
 	seen := make(map[string]struct{}, goroutines*perG)
@@ -58,6 +60,7 @@ func TestGenerateID_ConcurrentUniqueness(t *testing.T) {
 // TestCreateWebhook_NoSilentOverwrite verifies the user-facing impact:
 // rapidly created webhooks must each occupy a distinct map slot.
 func TestCreateWebhook_NoSilentOverwrite(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil, "acct")
 	const n = 1000
 	for i := 0; i < n; i++ {

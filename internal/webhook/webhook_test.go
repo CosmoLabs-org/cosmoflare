@@ -13,6 +13,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -107,6 +108,67 @@ func computeHMAC(payload []byte, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write(payload)
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// requireSignedDelivery asserts the wire contract shared by every signed
+// delivery test: the X-R2Go2-Signature header is present with the sha256=
+// prefix, it verifies against the delivered body with the given secret, and
+// the body decodes as a NotificationPayload. The decoded payload is returned
+// so callers can layer scenario-specific field checks on top.
+func requireSignedDelivery(t *testing.T, capt *capturedRequest, secret string) *NotificationPayload {
+	t.Helper()
+	receivedSignature := capt.headerValue("X-R2Go2-Signature")
+	if !strings.HasPrefix(receivedSignature, "sha256=") {
+		t.Fatalf("expected X-R2Go2-Signature with sha256= prefix, got: %q", receivedSignature)
+	}
+	_, _, body := capt.snapshot()
+	ok, err := ParseWebhookSignature(body, receivedSignature, secret)
+	if err != nil {
+		t.Fatalf("signature parse error: %v", err)
+	}
+	if !ok {
+		t.Error("expected signature to be valid for the received body")
+	}
+	var payload NotificationPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatalf("failed to unmarshal delivered body: %v", err)
+	}
+	return &payload
+}
+
+// newStoredWebhook creates a webhook through CreateWebhook (so it lands in the
+// manager's store with a generated ID) and fails the test if creation is
+// rejected. Note that CreateWebhook normalizes RetryCount 0 to 3, i.e. a
+// failing endpoint is attempted 4 times in total.
+func newStoredWebhook(t *testing.T, m *Manager, name, url string, enabled bool) *Webhook {
+	t.Helper()
+	wh, err := m.CreateWebhook(&Webhook{
+		Name:    name,
+		URL:     url,
+		Enabled: enabled,
+		Timeout: 5,
+	})
+	if err != nil {
+		t.Fatalf("create webhook %s: %v", name, err)
+	}
+	return wh
+}
+
+// runFieldChecks runs each named assertion as its own parallel subtest so a
+// regression names the exact field that failed instead of the test aborting
+// at the first mismatch. Each check returns "" when the field is correct and
+// a short mismatch description otherwise.
+func runFieldChecks(t *testing.T, checks map[string]func() string) {
+	t.Helper()
+	for name, check := range checks {
+		check := check
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if msg := check(); msg != "" {
+				t.Error(msg)
+			}
+		})
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -732,15 +794,9 @@ func TestWebhook_SecretSignatureVerifiable(t *testing.T) {
 		t.Fatalf("TestWebhook failed: %v", err)
 	}
 
-	// Verify the signature matches the body using ParseWebhookSignature
-	_, _, body := capt.snapshot()
-	ok, err := ParseWebhookSignature(body, capt.headerValue("X-R2Go2-Signature"), secret)
-	if err != nil {
-		t.Fatalf("signature parse error: %v", err)
-	}
-	if !ok {
-		t.Error("expected signature to be valid for the received body")
-	}
+	// Close the loop with the production verifier instead of recomputing the
+	// digest here: the receiver-side contract is what matters.
+	requireSignedDelivery(t, capt, secret)
 }
 
 // ---------------------------------------------------------------------------
@@ -1041,41 +1097,37 @@ func TestTriggerAlert_WithNotificationDelivery(t *testing.T) {
 	if got := capt.headerValue("X-R2Go2-Event"); got != "alert_triggered" {
 		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", got)
 	}
-	receivedSignature := capt.headerValue("X-R2Go2-Signature")
-	if receivedSignature == "" {
-		t.Fatal("expected signature header to be set")
-	}
-	if !strings.HasPrefix(receivedSignature, "sha256=") {
-		t.Errorf("expected sha256= prefix, got: %s", receivedSignature)
-	}
+	decoded := requireSignedDelivery(t, capt, "alert-secret")
 
-	// Verify signature is valid
-	_, _, body := capt.snapshot()
-	ok, err := ParseWebhookSignature(body, receivedSignature, "alert-secret")
-	if err != nil {
-		t.Fatalf("signature verification error: %v", err)
+	// Every projected payload field is its own subtest so a regression names
+	// the exact field that was dropped or corrupted.
+	checks := map[string]func() string{
+		"value is the observed metric": func() string {
+			if decoded.Value != 95.0 {
+				return fmt.Sprintf("got %f", decoded.Value)
+			}
+			return ""
+		},
+		"threshold comes from the alert": func() string {
+			if decoded.Threshold != 90.0 {
+				return fmt.Sprintf("got %f", decoded.Threshold)
+			}
+			return ""
+		},
+		"message is passed through": func() string {
+			if decoded.Message != "CPU is high" {
+				return fmt.Sprintf("got %s", decoded.Message)
+			}
+			return ""
+		},
+		"data carries the trigger context": func() string {
+			if decoded.Data == nil || decoded.Data["host"] != "server-1" {
+				return fmt.Sprintf("got %v", decoded.Data)
+			}
+			return ""
+		},
 	}
-	if !ok {
-		t.Error("expected valid signature")
-	}
-
-	// Verify payload contains alert data
-	var decoded NotificationPayload
-	if err := json.Unmarshal(body, &decoded); err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
-	}
-	if decoded.Value != 95.0 {
-		t.Errorf("expected value 95.0, got: %f", decoded.Value)
-	}
-	if decoded.Threshold != 90.0 {
-		t.Errorf("expected threshold 90.0, got: %f", decoded.Threshold)
-	}
-	if decoded.Message != "CPU is high" {
-		t.Errorf("expected message 'CPU is high', got: %s", decoded.Message)
-	}
-	if decoded.Data == nil || decoded.Data["host"] != "server-1" {
-		t.Error("expected data to contain host=server-1")
-	}
+	runFieldChecks(t, checks)
 }
 
 // TestTriggerAlert_DisabledWebhookSkipped verifies that an alert with no
@@ -1329,170 +1381,113 @@ func TestTriggerAlert_WithStoreWorkingWebhook(t *testing.T) {
 	if got := capt.headerValue("X-R2Go2-Event"); got != "alert_triggered" {
 		t.Errorf("expected X-R2Go2-Event 'alert_triggered', got %s", got)
 	}
-	receivedSignature := capt.headerValue("X-R2Go2-Signature")
-	if !strings.HasPrefix(receivedSignature, "sha256=") {
-		t.Errorf("expected sha256= prefix, got: %s", receivedSignature)
-	}
+	payload := requireSignedDelivery(t, capt, "store-secret")
 
-	// Verify signature
-	_, _, body := capt.snapshot()
-	ok, err := ParseWebhookSignature(body, receivedSignature, "store-secret")
-	if err != nil {
-		t.Fatalf("signature verification error: %v", err)
+	checks := map[string]func() string{
+		"value is the observed metric": func() string {
+			if payload.Value != 95.0 {
+				return fmt.Sprintf("got %f", payload.Value)
+			}
+			return ""
+		},
+		"threshold comes from the alert": func() string {
+			if payload.Threshold != 90.0 {
+				return fmt.Sprintf("got %f", payload.Threshold)
+			}
+			return ""
+		},
+		"message is passed through": func() string {
+			if payload.Message != "CPU is high" {
+				return fmt.Sprintf("got %s", payload.Message)
+			}
+			return ""
+		},
 	}
-	if !ok {
-		t.Error("expected valid signature")
-	}
-
-	var payload NotificationPayload
-	if err := json.Unmarshal(body, &payload); err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
-	}
-	if payload.Value != 95.0 {
-		t.Errorf("expected value 95.0, got: %f", payload.Value)
-	}
-	if payload.Threshold != 90.0 {
-		t.Errorf("expected threshold 90.0, got: %f", payload.Threshold)
-	}
-	if payload.Message != "CPU is high" {
-		t.Errorf("expected message 'CPU is high', got: %s", payload.Message)
-	}
+	runFieldChecks(t, checks)
 }
 
-// TestTriggerAlert_WithStoreDisabledWebhook verifies that a stored but
-// disabled webhook receives nothing while the alert still counts the fire.
-func TestTriggerAlert_WithStoreDisabledWebhook(t *testing.T) {
+// TestTriggerAlert_WithStoreFanOut is the parameterized fan-out surface for
+// TriggerAlert against stored webhooks. It absorbs the former
+// WithStoreDisabledWebhook / WithStoreNonexistentWebhook /
+// WithStoreServerError / WithStoreMultipleWebhooks tests, which shared the
+// identical "store targets, trigger one alert, count deliveries" structure.
+// Every case asserts the same invariant: only enabled, existing webhooks are
+// delivered to, and a delivery problem never loses the alert's own fire
+// bookkeeping.
+func TestTriggerAlert_WithStoreFanOut(t *testing.T) {
 	t.Parallel()
-	server, capt := newCaptureServer(t, http.StatusOK)
-
-	m := newWebhookTestManager()
-	wh, _ := m.CreateWebhook(&Webhook{
-		Name:    "disabled-alert-hook",
-		URL:     server.URL,
-		Enabled: false,
-		Secret:  "secret",
-		Timeout: 5,
-	})
-
-	alert := &Alert{
-		ID:       "alert-dis-2",
-		Name:     "Disk Alert",
-		Type:     AlertTypeHealth,
-		Metric:   "disk",
-		Webhooks: []string{wh.ID},
+	cases := []struct {
+		name       string
+		status     int      // capture-server reply status for every stored hook
+		enabled    int      // number of enabled webhooks to store
+		disabled   int      // number of disabled webhooks to store
+		missingIDs []string // webhook IDs the alert references but that are never stored
+		wantCalls  int
+	}{
+		{
+			name:      "disabled webhook is skipped",
+			status:    http.StatusOK,
+			disabled:  1,
+			wantCalls: 0,
+		},
+		{
+			name:       "nonexistent webhook ID is skipped",
+			status:     http.StatusOK,
+			missingIDs: []string{"wh_does_not_exist"},
+			wantCalls:  0,
+		},
+		{
+			// TriggerAlert logs delivery errors but still returns nil.
+			// CreateWebhook normalizes RetryCount 0 to 3, so the failing
+			// endpoint is attempted 4 times (1 initial + 3 retries).
+			name:      "endpoint 5xx does not fail the trigger",
+			status:    http.StatusBadGateway,
+			enabled:   1,
+			wantCalls: 4,
+		},
+		{
+			name:       "mixed fan-out calls only the enabled hooks",
+			status:     http.StatusOK,
+			enabled:    2,
+			disabled:   1,
+			missingIDs: []string{"wh_nonexistent"},
+			wantCalls:  2,
+		},
 	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			server, capt := newCaptureServer(t, tc.status)
 
-	err := m.TriggerAlert(alert, 99.0, "disk full", nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if hits, _, _ := capt.snapshot(); hits != 0 {
-		t.Error("disabled webhook should not have been called")
-	}
-	if alert.Count != 1 {
-		t.Errorf("expected Count=1, got: %d", alert.Count)
-	}
-}
+			m := newWebhookTestManager()
+			var targetIDs []string
+			for i := 0; i < tc.enabled; i++ {
+				targetIDs = append(targetIDs, newStoredWebhook(t, m, fmt.Sprintf("fanout-enabled-%d", i+1), server.URL, true).ID)
+			}
+			for i := 0; i < tc.disabled; i++ {
+				targetIDs = append(targetIDs, newStoredWebhook(t, m, fmt.Sprintf("fanout-disabled-%d", i+1), server.URL, false).ID)
+			}
+			targetIDs = append(targetIDs, tc.missingIDs...)
 
-// TestTriggerAlert_WithStoreNonexistentWebhook verifies that alert fan-out
-// silently skips unknown webhook IDs instead of failing the trigger.
-func TestTriggerAlert_WithStoreNonexistentWebhook(t *testing.T) {
-	t.Parallel()
-	m := newWebhookTestManager()
-	alert := &Alert{
-		ID:       "alert-missing",
-		Name:     "Missing Webhook Alert",
-		Type:     AlertTypeBudget,
-		Metric:   "cost",
-		Webhooks: []string{"wh_does_not_exist"},
-	}
+			alert := &Alert{
+				ID:       "alert-fanout",
+				Name:     "Fan-out Alert",
+				Type:     AlertTypeThreshold,
+				Metric:   "requests",
+				Webhooks: targetIDs,
+			}
 
-	// Should not error, just skip missing webhook
-	err := m.TriggerAlert(alert, 100.0, "over budget", nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if alert.Count != 1 {
-		t.Errorf("expected Count=1, got: %d", alert.Count)
-	}
-}
-
-// TestTriggerAlert_WithStoreServerError verifies that an endpoint returning
-// 5xx does not fail TriggerAlert and does not lose the fire count.
-func TestTriggerAlert_WithStoreServerError(t *testing.T) {
-	t.Parallel()
-	server, _ := newCaptureServer(t, http.StatusBadGateway)
-
-	m := newWebhookTestManager()
-	wh, _ := m.CreateWebhook(&Webhook{
-		Name:       "failing-alert-hook",
-		URL:        server.URL,
-		Enabled:    true,
-		RetryCount: 0,
-		Timeout:    5,
-	})
-
-	alert := &Alert{
-		ID:       "alert-fail-2",
-		Name:     "Net Alert",
-		Type:     AlertTypeCustom,
-		Metric:   "latency",
-		Webhooks: []string{wh.ID},
-	}
-
-	// TriggerAlert prints errors but returns nil
-	err := m.TriggerAlert(alert, 500.0, "high latency", nil)
-	if err != nil {
-		t.Fatalf("expected nil error, got: %v", err)
-	}
-	if alert.Count != 1 {
-		t.Errorf("expected Count=1 even on failure, got: %d", alert.Count)
-	}
-}
-
-// TestTriggerAlert_WithStoreMultipleWebhooks verifies fan-out across a mixed
-// set of targets: only the enabled, existing webhooks are called, missing IDs
-// are skipped, and the alert counts exactly one fire.
-func TestTriggerAlert_WithStoreMultipleWebhooks(t *testing.T) {
-	t.Parallel()
-	server, capt := newCaptureServer(t, http.StatusOK)
-
-	m := newWebhookTestManager()
-	newHook := func(name string, enabled bool) *Webhook {
-		wh, err := m.CreateWebhook(&Webhook{
-			Name:       name,
-			URL:        server.URL,
-			Enabled:    enabled,
-			RetryCount: 0,
-			Timeout:    5,
+			if err := m.TriggerAlert(alert, 1000.0, "threshold exceeded", nil); err != nil {
+				t.Fatalf("delivery problems must not fail the trigger, got: %v", err)
+			}
+			if hits, _, _ := capt.snapshot(); hits != tc.wantCalls {
+				t.Errorf("deliveries = %d, want %d", hits, tc.wantCalls)
+			}
+			// The fire itself must be recorded even when every target failed.
+			if alert.Count != 1 {
+				t.Errorf("expected Count=1, got: %d", alert.Count)
+			}
 		})
-		if err != nil {
-			t.Fatalf("create webhook %s: %v", name, err)
-		}
-		return wh
-	}
-	wh1 := newHook("multi-hook-1", true)
-	wh2 := newHook("multi-hook-2", true)
-	wh3 := newHook("multi-hook-disabled", false)
-
-	alert := &Alert{
-		ID:       "alert-multi",
-		Name:     "Multi Alert",
-		Type:     AlertTypeThreshold,
-		Metric:   "requests",
-		Webhooks: []string{wh1.ID, wh2.ID, wh3.ID, "wh_nonexistent"},
-	}
-
-	err := m.TriggerAlert(alert, 1000.0, "threshold exceeded", nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	hits, _, _ := capt.snapshot()
-	if hits != 2 { // only enabled webhooks should be called
-		t.Errorf("expected 2 calls (2 enabled + 1 disabled + 1 missing), got %d", hits)
-	}
-	if alert.Count != 1 {
-		t.Errorf("expected Count=1, got: %d", alert.Count)
 	}
 }
 
