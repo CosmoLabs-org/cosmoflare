@@ -25,10 +25,21 @@ func (f *fakeLimitsSource) Snapshot(ctx context.Context, bucket string) (*cosmof
 	return f.snap, nil
 }
 
+// newLimitsTestCache builds a cache already bound to src for the given
+// account, collapsing the two-line construction every cache test repeated.
+func newLimitsTestCache(ttl time.Duration, src *fakeLimitsSource, account string) *LimitsSnapshotCache {
+	c := NewLimitsSnapshotCache(ttl)
+	c.SetSource(src, account)
+	return c
+}
+
+// TestLimitsSnapshotCache_ServesOncePerTTL verifies the cache's core promise:
+// repeated reads inside the TTL are served from memory (exactly one fetch)
+// and hand back the identical snapshot pointer the source produced.
 func TestLimitsSnapshotCache_ServesOncePerTTL(t *testing.T) {
+	t.Parallel()
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(time.Hour)
-	c.SetSource(src, "acct-1")
+	c := newLimitsTestCache(time.Hour, src, "acct-1")
 
 	for i := 0; i < 3; i++ {
 		snap, err := c.Snapshot(context.Background(), "")
@@ -44,10 +55,13 @@ func TestLimitsSnapshotCache_ServesOncePerTTL(t *testing.T) {
 	}
 }
 
+// TestLimitsSnapshotCache_RefetchesAfterInvalidation verifies that switching
+// the account invalidates the cached snapshot, forcing a fresh fetch instead
+// of leaking one account's limits into another's view.
 func TestLimitsSnapshotCache_RefetchesAfterInvalidation(t *testing.T) {
+	t.Parallel()
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(time.Hour)
-	c.SetSource(src, "acct-1")
+	c := newLimitsTestCache(time.Hour, src, "acct-1")
 
 	if _, err := c.Snapshot(context.Background(), ""); err != nil {
 		t.Fatal(err)
@@ -61,10 +75,12 @@ func TestLimitsSnapshotCache_RefetchesAfterInvalidation(t *testing.T) {
 	}
 }
 
+// TestLimitsSnapshotCache_ZeroTTLDisablesCaching verifies that ttl=0 is an
+// explicit "always fetch" mode: every read goes through to the source.
 func TestLimitsSnapshotCache_ZeroTTLDisablesCaching(t *testing.T) {
+	t.Parallel()
 	src := &fakeLimitsSource{snap: &cosmoflare.LimitsSnapshot{}}
-	c := NewLimitsSnapshotCache(0)
-	c.SetSource(src, "acct-1")
+	c := newLimitsTestCache(0, src, "acct-1")
 
 	for i := 0; i < 2; i++ {
 		if _, err := c.Snapshot(context.Background(), ""); err != nil {
@@ -76,14 +92,18 @@ func TestLimitsSnapshotCache_ZeroTTLDisablesCaching(t *testing.T) {
 	}
 }
 
+// TestLimitsSnapshotCache_ErrorsNotCached verifies that a failed fetch is
+// never memoized: once the source recovers, the very next read succeeds and
+// re-consults the source, so a transient outage cannot pin a stale error.
 func TestLimitsSnapshotCache_ErrorsNotCached(t *testing.T) {
+	t.Parallel()
 	src := &fakeLimitsSource{err: errors.New("boom")}
-	c := NewLimitsSnapshotCache(time.Hour)
-	c.SetSource(src, "acct-1")
+	c := newLimitsTestCache(time.Hour, src, "acct-1")
 
 	if _, err := c.Snapshot(context.Background(), ""); err == nil {
 		t.Fatal("first call should fail")
 	}
+	// Simulate the outage ending between two reads.
 	src.err = nil
 	src.snap = &cosmoflare.LimitsSnapshot{}
 	if _, err := c.Snapshot(context.Background(), ""); err != nil {
@@ -94,10 +114,13 @@ func TestLimitsSnapshotCache_ErrorsNotCached(t *testing.T) {
 	}
 }
 
+// TestLimitsSnapshotCache_NoSourceErrors verifies that reading before any
+// source is configured returns an error rather than a nil snapshot that
+// callers would dereference.
 func TestLimitsSnapshotCache_NoSourceErrors(t *testing.T) {
+	t.Parallel()
 	c := NewLimitsSnapshotCache(time.Hour)
 	if _, err := c.Snapshot(context.Background(), ""); err == nil {
 		t.Fatal("Snapshot with no source set must error")
 	}
 }
-

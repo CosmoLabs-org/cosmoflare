@@ -83,13 +83,27 @@ func evalRule(name, condition string, threshold float64) *cosmoflare.AlertRule {
 	}
 }
 
+// newEvalEvaluator collapses the setup every evaluator rule test repeated
+// (temp-dir alert service + seeded rules + recorder-backed manager) into one
+// call. Each invocation builds isolated state, so callers may run in parallel.
+func newEvalEvaluator(t *testing.T, cooldown time.Duration, rules ...*cosmoflare.AlertRule) (*Evaluator, *alertRecorder) {
+	t.Helper()
+	svc, _ := newEvalService(t, rules...)
+	rec := &alertRecorder{}
+	return NewEvaluator(svc, newEvalManager(rec), cooldown), rec
+}
+
+// TestEvaluatorErrorRateFires verifies the core error-rate evaluation path:
+// with two rules over the same condition only the one whose threshold is
+// exceeded fires, and the notification it produces carries the observed
+// percentage, the configured threshold, the unit and the projected Alert
+// fields (type, ID, metric and fire count).
 func TestEvaluatorErrorRateFires(t *testing.T) {
-	svc, _ := newEvalService(t,
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
 		evalRule("err-over", "error-rate", 4),
 		evalRule("err-under", "error-rate", 6),
 	)
-	rec := &alertRecorder{}
-	eval := NewEvaluator(svc, newEvalManager(rec), time.Minute)
 
 	fired := eval.Evaluate(EvalMetrics{WorkersRequests: 1000, WorkersErrors: 50})
 	if len(fired) != 1 || fired[0] != "err-over" {
@@ -125,10 +139,12 @@ func TestEvaluatorErrorRateFires(t *testing.T) {
 	}
 }
 
+// TestEvaluatorZeroRequestsNeverFires guards against division by zero: an
+// error-rate condition with zero observed requests must never fire, no matter
+// how high the raw error count is.
 func TestEvaluatorZeroRequestsNeverFires(t *testing.T) {
-	svc, _ := newEvalService(t, evalRule("err-zero", "error-rate", 1))
-	rec := &alertRecorder{}
-	eval := NewEvaluator(svc, newEvalManager(rec), time.Minute)
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute, evalRule("err-zero", "error-rate", 1))
 
 	fired := eval.Evaluate(EvalMetrics{WorkersErrors: 10})
 	if len(fired) != 0 {
@@ -139,13 +155,15 @@ func TestEvaluatorZeroRequestsNeverFires(t *testing.T) {
 	}
 }
 
+// TestEvaluatorStorageLimit verifies threshold selection for the
+// storage-limit condition (absolute byte comparison, not a ratio) and that the
+// resulting message reports the "bytes" unit.
 func TestEvaluatorStorageLimit(t *testing.T) {
-	svc, _ := newEvalService(t,
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
 		evalRule("store-over", "storage-limit", 1000),
 		evalRule("store-under", "storage-limit", 1200),
 	)
-	rec := &alertRecorder{}
-	eval := NewEvaluator(svc, newEvalManager(rec), time.Minute)
 
 	fired := eval.Evaluate(EvalMetrics{R2StorageBytes: 1100})
 	if len(fired) != 1 || fired[0] != "store-over" {
@@ -156,14 +174,16 @@ func TestEvaluatorStorageLimit(t *testing.T) {
 	}
 }
 
+// TestEvaluatorLatencyAndFailureCount verifies that several independent
+// conditions can fire in a single evaluation pass and that each notification
+// reports its condition-specific unit ("ms" for latency).
 func TestEvaluatorLatencyAndFailureCount(t *testing.T) {
-	svc, _ := newEvalService(t,
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
 		evalRule("lat-over", "latency", 100),
 		evalRule("fail-over", "failure-count", 5),
 		evalRule("fail-under", "failure-count", 10),
 	)
-	rec := &alertRecorder{}
-	eval := NewEvaluator(svc, newEvalManager(rec), time.Minute)
 
 	fired := eval.Evaluate(EvalMetrics{CPUP99AvgMS: 120, WorkersErrors: 8})
 	want := []string{"lat-over", "fail-over"}
@@ -171,16 +191,22 @@ func TestEvaluatorLatencyAndFailureCount(t *testing.T) {
 		t.Fatalf("fired = %v, want %v", fired, want)
 	}
 	for _, p := range rec.payloads {
-		if p.Alert.Name == "lat-over" && !strings.Contains(p.Message, "ms") {
-			t.Errorf("latency message %q missing unit ms", p.Message)
-		}
+		t.Run("unit for "+p.Alert.Name, func(t *testing.T) {
+			t.Parallel()
+			if p.Alert.Name == "lat-over" && !strings.Contains(p.Message, "ms") {
+				t.Errorf("latency message %q missing unit ms", p.Message)
+			}
+		})
 	}
 }
 
+// TestEvaluatorCooldown drives the evaluator with a fake clock to prove the
+// cooldown window is honored: a rule stays quiet while inside the window and
+// fires again once it has elapsed, with the Alert fire counter accumulating
+// across fires instead of resetting.
 func TestEvaluatorCooldown(t *testing.T) {
-	svc, _ := newEvalService(t, evalRule("cool", "error-rate", 4))
-	rec := &alertRecorder{}
-	eval := NewEvaluator(svc, newEvalManager(rec), 15*time.Minute)
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, 15*time.Minute, evalRule("cool", "error-rate", 4))
 
 	base := time.Date(2026, 9, 8, 12, 0, 0, 0, time.UTC)
 	now := base
@@ -202,12 +228,19 @@ func TestEvaluatorCooldown(t *testing.T) {
 	if len(rec.payloads) != 2 {
 		t.Errorf("notifications = %d, want 2", len(rec.payloads))
 	}
+	// The payload is captured before TriggerAlert-style bookkeeping repeats,
+	// so the second notification must already observe the accumulated count.
 	if p := rec.payloads[1]; p.Alert.Count != 2 {
 		t.Errorf("second fire count = %d, want 2", p.Alert.Count)
 	}
 }
 
+// TestEvaluatorDisabledRuleSkipped verifies that a rule persisted with
+// enabled: false is filtered out before evaluation, so it neither fires nor
+// produces a notification. The rule is hand-written YAML (rather than created
+// through Create) because Create would refuse/normalize it.
 func TestEvaluatorDisabledRuleSkipped(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	rulesPath := filepath.Join(dir, ".cosmoflare-alerts.yaml")
 	svc, err := cosmoflare.NewAlertService(rulesPath, filepath.Join(dir, "history.log"))
@@ -229,7 +262,12 @@ func TestEvaluatorDisabledRuleSkipped(t *testing.T) {
 	}
 }
 
+// TestCollectEvalMetrics verifies metric aggregation over the GraphQL
+// analytics responses: worker requests/errors and CPU P99 are averaged or
+// summed across script dimensions, and R2 storage/object counts are summed
+// across buckets.
 func TestCollectEvalMetrics(t *testing.T) {
+	t.Parallel()
 	workersResp := `{"data":{"viewer":{"accounts":[{"workersInvocationsAdaptive":[` +
 		`{"sum":{"requests":1000,"errors":50},"quantiles":{"cpuTimeP50":10,"cpuTimeP99":120},"dimensions":{"scriptName":"a","status":"ok"}},` +
 		`{"sum":{"requests":500,"errors":10},"quantiles":{"cpuTimeP50":5,"cpuTimeP99":80},"dimensions":{"scriptName":"b","status":"ok"}}` +
@@ -268,7 +306,11 @@ func TestCollectEvalMetrics(t *testing.T) {
 	}
 }
 
+// TestCollectEvalMetricsError verifies that an error payload from the
+// analytics API is surfaced as a Go error instead of silently producing zero
+// metrics (which would make every threshold look healthy).
 func TestCollectEvalMetricsError(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"errors":[{"message":"boom"}]}`))
@@ -283,31 +325,51 @@ func TestCollectEvalMetricsError(t *testing.T) {
 	}
 }
 
+// TestConditionValueLimitMetrics is the parameterized surface for the
+// FEAT-015 limit conditions: each case pins the value and unit a populated
+// metrics snapshot resolves to, so renaming a unit breaks a named subtest
+// rather than an anonymous assertion.
 func TestConditionValueLimitMetrics(t *testing.T) {
+	t.Parallel()
 	m := EvalMetrics{WorkersScriptCount: 90, R2BucketCount: 5, DNSRecordQuotaPct: 95}
 
-	if v, unit, ok := conditionValue("workers-script-count", m); !ok || v != 90 || unit != "scripts" {
-		t.Fatalf("workers-script-count = (%v, %q, %v)", v, unit, ok)
+	cases := []struct {
+		condition string
+		wantValue float64
+		wantUnit  string
+	}{
+		{"workers-script-count", 90, "scripts"},
+		{"r2-bucket-count", 5, "buckets"},
+		{"dns-record-quota", 95, "%"},
 	}
-	if v, unit, ok := conditionValue("r2-bucket-count", m); !ok || v != 5 || unit != "buckets" {
-		t.Fatalf("r2-bucket-count = (%v, %q, %v)", v, unit, ok)
-	}
-	if v, unit, ok := conditionValue("dns-record-quota", m); !ok || v != 95 || unit != "%" {
-		t.Fatalf("dns-record-quota = (%v, %q, %v)", v, unit, ok)
+	for _, tc := range cases {
+		t.Run(tc.condition, func(t *testing.T) {
+			t.Parallel()
+			v, unit, ok := conditionValue(tc.condition, m)
+			if !ok || v != tc.wantValue || unit != tc.wantUnit {
+				t.Fatalf("%s = (%v, %q, %v), want (%v, %q, true)",
+					tc.condition, v, unit, ok, tc.wantValue, tc.wantUnit)
+			}
+		})
 	}
 
-	// Zero DNS percent means "no quota rows" — the condition must not fire.
-	if _, _, ok := conditionValue("dns-record-quota", EvalMetrics{}); ok {
-		t.Fatal("dns-record-quota must be !ok with no quota rows")
-	}
+	t.Run("dns-record-quota with no quota rows is not reportable", func(t *testing.T) {
+		t.Parallel()
+		// Zero DNS percent means "no quota rows returned" — indistinguishable
+		// from a real 0%, so the condition must not fire (ok=false).
+		if _, _, ok := conditionValue("dns-record-quota", EvalMetrics{}); ok {
+			t.Fatal("dns-record-quota must be !ok with no quota rows")
+		}
+	})
 }
 
+// TestCollectLimitMetrics verifies both outcomes of limit collection: partial
+// success (some sources failing) still fills the metrics it could gather,
+// while every source failing is a hard error rather than a silent zero
+// snapshot. The httptest server stands in for the (403) subscriptions call so
+// real listers are never reached.
 func TestCollectLimitMetrics(t *testing.T) {
-	// All sources failing must error; partial success must fill fields.
-	// Fixture: reuse the package's existing fake/httptest patterns. A limits
-	// service with no listers configured returns a snapshot with only
-	// plan-unknown rows when DNS is absent — use a real httptest server for
-	// subscriptions 403 + fake listers via exported options.
+	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 	}))
@@ -388,6 +450,7 @@ func (f fakeAnalytics) Workers(ctx context.Context, w cosmoflare.AnalyticsWindow
 // a case in conditionValue. The original bug: the limits feature extended
 // the registry without the evaluator, and the CLI rejected valid conditions.
 func TestConditionValueCoversRegistry(t *testing.T) {
+	t.Parallel()
 	populated := EvalMetrics{
 		WorkersRequests:    1000,
 		WorkersErrors:      10,

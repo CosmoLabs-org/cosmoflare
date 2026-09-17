@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -9,7 +10,13 @@ import (
 // The notifier must receive the payload built for webhook delivery, fire
 // once per trigger, and be safe to leave unset.
 
+// TestTriggerAlertInvokesNotifier verifies that the notifier receives exactly
+// one payload per trigger and that the payload is the one built for webhook
+// delivery: every projected field (event, value, threshold, message, source,
+// timestamp) is asserted as its own subtest so a regression names the exact
+// field that was dropped or corrupted.
 func TestTriggerAlertInvokesNotifier(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil, "acct-123")
 
 	var got []*NotificationPayload
@@ -26,30 +33,58 @@ func TestTriggerAlertInvokesNotifier(t *testing.T) {
 		t.Fatalf("notifier calls = %d, want 1", len(got))
 	}
 	p := got[0]
-	if p.Event != "alert_triggered" {
-		t.Errorf("payload event = %q, want alert_triggered", p.Event)
-	}
+	// Pointer identity matters: the SSE bridge must observe the very alert
+	// object that fired, not a copy that can diverge from later bookkeeping.
 	if p.Alert != alert {
-		t.Error("payload alert mismatch: notifier must receive the triggered alert")
+		t.Fatal("payload alert mismatch: notifier must receive the triggered alert")
 	}
-	if p.Value != 7.5 {
-		t.Errorf("payload value = %v, want 7.5", p.Value)
+
+	checks := map[string]func() string{
+		"event is alert_triggered": func() string {
+			if p.Event != "alert_triggered" {
+				return fmt.Sprintf("got %q", p.Event)
+			}
+			return ""
+		},
+		"value is the observed metric": func() string {
+			if p.Value != 7.5 {
+				return fmt.Sprintf("got %v", p.Value)
+			}
+			return ""
+		},
+		"threshold comes from the alert": func() string {
+			if p.Threshold != 5 {
+				return fmt.Sprintf("got %v", p.Threshold)
+			}
+			return ""
+		},
+		"message is passed through": func() string {
+			if p.Message != "error rate above threshold" {
+				return fmt.Sprintf("got %q", p.Message)
+			}
+			return ""
+		},
+		"source is cosmoflare": func() string {
+			if p.Source != "cosmoflare" {
+				return fmt.Sprintf("got %q", p.Source)
+			}
+			return ""
+		},
+		"timestamp is stamped": func() string {
+			if p.Timestamp.IsZero() {
+				return "timestamp is zero"
+			}
+			return ""
+		},
 	}
-	if p.Threshold != 5 {
-		t.Errorf("payload threshold = %v, want 5", p.Threshold)
-	}
-	if p.Message != "error rate above threshold" {
-		t.Errorf("payload message = %q", p.Message)
-	}
-	if p.Source != "cosmoflare" {
-		t.Errorf("payload source = %q, want cosmoflare", p.Source)
-	}
-	if p.Timestamp.IsZero() {
-		t.Error("payload timestamp is zero")
-	}
+	runFieldChecks(t, checks)
 }
 
+// TestTriggerAlertWithoutNotifierDoesNotPanic verifies the notifier is
+// optional: with none registered, triggering still succeeds and updates the
+// alert's own bookkeeping instead of nil-panicking.
 func TestTriggerAlertWithoutNotifierDoesNotPanic(t *testing.T) {
+	t.Parallel()
 	m := NewManager(nil, "acct-123")
 
 	alert := &Alert{ID: "a-2", Name: "budget", Type: AlertTypeBudget, Threshold: 100, Enabled: true}
