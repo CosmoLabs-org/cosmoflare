@@ -1,10 +1,12 @@
 id: TASK-012
 type: task
 created_at: 2026-09-17T20:08:33.127478+04:00
-updated_at: 2026-09-17T20:08:33.132925+04:00
+updated_at: 2026-09-17T20:08:35.440891+04:00
 source: local
 ulid: 01M2R20Y3CJ8G8QS5TACW1VF5R
 status: open
 category: refactor
+origin:
+    session: 60
 title: Unify the three HTTP-status classification seams
 description: 'From /simplify reuse review (2026-09-17): three disjoint failure-classification channels coexist — (a) typed constructors authError/accessDenied/quotaError that internal/server/rest.go mapError keys on (a decodeEnvelope 403 lands as plain R2Error so mapError calls it 502 upstream_error), (b) the httpStatusCarrier interface walk in pkg/cosmoflare/retry.go isHTTPStatusRetryable uses, (c) the new R2Error.Status + ErrorStatus (FEAT-014). Callers must know which seam to use; they drift independently. Fix direction: make R2Error implement httpStatusCarrier (StatusCode() int) so retry.go''s walk picks Status up and ErrorStatus delegates to the shared seam, or have decodeEnvelope emit authError/accessDenied with Status attached. Behavior-relevant (daemon REST mapping changes) — pin mapError with tests first, own wave.'

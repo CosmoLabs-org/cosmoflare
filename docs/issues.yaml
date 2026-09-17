@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-17T20:03:53.658497+04:00
+last_updated: 2026-09-17T20:08:33.131234+04:00
 next_bug_id: 54
 next_feat_id: 44
-next_task_id: 11
+next_task_id: 13
 next_imp_id: 1
 issues:
     - id: BUG-001
@@ -596,3 +596,15 @@ issues:
       status: open
       title: cosmolabs.org/cosmoflare product page
       created_at: 2026-09-15T05:34:03.521602+04:00
+    - id: TASK-011
+      type: task
+      status: open
+      title: 'Env-profile prefixing: cobra Args-level mechanism instead of per-site wraps'
+      category: refactor
+      created_at: 2026-09-17T20:08:27.316902+04:00
+    - id: TASK-012
+      type: task
+      status: open
+      title: Unify the three HTTP-status classification seams
+      category: refactor
+      created_at: 2026-09-17T20:08:33.127478+04:00
