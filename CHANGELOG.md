@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [v0.29.0] - 2026-09-17
+
+### Added
+- redact-safe token retrieval (FEAT-029 part 1) (927da244)
+- permission catalog pack + 10405 scope decode (FEAT-011) (c949271b)
+- opt-in env-gated update check (COSMOFLARE_UPDATE_CHECK, default off) (FEAT-043)
+- named environment profiles part 1: --env flag, profile plan_tier/resource_prefix, limits plan-tier awareness (FEAT-026)
+- SSL custom hostnames (SaaS) CRUD + verification status verbs (FEAT-031)
+- WAF lists CRUD + items add/replace + managed-rulesets update (FEAT-032)
+
 ## [v0.28.2] - 2026-09-16
 
 ### Added
