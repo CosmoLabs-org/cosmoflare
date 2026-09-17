@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -147,4 +148,122 @@ func searchString(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// --- Runner behavior (offline) ---
+
+// terraformRunGlobals snapshots and zeroes the credentials and terraform
+// flag variables the runners read, so tests cannot leak state.
+func terraformRunGlobals(t *testing.T) {
+	t.Helper()
+	oldAccount, oldToken := AccountID, APIToken
+	oldDry, oldJSON := DryRun, JSONOutput
+	oldServices, oldFormat, oldVersion := tfServices, tfFormat, tfProviderVersion
+	AccountID, APIToken = "", ""
+	tfServices, tfFormat, tfProviderVersion = nil, "hcl", "~> 4.0"
+	t.Cleanup(func() {
+		AccountID, APIToken = oldAccount, oldToken
+		DryRun, JSONOutput = oldDry, oldJSON
+		tfServices, tfFormat, tfProviderVersion = oldServices, oldFormat, oldVersion
+	})
+}
+
+// TestGetTerraformExporter validates credential handling in the exporter
+// factory: both fields are required and valid values yield an exporter.
+func TestGetTerraformExporter(t *testing.T) {
+	terraformRunGlobals(t)
+
+	t.Run("missing account ID", func(t *testing.T) {
+		AccountID, APIToken = "", "token"
+		exp, err := getTerraformExporter()
+		if err == nil || !strings.Contains(err.Error(), "account ID is required") {
+			t.Fatalf("expected account ID error, got %v", err)
+		}
+		if exp != nil {
+			t.Error("expected nil exporter on error")
+		}
+	})
+
+	t.Run("missing API token", func(t *testing.T) {
+		AccountID, APIToken = "account", ""
+		exp, err := getTerraformExporter()
+		if err == nil || !strings.Contains(err.Error(), "API token is required") {
+			t.Fatalf("expected token error, got %v", err)
+		}
+		if exp != nil {
+			t.Error("expected nil exporter on error")
+		}
+	})
+
+	t.Run("valid credentials", func(t *testing.T) {
+		AccountID, APIToken = "account", "token"
+		exp, err := getTerraformExporter()
+		if err != nil {
+			t.Fatalf("expected exporter, got error: %v", err)
+		}
+		if exp == nil {
+			t.Fatal("expected non-nil exporter")
+		}
+	})
+}
+
+// TestRunTerraformExport_NoCreds verifies the export runner fails at
+// exporter construction when credentials are absent.
+func TestRunTerraformExport_NoCreds(t *testing.T) {
+	terraformRunGlobals(t)
+
+	err := runTerraformExport(terraformExportCmd, nil)
+	if err == nil || !strings.Contains(err.Error(), "failed to create terraform exporter") {
+		t.Fatalf("expected exporter construction error, got %v", err)
+	}
+}
+
+// TestRunTerraformExport_DryRun verifies the dry-run path short-circuits
+// after exporter construction and emits the payload without exporting.
+func TestRunTerraformExport_DryRun(t *testing.T) {
+	terraformRunGlobals(t)
+	AccountID, APIToken = "account", "token"
+	DryRun = true
+	JSONOutput = false
+	tfServices = []string{"workers", "dns"}
+
+	if err := runTerraformExport(terraformExportCmd, []string{t.TempDir()}); err != nil {
+		t.Fatalf("runTerraformExport(DryRun) returned error: %v", err)
+	}
+}
+
+// TestRunTerraformExport_DryRunJSON verifies the dry-run path in JSON mode.
+func TestRunTerraformExport_DryRunJSON(t *testing.T) {
+	terraformRunGlobals(t)
+	AccountID, APIToken = "account", "token"
+	DryRun = true
+	JSONOutput = true
+
+	if err := runTerraformExport(terraformExportCmd, nil); err != nil {
+		t.Fatalf("runTerraformExport(DryRun+JSON) returned error: %v", err)
+	}
+}
+
+// TestRunTerraformImportBlock_NoCreds verifies the import-block runner fails
+// at exporter construction when credentials are absent.
+func TestRunTerraformImportBlock_NoCreds(t *testing.T) {
+	terraformRunGlobals(t)
+
+	err := runTerraformImportBlock(terraformImportBlockCmd, nil)
+	if err == nil || !strings.Contains(err.Error(), "failed to create terraform exporter") {
+		t.Fatalf("expected exporter construction error, got %v", err)
+	}
+}
+
+// TestRunTerraformImportBlock_DryRun verifies the import-block dry-run path
+// short-circuits after exporter construction.
+func TestRunTerraformImportBlock_DryRun(t *testing.T) {
+	terraformRunGlobals(t)
+	AccountID, APIToken = "account", "token"
+	DryRun = true
+	JSONOutput = false
+
+	if err := runTerraformImportBlock(terraformImportBlockCmd, nil); err != nil {
+		t.Fatalf("runTerraformImportBlock(DryRun) returned error: %v", err)
+	}
 }
