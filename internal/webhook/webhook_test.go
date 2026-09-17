@@ -160,7 +160,15 @@ func newStoredWebhook(t *testing.T, m *Manager, name, url string, enabled bool) 
 // a short mismatch description otherwise.
 func runFieldChecks(t *testing.T, checks map[string]func() string) {
 	t.Helper()
-	runFieldChecks(t, checks)
+	for name, check := range checks {
+		check := check
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if msg := check(); msg != "" {
+				t.Error(msg)
+			}
+		})
+	}
 }
 
 // ---------------------------------------------------------------------------
