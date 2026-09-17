@@ -1,7 +1,7 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-16T19:35:26.434683+04:00
-next_bug_id: 53
+last_updated: 2026-09-17T04:39:02.251156+04:00
+next_bug_id: 54
 next_feat_id: 44
 next_task_id: 11
 next_imp_id: 1
@@ -323,6 +323,12 @@ issues:
       component: release
       area: reliability
       created_at: 2026-09-16T05:03:11.874457+04:00
+    - id: BUG-053
+      type: bug
+      status: open
+      title: Duplicate test-integration make target — first definition silently dead
+      severity: low
+      created_at: 2026-09-17T04:39:02.247571+04:00
     - id: FEAT-001
       type: feature
       status: closed
@@ -378,7 +384,6 @@ issues:
       status: open
       title: CF API token permission names drifted — Zone WAF Edit governs rate limiting; legacy Rate Limiting API is off
       priority: 50
-      delegated_to: "0244"
     - id: FEAT-012
       type: feature
       status: closed
@@ -454,7 +459,6 @@ issues:
       type: feature
       status: open
       title: Named environment profiles (dev/staging/prod) across all commands
-      delegated_to: "0252"
       created_at: 2026-09-11T03:29:37.578741+04:00
     - id: FEAT-027
       type: feature
@@ -470,7 +474,6 @@ issues:
       type: feature
       status: open
       title: 'Auth modernization: token retrieval command + device-flow login'
-      delegated_to: "0253"
       created_at: 2026-09-11T15:39:33.659318+04:00
     - id: FEAT-030
       type: feature
@@ -481,13 +484,11 @@ issues:
       type: feature
       status: closed
       title: SSL custom hostnames (SaaS) CRUD + verification status
-      delegated_to: "0250"
       created_at: 2026-09-12T04:09:58.051122+04:00
     - id: FEAT-032
       type: feature
       status: closed
       title: WAF lists CRUD + managed-rulesets update
-      delegated_to: "0251"
       created_at: 2026-09-12T04:10:03.927446+04:00
     - id: FEAT-033
       type: feature
@@ -544,7 +545,6 @@ issues:
       type: feature
       status: closed
       title: Opt-in env-gated update check
-      delegated_to: "0243"
       created_at: 2026-09-16T13:02:22.793721+04:00
     - id: TASK-001
       type: task

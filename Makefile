@@ -216,11 +216,6 @@ test-coverage:
 # Run benchmarks
 .PHONY: bench
 
-# Run integration tests (requires CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN)
-.PHONY: test-integration
-test-integration:
-	@echo "Running integration tests against live R2..."
-	$(GOTEST) -v -tags=integration -timeout 10m ./pkg/cosmoflare/
 bench:
 	@echo "⚡ Running benchmarks..."
 	$(GOTEST) -bench=. -benchmem ./...
