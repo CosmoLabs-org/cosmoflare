@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -61,16 +62,59 @@ var validAlertServices = map[string]bool{
 	"dns":     true,
 }
 
-// Valid conditions for alert rules. The three count/quota conditions are fed
-// by the serve alert cycle's LimitsService snapshot (CollectLimitMetrics).
-var validAlertConditions = map[string]bool{
-	"error-rate":          true,
-	"storage-limit":       true,
-	"latency":             true,
-	"failure-count":       true,
-	"workers-script-count": true,
-	"r2-bucket-count":      true,
-	"dns-record-quota":     true,
+// AlertConditionDescriptor describes one alertable condition — the single
+// registry every surface derives from (FEAT-015): validation, error
+// messages, CLI help text, and the evaluator's data-key mapping. Adding a
+// condition here plus its case in the evaluator's conditionValue makes it
+// valid everywhere; extending one place and not the others is the drift this
+// table exists to prevent.
+type AlertConditionDescriptor struct {
+	Name    string // rule condition key
+	Unit    string // display unit of the observed value
+	Help    string // one-line description for help output
+	FedBy   string // availability rule: which metric source feeds it
+	DataKey string // EvalMetrics field the evaluator reads
+	Service string // service tag for grouping in help output
+}
+
+// alertConditionRegistry is the ordered condition registry. The three
+// count/quota conditions are fed by the serve alert cycle's LimitsService
+// snapshot (CollectLimitMetrics).
+var alertConditionRegistry = []AlertConditionDescriptor{
+	{Name: "error-rate", Unit: "%", Help: "share of Workers requests that errored over the window", FedBy: "Workers analytics (requests > 0)", DataKey: "WorkersErrors/WorkersRequests", Service: "workers"},
+	{Name: "storage-limit", Unit: "bytes", Help: "R2 storage in use", FedBy: "R2 analytics", DataKey: "R2StorageBytes", Service: "r2"},
+	{Name: "latency", Unit: "ms", Help: "Workers CPU p99 average", FedBy: "Workers analytics (CPU samples > 0)", DataKey: "CPUP99AvgMS", Service: "workers"},
+	{Name: "failure-count", Unit: "errors", Help: "absolute Workers error count over the window", FedBy: "Workers analytics", DataKey: "WorkersErrors", Service: "workers"},
+	{Name: "workers-script-count", Unit: "scripts", Help: "Workers scripts on the account against the plan limit", FedBy: "limits snapshot", DataKey: "WorkersScriptCount", Service: "workers"},
+	{Name: "r2-bucket-count", Unit: "buckets", Help: "R2 buckets on the account against the plan limit", FedBy: "limits snapshot", DataKey: "R2BucketCount", Service: "r2"},
+	{Name: "dns-record-quota", Unit: "%", Help: "highest per-zone DNS record usage against the zone quota", FedBy: "limits snapshot (DNS rows)", DataKey: "DNSRecordQuotaPct", Service: "dns"},
+}
+
+// AlertConditions returns the condition registry in registration order.
+func AlertConditions() []AlertConditionDescriptor {
+	out := make([]AlertConditionDescriptor, len(alertConditionRegistry))
+	copy(out, alertConditionRegistry)
+	return out
+}
+
+// AlertConditionList renders the registered condition names for error
+// messages and help text.
+func AlertConditionList() string {
+	names := make([]string, len(alertConditionRegistry))
+	for i, c := range alertConditionRegistry {
+		names[i] = c.Name
+	}
+	return strings.Join(names, ", ")
+}
+
+// validAlertCondition reports whether name is a registered condition.
+func validAlertCondition(name string) bool {
+	for _, c := range alertConditionRegistry {
+		if c.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // Valid actions for alert rules.
@@ -230,8 +274,8 @@ func (s *AlertService) Update(name string, update *AlertRule) (*AlertRule, error
 		found.Service = update.Service
 	}
 	if update.Condition != "" {
-		if !validAlertConditions[update.Condition] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota", update.Condition))
+		if !validAlertCondition(update.Condition) {
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: %s", update.Condition, AlertConditionList()))
 		}
 		found.Condition = update.Condition
 	}
@@ -427,8 +471,8 @@ func validateAlertRule(rule *AlertRule) error {
 	if !validAlertServices[rule.Service] {
 		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", rule.Service))
 	}
-	if !validAlertConditions[rule.Condition] {
-		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota", rule.Condition))
+	if !validAlertCondition(rule.Condition) {
+		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: %s", rule.Condition, AlertConditionList()))
 	}
 	if rule.Threshold <= 0 {
 		return validationError("validateAlertRule", "threshold must be a positive number")
