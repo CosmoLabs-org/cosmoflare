@@ -2,10 +2,12 @@ package cosmoflare
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -333,6 +335,12 @@ const dnsConcurrency = 8
 // the DNS quota API (concurrent, bounded); a failed live call falls back to
 // the static per-plan table with used 0 — honest, not fabricated. Enterprise
 // zones (account-level quota) are skipped: no per-zone limit exists.
+//
+// Fail-fast (FEAT-014): a 401/403 means the token lacks DNS Read — every
+// zone would fail identically — so the first such error stops dispatching
+// further zones and records ONE actionable source error instead of failing
+// all N calls one by one. Other statuses (e.g. 404 on a zone without the
+// endpoint) keep the per-zone static fallback.
 func (s *LimitsService) appendDNSRows(ctx context.Context, snap *LimitsSnapshot, zones []*Zone) {
 	type dnsResult struct {
 		row     LimitRow
@@ -340,17 +348,31 @@ func (s *LimitsService) appendDNSRows(ctx context.Context, snap *LimitsSnapshot,
 	}
 	results := make([]dnsResult, len(zones))
 
+	var authFailed atomic.Bool
 	sem := make(chan struct{}, dnsConcurrency)
 	var wg sync.WaitGroup
 	for i, z := range zones {
+		if authFailed.Load() {
+			break // permission already failed — don't start more calls
+		}
 		wg.Add(1)
 		go func(idx int, zone *Zone) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
+			if authFailed.Load() {
+				return // queued behind the semaphore when the permission failure landed
+			}
 
 			used, limit, src, err := s.dnsUsage(ctx, zone.ID)
 			if err != nil {
+				if status := ErrorStatus(err); status == http.StatusUnauthorized || status == http.StatusForbidden {
+					if authFailed.CompareAndSwap(false, true) {
+						snap.recordSourceError("dns.usage", fmt.Errorf(
+							"zone %s: %v — the token likely lacks DNS Read; skipping DNS usage for the remaining zones", zone.Name, err))
+					}
+					return
+				}
 				staticLimit, ok := dnsRecordsStaticLimit(zone.Plan.LegacyID, zone.CreatedOn)
 				if !ok {
 					return // enterprise: account-level quota, nothing per-zone to report

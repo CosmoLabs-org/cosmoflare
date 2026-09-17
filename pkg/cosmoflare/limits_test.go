@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -209,11 +210,14 @@ func TestDNSUsageNullQuota(t *testing.T) {
 // live endpoint 404s and the Snapshot-level static table answers. (The pure
 // table itself is covered by TestDNSRecordsStaticLimit.)
 func TestDNSUsageFallbackToStatic(t *testing.T) {
-	s := snapshotFixture(t,
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	t.Cleanup(srv.Close)
+	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
 		WithLimitsZones(fakeZoneLister{zones: []*Zone{
 			{ID: "z1", Name: "fallback.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
-		}}),
-	)
+		}}))
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -425,13 +429,17 @@ func TestSnapshotBucketScope(t *testing.T) {
 }
 
 func TestSnapshotDNSStaticFallback(t *testing.T) {
-	// Live DNS endpoint fails (testLimitServer returns 403 for every path);
-	// zone is free + created 2025 → static 200.
-	s := snapshotFixture(t,
+	// Live DNS endpoint 404s (endpoint absent — NOT a permission failure, so
+	// FEAT-014 fail-fast does not trigger); zone is free + created 2025 →
+	// static 200.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	t.Cleanup(srv.Close)
+	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
 		WithLimitsZones(fakeZoneLister{zones: []*Zone{
 			{ID: "z1", Name: "new.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 2, 2, 0, 0, 0, 0, time.UTC)},
-		}}),
-	)
+		}}))
 	snap, err := s.Snapshot(context.Background(), "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -445,4 +453,75 @@ func TestSnapshotDNSStaticFallback(t *testing.T) {
 		}
 	}
 	t.Fatal("dns.records fallback row missing")
+}
+
+// TestSnapshotDNSUsageFailFastOn403 pins FEAT-014's fail-fast: a token
+// without DNS Read (403 on the usage endpoint) must stop after the in-flight
+// calls and record ONE actionable source error instead of failing every zone
+// one by one. 12 zones with concurrency 8 → at most 8 usage calls.
+func TestSnapshotDNSUsageFailFastOn403(t *testing.T) {
+	var usageCalls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/dns_records/usage") {
+			atomic.AddInt32(&usageCalls, 1)
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, `{"success": false, "errors": [{"code": 10000, "message": "Authentication error"}]}`)
+			return
+		}
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"success": false}`)
+	}))
+	t.Cleanup(srv.Close)
+
+	zones := make([]*Zone, 12)
+	for i := range zones {
+		zones[i] = &Zone{ID: fmt.Sprintf("z%d", i), Name: fmt.Sprintf("z%d.example", i),
+			Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)}
+	}
+	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL), WithLimitsZones(fakeZoneLister{zones: zones}))
+
+	snap, err := s.Snapshot(context.Background(), "")
+	if err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	calls := atomic.LoadInt32(&usageCalls)
+	if calls > dnsConcurrency {
+		t.Errorf("usage calls = %d, want <= %d (fail-fast must stop dispatching)", calls, dnsConcurrency)
+	}
+	if len(snap.Sources) != 1 {
+		t.Fatalf("source errors = %d, want exactly 1: %+v", len(snap.Sources), snap.Sources)
+	}
+	if !strings.Contains(snap.Sources[0].Err, "skipping DNS usage for the remaining zones") {
+		t.Errorf("source error not actionable: %q", snap.Sources[0].Err)
+	}
+	for _, row := range snap.Rows {
+		if row.Resource == "dns.records" {
+			t.Fatalf("no dns.records row may be emitted on permission failure, got %+v", row)
+		}
+	}
+}
+
+func TestSnapshotDNSUsage404StillFallsBack(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r) // every endpoint 404s, including dns usage
+	}))
+	t.Cleanup(srv.Close)
+	s := NewLimitsService("acct", "tok", WithLimitsBaseURL(srv.URL),
+		WithLimitsZones(fakeZoneLister{zones: []*Zone{
+			{ID: "z1", Name: "nf.example", Plan: ZonePlan{LegacyID: "free"}, CreatedOn: time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)},
+		}}))
+
+	snap, err := s.Snapshot(context.Background(), "")
+	if err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	for _, row := range snap.Rows {
+		if row.Resource == "dns.records" && row.Scope == "nf.example" {
+			if row.LimitSource != "static-docs" {
+				t.Fatalf("404 must fall back to static, got %+v", row)
+			}
+			return
+		}
+	}
+	t.Fatal("dns.records fallback row missing on 404")
 }

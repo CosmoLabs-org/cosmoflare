@@ -195,6 +195,11 @@ func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertM
 	}
 	eval := webhook.NewEvaluator(rules, alertMgr, 0) // 0 → library default cooldown (15m)
 
+	// Limits snapshots move on an hours timescale — cache one per account
+	// for 30 minutes instead of re-collecting every alert tick (FEAT-014:
+	// ~45 calls/cycle → ~45 calls/half-hour on a 41-zone account).
+	limitsCache := webhook.NewLimitsSnapshotCache(nil, "", 30*time.Minute)
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -202,7 +207,7 @@ func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertM
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			runServeAlertEvalCycle(ctx, cm, eval, rules)
+			runServeAlertEvalCycle(ctx, cm, eval, rules, limitsCache)
 		}
 	}
 }
@@ -210,7 +215,7 @@ func runServeAlertEvalLoop(ctx context.Context, cm *config.ConfigManager, alertM
 // runServeAlertEvalCycle runs one evaluation pass: list rules, resolve the
 // current profile's credentials, collect 24h analytics, evaluate. Any failure
 // short-circuits with a log line — no alerts fire on fabricated zeros.
-func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval *webhook.Evaluator, rules *cosmoflare.AlertService) {
+func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval *webhook.Evaluator, rules *cosmoflare.AlertService, limitsCache *webhook.LimitsSnapshotCache) {
 	listed, err := rules.List()
 	if err != nil {
 		log.Printf("[alerts] list rules: %v", err)
@@ -236,7 +241,8 @@ func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval 
 	}
 
 	limits := cosmoflare.NewLimitsServiceFromCreds(p.AccountID, p.APIToken)
-	if err := webhook.CollectLimitMetrics(ctx, limits, &metrics); err != nil {
+	limitsCache.SetSource(limits, p.AccountID)
+	if err := webhook.CollectLimitMetrics(ctx, limitsCache, &metrics); err != nil {
 		// Limit collection failing must NOT skip the analytics-based rules.
 		log.Printf("[alerts] collect limits: %v", err)
 	}

@@ -307,14 +307,14 @@ func (c *restClient) sendWithRetry(ctx context.Context, op, method, path string,
 func decodeEnvelope(op string, data []byte, statusCode int, out interface{}) error {
 	var env apiEnvelope
 	if err := json.Unmarshal(data, &env); err != nil {
-		return newError(op, fmt.Sprintf("unexpected response (HTTP %d)", statusCode), err)
+		return newStatusError(op, fmt.Sprintf("unexpected response (HTTP %d)", statusCode), statusCode, err)
 	}
 	if !env.Success {
 		msg := fmt.Sprintf("API returned errors (HTTP %d)", statusCode)
 		if len(env.Errors) > 0 {
 			msg = env.Errors[0].Message
 		}
-		return newError(op, msg, nil)
+		return newStatusError(op, msg, statusCode, nil)
 	}
 	if out != nil && len(env.Result) > 0 {
 		if err := json.Unmarshal(env.Result, out); err != nil {

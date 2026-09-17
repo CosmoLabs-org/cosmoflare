@@ -18,6 +18,7 @@ type R2Error struct {
 	Key     string // Object key involved (if any)
 	Err     error  // Underlying error
 	Message string // Human-readable message
+	Status  int    // HTTP status of the failed response, 0 when not HTTP-born (FEAT-014)
 }
 
 func (e *R2Error) Error() string {
@@ -66,6 +67,26 @@ func newError(op, msg string, err error) *R2Error {
 		e.Message = msg + " — " + ke.Cause + " (fix: " + ke.Fix + ")"
 	}
 	return e
+}
+
+// newStatusError creates an R2Error that remembers the HTTP status of the
+// failed response, so callers can classify failures (auth, permission,
+// availability) without parsing message text (FEAT-014).
+func newStatusError(op, msg string, status int, err error) *R2Error {
+	e := newError(op, msg, err)
+	e.Status = status
+	return e
+}
+
+// ErrorStatus returns the HTTP status carried by err (or any error it
+// wraps), 0 when none — the classification seam for callers that must react
+// to failure classes rather than parse messages.
+func ErrorStatus(err error) int {
+	var r2e *R2Error
+	if errors.As(err, &r2e) {
+		return r2e.Status
+	}
+	return 0
 }
 
 // notFound creates an R2NotFoundError.

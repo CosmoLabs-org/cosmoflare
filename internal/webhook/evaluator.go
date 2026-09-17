@@ -215,7 +215,7 @@ func CollectEvalMetrics(ctx context.Context, analytics *cosmoflare.AnalyticsServ
 // partial snapshots leave the untouched fields at zero and the evaluator
 // skips conditions it cannot judge. DNSRecordQuotaPct is the MAXIMUM percent
 // across per-zone rows so one hot zone fires the rule.
-func CollectLimitMetrics(ctx context.Context, limits *cosmoflare.LimitsService, m *EvalMetrics) error {
+func CollectLimitMetrics(ctx context.Context, limits LimitsSource, m *EvalMetrics) error {
 	snap, err := limits.Snapshot(ctx, "")
 	if err != nil {
 		return fmt.Errorf("limits snapshot: %w", err)
