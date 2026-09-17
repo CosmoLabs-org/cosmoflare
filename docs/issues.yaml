@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-17T04:39:02.251156+04:00
+last_updated: 2026-09-17T04:39:20.459658+04:00
 next_bug_id: 54
 next_feat_id: 44
 next_task_id: 11
@@ -325,7 +325,7 @@ issues:
       created_at: 2026-09-16T05:03:11.874457+04:00
     - id: BUG-053
       type: bug
-      status: open
+      status: closed
       title: Duplicate test-integration make target — first definition silently dead
       severity: low
       created_at: 2026-09-17T04:39:02.247571+04:00
@@ -459,6 +459,7 @@ issues:
       type: feature
       status: open
       title: Named environment profiles (dev/staging/prod) across all commands
+      delegated_to: "0252"
       created_at: 2026-09-11T03:29:37.578741+04:00
     - id: FEAT-027
       type: feature
