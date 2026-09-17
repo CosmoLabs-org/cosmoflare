@@ -165,11 +165,24 @@ func getKVService() (*cosmoflare.KVService, error) {
 	return cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
 }
 
+// filterKVNamespacesByProfile keeps only namespaces whose title carries the
+// active profile's resource prefix (FEAT-026). The human title is scoped, not
+// the server-assigned numeric ID. A no-op with no active prefix.
+func filterKVNamespacesByProfile(namespaces []*cosmoflare.KVNamespace) []*cosmoflare.KVNamespace {
+	filtered := make([]*cosmoflare.KVNamespace, 0, len(namespaces))
+	for _, ns := range namespaces {
+		if matchesResourcePrefix(ns.Title) {
+			filtered = append(filtered, ns)
+		}
+	}
+	return filtered
+}
+
 func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("namespace title is required")
 	}
-	title := args[0]
+	title := applyResourcePrefix(args[0])
 
 	svc, err := getKVService()
 	if err != nil {
@@ -206,6 +219,7 @@ func runKVNamespaceList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return outErr("failed to list namespaces", err)
 	}
+	namespaces = filterKVNamespacesByProfile(namespaces)
 
 	return outResult(namespaces, func() {
 		if len(namespaces) == 0 {

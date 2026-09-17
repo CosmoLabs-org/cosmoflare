@@ -172,11 +172,23 @@ func getWorkerService() (*cosmoflare.WorkerService, error) {
 	return cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
 }
 
+// filterWorkersByProfile keeps only workers whose name carries the active
+// profile's resource prefix (FEAT-026). A no-op with no active prefix.
+func filterWorkersByProfile(workers []*cosmoflare.Worker) []*cosmoflare.Worker {
+	filtered := make([]*cosmoflare.Worker, 0, len(workers))
+	for _, worker := range workers {
+		if matchesResourcePrefix(worker.Name) {
+			filtered = append(filtered, worker)
+		}
+	}
+	return filtered
+}
+
 func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	if workerScript == "" {
 		return fmt.Errorf("script file is required (--script or -s)")
@@ -242,6 +254,7 @@ func runWorkerList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return outErr("failed to list workers", err)
 	}
+	workers = filterWorkersByProfile(workers)
 
 	return outResult(workers, func() {
 		if len(workers) == 0 {
@@ -268,7 +281,7 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -303,7 +316,7 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	if !workerForce && !DryRun {
 		fmt.Printf("Are you sure you want to delete worker '%s'? [y/N]: ", name)
@@ -344,7 +357,7 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -438,7 +451,7 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := args[0]
+	name := applyResourcePrefix(args[0])
 
 	if workerCompatDate == "" && workerUsageModel == "" && len(workerBindings) == 0 {
 		return fmt.Errorf("at least one setting is required (--compatibility-date, --usage-model, or --bindings)")

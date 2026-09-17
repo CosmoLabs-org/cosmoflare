@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
@@ -946,5 +947,32 @@ func TestR2StorageBackend_ListRemoteObjects_SinglePage(t *testing.T) {
 	}
 	if len(stub.receivedTokens) != 1 {
 		t.Errorf("ListObjects called %d time(s), want 1 (empty NextToken must end the loop)", len(stub.receivedTokens))
+	}
+}
+
+// --- Profile prefix scoping (FEAT-026) ---
+
+func TestScopeBucketRef(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile *config.Profile
+		in      string
+		want    string
+	}{
+		{"bucket part only", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-bucket/assets", "stg-my-bucket/assets"},
+		{"nested key prefix untouched", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-bucket/static/v2", "stg-my-bucket/static/v2"},
+		{"bare bucket prefixed whole", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-bucket", "stg-my-bucket"},
+		{"already prefixed passes through", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "stg-my-bucket/assets", "stg-my-bucket/assets"},
+		{"nil profile is a no-op", nil, "my-bucket/assets", "my-bucket/assets"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ActiveProfile = tt.profile
+			defer func() { ActiveProfile = nil }()
+
+			if got := scopeBucketRef(tt.in); got != tt.want {
+				t.Errorf("scopeBucketRef(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
 	}
 }

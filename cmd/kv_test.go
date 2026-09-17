@@ -3,8 +3,11 @@ package cmd
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -782,5 +785,93 @@ func TestKVPut_DryRunZeroTTL(t *testing.T) {
 	err := runKVPut(kvPutCmd, []string{"ns-abc", "zero-ttl-key"})
 	if err != nil {
 		t.Errorf("runKVPut(DryRun, TTL=0) returned error: %v", err)
+	}
+}
+
+// --- Profile prefix scoping (FEAT-026) ---
+
+// kvPrefixTestEnv snapshots the globals the prefix-scoping tests touch and
+// installs a staging profile with resource prefix "stg-".
+func kvPrefixTestEnv(profile *config.Profile) func() {
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAccountID := AccountID
+	origAPIToken := APIToken
+	origProfile := ActiveProfile
+	DryRun = true
+	JSONOutput = false
+	AccountID = "test-account"
+	APIToken = "test-token"
+	ActiveProfile = profile
+	return func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		AccountID = origAccountID
+		APIToken = origAPIToken
+		ActiveProfile = origProfile
+	}
+}
+
+func TestKVNamespaceCreate_PrefixScoping(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile *config.Profile
+		arg     string
+		want    string
+	}{
+		{"prefix applied", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "my-cache", "stg-my-cache"},
+		{"already prefixed passes through", &config.Profile{Name: "staging", ResourcePrefix: "stg-"}, "stg-my-cache", "stg-my-cache"},
+		{"nil profile is a no-op", nil, "my-cache", "my-cache"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			restore := kvPrefixTestEnv(tt.profile)
+			defer restore()
+
+			out := capturePrint(t, func() {
+				if err := runKVNamespaceCreate(kvNamespaceCreateCmd, []string{tt.arg}); err != nil {
+					t.Errorf("runKVNamespaceCreate returned error: %v", err)
+				}
+			})
+			if !strings.Contains(out, tt.want) {
+				t.Errorf("dry-run output should mention %q, got: %q", tt.want, out)
+			}
+		})
+	}
+}
+
+func TestKVNamespaceDelete_IDNotPrefixed(t *testing.T) {
+	restore := kvPrefixTestEnv(&config.Profile{Name: "staging", ResourcePrefix: "stg-"})
+	defer restore()
+
+	out := capturePrint(t, func() {
+		if err := runKVNamespaceDelete(kvNamespaceDeleteCmd, []string{"ns-abc123"}); err != nil {
+			t.Errorf("runKVNamespaceDelete returned error: %v", err)
+		}
+	})
+	if !strings.Contains(out, "ns-abc123") {
+		t.Errorf("dry-run output should mention %q, got: %q", "ns-abc123", out)
+	}
+	if strings.Contains(out, "stg-ns-abc123") {
+		t.Errorf("namespace IDs must never be prefixed, got: %q", out)
+	}
+}
+
+func TestFilterKVNamespacesByProfile(t *testing.T) {
+	namespaces := []*cosmoflare.KVNamespace{
+		{ID: "ns-1", Title: "stg-cache"},
+		{ID: "ns-2", Title: "prod-cache"},
+	}
+
+	ActiveProfile = &config.Profile{Name: "staging", ResourcePrefix: "stg-"}
+	got := filterKVNamespacesByProfile(namespaces)
+	if len(got) != 1 || got[0].Title != "stg-cache" {
+		t.Errorf("filterKVNamespacesByProfile with prefix = %v, want only stg-cache", got)
+	}
+
+	ActiveProfile = nil
+	got = filterKVNamespacesByProfile(namespaces)
+	if len(got) != 2 {
+		t.Errorf("filterKVNamespacesByProfile with nil profile kept %d, want 2", len(got))
 	}
 }
