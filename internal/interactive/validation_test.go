@@ -44,7 +44,7 @@ func TestValidateAPIToken_WithHTTPTest(t *testing.T) {
 
 // testValidateAPITokenValidR2 asserts that a verified token carrying R2 permission groups is reported as a valid api_token.
 func testValidateAPITokenValidR2(t *testing.T) {
-	server := startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Bearer test-token-valid-12345678", r.Header.Get("Authorization"))
 		assert.Equal(t, "/client/v4/user/tokens/verify", r.URL.Path)
 
@@ -73,7 +73,7 @@ func testValidateAPITokenValidR2(t *testing.T) {
 
 // testValidateAPITokenInvalid asserts that an HTTP 401 from the verify endpoint yields an invalid token and an error mentioning the status code.
 func testValidateAPITokenInvalid(t *testing.T) {
-	server := startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]any{
 			"success": false,
@@ -89,7 +89,7 @@ func testValidateAPITokenInvalid(t *testing.T) {
 
 // testValidateAPITokenNoR2 asserts that a verified token lacking R2 permissions is rejected with an error mentioning R2 permissions.
 func testValidateAPITokenNoR2(t *testing.T) {
-	server := startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "/client/v4", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{
 			"success": true,
 			"result": map[string]any{
@@ -120,7 +120,7 @@ func testValidateAPITokenShort(t *testing.T) {
 // TestGetAccountName_WithHTTPTest verifies getAccountName behavior, one t.Run subtest per scenario...
 func TestGetAccountName_WithHTTPTest(t *testing.T) {
 	t.Run("returns account name on success", func(t *testing.T) {
-		server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/client/v4/accounts/acc123", r.URL.Path)
 			json.NewEncoder(w).Encode(map[string]any{
 				"success": true,
@@ -235,7 +235,9 @@ func TestAutoDetectAccountInfo_ValidTokenWithAccountID(t *testing.T) {
 		} else {
 			w.WriteHeader(404)
 		}
-	})
+	}))
+	defer server.Close()
+	cfAPIBaseURL = server.URL + "/client/v4"
 
 	token := strings.Repeat("a", 25)
 	accountID, accountName := autoDetectAccountInfo(token)
@@ -245,7 +247,7 @@ func TestAutoDetectAccountInfo_ValidTokenWithAccountID(t *testing.T) {
 
 // TestAutoDetectAccountInfo_ValidTokenNoAccountID verifies that autoDetectAccountInfo handles the...
 func TestAutoDetectAccountInfo_ValidTokenNoAccountID(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": true,
@@ -269,7 +271,7 @@ func TestAutoDetectAccountInfo_ValidTokenNoAccountID(t *testing.T) {
 
 // TestAutoDetectAccountInfo_InvalidTokenResponse verifies that autoDetectAccountInfo handles the...
 func TestAutoDetectAccountInfo_InvalidTokenResponse(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(401)
 		w.Write([]byte(`{"success": false}`))
 	})
@@ -289,7 +291,7 @@ func TestGetAccountName_NetworkError(t *testing.T) {
 
 // TestGetAccountName_NonOKStatus verifies that getAccountName degrades gracefully on a non-200...
 func TestGetAccountName_NonOKStatus(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 	})
 
@@ -299,7 +301,7 @@ func TestGetAccountName_NonOKStatus(t *testing.T) {
 
 // TestGetAccountName_InvalidJSON verifies that getAccountName degrades gracefully on malformed JSON.
 func TestGetAccountName_InvalidJSON(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte(`invalid json`))
 	})
@@ -310,7 +312,7 @@ func TestGetAccountName_InvalidJSON(t *testing.T) {
 
 // TestGetAccountName_SuccessFalse verifies that getAccountName degrades gracefully when...
 func TestGetAccountName_SuccessFalse(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -351,7 +353,7 @@ func TestValidateAccountID_InvalidChar(t *testing.T) {
 
 // TestTestConnection_NotFound verifies that TestConnection handles the not found case.
 func TestTestConnection_NotFound(t *testing.T) {
-	server := startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
+	startCFTestServer(t, "", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 	})
 
