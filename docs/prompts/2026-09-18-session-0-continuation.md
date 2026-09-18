@@ -4,7 +4,7 @@ created: 2026-09-18
 status: PENDING
 branch: master
 goals_total: 9
-goals_completed: 0
+goals_completed: 2
 supersedes: "docs/prompts/2026-09-17-session-0-continuation.md"
 ---
 
@@ -20,16 +20,18 @@ Acceptance: https://cosmolabs.org/cosmoflare serves the page with OG + JSON-LD i
 Acceptance: Show HN + r/Cloudflare posts from docs/launch/ drafts live; ROAD-096 note records the URLs
 ### [ ] 3. G-03: Complete the research ingestion
 Acceptance: Final Qwen completeness line + grok-results.md + gemini-results.md landed in docs/research/2026-09-17-cf-perms-next-waves-tiers/; /run-continuation cf-perms-next-waves-tiers completes its 5 goals (FEAT-011 criterion 4 = dataset structured into the catalog)
-### [ ] 4. G-04: FEAT-020 waves 2+ — registry breadth and consumers
+### [x] 4. G-04: FEAT-020 waves 2+ — registry breadth and consumers
 Acceptance: workers/kv/d1/dns groups authored in internal/cmdmanifest (permissions from the Qwen dataset); dry-run-default consumer derives from the destructive flag; cross-check test: every registered CLIPath resolves against the live cobra tree
-### [ ] 5. G-05: Re-dispatch the 5 empty cover parts when the GLM queue recovers
+Done: commit 997143b — 58 entries (worker 35, kv 7, d1 11, dns 5), destructiveDryRun consumer wired into 5 destructive deletes, bidirectional cobra cross-check tests
+### [~] 5. G-05: Re-dispatch the 5 empty cover parts when the GLM queue recovers
 Acceptance: batch-005 prompt manifest parts for the 5 discarded agents re-run green through the quality gate; cmd package coverage measurably above the 60.2% baseline
 
 
 ### [ ] G-06 G-01: TASK-010 product page live on cosmolabs.org/cosmoflare (carried) (carried from docs/prompts/2026-09-17-session-0-continuation.md G-01)
 ### [ ] G-07 G-02: Publish launch posts in operator voice (carried) (carried from docs/prompts/2026-09-17-session-0-continuation.md G-02)
 ### [ ] G-08 G-03: Ingest cross-AI research results and synthesize (carried from docs/prompts/2026-09-17-session-0-continuation.md G-03)
-### [ ] G-09 G-04: FEAT-020 command registry spine, wave 1 (carried from docs/prompts/2026-09-17-session-0-continuation.md G-04)
+### [x] G-09 G-04: FEAT-020 command registry spine, wave 1 (carried from docs/prompts/2026-09-17-session-0-continuation.md G-04)
+Done pre-session: commit 88afec3
 ## Carry-Over
 
 Operator: launch posts (drafts final; next HN window Tue-Thu 8-10am ET) and TASK-010 (cosmolabs.org session). Research: Qwen may still owe a final completeness line — prompt Please continue in that chat; Grok + Gemini packs unopened (paths in docs/research/2026-09-17-cf-perms-next-waves-tiers/). Provider health: GLM queue 429-limited through the evening — do not dispatch batches until it recovers; the Agent tool routes through the same provider, so review-agent dispatches are equally affected. Open follow-ups: TASK-011 (cobra-Args prefix mechanism), TASK-012 (status-seam unification), TASK-013 (alerts disabled-rule API gap). Second /simplify pass on increment 8e77ac2..HEAD was skipped under rate-limit — safe to run next session.
