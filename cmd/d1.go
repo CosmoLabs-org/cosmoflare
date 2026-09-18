@@ -221,28 +221,19 @@ func runD1Get(cmd *cobra.Command, args []string) error {
 func runD1Delete(cmd *cobra.Command, args []string) error {
 	databaseID := args[0]
 
-	if !d1Force && !DryRun {
-		fmt.Printf("Are you sure you want to delete database '%s' and all its data? [y/N]: ", databaseID)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Database deletion cancelled")
-			return nil
-		}
-	}
-
-	svc, err := getD1Service()
-	if err != nil {
-		return outErr("failed to create D1 service", err)
-	}
-
-	if DryRun {
+	// Registry-flagged destructive: runs dry unless --force, so no prompt.
+	dry := destructiveDryRun([]string{"d1", "delete"}, d1Force)
+	if dry {
 		return outPayload("DRY RUN: Would delete database", func() any {
 			return map[string]string{"id": databaseID}
 		}, func() {
 			printInfo("DRY RUN: Would delete database '%s'", databaseID)
 		})
+	}
+
+	svc, err := getD1Service()
+	if err != nil {
+		return outErr("failed to create D1 service", err)
 	}
 
 	if err := svc.Delete(context.Background(), databaseID); err != nil {

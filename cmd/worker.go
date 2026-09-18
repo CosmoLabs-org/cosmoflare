@@ -318,28 +318,19 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	}
 	name := applyResourcePrefix(args[0])
 
-	if !workerForce && !DryRun {
-		fmt.Printf("Are you sure you want to delete worker '%s'? [y/N]: ", name)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Worker deletion cancelled")
-			return nil
-		}
-	}
-
-	svc, err := getWorkerService()
-	if err != nil {
-		return outErr("failed to create worker service", err)
-	}
-
-	if DryRun {
+	// Registry-flagged destructive: runs dry unless --force, so no prompt.
+	dry := destructiveDryRun([]string{"worker", "delete"}, workerForce)
+	if dry {
 		return outPayload("DRY RUN: Would delete worker", func() any {
 			return map[string]string{"name": name}
 		}, func() {
 			printInfo("DRY RUN: Would delete worker '%s'", name)
 		})
+	}
+
+	svc, err := getWorkerService()
+	if err != nil {
+		return outErr("failed to create worker service", err)
 	}
 
 	if err := svc.Delete(context.Background(), name); err != nil {

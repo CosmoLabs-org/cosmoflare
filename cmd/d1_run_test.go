@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -60,36 +59,25 @@ func TestRunD1Query_LocalAndRemoteConflict(t *testing.T) {
 	}
 }
 
-// TestRunD1Delete_ConfirmDeclined verifies a declined confirmation prompt
-// cancels the deletion without contacting the service.
-func TestRunD1Delete_ConfirmDeclined(t *testing.T) {
+// TestRunD1Delete_DryRunDefault verifies the FEAT-020 wave-2 contract: an
+// un-forced destructive delete runs dry by default — no prompt, no service
+// call — and reports what would have been deleted.
+func TestRunD1Delete_DryRunDefault(t *testing.T) {
 	d1RunSnapshot(t)
 	JSONOutput = false
 	DryRun = false
 	d1Force = false
 	AccountID = ""
-	APIToken = "" // cancellation must happen before service creation
-
-	savedStdin := os.Stdin
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("pipe: %v", err)
-	}
-	if _, err := w.WriteString("n\n"); err != nil {
-		t.Fatalf("seed stdin: %v", err)
-	}
-	w.Close()
-	os.Stdin = r
-	t.Cleanup(func() { os.Stdin = savedStdin })
+	APIToken = "" // dry-run must happen before service creation
 
 	out := capturePrint(t, func() {
 		if err := runD1Delete(nil, []string{"db-uuid"}); err != nil {
-			t.Errorf("declined confirmation should cancel cleanly, got %v", err)
+			t.Errorf("dry-run default should exit cleanly, got %v", err)
 		}
 	})
 
-	if !strings.Contains(out, "Database deletion cancelled") {
-		t.Errorf("expected cancellation notice, got %q", out)
+	if !strings.Contains(out, "DRY RUN: Would delete database") {
+		t.Errorf("expected dry-run notice, got %q", out)
 	}
 }
 

@@ -244,28 +244,19 @@ func runKVNamespaceDelete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	force, _ := cmd.Flags().GetBool("force")
-	if !force && !DryRun {
-		fmt.Printf("Are you sure you want to delete namespace '%s' and all its keys? [y/N]: ", id)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Namespace deletion cancelled")
-			return nil
-		}
-	}
-
-	svc, err := getKVService()
-	if err != nil {
-		return outErr("failed to create KV service", err)
-	}
-
-	if DryRun {
+	// Registry-flagged destructive: runs dry unless --force, so no prompt.
+	dry := destructiveDryRun([]string{"kv", "namespace", "delete"}, force)
+	if dry {
 		return outPayload("DRY RUN: Would delete namespace", func() any {
 			return map[string]string{"id": id}
 		}, func() {
 			printInfo("DRY RUN: Would delete namespace '%s'", id)
 		})
+	}
+
+	svc, err := getKVService()
+	if err != nil {
+		return outErr("failed to create KV service", err)
 	}
 
 	if err := svc.DeleteNamespace(context.Background(), id); err != nil {

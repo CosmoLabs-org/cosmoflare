@@ -374,28 +374,19 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 
 	printInfo("Deleting bucket: %s", bucketName)
 
-	if !force && !DryRun {
-		fmt.Printf("Are you sure you want to delete bucket '%s' and all its contents? [y/N]: ", bucketName)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("Bucket deletion cancelled")
-			return nil
-		}
-	}
-
-	client, err := getAPIClient()
-	if err != nil {
-		return outErr("failed to create API client", err)
-	}
-
-	if DryRun {
+	// Registry-flagged destructive: runs dry unless --force, so no prompt.
+	dry := destructiveDryRun([]string{"r2", "bucket", "delete"}, force)
+	if dry {
 		return outPayload("DRY RUN: Would delete bucket", func() any {
 			return map[string]string{"bucket": bucketName}
 		}, func() {
 			printInfo("DRY RUN: Would delete bucket '%s'", bucketName)
 		})
+	}
+
+	client, err := getAPIClient()
+	if err != nil {
+		return outErr("failed to create API client", err)
 	}
 
 	if err := client.DeleteBucket(context.Background(), bucketName); err != nil {

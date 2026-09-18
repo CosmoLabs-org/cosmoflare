@@ -371,7 +371,20 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 	}
 	zoneID, recordID := args[0], args[1]
 
-	if !dnsForce && !DryRun {
+	// Not registry-flagged destructive: the confirmation prompt stays live;
+	// an explicit --dry-run still short-circuits before any service call.
+	dry := destructiveDryRun([]string{"dns", "delete"}, dnsForce)
+	if dry {
+		return outPayload("DRY RUN: Would delete DNS record", func() any {
+			return map[string]string{
+				"zone_id":   zoneID,
+				"record_id": recordID,
+			}
+		}, func() {
+			printInfo("DRY RUN: Would delete DNS record '%s' from zone '%s'", recordID, zoneID)
+		})
+	}
+	if !dnsForce {
 		fmt.Printf("Are you sure you want to delete DNS record '%s'? [y/N]: ", recordID)
 		var response string
 		fmt.Scanln(&response)
@@ -385,17 +398,6 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 	svc, err := getDNSService(zoneID)
 	if err != nil {
 		return outErr("failed to create DNS service", err)
-	}
-
-	if DryRun {
-		return outPayload("DRY RUN: Would delete DNS record", func() any {
-			return map[string]string{
-				"zone_id":   zoneID,
-				"record_id": recordID,
-			}
-		}, func() {
-			printInfo("DRY RUN: Would delete DNS record '%s' from zone '%s'", recordID, zoneID)
-		})
 	}
 
 	if err := svc.Delete(context.Background(), recordID); err != nil {
