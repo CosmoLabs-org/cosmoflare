@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -43,24 +44,26 @@ func TestRunAlertsCheck_NoRules(t *testing.T) {
 
 // TestRunAlertsCheck_OnlyDisabledRules verifies disabled rules are not
 // counted as evaluated, so no metrics collection (and no credentials) is
-// required.
+// required. The rule is written straight to the YAML store because the
+// library cannot produce a disabled rule through its API today (Create
+// force-enables, Update has no Enabled field) — tracked as TASK-013.
 func TestRunAlertsCheck_OnlyDisabledRules(t *testing.T) {
 	buckAlertsCheckEnv(t)
 
-	svc, err := getAlertService()
-	if err != nil {
+	rulesYAML := "rules:\n" +
+		"  - name: disabled-rule\n" +
+		"    service: r2\n" +
+		"    condition: storage-limit\n" +
+		"    threshold: 80\n" +
+		"    action: log\n" +
+		"    target: /dev/null\n" +
+		"    enabled: false\n"
+	rulesPath := filepath.Join(t.TempDir(), ".cosmoflare-alerts.yaml")
+	if err := os.WriteFile(rulesPath, []byte(rulesYAML), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := svc.Create(&cosmoflare.AlertRule{
-		Name:      "disabled-rule",
-		Service:   "r2",
-		Condition: "storage-limit",
-		Threshold: 80,
-		Action:    "log",
-		Target:    "/dev/null",
-		Enabled:   false,
-	}); err != nil {
-		t.Fatalf("create disabled rule: %v", err)
+	getAlertServiceFn = func() (*cosmoflare.AlertService, error) {
+		return cosmoflare.NewAlertService(rulesPath, filepath.Join(t.TempDir(), "history.log"))
 	}
 
 	if err := runAlertsCheck(alertsCheckCmd, nil); err != nil {
