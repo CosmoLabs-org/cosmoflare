@@ -1,10 +1,9 @@
 ---
 ulid: 01M207EXMKWTJHWQ2B86MKWADZ
 id: IDEA-051
-id_assigned_at: 2026-09-10T16:45:25.445483+04:00
 title: First-run setup wizard — one token, whole platform
 created: "2026-09-08T14:01:47.92376+04:00"
-status: harvested
+status: withered
 source: human
 origin:
     session: 43
@@ -12,7 +11,14 @@ tags:
     - onboarding
     - ux
 promoted_to: FEAT-017
+resolution:
+    reason: implemented
+    date: "2026-09-18T10:49:58.308576+04:00"
+    ref: FEAT-017
+    note: Resolved via FEAT-017 (implemented)
 ---
+
+# First-run setup wizard — one token, whole platform
 
 # First-run setup wizard — one token, whole platform
 
