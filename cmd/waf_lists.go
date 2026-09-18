@@ -231,16 +231,18 @@ func runWAFListCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--kind is required (ip, asn, redirect, hostname)")
 	}
 	name := args[0]
-	svc, err := getWAFListService()
-	if err != nil {
-		return outErr("failed to create WAF list service", err)
-	}
+	// Dry-run short-circuits before service construction so previews
+	// never require credentials.
 	if DryRun {
 		return outPayload("DRY RUN: Would create WAF list", func() any {
 			return map[string]string{"name": name, "kind": wafListKind, "description": wafListDescription}
 		}, func() {
 			printInfo("DRY RUN: Would create WAF list '%s' kind=%s", name, wafListKind)
 		})
+	}
+	svc, err := getWAFListService()
+	if err != nil {
+		return outErr("failed to create WAF list service", err)
 	}
 	list, err := svc.CreateList(context.Background(), name, wafListKind, wafListDescription)
 	if err != nil {

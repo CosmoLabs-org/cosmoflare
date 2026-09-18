@@ -245,14 +245,22 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 		}
 	}
 
-	for {
+	// Bounded retries: closed stdin (EOF) or three consecutive empty
+	// answers must not loop forever — scripted and agent callers never
+	// answer prompts.
+	for empty := 0; ; {
 		fmt.Print("Account ID: ")
-		accountID, _ := w.Input.ReadLine()
+		accountID, err := w.Input.ReadLine()
 
 		if accountID == "" {
+			empty++
+			if err != nil || empty >= 3 {
+				return "", "", fmt.Errorf("account ID required: no input available")
+			}
 			colorError.Println("  ❌ Account ID cannot be empty")
 			continue
 		}
+		empty = 0
 
 		// Validate account ID format (should be 32 hex characters)
 		if len(accountID) != 32 {
