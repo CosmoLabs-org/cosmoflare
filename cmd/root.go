@@ -175,6 +175,38 @@ func init() {
 
 	// Add completion command
 	rootCmd.AddCommand(completionCmd)
+
+	// Bare `cosmoflare` prints help; when no credential store exists yet,
+	// append the first-run nudge (FEAT-017): one command, one credential.
+	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if err := cmd.Help(); err != nil {
+			return err
+		}
+		if !JSONOutput && !firstRunConfigured() {
+			fmt.Fprintln(cmd.OutOrStdout(), "\nFirst run? `cosmoflare setup` configures the whole platform with one API token.")
+		}
+		return nil
+	}
+}
+
+// firstRunConfigPath returns the credential-store path the first-run nudge
+// checks; a package var so tests can point it at a temp path.
+var firstRunConfigPath = func() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "" // no home → treat as configured; never nag unverifiably
+	}
+	return filepath.Join(home, ".cosmoflare", "config.yaml")
+}
+
+// firstRunConfigured reports whether a credential profile store exists.
+func firstRunConfigured() bool {
+	p := firstRunConfigPath()
+	if p == "" {
+		return true
+	}
+	_, err := os.Stat(p)
+	return err == nil
 }
 
 // resolveActiveEnv resolves the --env flag against the named environment

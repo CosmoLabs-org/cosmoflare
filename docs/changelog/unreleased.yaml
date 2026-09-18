@@ -20,6 +20,9 @@ entries:
         - description: 'command registry spine wave 1: internal/cmdmanifest with r2 pilot + danger-stamped audit mutations (FEAT-020)'
           source: manual
           date: 2026-09-18T04:47:24.831352+04:00
+        - description: 'first-run onboarding: bare-cosmoflare setup nudge + wizard points to status/doctor (FEAT-017)'
+          source: manual
+          date: 2026-09-18T10:50:01.935033+04:00
     fixed:
         - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
           source: manual

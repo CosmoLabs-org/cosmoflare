@@ -363,5 +363,11 @@ func runQuietSetup(wizard *interactive.SetupWizard) error {
 		printInfo("Account: %s", tokenInfo.AccountName)
 	}
 
+	// FEAT-017: the wizard's promise is install → live state in one
+	// credential. Point at the two follow-ups instead of leaving the user
+	// to discover them.
+	printInfo("Next: `cosmoflare status` shows live account state")
+	printInfo("     `cosmoflare doctor` runs a full health check")
+
 	return nil
 }
