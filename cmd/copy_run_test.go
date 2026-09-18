@@ -216,3 +216,127 @@ func TestRunCopy_BatchTextFile(t *testing.T) {
 		}
 	}
 }
+
+// --- Direct copyFile / copyDirectory coverage ---
+
+// copyRunDirectOpts builds quiet, fast-failing options for direct helper
+// calls, mirroring the options runCopy assembles from its flags.
+func copyRunDirectOpts() *operations.CopyOptions {
+	return &operations.CopyOptions{
+		Resume:      false,
+		Verify:      true,
+		Overwrite:   true,
+		Preserve:    true,
+		ProgressBar: false,
+		Quiet:       true,
+		Concurrency: 2,
+		Retries:     1,
+		Timeout:     time.Minute,
+	}
+}
+
+// TestCopyFile_RoundTrip verifies copyFile transfers file content intact.
+func TestCopyFile_RoundTrip(t *testing.T) {
+	copyRunGlobals(t)
+	src := copyRunWriteFile(t, t.TempDir(), "src.txt", "direct-copy-payload")
+	dst := filepath.Join(t.TempDir(), "dst.txt")
+
+	if err := copyFile(src, dst, copyRunDirectOpts()); err != nil {
+		t.Fatalf("copyFile returned error: %v", err)
+	}
+	got, err := os.ReadFile(dst)
+	if err != nil {
+		t.Fatalf("read destination: %v", err)
+	}
+	if string(got) != "direct-copy-payload" {
+		t.Errorf("destination content = %q, want %q", got, "direct-copy-payload")
+	}
+}
+
+// TestCopyFile_SourceMissing verifies the stat guard reports a missing
+// source before any transfer is attempted.
+func TestCopyFile_SourceMissing(t *testing.T) {
+	copyRunGlobals(t)
+	missing := filepath.Join(t.TempDir(), "does-not-exist.txt")
+	dst := filepath.Join(t.TempDir(), "dst.txt")
+
+	err := copyFile(missing, dst, copyRunDirectOpts())
+	if err == nil || !strings.Contains(err.Error(), "failed to stat source file") {
+		t.Fatalf("expected stat error, got %v", err)
+	}
+}
+
+// TestCopyFile_EmptySource verifies copying a zero-byte file succeeds and
+// preserves the empty content.
+func TestCopyFile_EmptySource(t *testing.T) {
+	copyRunGlobals(t)
+	src := copyRunWriteFile(t, t.TempDir(), "empty.txt", "")
+	dst := filepath.Join(t.TempDir(), "empty-copy.txt")
+
+	if err := copyFile(src, dst, copyRunDirectOpts()); err != nil {
+		t.Fatalf("copyFile(empty) returned error: %v", err)
+	}
+	info, err := os.Stat(dst)
+	if err != nil {
+		t.Fatalf("stat destination: %v", err)
+	}
+	if info.Size() != 0 {
+		t.Errorf("destination size = %d, want 0", info.Size())
+	}
+}
+
+// TestCopyDirectory_RoundTrip verifies copyDirectory preserves the nested
+// relative layout of the source tree.
+func TestCopyDirectory_RoundTrip(t *testing.T) {
+	copyRunGlobals(t)
+	copyRecursive = true
+	srcDir := t.TempDir()
+	copyRunWriteFile(t, srcDir, "top.txt", "top")
+	sub := filepath.Join(srcDir, "sub")
+	if err := os.Mkdir(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	copyRunWriteFile(t, sub, "nested.txt", "nested")
+	dstDir := filepath.Join(t.TempDir(), "out")
+
+	if err := copyDirectory(srcDir, dstDir, copyRunDirectOpts()); err != nil {
+		t.Fatalf("copyDirectory returned error: %v", err)
+	}
+	for name, want := range map[string]string{
+		filepath.Join("top.txt"):            "top",
+		filepath.Join("sub", "nested.txt"): "nested",
+	} {
+		got, err := os.ReadFile(filepath.Join(dstDir, name))
+		if err != nil {
+			t.Fatalf("read %s: %v", name, err)
+		}
+		if string(got) != want {
+			t.Errorf("%s content = %q, want %q", name, got, want)
+		}
+	}
+}
+
+// TestCopyDirectory_RequiresRecursiveFlag verifies the guard rejects
+// directory sources when --recursive is not set.
+func TestCopyDirectory_RequiresRecursiveFlag(t *testing.T) {
+	copyRunGlobals(t)
+	copyRecursive = false
+
+	err := copyDirectory(t.TempDir(), filepath.Join(t.TempDir(), "out"), copyRunDirectOpts())
+	if err == nil || !strings.Contains(err.Error(), "use --recursive") {
+		t.Fatalf("expected recursive-guard error, got %v", err)
+	}
+}
+
+// TestCopyDirectory_SourceMissing verifies walking a nonexistent source
+// surfaces a walk error rather than succeeding silently.
+func TestCopyDirectory_SourceMissing(t *testing.T) {
+	copyRunGlobals(t)
+	copyRecursive = true
+	missing := filepath.Join(t.TempDir(), "no-such-dir")
+
+	err := copyDirectory(missing, filepath.Join(t.TempDir(), "out"), copyRunDirectOpts())
+	if err == nil || !strings.Contains(err.Error(), "failed to walk directory") {
+		t.Fatalf("expected walk error, got %v", err)
+	}
+}

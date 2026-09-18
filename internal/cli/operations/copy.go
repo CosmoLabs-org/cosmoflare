@@ -277,8 +277,14 @@ func (op *CopyOperation) performCopy(progressBar progress.ProgressBar, result *C
 		writer = progress.NewProgressWriter(dstFile, progressBar)
 	}
 
-	// Use buffered copying for better performance
-	buffer := make([]byte, op.Options.ChunkSize)
+	// Use buffered copying for better performance. A zero ChunkSize means
+	// "unspecified": io.CopyBuffer PANICS on a zero-length buffer, so fall
+	// back to its default allocation rather than crashing (caught by the
+	// copy round-trip coverage test).
+	var buffer []byte
+	if op.Options.ChunkSize > 0 {
+		buffer = make([]byte, op.Options.ChunkSize)
+	}
 	copied, err := io.CopyBuffer(writer, srcFile, buffer)
 	if err != nil {
 		return fmt.Errorf("failed to copy file data: %w", err)
