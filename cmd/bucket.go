@@ -399,8 +399,10 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := client.DeleteBucket(context.Background(), bucketName); err != nil {
+		auditMutation([]string{"r2", "bucket", "delete"}, bucketName, false)
 		return outErr("failed to delete bucket", err)
 	}
+	auditMutation([]string{"r2", "bucket", "delete"}, bucketName, true)
 
 	return outPayload("Bucket deleted successfully", func() any {
 		return map[string]string{"bucket": bucketName}

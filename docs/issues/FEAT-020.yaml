@@ -1,7 +1,7 @@
 id: FEAT-020
 type: feature
 created_at: 2026-09-11T01:07:41.139745+04:00
-updated_at: 2026-09-11T01:07:43.251076+04:00
+updated_at: 2026-09-18T04:47:21.133068+04:00
 source: local
 ulid: 01M26JBMER3RW3Y4TA13DV4MNE
 status: open
@@ -12,3 +12,5 @@ description: 'Every CLI command described by a manifest entry: cli_path, wrangle
 acceptance_criteria:
     - criterion: Manifest schema defined and populated for all existing command groups;limits guard lookup resolves command->limit ids through the manifest;audit entries carry danger_level from the manifest
       met: false
+resolution:
+    notes: 'Wave 1 shipped 2026-09-18 (in-session): internal/cmdmanifest package — typed Go-source registry per corpus schema 4.1 (id/cli_path/wrangler/service/scope/verb/api_ops/permissions/limits/local+api checks/rate-limit/danger/destructive/trackable), r2 pilot group (12 commands: bucket lifecycle, object ops, sync up/down, watch), uniqueness+consistency tests (destructive⇒high danger enforced). First consumer live: r2 bucket delete stamps audit entries with manifest id + danger level via COSMOFLARE_AUDIT_LOG-overridable path; unregistered paths log manifest_id=unregistered so coverage gaps stay visible. Permissions pre-filled from the 2026-09-18 Qwen dataset (Workers R2 Storage). Next waves: remaining command groups, dry-run-default + MCP-description consumers.'

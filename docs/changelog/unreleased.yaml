@@ -17,6 +17,9 @@ entries:
         - description: 'cmd coverage wave: 8 test suites across bucket/worker/kv/wrangler/copy/durable-objects/terraform/alerts + CopyBuffer zero-chunk crash fix'
           source: manual
           date: 2026-09-18T04:42:32.616352+04:00
+        - description: 'command registry spine wave 1: internal/cmdmanifest with r2 pilot + danger-stamped audit mutations (FEAT-020)'
+          source: manual
+          date: 2026-09-18T04:47:24.831352+04:00
     fixed:
         - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
           source: manual
