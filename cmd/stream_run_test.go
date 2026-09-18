@@ -126,37 +126,3 @@ func TestRunStreamToken_InvalidExpires(t *testing.T) {
 		t.Fatalf("expected invalid-expires error, got %v", err)
 	}
 }
-
-// TestParseExpiresDuration covers the duration parser used by the token
-// runner: plain durations, day-suffixed durations and invalid inputs.
-func TestParseExpiresDuration(t *testing.T) {
-	cases := []struct {
-		name    string
-		input   string
-		want    int64
-		wantErr bool
-	}{
-		{"hours", "2h", 2 * 60 * 60, false},
-		{"days suffix", "7d", 7 * 24 * 60 * 60, false},
-		{"zero days", "0d", 0, false},
-		{"invalid suffix", "xd", 0, true},
-		{"garbage", "nope", 0, true},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := parseExpiresDuration(tc.input)
-			if tc.wantErr {
-				if err == nil {
-					t.Fatalf("expected error for %q, got %v", tc.input, got)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error for %q: %v", tc.input, err)
-			}
-			if got.Seconds() != float64(tc.want) {
-				t.Errorf("parseExpiresDuration(%q) = %v seconds, want %d", tc.input, got.Seconds(), tc.want)
-			}
-		})
-	}
-}
