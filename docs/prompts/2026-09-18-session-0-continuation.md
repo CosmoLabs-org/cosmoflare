@@ -4,7 +4,7 @@ created: 2026-09-18
 status: PENDING
 branch: master
 goals_total: 9
-goals_completed: 2
+goals_completed: 3
 supersedes: "docs/prompts/2026-09-17-session-0-continuation.md"
 ---
 
@@ -23,8 +23,9 @@ Acceptance: Final Qwen completeness line + grok-results.md + gemini-results.md l
 ### [x] 4. G-04: FEAT-020 waves 2+ — registry breadth and consumers
 Acceptance: workers/kv/d1/dns groups authored in internal/cmdmanifest (permissions from the Qwen dataset); dry-run-default consumer derives from the destructive flag; cross-check test: every registered CLIPath resolves against the live cobra tree
 Done: commit 997143b — 58 entries (worker 35, kv 7, d1 11, dns 5), destructiveDryRun consumer wired into 5 destructive deletes, bidirectional cobra cross-check tests
-### [~] 5. G-05: Re-dispatch the 5 empty cover parts when the GLM queue recovers
+### [x] 5. G-05: Re-dispatch the 5 empty cover parts when the GLM queue recovers
 Acceptance: batch-005 prompt manifest parts for the 5 discarded agents re-run green through the quality gate; cmd package coverage measurably above the 60.2% baseline
+Done: redispatch batch (0279-0283) — 4 salvaged+repaired+merged (908/625/629/796 test lines; repairs: duplicate test name, indented-JSON expectation, wizard EOF prompt-loop bound, WAF dry-run ordering); part9 failed twice agent-side (0283/0284 empty) → authored in-session; cmd coverage 67.5% (+7.3)
 
 
 ### [ ] G-06 G-01: TASK-010 product page live on cosmolabs.org/cosmoflare (carried) (carried from docs/prompts/2026-09-17-session-0-continuation.md G-01)
