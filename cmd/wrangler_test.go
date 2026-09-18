@@ -321,11 +321,9 @@ func TestCountByLevel(t *testing.T) {
 	}
 }
 
-// containsString checks if s contains substr (case-sensitive).
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && findSubstring(s, substr))
-}
-
+// containsString checks if s contains substr (case-sensitive). The simpler
+// strings.Contains helper already defined in demo_effects_test.go serves
+// the same purpose; this file's hand-rolled pair is replaced by it.
 func findSubstring(s, substr string) bool {
 	for i := 0; i <= len(s)-len(substr); i++ {
 		if s[i:i+len(substr)] == substr {

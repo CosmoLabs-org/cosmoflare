@@ -34,6 +34,15 @@ func kvCredsReset() {
 	JSONOutput = false
 }
 
+// kvCredsForceDelete skips namespace delete's interactive confirm for the
+// duration of one test, so credential-guard subtests observe the service
+// construction error instead of a cancelled prompt.
+func kvCredsForceDelete(t *testing.T) {
+	t.Helper()
+	_ = kvNamespaceDeleteCmd.Flags().Set("force", "true")
+	t.Cleanup(func() { _ = kvNamespaceDeleteCmd.Flags().Set("force", "false") })
+}
+
 // kvCredsRunners returns every KV runner wired with valid positional
 // arguments and --force on the namespace delete command, so the shared
 // credential guards can be exercised uniformly.
@@ -63,6 +72,7 @@ func TestRunKV_MissingAccountID(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			kvCredsGlobals(t)
 			kvCredsReset()
+			kvCredsForceDelete(t)
 			AccountID = ""
 			APIToken = "token-abcdef1234567890"
 
@@ -85,6 +95,7 @@ func TestRunKV_MissingAPIToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			kvCredsGlobals(t)
 			kvCredsReset()
+			kvCredsForceDelete(t)
 			AccountID = "test-account"
 			APIToken = ""
 
