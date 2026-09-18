@@ -1,0 +1,10 @@
+id: TASK-013
+type: task
+created_at: 2026-09-18T04:35:52.762887+04:00
+updated_at: 2026-09-18T04:35:52.768695+04:00
+source: local
+ulid: 01M2RZ1WA0AP6N02FERH9DPRF5
+status: open
+category: tech-debt
+title: AlertService cannot produce a disabled rule through its API
+description: 'Found by coverage batch 005 (2026-09-18): AlertService.Create force-enables every rule (pkg/cosmoflare/alerts.go:255 — rule.Enabled = true) and AlertRuleUpdate has no Enabled field, so no API path creates or updates a rule into a disabled state; only hand-editing the YAML store can. runAlertsCheck correctly skips credential/metrics work when only disabled rules exist, but that path is unreachable via the CLI. Fix direction: honor an explicit Enabled:false in Create (pointer or separate Disable API), add enable/disable verbs to Update, tests for both. Pinned by TestRunAlertsCheck_OnlyDisabledRules which writes the YAML directly.'
