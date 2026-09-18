@@ -1,6 +1,6 @@
 id: ROAD-096
 created_at: 2026-09-13T15:38:27.827191+04:00
-updated_at: 2026-09-17T20:10:46.600647+04:00
+updated_at: 2026-09-18T15:19:56.089242+04:00
 title: Launch and distribution program (0 to 1,000 stars)
 description: 'Sequenced: Phase 0 sync-engine fixes (BUG-040..043) then purge transcripts/GOrchestra from tracked tree, publish v0.26.0 (staged in dist/upload/), flip repo public, fix install URLs, brand sweep, then Show HN / r/Cloudflare / Cloudflare Community / awesome-list PRs + vs-Wrangler comparison page. Source: audit 2026-09-13 agent-4-competitive.md + agent-6-seo-content.md'
 status: in_progress
@@ -11,6 +11,7 @@ notes:
     - '2026-09-15: vs-Wrangler comparison page (docs/vs-wrangler.md + README section) shipped; Show HN + r/Cloudflare drafts in docs/launch/ awaiting operator voice (draft-only by design); Homebrew tap live (ROAD-089 done); product-page artifact ready in docs/launch/product-page.html — needs cosmolabs.org integration (cross-project). Remaining: post publishing, awesome-list PRs, social preview image.'
     - '2026-09-16: v0.28.2 published — module distribution restored (BUG-052: emoji-named dir poisoned proxy.golang.org zips for v0.28.0/v0.28.1; release gate now rejects non-ASCII tree paths). pkg.go.dev re-indexed with corrected package name. Drafts de-staled post-FEAT-021 (Workers lifecycle now covered) + fresh-eyes reviewed; vs-Wrangler table row fixed to match. Remaining: launch posts (operator voice), awesome-list PRs, social preview image, cosmolabs.org product-page integration (TASK-010 handoff ready).'
     - 'Session 2026-09-17: v0.29.0 released + tap/proxy verified + research packs out. Remaining: launch posts (operator) + TASK-010 product page (cosmolabs.org session).'
+    - 'Evening 2026-09-18: v0.29.0 live + registry/audit spine (FEAT-020 w1) + onboarding closed (FEAT-017). Remaining: launch posts (operator, next HN window Tue-Thu) + TASK-010 product page (cosmolabs.org session).'
 linked_issues:
     - TASK-010
 origin:
