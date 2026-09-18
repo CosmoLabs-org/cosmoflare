@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-17T20:08:33.131234+04:00
+last_updated: 2026-09-18T04:35:52.766797+04:00
 next_bug_id: 54
 next_feat_id: 44
-next_task_id: 13
+next_task_id: 14
 next_imp_id: 1
 issues:
     - id: BUG-001
@@ -608,3 +608,9 @@ issues:
       title: Unify the three HTTP-status classification seams
       category: refactor
       created_at: 2026-09-17T20:08:33.127478+04:00
+    - id: TASK-013
+      type: task
+      status: open
+      title: AlertService cannot produce a disabled rule through its API
+      category: tech-debt
+      created_at: 2026-09-18T04:35:52.762887+04:00
