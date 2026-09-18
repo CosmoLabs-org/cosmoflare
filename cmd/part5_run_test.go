@@ -776,7 +776,7 @@ func TestPart5ReportProbe_JSONOutput(t *testing.T) {
 		t.Fatalf("reportProbe returned error: %v", err)
 	}
 	out := read()
-	for _, want := range []string{"https://api.example.com/login", "tripped", `"requests":12`} {
+	for _, want := range []string{"https://api.example.com/login", "tripped", `"requests": 12`} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("JSON probe report missing %q: %q", want, out)
 		}
