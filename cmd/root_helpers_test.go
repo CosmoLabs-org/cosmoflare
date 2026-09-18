@@ -114,13 +114,20 @@ func TestGetRelativePath_Fallthrough(t *testing.T) {
 // renders the help text and returns nil (the cobra flag.ErrHelp contract).
 func TestExecute_NoArgsPrintsHelp(t *testing.T) {
 	savedArgs := os.Args
+	savedOut, savedErr := rootCmd.OutOrStdout(), rootCmd.ErrOrStderr()
 	rootCmd.SetArgs([]string{})
 	t.Cleanup(func() {
 		rootCmd.SetArgs(nil)
+		rootCmd.SetOut(savedOut)
+		rootCmd.SetErr(savedErr)
 		os.Args = savedArgs
 	})
 
 	out := capturePrint(t, func() {
+		// Hermetic: an earlier test may have redirected rootCmd's writers
+		// to its own buffer — rebind to the (captured) stdout for this run.
+		rootCmd.SetOut(os.Stdout)
+		rootCmd.SetErr(os.Stderr)
 		if err := Execute(); err != nil {
 			t.Errorf("Execute with no args should print help and return nil, got %v", err)
 		}
