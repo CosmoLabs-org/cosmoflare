@@ -23,6 +23,9 @@ entries:
         - description: 'first-run onboarding: bare-cosmoflare setup nudge + wizard points to status/doctor (FEAT-017)'
           source: manual
           date: 2026-09-18T10:50:01.935033+04:00
+        - description: 'FEAT-020 wave 2: command registry covers worker/kv/d1/dns (58 entries, Qwen-verified permissions); destructive deletes run dry by default unless --force'
+          source: manual
+          date: 2026-09-18T23:20:01.707719+04:00
     fixed:
         - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
           source: manual

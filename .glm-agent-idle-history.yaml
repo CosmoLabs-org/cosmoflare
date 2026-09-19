@@ -164,3 +164,8 @@ records:
       idle_timeouts: 1
       last_stall_point: '[claude-code:unrecognized_model] {"model":"glm-5.3[1m]","query_source":"sdk"}'
       updated: 2026-09-18T01:55:40.019475+04:00
+    - brief_hash: c67e0904e72f828f
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: "\e]0;_glm-agent-0279-worker-hyperdrive-cache-ssl-cu (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3[1m]\",\"query_"
+      updated: 2026-09-18T23:24:22.224113+04:00
