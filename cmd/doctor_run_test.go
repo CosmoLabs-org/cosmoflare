@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"io"
 	"strings"
 	"testing"
 	"time"
@@ -20,20 +19,6 @@ func doctorCredsGuard(t *testing.T) {
 	t.Cleanup(func() {
 		AccountID, APIToken = origAccount, origToken
 	})
-}
-
-// doctorCapture runs f with os.Stdout captured and returns everything it
-// printed. Reuses the captureStdout helper from root_test.go.
-func doctorCapture(t *testing.T, f func()) string {
-	t.Helper()
-	r, restore := captureStdout(t)
-	f()
-	restore()
-	out, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("reading captured stdout failed: %v", err)
-	}
-	return string(out)
 }
 
 // TestRunDoctorAll_MissingCreds verifies that fleet mode surfaces the
@@ -153,7 +138,7 @@ func TestEnrichDoctorReport_NoCredsIsNoop(t *testing.T) {
 // consistent and inconsistent cases.
 func TestPrintDNSSection(t *testing.T) {
 	t.Run("nil DNS prints skipped", func(t *testing.T) {
-		out := doctorCapture(t, func() { printDNSSection(&cosmoflare.DiagnosticReport{}) })
+		out := capturePrint(t, func() { printDNSSection(&cosmoflare.DiagnosticReport{}) })
 		if !strings.Contains(out, "DNS Propagation  (skipped)") {
 			t.Errorf("output should mark DNS as skipped, got: %q", out)
 		}
@@ -170,7 +155,7 @@ func TestPrintDNSSection(t *testing.T) {
 				},
 			},
 		}
-		out := doctorCapture(t, func() { printDNSSection(report) })
+		out := capturePrint(t, func() { printDNSSection(report) })
 		for _, want := range []string{"DNS Propagation ✓", "Queried 2 resolvers, all A records consistent", "203.0.113.1"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -190,7 +175,7 @@ func TestPrintDNSSection(t *testing.T) {
 				},
 			},
 		}
-		out := doctorCapture(t, func() { printDNSSection(report) })
+		out := capturePrint(t, func() { printDNSSection(report) })
 		for _, want := range []string{
 			"DNS Propagation ✗",
 			"Queried 3 resolvers, 2 responded — inconsistency detected",
@@ -208,7 +193,7 @@ func TestPrintDNSSection(t *testing.T) {
 // and healthy/expiring/expired certificate states.
 func TestPrintSSLSection(t *testing.T) {
 	t.Run("nil SSL prints skipped", func(t *testing.T) {
-		out := doctorCapture(t, func() { printSSLSection(&cosmoflare.DiagnosticReport{}) })
+		out := capturePrint(t, func() { printSSLSection(&cosmoflare.DiagnosticReport{}) })
 		if !strings.Contains(out, "SSL Certificate  (skipped)") {
 			t.Errorf("output should mark SSL as skipped, got: %q", out)
 		}
@@ -218,7 +203,7 @@ func TestPrintSSLSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			SSL: &cosmoflare.SSLProbeResult{Error: "connection refused"},
 		}
-		out := doctorCapture(t, func() { printSSLSection(report) })
+		out := capturePrint(t, func() { printSSLSection(report) })
 		for _, want := range []string{"SSL Certificate ✗", "Error: connection refused"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -238,7 +223,7 @@ func TestPrintSSLSection(t *testing.T) {
 				HSTS:       true,
 			},
 		}
-		out := doctorCapture(t, func() { printSSLSection(report) })
+		out := capturePrint(t, func() { printSSLSection(report) })
 		for _, want := range []string{"SSL Certificate ✓", "Valid: example.com", "Issuer: Let's Encrypt", "HSTS: yes"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -250,7 +235,7 @@ func TestPrintSSLSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			SSL: &cosmoflare.SSLProbeResult{Valid: true, DaysLeft: 10, NotAfter: time.Now().Add(10 * 24 * time.Hour)},
 		}
-		out := doctorCapture(t, func() { printSSLSection(report) })
+		out := capturePrint(t, func() { printSSLSection(report) })
 		if !strings.Contains(out, "SSL Certificate ⚠") {
 			t.Errorf("output should carry warning indicator, got: %q", out)
 		}
@@ -260,7 +245,7 @@ func TestPrintSSLSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			SSL: &cosmoflare.SSLProbeResult{Valid: true, DaysLeft: -3, NotAfter: time.Now().Add(-72 * time.Hour), HSTS: false},
 		}
-		out := doctorCapture(t, func() { printSSLSection(report) })
+		out := capturePrint(t, func() { printSSLSection(report) })
 		for _, want := range []string{"SSL Certificate ✗", "HSTS: no"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -273,7 +258,7 @@ func TestPrintSSLSection(t *testing.T) {
 // error and success/client-error/server-error status classes.
 func TestPrintHTTPSection(t *testing.T) {
 	t.Run("nil HTTP prints skipped", func(t *testing.T) {
-		out := doctorCapture(t, func() { printHTTPSection(&cosmoflare.DiagnosticReport{}) })
+		out := capturePrint(t, func() { printHTTPSection(&cosmoflare.DiagnosticReport{}) })
 		if !strings.Contains(out, "HTTP Response  (skipped)") {
 			t.Errorf("output should mark HTTP as skipped, got: %q", out)
 		}
@@ -283,7 +268,7 @@ func TestPrintHTTPSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			HTTP: &cosmoflare.HTTPProbeResult{Error: "dial tcp: timeout"},
 		}
-		out := doctorCapture(t, func() { printHTTPSection(report) })
+		out := capturePrint(t, func() { printHTTPSection(report) })
 		for _, want := range []string{"HTTP Response ✗", "Error: dial tcp: timeout"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -301,7 +286,7 @@ func TestPrintHTTPSection(t *testing.T) {
 				RedirectChain:  []string{"http://example.com", "https://example.com"},
 			},
 		}
-		out := doctorCapture(t, func() { printHTTPSection(report) })
+		out := capturePrint(t, func() { printHTTPSection(report) })
 		for _, want := range []string{
 			"HTTP Response ✓",
 			"Status: 200",
@@ -320,7 +305,7 @@ func TestPrintHTTPSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			HTTP: &cosmoflare.HTTPProbeResult{StatusCode: 404, ResponseTimeMs: 30},
 		}
-		out := doctorCapture(t, func() { printHTTPSection(report) })
+		out := capturePrint(t, func() { printHTTPSection(report) })
 		if !strings.Contains(out, "HTTP Response ⚠") {
 			t.Errorf("output should carry warning indicator, got: %q", out)
 		}
@@ -330,7 +315,7 @@ func TestPrintHTTPSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			HTTP: &cosmoflare.HTTPProbeResult{StatusCode: 503, ResponseTimeMs: 30},
 		}
-		out := doctorCapture(t, func() { printHTTPSection(report) })
+		out := capturePrint(t, func() { printHTTPSection(report) })
 		if !strings.Contains(out, "HTTP Response ✗") {
 			t.Errorf("output should carry failure indicator, got: %q", out)
 		}
@@ -340,7 +325,7 @@ func TestPrintHTTPSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			HTTP: &cosmoflare.HTTPProbeResult{StatusCode: 200, ResponseTimeMs: 5},
 		}
-		out := doctorCapture(t, func() { printHTTPSection(report) })
+		out := capturePrint(t, func() { printHTTPSection(report) })
 		for _, unwanted := range []string{"Server:", "CF-Ray:", "Redirects:"} {
 			if strings.Contains(out, unwanted) {
 				t.Errorf("output should not contain %q when field is empty, got: %q", unwanted, out)
@@ -353,7 +338,7 @@ func TestPrintHTTPSection(t *testing.T) {
 // error, matching and mismatching cases.
 func TestPrintNSSection(t *testing.T) {
 	t.Run("nil NS prints skipped", func(t *testing.T) {
-		out := doctorCapture(t, func() { printNSSection(&cosmoflare.DiagnosticReport{}) })
+		out := capturePrint(t, func() { printNSSection(&cosmoflare.DiagnosticReport{}) })
 		if !strings.Contains(out, "Nameservers  (skipped — no expected NS available)") {
 			t.Errorf("output should mark NS as skipped, got: %q", out)
 		}
@@ -363,7 +348,7 @@ func TestPrintNSSection(t *testing.T) {
 		report := &cosmoflare.DiagnosticReport{
 			Nameservers: &cosmoflare.NSProbeResult{Error: "lookup failed"},
 		}
-		out := doctorCapture(t, func() { printNSSection(report) })
+		out := capturePrint(t, func() { printNSSection(report) })
 		for _, want := range []string{"Nameservers ✗", "Error: lookup failed"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)
@@ -379,7 +364,7 @@ func TestPrintNSSection(t *testing.T) {
 				Match:    true,
 			},
 		}
-		out := doctorCapture(t, func() { printNSSection(report) })
+		out := capturePrint(t, func() { printNSSection(report) })
 		for _, want := range []string{
 			"Nameservers ✓",
 			"Expected: ns1.cloudflare.com, ns2.cloudflare.com",
@@ -400,7 +385,7 @@ func TestPrintNSSection(t *testing.T) {
 				Match:    false,
 			},
 		}
-		out := doctorCapture(t, func() { printNSSection(report) })
+		out := capturePrint(t, func() { printNSSection(report) })
 		for _, want := range []string{"Nameservers ✗", "Match: no"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("output missing %q, got: %q", want, out)

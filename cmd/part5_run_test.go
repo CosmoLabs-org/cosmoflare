@@ -15,6 +15,7 @@ package cmd
 //     mapping and error wrapping are verified without touching the live API.
 
 import (
+	"sync"
 	"bytes"
 	"context"
 	"fmt"
@@ -100,11 +101,31 @@ func part5MarkChanged(t *testing.T, cmd *cobra.Command, names ...string) {
 // part5NewCommand returns a bare command whose output writer is buffered, so
 // handlers that render to cmd.OutOrStdout() can be asserted without touching
 // the real stdout.
-func part5NewCommand() (*cobra.Command, *bytes.Buffer) {
-	var buf bytes.Buffer
+// part5Buffer is a mutex-guarded bytes.Buffer: the follow test polls the
+// captured output from the test goroutine while the followed command
+// writes from its own goroutine.
+type part5Buffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *part5Buffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *part5Buffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
+func part5NewCommand() (*cobra.Command, *part5Buffer) {
+	buf := &part5Buffer{}
 	c := &cobra.Command{Use: "part5"}
-	c.SetOut(&buf)
-	return c, &buf
+	c.SetOut(buf)
+	return c, buf
 }
 
 // --- worker runners ---
@@ -263,8 +284,15 @@ func TestPart5RunWorkerLogsFollow_StreamsEntriesAndStopsOnSignal(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- runWorkerLogsFollow(cmd, svc, "my-worker") }()
 
-	// Give the first poll a moment to emit its entry, then interrupt.
-	time.Sleep(500 * time.Millisecond)
+	// Wait until the first entry is rendered, then interrupt — polling
+	// beats a blind fixed sleep on both speed and determinism.
+	deadline := time.Now().Add(3 * time.Second)
+	for !strings.Contains(buf.String(), "[info]") {
+		if time.Now().After(deadline) {
+			t.Fatal("follow produced no log entry before deadline")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	proc, err := os.FindProcess(os.Getpid())
 	if err != nil {
 		t.Fatalf("find process: %v", err)

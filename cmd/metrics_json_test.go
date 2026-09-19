@@ -54,7 +54,7 @@ func TestRunMetricsJSON_AggregatesBucketTotals(t *testing.T) {
 		{Name: "two", Size: 50, ObjectCount: 6},
 	}}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runMetricsJSON(client); err != nil {
 			t.Errorf("runMetricsJSON should succeed: %v", err)
 		}
@@ -87,7 +87,7 @@ func TestRunMetricsJSON_NoBuckets(t *testing.T) {
 
 	client := &fakeR2Client{}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runMetricsJSON(client); err != nil {
 			t.Errorf("empty account should succeed: %v", err)
 		}

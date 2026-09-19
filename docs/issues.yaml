@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-18T11:25:54.796391+04:00
+last_updated: 2026-09-20T02:18:26.827836+04:00
 next_bug_id: 54
 next_feat_id: 44
-next_task_id: 14
+next_task_id: 17
 next_imp_id: 1
 issues:
     - id: BUG-001
@@ -611,3 +611,18 @@ issues:
       status: open
       title: AlertService cannot produce a disabled rule through its API
       created_at: 2026-09-18T04:35:52.762887+04:00
+    - id: TASK-014
+      type: task
+      status: open
+      title: 'Shared test-global guard: consolidate ~23 per-file snapshot helpers'
+      created_at: 2026-09-20T02:18:20.536985+04:00
+    - id: TASK-015
+      type: task
+      status: open
+      title: 'Structural dry-run/audit wiring: derive CLI path from cobra, wrap mutating RunEs once'
+      created_at: 2026-09-20T02:18:23.862928+04:00
+    - id: TASK-016
+      type: task
+      status: open
+      title: 'Wizard EOF contract: honor ReadLine errors instead of discarding'
+      created_at: 2026-09-20T02:18:26.823559+04:00

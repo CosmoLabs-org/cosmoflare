@@ -374,8 +374,9 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 
 	printInfo("Deleting bucket: %s", bucketName)
 
+	cliPath := []string{"r2", "bucket", "delete"}
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
-	dry := destructiveDryRun([]string{"r2", "bucket", "delete"}, force)
+	dry := destructiveDryRun(cliPath, force)
 	if dry {
 		return outPayload("DRY RUN: Would delete bucket", func() any {
 			return map[string]string{"bucket": bucketName}
@@ -390,10 +391,10 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := client.DeleteBucket(context.Background(), bucketName); err != nil {
-		auditMutation([]string{"r2", "bucket", "delete"}, bucketName, false)
+		auditMutation(cliPath, bucketName, false)
 		return outErr("failed to delete bucket", err)
 	}
-	auditMutation([]string{"r2", "bucket", "delete"}, bucketName, true)
+	auditMutation(cliPath, bucketName, true)
 
 	return outPayload("Bucket deleted successfully", func() any {
 		return map[string]string{"bucket": bucketName}

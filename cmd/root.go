@@ -192,11 +192,11 @@ func init() {
 // firstRunConfigPath returns the credential-store path the first-run nudge
 // checks; a package var so tests can point it at a temp path.
 var firstRunConfigPath = func() string {
-	home, err := os.UserHomeDir()
+	p, err := config.ConfigPath()
 	if err != nil {
 		return "" // no home → treat as configured; never nag unverifiably
 	}
-	return filepath.Join(home, ".cosmoflare", "config.yaml")
+	return p
 }
 
 // firstRunConfigured reports whether a credential profile store exists.

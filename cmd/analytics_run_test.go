@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"io"
 	"strings"
 	"testing"
 
@@ -43,19 +42,6 @@ func (f *fakeR2Client) ListObjects(ctx context.Context, bucket, prefix, delimite
 	return &cosmoflare.ListResult[*cosmoflare.Object]{Items: items}, nil
 }
 
-// part8Capture runs fn with os.Stdout replaced by a pipe and returns
-// everything fn printed. It reuses the captureStdout helper from root_test.go.
-func part8Capture(t *testing.T, fn func()) string {
-	t.Helper()
-	r, restore := captureStdout(t)
-	fn()
-	restore()
-	out, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("reading captured stdout: %v", err)
-	}
-	return string(out)
-}
 
 // analyticsRunSnapshot snapshots the analytics globals plus output-mode
 // switches and credentials so tests cannot leak state into each other.
@@ -123,7 +109,7 @@ func TestRunSingleBucketAnalytics_AggregatesSizes(t *testing.T) {
 		},
 	}}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runSingleBucketAnalytics(client); err != nil {
 			t.Errorf("runSingleBucketAnalytics should succeed: %v", err)
 		}
@@ -147,7 +133,7 @@ func TestRunSingleBucketAnalytics_EmptyBucket(t *testing.T) {
 
 	client := &fakeR2Client{objects: map[string][]*cosmoflare.Object{}}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runSingleBucketAnalytics(client); err != nil {
 			t.Errorf("empty bucket should succeed: %v", err)
 		}
@@ -190,7 +176,7 @@ func TestRunAllBucketsAnalytics_SumsAndPercentages(t *testing.T) {
 		},
 	}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runAllBucketsAnalytics(client); err != nil {
 			t.Errorf("runAllBucketsAnalytics should succeed: %v", err)
 		}
@@ -219,7 +205,7 @@ func TestRunAllBucketsAnalytics_SkipsFailingBucket(t *testing.T) {
 		listErrs: map[string]error{"bad": errors.New("boom")},
 	}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runAllBucketsAnalytics(client); err != nil {
 			t.Errorf("a failing bucket should be skipped, not fatal: %v", err)
 		}
@@ -237,7 +223,7 @@ func TestRunAllBucketsAnalytics_NoBuckets(t *testing.T) {
 
 	client := &fakeR2Client{}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runAllBucketsAnalytics(client); err != nil {
 			t.Errorf("empty account should succeed: %v", err)
 		}
@@ -260,7 +246,7 @@ func TestRunAllBucketsAnalytics_ZeroGrandTotal(t *testing.T) {
 		},
 	}
 
-	out := part8Capture(t, func() {
+	out := capturePrint(t, func() {
 		if err := runAllBucketsAnalytics(client); err != nil {
 			t.Errorf("zero-size bucket should succeed: %v", err)
 		}

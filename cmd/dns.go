@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
+
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
@@ -384,15 +385,9 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 			printInfo("DRY RUN: Would delete DNS record '%s' from zone '%s'", recordID, zoneID)
 		})
 	}
-	if !dnsForce {
-		fmt.Printf("Are you sure you want to delete DNS record '%s'? [y/N]: ", recordID)
-		var response string
-		fmt.Scanln(&response)
-		response = strings.TrimSpace(strings.ToLower(response))
-		if response != "y" && response != "yes" {
-			printInfo("DNS record deletion cancelled")
-			return nil
-		}
+	if !dnsForce && !ux.Confirm(fmt.Sprintf("Delete DNS record '%s'?", recordID)) {
+		printInfo("DNS record deletion cancelled")
+		return nil
 	}
 
 	svc, err := getDNSService(zoneID)

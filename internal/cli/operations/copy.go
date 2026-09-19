@@ -74,9 +74,17 @@ type CopyOperation struct {
 }
 
 // NewCopyOperation creates a new copy operation
+// defaultChunkSize is the single source for "unspecified" chunk sizing:
+// callers passing zero (or negative) get this, never io.CopyBuffer's
+// 32KB fallback, so the default means one thing everywhere.
+const defaultChunkSize = 8 * 1024 * 1024
+
 func NewCopyOperation(src, dst string, opts *CopyOptions) *CopyOperation {
 	if opts == nil {
 		opts = DefaultCopyOptions()
+	}
+	if opts.ChunkSize <= 0 {
+		opts.ChunkSize = defaultChunkSize
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

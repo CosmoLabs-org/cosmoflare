@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"strings"
+	"sync"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 
@@ -22,14 +23,42 @@ func mutationAuditLogPath() string {
 	return getAuditLogPath()
 }
 
+// The audit logger is cached per destination: building one costs an
+// MkdirAll plus an OpenFile and holds a file handle, which matters the
+// moment audit stamping is wired into loops (batch delete, sync). A path
+// change (tests redirect via COSMOFLARE_AUDIT_LOG) invalidates the cache.
+var (
+	auditLoggerMu     sync.Mutex
+	auditLoggerShared *cosmoflare.AuditLogger
+	auditLoggerPath   string
+)
+
+// sharedAuditLogger returns the cached logger for the current audit
+// destination, or nil when it cannot be constructed — audit must never
+// break the audited command.
+func sharedAuditLogger() *cosmoflare.AuditLogger {
+	path := mutationAuditLogPath()
+	auditLoggerMu.Lock()
+	defer auditLoggerMu.Unlock()
+	if auditLoggerShared != nil && path == auditLoggerPath {
+		return auditLoggerShared
+	}
+	logger, err := cosmoflare.NewAuditLogger(path)
+	if err != nil || logger == nil {
+		return nil
+	}
+	auditLoggerShared, auditLoggerPath = logger, path
+	return logger
+}
+
 // auditMutation stamps one executed mutation into the audit log, decorated
 // with the command registry's danger metadata (FEAT-020 wave 1 consumer).
 // Failures are never surfaced — audit must not break the audited command —
 // and an unregistered path logs bare details so coverage gaps are visible
 // in the log itself.
 func auditMutation(cliPath []string, resource string, success bool) {
-	logger, err := cosmoflare.NewAuditLogger(mutationAuditLogPath())
-	if err != nil || logger == nil {
+	logger := sharedAuditLogger()
+	if logger == nil {
 		return
 	}
 

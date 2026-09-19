@@ -80,15 +80,25 @@ type ConfigManager struct {
 	secrets    Secrets
 }
 
-// NewConfigManager creates a new configuration manager
-func NewConfigManager() (*ConfigManager, error) {
+// ConfigPath returns the credential-store config path
+// (~/.cosmoflare/config.yaml) WITHOUT creating the directory — for pure
+// existence checks. Callers that need the directory materialized use
+// NewConfigManager instead.
+func ConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
+	return filepath.Join(homeDir, ".cosmoflare", "config.yaml"), nil
+}
 
-	configDir := filepath.Join(homeDir, ".cosmoflare")
-	configPath := filepath.Join(configDir, "config.yaml")
+// NewConfigManager creates a new configuration manager
+func NewConfigManager() (*ConfigManager, error) {
+	configPath, err := ConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	configDir := filepath.Dir(configPath)
 
 	// Ensure config directory exists
 	if err := os.MkdirAll(configDir, 0755); err != nil {

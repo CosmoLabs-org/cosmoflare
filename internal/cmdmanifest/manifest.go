@@ -13,6 +13,11 @@
 // list means "not yet authored", never "none required".
 package cmdmanifest
 
+import (
+	"strings"
+	"sync"
+)
+
 // Command describes one CLI command. Field semantics follow the corpus
 // schema (docs/research/2026-09-10-cf-limits-corpus, section 4.1).
 type Command struct {
@@ -55,9 +60,11 @@ type Manifest struct {
 	byPath   map[string]int
 }
 
-// Load returns the built-in manifest. The data is immutable; the returned
-// Manifest may be shared freely.
-func Load() *Manifest {
+// load builds the shared manifest once: the registry is immutable, and
+// consumers (audit stamping, dry-run defaults, future permission checks
+// and MCP generation) call Load per command invocation — rebuilding the
+// indexes every time would waste work as consumer count grows.
+var load = sync.OnceValue(func() *Manifest {
 	m := &Manifest{
 		commands: registry,
 		byID:     make(map[string]int, len(registry)),
@@ -65,9 +72,15 @@ func Load() *Manifest {
 	}
 	for i, c := range registry {
 		m.byID[c.ID] = i
-		m.byPath[pathKey(c.CLIPath)] = i
+		m.byPath[strings.Join(c.CLIPath, " ")] = i
 	}
 	return m
+})
+
+// Load returns the built-in manifest. The data is immutable; the returned
+// Manifest may be shared freely.
+func Load() *Manifest {
+	return load()
 }
 
 // Commands returns the registry in declaration order.
@@ -87,20 +100,9 @@ func (m *Manifest) ResolveCLI(path ...string) (Command, bool) {
 	if len(path) == 0 {
 		return Command{}, false
 	}
-	i, ok := m.byPath[pathKey(path)]
+	i, ok := m.byPath[strings.Join(path, " ")]
 	if !ok {
 		return Command{}, false
 	}
 	return m.commands[i], true
-}
-
-func pathKey(path []string) string {
-	key := ""
-	for i, seg := range path {
-		if i > 0 {
-			key += " "
-		}
-		key += seg
-	}
-	return key
 }
