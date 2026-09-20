@@ -1,8 +1,14 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-18T15:19:56.131169+04:00
-next_id: 100
+last_updated: 2026-09-20T17:36:11.526867+04:00
+next_id: 101
 items:
+    - id: ROAD-100
+      title: Notification severity system + light theme (desktop)
+      status: captured
+      priority: 35
+      category: workflow
+      created_at: 2026-09-20T17:36:11.526662+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -75,10 +81,11 @@ items:
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-015
       title: Environment separation
-      status: captured
+      status: completed
       category: infra
       linked_issues:
         - FEAT-026
+      completed_in: v0.29.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: ROAD-000
       title: Wire up real S3 API client (replace placeholders)
@@ -778,12 +785,13 @@ items:
       created_at: 2026-09-08T13:26:15.156337+04:00
     - id: ROAD-091
       title: Agentic-surface completeness — Durable Objects, Workflows, Queues depth, Workers AI, MCP parity
-      status: captured
+      status: completed
       has_plan: true
       linked_issues:
         - FEAT-021
         - FEAT-022
         - FEAT-023
+      completed_in: v0.29.0
       created_at: 2026-09-08T13:26:17.669567+04:00
     - id: ROAD-092
       title: CF API knowledge layer — endpoint registry, plan caps, error decoding (FEAT-012)
@@ -808,10 +816,11 @@ items:
       created_at: 2026-09-13T15:38:09.456555+04:00
     - id: ROAD-095
       title: Agent-first onboarding — first-run wizard + least-privilege token doctor
-      status: captured
+      status: completed
       linked_issues:
         - FEAT-017
         - FEAT-019
+      completed_in: v0.29.0
       created_at: 2026-09-13T15:38:25.424438+04:00
     - id: ROAD-096
       title: Launch and distribution program (0 to 1,000 stars)
@@ -825,9 +834,10 @@ items:
       created_at: 2026-09-13T15:38:29.916228+04:00
     - id: ROAD-098
       title: Rate-limit-aware shared client — tracked home for remainder
-      status: captured
+      status: completed
       linked_issues:
         - FEAT-025
+      completed_in: v0.29.0
       created_at: 2026-09-13T15:38:32.008627+04:00
     - id: ROAD-099
       title: Production-evidence reliability loop

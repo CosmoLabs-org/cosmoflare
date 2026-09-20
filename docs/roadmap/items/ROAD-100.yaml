@@ -1,0 +1,19 @@
+id: ROAD-100
+created_at: 2026-09-20T17:36:11.526662+04:00
+updated_at: 2026-09-20T17:36:11.527794+04:00
+title: Notification severity system + light theme (desktop)
+description: |-
+    # Notification severity system + light theme (desktop)
+
+    Every notification gets the same amber border (no severity encoding, styles.css:327); dark-only theme for a paid tier. Add severity field + border color mapping; add [data-theme=light] token set. Evidence: agent-17-design-taste.md
+
+    ## Additional context
+
+    Desktop notifications carry no severity (single amber border, styles.css:327) and the app is dark-only — weak for a paid tier. Add a severity field to the notification model, map severities to border colors, and add a data-theme=light token set. Evidence: audit agent-17-design-taste.md.
+
+    Origin: audit-agent-17-design-taste
+    Context file: docs/audit/2026-09-13-cosmoflare/agent-17-design-taste.md
+status: captured
+priority: 35
+category: workflow
+ulid: 01M2ZGG3R78H5PSEVWZC6A4BWG
