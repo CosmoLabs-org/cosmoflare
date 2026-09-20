@@ -15,15 +15,12 @@ import (
 // other or into the shared command tree.
 func workerVersionRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldScript, oldCompat, oldModule := workerVersionScript, workerVersionCompatDate, workerVersionModule
 	oldForce, oldBindings, oldTags := workerVersionForce, workerBindings, workerTags
-	oldToken, oldAccount := APIToken, AccountID
-	oldDry, oldJSON := DryRun, JSONOutput
 	t.Cleanup(func() {
 		workerVersionScript, workerVersionCompatDate, workerVersionModule = oldScript, oldCompat, oldModule
 		workerVersionForce, workerBindings, workerTags = oldForce, oldBindings, oldTags
-		APIToken, AccountID = oldToken, oldAccount
-		DryRun, JSONOutput = oldDry, oldJSON
 	})
 }
 

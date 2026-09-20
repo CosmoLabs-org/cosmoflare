@@ -13,19 +13,15 @@ import (
 
 // workerCronRunGlobals snapshots and restores the package-level flag
 // variables the worker cron runners read, so tests cannot leak state.
+// Credentials are zeroed by runGlobalsSnapshot for the test's duration:
+// earlier suite tests may leave them set, which would let service creation
+// succeed and flip these tests from offline-error to dry-run-success
+// (order-dependent).
 func workerCronRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldExpr, oldNew := workerCronExpr, workerCronNew
-	oldToken, oldDry, oldJSON := APIToken, DryRun, JSONOutput
-	oldAcct := AccountID
-	// Zero credentials for the test's duration: earlier suite tests may
-	// leave them set, which would let service creation succeed and flip
-	// these tests from offline-error to dry-run-success (order-dependent).
-	AccountID, APIToken = "", ""
-	t.Cleanup(func() {
-		workerCronExpr, workerCronNew = oldExpr, oldNew
-		AccountID, APIToken, DryRun, JSONOutput = oldAcct, oldToken, oldDry, oldJSON
-	})
+	t.Cleanup(func() { workerCronExpr, workerCronNew = oldExpr, oldNew })
 }
 
 // workerCronRunResetFlags returns the cron flag variables to their zero

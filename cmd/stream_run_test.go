@@ -11,13 +11,10 @@ import (
 // so tests cannot leak state into each other.
 func streamRunSnapshot(t *testing.T) {
 	t.Helper()
-	savedAccount, savedToken := AccountID, APIToken
-	savedDry, savedJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	savedURL, savedMeta := streamURL, streamMetadata
 	savedExpires := streamExpires
 	t.Cleanup(func() {
-		AccountID, APIToken = savedAccount, savedToken
-		DryRun, JSONOutput = savedDry, savedJSON
 		streamURL, streamMetadata = savedURL, savedMeta
 		streamExpires = savedExpires
 	})

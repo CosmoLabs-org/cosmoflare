@@ -10,13 +10,12 @@ import (
 // d1RunSnapshot snapshots the D1 handler globals and restores them on cleanup.
 func d1RunSnapshot(t *testing.T) {
 	t.Helper()
-	savedDry, savedJSON, savedLocal, savedRemote := DryRun, JSONOutput, d1Local, d1Remote
+	runGlobalsSnapshot(t)
+	savedLocal, savedRemote := d1Local, d1Remote
 	savedSQL, savedForce := d1SQL, d1Force
-	savedAccount, savedToken := AccountID, APIToken
 	t.Cleanup(func() {
-		DryRun, JSONOutput, d1Local, d1Remote = savedDry, savedJSON, savedLocal, savedRemote
+		d1Local, d1Remote = savedLocal, savedRemote
 		d1SQL, d1Force = savedSQL, savedForce
-		AccountID, APIToken = savedAccount, savedToken
 	})
 }
 

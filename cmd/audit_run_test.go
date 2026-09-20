@@ -16,14 +16,13 @@ import (
 func auditRunEnv(t *testing.T) string {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
+	runGlobalsSnapshot(t)
 
 	oldLimit, oldSince := auditLimit, auditSince
 	oldType, oldForce, oldBefore := auditType, auditForce, auditBefore
-	oldJSON, oldDry := JSONOutput, DryRun
 	t.Cleanup(func() {
 		auditLimit, auditSince = oldLimit, oldSince
 		auditType, auditForce, auditBefore = oldType, oldForce, oldBefore
-		JSONOutput, DryRun = oldJSON, oldDry
 	})
 	auditLimit, auditSince = 50, ""
 	auditType, auditForce, auditBefore = "", false, ""

@@ -11,14 +11,9 @@ import (
 // apply runners read, so tests cannot leak state between each other.
 func applyRunGlobals(t *testing.T) {
 	t.Helper()
-	oldAccount, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	oldYes, oldDelete := applyYes, applyDeleteUnmanaged
-	t.Cleanup(func() {
-		AccountID, APIToken = oldAccount, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
-		applyYes, applyDeleteUnmanaged = oldYes, oldDelete
-	})
+	t.Cleanup(func() { applyYes, applyDeleteUnmanaged = oldYes, oldDelete })
 }
 
 // TestGetApplyService_RequiresCredentials verifies the apply service factory

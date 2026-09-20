@@ -13,14 +13,9 @@ import (
 // cost run functions read, so tests cannot leak state.
 func costRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldPeriod, oldFormat := costPeriod, costFormat
-	oldAcct, oldToken := AccountID, APIToken
-	oldJSON, oldDry := JSONOutput, DryRun
-	t.Cleanup(func() {
-		costPeriod, costFormat = oldPeriod, oldFormat
-		AccountID, APIToken = oldAcct, oldToken
-		JSONOutput, DryRun = oldJSON, oldDry
-	})
+	t.Cleanup(func() { costPeriod, costFormat = oldPeriod, oldFormat })
 }
 
 // costRunDefaults installs the pristine flag state each subtest needs.

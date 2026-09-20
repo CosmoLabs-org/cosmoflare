@@ -10,18 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// lifecycleRunGlobals snapshots and restores the package globals the
-// lifecycle runners read, so tests cannot leak state between each other.
-func lifecycleRunGlobals(t *testing.T) {
-	t.Helper()
-	oldAccount, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
-	t.Cleanup(func() {
-		AccountID, APIToken = oldAccount, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
-	})
-}
-
 // lifecycleResetFlags restores the given flags on a command to their default
 // values and clears their "changed" marks, so subtests start pristine.
 func lifecycleResetFlags(cmd *cobra.Command, names ...string) {
@@ -55,7 +43,7 @@ func lifecycleWriteRules(t *testing.T, content string) string {
 // TestRunBucketLifecycle_RequiresBucket verifies the get, set and clear
 // runners all reject a missing bucket argument before any service is built.
 func TestRunBucketLifecycle_RequiresBucket(t *testing.T) {
-	lifecycleRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name string
 		cmd  *cobra.Command
@@ -78,7 +66,7 @@ func TestRunBucketLifecycle_RequiresBucket(t *testing.T) {
 // TestRunBucketLifecycleSet_InputValidation verifies the set runner rejects
 // each malformed input mode before any network call is possible.
 func TestRunBucketLifecycleSet_InputValidation(t *testing.T) {
-	lifecycleRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name    string
 		set     func(t *testing.T)
@@ -291,7 +279,7 @@ func TestLifecycleTransitionSummary(t *testing.T) {
 // TestConfirmBucketLifecycleReplace verifies --force and dry-run mode both
 // skip the interactive confirmation prompt.
 func TestConfirmBucketLifecycleReplace(t *testing.T) {
-	lifecycleRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name  string
 		force bool
@@ -313,7 +301,7 @@ func TestConfirmBucketLifecycleReplace(t *testing.T) {
 // TestGetBucketLifecycleService verifies the service factory returns a
 // non-nil service for the given credentials.
 func TestGetBucketLifecycleService(t *testing.T) {
-	lifecycleRunGlobals(t)
+	runGlobalsSnapshot(t)
 	if getBucketLifecycleService() == nil {
 		t.Fatal("expected non-nil lifecycle service")
 	}
@@ -323,7 +311,7 @@ func TestGetBucketLifecycleService(t *testing.T) {
 // runners surface the wrapped service error when the API call fails (no
 // reachable API with the fake credentials).
 func TestRunBucketLifecycle_ServiceFailsOffline(t *testing.T) {
-	lifecycleRunGlobals(t)
+	runGlobalsSnapshot(t)
 	AccountID = "acct-123"
 	APIToken = "fake-token-1234567890"
 

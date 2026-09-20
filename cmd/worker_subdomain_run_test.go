@@ -5,17 +5,8 @@ import (
 	"testing"
 )
 
-// workerSubdomainGlobals snapshots the credential globals the subdomain
-// commands read, so tests cannot leak state and cannot dial the API.
-func workerSubdomainGlobals(t *testing.T) {
-	t.Helper()
-	oldAcct, oldToken := AccountID, APIToken
-	AccountID, APIToken = "", ""
-	t.Cleanup(func() { AccountID, APIToken = oldAcct, oldToken })
-}
-
 func TestWorkerSubdomainSetValidation(t *testing.T) {
-	workerSubdomainGlobals(t)
+	runGlobalsSnapshot(t)
 
 	if err := runWorkerSubdomainSet(workerSubdomainSetCmd, nil); err == nil || !strings.Contains(err.Error(), "subdomain is required") {
 		t.Fatalf("expected missing-arg error, got %v", err)
@@ -42,7 +33,7 @@ func TestWorkerSubdomainSetValidation(t *testing.T) {
 }
 
 func TestWorkerSubdomainSetValidNameFailsOffline(t *testing.T) {
-	workerSubdomainGlobals(t)
+	runGlobalsSnapshot(t)
 	// A well-formed name passes local validation and only then fails on
 	// the missing credentials.
 	err := runWorkerSubdomainSet(workerSubdomainSetCmd, []string{"my-team"})
@@ -52,7 +43,7 @@ func TestWorkerSubdomainSetValidNameFailsOffline(t *testing.T) {
 }
 
 func TestWorkerSubdomainGetFailsOffline(t *testing.T) {
-	workerSubdomainGlobals(t)
+	runGlobalsSnapshot(t)
 	err := runWorkerSubdomainGet(workerSubdomainGetCmd, nil)
 	if err == nil || !strings.Contains(err.Error(), "failed to create worker service") {
 		t.Fatalf("expected offline service error, got %v", err)

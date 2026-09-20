@@ -11,17 +11,10 @@ import (
 // every service construction fails offline before any network call.
 func statusRunGlobals(t *testing.T) {
 	t.Helper()
-	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
-	t.Setenv("CLOUDFLARE_API_TOKEN", "")
-
-	oldAccountID, oldAPIToken := AccountID, APIToken
-	oldJSON, oldDry, oldVerbose := JSONOutput, DryRun, statusVerbose
-	t.Cleanup(func() {
-		AccountID, APIToken = oldAccountID, oldAPIToken
-		JSONOutput, DryRun, statusVerbose = oldJSON, oldDry, oldVerbose
-	})
-	AccountID, APIToken = "", ""
-	JSONOutput, DryRun, statusVerbose = false, false, false
+	runGlobalsSnapshot(t)
+	oldVerbose := statusVerbose
+	t.Cleanup(func() { statusVerbose = oldVerbose })
+	statusVerbose = false
 }
 
 // TestRunStatus_NoCredentials verifies runStatus succeeds offline when no

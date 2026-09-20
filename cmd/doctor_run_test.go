@@ -9,23 +9,11 @@ import (
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
-// doctorCredsGuard zeroes the credential globals for the duration of a test so
-// service construction fails deterministically instead of depending on the
-// ambient environment, restoring the previous values afterwards.
-func doctorCredsGuard(t *testing.T) {
-	t.Helper()
-	origAccount, origToken := AccountID, APIToken
-	AccountID, APIToken = "", ""
-	t.Cleanup(func() {
-		AccountID, APIToken = origAccount, origToken
-	})
-}
-
 // TestRunDoctorAll_MissingCreds verifies that fleet mode surfaces the
 // fleet-status service construction error before any API request when
 // credentials are absent.
 func TestRunDoctorAll_MissingCreds(t *testing.T) {
-	doctorCredsGuard(t)
+	runGlobalsSnapshot(t)
 
 	err := runDoctorAll(context.Background())
 	if err == nil {
@@ -39,7 +27,7 @@ func TestRunDoctorAll_MissingCreds(t *testing.T) {
 // TestRunDoctor_AllRoutesToDoctorAll verifies runDoctor routes to the fleet
 // path when --all is set, even with no domain argument.
 func TestRunDoctor_AllRoutesToDoctorAll(t *testing.T) {
-	doctorCredsGuard(t)
+	runGlobalsSnapshot(t)
 
 	origAll := doctorAll
 	doctorAll = true
@@ -58,7 +46,7 @@ func TestRunDoctor_AllRoutesToDoctorAll(t *testing.T) {
 // fails fast with the zone-service construction error when the target looks
 // like a zone ID and credentials are missing — before any network probe runs.
 func TestRunDoctorSingle_ZoneIDTargetWithoutCreds(t *testing.T) {
-	doctorCredsGuard(t)
+	runGlobalsSnapshot(t)
 
 	doctor := cosmoflare.NewDoctorService(time.Second)
 	err := runDoctorSingle(context.Background(), doctor, "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
@@ -74,7 +62,7 @@ func TestRunDoctorSingle_ZoneIDTargetWithoutCreds(t *testing.T) {
 // the zone-ID error path.
 func TestResolveDoctorTarget(t *testing.T) {
 	t.Run("plain domain passes through with no expected NS offline", func(t *testing.T) {
-		doctorCredsGuard(t)
+		runGlobalsSnapshot(t)
 
 		domain, ns, err := resolveDoctorTarget(context.Background(), "example.com")
 		if err != nil {
@@ -89,7 +77,7 @@ func TestResolveDoctorTarget(t *testing.T) {
 	})
 
 	t.Run("zone ID target without creds errors", func(t *testing.T) {
-		doctorCredsGuard(t)
+		runGlobalsSnapshot(t)
 
 		_, _, err := resolveDoctorTarget(context.Background(), "0123456789abcdef0123456789abcdef")
 		if err == nil {
@@ -101,7 +89,7 @@ func TestResolveDoctorTarget(t *testing.T) {
 	})
 
 	t.Run("empty target is not treated as zone ID", func(t *testing.T) {
-		doctorCredsGuard(t)
+		runGlobalsSnapshot(t)
 
 		domain, _, err := resolveDoctorTarget(context.Background(), "")
 		if err != nil {
@@ -117,7 +105,7 @@ func TestResolveDoctorTarget(t *testing.T) {
 // enrichment leaves the report untouched (and does not panic) when the zone
 // service cannot be constructed.
 func TestEnrichDoctorReport_NoCredsIsNoop(t *testing.T) {
-	doctorCredsGuard(t)
+	runGlobalsSnapshot(t)
 
 	report := &cosmoflare.DiagnosticReport{
 		Domain: "example.com",

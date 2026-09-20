@@ -17,11 +17,7 @@ func configRunEnv(t *testing.T) string {
 	t.Setenv("COSMOFLARE_NO_KEYCHAIN", "1") // never probe the OS keychain
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-
-	oldDry, oldJSON := DryRun, JSONOutput
-	t.Cleanup(func() {
-		DryRun, JSONOutput = oldDry, oldJSON
-	})
+	runGlobalsSnapshot(t)
 	return home
 }
 

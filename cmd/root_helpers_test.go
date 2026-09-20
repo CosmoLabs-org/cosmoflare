@@ -24,6 +24,24 @@ func setOutputMode(t *testing.T, jsonMode, dryRun bool) {
 	t.Cleanup(func() { JSONOutput, DryRun = savedJSON, savedDry })
 }
 
+// runGlobalsSnapshot zeroes the shared run globals (output mode, dry-run,
+// credentials) for the duration of the test and clears the credential env
+// vars, restoring everything on cleanup. Per-file helpers keep only their
+// own domain variables on top of this.
+func runGlobalsSnapshot(t *testing.T) {
+	t.Helper()
+	savedJSON, savedDry := JSONOutput, DryRun
+	savedAccount, savedToken := AccountID, APIToken
+	JSONOutput, DryRun = false, false
+	AccountID, APIToken = "", ""
+	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
+	t.Setenv("CLOUDFLARE_API_TOKEN", "")
+	t.Cleanup(func() {
+		JSONOutput, DryRun = savedJSON, savedDry
+		AccountID, APIToken = savedAccount, savedToken
+	})
+}
+
 // TestPrintHelpers_TextModePrefixes verifies that the print helpers render
 // their message with the expected status prefix in plain (non-JSON) mode.
 func TestPrintHelpers_TextModePrefixes(t *testing.T) {

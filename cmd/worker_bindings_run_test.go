@@ -7,24 +7,10 @@ import (
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
-// workerBindingsSnapshot zeroes the credential globals so service
-// construction fails deterministically, restoring them afterwards.
-func workerBindingsSnapshot(t *testing.T) {
-	t.Helper()
-	origAccount, origToken := AccountID, APIToken
-	origJSON := JSONOutput
-	t.Cleanup(func() {
-		AccountID, APIToken = origAccount, origToken
-		JSONOutput = origJSON
-	})
-	AccountID, APIToken = "", ""
-	JSONOutput = false
-}
-
 // TestRunWorkerBindings_NameRequired verifies the direct-call guard rejects
 // an empty argument list before any service work.
 func TestRunWorkerBindings_NameRequired(t *testing.T) {
-	workerBindingsSnapshot(t)
+	runGlobalsSnapshot(t)
 
 	err := runWorkerBindings(workerBindingsCmd, nil)
 	if err == nil || !strings.Contains(err.Error(), "worker name is required") {
@@ -35,7 +21,7 @@ func TestRunWorkerBindings_NameRequired(t *testing.T) {
 // TestRunWorkerBindings_MissingCreds verifies the runner fails fast with the
 // service construction error when credentials are absent.
 func TestRunWorkerBindings_MissingCreds(t *testing.T) {
-	workerBindingsSnapshot(t)
+	runGlobalsSnapshot(t)
 
 	err := runWorkerBindings(workerBindingsCmd, []string{"api-gateway"})
 	if err == nil {

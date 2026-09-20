@@ -12,15 +12,16 @@ import (
 func accountRunEnv(t *testing.T) string {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
+	runGlobalsSnapshot(t)
 
 	oldID, oldToken, oldEmail := accountAddAccountID, accountAddAPIToken, accountAddEmail
-	oldForce, oldJSON, oldDry := accountRemoveForce, JSONOutput, DryRun
+	oldForce := accountRemoveForce
 	t.Cleanup(func() {
 		accountAddAccountID, accountAddAPIToken, accountAddEmail = oldID, oldToken, oldEmail
-		accountRemoveForce, JSONOutput, DryRun = oldForce, oldJSON, oldDry
+		accountRemoveForce = oldForce
 	})
 	accountAddAccountID, accountAddAPIToken, accountAddEmail = "", "", ""
-	accountRemoveForce, JSONOutput, DryRun = false, false, false
+	accountRemoveForce = false
 	return os.Getenv("HOME")
 }
 

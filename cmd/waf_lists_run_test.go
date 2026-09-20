@@ -12,16 +12,13 @@ import (
 // variables so tests cannot leak state into each other.
 func wafListRunSnapshot(t *testing.T) {
 	t.Helper()
-	savedAccount, savedToken := AccountID, APIToken
-	savedDry, savedJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	savedKind, savedDesc := wafListKind, wafListDescription
 	savedName, savedForce := wafListName, wafListForce
 	savedIP, savedASN := wafListItemIP, wafListItemASN
 	savedComment, savedFile := wafListItemComment, wafListItemFile
 	savedMode := wafManagedMode
 	t.Cleanup(func() {
-		AccountID, APIToken = savedAccount, savedToken
-		DryRun, JSONOutput = savedDry, savedJSON
 		wafListKind, wafListDescription = savedKind, savedDesc
 		wafListName, wafListForce = savedName, savedForce
 		wafListItemIP, wafListItemASN = savedIP, savedASN

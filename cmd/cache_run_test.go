@@ -9,15 +9,14 @@ import (
 // runCachePurge and runCacheSettings read, so tests cannot leak state.
 func cacheRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldAll, oldForce := cachePurgeAll, cachePurgeForce
 	oldURLs, oldTags, oldHosts := cachePurgeURLs, cachePurgeTags, cachePurgeHosts
 	oldTTL, oldDev, oldLevel := cacheBrowserTTL, cacheDevMode, cacheCacheLevel
-	oldToken, oldDry, oldJSON := APIToken, DryRun, JSONOutput
 	t.Cleanup(func() {
 		cachePurgeAll, cachePurgeForce = oldAll, oldForce
 		cachePurgeURLs, cachePurgeTags, cachePurgeHosts = oldURLs, oldTags, oldHosts
 		cacheBrowserTTL, cacheDevMode, cacheCacheLevel = oldTTL, oldDev, oldLevel
-		APIToken, DryRun, JSONOutput = oldToken, oldDry, oldJSON
 	})
 }
 

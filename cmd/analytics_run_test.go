@@ -47,19 +47,10 @@ func (f *fakeR2Client) ListObjects(ctx context.Context, bucket, prefix, delimite
 // switches and credentials so tests cannot leak state into each other.
 func analyticsRunSnapshot(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	savedBucket, savedPeriod := analyticsBucket, analyticsPeriod
-	savedJSON, savedDry := JSONOutput, DryRun
-	savedAccount, savedToken := AccountID, APIToken
-	t.Cleanup(func() {
-		analyticsBucket, analyticsPeriod = savedBucket, savedPeriod
-		JSONOutput, DryRun = savedJSON, savedDry
-		AccountID, APIToken = savedAccount, savedToken
-	})
-	t.Setenv("CLOUDFLARE_ACCOUNT_ID", "")
-	t.Setenv("CLOUDFLARE_API_TOKEN", "")
+	t.Cleanup(func() { analyticsBucket, analyticsPeriod = savedBucket, savedPeriod })
 	analyticsBucket, analyticsPeriod = "", "7d"
-	JSONOutput, DryRun = false, false
-	AccountID, APIToken = "", ""
 }
 
 // TestRunAnalytics_NoCredentials verifies runAnalytics fails fast with the

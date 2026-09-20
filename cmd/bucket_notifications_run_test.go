@@ -9,18 +9,6 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// notificationsRunGlobals snapshots and restores the package globals the
-// notification runners read so tests cannot leak state between each other.
-func notificationsRunGlobals(t *testing.T) {
-	t.Helper()
-	oldAccount, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
-	t.Cleanup(func() {
-		AccountID, APIToken = oldAccount, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
-	})
-}
-
 // notificationsResetFlags restores the given flags to their default values
 // and clears their "changed" marks, so subtests start pristine. Repeatable
 // string-array flags are cleared via SliceValue.Replace because calling Set
@@ -47,7 +35,7 @@ var notificationsCreateFlagNames = []string{
 // TestRunBucketNotifications_RequiresBucket verifies all four runners reject
 // a missing bucket argument before any service is built.
 func TestRunBucketNotifications_RequiresBucket(t *testing.T) {
-	notificationsRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name string
 		cmd  *cobra.Command
@@ -71,7 +59,7 @@ func TestRunBucketNotifications_RequiresBucket(t *testing.T) {
 // TestRunBucketNotificationsCreate_Validation verifies every flag-validation
 // branch of the create runner, all of which return before any network call.
 func TestRunBucketNotificationsCreate_Validation(t *testing.T) {
-	notificationsRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name    string
 		set     func(t *testing.T)
@@ -126,7 +114,7 @@ func TestRunBucketNotificationsCreate_Validation(t *testing.T) {
 // TestRunBucketNotificationsGet_RequiresQueueID verifies the get runner's
 // queue-ID guard fires before the service call.
 func TestRunBucketNotificationsGet_RequiresQueueID(t *testing.T) {
-	notificationsRunGlobals(t)
+	runGlobalsSnapshot(t)
 	notificationsResetFlags(bucketNotificationsGetCmd, "queue-id")
 
 	err := runBucketNotificationsGet(bucketNotificationsGetCmd, []string{"my-bucket"})
@@ -138,7 +126,7 @@ func TestRunBucketNotificationsGet_RequiresQueueID(t *testing.T) {
 // TestRunBucketNotificationsDelete_Validation verifies the delete runner's
 // queue-ID, rule-selection and mutual-exclusion guards.
 func TestRunBucketNotificationsDelete_Validation(t *testing.T) {
-	notificationsRunGlobals(t)
+	runGlobalsSnapshot(t)
 	flagNames := []string{"queue-id", "rule-id", "all", "force"}
 	cases := []struct {
 		name    string

@@ -11,11 +11,10 @@ import (
 // them when the test finishes.
 func wafRunSnapshot(t *testing.T) {
 	t.Helper()
-	savedToken, savedDry, savedJSON := APIToken, DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	savedMode, savedIP := wafRuleMode, wafAccessIP
 	savedAccessMode, savedNote, savedForce := wafAccessMode, wafAccessNote, wafForce
 	t.Cleanup(func() {
-		APIToken, DryRun, JSONOutput = savedToken, savedDry, savedJSON
 		wafRuleMode, wafAccessIP = savedMode, savedIP
 		wafAccessMode, wafAccessNote, wafForce = savedAccessMode, savedNote, savedForce
 	})

@@ -10,14 +10,9 @@ import (
 // cleanup.
 func queueRunSnapshot(t *testing.T) {
 	t.Helper()
-	savedDry, savedJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	savedForce, savedName := queueForce, queueNewName
-	savedAccount, savedToken := AccountID, APIToken
-	t.Cleanup(func() {
-		DryRun, JSONOutput = savedDry, savedJSON
-		queueForce, queueNewName = savedForce, savedName
-		AccountID, APIToken = savedAccount, savedToken
-	})
+	t.Cleanup(func() { queueForce, queueNewName = savedForce, savedName })
 }
 
 // TestRunQueueServiceError verifies list, get, and consumers fail fast with
