@@ -983,4 +983,164 @@ var registry = []Command{
 		Service: "alerts", Scope: "config", Verb: "read",
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+
+	// --- tunnel (wave 4; permissions from the Qwen dataset) ---
+	// cloudflared/Wrangler have no stable REST-tunnel equivalent commands, so
+	// WranglerEquivalent is left empty for the whole group.
+	{
+		ID: "tunnel.list", CLIPath: []string{"tunnel", "list"},
+		Service: "tunnel", Scope: "account", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/cfd_tunnel"},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "tunnel.get", CLIPath: []string{"tunnel", "get"},
+		Service: "tunnel", Scope: "tunnel", Verb: "read",
+		APIOps: []string{
+			// name lookup goes through the list call before the direct get
+			"GET /accounts/{account_id}/cfd_tunnel",
+			"GET /accounts/{account_id}/cfd_tunnel/{tunnel_id}",
+		},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "tunnel.create", CLIPath: []string{"tunnel", "create"},
+		Service: "tunnel", Scope: "tunnel", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/cfd_tunnel"},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "tunnel.delete", CLIPath: []string{"tunnel", "delete"},
+		Service: "tunnel", Scope: "tunnel", Verb: "delete",
+		APIOps: []string{
+			// cascade=true tears down live connections before the delete
+			"DELETE /accounts/{account_id}/cfd_tunnel/{tunnel_id}/connections",
+			"DELETE /accounts/{account_id}/cfd_tunnel/{tunnel_id}",
+		},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
+	{
+		ID: "tunnel.token", CLIPath: []string{"tunnel", "token"},
+		Service: "tunnel", Scope: "tunnel", Verb: "read",
+		APIOps:      []string{"GET /accounts/{account_id}/cfd_tunnel/{tunnel_id}/token"},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "tunnel.connections", CLIPath: []string{"tunnel", "connections"},
+		Service: "tunnel", Scope: "tunnel", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/cfd_tunnel/{tunnel_id}/connections"},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "tunnel.cleanup", CLIPath: []string{"tunnel", "cleanup"},
+		Service: "tunnel", Scope: "tunnel", Verb: "delete",
+		APIOps: []string{
+			"DELETE /accounts/{account_id}/cfd_tunnel/{tunnel_id}/connections",
+			"DELETE /accounts/{account_id}/cfd_tunnel/{tunnel_id}",
+		},
+		Permissions: Permissions{Account: []string{"Cloudflare Tunnel"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
+
+	// --- account (wave 4) ---
+	// The profile subcommands (list/add/switch/remove/current) are local
+	// config-file operations — no Cloudflare API calls, no permission applies.
+	{
+		ID: "account.list", CLIPath: []string{"account", "list"},
+		Service: "account", Scope: "config", Verb: "list",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.add", CLIPath: []string{"account", "add"},
+		Service: "account", Scope: "config", Verb: "write",
+		LocalChecks: []string{"account_id_present", "api_token_present"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.switch", CLIPath: []string{"account", "switch"},
+		Service: "account", Scope: "config", Verb: "write",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.remove", CLIPath: []string{"account", "remove"},
+		// removes the local profile only; no Cloudflare resource is touched
+		Service: "account", Scope: "config", Verb: "delete",
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.current", CLIPath: []string{"account", "current"},
+		Service: "account", Scope: "config", Verb: "read",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		// any token can verify itself; no account-level permission is checked
+		ID: "account.verify", CLIPath: []string{"account", "verify"},
+		Service: "account", Scope: "config", Verb: "read",
+		APIOps: []string{"GET /user/tokens/verify"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+
+	// member/role commands; "Memberships" is a user-scoped permission in the
+	// dataset (docs/research/2026-09-17-cf-perms-next-waves-tiers/qwen-results.md).
+	{
+		ID: "account.member.list", CLIPath: []string{"account", "member", "list"},
+		Service: "account", Scope: "member", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/members"},
+		Permissions: Permissions{User: []string{"Memberships"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.member.invite", CLIPath: []string{"account", "member", "invite"},
+		Service: "account", Scope: "member", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/members"},
+		Permissions: Permissions{User: []string{"Memberships"}},
+		LocalChecks: []string{"email_format", "role_ids_present"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.member.update", CLIPath: []string{"account", "member", "update"},
+		Service: "account", Scope: "member", Verb: "write",
+		APIOps:      []string{"PUT /accounts/{account_id}/members/{member_id}"},
+		Permissions: Permissions{User: []string{"Memberships"}},
+		LocalChecks: []string{"role_ids_present"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.member.remove", CLIPath: []string{"account", "member", "remove"},
+		Service: "account", Scope: "member", Verb: "delete",
+		APIOps:      []string{"DELETE /accounts/{account_id}/members/{member_id}"},
+		Permissions: Permissions{User: []string{"Memberships"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
+	{
+		ID: "account.role.list", CLIPath: []string{"account", "role", "list"},
+		Service: "account", Scope: "role", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/roles"},
+		Permissions: Permissions{User: []string{"Memberships"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+
+	// Cloudflare account audit log; per the dataset's wave-3 mapping the
+	// /accounts/{id}/logs/audit surface requires "Account Settings" (Read or
+	// Edit) — "Access: Audit Logs" in the dataset is the Zero Trust surface.
+	{
+		ID: "account.audit-logs.list", CLIPath: []string{"account", "audit-logs", "list"},
+		Service: "account", Scope: "audit_log", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/logs/audit"},
+		Permissions: Permissions{Account: []string{"Account Settings"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "account.audit-logs.history", CLIPath: []string{"account", "audit-logs", "history"},
+		Service: "account", Scope: "audit_log", Verb: "read",
+		APIOps:      []string{"GET /accounts/{account_id}/logs/audit/{log_id}/history"},
+		Permissions: Permissions{Account: []string{"Account Settings"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
 }
