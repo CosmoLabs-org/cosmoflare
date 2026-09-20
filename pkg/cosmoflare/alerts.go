@@ -24,14 +24,38 @@ type AlertService struct {
 // AlertRule defines a single alerting rule configuration.
 type AlertRule struct {
 	Name      string    `json:"name" yaml:"name"`
-	Service   string    `json:"service" yaml:"service"`       // r2, workers, kv, dns
-	Condition string    `json:"condition" yaml:"condition"`    // error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota
+	Service   string    `json:"service" yaml:"service"`     // r2, workers, kv, dns
+	Condition string    `json:"condition" yaml:"condition"` // error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota
 	Threshold float64   `json:"threshold" yaml:"threshold"`
-	Action    string    `json:"action" yaml:"action"`          // webhook, email, log
-	Target    string    `json:"target" yaml:"target"`          // URL or email address
+	Action    string    `json:"action" yaml:"action"` // webhook, email, log
+	Target    string    `json:"target" yaml:"target"` // URL or email address
 	Enabled   bool      `json:"enabled" yaml:"enabled"`
 	CreatedAt time.Time `json:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" yaml:"updated_at"`
+}
+
+// AlertRuleUpdate is the patch payload for AlertService.Update. Nil fields
+// leave the corresponding stored rule field unchanged. Enabled is a pointer
+// so a rule can be explicitly disabled — a plain bool could not distinguish
+// "set to false" from "not provided".
+type AlertRuleUpdate struct {
+	Service   *string  `json:"service,omitempty"`
+	Condition *string  `json:"condition,omitempty"`
+	Threshold *float64 `json:"threshold,omitempty"`
+	Action    *string  `json:"action,omitempty"`
+	Target    *string  `json:"target,omitempty"`
+	Enabled   *bool    `json:"enabled,omitempty"`
+}
+
+// CreateOption customizes rule creation in AlertService.Create.
+type CreateOption func(*AlertRule)
+
+// WithEnabled overrides the default enabled state of a created rule. Rules
+// are created enabled unless this option says otherwise.
+func WithEnabled(enabled bool) CreateOption {
+	return func(r *AlertRule) {
+		r.Enabled = enabled
+	}
 }
 
 // AlertHistory records a single alert trigger event.
@@ -232,7 +256,8 @@ func (s *AlertService) Get(name string) (*AlertRule, error) {
 }
 
 // Create adds a new alert rule. Returns an error if a rule with the same name already exists.
-func (s *AlertService) Create(rule *AlertRule) (*AlertRule, error) {
+// Rules are created enabled by default; pass WithEnabled(false) to create a disabled rule.
+func (s *AlertService) Create(rule *AlertRule, opts ...CreateOption) (*AlertRule, error) {
 	if err := validateAlertRule(rule); err != nil {
 		return nil, err
 	}
@@ -253,6 +278,11 @@ func (s *AlertService) Create(rule *AlertRule) (*AlertRule, error) {
 	rule.CreatedAt = now
 	rule.UpdatedAt = now
 	rule.Enabled = true
+	for _, opt := range opts {
+		if opt != nil {
+			opt(rule)
+		}
+	}
 
 	cfg.Rules = append(cfg.Rules, rule)
 	if err := s.saveConfig(cfg); err != nil {
@@ -261,10 +291,14 @@ func (s *AlertService) Create(rule *AlertRule) (*AlertRule, error) {
 	return rule, nil
 }
 
-// Update modifies an existing alert rule. Only non-zero fields on the update are applied.
-func (s *AlertService) Update(name string, update *AlertRule) (*AlertRule, error) {
+// Update modifies an existing alert rule. Nil fields on the update are left
+// unchanged; Enabled may be explicitly set to false to disable the rule.
+func (s *AlertService) Update(name string, update *AlertRuleUpdate) (*AlertRule, error) {
 	if name == "" {
 		return nil, validationError("AlertService.Update", "alert rule name is required")
+	}
+	if update == nil {
+		return nil, validationError("AlertService.Update", "update payload is required")
 	}
 
 	cfg, err := s.loadConfig()
@@ -283,30 +317,33 @@ func (s *AlertService) Update(name string, update *AlertRule) (*AlertRule, error
 		return nil, notFound("AlertService.Update", "", name, nil)
 	}
 
-	// Apply non-zero updates
-	if update.Service != "" {
-		if !validAlertServices[update.Service] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", update.Service))
+	// Apply provided updates; nil fields are no-ops
+	if update.Service != nil {
+		if !validAlertServices[*update.Service] {
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", *update.Service))
 		}
-		found.Service = update.Service
+		found.Service = *update.Service
 	}
-	if update.Condition != "" {
-		if !validAlertCondition(update.Condition) {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: %s", update.Condition, AlertConditionList()))
+	if update.Condition != nil {
+		if !validAlertCondition(*update.Condition) {
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid condition %q, must be one of: %s", *update.Condition, AlertConditionList()))
 		}
-		found.Condition = update.Condition
+		found.Condition = *update.Condition
 	}
-	if update.Threshold != 0 {
-		found.Threshold = update.Threshold
+	if update.Threshold != nil {
+		found.Threshold = *update.Threshold
 	}
-	if update.Action != "" {
-		if !validAlertActions[update.Action] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid action %q, must be one of: webhook, email, log", update.Action))
+	if update.Action != nil {
+		if !validAlertActions[*update.Action] {
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid action %q, must be one of: webhook, email, log", *update.Action))
 		}
-		found.Action = update.Action
+		found.Action = *update.Action
 	}
-	if update.Target != "" {
-		found.Target = update.Target
+	if update.Target != nil {
+		found.Target = *update.Target
+	}
+	if update.Enabled != nil {
+		found.Enabled = *update.Enabled
 	}
 
 	found.UpdatedAt = time.Now()
