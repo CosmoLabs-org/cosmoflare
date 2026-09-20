@@ -9,16 +9,14 @@ import (
 // cleanup, keeping tests independent of flag defaults and ambient profile.
 func d1LocalSnapshot(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	origSQL, origParams := d1SQL, d1Params
-	origDry, origJSON := DryRun, JSONOutput
 	origProfile := ActiveProfile
 	t.Cleanup(func() {
 		d1SQL, d1Params = origSQL, origParams
-		DryRun, JSONOutput = origDry, origJSON
 		ActiveProfile = origProfile
 	})
 	d1SQL, d1Params = "", nil
-	DryRun, JSONOutput = false, false
 	ActiveProfile = nil
 }
 

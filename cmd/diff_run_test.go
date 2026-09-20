@@ -13,12 +13,9 @@ import (
 // read, so tests cannot leak state between each other.
 func diffRunGlobals(t *testing.T) {
 	t.Helper()
-	oldAccount, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	oldOutput := diffOutput
 	t.Cleanup(func() {
-		AccountID, APIToken = oldAccount, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
 		diffOutput = oldOutput
 		if f := diffCmd.PersistentFlags().Lookup("output"); f != nil {
 			f.Changed = false

@@ -9,15 +9,6 @@ import (
 	"github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
-// workerTailGlobals snapshots the credential globals the tail command
-// reads, so tests cannot leak state and cannot dial the API.
-func workerTailGlobals(t *testing.T) {
-	t.Helper()
-	oldAcct, oldToken := AccountID, APIToken
-	AccountID, APIToken = "", ""
-	t.Cleanup(func() { AccountID, APIToken = oldAcct, oldToken })
-}
-
 func TestWorkerTailFormatEntryText(t *testing.T) {
 	e := &cosmoflare.LogEntry{
 		Timestamp: time.Date(2026, 9, 16, 12, 30, 5, 0, time.UTC),
@@ -58,14 +49,14 @@ func TestWorkerTailFormatEntryNil(t *testing.T) {
 }
 
 func TestWorkerTailValidation(t *testing.T) {
-	workerTailGlobals(t)
+	runGlobalsSnapshot(t)
 	if err := runWorkerTail(workerTailCmd, nil); err == nil || !strings.Contains(err.Error(), "worker name is required") {
 		t.Fatalf("expected arg validation error, got %v", err)
 	}
 }
 
 func TestWorkerTailInvalidFormat(t *testing.T) {
-	workerTailGlobals(t)
+	runGlobalsSnapshot(t)
 	old := workerTailFormat
 	workerTailFormat = "yaml"
 	t.Cleanup(func() { workerTailFormat = old })
@@ -75,7 +66,7 @@ func TestWorkerTailInvalidFormat(t *testing.T) {
 }
 
 func TestWorkerTailFailsOffline(t *testing.T) {
-	workerTailGlobals(t)
+	runGlobalsSnapshot(t)
 	old := workerTailFormat
 	workerTailFormat = "text"
 	t.Cleanup(func() { workerTailFormat = old })

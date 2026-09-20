@@ -8,18 +8,6 @@ import (
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
-// bucketDomainRunGlobals snapshots and restores the credentials the bucket
-// domain runners read, so tests cannot leak state.
-func bucketDomainRunGlobals(t *testing.T) {
-	t.Helper()
-	oldAccount, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
-	t.Cleanup(func() {
-		AccountID, APIToken = oldAccount, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
-	})
-}
-
 // bucketDomainFlagReset restores the given flags to their default values and
 // clears their "changed" marks once the test finishes.
 func bucketDomainFlagReset(t *testing.T, cmd *cobra.Command, names ...string) {
@@ -39,7 +27,7 @@ func bucketDomainFlagReset(t *testing.T, cmd *cobra.Command, names ...string) {
 // TestRunBucketDomainAttach_ArgumentValidation verifies the attach runner
 // rejects a missing bucket argument and a missing --domain flag.
 func TestRunBucketDomainAttach_ArgumentValidation(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name    string
 		args    []string
@@ -62,7 +50,7 @@ func TestRunBucketDomainAttach_ArgumentValidation(t *testing.T) {
 // --zone-id and with empty credentials, attach aborts while creating the zone
 // service — before any network call is possible.
 func TestRunBucketDomainAttach_ZoneResolutionFailsOffline(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 	bucketDomainFlagReset(t, bucketDomainAttachCmd, "domain", "zone-id")
 	AccountID = ""
 	APIToken = ""
@@ -79,7 +67,7 @@ func TestRunBucketDomainAttach_ZoneResolutionFailsOffline(t *testing.T) {
 // TestRunBucketDomainList_RequiresBucket verifies the list runner rejects a
 // missing bucket argument before any service is built.
 func TestRunBucketDomainList_RequiresBucket(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 
 	err := runBucketDomainList(bucketDomainListCmd, nil)
 	if err == nil || !strings.Contains(err.Error(), "bucket name is required") {
@@ -90,7 +78,7 @@ func TestRunBucketDomainList_RequiresBucket(t *testing.T) {
 // TestRunBucketDomain_TwoArgumentRequirement verifies the get, verify, update
 // and detach runners all require both bucket and domain arguments.
 func TestRunBucketDomain_TwoArgumentRequirement(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 	cases := []struct {
 		name string
 		cmd  *cobra.Command
@@ -114,7 +102,7 @@ func TestRunBucketDomain_TwoArgumentRequirement(t *testing.T) {
 // TestRunBucketDomainVerify_InvalidTimeout verifies the verify runner rejects
 // a malformed --timeout duration before any polling starts.
 func TestRunBucketDomainVerify_InvalidTimeout(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 	bucketDomainFlagReset(t, bucketDomainVerifyCmd, "timeout")
 	if err := bucketDomainVerifyCmd.Flags().Set("timeout", "not-a-duration"); err != nil {
 		t.Fatal(err)
@@ -129,7 +117,7 @@ func TestRunBucketDomainVerify_InvalidTimeout(t *testing.T) {
 // TestRunBucketDomainUpdate_FlagValidation verifies the update runner rejects
 // mutually exclusive flags and a run with nothing to update.
 func TestRunBucketDomainUpdate_FlagValidation(t *testing.T) {
-	bucketDomainRunGlobals(t)
+	runGlobalsSnapshot(t)
 	bucketDomainFlagReset(t, bucketDomainUpdateCmd, "enabled", "disabled", "min-tls", "cipher")
 	cases := []struct {
 		name    string

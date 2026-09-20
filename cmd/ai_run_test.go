@@ -9,19 +9,16 @@ import (
 // functions read, so tests cannot leak state.
 func aiRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldFilter := aiModelsFilter
 	oldPrompt, oldSystem := aiRunPrompt, aiRunSystem
 	oldTTL, oldLimit, oldWindow := aiGatewayCacheTTL, aiGatewayRateLimit, aiGatewayRateWindow
 	oldCollect, oldForce, oldLogs := aiGatewayCollectLogs, aiGatewayForce, aiGatewayLogsLimit
-	oldAcct, oldToken := AccountID, APIToken
-	oldJSON, oldDry := JSONOutput, DryRun
 	t.Cleanup(func() {
 		aiModelsFilter = oldFilter
 		aiRunPrompt, aiRunSystem = oldPrompt, oldSystem
 		aiGatewayCacheTTL, aiGatewayRateLimit, aiGatewayRateWindow = oldTTL, oldLimit, oldWindow
 		aiGatewayCollectLogs, aiGatewayForce, aiGatewayLogsLimit = oldCollect, oldForce, oldLogs
-		AccountID, APIToken = oldAcct, oldToken
-		JSONOutput, DryRun = oldJSON, oldDry
 	})
 }
 

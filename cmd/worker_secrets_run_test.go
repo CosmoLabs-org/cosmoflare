@@ -14,12 +14,9 @@ import (
 // variables the worker secret runners read, so tests cannot leak state.
 func workerSecretRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldValue, oldForce := workerSecretValue, workerSecretForce
-	oldToken, oldDry, oldJSON := APIToken, DryRun, JSONOutput
-	t.Cleanup(func() {
-		workerSecretValue, workerSecretForce = oldValue, oldForce
-		APIToken, DryRun, JSONOutput = oldToken, oldDry, oldJSON
-	})
+	t.Cleanup(func() { workerSecretValue, workerSecretForce = oldValue, oldForce })
 }
 
 // workerSecretRunResetFlags returns the secret flag variables to their

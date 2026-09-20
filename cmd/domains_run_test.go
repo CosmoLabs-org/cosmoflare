@@ -9,24 +9,19 @@ import (
 // pair, restoring everything on cleanup.
 func domainsRunSnapshot(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	origFilter, origName := domainsFilter, domainsName
 	origPage, origPerPage := domainsPage, domainsPerPage
 	origSort, origDetail, origEnrich := domainsSort, domainsDetail, domainsEnrich
-	origDry, origJSON := DryRun, JSONOutput
-	origAccount, origToken := AccountID, APIToken
 	t.Cleanup(func() {
 		domainsFilter, domainsName = origFilter, origName
 		domainsPage, domainsPerPage = origPage, origPerPage
 		domainsSort, domainsDetail, domainsEnrich = origSort, origDetail, origEnrich
-		DryRun, JSONOutput = origDry, origJSON
-		AccountID, APIToken = origAccount, origToken
 	})
 	domainsFilter, domainsName = "", ""
 	domainsPage, domainsPerPage = 1, 50
 	domainsSort = ""
 	domainsDetail, domainsEnrich = false, false
-	DryRun, JSONOutput = false, false
-	AccountID, APIToken = "", ""
 }
 
 // TestRunDomains_MissingCreds verifies the list runner fails fast with the

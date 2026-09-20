@@ -9,14 +9,9 @@ import (
 // so tests cannot leak state into each other.
 func imagesRunSnapshot(t *testing.T) {
 	t.Helper()
-	savedAccount, savedToken := AccountID, APIToken
-	savedDry, savedJSON := DryRun, JSONOutput
+	runGlobalsSnapshot(t)
 	savedURL := imagesURL
-	t.Cleanup(func() {
-		AccountID, APIToken = savedAccount, savedToken
-		DryRun, JSONOutput = savedDry, savedJSON
-		imagesURL = savedURL
-	})
+	t.Cleanup(func() { imagesURL = savedURL })
 }
 
 // TestRunImagesUploadByURL_DryRun verifies the URL upload path short-circuits

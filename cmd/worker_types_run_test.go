@@ -9,24 +9,15 @@ import (
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
-// workerTypesGlobals snapshots the credential globals so tests cannot leak
-// state and cannot dial the API.
-func workerTypesGlobals(t *testing.T) {
-	t.Helper()
-	oldAcct, oldToken := AccountID, APIToken
-	AccountID, APIToken = "", ""
-	t.Cleanup(func() { AccountID, APIToken = oldAcct, oldToken })
-}
-
 func TestWorkerTypesCmdValidation(t *testing.T) {
-	workerTypesGlobals(t)
+	runGlobalsSnapshot(t)
 	if err := runWorkerTypes(workerTypesCmd, nil); err == nil || !strings.Contains(err.Error(), "worker name is required") {
 		t.Fatalf("expected arg validation error, got %v", err)
 	}
 }
 
 func TestWorkerTypesCmdFailsOffline(t *testing.T) {
-	workerTypesGlobals(t)
+	runGlobalsSnapshot(t)
 	err := runWorkerTypes(workerTypesCmd, []string{"api"})
 	if err == nil || !strings.Contains(err.Error(), "failed to create worker service") {
 		t.Fatalf("expected offline service error, got %v", err)
@@ -34,7 +25,7 @@ func TestWorkerTypesCmdFailsOffline(t *testing.T) {
 }
 
 func TestWorkerTypesOutWritesGeneratedContent(t *testing.T) {
-	workerTypesGlobals(t)
+	runGlobalsSnapshot(t)
 	path := filepath.Join(t.TempDir(), "worker-configuration.d.ts")
 
 	content := cosmoflare.GenerateWorkerTypes(cosmoflare.WorkerSettings{

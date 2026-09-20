@@ -12,15 +12,14 @@ import (
 // credentials runWatch and its helpers read, so tests cannot leak state.
 func watchRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldPrefix, oldExclude := watchPrefix, watchExclude
 	oldInterval, oldDelete := watchInterval, watchDelete
-	oldDry, oldJSON, oldVerbose := DryRun, JSONOutput, Verbose
-	oldAccount, oldToken := AccountID, APIToken
+	oldVerbose := Verbose
 	t.Cleanup(func() {
 		watchPrefix, watchExclude = oldPrefix, oldExclude
 		watchInterval, watchDelete = oldInterval, oldDelete
-		DryRun, JSONOutput, Verbose = oldDry, oldJSON, oldVerbose
-		AccountID, APIToken = oldAccount, oldToken
+		Verbose = oldVerbose
 	})
 }
 

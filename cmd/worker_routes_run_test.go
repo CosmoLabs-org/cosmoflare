@@ -11,14 +11,9 @@ import (
 // the worker-route runners read, so tests cannot leak state.
 func workerRouteRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldPattern, oldScript, oldForce := workerRoutePattern, workerRouteScript, workerRouteForce
-	oldAccountID, oldToken := AccountID, APIToken
-	oldDry, oldJSON := DryRun, JSONOutput
-	t.Cleanup(func() {
-		workerRoutePattern, workerRouteScript, workerRouteForce = oldPattern, oldScript, oldForce
-		AccountID, APIToken = oldAccountID, oldToken
-		DryRun, JSONOutput = oldDry, oldJSON
-	})
+	t.Cleanup(func() { workerRoutePattern, workerRouteScript, workerRouteForce = oldPattern, oldScript, oldForce })
 }
 
 // workerRouteRunResetFlags clears the shared route flag variables so each

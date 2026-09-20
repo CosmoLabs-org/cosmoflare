@@ -11,12 +11,9 @@ import (
 // variables the worker domain runners read, so tests cannot leak state.
 func workerDomainRunGlobals(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	oldService, oldZone, oldForce := workerDomainService, workerDomainZone, workerDomainForce
-	oldToken, oldDry, oldJSON := APIToken, DryRun, JSONOutput
-	t.Cleanup(func() {
-		workerDomainService, workerDomainZone, workerDomainForce = oldService, oldZone, oldForce
-		APIToken, DryRun, JSONOutput = oldToken, oldDry, oldJSON
-	})
+	t.Cleanup(func() { workerDomainService, workerDomainZone, workerDomainForce = oldService, oldZone, oldForce })
 }
 
 // workerDomainRunResetFlags returns the domain flag variables to their zero

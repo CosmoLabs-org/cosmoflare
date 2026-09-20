@@ -9,13 +9,12 @@ import (
 // them on cleanup.
 func pagerulesRunSnapshot(t *testing.T) {
 	t.Helper()
+	runGlobalsSnapshot(t)
 	savedURL, savedAction, savedValue := pageruleURL, pageruleAction, pageruleActionValue
 	savedStatus, savedPriority, savedForce := pageruleStatus, pagerulePriority, pageruleForce
-	savedDry, savedJSON, savedToken := DryRun, JSONOutput, APIToken
 	t.Cleanup(func() {
 		pageruleURL, pageruleAction, pageruleActionValue = savedURL, savedAction, savedValue
 		pageruleStatus, pagerulePriority, pageruleForce = savedStatus, savedPriority, savedForce
-		DryRun, JSONOutput, APIToken = savedDry, savedJSON, savedToken
 	})
 }
 
