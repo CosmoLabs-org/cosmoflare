@@ -1,6 +1,6 @@
 id: ROAD-100
 created_at: 2026-09-20T17:36:11.526662+04:00
-updated_at: 2026-09-20T17:36:11.527794+04:00
+updated_at: 2026-09-20T17:36:14.633539+04:00
 title: Notification severity system + light theme (desktop)
 description: |-
     # Notification severity system + light theme (desktop)
@@ -16,4 +16,6 @@ description: |-
 status: captured
 priority: 35
 category: workflow
+linked_issues:
+    - FEAT-041
 ulid: 01M2ZGG3R78H5PSEVWZC6A4BWG

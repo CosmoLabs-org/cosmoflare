@@ -1,9 +1,9 @@
 id: BASE-015
 created_at: 2026-05-24T08:28:39.667621-03:00
-updated_at: 2026-09-17T00:10:43.85596+04:00
+updated_at: 2026-09-20T17:36:11.380242+04:00
 title: Environment separation
 description: Distinct dev/staging/prod configurations with environment-specific values
-status: captured
+status: completed
 category: infra
 tags:
     - foundation
@@ -11,3 +11,5 @@ notes:
     - '2026-09-16: FEAT-026 part 1 merged (4047a3c) — named environment profiles in .cosmoflare.yaml with plan_tier + resource_prefix fields, ValidateEnv, global --env flag with per-invocation credential scoping, limits reflects profile plan tier. Part 2 (d1/kv/r2/workers scoping, d1 execute --local/--remote) remains.'
 linked_issues:
     - FEAT-026
+completed_in: v0.29.0
+completed_at: 2026-09-20T17:36:11.380234+04:00

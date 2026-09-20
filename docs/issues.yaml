@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-20T02:18:26.827836+04:00
+last_updated: 2026-09-20T17:35:48.394751+04:00
 next_bug_id: 54
 next_feat_id: 44
 next_task_id: 17
@@ -503,12 +503,12 @@ issues:
       created_at: 2026-09-12T06:11:23.043029+04:00
     - id: FEAT-035
       type: feature
-      status: open
+      status: closed
       title: Cloudflare Tunnels management CLI
       created_at: 2026-09-12T06:11:28.663632+04:00
     - id: FEAT-036
       type: feature
-      status: open
+      status: closed
       title: Account management + audit logs
       created_at: 2026-09-12T06:11:33.843356+04:00
     - id: FEAT-037
@@ -608,7 +608,7 @@ issues:
       created_at: 2026-09-17T20:08:33.127478+04:00
     - id: TASK-013
       type: task
-      status: open
+      status: closed
       title: AlertService cannot produce a disabled rule through its API
       created_at: 2026-09-18T04:35:52.762887+04:00
     - id: TASK-014

@@ -26,10 +26,19 @@ entries:
         - description: 'FEAT-020 wave 2: command registry covers worker/kv/d1/dns (58 entries, Qwen-verified permissions); destructive deletes run dry by default unless --force'
           source: manual
           date: 2026-09-18T23:20:01.707719+04:00
+        - description: 'Tunnels management: tunnel CRUD, connector token, connections, cleanup (FEAT-035)'
+          source: manual
+          date: 2026-09-20T17:36:07.623658+04:00
+        - description: 'Account management: members, roles, and audit-log query with NDJSON/CSV export (FEAT-036)'
+          source: manual
+          date: 2026-09-20T17:36:07.668049+04:00
     fixed:
         - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
           source: manual
           date: 2026-09-17T19:36:20.836203+04:00
+        - description: 'Alerts: rules can be created and updated into a disabled state (TASK-013)'
+          source: manual
+          date: 2026-09-20T17:36:07.749812+04:00
     changed: []
     deprecated: []
     removed: []

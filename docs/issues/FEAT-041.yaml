@@ -1,7 +1,7 @@
 id: FEAT-041
 type: feature
 created_at: 2026-09-15T05:33:54.414913+04:00
-updated_at: 2026-09-15T05:33:56.771047+04:00
+updated_at: 2026-09-20T17:36:14.67353+04:00
 source: local
 ulid: 01M2HB5ZBN42V9F6WP9X21402G
 status: open
@@ -9,6 +9,8 @@ labels:
     - audit
     - design
 origin:
+    roadmap_items:
+        - ROAD-100
     idea_slug: 2026-09-13-notification-severity-system-light-theme-desktop
     session: 53
 title: Notification severity system + light theme (desktop)

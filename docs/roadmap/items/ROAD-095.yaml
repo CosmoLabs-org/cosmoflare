@@ -1,14 +1,16 @@
 id: ROAD-095
 created_at: 2026-09-13T15:38:25.424438+04:00
-updated_at: 2026-09-13T15:38:36.781355+04:00
+updated_at: 2026-09-20T17:36:11.412484+04:00
 title: Agent-first onboarding — first-run wizard + least-privilege token doctor
 description: 'One token, whole platform: setup wizard (FEAT-017) plus permission manifest and token doctor (FEAT-019, already merged — verify scope then close). The agent-first UX is cosmoflare''s stated differentiator per CLAUDE.md yet has no roadmap item. Source: audit 2026-09-13 agent-12-roadmap-health.md'
-status: captured
+status: completed
 tags:
     - audit-hydrated
 linked_issues:
     - FEAT-017
     - FEAT-019
+completed_in: v0.29.0
+completed_at: 2026-09-20T17:36:11.412482+04:00
 origin:
     session: 53
 ulid: 01M2D8ZE8JMBNEKH6C9WDDZZ5J

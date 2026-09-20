@@ -1,13 +1,15 @@
 id: ROAD-098
 created_at: 2026-09-13T15:38:32.008627+04:00
-updated_at: 2026-09-13T15:38:36.822746+04:00
+updated_at: 2026-09-20T17:36:11.418683+04:00
 title: Rate-limit-aware shared client — tracked home for remainder
 description: 'FEAT-025 core landed via merge 562a602 (rest_client.go Retry-After/backoff). Track remaining surface: thread the shared client through the 27 NewXServiceFromCreds constructors (kv.go et al. currently http.DefaultClient) + documentation. Source: audit 2026-09-13 agent-12 + agent-7'
-status: captured
+status: completed
 tags:
     - audit-hydrated
 linked_issues:
     - FEAT-025
+completed_in: v0.29.0
+completed_at: 2026-09-20T17:36:11.41868+04:00
 origin:
     session: 53
 ulid: 01M2D8ZMPA2575HHXP4ZNPB61J
