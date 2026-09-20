@@ -45,6 +45,16 @@ func NewSetupWizard() *SetupWizard {
 	}
 }
 
+// ask prints the prompt and reads one line. A reader error (EOF, closed
+// stdin) is terminal: scripted and agent callers never answer prompts, so
+// the wizard returns the error instead of looping on empty reads. The
+// bounded-empty-retry policy stays ONLY where product intent wants a human
+// to retry (Step 3's account ID).
+func (w *SetupWizard) ask(prompt string) (string, error) {
+	fmt.Print(prompt)
+	return w.Input.ReadLine()
+}
+
 // Welcome displays the welcome screen
 func (w *SetupWizard) Welcome() {
 	w.clearScreen()
@@ -115,10 +125,9 @@ func (w *SetupWizard) Step1_AuthMethod() (string, error) {
 	fmt.Println()
 
 	for {
-		fmt.Print("Choose method [1]: ")
-		response, err := w.Input.ReadLine()
+		response, err := w.ask("Choose method [1]: ")
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to read auth method: %w", err)
 		}
 
 		if response == "" || response == "1" {
@@ -152,9 +161,11 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 	// Try environment variable first
 	envToken := os.Getenv("CLOUDFLARE_API_TOKEN")
 	if envToken != "" {
-		fmt.Printf("Found token in environment variable (%s characters). Use this? [Y/n]: ",
-			colorMuted.Sprintf("%d", len(envToken)))
-		response, _ := w.Input.ReadLine()
+		response, err := w.ask(fmt.Sprintf("Found token in environment variable (%s characters). Use this? [Y/n]: ",
+			colorMuted.Sprintf("%d", len(envToken))))
+		if err != nil {
+			return "", fmt.Errorf("failed to read token confirmation: %w", err)
+		}
 		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
@@ -186,8 +197,10 @@ func (w *SetupWizard) Step2_APIToken() (string, error) {
 		masked := maskToken(token)
 		fmt.Printf("Token entered: %s\n", colorMuted.Sprintf("%s", masked))
 
-		fmt.Printf("Does this look correct? [Y/n]: ")
-		response, _ := w.Input.ReadLine()
+		response, err := w.ask("Does this look correct? [Y/n]: ")
+		if err != nil {
+			return "", fmt.Errorf("failed to read token confirmation: %w", err)
+		}
 		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
@@ -219,8 +232,10 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 		}
 		fmt.Println()
 
-		fmt.Printf("Use this account? [Y/n]: ")
-		response, _ := w.Input.ReadLine()
+		response, err := w.ask("Use this account? [Y/n]: ")
+		if err != nil {
+			return "", "", fmt.Errorf("failed to read account confirmation: %w", err)
+		}
 		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
@@ -235,9 +250,11 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 	// Try environment variable first
 	envAccountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	if envAccountID != "" {
-		fmt.Printf("Found account ID in environment: %s. Use this? [Y/n]: ",
-			colorMuted.Sprintf("%s", utils.MaskAccountID(envAccountID)))
-		response, _ := w.Input.ReadLine()
+		response, err := w.ask(fmt.Sprintf("Found account ID in environment: %s. Use this? [Y/n]: ",
+			colorMuted.Sprintf("%s", utils.MaskAccountID(envAccountID))))
+		if err != nil {
+			return "", "", fmt.Errorf("failed to read account ID confirmation: %w", err)
+		}
 		response = strings.ToLower(response)
 
 		if response == "" || response == "y" || response == "yes" {
@@ -249,8 +266,7 @@ func (w *SetupWizard) Step3_AccountInfo(token string) (string, string, error) {
 	// answers must not loop forever — scripted and agent callers never
 	// answer prompts.
 	for empty := 0; ; {
-		fmt.Print("Account ID: ")
-		accountID, err := w.Input.ReadLine()
+		accountID, err := w.ask("Account ID: ")
 
 		if accountID == "" {
 			empty++
@@ -284,15 +300,19 @@ func (w *SetupWizard) Step4_ProfileSetup() (string, string, error) {
 
 	// Profile name
 	defaultProfileName := "production"
-	fmt.Printf("Profile name [%s]: ", colorMuted.Sprintf("%s", defaultProfileName))
-	profileName, _ := w.Input.ReadLine()
+	profileName, err := w.ask(fmt.Sprintf("Profile name [%s]: ", colorMuted.Sprintf("%s", defaultProfileName)))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read profile name: %w", err)
+	}
 	if profileName == "" {
 		profileName = defaultProfileName
 	}
 
 	// Profile description
-	fmt.Print("Description (optional): ")
-	description, _ := w.Input.ReadLine()
+	description, err := w.ask("Description (optional): ")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read description: %w", err)
+	}
 
 	return profileName, description, nil
 }

@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -457,3 +458,119 @@ func TestMaskTokenCoverage(t *testing.T) {
 // ---------------------------------------------------------------------------
 // Welcome and Complete
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Closed-stdin (EOF) contract: reader errors are terminal in every step
+// ---------------------------------------------------------------------------
+
+// eofStepTimeout bounds each closed-stdin subtest so a surviving infinite
+// loop fails fast instead of hanging the suite.
+const eofStepTimeout = 5 * time.Second
+
+// runEofStep runs fn in a goroutine and fails the test if it does not
+// return before eofStepTimeout (an EOF-read infinite loop).
+func runEofStep(t *testing.T, name string, fn func()) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		fn()
+	}()
+	select {
+	case <-done:
+	case <-time.After(eofStepTimeout):
+		t.Fatalf("%s did not terminate on closed stdin (EOF loop suspected)", name)
+	}
+}
+
+// TestSetupWizard_ClosedStdin verifies that every prompting step treats a
+// reader error (EOF / closed stdin) as terminal and returns an error
+// instead of looping on empty reads. See SetupWizard.ask.
+func TestSetupWizard_ClosedStdin(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	newClosedWizard := func() *SetupWizard {
+		w := NewSetupWizard()
+		w.Quiet = true
+		w.Input = newMockReader() // no canned input: every ReadLine returns EOF
+		return w
+	}
+
+	t.Run("Step1_AuthMethod returns error", func(t *testing.T) {
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step1_AuthMethod", func() {
+			_, err = w.Step1_AuthMethod()
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("Step2_APIToken returns error", func(t *testing.T) {
+		os.Unsetenv("CLOUDFLARE_API_TOKEN")
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step2_APIToken", func() {
+			_, err = w.Step2_APIToken()
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("Step2_APIToken env confirm returns error", func(t *testing.T) {
+		t.Setenv("CLOUDFLARE_API_TOKEN", strings.Repeat("x", 30))
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step2_APIToken", func() {
+			_, err = w.Step2_APIToken()
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("Step3_AccountInfo returns error", func(t *testing.T) {
+		os.Unsetenv("CLOUDFLARE_ACCOUNT_ID")
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step3_AccountInfo", func() {
+			_, _, err = w.Step3_AccountInfo("test-token")
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("Step3_AccountInfo env confirm returns error", func(t *testing.T) {
+		t.Setenv("CLOUDFLARE_ACCOUNT_ID", strings.Repeat("b", 32))
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step3_AccountInfo", func() {
+			_, _, err = w.Step3_AccountInfo("test-token")
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("Step4_ProfileSetup returns error", func(t *testing.T) {
+		w := newClosedWizard()
+		var err error
+		runEofStep(t, "Step4_ProfileSetup", func() {
+			_, _, err = w.Step4_ProfileSetup()
+		})
+		require.Error(t, err)
+	})
+}
+
+// TestSetupWizard_Step3_BoundedEmptyRetry verifies that the ONLY empty-retry
+// policy left in the file is Step 3's three-empty bound: two empty answers
+// followed by EOF must still terminate with an error.
+func TestSetupWizard_Step3_BoundedEmptyRetry(t *testing.T) {
+	globalAnimator.Disabled = true
+	defer func() { globalAnimator.Disabled = false }()
+
+	os.Unsetenv("CLOUDFLARE_ACCOUNT_ID")
+	w := NewSetupWizard()
+	w.Quiet = true
+	w.Input = newMockReader("", "", "") // two retries, then EOF on the third read
+
+	var err error
+	runEofStep(t, "Step3_AccountInfo", func() {
+		_, _, err = w.Step3_AccountInfo("test-token")
+	})
+	require.Error(t, err)
+}
