@@ -93,7 +93,15 @@ func newStatusError(op, msg string, status int, err error) *R2Error {
 // (0) does not shadow a status deeper in the chain.
 func ErrorStatus(err error) int {
 	for unwrapped := err; unwrapped != nil; {
-		// cloudflare-go / R2Error style: StatusCode() method.
+		// cloudflare-go exposes StatusCode as a struct FIELD, not a
+		// method, so the carrier interface below cannot see it — read it
+		// structurally before the interface walk.
+		if cf, ok := unwrapped.(*cloudflare.Error); ok {
+			if code := cf.StatusCode; code != 0 {
+				return code
+			}
+		}
+		// R2Error / smithy style: StatusCode() method.
 		if sc, ok := unwrapped.(httpStatusCarrier); ok {
 			if code := sc.StatusCode(); code != 0 {
 				return code
