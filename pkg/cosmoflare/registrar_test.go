@@ -178,6 +178,22 @@ func registrarStubServer(t *testing.T, handler http.HandlerFunc) (*httptest.Serv
 }
 
 // registrarStubDomain builds a single-domain GET response body.
+// registrarStubDomainArray writes the same domain wrapped in a result
+// ARRAY — the shape TransferRegistrarDomain decodes.
+func registrarStubDomainArray(w http.ResponseWriter, name string, locked bool) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"errors":  []interface{}{},
+		"result": []map[string]interface{}{{
+			"id": name, "available": false, "supported_tld": true,
+			"can_register": false, "current_registrar": "Cloudflare",
+			"expires_at": "2027-01-01T00:00:00Z", "locked": locked,
+			"registry_statuses": "clientTransferProhibited",
+		}},
+	})
+}
+
 func registrarStubDomain(w http.ResponseWriter, name string, locked bool) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -341,7 +357,8 @@ func TestRegistrarService_TransferAndCancel(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
-		registrarStubDomain(w, "example.com", false)
+		// TransferRegistrarDomain decodes result as an ARRAY of domains.
+		registrarStubDomainArray(w, "example.com", false)
 	})
 
 	svc := NewRegistrarService(cf, "acct-1")

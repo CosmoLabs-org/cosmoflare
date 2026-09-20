@@ -193,7 +193,11 @@ func (s *RegistrarService) validate(domain string) error {
 func (s *RegistrarService) registrarRaw(ctx context.Context, op, method, path string, body, out any) error {
 	resp, err := s.cf.Raw(ctx, method, path, body, nil)
 	if err != nil {
-		return newError("RegistrarService."+op, strings.ToLower(method)+" "+path, err)
+		// R2Error.Error() renders Message only (never Err), so fold the
+		// underlying text in verbatim — API messages like "domain is not
+		// within the renewal window" must survive the wrap. Err stays
+		// attached for Status-based classification (TASK-012 seam).
+		return newError("RegistrarService."+op, strings.ToLower(method)+" "+path+": "+err.Error(), err)
 	}
 	if out == nil {
 		return nil
