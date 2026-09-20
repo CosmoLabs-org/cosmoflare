@@ -32,6 +32,11 @@ func sampleRule(name string) *AlertRule {
 	}
 }
 
+// Pointer helpers for building AlertRuleUpdate values in tests. boolPtr is
+// already provided by dns.go in this package.
+func alertsTestStrPtr(s string) *string   { return &s }
+func alertsTestF64Ptr(f float64) *float64 { return &f }
+
 func TestAlertService_CreateAndGet(t *testing.T) {
 	svc := newTestAlertService(t)
 
@@ -139,11 +144,11 @@ func TestAlertService_Update(t *testing.T) {
 		t.Fatalf("Create: %v", err)
 	}
 
-	updated, err := svc.Update("update-me", &AlertRule{
-		Service:   "workers",
-		Threshold: 10.0,
-		Action:    "email",
-		Target:    "admin@example.com",
+	updated, err := svc.Update("update-me", &AlertRuleUpdate{
+		Service:   alertsTestStrPtr("workers"),
+		Threshold: alertsTestF64Ptr(10.0),
+		Action:    alertsTestStrPtr("email"),
+		Target:    alertsTestStrPtr("admin@example.com"),
 	})
 	if err != nil {
 		t.Fatalf("Update: %v", err)
@@ -168,10 +173,101 @@ func TestAlertService_Update(t *testing.T) {
 	}
 }
 
+// TestAlertService_CreateDisabled verifies that an explicit disabled state
+// from the create input is honored instead of force-enabled (TASK-013).
+func TestAlertService_CreateDisabled(t *testing.T) {
+	svc := newTestAlertService(t)
+
+	created, err := svc.Create(sampleRule("paused-rule"), WithEnabled(false))
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if created.Enabled {
+		t.Error("expected rule to stay disabled when created with WithEnabled(false)")
+	}
+
+	// Verify persisted state survives a reload
+	got, err := svc.Get("paused-rule")
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if got.Enabled {
+		t.Error("persisted rule should remain disabled")
+	}
+}
+
+// TestAlertService_UpdateEnableDisable verifies Update can flip the enabled
+// state in both directions (TASK-013).
+func TestAlertService_UpdateEnableDisable(t *testing.T) {
+	svc := newTestAlertService(t)
+
+	if _, err := svc.Create(sampleRule("toggle-rule")); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	// enable -> disable
+	updated, err := svc.Update("toggle-rule", &AlertRuleUpdate{Enabled: boolPtr(false)})
+	if err != nil {
+		t.Fatalf("Update disable: %v", err)
+	}
+	if updated.Enabled {
+		t.Error("expected rule to be disabled after update")
+	}
+	got, err := svc.Get("toggle-rule")
+	if err != nil {
+		t.Fatalf("Get after disable: %v", err)
+	}
+	if got.Enabled {
+		t.Error("persisted rule should be disabled")
+	}
+
+	// disable -> enable
+	updated, err = svc.Update("toggle-rule", &AlertRuleUpdate{Enabled: boolPtr(true)})
+	if err != nil {
+		t.Fatalf("Update enable: %v", err)
+	}
+	if !updated.Enabled {
+		t.Error("expected rule to be re-enabled after update")
+	}
+}
+
+// TestAlertService_UpdateNilEnabledUnchanged verifies a nil Enabled field on
+// the update payload leaves the stored enabled state untouched (TASK-013).
+func TestAlertService_UpdateNilEnabledUnchanged(t *testing.T) {
+	svc := newTestAlertService(t)
+
+	// Disabled rule stays disabled across an unrelated update.
+	if _, err := svc.Create(sampleRule("quiet-rule"), WithEnabled(false)); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	updated, err := svc.Update("quiet-rule", &AlertRuleUpdate{Threshold: alertsTestF64Ptr(42.0)})
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if updated.Enabled {
+		t.Error("nil Enabled must not re-enable a disabled rule")
+	}
+	if updated.Threshold != 42.0 {
+		t.Errorf("expected threshold 42.0, got %f", updated.Threshold)
+	}
+
+	// Enabled rule stays enabled across an unrelated update.
+	if _, err := svc.Create(sampleRule("loud-rule")); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	updated, err = svc.Update("loud-rule", &AlertRuleUpdate{Threshold: alertsTestF64Ptr(7.0)})
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if !updated.Enabled {
+		t.Error("nil Enabled must not disable an enabled rule")
+	}
+}
+
 func TestAlertService_UpdateNotFound(t *testing.T) {
 	svc := newTestAlertService(t)
 
-	_, err := svc.Update("nonexistent", &AlertRule{Service: "r2"})
+	_, err := svc.Update("nonexistent", &AlertRuleUpdate{Service: alertsTestStrPtr("r2")})
 	if err == nil {
 		t.Fatal("expected error updating nonexistent rule")
 	}
@@ -181,7 +277,7 @@ func TestAlertService_UpdateInvalidService(t *testing.T) {
 	svc := newTestAlertService(t)
 	_, _ = svc.Create(sampleRule("bad-update"))
 
-	_, err := svc.Update("bad-update", &AlertRule{Service: "invalid"})
+	_, err := svc.Update("bad-update", &AlertRuleUpdate{Service: alertsTestStrPtr("invalid")})
 	if err == nil {
 		t.Fatal("expected validation error for invalid service")
 	}
@@ -604,7 +700,7 @@ func TestSplitLines(t *testing.T) {
 func TestAlertService_UpdateEmptyName(t *testing.T) {
 	svc := newTestAlertService(t)
 
-	_, err := svc.Update("", &AlertRule{Service: "r2"})
+	_, err := svc.Update("", &AlertRuleUpdate{Service: alertsTestStrPtr("r2")})
 	if err == nil {
 		t.Fatal("expected validation error for empty name")
 	}
@@ -617,7 +713,7 @@ func TestAlertService_UpdateInvalidCondition(t *testing.T) {
 		t.Fatalf("Create: %v", err)
 	}
 
-	_, err := svc.Update("cond-update", &AlertRule{Condition: "unknown-condition"})
+	_, err := svc.Update("cond-update", &AlertRuleUpdate{Condition: alertsTestStrPtr("unknown-condition")})
 	if err == nil {
 		t.Fatal("expected validation error for invalid condition")
 	}
@@ -630,7 +726,7 @@ func TestAlertService_UpdateInvalidAction(t *testing.T) {
 		t.Fatalf("Create: %v", err)
 	}
 
-	_, err := svc.Update("action-update", &AlertRule{Action: "pager"})
+	_, err := svc.Update("action-update", &AlertRuleUpdate{Action: alertsTestStrPtr("pager")})
 	if err == nil {
 		t.Fatal("expected validation error for invalid action")
 	}
@@ -643,9 +739,9 @@ func TestAlertService_UpdateConditionAndTarget(t *testing.T) {
 		t.Fatalf("Create: %v", err)
 	}
 
-	updated, err := svc.Update("patch-rule", &AlertRule{
-		Condition: "storage-limit",
-		Target:    "https://new.hook.example.com",
+	updated, err := svc.Update("patch-rule", &AlertRuleUpdate{
+		Condition: alertsTestStrPtr("storage-limit"),
+		Target:    alertsTestStrPtr("https://new.hook.example.com"),
 	})
 	if err != nil {
 		t.Fatalf("Update: %v", err)
@@ -675,7 +771,7 @@ func TestAlertService_UpdateSetsUpdatedAt(t *testing.T) {
 	// Small sleep to ensure time advances
 	time.Sleep(2 * time.Millisecond)
 
-	updated, err := svc.Update("ts-rule", &AlertRule{Threshold: 99.0})
+	updated, err := svc.Update("ts-rule", &AlertRuleUpdate{Threshold: alertsTestF64Ptr(99.0)})
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}

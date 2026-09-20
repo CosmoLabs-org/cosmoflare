@@ -51,7 +51,13 @@ var (
 	alertForce     bool
 	alertLimit     int
 	alertSince     string
+	alertEnabled   bool
 )
+
+// Pointer helpers for building an AlertRuleUpdate from changed flags.
+func alertsStrPtr(s string) *string   { return &s }
+func alertsF64Ptr(f float64) *float64 { return &f }
+func alertsBoolPtr(b bool) *bool      { return &b }
 
 var alertsListCmd = &cobra.Command{
 	Use:   "list",
@@ -197,6 +203,7 @@ func init() {
 	alertsCreateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsCreateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsCreateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
+	alertsCreateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Create the rule enabled (use --enabled=false to create it disabled)")
 	_ = alertsCreateCmd.MarkFlagRequired("service")
 	_ = alertsCreateCmd.MarkFlagRequired("condition")
 	_ = alertsCreateCmd.MarkFlagRequired("threshold")
@@ -209,6 +216,7 @@ func init() {
 	alertsUpdateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsUpdateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsUpdateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
+	alertsUpdateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Enable or disable the rule (only applied when the flag is set)")
 
 	// Delete flags
 	alertsDeleteCmd.Flags().BoolVar(&alertForce, "force", false, "Confirm deletion")
@@ -323,6 +331,15 @@ func runAlertsList(cmd *cobra.Command, args []string) error {
 	})
 }
 
+// createOptions derives Create options from explicitly-set flags. The
+// --enabled flag only overrides the default when the user passed it.
+func createOptions(cmd *cobra.Command) []cosmoflare.CreateOption {
+	if cmd.Flags().Changed("enabled") {
+		return []cosmoflare.CreateOption{cosmoflare.WithEnabled(alertEnabled)}
+	}
+	return nil
+}
+
 func runAlertsCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
@@ -348,7 +365,7 @@ func runAlertsCreate(cmd *cobra.Command, args []string) error {
 		return outErr("failed to create alert service", err)
 	}
 
-	created, err := svc.Create(rule)
+	created, err := svc.Create(rule, createOptions(cmd)...)
 	if err != nil {
 		return outErr("failed to create alert rule", err)
 	}
@@ -391,21 +408,24 @@ func runAlertsGet(cmd *cobra.Command, args []string) error {
 func runAlertsUpdate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	update := &cosmoflare.AlertRule{}
+	update := &cosmoflare.AlertRuleUpdate{}
 	if cmd.Flags().Changed("service") {
-		update.Service = alertService
+		update.Service = alertsStrPtr(alertService)
 	}
 	if cmd.Flags().Changed("condition") {
-		update.Condition = alertCondition
+		update.Condition = alertsStrPtr(alertCondition)
 	}
 	if cmd.Flags().Changed("threshold") {
-		update.Threshold = alertThreshold
+		update.Threshold = alertsF64Ptr(alertThreshold)
 	}
 	if cmd.Flags().Changed("action") {
-		update.Action = alertAction
+		update.Action = alertsStrPtr(alertAction)
 	}
 	if cmd.Flags().Changed("target") {
-		update.Target = alertTarget
+		update.Target = alertsStrPtr(alertTarget)
+	}
+	if cmd.Flags().Changed("enabled") {
+		update.Enabled = alertsBoolPtr(alertEnabled)
 	}
 
 	if DryRun {
