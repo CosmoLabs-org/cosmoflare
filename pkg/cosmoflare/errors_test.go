@@ -376,3 +376,56 @@ func TestIsNotFound(t *testing.T) {
 		})
 	}
 }
+
+// --- TASK-012: shared HTTP-status seam ---
+
+// TestErrorStatus_SharedSeam verifies ErrorStatus walks every carrier shape
+// (R2Error via StatusCode, cloudflare-go via StatusCode, AWS SDK via
+// HTTPStatusCode) and that a status-less wrapper does not shadow a status
+// deeper in the chain.
+func TestErrorStatus_SharedSeam(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want int
+	}{
+		{"nil error", nil, 0},
+		{"plain error", errors.New("boom"), 0},
+		{"plain R2Error without status", &R2Error{Op: "op", Message: "m"}, 0},
+		{"plain R2Error with status", &R2Error{Op: "op", Message: "m", Status: http.StatusForbidden}, http.StatusForbidden},
+		{"typed auth error with status", &R2AuthError{R2Error{Op: "op", Message: "m", Status: http.StatusUnauthorized}}, http.StatusUnauthorized},
+		{"wrapped R2Error", fmt.Errorf("call failed: %w", &R2Error{Op: "op", Message: "m", Status: http.StatusTooManyRequests}), http.StatusTooManyRequests},
+		{"cloudflare error", &cloudflare.Error{StatusCode: http.StatusNotFound}, http.StatusNotFound},
+		{"status-less R2Error does not shadow wrapped cf status", &R2Error{Op: "op", Message: "m", Err: &cloudflare.Error{StatusCode: http.StatusInternalServerError}}, http.StatusInternalServerError},
+		{"outermost non-zero status wins", &R2Error{Op: "op", Message: "m", Status: http.StatusBadRequest, Err: &cloudflare.Error{StatusCode: http.StatusInternalServerError}}, http.StatusBadRequest},
+		{"smithy-style carrier", &smithyStyleError{status: http.StatusBadGateway, msg: "502"}, http.StatusBadGateway},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := ErrorStatus(tc.err); got != tc.want {
+				t.Errorf("ErrorStatus(%v) = %d, want %d", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestR2Error_ImplementsHTTPStatusCarrier pins the seam contract: R2Error
+// itself is an httpStatusCarrier, so retry classification picks up its
+// status, and a status-less R2Error does not mask a retryable wrapped one.
+func TestR2Error_ImplementsHTTPStatusCarrier(t *testing.T) {
+	var _ httpStatusCarrier = (*R2Error)(nil)
+
+	if !isHTTPStatusRetryable(&R2Error{Op: "op", Message: "m", Status: http.StatusServiceUnavailable}) {
+		t.Error("R2Error with 503 status should be retryable")
+	}
+	if !isHTTPStatusRetryable(&R2Error{Op: "op", Message: "m", Status: http.StatusTooManyRequests}) {
+		t.Error("R2Error with 429 status should be retryable")
+	}
+	if isHTTPStatusRetryable(&R2Error{Op: "op", Message: "m", Status: http.StatusNotFound}) {
+		t.Error("R2Error with 404 status should not be retryable")
+	}
+	statusless := &R2Error{Op: "op", Message: "m", Err: &statusError{status: http.StatusBadGateway, msg: "502"}}
+	if !isHTTPStatusRetryable(statusless) {
+		t.Error("status-less R2Error wrapping a 502 carrier should stay retryable")
+	}
+}

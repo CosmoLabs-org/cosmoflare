@@ -166,18 +166,10 @@ type httpStatusError interface {
 	HTTPStatusCode() int
 }
 
-// isHTTPStatusRetryable checks if any wrapped error carries a retryable HTTP status.
+// isHTTPStatusRetryable checks if err carries a retryable HTTP status via
+// the shared ErrorStatus seam (TASK-012): 429 and any 5xx, whatever error
+// type carries the status (R2Error, cloudflare-go, AWS SDK).
 func isHTTPStatusRetryable(err error) bool {
-	for unwrapped := err; unwrapped != nil; {
-		// cloudflare-go style: StatusCode() method.
-		if sc, ok := unwrapped.(httpStatusCarrier); ok {
-			return sc.StatusCode() == http.StatusTooManyRequests || sc.StatusCode() >= 500
-		}
-		// AWS SDK / smithy-go style: HTTPStatusCode() method.
-		if sc, ok := unwrapped.(httpStatusError); ok {
-			return sc.HTTPStatusCode() == http.StatusTooManyRequests || sc.HTTPStatusCode() >= 500
-		}
-		unwrapped = errors.Unwrap(unwrapped)
-	}
-	return false
+	status := ErrorStatus(err)
+	return status == http.StatusTooManyRequests || status >= 500
 }

@@ -33,6 +33,12 @@ func (e *R2Error) Error() string {
 
 func (e *R2Error) Unwrap() error { return e.Err }
 
+// StatusCode implements httpStatusCarrier (the shared HTTP-status seam,
+// TASK-012) so status-aware walks — retry classification, ErrorStatus,
+// mapError — pick up the HTTP status any R2Error carries, the same way
+// they pick up cloudflare-go and AWS SDK statuses.
+func (e *R2Error) StatusCode() int { return e.Status }
+
 // R2NotFoundError indicates a requested resource does not exist.
 type R2NotFoundError struct {
 	R2Error
@@ -79,12 +85,27 @@ func newStatusError(op, msg string, status int, err error) *R2Error {
 }
 
 // ErrorStatus returns the HTTP status carried by err (or any error it
-// wraps), 0 when none — the classification seam for callers that must react
-// to failure classes rather than parse messages.
+// wraps), 0 when none — the single classification seam (TASK-012) for
+// callers that must react to failure classes rather than parse messages.
+// It walks the error chain honoring both carrier shapes (cloudflare-go's
+// StatusCode and the AWS SDK's HTTPStatusCode, plus R2Error itself) and
+// returns the outermost non-zero status: a wrapper that carries no status
+// (0) does not shadow a status deeper in the chain.
 func ErrorStatus(err error) int {
-	var r2e *R2Error
-	if errors.As(err, &r2e) {
-		return r2e.Status
+	for unwrapped := err; unwrapped != nil; {
+		// cloudflare-go / R2Error style: StatusCode() method.
+		if sc, ok := unwrapped.(httpStatusCarrier); ok {
+			if code := sc.StatusCode(); code != 0 {
+				return code
+			}
+		}
+		// AWS SDK / smithy-go style: HTTPStatusCode() method.
+		if se, ok := unwrapped.(httpStatusError); ok {
+			if code := se.HTTPStatusCode(); code != 0 {
+				return code
+			}
+		}
+		unwrapped = errors.Unwrap(unwrapped)
 	}
 	return 0
 }

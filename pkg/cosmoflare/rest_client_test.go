@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -268,5 +269,80 @@ func TestExhaustedRetriesErrorNamesAttemptsAndElapsed(t *testing.T) {
 	msg := err.Error()
 	if !strings.Contains(msg, "attempt") || !strings.Contains(msg, strconv.Itoa(3)) {
 		t.Fatalf("expected error to name attempt count, got: %s", msg)
+	}
+}
+
+// TestDecodeEnvelope_ClassifiedErrors pins TASK-012's contract: envelope
+// failures on auth/quota statuses surface as their typed error classes with
+// the HTTP status attached, so the daemon's mapError classifies them
+// instead of reporting a blanket 502 upstream_error.
+func TestDecodeEnvelope_ClassifiedErrors(t *testing.T) {
+	body := []byte(`{"success":false,"errors":[{"code":9109,"message":"Unauthorized to access requested resource"}]}`)
+	tests := []struct {
+		name       string
+		statusCode int
+		check      func(*testing.T, error)
+	}{
+		{
+			name:       "401 becomes R2AuthError",
+			statusCode: http.StatusUnauthorized,
+			check: func(t *testing.T, err error) {
+				var authErr *R2AuthError
+				if !errors.As(err, &authErr) {
+					t.Fatalf("want *R2AuthError, got %T", err)
+				}
+				if ErrorStatus(err) != http.StatusUnauthorized {
+					t.Errorf("ErrorStatus = %d, want 401", ErrorStatus(err))
+				}
+			},
+		},
+		{
+			name:       "403 becomes R2AccessDeniedError",
+			statusCode: http.StatusForbidden,
+			check: func(t *testing.T, err error) {
+				var deniedErr *R2AccessDeniedError
+				if !errors.As(err, &deniedErr) {
+					t.Fatalf("want *R2AccessDeniedError, got %T", err)
+				}
+				if ErrorStatus(err) != http.StatusForbidden {
+					t.Errorf("ErrorStatus = %d, want 403", ErrorStatus(err))
+				}
+			},
+		},
+		{
+			name:       "429 becomes R2QuotaError",
+			statusCode: http.StatusTooManyRequests,
+			check: func(t *testing.T, err error) {
+				var quotaErr *R2QuotaError
+				if !errors.As(err, &quotaErr) {
+					t.Fatalf("want *R2QuotaError, got %T", err)
+				}
+				if ErrorStatus(err) != http.StatusTooManyRequests {
+					t.Errorf("ErrorStatus = %d, want 429", ErrorStatus(err))
+				}
+			},
+		},
+		{
+			name:       "500 stays plain R2Error with status",
+			statusCode: http.StatusInternalServerError,
+			check: func(t *testing.T, err error) {
+				var r2e *R2Error
+				if !errors.As(err, &r2e) {
+					t.Fatalf("want *R2Error, got %T", err)
+				}
+				if ErrorStatus(err) != http.StatusInternalServerError {
+					t.Errorf("ErrorStatus = %d, want 500", ErrorStatus(err))
+				}
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := decodeEnvelope("TestOp", body, tc.statusCode, nil)
+			if err == nil {
+				t.Fatal("decodeEnvelope returned nil error for failed envelope")
+			}
+			tc.check(t, err)
+		})
 	}
 }
