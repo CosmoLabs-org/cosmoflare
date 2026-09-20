@@ -62,6 +62,7 @@ Examples:
   cosmoflare dns create ZONE_ID --type=MX --name=@ --content=mail.example.com --priority=10
   cosmoflare dns create ZONE_ID --type=TXT --name=@ --content="v=spf1 include:example.com ~all"
   cosmoflare dns create ZONE_ID --type=A --name=api --content=1.2.3.4 --proxied --ttl=1 --comment="API endpoint"`,
+	Args: prefixedResourceArgs(cobra.MinimumNArgs(1)),
 	RunE: runDNSCreate,
 }
 
@@ -76,6 +77,7 @@ Examples:
   cosmoflare dns list ZONE_ID --name=www.example.com
   cosmoflare dns list ZONE_ID --content=1.2.3.4
   cosmoflare dns list ZONE_ID --json`,
+	Args: prefixedResourceArgs(cobra.MinimumNArgs(1)),
 	RunE: runDNSList,
 }
 
@@ -87,6 +89,7 @@ var dnsGetCmd = &cobra.Command{
 Examples:
   cosmoflare dns get ZONE_ID RECORD_ID
   cosmoflare dns get ZONE_ID RECORD_ID --json`,
+	Args: prefixedResourceArgs(cobra.MinimumNArgs(2)),
 	RunE: runDNSGet,
 }
 
@@ -102,6 +105,7 @@ Examples:
   cosmoflare dns update ZONE_ID RECORD_ID --ttl=300
   cosmoflare dns update ZONE_ID RECORD_ID --proxied --comment="Updated endpoint"
   cosmoflare dns update ZONE_ID RECORD_ID --content=5.6.7.8 --ttl=300 --json`,
+	Args: prefixedResourceArgs(cobra.MinimumNArgs(2)),
 	RunE: runDNSUpdate,
 }
 
@@ -115,6 +119,7 @@ WARNING: This action is irreversible.
 Examples:
   cosmoflare dns delete ZONE_ID RECORD_ID
   cosmoflare dns delete ZONE_ID RECORD_ID --force`,
+	Args: prefixedResourceArgs(cobra.MinimumNArgs(2)),
 	RunE: runDNSDelete,
 }
 
