@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -159,5 +160,91 @@ func TestREST_NoSourceIs503(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusServiceUnavailable {
 		t.Fatalf("no source /zones: got %d, want 503", resp.StatusCode)
+	}
+}
+
+// TestMapError_Classes pins the mapError classification contract for every
+// error class TASK-012 touches: typed constructors, and plain R2Errors with
+// and without an HTTP status. These expectations define the contract that
+// the unified HTTP-status seam must preserve (or deliberately improve).
+func TestMapError_Classes(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        error
+		wantStatus int
+		wantCode   string
+	}{
+		{
+			name:       "auth",
+			err:        &cosmoflare.R2AuthError{R2Error: cosmoflare.R2Error{Op: "op", Message: "invalid api token"}},
+			wantStatus: http.StatusUnauthorized,
+			wantCode:   "unauthorized",
+		},
+		{
+			name:       "access denied",
+			err:        &cosmoflare.R2AccessDeniedError{R2Error: cosmoflare.R2Error{Op: "op", Bucket: "b", Message: "no permission"}},
+			wantStatus: http.StatusForbidden,
+			wantCode:   "forbidden",
+		},
+		{
+			name:       "quota",
+			err:        &cosmoflare.R2QuotaError{R2Error: cosmoflare.R2Error{Op: "op", Message: "rate limit exceeded"}},
+			wantStatus: http.StatusTooManyRequests,
+			wantCode:   "rate_limited",
+		},
+		{
+			name:       "not found",
+			err:        &cosmoflare.R2NotFoundError{R2Error: cosmoflare.R2Error{Op: "op", Message: "resource not found"}},
+			wantStatus: http.StatusNotFound,
+			wantCode:   "not_found",
+		},
+		// TASK-012: plain R2Errors carrying a classifiable HTTP status now
+		// map through the shared ErrorStatus seam instead of a blanket 502.
+		{
+			name:       "plain R2Error with 401 status",
+			err:        &cosmoflare.R2Error{Op: "op", Message: "m", Status: http.StatusUnauthorized},
+			wantStatus: http.StatusUnauthorized,
+			wantCode:   "unauthorized",
+		},
+		{
+			name:       "plain R2Error with 403 status",
+			err:        &cosmoflare.R2Error{Op: "op", Message: "m", Status: http.StatusForbidden},
+			wantStatus: http.StatusForbidden,
+			wantCode:   "forbidden",
+		},
+		{
+			name:       "plain R2Error with 429 status",
+			err:        &cosmoflare.R2Error{Op: "op", Message: "m", Status: http.StatusTooManyRequests},
+			wantStatus: http.StatusTooManyRequests,
+			wantCode:   "rate_limited",
+		},
+		// A 5xx status stays a 502 upstream_error — the daemon's transient
+		// failure semantics.
+		{
+			name:       "plain R2Error with 500 status",
+			err:        &cosmoflare.R2Error{Op: "op", Message: "m", Status: http.StatusInternalServerError},
+			wantStatus: http.StatusBadGateway,
+			wantCode:   "upstream_error",
+		},
+		{
+			name:       "plain R2Error without status",
+			err:        &cosmoflare.R2Error{Op: "op", Message: "m"},
+			wantStatus: http.StatusBadGateway,
+			wantCode:   "upstream_error",
+		},
+		{
+			name:       "plain error",
+			err:        errors.New("connection reset"),
+			wantStatus: http.StatusBadGateway,
+			wantCode:   "upstream_error",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			status, code := mapError(tc.err)
+			if status != tc.wantStatus || code != tc.wantCode {
+				t.Fatalf("mapError(%v) = %d/%q, want %d/%q", tc.err, status, code, tc.wantStatus, tc.wantCode)
+			}
+		})
 	}
 }

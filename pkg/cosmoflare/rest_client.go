@@ -314,6 +314,24 @@ func decodeEnvelope(op string, data []byte, statusCode int, out interface{}) err
 		if len(env.Errors) > 0 {
 			msg = env.Errors[0].Message
 		}
+		// Envelope-level auth/quota failures must surface as their typed
+		// counterparts (with the HTTP status attached) so the daemon's
+		// mapError classifies them correctly instead of reporting a
+		// blanket 502 upstream_error (TASK-012).
+		switch statusCode {
+		case http.StatusUnauthorized:
+			e := authError(op, msg, nil)
+			e.Status = statusCode
+			return e
+		case http.StatusForbidden:
+			e := accessDenied(op, "", msg, nil)
+			e.Status = statusCode
+			return e
+		case http.StatusTooManyRequests:
+			e := quotaError(op, msg, nil)
+			e.Status = statusCode
+			return e
+		}
 		return newStatusError(op, msg, statusCode, nil)
 	}
 	if out != nil && len(env.Result) > 0 {

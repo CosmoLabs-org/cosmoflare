@@ -150,6 +150,20 @@ func mapError(err error) (status int, code string) {
 	if errors.As(err, &quotaErr) {
 		return http.StatusTooManyRequests, "rate_limited"
 	}
+	// Shared HTTP-status seam (TASK-012): an error that carries a
+	// classifiable HTTP status (plain R2Error from newStatusError, or a
+	// wrapped cloudflare/AWS error) maps like its typed counterpart
+	// instead of falling through to a blanket 502.
+	switch cosmoflare.ErrorStatus(err) {
+	case http.StatusUnauthorized:
+		return http.StatusUnauthorized, "unauthorized"
+	case http.StatusForbidden:
+		return http.StatusForbidden, "forbidden"
+	case http.StatusNotFound:
+		return http.StatusNotFound, "not_found"
+	case http.StatusTooManyRequests:
+		return http.StatusTooManyRequests, "rate_limited"
+	}
 	return http.StatusBadGateway, "upstream_error"
 }
 
