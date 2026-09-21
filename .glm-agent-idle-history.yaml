@@ -169,3 +169,8 @@ records:
       idle_timeouts: 1
       last_stall_point: "\e]0;_glm-agent-0279-worker-hyperdrive-cache-ssl-cu (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3[1m]\",\"query_"
       updated: 2026-09-18T23:24:22.224113+04:00
+    - brief_hash: 2f22c8142e60c0fd
+      model: ""
+      idle_timeouts: 1
+      last_stall_point: "\e]0;_glm-agent-0294-feat-030-registrar-operations (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3[1m]\",\"query_s"
+      updated: 2026-09-21T03:26:54.709133+04:00

@@ -32,6 +32,9 @@ entries:
         - description: 'Account management: members, roles, and audit-log query with NDJSON/CSV export (FEAT-036)'
           source: manual
           date: 2026-09-20T17:36:07.668049+04:00
+        - description: 'Registrar operations: register, transfer, renew, auto-renew, lock/unlock, contacts, DNSSEC (FEAT-030)'
+          source: manual
+          date: 2026-09-21T04:13:38.513309+04:00
     fixed:
         - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
           source: manual
@@ -39,6 +42,9 @@ entries:
         - description: 'Alerts: rules can be created and updated into a disabled state (TASK-013)'
           source: manual
           date: 2026-09-20T17:36:07.749812+04:00
+        - description: 'Error classification: envelope auth failures map correctly instead of 502; one shared HTTP-status seam (TASK-012)'
+          source: manual
+          date: 2026-09-21T04:13:38.564343+04:00
     changed: []
     deprecated: []
     removed: []

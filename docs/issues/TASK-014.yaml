@@ -1,11 +1,14 @@
 id: TASK-014
 type: task
 created_at: 2026-09-20T02:18:20.536985+04:00
-updated_at: 2026-09-20T02:18:22.80899+04:00
+updated_at: 2026-09-21T04:13:37.973361+04:00
 source: local
 ulid: 01M2XVZFGDJNV00ZK6HPAX2T4J
-status: open
+status: closed
 origin:
     session: 62
 title: 'Shared test-global guard: consolidate ~23 per-file snapshot helpers'
 description: 'Reuse+simplification reviews of 8e77ac2..HEAD flagged ~150 duplicated lines across ~23 cmd/*_run_test.go files: each hand-rolls save/restore/clear of the same core globals (JSONOutput, DryRun, AccountID, APIToken + t.Setenv CLOUDFLARE_*). Fix: one shared credsGuard/resetRunGlobals helper beside setOutputMode in cmd/root_helpers_test.go; per-file helpers shrink to domain vars only. Wide mechanical churn — ideal GLM dispatch, one agent, all test files.'
+revisions:
+    - date: "2026-09-21"
+      action: closed
