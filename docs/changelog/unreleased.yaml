@@ -4,7 +4,10 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: Profile-prefix scoping declared at command definitions across the CLI (TASK-011)
+          source: manual
+          date: 2026-09-22T16:42:38.291795+04:00
     fixed: []
     changed: []
     deprecated: []

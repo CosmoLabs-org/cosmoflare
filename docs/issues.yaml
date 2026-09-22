@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-09-21T04:13:38.338404+04:00
+last_updated: 2026-09-22T16:42:38.071565+04:00
 next_bug_id: 54
 next_feat_id: 44
 next_task_id: 17
@@ -598,7 +598,7 @@ issues:
       created_at: 2026-09-15T05:34:03.521602+04:00
     - id: TASK-011
       type: task
-      status: open
+      status: closed
       title: 'Env-profile prefixing: cobra Args-level mechanism instead of per-site wraps'
       created_at: 2026-09-17T20:08:27.316902+04:00
     - id: TASK-012
