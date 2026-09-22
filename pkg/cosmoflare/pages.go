@@ -148,6 +148,26 @@ func (s *PagesService) ListDeployments(ctx context.Context, projectName string) 
 	return deployments, nil
 }
 
+// CreateDeployment triggers a new deployment for a Pages project via the
+// Cloudflare API and returns it (the result carries the deployment URL).
+// An empty branch lets the API use the project's production branch.
+func (s *PagesService) CreateDeployment(ctx context.Context, projectName, branch string) (*PagesDeployment, error) {
+	if projectName == "" {
+		return nil, validationError("PagesService.CreateDeployment", "project name is required")
+	}
+
+	rc := cloudflare.AccountIdentifier(s.accountID)
+	result, err := s.cf.CreatePagesDeployment(ctx, rc, cloudflare.CreatePagesDeploymentParams{
+		ProjectName: projectName,
+		Branch:      branch,
+	})
+	if err != nil {
+		return nil, newError("PagesService.CreateDeployment", fmt.Sprintf("failed to create deployment for project %q", projectName), err)
+	}
+
+	return mapPagesDeployment(result), nil
+}
+
 // GetDeployment retrieves a single deployment by project name and deployment ID.
 func (s *PagesService) GetDeployment(ctx context.Context, projectName, deploymentID string) (*PagesDeployment, error) {
 	if projectName == "" {
