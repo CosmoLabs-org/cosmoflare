@@ -61,6 +61,7 @@ Examples:
   cosmoflare worker deploy my-worker --script=worker.js
   cosmoflare worker deploy my-worker --script=worker.js --compatibility-date=2024-01-01
   cosmoflare worker deploy my-worker --script=worker.js --bindings=kv:MY_KV:ns-123`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerDeploy,
 }
 
@@ -83,6 +84,7 @@ var workerGetCmd = &cobra.Command{
 Examples:
   cosmoflare worker get my-worker
   cosmoflare worker get my-worker --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerGet,
 }
 
@@ -96,6 +98,7 @@ WARNING: This action is irreversible.
 Examples:
   cosmoflare worker delete my-worker
   cosmoflare worker delete my-worker --force`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerDelete,
 }
 
@@ -113,6 +116,7 @@ Examples:
   cosmoflare worker logs my-worker --follow
   cosmoflare worker logs my-worker -f --level=error --since=15m
   cosmoflare worker logs my-worker -f --interval=5 --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerLogs,
 }
 
@@ -124,6 +128,7 @@ var workerSettingsCmd = &cobra.Command{
 Examples:
   cosmoflare worker settings my-worker --compatibility-date=2024-01-01
   cosmoflare worker settings my-worker --usage-model=bundled`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerSettings,
 }
 
@@ -188,7 +193,7 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	if workerScript == "" {
 		return fmt.Errorf("script file is required (--script or -s)")
@@ -281,7 +286,7 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -316,7 +321,7 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun([]string{"worker", "delete"}, workerForce)
@@ -348,7 +353,7 @@ func runWorkerLogs(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -442,7 +447,7 @@ func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	if workerCompatDate == "" && workerUsageModel == "" && len(workerBindings) == 0 {
 		return fmt.Errorf("at least one setting is required (--compatibility-date, --usage-model, or --bindings)")

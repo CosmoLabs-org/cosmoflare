@@ -49,6 +49,7 @@ Each entry shows the cron expression and when it was last modified.
 Examples:
   cosmoflare worker cron list my-worker
   cosmoflare worker cron list my-worker --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerCronList,
 }
 
@@ -63,6 +64,7 @@ create is a safe no-op. The existing schedules are preserved.
 Examples:
   cosmoflare worker cron create my-worker --expr "*/5 * * * *"
   cosmoflare worker cron create my-worker --expr "0 12 * * 1" --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerCronCreate,
 }
 
@@ -77,6 +79,7 @@ scheduled is an error, not a silent no-op.
 Examples:
   cosmoflare worker cron delete my-worker --expr "*/5 * * * *"
   cosmoflare worker cron delete my-worker --expr "*/5 * * * *" --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerCronDelete,
 }
 
@@ -92,6 +95,7 @@ The old expression must currently be scheduled and the new one must not.
 Examples:
   cosmoflare worker cron update my-worker --expr "*/5 * * * *" --new "*/10 * * * *"
   cosmoflare worker cron update my-worker --expr "*/5 * * * *" --new "0 12 * * 1" --json`,
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWorkerCronUpdate,
 }
 
@@ -139,7 +143,7 @@ func runWorkerCronList(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := applyResourcePrefix(args[0])
+	worker := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -166,7 +170,7 @@ func runWorkerCronCreate(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := applyResourcePrefix(args[0])
+	worker := args[0]
 	if workerCronExpr == "" {
 		return outErrf("cron expression is required (--expr)")
 	}
@@ -201,7 +205,7 @@ func runWorkerCronDelete(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := applyResourcePrefix(args[0])
+	worker := args[0]
 	if workerCronExpr == "" {
 		return outErrf("cron expression is required (--expr)")
 	}
@@ -238,7 +242,7 @@ func runWorkerCronUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := applyResourcePrefix(args[0])
+	worker := args[0]
 	if workerCronExpr == "" {
 		return outErrf("current cron expression is required (--expr)")
 	}

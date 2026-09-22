@@ -848,7 +848,14 @@ func TestWorkerDeploy_PrefixScoping(t *testing.T) {
 			defer func() { workerScript = "" }()
 
 			out := capturePrint(t, func() {
-				if err := runWorkerDeploy(workerDeployCmd, []string{tt.arg}); err != nil {
+				// Route through the command's Args validator the way cobra
+				// does (TASK-011): it applies the resource prefix to args[0]
+				// in place before the runner reads it bare.
+				args := []string{tt.arg}
+				if err := workerDeployCmd.Args(workerDeployCmd, args); err != nil {
+					t.Errorf("worker deploy args validation: %v", err)
+				}
+				if err := runWorkerDeploy(workerDeployCmd, args); err != nil {
 					t.Errorf("runWorkerDeploy returned error: %v", err)
 				}
 			})
@@ -864,7 +871,14 @@ func TestWorkerDelete_PrefixScoping(t *testing.T) {
 	defer restore()
 
 	out := capturePrint(t, func() {
-		if err := runWorkerDelete(workerDeleteCmd, []string{"my-worker"}); err != nil {
+		// Route through the command's Args validator the way cobra does
+		// (TASK-011): it applies the resource prefix to args[0] in place
+		// before the runner reads it bare.
+		args := []string{"my-worker"}
+		if err := workerDeleteCmd.Args(workerDeleteCmd, args); err != nil {
+			t.Errorf("worker delete args validation: %v", err)
+		}
+		if err := runWorkerDelete(workerDeleteCmd, args); err != nil {
 			t.Errorf("runWorkerDelete returned error: %v", err)
 		}
 	})

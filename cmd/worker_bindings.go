@@ -25,7 +25,7 @@ R2 bucket (r2), a D1 database (d1), a queue (queue), a plain variable
 
   # Machine-readable output
   cosmoflare worker bindings api-gateway --json`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runWorkerBindings,
 }
 
@@ -40,7 +40,7 @@ func runWorkerBindings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
