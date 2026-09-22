@@ -174,3 +174,8 @@ records:
       idle_timeouts: 1
       last_stall_point: "\e]0;_glm-agent-0294-feat-030-registrar-operations (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3[1m]\",\"query_s"
       updated: 2026-09-21T03:26:54.709133+04:00
+    - brief_hash: 781c982d71d616fd
+      model: ""
+      idle_timeouts: 2
+      last_stall_point: "\e]0;_glm-agent-0300-feat-018-p0-cosmoflare (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3\",\"query_source\":\"sdk"
+      updated: 2026-09-22T16:56:48.113438+04:00

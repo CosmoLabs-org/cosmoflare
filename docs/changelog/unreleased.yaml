@@ -8,6 +8,12 @@ entries:
         - description: Profile-prefix scoping declared at command definitions across the CLI (TASK-011)
           source: manual
           date: 2026-09-22T16:42:38.291795+04:00
+        - description: 'd1 push-sql: batched remote SQL push with retry, split recovery, resume (FEAT-018)'
+          source: manual
+          date: 2026-09-22T17:26:26.489355+04:00
+        - description: 'Desktop: notification severity levels and light theme (FEAT-041)'
+          source: manual
+          date: 2026-09-22T17:26:27.152511+04:00
     fixed: []
     changed: []
     deprecated: []

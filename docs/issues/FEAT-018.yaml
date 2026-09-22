@@ -2,9 +2,9 @@
 id: FEAT-018
 type: feature
 created: "2026-09-11"
-updated: "2026-09-13T15:38:36.869037+04:00"
+updated: "2026-09-22T17:26:25.614548+04:00"
 priority: 70
-status: open
+status: closed
 area: reliability
 labels:
     - d1
@@ -19,6 +19,9 @@ origin:
     received: "2026-09-10"
     converted: "2026-09-11"
 title: 'MyCarGuide production friction: D1 batch-push, usage-vs-limits, deploy-verify, parity, WAF ratelimit'
+revisions:
+    - date: "2026-09-22T17:26:25.613198+04:00"
+      action: closed
 
 ---
 

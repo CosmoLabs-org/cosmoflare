@@ -346,3 +346,9 @@ entries:
       completed: 2026-09-19T00:04:21.400503+04:00
       status: discarded
       reason: manually discarded by user
+    - id: "0299"
+      task: 'FEAT-018 P0 — `cosmoflare d1 push-sql`: batched remote SQL push'
+      started: 2026-09-22T16:51:34.624755+04:00
+      completed: 2026-09-22T17:28:54.620085+04:00
+      status: discarded
+      reason: manually discarded by user
