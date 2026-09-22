@@ -4,6 +4,8 @@
 // state (data-* attributes never enter the accessibility tree, and `title`
 // never computes into the accessible name).
 
+import { useEffect, useState } from "react";
+
 export interface Account {
   name: string;
 }
@@ -14,6 +16,65 @@ export interface HeaderProps {
   accounts: Account[];
   selectedAccount?: string;
   onAccountChange?: (name: string) => void;
+}
+
+/* --- Theme toggle (FEAT-041) ---------------------------------------------- */
+
+export type Theme = "light" | "dark";
+
+/** localStorage key persisting the user's explicit theme choice. */
+export const THEME_STORAGE_KEY = "cosmoflare-theme";
+
+/**
+ * Initial theme resolution: an explicit stored choice wins; otherwise follow
+ * the OS `prefers-color-scheme`, defaulting to dark (the app's roots).
+ */
+export function resolveInitialTheme(): Theme {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // localStorage can throw in hardened/embedded contexts — fall through.
+  }
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+/** Apply a theme to the document root; styles.css keys off [data-theme]. */
+export function applyTheme(theme: Theme): void {
+  document.documentElement.dataset.theme = theme;
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>(resolveInitialTheme);
+
+  // Apply on every change (and once on mount, picking up the stored/OS theme).
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const next: Theme = theme === "dark" ? "light" : "dark";
+  const toggle = () => {
+    setTheme(next);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch {
+      // Persistence is best-effort; the in-memory theme still applies.
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      data-testid="theme-toggle"
+      className="cf-theme-toggle"
+      onClick={toggle}
+      aria-label={`Switch to ${next} theme`}
+      aria-pressed={theme === "light"}
+      title={`Switch to ${next} theme`}
+    >
+      <span aria-hidden>{theme === "dark" ? "☀" : "☾"}</span>
+    </button>
+  );
 }
 
 export function Header({
@@ -50,6 +111,7 @@ export function Header({
       <div className="cf-health">
         <HealthDot testId="health-systems" label="Systems" online={systemsOnline} />
         <HealthDot testId="health-cloudflare" label="Cloudflare" online={cloudflareOnline} />
+        <ThemeToggle />
       </div>
     </header>
   );

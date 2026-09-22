@@ -4,6 +4,7 @@ import {
   MAX_NOTIFICATIONS,
   Notifications,
   appendNotification,
+  parseSeverity,
   type NotificationItem,
   useNotifications,
 } from "../views/Notifications";
@@ -24,6 +25,32 @@ describe("appendNotification", () => {
       hist = appendNotification(hist, { raw: { i } });
     }
     expect(hist.length).toBe(MAX_NOTIFICATIONS);
+  });
+});
+
+// --- severity parsing (FEAT-041) ---
+
+describe("parseSeverity (FEAT-041)", () => {
+  it.each(["info", "warning", "critical"] as const)(
+    "passes through the known severity %s",
+    (sev) => {
+      expect(parseSeverity(sev)).toBe(sev);
+    }
+  );
+
+  it("defaults to info when the field is missing", () => {
+    expect(parseSeverity(undefined)).toBe("info");
+  });
+
+  it("defaults to info on null", () => {
+    expect(parseSeverity(null)).toBe("info");
+  });
+
+  it("defaults to info on non-string or unknown values", () => {
+    expect(parseSeverity(42)).toBe("info");
+    expect(parseSeverity({ level: "high" })).toBe("info");
+    expect(parseSeverity("ALARM")).toBe("info");
+    expect(parseSeverity("")).toBe("info");
   });
 });
 
@@ -84,6 +111,40 @@ describe("Notifications (view)", () => {
       "aria-label",
       "1 unread notification"
     );
+  });
+
+  // FEAT-041: each item carries its severity as a modifier class, a
+  // data-severity attribute, and a visible label (never color alone).
+  it("maps each severity to its modifier class, data attribute and label (FEAT-041)", () => {
+    render(
+      <Notifications
+        items={[
+          { raw: { message: "routine" }, severity: "info" },
+          { raw: { message: "quota 80%" }, severity: "warning" },
+          { raw: { message: "zone down" }, severity: "critical" },
+        ]}
+        unread={3}
+      />
+    );
+    const items = screen.getAllByTestId(/^notification-/);
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveClass("cf-notification-item", "is-info");
+    expect(items[0]).toHaveAttribute("data-severity", "info");
+    expect(items[1]).toHaveClass("is-warning");
+    expect(items[1]).toHaveAttribute("data-severity", "warning");
+    expect(items[2]).toHaveClass("is-critical");
+    expect(items[2]).toHaveAttribute("data-severity", "critical");
+    // Visible (non-color) severity labels.
+    expect(items[0]).toHaveTextContent("info");
+    expect(items[1]).toHaveTextContent("warning");
+    expect(items[2]).toHaveTextContent("critical");
+  });
+
+  it("renders items without a severity as info (pre-FEAT-041 payloads)", () => {
+    render(<Notifications items={[{ raw: { message: "legacy" } }]} unread={1} />);
+    const item = screen.getByTestId("notification-0");
+    expect(item).toHaveClass("is-info");
+    expect(item).toHaveAttribute("data-severity", "info");
   });
 });
 
@@ -158,5 +219,28 @@ describe("useNotifications (SSE)", () => {
     // No notification items should appear.
     expect(screen.queryAllByTestId(/^notification-/)).toHaveLength(0);
     expect(screen.getByTestId("unread-badge")).toHaveTextContent("0");
+  });
+
+  it("carries the payload severity and defaults missing ones to info (FEAT-041)", async () => {
+    render(<HookHost />);
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    act(() => {
+      MockEventSource.instances[0].emit("notifications", {
+        message: "zone offline",
+        severity: "critical",
+      });
+      MockEventSource.instances[0].emit("notifications", { message: "legacy payload" });
+      MockEventSource.instances[0].emit("notifications", {
+        message: "bogus",
+        severity: "loud",
+      });
+    });
+    await waitFor(() => expect(screen.getAllByTestId(/^notification-/)).toHaveLength(3));
+    const items = screen.getAllByTestId(/^notification-/);
+    // Newest first: bogus("loud") → defaulted, legacy → defaulted, critical.
+    expect(items[0]).toHaveAttribute("data-severity", "info");
+    expect(items[1]).toHaveAttribute("data-severity", "info");
+    expect(items[2]).toHaveAttribute("data-severity", "critical");
+    expect(items[2]).toHaveClass("is-critical");
   });
 });
