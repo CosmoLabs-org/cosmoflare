@@ -49,6 +49,7 @@ ABORT MPU (abort stale multipart uploads after N seconds), and TRANSITION
 
 Examples:
   cosmoflare bucket lifecycle get my-bucket --json`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketLifecycleGet,
 }
 
@@ -73,6 +74,7 @@ Two input modes (exactly one required):
 Examples:
   cosmoflare bucket lifecycle set my-bucket --prefix img/ --expire-seconds 7776000
   cosmoflare bucket lifecycle set my-bucket --abort-multipart-seconds 604800 --force`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketLifecycleSet,
 }
 
@@ -87,6 +89,7 @@ after initiation) applies once no rules remain.
 
 Examples:
   cosmoflare bucket lifecycle clear my-bucket --force`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketLifecycleClear,
 }
 
@@ -154,7 +157,7 @@ func runBucketLifecycleGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 
 	svc := getBucketLifecycleService()
 	rules, err := svc.Get(cmd.Context(), bucket)
@@ -245,7 +248,7 @@ func runBucketLifecycleSet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 
 	file, _ := cmd.Flags().GetString("file")
 	force, _ := cmd.Flags().GetBool("force")
@@ -302,7 +305,7 @@ func runBucketLifecycleClear(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 	force, _ := cmd.Flags().GetBool("force")
 
 	if !confirmBucketLifecycleReplace(bucket, "clear all lifecycle rules", force) {

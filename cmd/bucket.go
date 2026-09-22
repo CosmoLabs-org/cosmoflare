@@ -59,6 +59,7 @@ Bucket names must:
 Examples:
   cosmoflare bucket create my-bucket
   cosmoflare bucket create my-bucket --location=eu --tags=env=prod,tier=standard`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketCreate,
 }
 
@@ -88,6 +89,7 @@ Examples:
   cosmoflare bucket get my-bucket
   cosmoflare bucket get my-bucket --output json
   cosmoflare bucket get my-bucket --include-objects`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketGet,
 }
 
@@ -101,6 +103,7 @@ Note: Bucket names cannot be changed after creation.
 Examples:
   cosmoflare bucket update my-bucket --tags=env=staging
   cosmoflare bucket update my-bucket --add-tags=project=website`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketUpdate,
 }
 
@@ -116,6 +119,7 @@ Examples:
   cosmoflare bucket delete my-bucket
   cosmoflare bucket delete my-bucket --force
   cosmoflare bucket delete my-bucket --dry-run`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDelete,
 }
 
@@ -131,6 +135,7 @@ Exit codes:
 
 Examples:
   cosmoflare bucket exists my-bucket && echo "Bucket exists"`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketExists,
 }
 
@@ -204,6 +209,9 @@ func runBucketCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
+	// Retained applyResourcePrefix wrap (idempotent with the Args
+	// declaration above): TestBucketCreate_PrefixScoping drives this runner
+	// directly, bypassing cobra, and pins runner-level prefixing.
 	bucketName := applyResourcePrefix(args[0])
 	printInfo("Creating bucket: %s", bucketName)
 
@@ -293,7 +301,7 @@ func runBucketGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := applyResourcePrefix(args[0])
+	bucketName := args[0]
 	output, _ := cmd.Flags().GetString("output")
 	includeObjects, _ := cmd.Flags().GetBool("include-objects")
 
@@ -369,6 +377,9 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
+	// Retained applyResourcePrefix wrap (idempotent with the Args
+	// declaration above): TestBucketDelete_PrefixScoping drives this runner
+	// directly, bypassing cobra, and pins runner-level prefixing.
 	bucketName := applyResourcePrefix(args[0])
 	force, _ := cmd.Flags().GetBool("force")
 
@@ -407,7 +418,7 @@ func runBucketExists(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucketName := applyResourcePrefix(args[0])
+	bucketName := args[0]
 
 	client, err := getAPIClient()
 	if err != nil {
