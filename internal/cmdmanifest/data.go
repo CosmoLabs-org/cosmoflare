@@ -569,6 +569,16 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 
+	// --- d1 workflow commands (FEAT-018) ---
+	{
+		ID: "d1.push-sql", CLIPath: []string{"d1", "push-sql"},
+		Service: "d1", Scope: "database", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/query"},
+		Permissions: Permissions{Account: []string{"D1"}},
+		LocalChecks: []string{"dump_file_readable"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+
 	// --- dns records (zone-scoped) ---
 	{
 		ID: "dns.create", CLIPath: []string{"dns", "create"},
