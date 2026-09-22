@@ -569,6 +569,16 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 
+	// --- d1 workflow commands (FEAT-018) ---
+	{
+		ID: "d1.parity", CLIPath: []string{"d1", "parity"},
+		Service: "d1", Scope: "database", Verb: "read",
+		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/query"},
+		Permissions: Permissions{Account: []string{"D1"}},
+		LocalChecks: []string{"local_sqlite_readable"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+
 	// --- dns records (zone-scoped) ---
 	{
 		ID: "dns.create", CLIPath: []string{"dns", "create"},
