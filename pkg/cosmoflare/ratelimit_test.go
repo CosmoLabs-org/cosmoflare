@@ -185,3 +185,38 @@ func containsStr(haystack []string, needle string) bool {
 	}
 	return false
 }
+
+// TestRateLimitCreateActionDefaultAndChallenge verifies the Create action
+// contract added for `waf ratelimit` (FEAT-018): an empty input action
+// defaults to "block" (the legacy behavior), while an explicit "challenge"
+// survives the entrypoint PUT round trip.
+func TestRateLimitCreateActionDefaultAndChallenge(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"empty defaults to block", "", "block"},
+		{"explicit block", "block", "block"},
+		{"explicit challenge", "challenge", "challenge"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			_, cf := ratelimitTestServer(t, nil)
+			rule, err := newRatelimitService(t, cf).Create(context.Background(), RateLimitCreateInput{
+				ZoneID: "z1", Action: tc.input,
+				Expression:        `starts_with(http.request.uri.path, "/login")`,
+				RequestsPerPeriod: 30, Period: 10, MitigationTimeout: 10,
+				Characteristics: []string{"cf.colo.id", "ip.src"},
+			})
+			if err != nil {
+				t.Fatalf("Create: %v", err)
+			}
+			if rule.Action != tc.want {
+				t.Fatalf("action: want %q, got %q", tc.want, rule.Action)
+			}
+		})
+	}
+}

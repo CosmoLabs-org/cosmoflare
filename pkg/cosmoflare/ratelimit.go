@@ -14,6 +14,7 @@ import (
 // RateLimitRule is one http_ratelimit phase rule in our shape.
 type RateLimitRule struct {
 	ID                string   `json:"id"`
+	Action            string   `json:"action,omitempty"`
 	Expression        string   `json:"expression"`
 	Description       string   `json:"description,omitempty"`
 	Enabled           bool     `json:"enabled"`
@@ -26,6 +27,9 @@ type RateLimitRule struct {
 // RateLimitCreateInput captures what a caller supplies to create one rule.
 type RateLimitCreateInput struct {
 	ZoneID            string
+	// Action is the phase rule action: "block" (default when empty) or
+	// "challenge".
+	Action            string
 	Expression        string
 	Description       string
 	RequestsPerPeriod int
@@ -144,9 +148,14 @@ func (s *RateLimitService) Create(ctx context.Context, in RateLimitCreateInput) 
 			knowledge.DecodeCFError(err, "phase-entrypoint"))
 	}
 
+	action := in.Action
+	if action == "" {
+		action = "block"
+	}
+
 	enabled := true
 	rules = append(rules, cloudflare.RulesetRule{
-		Action:      "block",
+		Action:      action,
 		Expression:  in.Expression,
 		Description: in.Description,
 		Enabled:     &enabled,
@@ -188,6 +197,7 @@ func fromCFRules(in []cloudflare.RulesetRule) []RateLimitRule {
 	for _, r := range in {
 		rr := RateLimitRule{
 			ID:          r.ID,
+			Action:      r.Action,
 			Expression:  r.Expression,
 			Description: r.Description,
 			Enabled:     r.Enabled == nil || *r.Enabled,

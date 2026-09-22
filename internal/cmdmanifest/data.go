@@ -10,7 +10,7 @@ var registry = []Command{
 	{
 		ID: "r2.bucket.create", CLIPath: []string{"r2", "bucket", "create"},
 		WranglerEquivalent: "wrangler r2 bucket create",
-		Service: "r2", Scope: "account", Verb: "write",
+		Service:            "r2", Scope: "account", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/r2/buckets"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		Limits:      []string{"r2.buckets"},
@@ -21,7 +21,7 @@ var registry = []Command{
 	{
 		ID: "r2.bucket.list", CLIPath: []string{"r2", "bucket", "list"},
 		WranglerEquivalent: "wrangler r2 bucket list",
-		Service: "r2", Scope: "account", Verb: "list",
+		Service:            "r2", Scope: "account", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/r2/buckets"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		RateLimit:   &RateLimitBehavior{HTTPStatus: 429, RetryAfter: true, Bucket: "r2_rest"},
@@ -30,7 +30,7 @@ var registry = []Command{
 	{
 		ID: "r2.bucket.get", CLIPath: []string{"r2", "bucket", "get"},
 		WranglerEquivalent: "wrangler r2 bucket info",
-		Service: "r2", Scope: "bucket", Verb: "read",
+		Service:            "r2", Scope: "bucket", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/r2/buckets/{bucket}"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		RateLimit:   &RateLimitBehavior{HTTPStatus: 429, RetryAfter: true, Bucket: "r2_rest"},
@@ -47,7 +47,7 @@ var registry = []Command{
 	{
 		ID: "r2.bucket.delete", CLIPath: []string{"r2", "bucket", "delete"},
 		WranglerEquivalent: "wrangler r2 bucket delete",
-		Service: "r2", Scope: "bucket", Verb: "delete",
+		Service:            "r2", Scope: "bucket", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/r2/buckets/{bucket}"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		APIChecks:   []string{"bucket_empty"},
@@ -59,7 +59,7 @@ var registry = []Command{
 	{
 		ID: "r2.object.put", CLIPath: []string{"r2", "object", "put"},
 		WranglerEquivalent: "wrangler r2 object put",
-		Service: "r2", Scope: "object", Verb: "write",
+		Service:            "r2", Scope: "object", Verb: "write",
 		APIOps: []string{
 			"PUT /{bucket}/{key}",
 			"POST multipart-upload", "POST upload-part", "POST complete-multipart-upload",
@@ -74,7 +74,7 @@ var registry = []Command{
 	{
 		ID: "r2.object.get", CLIPath: []string{"r2", "object", "get"},
 		WranglerEquivalent: "wrangler r2 object get",
-		Service: "r2", Scope: "object", Verb: "read",
+		Service:            "r2", Scope: "object", Verb: "read",
 		APIOps:      []string{"GET /{bucket}/{key}"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		RateLimit:   &RateLimitBehavior{HTTPStatus: 429, RetryAfter: true, Bucket: "r2_rest_or_s3"},
@@ -83,7 +83,7 @@ var registry = []Command{
 	{
 		ID: "r2.object.delete", CLIPath: []string{"r2", "object", "delete"},
 		WranglerEquivalent: "wrangler r2 object delete",
-		Service: "r2", Scope: "object", Verb: "delete",
+		Service:            "r2", Scope: "object", Verb: "delete",
 		APIOps:      []string{"DELETE /{bucket}/{key}"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
 		RateLimit:   &RateLimitBehavior{HTTPStatus: 429, RetryAfter: true, Bucket: "r2_rest_or_s3"},
@@ -133,7 +133,7 @@ var registry = []Command{
 	{
 		ID: "worker.deploy", CLIPath: []string{"worker", "deploy"},
 		WranglerEquivalent: "wrangler deploy",
-		Service: "workers", Scope: "script", Verb: "write",
+		Service:            "workers", Scope: "script", Verb: "write",
 		APIOps:      []string{"PUT /accounts/{account_id}/workers/scripts/{script_name}"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -155,7 +155,7 @@ var registry = []Command{
 	{
 		ID: "worker.delete", CLIPath: []string{"worker", "delete"},
 		WranglerEquivalent: "wrangler delete",
-		Service: "workers", Scope: "script", Verb: "delete",
+		Service:            "workers", Scope: "script", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/workers/scripts/{script_name}"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		APIChecks:   []string{"script_exists"},
@@ -171,7 +171,7 @@ var registry = []Command{
 	{
 		ID: "worker.tail", CLIPath: []string{"worker", "tail"},
 		WranglerEquivalent: "wrangler tail",
-		Service: "workers", Scope: "script", Verb: "read",
+		Service:            "workers", Scope: "script", Verb: "read",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/scripts/{script_name}/tails"},
 		Permissions: Permissions{Account: []string{"Workers Tail", "Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -193,7 +193,7 @@ var registry = []Command{
 	{
 		ID: "worker.types", CLIPath: []string{"worker", "types"},
 		WranglerEquivalent: "wrangler types",
-		Service: "workers", Scope: "script", Verb: "read",
+		Service:            "workers", Scope: "script", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/settings"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		LocalChecks: []string{"bindings_present"},
@@ -202,7 +202,7 @@ var registry = []Command{
 	{
 		ID: "worker.rollback", CLIPath: []string{"worker", "rollback"},
 		WranglerEquivalent: "wrangler rollback",
-		Service: "workers", Scope: "script", Verb: "write",
+		Service:            "workers", Scope: "script", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}/deploy"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -242,7 +242,7 @@ var registry = []Command{
 	{
 		ID: "worker.secret.put", CLIPath: []string{"worker", "secret", "put"},
 		WranglerEquivalent: "wrangler secret put",
-		Service: "workers", Scope: "secret", Verb: "write",
+		Service:            "workers", Scope: "secret", Verb: "write",
 		APIOps:      []string{"PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -250,7 +250,7 @@ var registry = []Command{
 	{
 		ID: "worker.secret.bulk", CLIPath: []string{"worker", "secret", "bulk"},
 		WranglerEquivalent: "wrangler secret bulk",
-		Service: "workers", Scope: "secret", Verb: "write",
+		Service:            "workers", Scope: "secret", Verb: "write",
 		APIOps:      []string{"PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets/bulk"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		LocalChecks: []string{"secrets_file_json"},
@@ -259,7 +259,7 @@ var registry = []Command{
 	{
 		ID: "worker.secret.list", CLIPath: []string{"worker", "secret", "list"},
 		WranglerEquivalent: "wrangler secret list",
-		Service: "workers", Scope: "secret", Verb: "list",
+		Service:            "workers", Scope: "secret", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/secrets"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -267,7 +267,7 @@ var registry = []Command{
 	{
 		ID: "worker.secret.delete", CLIPath: []string{"worker", "secret", "delete"},
 		WranglerEquivalent: "wrangler secret delete",
-		Service: "workers", Scope: "secret", Verb: "delete",
+		Service:            "workers", Scope: "secret", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/workers/scripts/{script_name}/secrets/{secret_name}"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -349,7 +349,7 @@ var registry = []Command{
 	{
 		ID: "worker.versions.list", CLIPath: []string{"worker", "versions", "list"},
 		WranglerEquivalent: "wrangler versions list",
-		Service: "workers", Scope: "version", Verb: "list",
+		Service:            "workers", Scope: "version", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/versions"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -357,7 +357,7 @@ var registry = []Command{
 	{
 		ID: "worker.versions.upload", CLIPath: []string{"worker", "versions", "upload"},
 		WranglerEquivalent: "wrangler versions upload",
-		Service: "workers", Scope: "version", Verb: "write",
+		Service:            "workers", Scope: "version", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/scripts/{script_name}/versions"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -365,7 +365,7 @@ var registry = []Command{
 	{
 		ID: "worker.versions.view", CLIPath: []string{"worker", "versions", "view"},
 		WranglerEquivalent: "wrangler versions view",
-		Service: "workers", Scope: "version", Verb: "read",
+		Service:            "workers", Scope: "version", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -373,7 +373,7 @@ var registry = []Command{
 	{
 		ID: "worker.versions.deploy", CLIPath: []string{"worker", "versions", "deploy"},
 		WranglerEquivalent: "wrangler versions deploy",
-		Service: "workers", Scope: "version", Verb: "write",
+		Service:            "workers", Scope: "version", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}/deploy"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -381,7 +381,7 @@ var registry = []Command{
 	{
 		ID: "worker.versions.rollback", CLIPath: []string{"worker", "versions", "rollback"},
 		WranglerEquivalent: "wrangler rollback",
-		Service: "workers", Scope: "version", Verb: "write",
+		Service:            "workers", Scope: "version", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}/deploy"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -396,7 +396,7 @@ var registry = []Command{
 	{
 		ID: "worker.deployments.list", CLIPath: []string{"worker", "deployments", "list"},
 		WranglerEquivalent: "wrangler deployments list",
-		Service: "workers", Scope: "deployment", Verb: "list",
+		Service:            "workers", Scope: "deployment", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/deployments"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -404,7 +404,7 @@ var registry = []Command{
 	{
 		ID: "worker.deployments.view", CLIPath: []string{"worker", "deployments", "view"},
 		WranglerEquivalent: "wrangler deployments view",
-		Service: "workers", Scope: "deployment", Verb: "read",
+		Service:            "workers", Scope: "deployment", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/workers/scripts/{script_name}/deployments/{deployment_id}"},
 		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -414,7 +414,7 @@ var registry = []Command{
 	{
 		ID: "kv.namespace.create", CLIPath: []string{"kv", "namespace", "create"},
 		WranglerEquivalent: "wrangler kv namespace create",
-		Service: "kv", Scope: "namespace", Verb: "write",
+		Service:            "kv", Scope: "namespace", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/storage/kv/namespaces"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -422,7 +422,7 @@ var registry = []Command{
 	{
 		ID: "kv.namespace.list", CLIPath: []string{"kv", "namespace", "list"},
 		WranglerEquivalent: "wrangler kv namespace list",
-		Service: "kv", Scope: "account", Verb: "list",
+		Service:            "kv", Scope: "account", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/storage/kv/namespaces"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -430,7 +430,7 @@ var registry = []Command{
 	{
 		ID: "kv.namespace.delete", CLIPath: []string{"kv", "namespace", "delete"},
 		WranglerEquivalent: "wrangler kv namespace delete",
-		Service: "kv", Scope: "namespace", Verb: "delete",
+		Service:            "kv", Scope: "namespace", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/storage/kv/namespaces/{namespace_id}"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		APIChecks:   []string{"namespace_empty"},
@@ -441,7 +441,7 @@ var registry = []Command{
 	{
 		ID: "kv.put", CLIPath: []string{"kv", "put"},
 		WranglerEquivalent: "wrangler kv key put",
-		Service: "kv", Scope: "key", Verb: "write",
+		Service:            "kv", Scope: "key", Verb: "write",
 		APIOps:      []string{"PUT /accounts/{account_id}/storage/kv/namespaces/{namespace_id}/values/{key}"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		LocalChecks: []string{"key_charset"},
@@ -450,7 +450,7 @@ var registry = []Command{
 	{
 		ID: "kv.get", CLIPath: []string{"kv", "get"},
 		WranglerEquivalent: "wrangler kv key get",
-		Service: "kv", Scope: "key", Verb: "read",
+		Service:            "kv", Scope: "key", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/storage/kv/namespaces/{namespace_id}/values/{key}"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -458,7 +458,7 @@ var registry = []Command{
 	{
 		ID: "kv.delete", CLIPath: []string{"kv", "delete"},
 		WranglerEquivalent: "wrangler kv key delete",
-		Service: "kv", Scope: "key", Verb: "delete",
+		Service:            "kv", Scope: "key", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/storage/kv/namespaces/{namespace_id}/values/{key}"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -466,7 +466,7 @@ var registry = []Command{
 	{
 		ID: "kv.list", CLIPath: []string{"kv", "list"},
 		WranglerEquivalent: "wrangler kv key list",
-		Service: "kv", Scope: "namespace", Verb: "list",
+		Service:            "kv", Scope: "namespace", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/storage/kv/namespaces/{namespace_id}/keys"},
 		Permissions: Permissions{Account: []string{"Workers KV Storage"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -476,7 +476,7 @@ var registry = []Command{
 	{
 		ID: "d1.create", CLIPath: []string{"d1", "create"},
 		WranglerEquivalent: "wrangler d1 create",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/d1/database"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -484,7 +484,7 @@ var registry = []Command{
 	{
 		ID: "d1.list", CLIPath: []string{"d1", "list"},
 		WranglerEquivalent: "wrangler d1 list",
-		Service: "d1", Scope: "account", Verb: "list",
+		Service:            "d1", Scope: "account", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/d1/database"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -492,7 +492,7 @@ var registry = []Command{
 	{
 		ID: "d1.get", CLIPath: []string{"d1", "get"},
 		WranglerEquivalent: "wrangler d1 info",
-		Service: "d1", Scope: "database", Verb: "read",
+		Service:            "d1", Scope: "database", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/d1/database/{database_id}"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -500,7 +500,7 @@ var registry = []Command{
 	{
 		ID: "d1.delete", CLIPath: []string{"d1", "delete"},
 		WranglerEquivalent: "wrangler d1 delete",
-		Service: "d1", Scope: "database", Verb: "delete",
+		Service:            "d1", Scope: "database", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/d1/database/{database_id}"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		DangerLevel: "high", Destructive: true, Trackable: true,
@@ -508,7 +508,7 @@ var registry = []Command{
 	{
 		ID: "d1.query", CLIPath: []string{"d1", "query"},
 		WranglerEquivalent: "wrangler d1 query",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/query"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		LocalChecks: []string{"unbounded_delete_guard"},
@@ -517,7 +517,7 @@ var registry = []Command{
 	{
 		ID: "d1.import", CLIPath: []string{"d1", "import"},
 		WranglerEquivalent: "wrangler d1 import",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/import"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		LocalChecks: []string{"dump_file_readable"},
@@ -526,7 +526,7 @@ var registry = []Command{
 	{
 		ID: "d1.export", CLIPath: []string{"d1", "export"},
 		WranglerEquivalent: "wrangler d1 export",
-		Service: "d1", Scope: "database", Verb: "read",
+		Service:            "d1", Scope: "database", Verb: "read",
 		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/export"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -534,7 +534,7 @@ var registry = []Command{
 	{
 		ID: "d1.migrations.list", CLIPath: []string{"d1", "migrations", "list"},
 		WranglerEquivalent: "wrangler d1 migrations list",
-		Service: "d1", Scope: "database", Verb: "list",
+		Service:            "d1", Scope: "database", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/d1/database/{database_id}/query"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		LocalChecks: []string{"migrations_dir_present"},
@@ -543,7 +543,7 @@ var registry = []Command{
 	{
 		ID: "d1.migrations.create", CLIPath: []string{"d1", "migrations", "create"},
 		WranglerEquivalent: "wrangler d1 migrations create",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		Permissions: Permissions{Account: []string{"D1"}},
 		LocalChecks: []string{"migrations_dir_writable"},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -551,7 +551,7 @@ var registry = []Command{
 	{
 		ID: "d1.migrations.apply", CLIPath: []string{"d1", "migrations", "apply"},
 		WranglerEquivalent: "wrangler d1 migrations apply",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/query"},
 		Permissions: Permissions{Account: []string{"D1"}},
 		LocalChecks: []string{"migrations_dir_present"},
@@ -560,7 +560,7 @@ var registry = []Command{
 	{
 		ID: "d1.time-travel.restore", CLIPath: []string{"d1", "time-travel", "restore"},
 		WranglerEquivalent: "wrangler d1 time-travel restore",
-		Service: "d1", Scope: "database", Verb: "write",
+		Service:            "d1", Scope: "database", Verb: "write",
 		APIOps: []string{
 			"GET /accounts/{account_id}/d1/database/{database_id}/time_travel/bookmark",
 			"POST /accounts/{account_id}/d1/database/{database_id}/restore",
@@ -734,6 +734,14 @@ var registry = []Command{
 		APIOps:      []string{"GET /zones/{zone_id}/firewall/packages/{package_id}/rules"},
 		Permissions: Permissions{Zone: []string{"Zone WAF"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "waf.ratelimit", CLIPath: []string{"waf", "ratelimit"},
+		Service: "waf", Scope: "zone", Verb: "write",
+		APIOps:      []string{"POST /zones/{zone_id}/rate_limits"},
+		Permissions: Permissions{Zone: []string{"Zone WAF"}},
+		LocalChecks: []string{"path_expression_valid"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 	{
 		ID: "waf.rule", CLIPath: []string{"waf", "rule"},
@@ -921,7 +929,7 @@ var registry = []Command{
 	{
 		ID: "hyperdrive.list", CLIPath: []string{"hyperdrive", "list"},
 		WranglerEquivalent: "wrangler hyperdrive list",
-		Service: "hyperdrive", Scope: "account", Verb: "list",
+		Service:            "hyperdrive", Scope: "account", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/hyperdrive/configs"},
 		Permissions: Permissions{Account: []string{"Hyperdrive"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
@@ -936,7 +944,7 @@ var registry = []Command{
 	{
 		ID: "hyperdrive.create", CLIPath: []string{"hyperdrive", "create"},
 		WranglerEquivalent: "wrangler hyperdrive create",
-		Service: "hyperdrive", Scope: "config", Verb: "write",
+		Service:            "hyperdrive", Scope: "config", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/hyperdrive/configs"},
 		Permissions: Permissions{Account: []string{"Hyperdrive"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -944,7 +952,7 @@ var registry = []Command{
 	{
 		ID: "hyperdrive.update", CLIPath: []string{"hyperdrive", "update"},
 		WranglerEquivalent: "wrangler hyperdrive update",
-		Service: "hyperdrive", Scope: "config", Verb: "write",
+		Service:            "hyperdrive", Scope: "config", Verb: "write",
 		APIOps:      []string{"PUT /accounts/{account_id}/hyperdrive/configs/{config_id}"},
 		Permissions: Permissions{Account: []string{"Hyperdrive"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
@@ -952,7 +960,7 @@ var registry = []Command{
 	{
 		ID: "hyperdrive.delete", CLIPath: []string{"hyperdrive", "delete"},
 		WranglerEquivalent: "wrangler hyperdrive delete",
-		Service: "hyperdrive", Scope: "config", Verb: "delete",
+		Service:            "hyperdrive", Scope: "config", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/hyperdrive/configs/{config_id}"},
 		Permissions: Permissions{Account: []string{"Hyperdrive"}},
 		DangerLevel: "high", Destructive: true, Trackable: true,
@@ -1102,7 +1110,7 @@ var registry = []Command{
 		// any token can verify itself; no account-level permission is checked
 		ID: "account.verify", CLIPath: []string{"account", "verify"},
 		Service: "account", Scope: "config", Verb: "read",
-		APIOps: []string{"GET /user/tokens/verify"},
+		APIOps:      []string{"GET /user/tokens/verify"},
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 
