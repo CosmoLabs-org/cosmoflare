@@ -49,6 +49,10 @@ Examples:
   cosmoflare watch my-bucket . --delete                    # Sync deletions too
   cosmoflare watch my-bucket . --dry-run                   # Preview without uploading
   cosmoflare watch my-bucket . --json                      # NDJSON event stream`,
+	// TASK-011: args[0] is the bucket NAME, so it is profile-scoped at the
+	// cobra.Args level. cobra.ArbitraryArgs preserves the previous nil-Args
+	// behavior; the runner still enforces presence.
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runWatch,
 }
 
@@ -84,6 +88,10 @@ type watchState struct {
 // scopedWatchBucket applies the active profile's resource prefix to the
 // watch bucket argument (FEAT-026). The bucket arg is a bare name here — the
 // R2 key prefix is a separate --prefix flag — so it is scoped whole.
+//
+// TASK-011: the live path now scopes args[0] via prefixedResourceArgs at the
+// cobra.Args level; this helper is kept for direct-call tests of the scoping
+// behavior.
 func scopedWatchBucket(arg string) string {
 	return applyResourcePrefix(arg)
 }
@@ -93,7 +101,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("bucket name is required\n\nUsage: cosmoflare watch <bucket> [directory]")
 	}
 
-	bucket := scopedWatchBucket(args[0])
+	// args[0] is already profile-scoped by watchCmd.Args
+	// (prefixedResourceArgs).
+	bucket := args[0]
 	dir := "."
 	if len(args) >= 2 {
 		dir = args[1]

@@ -106,6 +106,13 @@ Examples:
   cosmoflare sync down my-bucket ./mirror --delete
   cosmoflare sync down my-bucket/data ./data --exclude "*.tmp" --progress
   cosmoflare sync down my-bucket ./restore --checksum --dry-run --json`,
+	// TASK-011: args[0] is the bucket reference (a resource NAME position),
+	// so it is profile-scoped at the cobra.Args level. cobra.ArbitraryArgs
+	// preserves the previous nil-Args behavior; the runner still enforces
+	// presence. Prepending the prefix to the whole "bucket[/prefix]" ref is
+	// equivalent to scoping only the bucket part: the prefix is a plain
+	// prepend and idempotency is checked against the leading bucket name.
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runSyncDown,
 }
 
@@ -150,6 +157,11 @@ func parseBucketPrefix(input string) (bucket, prefix string) {
 // part of a "bucket[/key-prefix]" reference (FEAT-026). Only the part before
 // the FIRST "/" is scoped — the key prefix is object-naming, not a resource
 // name. A bare bucket name (no "/") is prefixed whole.
+//
+// TASK-011: sync down now scopes its args[0] via prefixedResourceArgs at the
+// cobra.Args level, so this helper is only used by `sync up`, whose bucket
+// reference sits at args[1] — a position the Args-level mechanism cannot
+// reach.
 func scopeBucketRef(ref string) string {
 	if i := strings.Index(ref, "/"); i >= 0 {
 		return applyResourcePrefix(ref[:i]) + ref[i:]
@@ -328,7 +340,9 @@ func runSyncDown(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("local directory is required\n\nUsage: cosmoflare sync down <bucket>[/prefix] <local-dir>")
 	}
 
-	bucket, prefix := parseBucketPrefix(scopeBucketRef(args[0]))
+	// args[0] is already profile-scoped by syncDownCmd.Args
+	// (prefixedResourceArgs).
+	bucket, prefix := parseBucketPrefix(args[0])
 	localDir := args[1]
 
 	// Scan local files if directory exists (same exclude semantics as sync up,

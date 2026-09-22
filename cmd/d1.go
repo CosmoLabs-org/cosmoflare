@@ -48,7 +48,7 @@ The name must be unique within your account.
 Examples:
   cosmoflare d1 create my-database
   cosmoflare d1 create production-db --json`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runD1Create,
 }
 
@@ -135,6 +135,11 @@ func getD1Service() (*cosmoflare.D1Service, error) {
 }
 
 func runD1Create(cmd *cobra.Command, args []string) error {
+	// TASK-011: args[0] is already profile-scoped by d1CreateCmd.Args
+	// (prefixedResourceArgs) in cobra-driven runs. The wrap is kept because
+	// direct runner calls (tests) rely on the runner itself scoping the
+	// name; applyResourcePrefix is idempotent, so this is a no-op after
+	// the Args-level prefix.
 	name := applyResourcePrefix(args[0])
 
 	svc, err := getD1Service()

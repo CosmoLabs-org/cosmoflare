@@ -64,6 +64,10 @@ A 400 error is returned if a namespace with this title already exists.
 Examples:
   cosmoflare kv namespace create my-cache
   cosmoflare kv namespace create production-data --json`,
+	// TASK-011: args[0] is the namespace TITLE (a resource name), so it is
+	// profile-scoped at the cobra.Args level. cobra.ArbitraryArgs preserves
+	// the previous nil-Args behavior; the runner still enforces presence.
+	Args: prefixedResourceArgs(cobra.ArbitraryArgs),
 	RunE: runKVNamespaceCreate,
 }
 
@@ -182,6 +186,11 @@ func runKVNamespaceCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("namespace title is required")
 	}
+	// TASK-011: args[0] is already profile-scoped by kvNamespaceCreateCmd.Args
+	// (prefixedResourceArgs) in cobra-driven runs. The wrap is kept because
+	// direct runner calls (tests) rely on the runner itself scoping the
+	// title; applyResourcePrefix is idempotent, so this is a no-op after
+	// the Args-level prefix.
 	title := applyResourcePrefix(args[0])
 
 	svc, err := getKVService()
