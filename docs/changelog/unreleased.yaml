@@ -4,47 +4,8 @@
 
 version: pending
 entries:
-    added:
-        - description: 'named environment profiles part 2: resource-prefix scoping across d1/kv/r2/workers, d1 execute --local/--remote, dev --env reconciliation (FEAT-026)'
-          source: manual
-          date: 2026-09-17T05:43:10.001478+04:00
-        - description: 'env profiles part 3: prefix scoping on bucket sub-resources and worker subcommands (FEAT-026)'
-          source: manual
-          date: 2026-09-17T19:36:20.743699+04:00
-        - description: 'serve alert cycle: limits-snapshot 30m TTL cache + DNS usage 401/403 fail-fast (FEAT-014)'
-          source: manual
-          date: 2026-09-17T19:36:20.79213+04:00
-        - description: 'cmd coverage wave: 8 test suites across bucket/worker/kv/wrangler/copy/durable-objects/terraform/alerts + CopyBuffer zero-chunk crash fix'
-          source: manual
-          date: 2026-09-18T04:42:32.616352+04:00
-        - description: 'command registry spine wave 1: internal/cmdmanifest with r2 pilot + danger-stamped audit mutations (FEAT-020)'
-          source: manual
-          date: 2026-09-18T04:47:24.831352+04:00
-        - description: 'first-run onboarding: bare-cosmoflare setup nudge + wizard points to status/doctor (FEAT-017)'
-          source: manual
-          date: 2026-09-18T10:50:01.935033+04:00
-        - description: 'FEAT-020 wave 2: command registry covers worker/kv/d1/dns (58 entries, Qwen-verified permissions); destructive deletes run dry by default unless --force'
-          source: manual
-          date: 2026-09-18T23:20:01.707719+04:00
-        - description: 'Tunnels management: tunnel CRUD, connector token, connections, cleanup (FEAT-035)'
-          source: manual
-          date: 2026-09-20T17:36:07.623658+04:00
-        - description: 'Account management: members, roles, and audit-log query with NDJSON/CSV export (FEAT-036)'
-          source: manual
-          date: 2026-09-20T17:36:07.668049+04:00
-        - description: 'Registrar operations: register, transfer, renew, auto-renew, lock/unlock, contacts, DNSSEC (FEAT-030)'
-          source: manual
-          date: 2026-09-21T04:13:38.513309+04:00
-    fixed:
-        - description: alert condition descriptor registry — one source for validation, errors, help (FEAT-015)
-          source: manual
-          date: 2026-09-17T19:36:20.836203+04:00
-        - description: 'Alerts: rules can be created and updated into a disabled state (TASK-013)'
-          source: manual
-          date: 2026-09-20T17:36:07.749812+04:00
-        - description: 'Error classification: envelope auth failures map correctly instead of 502; one shared HTTP-status seam (TASK-012)'
-          source: manual
-          date: 2026-09-21T04:13:38.564343+04:00
+    added: []
+    fixed: []
     changed: []
     deprecated: []
     removed: []
