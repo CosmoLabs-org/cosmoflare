@@ -47,6 +47,7 @@ output, including --json payloads and error messages.
 Examples:
   cosmoflare worker secret put my-worker API_TOKEN --value='hunter2'
   printf '%s' 'hunter2' | cosmoflare worker secret put my-worker API_TOKEN`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runWorkerSecretPut,
 }
 
@@ -61,6 +62,7 @@ Worker. Use --force to skip the confirmation prompt.
 Examples:
   cosmoflare worker secret delete my-worker API_TOKEN
   cosmoflare worker secret delete my-worker API_TOKEN --force`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runWorkerSecretDelete,
 }
 
@@ -75,6 +77,7 @@ types) only, sorted alphabetically.
 Examples:
   cosmoflare worker secret list my-worker
   cosmoflare worker secret list my-worker --json`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runWorkerSecretList,
 }
 
@@ -92,6 +95,7 @@ report contains names and per-key status only.
 
 Examples:
   cosmoflare worker secret bulk my-worker secrets.json`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runWorkerSecretBulk,
 }
 
@@ -151,7 +155,7 @@ func runWorkerSecretPut(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secret name is required")
 	}
-	worker, key := applyResourcePrefix(args[0]), args[1]
+	worker, key := args[0], args[1]
 
 	value := workerSecretValue
 	if value == "" {
@@ -196,7 +200,7 @@ func runWorkerSecretDelete(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secret name is required")
 	}
-	worker, key := applyResourcePrefix(args[0]), args[1]
+	worker, key := args[0], args[1]
 
 	if !workerSecretForce && !DryRun {
 		fmt.Printf("Are you sure you want to delete secret '%s' from worker '%s'? [y/N]: ", key, worker)
@@ -237,7 +241,7 @@ func runWorkerSecretList(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("worker name is required")
 	}
-	worker := applyResourcePrefix(args[0])
+	worker := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
@@ -273,7 +277,7 @@ func runWorkerSecretBulk(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return outErrf("secrets file is required")
 	}
-	worker, file := applyResourcePrefix(args[0]), args[1]
+	worker, file := args[0], args[1]
 
 	// Read and validate the file before building the service so bad input
 	// fails fast offline (no credentials needed to see these errors).

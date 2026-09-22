@@ -60,7 +60,7 @@ treat it as a breaking change for anything already deployed.
 Examples:
   cosmoflare worker subdomain set my-team
   cosmoflare worker subdomain set my-team --json`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runWorkerSubdomainSet,
 }
 
@@ -115,7 +115,9 @@ func runWorkerSubdomainSet(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return outErrf("subdomain is required")
 	}
-	name := applyResourcePrefix(strings.TrimSpace(args[0]))
+	// The prefix is applied at the Args level (prefixedResourceArgs); trim
+	// here so validation sees the same canonical form as before.
+	name := strings.TrimSpace(args[0])
 	if err := validateSubdomainName(name); err != nil {
 		return outErr("%s", err)
 	}

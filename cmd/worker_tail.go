@@ -34,7 +34,7 @@ line, suitable for piping into jq.`,
 
   # Pipe JSON entries through jq
   cosmoflare worker tail api-gateway --format json | jq .message`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runWorkerTail,
 }
 
@@ -53,7 +53,7 @@ func runWorkerTail(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	jsonMode := workerTailFormat == "json"
 	if workerTailFormat != "text" && workerTailFormat != "json" {
