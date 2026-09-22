@@ -31,7 +31,7 @@ var bucketPolicyGetCmd = &cobra.Command{
 Examples:
   cosmoflare bucket policy get my-bucket
   cosmoflare bucket policy get my-bucket --json`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runBucketPolicyGet,
 }
 
@@ -45,7 +45,7 @@ The file is validated as well-formed JSON locally before any API call.
 Examples:
   cosmoflare bucket policy set my-bucket --file policy.json
   cosmoflare bucket policy set my-bucket --file policy.json --json`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runBucketPolicySet,
 }
 
@@ -67,7 +67,7 @@ func getBucketPolicyService() *cosmoflare.BucketPolicyService {
 }
 
 func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 
 	svc := getBucketPolicyService()
 	policy, err := svc.GetBucketPolicy(cmd.Context(), bucket)
@@ -81,6 +81,9 @@ func runBucketPolicyGet(cmd *cobra.Command, args []string) error {
 }
 
 func runBucketPolicySet(cmd *cobra.Command, args []string) error {
+	// Retained applyResourcePrefix wrap (idempotent with the Args
+	// declaration above): TestBucketPolicySet_PrefixScoping drives this runner
+	// directly, bypassing cobra, and pins runner-level prefixing.
 	bucket := applyResourcePrefix(args[0])
 
 	if bucketPolicyFile == "" {

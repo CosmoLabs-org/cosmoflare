@@ -48,6 +48,7 @@ Minimum TLS versions: 1.0 (API default), 1.1, 1.2, 1.3.
 
 Examples:
   cosmoflare bucket domain attach my-bucket --domain cdn.example.com --min-tls 1.2`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainAttach,
 }
 
@@ -61,6 +62,7 @@ and the minimum TLS version. Use --json for machine-readable output.
 
 Examples:
   cosmoflare bucket domain list my-bucket`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainList,
 }
 
@@ -72,6 +74,7 @@ including ownership and SSL activation statuses.
 
 Examples:
   cosmoflare bucket domain get my-bucket cdn.example.com --json`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainGet,
 }
 
@@ -83,6 +86,7 @@ var bucketDomainVerifyCmd = &cobra.Command{
 
 Examples:
   cosmoflare bucket domain verify my-bucket cdn.example.com --timeout 120s`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainVerify,
 }
 
@@ -94,6 +98,7 @@ of an attached custom domain. Only the flags you pass are sent to the API.
 
 Examples:
   cosmoflare bucket domain update my-bucket cdn.example.com --min-tls 1.3`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainUpdate,
 }
 
@@ -107,6 +112,7 @@ serving traffic on that domain.
 
 Examples:
   cosmoflare bucket domain detach my-bucket cdn.example.com --force`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketDomainDetach,
 }
 
@@ -167,7 +173,7 @@ func runBucketDomainAttach(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 	domain, _ := cmd.Flags().GetString("domain")
 	zoneID, _ := cmd.Flags().GetString("zone-id")
 	minTLS, _ := cmd.Flags().GetString("min-tls")
@@ -213,7 +219,7 @@ func runBucketDomainList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 
 	svc := getBucketDomainService()
 	domains, err := svc.List(context.Background(), bucket)
@@ -246,7 +252,7 @@ func runBucketDomainGet(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := applyResourcePrefix(args[0]), args[1]
+	bucket, domain := args[0], args[1]
 
 	svc := getBucketDomainService()
 	d, err := svc.Get(context.Background(), bucket, domain)
@@ -279,7 +285,7 @@ func runBucketDomainVerify(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := applyResourcePrefix(args[0]), args[1]
+	bucket, domain := args[0], args[1]
 
 	timeoutStr, _ := cmd.Flags().GetString("timeout")
 	timeout, err := time.ParseDuration(timeoutStr)
@@ -311,7 +317,7 @@ func runBucketDomainUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := applyResourcePrefix(args[0]), args[1]
+	bucket, domain := args[0], args[1]
 
 	enabledSet, _ := cmd.Flags().GetBool("enabled")
 	disabledSet, _ := cmd.Flags().GetBool("disabled")
@@ -355,7 +361,7 @@ func runBucketDomainDetach(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("bucket name and domain are required")
 	}
-	bucket, domain := applyResourcePrefix(args[0]), args[1]
+	bucket, domain := args[0], args[1]
 	force, _ := cmd.Flags().GetBool("force")
 
 	if !force && !DryRun && !ux.Confirm(fmt.Sprintf("Detach domain '%s' from bucket '%s'?", domain, bucket)) {

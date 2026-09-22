@@ -61,6 +61,7 @@ The queue must already exist; up to 100 rules per bucket are allowed.
 Examples:
   cosmoflare bucket notifications create my-bucket --queue-id QUEUE_ID --event-type object-create --prefix img/ --suffix .jpeg
   cosmoflare bucket notifications create my-bucket --queue-id QUEUE_ID --action PutObject --action DeleteObject`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketNotificationsCreate,
 }
 
@@ -73,6 +74,7 @@ IDs, prefixes and suffixes.
 
 Examples:
   cosmoflare bucket notifications list my-bucket --json`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketNotificationsList,
 }
 
@@ -84,6 +86,7 @@ and creation timestamps (needed by 'notifications delete').
 
 Examples:
   cosmoflare bucket notifications get my-bucket --queue-id QUEUE_ID`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketNotificationsGet,
 }
 
@@ -99,6 +102,7 @@ unless --force.
 Examples:
   cosmoflare bucket notifications delete my-bucket --queue-id QUEUE_ID --rule-id RULE_ID
   cosmoflare bucket notifications delete my-bucket --queue-id QUEUE_ID --all --force`,
+	Args: prefixedResourceArgs(nil),
 	RunE: runBucketNotificationsDelete,
 }
 
@@ -142,7 +146,7 @@ func runBucketNotificationsList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 
 	svc := getBucketNotificationService()
 	queues, err := svc.List(context.Background(), bucket)
@@ -181,7 +185,7 @@ func runBucketNotificationsCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	actionsRaw, _ := cmd.Flags().GetStringArray("action")
 	eventType, _ := cmd.Flags().GetString("event-type")
@@ -241,7 +245,7 @@ func runBucketNotificationsGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	if queueID == "" {
 		return fmt.Errorf("--queue-id is required")
@@ -278,7 +282,7 @@ func runBucketNotificationsDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("bucket name is required")
 	}
-	bucket := applyResourcePrefix(args[0])
+	bucket := args[0]
 	queueID, _ := cmd.Flags().GetString("queue-id")
 	ruleIDs, _ := cmd.Flags().GetStringArray("rule-id")
 	all, _ := cmd.Flags().GetBool("all")
