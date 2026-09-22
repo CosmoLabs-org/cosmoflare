@@ -34,7 +34,7 @@ var workerDeploymentsListCmd = &cobra.Command{
 Each entry carries the deployment ID, the version it rolled out, when it
 was created, and who created it. Pipe through --json for scripting.`,
 	Example: `  cosmoflare worker deployments list api-gateway --json`,
-	Args:    cobra.ExactArgs(1),
+	Args:    prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE:    runWorkerDeploymentsList,
 }
 
@@ -44,7 +44,7 @@ var workerDeploymentsViewCmd = &cobra.Command{
 	Long: `Show the full record of a single Worker deployment: the version it
 rolled out, creation time, source, and author.`,
 	Example: `  cosmoflare worker deployments view api-gateway dep-123`,
-	Args:    cobra.ExactArgs(2),
+	Args:    prefixedResourceArgs(cobra.ExactArgs(2)),
 	RunE:    runWorkerDeploymentsView,
 }
 
@@ -62,7 +62,7 @@ With an ID, it rolls back to that deployment's version.`,
 
   # Roll back to a specific deployment's version
   cosmoflare worker rollback api-gateway dep-123`,
-	Args: cobra.RangeArgs(1, 2),
+	Args: prefixedResourceArgs(cobra.RangeArgs(1, 2)),
 	RunE: runWorkerRollback,
 }
 
@@ -75,7 +75,7 @@ func runWorkerDeploymentsList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 	svc, err := getWorkerService()
 	if err != nil {
 		return outErr("failed to create worker service", err)
@@ -101,7 +101,7 @@ func runWorkerDeploymentsView(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return outErr("failed to create worker service", err)
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 	deployment, err := svc.DeploymentGet(cmd.Context(), name, args[1])
 	if err != nil {
 		return outErr(fmt.Sprintf("failed to get deployment %s", args[1]), err)
@@ -128,7 +128,7 @@ func runWorkerRollback(cmd *cobra.Command, args []string) error {
 	if len(args) == 2 {
 		deploymentID = args[1]
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 	deployment, err := svc.Rollback(cmd.Context(), name, deploymentID)
 	if err != nil {
 		return outErr(fmt.Sprintf("failed to roll back worker %q", name), err)
