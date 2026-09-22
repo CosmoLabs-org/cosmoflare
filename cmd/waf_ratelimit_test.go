@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"io"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -46,7 +47,7 @@ func TestBuildWAFRatelimitInput(t *testing.T) {
 	if in.ZoneID != "z1" {
 		t.Errorf("zone ID: got %q", in.ZoneID)
 	}
-	if !containsStr(in.Characteristics, "cf.colo.id") {
+	if !slices.Contains(in.Characteristics, "cf.colo.id") {
 		t.Errorf("characteristics missing mandatory cf.colo.id: %v", in.Characteristics)
 	}
 
@@ -165,7 +166,10 @@ func TestRunWAFRatelimit_DryRun(t *testing.T) {
 			}
 			text := string(out)
 			for _, want := range []string{
-				`starts_with(http.request.uri.path, "/login")`,
+				// The expression rides inside marshaled JSON, so its
+				// quotes are escaped — assert the unquoted segments.
+				"starts_with(http.request.uri.path",
+				"/login",
 				"block",
 				"z1",
 				"30",
