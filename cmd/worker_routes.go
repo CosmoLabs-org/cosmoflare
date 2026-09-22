@@ -176,7 +176,7 @@ func runWorkerRouteCreate(cmd *cobra.Command, args []string) error {
 	if workerRouteScript == "" {
 		return fmt.Errorf("script is required (--script)")
 	}
-	script := applyResourcePrefix(workerRouteScript)
+	script := prefixedFlag(cmd, "script")
 
 	if DryRun {
 		return outPayload("DRY RUN: Would create worker route", func() any {
@@ -226,7 +226,7 @@ func runWorkerRouteUpdate(cmd *cobra.Command, args []string) error {
 	if workerRouteScript == "" {
 		return fmt.Errorf("script is required (--script)")
 	}
-	script := applyResourcePrefix(workerRouteScript)
+	script := prefixedFlag(cmd, "script")
 
 	if DryRun {
 		return outPayload("DRY RUN: Would update worker route", func() any {

@@ -37,7 +37,7 @@ Examples:
 
   # Write it to a file for tsc to pick up
   cosmoflare worker types api-gateway --out=worker-configuration.d.ts`,
-	Args: cobra.ExactArgs(1),
+	Args: prefixedResourceArgs(cobra.ExactArgs(1)),
 	RunE: runWorkerTypes,
 }
 
@@ -54,7 +54,7 @@ func runWorkerTypes(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("worker name is required")
 	}
-	name := applyResourcePrefix(args[0])
+	name := args[0]
 
 	svc, err := getWorkerService()
 	if err != nil {
