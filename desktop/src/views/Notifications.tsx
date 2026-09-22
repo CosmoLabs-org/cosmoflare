@@ -12,15 +12,37 @@ import { useCallback, useRef, useState } from "react";
 import { useDaemonSSE } from "../api/sse";
 import type { DaemonEndpoint } from "../api/client";
 
+/** FEAT-041: severity triage level carried by notification payloads. */
+export type NotificationSeverity = "info" | "warning" | "critical";
+
+const SEVERITIES: readonly NotificationSeverity[] = ["info", "warning", "critical"];
+
 export interface NotificationItem {
   raw: unknown;
   message?: string;
+  /**
+   * Visual severity (FEAT-041): drives the left-border color and the severity
+   * dot/label. Optional because older daemon payloads omit it; anything unset
+   * renders as "info". Ingest raw SSE frames through {@link parseSeverity}.
+   */
+  severity?: NotificationSeverity;
   /** Stable id for list keys (assigned by the hook). */
   id?: number;
 }
 
 /** Maximum items retained in the scrollable history. */
 export const MAX_NOTIFICATIONS = 200;
+
+/**
+ * Defensive severity extraction: anything missing, null, or outside the known
+ * set falls back to "info" — an old daemon streaming pre-FEAT-041 payloads
+ * must render identically to before, never crash the panel.
+ */
+export function parseSeverity(value: unknown): NotificationSeverity {
+  return typeof value === "string" && (SEVERITIES as readonly string[]).includes(value)
+    ? (value as NotificationSeverity)
+    : "info";
+}
 
 /**
  * Pure reducer: prepend newest-first and cap the history. Extracted so the cap
@@ -37,6 +59,11 @@ interface NotificationsProps {
   items: NotificationItem[];
   unread: number;
   onSeen?: () => void;
+}
+
+/** Normalize an item's severity, defaulting pre-FEAT-041 items to "info". */
+function severityOf(it: NotificationItem): NotificationSeverity {
+  return it.severity ?? "info";
 }
 
 export function Notifications({ items, unread, onSeen }: NotificationsProps) {
@@ -70,15 +97,25 @@ export function Notifications({ items, unread, onSeen }: NotificationsProps) {
           <p className="cf-empty">No notifications yet.</p>
         ) : (
           <ul className="cf-notification-list">
-            {items.map((it, i) => (
-              <li
-                key={it.id ?? i}
-                data-testid={`notification-${i}`}
-                className="cf-notification-item"
-              >
-                {it.message ?? JSON.stringify(it.raw)}
-              </li>
-            ))}
+            {items.map((it, i) => {
+              const severity = severityOf(it);
+              return (
+                <li
+                  key={it.id ?? i}
+                  data-testid={`notification-${i}`}
+                  data-severity={severity}
+                  className={`cf-notification-item is-${severity}`}
+                >
+                  <span className="cf-notification-severity">
+                    <span className="cf-severity-mark" aria-hidden />
+                    <span className="cf-severity-label">{severity}</span>
+                  </span>
+                  <span className="cf-notification-message">
+                    {it.message ?? JSON.stringify(it.raw)}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -97,8 +134,14 @@ export function useNotifications(endpoint: DaemonEndpoint | null) {
     const raw = e.data;
     const maybeMessage = (raw as { message?: unknown } | null)?.message;
     const message = typeof maybeMessage === "string" ? maybeMessage : undefined;
+    // FEAT-041: severity is optional on the wire — parseSeverity defaults
+    // pre-FEAT-041 payloads to "info" so they render unchanged.
+    const maybeSeverity = (raw as { severity?: unknown } | null)?.severity;
+    const severity = parseSeverity(maybeSeverity);
     counter.current += 1;
-    setItems((prev) => appendNotification(prev, { raw, message, id: counter.current }));
+    setItems((prev) =>
+      appendNotification(prev, { raw, message, severity, id: counter.current })
+    );
     setUnread((u) => u + 1);
   });
 

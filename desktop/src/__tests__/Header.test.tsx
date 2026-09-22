@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { Header } from "../components/Header";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { Header, resolveInitialTheme } from "../components/Header";
 
 describe("Header", () => {
   it("renders both health indicators with their online state", () => {
@@ -62,5 +62,53 @@ describe("Header", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: /cosmoflare/i })
     ).toBeInTheDocument();
+  });
+});
+
+// --- theme toggle (FEAT-041) ---
+
+describe("Header theme toggle (FEAT-041)", () => {
+  afterEach(() => {
+    localStorage.removeItem("cosmoflare-theme");
+    delete document.documentElement.dataset.theme;
+  });
+
+  it("flips data-theme on the document root and persists the choice", () => {
+    render(<Header systemsOnline={true} cloudflareOnline={true} accounts={[]} />);
+    // Initial state (no stored preference, no matchMedia in jsdom): dark.
+    expect(document.documentElement.dataset.theme).toBe("dark");
+
+    fireEvent.click(screen.getByTestId("theme-toggle"));
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(localStorage.getItem("cosmoflare-theme")).toBe("light");
+
+    fireEvent.click(screen.getByTestId("theme-toggle"));
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(localStorage.getItem("cosmoflare-theme")).toBe("dark");
+  });
+
+  it("announces the target theme and exposes pressed state", () => {
+    render(<Header systemsOnline={true} cloudflareOnline={true} accounts={[]} />);
+    const toggle = screen.getByTestId("theme-toggle");
+    expect(toggle).toHaveAttribute("aria-label", "Switch to light theme");
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-label", "Switch to dark theme");
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("restores the stored theme on mount", () => {
+    localStorage.setItem("cosmoflare-theme", "light");
+    render(<Header systemsOnline={true} cloudflareOnline={true} accounts={[]} />);
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(screen.getByTestId("theme-toggle")).toHaveAttribute(
+      "aria-label",
+      "Switch to dark theme"
+    );
+  });
+
+  it("resolveInitialTheme ignores invalid stored values", () => {
+    localStorage.setItem("cosmoflare-theme", "neon");
+    expect(resolveInitialTheme()).toBe("dark");
   });
 });
