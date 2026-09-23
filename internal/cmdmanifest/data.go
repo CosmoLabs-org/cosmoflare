@@ -1229,4 +1229,97 @@ var registry = []Command{
 		LocalChecks: []string{"destination_conf_present"},
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+
+	// --- loadbalancer (FEAT-037 wave 2; permissions from the Qwen dataset) ---
+	// Wrangler has no Load Balancer equivalent commands, so
+	// WranglerEquivalent is left empty for the whole group — this surface is
+	// the CLI's differentiation. The dataset maps every pool and monitor
+	// operation (reads included) to the account-level
+	// "Load Balancing: Monitors and Pools" permission.
+	{
+		ID: "loadbalancer.pool.create", CLIPath: []string{"loadbalancer", "pool", "create"},
+		Service: "loadbalancer", Scope: "pool", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/load_balancers/pools"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		LocalChecks: []string{"name_present", "origins_present"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.pool.list", CLIPath: []string{"loadbalancer", "pool", "list"},
+		Service: "loadbalancer", Scope: "account", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/load_balancers/pools"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.pool.get", CLIPath: []string{"loadbalancer", "pool", "get"},
+		Service: "loadbalancer", Scope: "pool", Verb: "read",
+		APIOps: []string{
+			"GET /accounts/{account_id}/load_balancers/pools/{pool_id}",
+			// fetched additionally when --health is passed
+			"GET /accounts/{account_id}/load_balancers/pools/{pool_id}/health",
+		},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.pool.update", CLIPath: []string{"loadbalancer", "pool", "update"},
+		Service: "loadbalancer", Scope: "pool", Verb: "write",
+		APIOps: []string{
+			// update is a full replace in the API: the current pool is
+			// fetched first and the partial changes merged on top
+			"GET /accounts/{account_id}/load_balancers/pools/{pool_id}",
+			"PATCH /accounts/{account_id}/load_balancers/pools/{pool_id}",
+		},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.pool.delete", CLIPath: []string{"loadbalancer", "pool", "delete"},
+		Service: "loadbalancer", Scope: "pool", Verb: "delete",
+		APIOps:      []string{"DELETE /accounts/{account_id}/load_balancers/pools/{pool_id}"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.monitor.create", CLIPath: []string{"loadbalancer", "monitor", "create"},
+		Service: "loadbalancer", Scope: "monitor", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/load_balancers/monitors"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		LocalChecks: []string{"monitor_type_valid"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.monitor.list", CLIPath: []string{"loadbalancer", "monitor", "list"},
+		Service: "loadbalancer", Scope: "account", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/load_balancers/monitors"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.monitor.get", CLIPath: []string{"loadbalancer", "monitor", "get"},
+		Service: "loadbalancer", Scope: "monitor", Verb: "read",
+		APIOps:      []string{"GET /accounts/{account_id}/load_balancers/monitors/{monitor_id}"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.monitor.update", CLIPath: []string{"loadbalancer", "monitor", "update"},
+		Service: "loadbalancer", Scope: "monitor", Verb: "write",
+		APIOps: []string{
+			// update is a full replace in the API: the current monitor is
+			// fetched first and the partial changes merged on top
+			"GET /accounts/{account_id}/load_balancers/monitors/{monitor_id}",
+			"PATCH /accounts/{account_id}/load_balancers/monitors/{monitor_id}",
+		},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "loadbalancer.monitor.delete", CLIPath: []string{"loadbalancer", "monitor", "delete"},
+		Service: "loadbalancer", Scope: "monitor", Verb: "delete",
+		APIOps:      []string{"DELETE /accounts/{account_id}/load_balancers/monitors/{monitor_id}"},
+		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
 }

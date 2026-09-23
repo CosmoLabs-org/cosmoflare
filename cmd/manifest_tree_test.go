@@ -48,14 +48,14 @@ func collectCobraPaths(t *testing.T, groups ...string) map[string]bool {
 // consumer would stamp "unregistered" for a real command, and permission
 // consumers would never fire.
 func TestManifestCLIPathsResolveAgainstCobraTree(t *testing.T) {
-	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush")
+	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush", "loadbalancer")
 	if len(live) == 0 {
 		t.Fatal("cobra tree walk found no commands under wave groups")
 	}
 	for _, c := range cmdmanifest.Load().Commands() {
 		key := strings.Join(c.CLIPath, " ")
 		switch c.CLIPath[0] {
-		case "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush":
+		case "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush", "loadbalancer":
 			if !live[key] {
 				t.Errorf("%q: registered CLI path %q not found in live cobra tree", c.ID, key)
 			}
@@ -71,7 +71,7 @@ func TestManifestCLIPathsResolveAgainstCobraTree(t *testing.T) {
 // cross-check: every live leaf under a wave-2 group must have a registry
 // entry, so audit stamping and dry-run defaults cover the whole surface.
 func TestCobraTreeLeavesAllRegistered(t *testing.T) {
-	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush")
+	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush", "loadbalancer")
 	if len(live) == 0 {
 		t.Fatal("cobra tree walk found no commands under wave groups")
 	}
@@ -95,7 +95,7 @@ func TestDumpCobraTree(t *testing.T) {
 	if os.Getenv("DUMP_TREE") == "" {
 		t.Skip("set DUMP_TREE=1 to dump")
 	}
-	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush")
+	live := collectCobraPaths(t, "worker", "kv", "d1", "dns", "email", "waf", "ssl", "cache", "hyperdrive", "alerts", "tunnel", "account", "logpush", "loadbalancer")
 	out := make([]string, 0, len(live))
 	for p := range live {
 		out = append(out, p)
