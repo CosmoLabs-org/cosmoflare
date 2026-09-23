@@ -227,7 +227,7 @@ func runD1Delete(cmd *cobra.Command, args []string) error {
 	databaseID := args[0]
 
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
-	dry := destructiveDryRun([]string{"d1", "delete"}, d1Force)
+	dry := destructiveDryRun(cliPathOfCmdOr(cmd, "d1 delete"), d1Force)
 	if dry {
 		return outPayload("DRY RUN: Would delete database", func() any {
 			return map[string]string{"id": databaseID}

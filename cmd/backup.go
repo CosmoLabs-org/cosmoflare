@@ -10,8 +10,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
+	"github.com/spf13/cobra"
 )
 
 // backupCmd represents the backup command

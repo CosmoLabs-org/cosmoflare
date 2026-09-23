@@ -1,14 +1,14 @@
 package cmdmanifest
 
-// registry is the command registry in declaration order. Wave 1 authors the
-// r2 pilot group (FEAT-020); later waves append groups without touching the
-// loader. Permissions come from the live token-UI names verified 2026-09-18
+// true invocation path (the wave-1 "r2" prefix was a service namespace, not
+// a CLI segment — corrected when the live-tree sweep test landed). Wave 1
+// authored the r2 surface (FEAT-020); later waves append groups. Permissions come from the live token-UI names verified 2026-09-18
 // (docs/research/2026-09-17-cf-perms-next-waves-tiers/qwen-results.md);
 // entries left empty await the FEAT-011 dataset, never "none required".
 var registry = []Command{
 	// --- r2 bucket lifecycle ---
 	{
-		ID: "r2.bucket.create", CLIPath: []string{"r2", "bucket", "create"},
+		ID: "r2.bucket.create", CLIPath: []string{"bucket", "create"},
 		WranglerEquivalent: "wrangler r2 bucket create",
 		Service:            "r2", Scope: "account", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/r2/buckets"},
@@ -19,7 +19,7 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.bucket.list", CLIPath: []string{"r2", "bucket", "list"},
+		ID: "r2.bucket.list", CLIPath: []string{"bucket", "list"},
 		WranglerEquivalent: "wrangler r2 bucket list",
 		Service:            "r2", Scope: "account", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/r2/buckets"},
@@ -28,7 +28,7 @@ var registry = []Command{
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.bucket.get", CLIPath: []string{"r2", "bucket", "get"},
+		ID: "r2.bucket.get", CLIPath: []string{"bucket", "get"},
 		WranglerEquivalent: "wrangler r2 bucket info",
 		Service:            "r2", Scope: "bucket", Verb: "read",
 		APIOps:      []string{"GET /accounts/{account_id}/r2/buckets/{bucket}"},
@@ -37,7 +37,7 @@ var registry = []Command{
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.bucket.exists", CLIPath: []string{"r2", "bucket", "exists"},
+		ID: "r2.bucket.exists", CLIPath: []string{"bucket", "exists"},
 		Service: "r2", Scope: "bucket", Verb: "read",
 		APIOps:      []string{"HEAD /accounts/{account_id}/r2/buckets/{bucket}"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
@@ -45,7 +45,7 @@ var registry = []Command{
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.bucket.delete", CLIPath: []string{"r2", "bucket", "delete"},
+		ID: "r2.bucket.delete", CLIPath: []string{"bucket", "delete"},
 		WranglerEquivalent: "wrangler r2 bucket delete",
 		Service:            "r2", Scope: "bucket", Verb: "delete",
 		APIOps:      []string{"DELETE /accounts/{account_id}/r2/buckets/{bucket}"},
@@ -57,7 +57,7 @@ var registry = []Command{
 
 	// --- r2 object operations ---
 	{
-		ID: "r2.object.put", CLIPath: []string{"r2", "object", "put"},
+		ID: "r2.object.put", CLIPath: []string{"object", "put"},
 		WranglerEquivalent: "wrangler r2 object put",
 		Service:            "r2", Scope: "object", Verb: "write",
 		APIOps: []string{
@@ -72,7 +72,7 @@ var registry = []Command{
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.object.get", CLIPath: []string{"r2", "object", "get"},
+		ID: "r2.object.get", CLIPath: []string{"object", "get"},
 		WranglerEquivalent: "wrangler r2 object get",
 		Service:            "r2", Scope: "object", Verb: "read",
 		APIOps:      []string{"GET /{bucket}/{key}"},
@@ -81,7 +81,7 @@ var registry = []Command{
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.object.delete", CLIPath: []string{"r2", "object", "delete"},
+		ID: "r2.object.delete", CLIPath: []string{"object", "delete"},
 		WranglerEquivalent: "wrangler r2 object delete",
 		Service:            "r2", Scope: "object", Verb: "delete",
 		APIOps:      []string{"DELETE /{bucket}/{key}"},
@@ -90,7 +90,7 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 	{
-		ID: "r2.object.list", CLIPath: []string{"r2", "object", "list"},
+		ID: "r2.object.list", CLIPath: []string{"object", "ls"},
 		Service: "r2", Scope: "bucket", Verb: "list",
 		APIOps:      []string{"GET /{bucket}?list-type=2"},
 		Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
@@ -1322,4 +1322,53 @@ var registry = []Command{
 		Permissions: Permissions{Account: []string{"Load Balancing: Monitors and Pools"}},
 		DangerLevel: "high", Destructive: true, Trackable: true,
 	},
+
+	// --- bucket subresources + object long-tail (live-tree sweep completion) ---
+	// APIOps grounded in the pkg services; object batch/search stay sparse
+	// pending endpoint grounding.
+	{ID: "bucket.domain.list", CLIPath: []string{"bucket", "domain", "list"}, Service: "r2", Scope: "bucket", Verb: "list",
+		APIOps: []string{"GET /accounts/{account_id}/r2/buckets/{bucket}/domains/custom"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.domain.get", CLIPath: []string{"bucket", "domain", "get"}, Service: "r2", Scope: "bucket", Verb: "read",
+		APIOps: []string{"GET /accounts/{account_id}/r2/buckets/{bucket}/domains/custom"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.domain.attach", CLIPath: []string{"bucket", "domain", "attach"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"POST /accounts/{account_id}/r2/buckets/{bucket}/domains/custom"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.domain.update", CLIPath: []string{"bucket", "domain", "update"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"PUT /accounts/{account_id}/r2/buckets/{bucket}/domains/custom"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.domain.detach", CLIPath: []string{"bucket", "domain", "detach"}, Service: "r2", Scope: "bucket", Verb: "delete",
+		APIOps: []string{"DELETE /accounts/{account_id}/r2/buckets/{bucket}/domains/custom"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.domain.verify", CLIPath: []string{"bucket", "domain", "verify"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"POST /accounts/{account_id}/r2/buckets/{bucket}/domains/custom/verify"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.import", CLIPath: []string{"bucket", "import"}, Service: "r2", Scope: "account", Verb: "write",
+		APIOps: []string{"POST /accounts/{account_id}/r2/buckets"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}},
+		LocalChecks: []string{"spec_file_readable"}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.lifecycle.get", CLIPath: []string{"bucket", "lifecycle", "get"}, Service: "r2", Scope: "bucket", Verb: "read",
+		APIOps: []string{"GET /accounts/{account_id}/r2/buckets/{bucket}/lifecycle"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.lifecycle.set", CLIPath: []string{"bucket", "lifecycle", "set"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"PUT /accounts/{account_id}/r2/buckets/{bucket}/lifecycle"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.lifecycle.clear", CLIPath: []string{"bucket", "lifecycle", "clear"}, Service: "r2", Scope: "bucket", Verb: "delete",
+		APIOps: []string{"DELETE /accounts/{account_id}/r2/buckets/{bucket}/lifecycle"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.notifications.list", CLIPath: []string{"bucket", "notifications", "list"}, Service: "r2", Scope: "bucket", Verb: "list",
+		APIOps: []string{"GET /accounts/{account_id}/event_notifications/r2/{bucket}/configuration"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.notifications.get", CLIPath: []string{"bucket", "notifications", "get"}, Service: "r2", Scope: "bucket", Verb: "read",
+		APIOps: []string{"GET /accounts/{account_id}/event_notifications/r2/{bucket}/configuration"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.notifications.create", CLIPath: []string{"bucket", "notifications", "create"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"PUT /accounts/{account_id}/event_notifications/r2/{bucket}/configuration"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.notifications.delete", CLIPath: []string{"bucket", "notifications", "delete"}, Service: "r2", Scope: "bucket", Verb: "delete",
+		APIOps: []string{"DELETE /accounts/{account_id}/event_notifications/r2/{bucket}/configuration"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.policy.get", CLIPath: []string{"bucket", "policy", "get"}, Service: "r2", Scope: "bucket", Verb: "read",
+		APIOps: []string{"GET /accounts/{account_id}/r2/buckets/{bucket}/policy"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "bucket.policy.set", CLIPath: []string{"bucket", "policy", "set"}, Service: "r2", Scope: "bucket", Verb: "write",
+		APIOps: []string{"PUT /accounts/{account_id}/r2/buckets/{bucket}/policy"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "bucket.update", CLIPath: []string{"bucket", "update"}, Service: "r2", Scope: "bucket", Verb: "write",
+		Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "object.batch", CLIPath: []string{"object", "batch"}, Service: "r2", Scope: "object", Verb: "write",
+		Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "object.copy", CLIPath: []string{"object", "copy"}, Service: "r2", Scope: "object", Verb: "write",
+		APIOps: []string{"PUT /{dst-bucket}/{dst-key} (x-amz-copy-source)"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "medium", Trackable: true},
+	{ID: "object.head", CLIPath: []string{"object", "head"}, Service: "r2", Scope: "object", Verb: "read",
+		APIOps: []string{"HEAD /{bucket}/{key}"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "object.presign", CLIPath: []string{"object", "presign"}, Service: "r2", Scope: "object", Verb: "read",
+		APIOps: []string{"GET /{bucket}/{key} (presigned)"}, Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
+	{ID: "object.search", CLIPath: []string{"object", "search"}, Service: "r2", Scope: "bucket", Verb: "read",
+		Permissions: Permissions{Account: []string{"Workers R2 Storage"}}, DangerLevel: "low", Trackable: true},
 }

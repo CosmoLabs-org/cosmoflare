@@ -14,11 +14,11 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	"context"
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var (

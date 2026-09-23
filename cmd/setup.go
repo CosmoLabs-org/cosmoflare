@@ -12,9 +12,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
+	"github.com/spf13/cobra"
 )
 
 // setupCmd represents the setup command
@@ -42,14 +42,14 @@ Example:
 }
 
 var (
-	setupProfile     string
-	setupQuiet       bool
-	setupSkipTest    bool
-	setupAutoDetect  bool
-	setupSwitch      bool
-	setupWelcome     bool
-	setupBackup      bool
-	setupRestore     bool
+	setupProfile    string
+	setupQuiet      bool
+	setupSkipTest   bool
+	setupAutoDetect bool
+	setupSwitch     bool
+	setupWelcome    bool
+	setupBackup     bool
+	setupRestore    bool
 )
 
 func init() {

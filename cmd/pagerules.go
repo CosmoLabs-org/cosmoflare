@@ -8,8 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var pagerulesCmd = &cobra.Command{
@@ -174,33 +174,33 @@ func runPageRulesList(cmd *cobra.Command, args []string) error {
 	}
 
 	return outResult(rules, func() {
-	if len(rules) == 0 {
-		printInfo("No page rules found")
-		return
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tSTATUS\tPRIORITY\tURL PATTERN\tACTION")
-	for _, r := range rules {
-		urlPattern := ""
-		if len(r.Targets) > 0 {
-			urlPattern = r.Targets[0].Constraint.Value
+		if len(rules) == 0 {
+			printInfo("No page rules found")
+			return
 		}
-		actionStr := ""
-		if len(r.Actions) > 0 {
-			actionStr = r.Actions[0].ID
-		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\n",
-			r.ID,
-			r.Status,
-			r.Priority,
-			urlPattern,
-			actionStr,
-		)
-	}
-	w.Flush()
 
-	printInfo("Total: %d page rule(s)", len(rules))
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tSTATUS\tPRIORITY\tURL PATTERN\tACTION")
+		for _, r := range rules {
+			urlPattern := ""
+			if len(r.Targets) > 0 {
+				urlPattern = r.Targets[0].Constraint.Value
+			}
+			actionStr := ""
+			if len(r.Actions) > 0 {
+				actionStr = r.Actions[0].ID
+			}
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\n",
+				r.ID,
+				r.Status,
+				r.Priority,
+				urlPattern,
+				actionStr,
+			)
+		}
+		w.Flush()
+
+		printInfo("Total: %d page rule(s)", len(rules))
 	})
 }
 
@@ -221,23 +221,23 @@ func runPageRulesGet(cmd *cobra.Command, args []string) error {
 	}
 
 	return outResult(rule, func() {
-	fmt.Printf("ID:         %s\n", rule.ID)
-	fmt.Printf("Status:     %s\n", rule.Status)
-	fmt.Printf("Priority:   %d\n", rule.Priority)
-	fmt.Printf("Created:    %s\n", rule.CreatedOn.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Modified:   %s\n", rule.ModifiedOn.Format("2006-01-02 15:04:05"))
-	fmt.Println("Targets:")
-	for _, t := range rule.Targets {
-		fmt.Printf("  %s %s %s\n", t.Target, t.Constraint.Operator, t.Constraint.Value)
-	}
-	fmt.Println("Actions:")
-	for _, a := range rule.Actions {
-		if a.Value != nil {
-			fmt.Printf("  %s = %v\n", a.ID, a.Value)
-		} else {
-			fmt.Printf("  %s\n", a.ID)
+		fmt.Printf("ID:         %s\n", rule.ID)
+		fmt.Printf("Status:     %s\n", rule.Status)
+		fmt.Printf("Priority:   %d\n", rule.Priority)
+		fmt.Printf("Created:    %s\n", rule.CreatedOn.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Modified:   %s\n", rule.ModifiedOn.Format("2006-01-02 15:04:05"))
+		fmt.Println("Targets:")
+		for _, t := range rule.Targets {
+			fmt.Printf("  %s %s %s\n", t.Target, t.Constraint.Operator, t.Constraint.Value)
 		}
-	}
+		fmt.Println("Actions:")
+		for _, a := range rule.Actions {
+			if a.Value != nil {
+				fmt.Printf("  %s = %v\n", a.ID, a.Value)
+			} else {
+				fmt.Printf("  %s\n", a.ID)
+			}
+		}
 	})
 }
 

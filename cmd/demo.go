@@ -12,8 +12,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/visual"
+	"github.com/spf13/cobra"
 )
 
 // demoCmd represents the demo command
@@ -132,14 +132,14 @@ func demoRainbow() {
 
 func demoDashboard() {
 	metrics := map[string]interface{}{
-		"Status":      "Running",
-		"Uptime":      "2h 15m 32s",
-		"Operations":  "1,247",
-		"Speed":       "87.3 MB/s",
-		"Completed":   "1,198",
-		"Failed":      "3",
-		"CPU Usage":   "12%",
-		"Memory":      "245 MB",
+		"Status":     "Running",
+		"Uptime":     "2h 15m 32s",
+		"Operations": "1,247",
+		"Speed":      "87.3 MB/s",
+		"Completed":  "1,198",
+		"Failed":     "3",
+		"CPU Usage":  "12%",
+		"Memory":     "245 MB",
 	}
 
 	visual.ShowDashboard("📊 Live Dashboard", metrics)

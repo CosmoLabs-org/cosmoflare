@@ -6,8 +6,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 

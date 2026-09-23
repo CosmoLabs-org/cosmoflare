@@ -294,7 +294,18 @@ func runWAFListDelete(cmd *cobra.Command, args []string) error {
 	}
 	listID := args[0]
 
-	if !wafListForce && !DryRun {
+	// Dry-run short-circuits before service construction so previews
+	// never require credentials (also covers the wrapper-injected dry run
+	// from withDestructiveDefaults — this command is registry-destructive).
+	if DryRun {
+		return outPayload("DRY RUN: Would delete WAF list", func() any {
+			return map[string]string{"list_id": listID}
+		}, func() {
+			printInfo("DRY RUN: Would delete WAF list '%s'", listID)
+		})
+	}
+
+	if !wafListForce {
 		fmt.Printf("Are you sure you want to delete WAF list '%s'? [y/N]: ", listID)
 		var response string
 		fmt.Scanln(&response)
@@ -308,13 +319,7 @@ func runWAFListDelete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return outErr("failed to create WAF list service", err)
 	}
-	if DryRun {
-		return outPayload("DRY RUN: Would delete WAF list", func() any {
-			return map[string]string{"list_id": listID}
-		}, func() {
-			printInfo("DRY RUN: Would delete WAF list '%s'", listID)
-		})
-	}
+
 	if err := svc.DeleteList(context.Background(), listID); err != nil {
 		return outErr("failed to delete WAF list", err)
 	}

@@ -10,8 +10,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/migration"
+	"github.com/spf13/cobra"
 )
 
 // migrateCmd represents the migrate command
@@ -41,17 +41,17 @@ Example:
 }
 
 var (
-	migrateSource      string
-	migrateDest        string
-	migrateFilter      string
-	migrateConcurrency int
-	migrateDryRun      bool
-	migrateResume      bool
-	migrateVerify      bool
+	migrateSource       string
+	migrateDest         string
+	migrateFilter       string
+	migrateConcurrency  int
+	migrateDryRun       bool
+	migrateResume       bool
+	migrateVerify       bool
 	migrateDeleteExtras bool
-	migrateCompress    bool
-	migrateIncremental bool
-	migrateManifest    string
+	migrateCompress     bool
+	migrateIncremental  bool
+	migrateManifest     string
 )
 
 // migrateFromS3Cmd represents the migrate from-s3 command

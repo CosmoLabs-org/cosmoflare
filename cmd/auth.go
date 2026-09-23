@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -438,14 +438,14 @@ func redactTokenTail(token string) string {
 // Helper types and functions
 
 type AuthCredentials struct {
-	APIToken    string
-	AccountID   string
-	Email       string
-	AccessKey   string
-	SecretKey   string
-	Method      string
-	Scope       string
-	ExpiresAt   time.Time
+	APIToken  string
+	AccountID string
+	Email     string
+	AccessKey string
+	SecretKey string
+	Method    string
+	Scope     string
+	ExpiresAt time.Time
 }
 
 func selectAuthMethod() string {

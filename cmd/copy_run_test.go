@@ -303,7 +303,7 @@ func TestCopyDirectory_RoundTrip(t *testing.T) {
 		t.Fatalf("copyDirectory returned error: %v", err)
 	}
 	for name, want := range map[string]string{
-		filepath.Join("top.txt"):            "top",
+		filepath.Join("top.txt"):           "top",
 		filepath.Join("sub", "nested.txt"): "nested",
 	} {
 		got, err := os.ReadFile(filepath.Join(dstDir, name))

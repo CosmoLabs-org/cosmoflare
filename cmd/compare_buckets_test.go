@@ -121,14 +121,14 @@ func TestCompareListBuckets_ListErrors(t *testing.T) {
 // or same.
 func TestCompareDiffBuckets_Classification(t *testing.T) {
 	src := map[string]int64{
-		"only-src":  5,
-		"same-key":  7,
-		"diff-key":  100,
+		"only-src": 5,
+		"same-key": 7,
+		"diff-key": 100,
 	}
 	dst := map[string]int64{
-		"same-key":  7,
-		"diff-key":  42,
-		"only-dst":  9,
+		"same-key": 7,
+		"diff-key": 42,
+		"only-dst": 9,
 	}
 
 	got := compareDiffBuckets(src, dst)

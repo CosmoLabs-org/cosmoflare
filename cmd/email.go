@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var emailCmd = &cobra.Command{
@@ -364,41 +364,41 @@ func runEmailRulesList(cmd *cobra.Command, args []string) error {
 			return
 		}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tMATCH\tACTION\tENABLED\tPRIORITY")
-	for _, r := range rules {
-		matchStr := ""
-		if len(r.Matchers) > 0 {
-			if r.Matchers[0].Type == "all" {
-				matchStr = "(all)"
-			} else {
-				matchStr = r.Matchers[0].Value
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tMATCH\tACTION\tENABLED\tPRIORITY")
+		for _, r := range rules {
+			matchStr := ""
+			if len(r.Matchers) > 0 {
+				if r.Matchers[0].Type == "all" {
+					matchStr = "(all)"
+				} else {
+					matchStr = r.Matchers[0].Value
+				}
 			}
-		}
-		actionStr := ""
-		if len(r.Actions) > 0 {
-			if r.Actions[0].Type == "drop" {
-				actionStr = "drop"
-			} else {
-				actionStr = strings.Join(r.Actions[0].Value, ", ")
+			actionStr := ""
+			if len(r.Actions) > 0 {
+				if r.Actions[0].Type == "drop" {
+					actionStr = "drop"
+				} else {
+					actionStr = strings.Join(r.Actions[0].Value, ", ")
+				}
 			}
+			enabledStr := "no"
+			if r.Enabled {
+				enabledStr = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\n",
+				r.ID,
+				r.Name,
+				matchStr,
+				actionStr,
+				enabledStr,
+				r.Priority,
+			)
 		}
-		enabledStr := "no"
-		if r.Enabled {
-			enabledStr = "yes"
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\n",
-			r.ID,
-			r.Name,
-			matchStr,
-			actionStr,
-			enabledStr,
-			r.Priority,
-		)
-	}
-	w.Flush()
+		w.Flush()
 
-	printInfo("Total: %d rule(s)", len(rules))
+		printInfo("Total: %d rule(s)", len(rules))
 	})
 }
 
@@ -419,30 +419,30 @@ func runEmailRulesGet(cmd *cobra.Command, args []string) error {
 	}
 
 	return outResult(rule, func() {
-	fmt.Printf("ID:         %s\n", rule.ID)
-	fmt.Printf("Name:       %s\n", rule.Name)
-	fmt.Printf("Enabled:    %v\n", rule.Enabled)
-	fmt.Printf("Priority:   %d\n", rule.Priority)
-	if len(rule.Matchers) > 0 {
-		fmt.Printf("Matchers:\n")
-		for _, m := range rule.Matchers {
-			if m.Type == "all" {
-				fmt.Printf("  - Type: all (match all incoming)\n")
-			} else {
-				fmt.Printf("  - Type: %s  Field: %s  Value: %s\n", m.Type, m.Field, m.Value)
+		fmt.Printf("ID:         %s\n", rule.ID)
+		fmt.Printf("Name:       %s\n", rule.Name)
+		fmt.Printf("Enabled:    %v\n", rule.Enabled)
+		fmt.Printf("Priority:   %d\n", rule.Priority)
+		if len(rule.Matchers) > 0 {
+			fmt.Printf("Matchers:\n")
+			for _, m := range rule.Matchers {
+				if m.Type == "all" {
+					fmt.Printf("  - Type: all (match all incoming)\n")
+				} else {
+					fmt.Printf("  - Type: %s  Field: %s  Value: %s\n", m.Type, m.Field, m.Value)
+				}
 			}
 		}
-	}
-	if len(rule.Actions) > 0 {
-		fmt.Printf("Actions:\n")
-		for _, a := range rule.Actions {
-			if a.Type == "drop" {
-				fmt.Printf("  - Type: drop\n")
-			} else {
-				fmt.Printf("  - Type: %s  Value: %s\n", a.Type, strings.Join(a.Value, ", "))
+		if len(rule.Actions) > 0 {
+			fmt.Printf("Actions:\n")
+			for _, a := range rule.Actions {
+				if a.Type == "drop" {
+					fmt.Printf("  - Type: drop\n")
+				} else {
+					fmt.Printf("  - Type: %s  Value: %s\n", a.Type, strings.Join(a.Value, ", "))
+				}
 			}
 		}
-	}
 	})
 }
 
@@ -679,27 +679,27 @@ func runEmailDestList(cmd *cobra.Command, args []string) error {
 			return
 		}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tEMAIL\tVERIFIED\tCREATED")
-	for _, d := range destinations {
-		verifiedStr := "pending"
-		if !d.Verified.IsZero() {
-			verifiedStr = d.Verified.Format("2006-01-02")
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tEMAIL\tVERIFIED\tCREATED")
+		for _, d := range destinations {
+			verifiedStr := "pending"
+			if !d.Verified.IsZero() {
+				verifiedStr = d.Verified.Format("2006-01-02")
+			}
+			createdStr := ""
+			if !d.Created.IsZero() {
+				createdStr = d.Created.Format("2006-01-02 15:04:05")
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				d.ID,
+				d.Email,
+				verifiedStr,
+				createdStr,
+			)
 		}
-		createdStr := ""
-		if !d.Created.IsZero() {
-			createdStr = d.Created.Format("2006-01-02 15:04:05")
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			d.ID,
-			d.Email,
-			verifiedStr,
-			createdStr,
-		)
-	}
-	w.Flush()
+		w.Flush()
 
-	printInfo("Total: %d destination(s)", len(destinations))
+		printInfo("Total: %d destination(s)", len(destinations))
 	})
 }
 
@@ -757,19 +757,19 @@ func runEmailDestGet(cmd *cobra.Command, args []string) error {
 	}
 
 	return outResult(dest, func() {
-	fmt.Printf("ID:       %s\n", dest.ID)
-	fmt.Printf("Email:    %s\n", dest.Email)
-	if !dest.Verified.IsZero() {
-		fmt.Printf("Verified: %s\n", dest.Verified.Format("2006-01-02 15:04:05"))
-	} else {
-		fmt.Printf("Verified: pending\n")
-	}
-	if !dest.Created.IsZero() {
-		fmt.Printf("Created:  %s\n", dest.Created.Format("2006-01-02 15:04:05"))
-	}
-	if !dest.Modified.IsZero() {
-		fmt.Printf("Modified: %s\n", dest.Modified.Format("2006-01-02 15:04:05"))
-	}
+		fmt.Printf("ID:       %s\n", dest.ID)
+		fmt.Printf("Email:    %s\n", dest.Email)
+		if !dest.Verified.IsZero() {
+			fmt.Printf("Verified: %s\n", dest.Verified.Format("2006-01-02 15:04:05"))
+		} else {
+			fmt.Printf("Verified: pending\n")
+		}
+		if !dest.Created.IsZero() {
+			fmt.Printf("Created:  %s\n", dest.Created.Format("2006-01-02 15:04:05"))
+		}
+		if !dest.Modified.IsZero() {
+			fmt.Printf("Modified: %s\n", dest.Modified.Format("2006-01-02 15:04:05"))
+		}
 	})
 }
 
@@ -839,25 +839,25 @@ func runEmailCatchall(cmd *cobra.Command, args []string) error {
 	}
 
 	return outResult(catchall, func() {
-	fmt.Printf("ID:       %s\n", catchall.ID)
-	fmt.Printf("Name:     %s\n", catchall.Name)
-	fmt.Printf("Enabled:  %v\n", catchall.Enabled)
-	if len(catchall.Matchers) > 0 {
-		fmt.Printf("Matchers:\n")
-		for _, m := range catchall.Matchers {
-			fmt.Printf("  - Type: %s\n", m.Type)
-		}
-	}
-	if len(catchall.Actions) > 0 {
-		fmt.Printf("Actions:\n")
-		for _, a := range catchall.Actions {
-			if a.Type == "drop" {
-				fmt.Printf("  - Type: drop\n")
-			} else {
-				fmt.Printf("  - Type: %s  Value: %s\n", a.Type, strings.Join(a.Value, ", "))
+		fmt.Printf("ID:       %s\n", catchall.ID)
+		fmt.Printf("Name:     %s\n", catchall.Name)
+		fmt.Printf("Enabled:  %v\n", catchall.Enabled)
+		if len(catchall.Matchers) > 0 {
+			fmt.Printf("Matchers:\n")
+			for _, m := range catchall.Matchers {
+				fmt.Printf("  - Type: %s\n", m.Type)
 			}
 		}
-	}
+		if len(catchall.Actions) > 0 {
+			fmt.Printf("Actions:\n")
+			for _, a := range catchall.Actions {
+				if a.Type == "drop" {
+					fmt.Printf("  - Type: drop\n")
+				} else {
+					fmt.Printf("  - Type: %s  Value: %s\n", a.Type, strings.Join(a.Value, ", "))
+				}
+			}
+		}
 	})
 }
 

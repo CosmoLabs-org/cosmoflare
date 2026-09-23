@@ -87,10 +87,10 @@ func (p *Presenter) Success(message string, data any) error {
 // Package-level conveniences for the mechanical sweep (FEAT-040). A
 // Presenter is a bool copy — constructing one per call is free and avoids
 // per-handler plumbing in files that only need the error species.
-func outErr(msg string, err error) error          { return NewPresenter().ErrorWrap(msg, err) }
-func outErrf(format string, a ...any) error       { return NewPresenter().Error(format, a...) }
-func outResult(data any, human func()) error     { return NewPresenter().Result(data, human) }
-func outSuccess(message string, data any) error  { return NewPresenter().Success(message, data) }
+func outErr(msg string, err error) error        { return NewPresenter().ErrorWrap(msg, err) }
+func outErrf(format string, a ...any) error     { return NewPresenter().Error(format, a...) }
+func outResult(data any, human func()) error    { return NewPresenter().Result(data, human) }
+func outSuccess(message string, data any) error { return NewPresenter().Success(message, data) }
 func outPayload(message string, json func() any, human func()) error {
 	return NewPresenter().SuccessPayload(message, json, human)
 }

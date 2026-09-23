@@ -14,13 +14,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/batch"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/operations"
-	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/progress"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	visual "github.com/CosmoLabs-org/cosmoflare/internal/cli/visual"
+	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	"github.com/spf13/cobra"
 )
 
 // Enhanced copy command with progress monitoring and batch support
@@ -75,23 +75,23 @@ Examples:
 }
 
 var (
-	copyRecursive    bool
-	copyResume       bool
-	copyVerify       bool
-	copyOverwrite    bool
-	copyPreserve     bool
-	copyProgress     bool
-	copyQuiet        bool
-	copyBatch        bool
-	copyParallel     int
-	copyChunkSize    string
-	copyRetries      int
-	copyTimeout      string
-	copyInteractive  bool
-	copyDryRun       bool
-	copyNoClobber    bool
-	copyStats        bool
-	copyFormat       string
+	copyRecursive   bool
+	copyResume      bool
+	copyVerify      bool
+	copyOverwrite   bool
+	copyPreserve    bool
+	copyProgress    bool
+	copyQuiet       bool
+	copyBatch       bool
+	copyParallel    int
+	copyChunkSize   string
+	copyRetries     int
+	copyTimeout     string
+	copyInteractive bool
+	copyDryRun      bool
+	copyNoClobber   bool
+	copyStats       bool
+	copyFormat      string
 )
 
 func init() {

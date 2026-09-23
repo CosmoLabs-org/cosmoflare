@@ -94,7 +94,7 @@ func TestRunLBPoolDelete_DryRunByDefault(t *testing.T) {
 	r, restore := captureStdout(t)
 	err := runLBPoolDelete(lbPoolDeleteCmd, []string{"pool-1"})
 	restore()
-out := readAll(t, r)
+	out := readAll(t, r)
 	restore()
 
 	if err != nil {
@@ -115,7 +115,7 @@ func TestRunLBMonitorDelete_DryRunByDefault(t *testing.T) {
 	r, restore := captureStdout(t)
 	err := runLBMonitorDelete(lbMonitorDeleteCmd, []string{"mon-1"})
 	restore()
-out := readAll(t, r)
+	out := readAll(t, r)
 	restore()
 
 	if err != nil {

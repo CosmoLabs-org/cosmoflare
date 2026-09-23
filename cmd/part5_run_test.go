@@ -15,7 +15,6 @@ package cmd
 //     mapping and error wrapping are verified without touching the live API.
 
 import (
-	"sync"
 	"bytes"
 	"context"
 	"fmt"
@@ -23,11 +22,12 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
 	cloudflare "github.com/cloudflare/cloudflare-go"
+	"github.com/spf13/cobra"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )

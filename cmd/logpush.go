@@ -419,7 +419,7 @@ func runLogpushJobDelete(cmd *cobra.Command, args []string) error {
 		return outErr("failed to parse job ID", err)
 	}
 
-	cliPath := []string{"logpush", "job", "delete"}
+	cliPath := cliPathOfCmdOr(cmd, "logpush job delete")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, logpushForce)
 	if dry {

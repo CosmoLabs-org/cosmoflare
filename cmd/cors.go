@@ -8,8 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var corsCmd = &cobra.Command{
@@ -189,14 +189,14 @@ func runCORSSet(cmd *cobra.Command, args []string) error {
 	if DryRun {
 		return outPayload("DRY RUN: Would set CORS rule", func() any {
 			return map[string]interface{}{
-				"zone_id":  zoneID,
-				"rule":     corsRuleName,
-				"origins":  origins,
-				"methods":  methods,
-				"headers":  headers,
-				"max_age":  corsMaxAge,
-				"creds":    corsCredentials,
-				"expr":     corsExpression,
+				"zone_id": zoneID,
+				"rule":    corsRuleName,
+				"origins": origins,
+				"methods": methods,
+				"headers": headers,
+				"max_age": corsMaxAge,
+				"creds":   corsCredentials,
+				"expr":    corsExpression,
 			}
 		}, func() {
 			printInfo("DRY RUN: Would set CORS rule '%s' on zone '%s'", corsRuleName, zoneID)

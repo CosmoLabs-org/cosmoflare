@@ -9,9 +9,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/spf13/cobra"
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -385,7 +385,7 @@ func runBucketDelete(cmd *cobra.Command, args []string) error {
 
 	printInfo("Deleting bucket: %s", bucketName)
 
-	cliPath := []string{"r2", "bucket", "delete"}
+	cliPath := cliPathOfCmdOr(cmd, "bucket delete")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, force)
 	if dry {
@@ -516,10 +516,10 @@ type BucketSpec struct {
 }
 
 type BucketSpecItem struct {
-	Name        string            `json:"name" yaml:"name"`
-	Location    string            `json:"location,omitempty" yaml:"location,omitempty"`
-	Tags        map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Metadata    map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Name     string            `json:"name" yaml:"name"`
+	Location string            `json:"location,omitempty" yaml:"location,omitempty"`
+	Tags     map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 func parseKeyValuePairs(pairs []string) (map[string]string, error) {

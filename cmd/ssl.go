@@ -6,8 +6,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var sslCmd = &cobra.Command{
@@ -31,9 +31,9 @@ Examples:
 }
 
 var (
-	sslMode       string
-	sslMinTLS     string
-	sslAlwaysHTTPS bool
+	sslMode         string
+	sslMinTLS       string
+	sslAlwaysHTTPS  bool
 	sslAutoRewrites bool
 )
 
