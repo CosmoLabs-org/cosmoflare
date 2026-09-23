@@ -352,3 +352,9 @@ entries:
       completed: 2026-09-22T17:28:54.620085+04:00
       status: discarded
       reason: manually discarded by user
+    - id: "0305"
+      task: FEAT-037 wave 1 — Logpush job management
+      started: 2026-09-23T19:59:11.835679+04:00
+      completed: 2026-09-23T20:19:52.302867+04:00
+      status: discarded
+      reason: manually discarded by user
