@@ -35,16 +35,16 @@ Examples:
 }
 
 var (
-	dnsRecordType string
-	dnsName       string
-	dnsContent    string
-	dnsTTL        int
-	dnsProxied    bool
-	dnsPriority   uint16
-	dnsComment    string
-	dnsForce      bool
-	dnsFilterType string
-	dnsFilterName string
+	dnsRecordType    string
+	dnsName          string
+	dnsContent       string
+	dnsTTL           int
+	dnsProxied       bool
+	dnsPriority      uint16
+	dnsComment       string
+	dnsForce         bool
+	dnsFilterType    string
+	dnsFilterName    string
 	dnsFilterContent string
 )
 
@@ -379,7 +379,7 @@ func runDNSDelete(cmd *cobra.Command, args []string) error {
 
 	// Not registry-flagged destructive: the confirmation prompt stays live;
 	// an explicit --dry-run still short-circuits before any service call.
-	dry := destructiveDryRun([]string{"dns", "delete"}, dnsForce)
+	dry := destructiveDryRun(cliPathOfCmdOr(cmd, "dns delete"), dnsForce)
 	if dry {
 		return outPayload("DRY RUN: Would delete DNS record", func() any {
 			return map[string]string{

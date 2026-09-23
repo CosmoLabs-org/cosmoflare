@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var wafCmd = &cobra.Command{

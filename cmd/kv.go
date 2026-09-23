@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var kvCmd = &cobra.Command{
@@ -254,7 +254,7 @@ func runKVNamespaceDelete(cmd *cobra.Command, args []string) error {
 
 	force, _ := cmd.Flags().GetBool("force")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
-	dry := destructiveDryRun([]string{"kv", "namespace", "delete"}, force)
+	dry := destructiveDryRun(cliPathOfCmdOr(cmd, "kv namespace delete"), force)
 	if dry {
 		return outPayload("DRY RUN: Would delete namespace", func() any {
 			return map[string]string{"id": id}

@@ -42,7 +42,6 @@ func (f *fakeR2Client) ListObjects(ctx context.Context, bucket, prefix, delimite
 	return &cosmoflare.ListResult[*cosmoflare.Object]{Items: items}, nil
 }
 
-
 // analyticsRunSnapshot snapshots the analytics globals plus output-mode
 // switches and credentials so tests cannot leak state into each other.
 func analyticsRunSnapshot(t *testing.T) {

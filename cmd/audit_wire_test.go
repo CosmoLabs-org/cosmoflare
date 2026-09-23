@@ -35,14 +35,14 @@ func TestAuditMutationStampsDangerLevel(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "audit.log")
 	t.Setenv(auditLogPathEnv, logPath)
 
-	auditMutation([]string{"r2", "bucket", "delete"}, "my-bucket", true)
+	auditMutation([]string{"bucket", "delete"}, "my-bucket", true)
 
 	entries := readAuditLines(t, logPath)
 	if len(entries) != 1 {
 		t.Fatalf("got %d entries, want 1", len(entries))
 	}
 	e := entries[0]
-	if e["operation"] != "r2 bucket delete" {
+	if e["operation"] != "bucket delete" {
 		t.Errorf("operation = %v, want r2 bucket delete", e["operation"])
 	}
 	details, _ := e["details"].(map[string]any)
@@ -88,5 +88,5 @@ func TestAuditMutationNoPathIsNoOp(t *testing.T) {
 	t.Setenv(auditLogPathEnv, "")
 	// Empty override falls through to the home default; on CI machines with
 	// a home this still must not error — assert only that it returns.
-	auditMutation([]string{"r2", "bucket", "delete"}, "b", true)
+	auditMutation([]string{"bucket", "delete"}, "b", true)
 }

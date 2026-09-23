@@ -238,7 +238,7 @@ func runAccountMemberUpdate(cmd *cobra.Command, args []string) error {
 func runAccountMemberRemove(cmd *cobra.Command, args []string) error {
 	memberID := args[0]
 
-	cliPath := []string{"account", "member", "remove"}
+	cliPath := cliPathOfCmdOr(cmd, "account member remove")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, accountMemberForce)
 	if dry {

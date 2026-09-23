@@ -1,13 +1,5 @@
 package cmd
 
-import (
-	"github.com/CosmoLabs-org/cosmoflare/internal/cmdmanifest"
-)
-
-// The cmdmanifest import is retained for callers composing paths from the
-// registry; destructiveDryRun itself now delegates to destructive.go.
-var _ = cmdmanifest.Load
-
 // destructiveDryRun reports whether this invocation should execute in
 // dry-run mode (FEAT-020 wave 2 consumer): registry entries flagged
 // Destructive run dry unless the operator explicitly forces execution.

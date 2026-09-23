@@ -559,7 +559,7 @@ func runLBPoolUpdate(cmd *cobra.Command, args []string) error {
 func runLBPoolDelete(cmd *cobra.Command, args []string) error {
 	poolID := args[0]
 
-	cliPath := []string{"loadbalancer", "pool", "delete"}
+	cliPath := cliPathOfCmdOr(cmd, "loadbalancer pool delete")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, lbPoolForce)
 	if dry {
@@ -748,7 +748,7 @@ func runLBMonitorUpdate(cmd *cobra.Command, args []string) error {
 func runLBMonitorDelete(cmd *cobra.Command, args []string) error {
 	monitorID := args[0]
 
-	cliPath := []string{"loadbalancer", "monitor", "delete"}
+	cliPath := cliPathOfCmdOr(cmd, "loadbalancer monitor delete")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, lbMonitorForce)
 	if dry {

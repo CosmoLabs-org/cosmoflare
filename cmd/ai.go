@@ -419,9 +419,9 @@ func runAIGatewayCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	params := cosmoflare.AIGatewayCreateParams{
-		CacheTTL:           aiGatewayCacheTTL,
-		RateLimitLimit:     aiGatewayRateLimit,
-		RateLimitInterval:  aiGatewayRateWindow,
+		CacheTTL:          aiGatewayCacheTTL,
+		RateLimitLimit:    aiGatewayRateLimit,
+		RateLimitInterval: aiGatewayRateWindow,
 	}
 	if aiGatewayCollectLogs {
 		params.CollectLogs = &aiGatewayCollectLogs

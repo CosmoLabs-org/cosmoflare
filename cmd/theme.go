@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/CosmoLabs-org/cosmoflare/internal/interactive"
+	"github.com/spf13/cobra"
 )
 
 // themeCmd represents the theme command

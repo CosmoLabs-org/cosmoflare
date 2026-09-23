@@ -11,8 +11,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var workerCmd = &cobra.Command{
@@ -36,18 +36,18 @@ Examples:
 }
 
 var (
-	workerScript       string
-	workerCompatDate   string
-	workerBindings     []string
-	workerTags         []string
-	workerModule       bool
-	workerForce        bool
-	workerLogLimit     int
-	workerLogFollow    bool
-	workerLogInterval  int
-	workerLogLevel     string
-	workerLogSince     string
-	workerUsageModel   string
+	workerScript      string
+	workerCompatDate  string
+	workerBindings    []string
+	workerTags        []string
+	workerModule      bool
+	workerForce       bool
+	workerLogLimit    int
+	workerLogFollow   bool
+	workerLogInterval int
+	workerLogLevel    string
+	workerLogSince    string
+	workerUsageModel  string
 )
 
 var workerDeployCmd = &cobra.Command{
@@ -324,7 +324,7 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
-	dry := destructiveDryRun([]string{"worker", "delete"}, workerForce)
+	dry := destructiveDryRun(cliPathOfCmdOr(cmd, "worker delete"), workerForce)
 	if dry {
 		return outPayload("DRY RUN: Would delete worker", func() any {
 			return map[string]string{"name": name}

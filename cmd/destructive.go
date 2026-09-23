@@ -26,14 +26,16 @@ func cliPathOf(cmd *cobra.Command) []string {
 }
 
 // cliPathOfCmdOr derives the manifest path from cmd, falling back to the
-// command's package-level registration when cmd is nil — direct runner
-// invocations in tests (e.g. runD1Delete(nil, args)) skip cobra wiring but
-// still need the registry-derived destructive default.
-func cliPathOfCmdOr(cmd, registered *cobra.Command) []string {
+// command's known path when cmd is nil — direct runner invocations in
+// tests (e.g. runD1Delete(nil, args)) skip cobra wiring but still need the
+// registry-derived destructive default. The fallback is the path as a
+// space-separated string (NOT the *cobra.Command: a runner referencing its
+// own command variable is an initialization cycle).
+func cliPathOfCmdOr(cmd *cobra.Command, pathFallback string) []string {
 	if cmd != nil {
 		return cliPathOf(cmd)
 	}
-	return cliPathOf(registered)
+	return strings.Fields(pathFallback)
 }
 
 // destructiveByRegistry reports whether the registry marks the given CLI
@@ -75,4 +77,28 @@ func shouldDryByDefault(cmd *cobra.Command) bool {
 		return false
 	}
 	return destructiveByRegistry(cliPathOf(cmd))
+}
+
+// Registry-destructive commands, wrapped once here: a rename or a newly
+// authored destructive command only needs a registry entry to inherit the
+// dry-by-default behavior — no runner-side wiring to remember.
+func init() {
+	for _, c := range []*cobra.Command{
+		bucketDeleteCmd,
+		workerDeleteCmd,
+		kvNamespaceDeleteCmd,
+		d1DeleteCmd,
+		wafListDeleteCmd,
+		hyperdriveDeleteCmd,
+		accountMemberRemoveCmd,
+		logpushJobDeleteCmd,
+		lbPoolDeleteCmd,
+		lbMonitorDeleteCmd,
+		tunnelDeleteCmd,
+		tunnelCleanupCmd,
+	} {
+		if c != nil && c.RunE != nil {
+			c.RunE = withDestructiveDefaults(c, c.RunE)
+		}
+	}
 }

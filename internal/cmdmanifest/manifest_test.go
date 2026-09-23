@@ -67,7 +67,7 @@ func TestManifestDestructiveImpliesHighDanger(t *testing.T) {
 func TestResolveCLI(t *testing.T) {
 	m := Load()
 
-	c, ok := m.ResolveCLI("r2", "bucket", "delete")
+	c, ok := m.ResolveCLI("bucket", "delete")
 	if !ok {
 		t.Fatal("r2 bucket delete not registered")
 	}

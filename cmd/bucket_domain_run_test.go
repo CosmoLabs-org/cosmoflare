@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 // bucketDomainFlagReset restores the given flags to their default values and

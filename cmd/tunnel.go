@@ -269,7 +269,7 @@ func runTunnelGet(cmd *cobra.Command, args []string) error {
 func runTunnelDelete(cmd *cobra.Command, args []string) error {
 	tunnelID := args[0]
 
-	cliPath := []string{"tunnel", "delete"}
+	cliPath := cliPathOfCmdOr(cmd, "tunnel delete")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, tunnelForce)
 	if dry {
@@ -361,7 +361,7 @@ func runTunnelConnections(cmd *cobra.Command, args []string) error {
 func runTunnelCleanup(cmd *cobra.Command, args []string) error {
 	tunnelID := args[0]
 
-	cliPath := []string{"tunnel", "cleanup"}
+	cliPath := cliPathOfCmdOr(cmd, "tunnel cleanup")
 	// Registry-flagged destructive: runs dry unless --force, so no prompt.
 	dry := destructiveDryRun(cliPath, tunnelForce)
 	if dry {

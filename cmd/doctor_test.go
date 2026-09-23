@@ -105,8 +105,8 @@ func TestDoctorZoneIDPattern(t *testing.T) {
 		{"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6x", false}, // 33 chars — too long
 		{"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d", false},   // 31 chars — too short
 		{"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5g6", false},  // contains 'g' — not hex
-		{"00000000000000000000000000000000", true},    // all zeros valid
-		{"ffffffffffffffffffffffffffffffff", true},    // all f's valid
+		{"00000000000000000000000000000000", true},   // all zeros valid
+		{"ffffffffffffffffffffffffffffffff", true},   // all f's valid
 	}
 
 	for _, tc := range tests {
@@ -217,9 +217,9 @@ func TestDoctorPrintReportScores(t *testing.T) {
 // empty issues slice.
 func TestDoctorIssuesSectionEmpty(t *testing.T) {
 	report := &cosmoflare.DiagnosticReport{
-		Domain:  "example.com",
-		Score:   "healthy",
-		Issues:  []cosmoflare.DiagnosticIssue{},
+		Domain: "example.com",
+		Score:  "healthy",
+		Issues: []cosmoflare.DiagnosticIssue{},
 	}
 
 	old := os.Stdout

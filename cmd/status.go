@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/cobra"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/spf13/cobra"
 )
 
 var statusCmd = &cobra.Command{
@@ -35,16 +35,16 @@ func init() {
 }
 
 type StatusReport struct {
-	Timestamp    string              `json:"timestamp"`
-	AccountID    string              `json:"account_id"`
-	Zones        StatusSection       `json:"zones"`
-	Workers      StatusSection       `json:"workers"`
-	KV           StatusSection       `json:"kv_namespaces"`
-	Buckets      StatusSection       `json:"r2_buckets"`
-	DNS          StatusSection       `json:"dns_records"`
-	SSL          SSLStatusSection    `json:"ssl"`
-	QueryTimeMs  int64               `json:"query_time_ms"`
-	Errors       []string            `json:"errors,omitempty"`
+	Timestamp   string           `json:"timestamp"`
+	AccountID   string           `json:"account_id"`
+	Zones       StatusSection    `json:"zones"`
+	Workers     StatusSection    `json:"workers"`
+	KV          StatusSection    `json:"kv_namespaces"`
+	Buckets     StatusSection    `json:"r2_buckets"`
+	DNS         StatusSection    `json:"dns_records"`
+	SSL         SSLStatusSection `json:"ssl"`
+	QueryTimeMs int64            `json:"query_time_ms"`
+	Errors      []string         `json:"errors,omitempty"`
 }
 
 type StatusSection struct {
