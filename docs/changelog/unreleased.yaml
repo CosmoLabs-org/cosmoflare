@@ -11,9 +11,12 @@ entries:
         - description: 'd1 push-sql: batched remote SQL push with retry, split recovery, resume (FEAT-018)'
           source: manual
           date: 2026-09-22T17:26:26.489355+04:00
+        - description: Cloudflare Logpush jobs and Load Balancer pools/monitors — first CLI coverage, ownership validation, full CRUD (FEAT-037)
+          source: manual
+          date: 2026-09-23T20:56:26.93609+04:00
         - description: 'Desktop: notification severity levels and light theme (FEAT-041)'
           source: manual
-          date: 2026-09-22T17:26:27.152511+04:00
+          date: 2026-09-23T20:58:41.241441+04:00
     fixed: []
     changed: []
     deprecated: []
