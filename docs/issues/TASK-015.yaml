@@ -1,11 +1,14 @@
 id: TASK-015
 type: task
 created_at: 2026-09-20T02:18:23.862928+04:00
-updated_at: 2026-09-20T02:18:25.787895+04:00
+updated_at: 2026-09-23T21:51:14.905368+04:00
 source: local
 ulid: 01M2XVZJQWWWK9TY9QZHT3YSWV
-status: open
+status: closed
 origin:
     session: 62
 title: 'Structural dry-run/audit wiring: derive CLI path from cobra, wrap mutating RunEs once'
 description: 'Altitude review of 8e77ac2..HEAD: destructiveDryRun/auditMutation wiring is opt-in per RunE body with hand-typed path literals — only 5 of 70 manifest mutations wired; auditMutation landed in 1 command. Deeper fix: derive the path from cmd.CommandPath() minus root instead of string literals, and wrap mutating RunEs once at registration (decorator resolving destructiveDryRun, calling the per-command dry-payload fn, stamping auditMutation on both outcomes). Coverage becomes structural instead of remembered. Per-command dry payloads stay per-command (they legitimately differ).'
+revisions:
+    - date: "2026-09-23T21:51:14.904131+04:00"
+      action: closed
