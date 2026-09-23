@@ -364,3 +364,27 @@ entries:
       completed: 2026-09-23T21:25:07.73942+04:00
       status: discarded
       reason: manually discarded by user
+    - id: "0309"
+      task: FEAT-037 wave 3 — Waiting Room + Spectrum
+      started: 2026-09-23T23:31:03.774293+04:00
+      completed: 2026-09-23T23:54:50.323598+04:00
+      status: discarded
+      reason: manually discarded by user
+    - id: "0310"
+      task: FEAT-037 wave 3 — Page Shield + Turnstile
+      started: 2026-09-23T23:31:16.170098+04:00
+      completed: 2026-09-23T23:54:53.288802+04:00
+      status: discarded
+      reason: manually discarded by user
+    - id: "0311"
+      task: FEAT-037 wave 3 — Web Analytics
+      started: 2026-09-23T23:31:26.671807+04:00
+      completed: 2026-09-23T23:54:55.843806+04:00
+      status: discarded
+      reason: manually discarded by user
+    - id: "0312"
+      task: FEAT-037 wave 3b — CLI wiring for three landed services
+      started: 2026-09-23T23:57:31.184519+04:00
+      completed: 2026-09-24T00:13:52.351873+04:00
+      status: discarded
+      reason: manually discarded by user

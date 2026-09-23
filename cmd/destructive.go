@@ -96,6 +96,11 @@ func init() {
 		lbMonitorDeleteCmd,
 		tunnelDeleteCmd,
 		tunnelCleanupCmd,
+		waitingRoomDeleteCmd,
+		spectrumAppDeleteCmd,
+		pageShieldPolicyDeleteCmd,
+		turnstileWidgetDeleteCmd,
+		webAnalyticsSiteDeleteCmd,
 	} {
 		if c != nil && c.RunE != nil {
 			c.RunE = withDestructiveDefaults(c, c.RunE)

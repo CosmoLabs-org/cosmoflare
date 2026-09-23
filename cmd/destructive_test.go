@@ -91,14 +91,20 @@ func TestDestructiveCommandsWrappedInDryDefault(t *testing.T) {
 	JSONOutput = false
 
 	m := cmdmanifest.Load()
-	// One dummy argument satisfies every delete runner's arity check.
-	dummy := map[string]string{
-		"bucket delete": "bucket", "worker delete": "worker",
-		"kv namespace delete": "ns", "d1 delete": "db",
-		"waf list delete": "list", "hyperdrive delete": "config",
-		"account member remove": "member", "logpush job delete": "123",
-		"loadbalancer pool delete": "pool", "loadbalancer monitor delete": "mon",
-		"tunnel delete": "tun", "tunnel cleanup": "tun",
+	// Dummy args satisfy every delete runner's arity check (zone-scoped
+	// deletes take zone-id + id; the rest take a single id).
+	dummy := map[string][]string{
+		"bucket delete": {"bucket"}, "worker delete": {"worker"},
+		"kv namespace delete": {"ns"}, "d1 delete": {"db"},
+		"waf list delete": {"list"}, "hyperdrive delete": {"config"},
+		"account member remove": {"member"}, "logpush job delete": {"123"},
+		"loadbalancer pool delete": {"pool"}, "loadbalancer monitor delete": {"mon"},
+		"tunnel delete": {"tun"}, "tunnel cleanup": {"tun"},
+		"waiting-room delete":       {"zone", "room"},
+		"spectrum app delete":       {"zone", "app"},
+		"page-shield policy delete": {"zone", "policy"},
+		"turnstile widget delete":   {"0x4AAA-sitekey"},
+		"web-analytics site delete": {"site-tag"},
 	}
 	for _, c := range m.Commands() {
 		if !c.Destructive {
@@ -114,7 +120,7 @@ func TestDestructiveCommandsWrappedInDryDefault(t *testing.T) {
 				t.Fatalf("command %q has no RunE", key)
 			}
 			out := capturePrint(t, func() {
-				if err := target.RunE(target, []string{dummy[key]}); err != nil {
+				if err := target.RunE(target, dummy[key]); err != nil {
 					t.Errorf("dry default should preview, got error: %v", err)
 				}
 			})
