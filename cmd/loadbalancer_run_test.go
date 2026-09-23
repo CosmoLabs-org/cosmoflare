@@ -37,9 +37,20 @@ func TestRunLBMissingCreds(t *testing.T) {
 	runGlobalsSnapshot(t)
 	lbFlagSnapshot(t)
 
-	for _, tc := range []string{
-		"pool create", "pool list", "pool get", "pool update",
-		"monitor create", "monitor list", "monitor get", "monitor update",
+	// args must satisfy each runner's arity check so the test isolates
+	// the creds failure it exists to pin.
+	for _, tc := range []struct {
+		name string
+		args []string
+	}{
+		{"pool create", nil},
+		{"pool list", nil},
+		{"pool get", []string{"pool-1"}},
+		{"pool update", []string{"pool-1"}},
+		{"monitor create", nil},
+		{"monitor list", nil},
+		{"monitor get", []string{"mon-1"}},
+		{"monitor update", []string{"mon-1"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
@@ -82,7 +93,8 @@ func TestRunLBPoolDelete_DryRunByDefault(t *testing.T) {
 
 	r, restore := captureStdout(t)
 	err := runLBPoolDelete(lbPoolDeleteCmd, []string{"pool-1"})
-	out := readAll(t, r)
+	restore()
+out := readAll(t, r)
 	restore()
 
 	if err != nil {
@@ -102,7 +114,8 @@ func TestRunLBMonitorDelete_DryRunByDefault(t *testing.T) {
 
 	r, restore := captureStdout(t)
 	err := runLBMonitorDelete(lbMonitorDeleteCmd, []string{"mon-1"})
-	out := readAll(t, r)
+	restore()
+out := readAll(t, r)
 	restore()
 
 	if err != nil {
@@ -135,6 +148,9 @@ func TestRunLBDeletes_ForceWithoutCredsFails(t *testing.T) {
 func TestRunLBPoolCreate_OriginJSONParseErrors(t *testing.T) {
 	runGlobalsSnapshot(t)
 	lbFlagSnapshot(t)
+	// Validation must precede service construction; dummy creds keep the
+	// service error out of the way so the origin-parse errors surface.
+	AccountID, APIToken = "acct", "tok"
 
 	cases := []struct {
 		name    string
@@ -214,6 +230,7 @@ func TestRunLBDryRun_JSONEnvelopes(t *testing.T) {
 
 		r, restore := captureStdout(t)
 		err := runLBPoolCreate(lbPoolCreateCmd, nil)
+		restore()
 		out := readAll(t, r)
 		restore()
 
@@ -258,6 +275,7 @@ func TestRunLBDryRun_JSONEnvelopes(t *testing.T) {
 
 		r, restore := captureStdout(t)
 		err := runLBMonitorCreate(lbMonitorCreateCmd, nil)
+		restore()
 		out := readAll(t, r)
 		restore()
 
