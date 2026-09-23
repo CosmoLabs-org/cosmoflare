@@ -127,7 +127,10 @@ func TestD1UsageReport(t *testing.T) {
 	srv := d1UsageStubServer(t, gql, nil)
 	defer srv.Close()
 
+	// Pin now to the fixture's date: Today() compares against the real
+	// clock, which rolled past the hardcoded fixture on 2026-09-23.
 	svc := d1UsageService(t, srv)
+	svc.nowFn = func() time.Time { return time.Date(2026, 9, 22, 12, 0, 0, 0, time.UTC) }
 	report, err := svc.Report(context.Background(), "db-1", 1)
 	if err != nil {
 		t.Fatalf("Report: %v", err)

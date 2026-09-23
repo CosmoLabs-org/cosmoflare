@@ -29,6 +29,7 @@ type D1UsageReport struct {
 	TotalRowsWritten int64          `json:"total_rows_written"`
 	FileSizeBytes    int64          `json:"file_size_bytes"`
 	NumTables        int            `json:"num_tables"`
+	asOf             time.Time      // clock the report was built against (service nowFn seam)
 }
 
 // D1UsageService reads D1 daily usage from Cloudflare's GraphQL Analytics
@@ -164,13 +165,18 @@ func (s *D1UsageService) Report(ctx context.Context, databaseID string, days int
 		report.TotalRowsRead += day.RowsRead
 		report.TotalRowsWritten += day.RowsWritten
 	}
+	report.asOf = s.nowFn()
 	return report, nil
 }
 
 // Today returns today's UTC usage, or a zero entry when analytics has no
 // row for today yet (a database that has not been queried today).
 func (r *D1UsageReport) Today() D1DailyUsage {
-	today := time.Now().UTC().Format("2006-01-02")
+	asOf := r.asOf
+	if asOf.IsZero() {
+		asOf = time.Now()
+	}
+	today := asOf.UTC().Format("2006-01-02")
 	// Days are sorted ascending by DailyUsage, so scan from the end.
 	for i := len(r.Days) - 1; i >= 0; i-- {
 		if r.Days[i].Date == today {
