@@ -2,6 +2,7 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -137,16 +138,18 @@ func TestTurnstileService_GetStripsSecret(t *testing.T) {
 	}
 }
 
-// TestTurnstileService_Update verifies Update issues a PATCH carrying only
-// the changed fields (pointer-based patch semantics).
+// TestTurnstileService_Update verifies Update PUTs the merged config
+// (cloudflare-go transport) carrying the changed fields.
 func TestTurnstileService_Update(t *testing.T) {
 	t.Parallel()
 	const accountID = "account-test-123"
 	const siteKey = "0x4AAA-sitekey"
 
 	svc := newTurnstileTestService(t, accountID, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPatch {
-			t.Errorf("expected PATCH, got %s", r.Method)
+		// cloudflare-go v0.116.0 UpdateTurnstileWidget issues PUT with the
+		// merged config; assert the transport the SDK actually ships.
+		if r.Method != http.MethodPut {
+			t.Errorf("expected PUT, got %s", r.Method)
 		}
 		if got, want := r.URL.Path, "/accounts/"+accountID+"/challenges/widgets/"+siteKey; got != want {
 			t.Errorf("expected path %q, got %q", want, got)
@@ -196,7 +199,9 @@ func TestTurnstileService_Delete(t *testing.T) {
 		if got, want := r.URL.Path, "/accounts/"+accountID+"/challenges/widgets/"+siteKey; got != want {
 			t.Errorf("expected path %q, got %q", want, got)
 		}
-		w.WriteHeader(http.StatusOK)
+		// The SDK decodes the response envelope; an empty 200 body errors.
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"success": true, "errors": []any{}, "result": nil})
 	})
 
 	if err := svc.Delete(context.Background(), siteKey); err != nil {
