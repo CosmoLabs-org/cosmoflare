@@ -212,12 +212,20 @@ func TestLogpushService_Update(t *testing.T) {
 	t.Parallel()
 	const accountID = "account-test-123"
 
+	updated := false
 	_, cf := logpushStubServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/accounts/"+accountID+"/logpush/jobs/100237":
-			_ = json.NewEncoder(w).Encode(logpushEnvelope(logpushJobJSON(100237, "edge-logs", "http_requests", "r2://bucket/a", "high", true)))
+			// First GET fetches the current job; after the PUT, the
+			// re-fetch returns the updated state.
+			if updated {
+				_ = json.NewEncoder(w).Encode(logpushEnvelope(logpushJobJSON(100237, "edge-logs-v2", "http_requests", "r2://bucket/a", "high", false)))
+			} else {
+				_ = json.NewEncoder(w).Encode(logpushEnvelope(logpushJobJSON(100237, "edge-logs", "http_requests", "r2://bucket/a", "high", true)))
+			}
 		case r.Method == http.MethodPut && r.URL.Path == "/accounts/"+accountID+"/logpush/jobs/100237":
+			updated = true
 			var body map[string]any
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				t.Errorf("failed to decode PUT body: %v", err)
