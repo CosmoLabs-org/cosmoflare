@@ -1171,4 +1171,62 @@ var registry = []Command{
 		Permissions: Permissions{Account: []string{"Account Settings"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+
+	// --- logpush (FEAT-037 wave 1; permissions from the Qwen dataset) ---
+	// Wrangler/cloudflared have no Logpush equivalent commands, so
+	// WranglerEquivalent is left empty for the whole group — this surface is
+	// the CLI's differentiation. The dataset maps every Logpush operation
+	// (reads included) to account "Logs: Edit".
+	{
+		ID: "logpush.job.create", CLIPath: []string{"logpush", "job", "create"},
+		Service: "logpush", Scope: "job", Verb: "write",
+		APIOps:      []string{"POST /accounts/{account_id}/logpush/jobs"},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		LocalChecks: []string{"dataset_present", "destination_conf_present"},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "logpush.job.list", CLIPath: []string{"logpush", "job", "list"},
+		Service: "logpush", Scope: "account", Verb: "list",
+		APIOps:      []string{"GET /accounts/{account_id}/logpush/jobs"},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "logpush.job.get", CLIPath: []string{"logpush", "job", "get"},
+		Service: "logpush", Scope: "job", Verb: "read",
+		APIOps:      []string{"GET /accounts/{account_id}/logpush/jobs/{job_id}"},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "logpush.job.update", CLIPath: []string{"logpush", "job", "update"},
+		Service: "logpush", Scope: "job", Verb: "write",
+		APIOps: []string{
+			// update is a full replace in the API: the current job is
+			// fetched first and the partial changes merged on top
+			"GET /accounts/{account_id}/logpush/jobs/{job_id}",
+			"PUT /accounts/{account_id}/logpush/jobs/{job_id}",
+		},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		DangerLevel: "medium", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "logpush.job.delete", CLIPath: []string{"logpush", "job", "delete"},
+		Service: "logpush", Scope: "job", Verb: "delete",
+		APIOps:      []string{"DELETE /accounts/{account_id}/logpush/jobs/{job_id}"},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		DangerLevel: "high", Destructive: true, Trackable: true,
+	},
+	{
+		ID: "logpush.ownership.verify", CLIPath: []string{"logpush", "ownership", "verify"},
+		Service: "logpush", Scope: "destination", Verb: "read",
+		APIOps: []string{
+			"POST /accounts/{account_id}/logpush/ownership",
+			"POST /accounts/{account_id}/logpush/ownership/validate",
+		},
+		Permissions: Permissions{Account: []string{"Logs"}},
+		LocalChecks: []string{"destination_conf_present"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
 }
