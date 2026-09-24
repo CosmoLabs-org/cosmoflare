@@ -4,22 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: Profile-prefix scoping declared at command definitions across the CLI (TASK-011)
-          source: manual
-          date: 2026-09-22T16:42:38.291795+04:00
-        - description: 'd1 push-sql: batched remote SQL push with retry, split recovery, resume (FEAT-018)'
-          source: manual
-          date: 2026-09-22T17:26:26.489355+04:00
-        - description: 'Long-tail services — first CLI coverage: Logpush, Load Balancer pools/monitors, Waiting Room, Spectrum, Page Shield, Turnstile, Web Analytics (FEAT-037)'
-          source: manual
-          date: 2026-09-23T20:56:26.93609+04:00
-        - description: 'Desktop: notification severity levels and light theme (FEAT-041)'
-          source: manual
-          date: 2026-09-23T20:58:41.241441+04:00
-        - description: 'Structural safety defaults: every registry-destructive command runs dry unless --force; CLI paths derived from the live command tree (TASK-015)'
-          source: manual
-          date: 2026-09-23T21:51:15.15827+04:00
+    added: []
     fixed: []
     changed: []
     deprecated: []

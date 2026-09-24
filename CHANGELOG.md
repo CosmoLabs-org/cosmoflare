@@ -28,6 +28,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [0.31.0] - 2026-09-24
+
+### Added
+- Profile-prefix scoping declared at command definitions across the CLI (TASK-011)
+- d1 push-sql: batched remote SQL push with retry, split recovery, resume (FEAT-018)
+- Long-tail services — first CLI coverage: Logpush, Load Balancer pools/monitors, Waiting Room, Spectrum, Page Shield, Turnstile, Web Analytics (FEAT-037)
+- Desktop: notification severity levels and light theme (FEAT-041)
+- Structural safety defaults: every registry-destructive command runs dry unless --force; CLI paths derived from the live command tree (TASK-015)
+- page-shield, turnstile, web-analytics CLIs + wave-3 registry (commit:4d62dd94)
+
+### Fixed
+- assert the SDK's PUT transport; decode-able delete stub (commit:74038865)
+- salvage repairs — struct table, capture deadlock, validation creds (commit:b610f7d5)
+- stateful stub — re-fetch after PUT returns the updated job (commit:f7f1048d)
+- Today() honors the service clock — date-rollover time bomb (commit:b3bf236c)
+- salvage repairs — helper name, JSON-escaping-safe assertions, registry entry (commit:f9d129d5)
+- stub localStorage in test setup — jsdom ships none (commit:1bf2c0cc)
+- register d1 parity in the command registry (commit:b786e50c)
+
 ## [0.30.0] - 2026-09-22
 
 ### Added
