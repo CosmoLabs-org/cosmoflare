@@ -23,6 +23,9 @@ tests:
       expect:
         exit_code: 0
     - name: Docker build
+      # ENVIRONMENTAL: fails when the Docker daemon is down (efficiency
+      # review, recurring). TODO: tag as environmental once smokesig ships
+      # a skip/environmental field — do not treat as a code regression.
       run: docker build -t test .
       expect:
         exit_code: 0
