@@ -114,3 +114,18 @@ func TestWranglerEquivalentsParsable(t *testing.T) {
 		}
 	}
 }
+
+// TestSpectrumWebAnalyticsPermissionsFilled pins the FEAT-011 dataset fill:
+// spectrum (needs DNS + Zone Settings — no dedicated Spectrum permission
+// exists) and web-analytics (Account Analytics) must no longer have sparse
+// permission columns.
+func TestSpectrumWebAnalyticsPermissionsFilled(t *testing.T) {
+	for _, c := range Load().Commands() {
+		if c.Service != "spectrum" && c.Service != "web-analytics" {
+			continue
+		}
+		if len(c.Permissions.Account) == 0 && len(c.Permissions.Zone) == 0 {
+			t.Errorf("%q: sparse permissions — spectrum needs Zone DNS + Zone Settings, web-analytics needs Account Analytics", c.ID)
+		}
+	}
+}

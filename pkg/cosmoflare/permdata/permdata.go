@@ -18,14 +18,21 @@ import (
 //go:embed permissions.json
 var permissionsJSON []byte
 
-// Family describes one Cloudflare API token permission family.
+// Family describes one Cloudflare API token permission family. Unlocks,
+// Docs, Notes and Verified are optional annotations from the research
+// dataset (FEAT-011); an empty Verified means "seed-era row, not yet
+// re-verified against live docs".
 type Family struct {
-	ID     string   `json:"id"`
-	Scope  string   `json:"scope"`
-	Name   string   `json:"name"`
-	Read   bool     `json:"read"`
-	Edit   bool     `json:"edit"`
-	UsedBy []string `json:"used_by"`
+	ID       string   `json:"id"`
+	Scope    string   `json:"scope"`
+	Name     string   `json:"name"`
+	Read     bool     `json:"read"`
+	Edit     bool     `json:"edit"`
+	UsedBy   []string `json:"used_by"`
+	Unlocks  []string `json:"unlocks,omitempty"`
+	Docs     string   `json:"docs,omitempty"`
+	Notes    string   `json:"notes,omitempty"`
+	Verified string   `json:"verified,omitempty"`
 }
 
 // LeastPrivilegeEntry describes the minimum permissions a command group needs.

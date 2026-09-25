@@ -4,7 +4,10 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: 'FEAT-011: ingest Qwen permission dataset — catalog grows 76 to 157 token-permission families with endpoint unlocks, spectrum/web-analytics permission sparseness filled in the command registry'
+          source: manual
+          date: 2026-09-25T05:34:25.315838+04:00
     fixed: []
     changed: []
     deprecated: []

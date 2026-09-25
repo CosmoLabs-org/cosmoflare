@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "manifest_version": "2026-09-11",
+  "manifest_version": "2026-09-25",
   "source_url": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
-  "verified_on": "2026-09-11T00:00:00Z",
+  "verified_on": "2026-09-18T00:00:00Z",
   "families": [
     {
       "id": "account.account_settings",
@@ -13,7 +13,9 @@
       "used_by": [
         "account settings",
         "org settings"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.api_tokens",
@@ -54,7 +56,9 @@
       "edit": true,
       "used_by": [
         "plan/subscription/usage"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.analytics",
@@ -64,7 +68,9 @@
       "edit": false,
       "used_by": [
         "usage metrics"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.alerts",
@@ -84,7 +90,9 @@
       "edit": true,
       "used_by": [
         "notification policies"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.logpush",
@@ -104,7 +112,9 @@
       "edit": true,
       "used_by": [
         "D1 CRUD/query"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.kv_storage",
@@ -114,7 +124,9 @@
       "edit": true,
       "used_by": [
         "Workers KV namespaces/keys"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.queues",
@@ -124,7 +136,9 @@
       "edit": true,
       "used_by": [
         "queue CRUD/messages/consumers"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.r2_storage",
@@ -134,7 +148,9 @@
       "edit": true,
       "used_by": [
         "bucket/object management"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.r2_admin",
@@ -155,7 +171,9 @@
       "edit": true,
       "used_by": [
         "Worker script CRUD"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.workers_routes",
@@ -175,7 +193,10 @@
       "edit": false,
       "used_by": [
         "live Worker logs"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "notes": "Grants `wrangler tail` read permissions.",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.workers_tracing",
@@ -195,7 +216,9 @@
       "edit": true,
       "used_by": [
         "AI inference/catalog where applicable"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.ai_gateway",
@@ -205,7 +228,10 @@
       "edit": true,
       "used_by": [
         "gateway configuration/logs"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "notes": "Grants run access to Non-realtime WebSockets API"
     },
     {
       "id": "account.vectorize",
@@ -215,7 +241,9 @@
       "edit": true,
       "used_by": [
         "vector indexes/queries"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.hyperdrive",
@@ -225,7 +253,9 @@
       "edit": true,
       "used_by": [
         "Hyperdrive configs"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.images",
@@ -235,7 +265,9 @@
       "edit": true,
       "used_by": [
         "Images storage/transformations"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.stream",
@@ -245,7 +277,9 @@
       "edit": true,
       "used_by": [
         "Stream video management"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.registrar",
@@ -265,7 +299,9 @@
       "edit": true,
       "used_by": [
         "cert management"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.rulesets",
@@ -275,7 +311,9 @@
       "edit": true,
       "used_by": [
         "WAF/ruleset APIs"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.access",
@@ -285,7 +323,9 @@
       "edit": true,
       "used_by": [
         "Zero Trust Access objects"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.teams_zero_trust",
@@ -295,7 +335,9 @@
       "edit": true,
       "used_by": [
         "broader Zero Trust settings"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.turnstile",
@@ -305,7 +347,9 @@
       "edit": true,
       "used_by": [
         "Turnstile widgets"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.dns_firewall_dns_settings",
@@ -315,7 +359,9 @@
       "edit": true,
       "used_by": [
         "account DNS features where applicable"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "account.cache_purge",
@@ -345,7 +391,9 @@
       "edit": true,
       "used_by": [
         "zone CRUD/settings"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.zone_settings",
@@ -355,7 +403,9 @@
       "edit": true,
       "used_by": [
         "zone settings updates"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.dns",
@@ -365,7 +415,9 @@
       "edit": true,
       "used_by": [
         "DNS records"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.ssl_and_certificates",
@@ -375,7 +427,9 @@
       "edit": true,
       "used_by": [
         "zone certificates"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.custom_hostnames",
@@ -395,7 +449,9 @@
       "edit": true,
       "used_by": [
         "purge operations"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.page_rules",
@@ -405,7 +461,9 @@
       "edit": true,
       "used_by": [
         "legacy page rules"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.redirect_rules",
@@ -425,7 +483,9 @@
       "edit": true,
       "used_by": [
         "request/response transforms"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.configuration_rules",
@@ -445,7 +505,9 @@
       "edit": true,
       "used_by": [
         "cache behavior"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.origin_rules",
@@ -455,7 +517,9 @@
       "edit": true,
       "used_by": [
         "origin routing/header overrides"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.custom_errors",
@@ -476,7 +540,14 @@
       "used_by": [
         "custom rules",
         "managed rules"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "unlocks": [
+        "PUT /zones/{zone_id}/rulesets/phases/http_ratelimit/entrypoint",
+        "PUT /zones/{zone_id}/rulesets/phases/http_request_firewall_custom/entrypoint"
+      ],
+      "notes": "governs modern rate-limiting rules; permission named 'Rate Limiting' is legacy-only"
     },
     {
       "id": "zone.rate_limiting",
@@ -516,7 +587,9 @@
       "edit": true,
       "used_by": [
         "route management"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.workers_scripts",
@@ -586,7 +659,9 @@
       "edit": true,
       "used_by": [
         "routing rules/destinations"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.email_security",
@@ -603,20 +678,24 @@
       "scope": "zone",
       "name": "Analytics",
       "read": true,
-      "edit": false,
+      "edit": true,
       "used_by": [
         "zone analytics"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.logs",
       "scope": "zone",
       "name": "Logs",
       "read": true,
-      "edit": false,
+      "edit": true,
       "used_by": [
         "zone logs"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.load_balancing",
@@ -626,7 +705,9 @@
       "edit": true,
       "used_by": [
         "LB pools/monitors"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.health_checks",
@@ -636,7 +717,9 @@
       "edit": true,
       "used_by": [
         "health checks"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.page_shield",
@@ -646,7 +729,10 @@
       "edit": true,
       "used_by": [
         "Page Shield"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "notes": "permission renamed to Client-side security in the token UI (formerly Page Shield); CLI service stays page-shield",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.spectrum",
@@ -666,7 +752,9 @@
       "edit": true,
       "used_by": [
         "bot settings"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.waiting_room",
@@ -676,7 +764,9 @@
       "edit": true,
       "used_by": [
         "waiting rooms"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "zone.web_analytics",
@@ -716,7 +806,10 @@
       "edit": true,
       "used_by": [
         "zone-scoped Access apps/policies"
-      ]
+      ],
+      "notes": "includes revoke access level",
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "user.user_details",
@@ -726,7 +819,9 @@
       "edit": true,
       "used_by": [
         "profile info"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "user.user_api_tokens",
@@ -736,7 +831,9 @@
       "edit": true,
       "used_by": [
         "personal token management"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "user.memberships",
@@ -746,7 +843,9 @@
       "edit": true,
       "used_by": [
         "account memberships"
-      ]
+      ],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     },
     {
       "id": "user.sessions",
@@ -767,6 +866,826 @@
       "used_by": [
         "user notification settings"
       ]
+    },
+    {
+      "id": "account.cloudflare_tunnel",
+      "scope": "account",
+      "name": "Cloudflare Tunnel",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.logs",
+      "scope": "account",
+      "name": "Logs",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "unlocks": [
+        "POST /accounts/{account_id}/logpush/jobs",
+        "GET /accounts/{account_id}/logpush/jobs"
+      ]
+    },
+    {
+      "id": "account.load_balancing_monitors_and_pools",
+      "scope": "account",
+      "name": "Load Balancing: Monitors and Pools",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_pages",
+      "scope": "account",
+      "name": "Cloudflare Pages",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.account_waf",
+      "scope": "account",
+      "name": "Account WAF",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.api_gateway",
+      "scope": "account",
+      "name": "API Gateway",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.magic_transit",
+      "scope": "account",
+      "name": "Magic Transit",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.magic_firewall",
+      "scope": "account",
+      "name": "Magic Firewall",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.firewall_services",
+      "scope": "zone",
+      "name": "Firewall Services",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.api_gateway",
+      "scope": "zone",
+      "name": "API Gateway",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_apps",
+      "scope": "account",
+      "name": "Access: Apps",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "notes": "includes revoke access level"
+    },
+    {
+      "id": "account.access_audit_logs",
+      "scope": "account",
+      "name": "Access: Audit Logs",
+      "read": true,
+      "edit": false,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_custom_pages",
+      "scope": "account",
+      "name": "Access: Custom Pages",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_device_posture",
+      "scope": "account",
+      "name": "Access: Device Posture",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_groups",
+      "scope": "account",
+      "name": "Access: Groups",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_identity_providers",
+      "scope": "account",
+      "name": "Access: Identity Providers",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_keys",
+      "scope": "account",
+      "name": "Access: Keys",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_mutual_tls_certificates",
+      "scope": "account",
+      "name": "Access: Mutual TLS Certificates",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_organizations",
+      "scope": "account",
+      "name": "Access: Organizations",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "notes": "includes revoke access level"
+    },
+    {
+      "id": "account.access_organizations_identity_providers_and_groups",
+      "scope": "account",
+      "name": "Access: Organizations, Identity Providers, and Groups",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18",
+      "notes": "includes revoke access level"
+    },
+    {
+      "id": "account.access_policies",
+      "scope": "account",
+      "name": "Access: Policies",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_policy_test",
+      "scope": "account",
+      "name": "Access: Policy Test",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_population",
+      "scope": "account",
+      "name": "Access: Population",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_scim_logs",
+      "scope": "account",
+      "name": "Access: SCIM Logs",
+      "read": true,
+      "edit": false,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_service_tokens",
+      "scope": "account",
+      "name": "Access: Service Tokens",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_ssh_auditing",
+      "scope": "account",
+      "name": "Access: SSH Auditing",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_tags",
+      "scope": "account",
+      "name": "Access: Tags",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.access_users",
+      "scope": "account",
+      "name": "Access: Users",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.account_custom_pages",
+      "scope": "account",
+      "name": "Account Custom Pages",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.account_filter_lists",
+      "scope": "account",
+      "name": "Account Filter Lists",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "notes": "Also listed as 'Account Rule Lists' in API tabs.",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.account_firewall_access_rules",
+      "scope": "account",
+      "name": "Account Firewall Access Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.account_security_center_insights",
+      "scope": "account",
+      "name": "Account Security Center Insights",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.address_maps",
+      "scope": "account",
+      "name": "Address Maps",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.allow_request_tracer",
+      "scope": "account",
+      "name": "Allow Request Tracer",
+      "read": true,
+      "edit": false,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.bulk_url_redirects",
+      "scope": "account",
+      "name": "Bulk URL Redirects",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "notes": "Also listed as 'Mass URL Redirects'",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.china_network_steering",
+      "scope": "account",
+      "name": "China Network Steering",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudchamber",
+      "scope": "account",
+      "name": "Cloudchamber",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_casb",
+      "scope": "account",
+      "name": "Cloudflare CASB",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_dex",
+      "scope": "account",
+      "name": "Cloudflare DEX",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_one_connector_cloudflared",
+      "scope": "account",
+      "name": "Cloudflare One Connector: cloudflared",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_one_connector_warp",
+      "scope": "account",
+      "name": "Cloudflare One Connector: WARP",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_one_connectors",
+      "scope": "account",
+      "name": "Cloudflare One Connectors",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_one_networks",
+      "scope": "account",
+      "name": "Cloudflare One Networks",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudflare_realtime",
+      "scope": "account",
+      "name": "Cloudflare Realtime",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.cloudforce_one",
+      "scope": "account",
+      "name": "Cloudforce One",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.constellation",
+      "scope": "account",
+      "name": "Constellation",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.containers",
+      "scope": "account",
+      "name": "Containers",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.ddos_botnet_feed",
+      "scope": "account",
+      "name": "DDoS Botnet Feed",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.ddos_protection",
+      "scope": "account",
+      "name": "DDoS Protection",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.email_routing_addresses",
+      "scope": "account",
+      "name": "Email Routing Addresses",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.email_security",
+      "scope": "account",
+      "name": "Email Security",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.intel",
+      "scope": "account",
+      "name": "Intel",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.integration",
+      "scope": "account",
+      "name": "Integration",
+      "read": false,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.iot",
+      "scope": "account",
+      "name": "IOT",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.ip_prefixes",
+      "scope": "account",
+      "name": "IP Prefixes",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.ip_prefixes_bgp_on_demand",
+      "scope": "account",
+      "name": "IP Prefixes: BGP On Demand",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.l3_4_ddos_managed_ruleset",
+      "scope": "account",
+      "name": "L3/4 DDoS Managed Ruleset",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.magic_firewall_packet_captures",
+      "scope": "account",
+      "name": "Magic Firewall Packet Captures",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.magic_network_monitoring",
+      "scope": "account",
+      "name": "Magic Network Monitoring",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.rule_policies",
+      "scope": "account",
+      "name": "Rule Policies",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.url_scanner",
+      "scope": "account",
+      "name": "URL Scanner",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.workers_ci",
+      "scope": "account",
+      "name": "Workers CI",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.workers_pipelines",
+      "scope": "account",
+      "name": "Workers Pipelines",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.zero_trust_pii",
+      "scope": "account",
+      "name": "Zero Trust: PII",
+      "read": true,
+      "edit": false,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "account.zero_trust_seats",
+      "scope": "account",
+      "name": "Zero Trust: Seats",
+      "read": false,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.apps",
+      "scope": "zone",
+      "name": "Apps",
+      "read": false,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "notes": "Deprecated, refer to Workers instead",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.bot_management_feedback",
+      "scope": "zone",
+      "name": "Bot Management Feedback",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.cloud_connector",
+      "scope": "zone",
+      "name": "Cloud Connector",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.config_rules",
+      "scope": "zone",
+      "name": "Config Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.custom_error_rules",
+      "scope": "zone",
+      "name": "Custom Error Rules",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.custom_pages",
+      "scope": "zone",
+      "name": "Custom Pages",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.dmarc_management",
+      "scope": "zone",
+      "name": "Dmarc Management",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.http_ddos_managed_ruleset",
+      "scope": "zone",
+      "name": "HTTP DDoS Managed Ruleset",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.managed_headers",
+      "scope": "zone",
+      "name": "Managed Headers",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.response_compression",
+      "scope": "zone",
+      "name": "Response Compression",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.sanitize",
+      "scope": "zone",
+      "name": "Sanitize",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.single_redirect",
+      "scope": "zone",
+      "name": "Single Redirect",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.web3_hostnames",
+      "scope": "zone",
+      "name": "Web3 Hostnames",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.zaraz",
+      "scope": "zone",
+      "name": "Zaraz",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.zone_security_center_insights",
+      "scope": "zone",
+      "name": "Zone Security Center Insights",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
+    },
+    {
+      "id": "zone.zone_versioning",
+      "scope": "zone",
+      "name": "Zone Versioning",
+      "read": true,
+      "edit": true,
+      "used_by": [],
+      "docs": "https://developers.cloudflare.com/fundamentals/api/reference/permissions/",
+      "verified": "2026-09-18"
     }
   ],
   "least_privilege": [

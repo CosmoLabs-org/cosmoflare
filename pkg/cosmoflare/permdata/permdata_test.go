@@ -2,6 +2,8 @@ package permdata
 
 import (
 	"encoding/json"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -94,4 +96,80 @@ func TestLeastPrivilege_Miss(t *testing.T) {
 	if perms != nil {
 		t.Errorf("LeastPrivilege(\"nonexistent-group\") permissions = %v, want nil", perms)
 	}
+}
+
+// TestQwenIngestion_CatalogExpanded pins the FEAT-011 criterion-4 ingestion:
+// the Qwen dataset (docs/research/2026-09-17-cf-perms-next-waves-tiers)
+// grew the catalog well past the 76-family seed.
+func TestQwenIngestion_CatalogExpanded(t *testing.T) {
+	m, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if len(m.Families) < 150 {
+		t.Errorf("Families count = %d, want >= 150 after Qwen dataset ingestion", len(m.Families))
+	}
+	if m.ManifestVersion < "2026-09-18" {
+		t.Errorf("ManifestVersion = %q, want >= 2026-09-18 (Qwen verification date)", m.ManifestVersion)
+	}
+}
+
+// TestQwenIngestion_UnlocksPreserved pins the drift folklore the catalog
+// exists for: Zone WAF Edit unlocks the modern rulesets phases, and account
+// Logs Edit unlocks Logpush job writes.
+func TestQwenIngestion_UnlocksPreserved(t *testing.T) {
+	m, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	want := map[string]string{
+		"zone.waf":     "PUT /zones/{zone_id}/rulesets/phases/http_ratelimit/entrypoint",
+		"account.logs": "POST /accounts/{account_id}/logpush/jobs",
+	}
+	got := map[string][]string{}
+	for _, f := range m.Families {
+		got[f.ID] = f.Unlocks
+	}
+	for id, unlock := range want {
+		if !slices.Contains(got[id], unlock) {
+			t.Errorf("family %q: unlocks missing %q (got %v)", id, unlock, got[id])
+		}
+	}
+}
+
+// TestQwenIngestion_VerifiedDatesParse ensures any family carrying a
+// verified date uses a real ISO date — a malformed date means the merge
+// script broke a row.
+func TestQwenIngestion_VerifiedDatesParse(t *testing.T) {
+	m, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	for _, f := range m.Families {
+		if f.Verified == "" {
+			continue
+		}
+		if len(f.Verified) != 10 || f.Verified[4] != '-' || f.Verified[7] != '-' {
+			t.Errorf("family %q: verified %q is not an ISO date", f.ID, f.Verified)
+		}
+	}
+}
+
+// TestQwenIngestion_PageShieldRenamePinned records the token-UI rename the
+// Qwen pass surfaced: the Page Shield permission family is now "Client-side
+// security".
+func TestQwenIngestion_PageShieldRenamePinned(t *testing.T) {
+	m, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	for _, f := range m.Families {
+		if f.ID == "zone.page_shield" {
+			if !strings.Contains(f.Notes, "Client-side security") {
+				t.Errorf("zone.page_shield notes = %q, want mention of Client-side security rename", f.Notes)
+			}
+			return
+		}
+	}
+	t.Error("zone.page_shield family missing")
 }
