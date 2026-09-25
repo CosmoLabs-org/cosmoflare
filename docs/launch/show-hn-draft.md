@@ -12,8 +12,11 @@ Status: DRAFT — awaiting operator voice/edits. Do not publish as-is.
 Hi — we built Cosmoflare [1], an open-source (MIT) CLI + Go library for the
 entire Cloudflare developer platform: R2 storage, DNS, Zones, SSL/TLS, Cache,
 WAF, D1, KV, Queues, Pages, Images, Hyperdrive, Vectorize, Workers AI,
-Stream, Email Routing and more — 22 services, one static ~37 MB binary, zero
-runtime dependencies.
+Stream, Email Routing and more — 30+ services, one static ~35 MB binary, zero
+runtime dependencies. The latest release (v0.31.0) added what we believe is
+first-of-its-kind CLI coverage for Logpush, Load Balancers, Waiting Room,
+Spectrum, Page Shield, Turnstile and Web Analytics — surfaces Wrangler
+doesn't touch.
 
 Why we built it: Cloudflare's own `flarectl` (Go) is deprecated, and Wrangler
 requires Node 18+. If you operate the whole platform — DNS records, zone

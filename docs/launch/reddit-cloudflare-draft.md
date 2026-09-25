@@ -22,6 +22,9 @@ Things r/Cloudflare folks might care about:
 - `cosmoflare object presign`, `sync`, and `watch` for R2 directories
   (wrangler's r2 object surface is get/put/delete)
 - `cosmoflare cache purge` / `ssl settings` / `dns create` as plain commands
+- The long-tail surfaces wrangler ignores, now CLI-manageable as of v0.31.0:
+  Logpush jobs, Load Balancer pools/monitors, Waiting Room, Spectrum apps,
+  Page Shield, Turnstile, Web Analytics
 - JSON output on everything with one envelope shape — good for scripts
 - Built-in MCP server for AI agents, read-only until you flip an explicit
   allow switch; uploads can be capped by bucket allowlist / key patterns /
