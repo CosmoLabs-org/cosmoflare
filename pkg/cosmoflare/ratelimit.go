@@ -25,7 +25,7 @@ type RateLimitRule struct {
 
 // RateLimitCreateInput captures what a caller supplies to create one rule.
 type RateLimitCreateInput struct {
-	ZoneID            string
+	ZoneID string
 	// Action is the phase rule action: "block" (default when empty) or
 	// "challenge".
 	Action            string

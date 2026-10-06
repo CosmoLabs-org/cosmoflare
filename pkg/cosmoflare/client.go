@@ -81,8 +81,8 @@ type client struct {
 // the API timeout (BUG-042).
 func NewClient(opts ...ClientOption) (R2Client, error) {
 	cfg := &clientConfig{
-		region:     "auto",
-		timeout:    30 * time.Second,
+		region:       "auto",
+		timeout:      30 * time.Second,
 		cacheControl: true,
 	}
 	for _, o := range opts {
@@ -244,5 +244,5 @@ func (c *client) TestConnection(ctx context.Context) error {
 }
 
 // Convenience: s3Client returns the underlying S3 client for CopyObject.
-func (c *client) s3Client() *s3.Client { return c.s3 }
+func (c *client) s3Client() *s3.Client      { return c.s3 }
 func (c *client) cfClient() *cloudflare.API { return c.cf }
