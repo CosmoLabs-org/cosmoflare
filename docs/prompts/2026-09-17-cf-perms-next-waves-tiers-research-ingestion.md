@@ -4,13 +4,15 @@ created: 2026-09-17
 status: PENDING
 branch: master
 goals_total: 5
-goals_completed: 0
+goals_completed: 2
 requires_reading:
     - docs/research/2026-09-17-cf-perms-next-waves-tiers/qwen-pack.md
     - docs/research/2026-09-17-cf-perms-next-waves-tiers/grok-pack.md
     - docs/research/2026-09-17-cf-perms-next-waves-tiers/gemini-pack.md
     - docs/issues/FEAT-011.yaml
 schema_version: 1
+implemented_commits:
+    - '85b2623a865d' # goal 1: Qwen dataset ingested, 76->157 families, FEAT-011 closed; goal 5 evidence: wave order shipped via v0.30/v0.31, FEAT-011 outcome recorded
 ---
 
 ## Context
@@ -27,7 +29,7 @@ fabricate or partially ingest.
 
 ## Goals
 
-### [ ] 1. Ingest and validate Qwen results (FEAT-011 canonical permission dataset)
+### [x] 1. Ingest and validate Qwen results (FEAT-011 canonical permission dataset)
 Acceptance: qwen-results.md parsed; permission catalog + error table
 validated for YAML shape; unverified rows flagged; dataset structured into
 the FEAT-011 catalog (criterion 4) as a committed data file + loader wiring
@@ -46,7 +48,7 @@ Acceptance: one synthesis doc in the research dir merging all three results
 (the permissions needed per wave from Qwen x the demand/coverage evidence
 from Grok x the priority matrix from Gemini), every claim tagged
 [qwen|grok|gemini]; conflicts between models called out explicitly
-### [ ] 5. Write the wave decision and record it
+### [x] 5. Write the wave decision and record it
 Acceptance: FEAT-030/035/036/037 order decided and recorded (issue notes +
 roadmap); FEAT-011 dataset outcome recorded (closed if criterion 4 met, else
 precise remainder); changelog staged if any code shipped

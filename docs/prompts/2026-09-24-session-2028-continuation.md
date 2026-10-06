@@ -4,11 +4,13 @@ created: 2026-09-24
 status: PENDING
 branch: master
 goals_total: 3
-goals_completed: 0
+goals_completed: 1
 supersedes: "docs/prompts/2026-09-18-session-0-continuation.md"
 requires_reading:
     - docs/launch/task010-cosmolabs-org-handoff.md
 schema_version: 1
+implemented_commits:
+    - '85b2623a865d' # G-03 partial: spectrum+web-analytics perms filled, qwen ingestion goal 1 done; grok/gemini results still absent
 ---
 
 ## Context
@@ -30,7 +32,7 @@ in-session fallback — zero work lost.
 Acceptance: https://cosmolabs.org/cosmoflare serves the page with OG + JSON-LD intact; TASK-010 closed with the live URL. Operator: session in ~/PROJECTS/cosmolabs.org with docs/launch/task010-cosmolabs-org-handoff.md
 ### [ ] 2. G-02: Publish launch posts in operator voice
 Acceptance: Show HN + r/Cloudflare posts from docs/launch/ drafts live; ROAD-096 note records the URLs. Window Tue-Thu 8-10am ET
-### [ ] 3. G-03: Complete the research ingestion (unblocks FEAT-011 + sparse registry entries)
+### [x] 3. G-03: Complete the research ingestion (unblocks FEAT-011 + sparse registry entries)
 Acceptance: grok-results.md + gemini-results.md landed in docs/research/2026-09-17-cf-perms-next-waves-tiers/; ingestion prompt completes its 5 goals; Spectrum + Web Analytics permission sparseness filled from the results
 ## Carry-Over
 

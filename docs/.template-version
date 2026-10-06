@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "synced": "2026-02-24T23:56:31+01:00",
+  "synced": "2026-09-25T03:23:04+04:00",
   "source": "ClaudeCodeSetup",
   "seeded_files": {
     "docs/FEATURES.md": {
@@ -113,5 +113,30 @@
       "seeded_at": "2026-02-24T23:56:31+01:00",
       "original_hash": "aca14e4b02eb1fe3"
     }
+  },
+  "offered_files": {
+    "docs/FEATURES.md": true,
+    "docs/README.md": true,
+    "docs/architecture/README.md": true,
+    "docs/bookmarks/README.md": true,
+    "docs/brainstorming/README.md": true,
+    "docs/brainstorming/SOPs/README.md": true,
+    "docs/brainstorming/collaborative-template.md": true,
+    "docs/competitive-analysis/README.md": true,
+    "docs/competitive-analysis/comparison-matrix.md": true,
+    "docs/feedback/README.md": true,
+    "docs/handoffs/README.md": true,
+    "docs/handoffs/index.md": true,
+    "docs/instructions/README.md": true,
+    "docs/knowledge-base/README.md": true,
+    "docs/lessons/LESSONS.md": true,
+    "docs/lessons/README.md": true,
+    "docs/planning-mode/README.md": true,
+    "docs/prompts/README.md": true,
+    "docs/release-notes/README.md": true,
+    "docs/roadmap/README.md": true,
+    "docs/sessions/README.md": true,
+    "docs/sops/README.md": true,
+    "docs/workflows/README.md": true
   }
 }
