@@ -1112,7 +1112,7 @@ var registry = []Command{
 		// any token can verify itself; no account-level permission is checked
 		ID: "account.verify", CLIPath: []string{"account", "verify"},
 		Service: "account", Scope: "config", Verb: "read",
-		APIOps:      []string{"GET /user/tokens/verify"},
+		APIOps: []string{"GET /user/tokens/verify"},
 		// /user/tokens/verify accepts any valid token regardless of scopes —
 		// verified none required (NoPermsRequired), not "not yet authored".
 		NoPermsRequired: true,

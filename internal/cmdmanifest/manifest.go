@@ -37,13 +37,13 @@ type Command struct {
 	// unambiguous: sparse means "not yet authored", this flag means
 	// "verified none required".
 	NoPermsRequired bool
-	Limits             []string // limit catalog ids guarding this command
-	LocalChecks        []string // preflight checks run before any API call
-	APIChecks          []string // checks run against the API before mutating
-	RateLimit          *RateLimitBehavior
-	DangerLevel        string // low | medium | high
-	Destructive        bool
-	Trackable          bool
+	Limits          []string // limit catalog ids guarding this command
+	LocalChecks     []string // preflight checks run before any API call
+	APIChecks       []string // checks run against the API before mutating
+	RateLimit       *RateLimitBehavior
+	DangerLevel     string // low | medium | high
+	Destructive     bool
+	Trackable       bool
 }
 
 // Permissions lists the API-token permission names a command requires, per
@@ -56,8 +56,8 @@ type Permissions struct {
 
 // RateLimitBehavior records how the backing API throttles this command.
 type RateLimitBehavior struct {
-	HTTPStatus int  // status signaling the limit (429)
-	RetryAfter bool // whether Retry-After is honored on that status
+	HTTPStatus int    // status signaling the limit (429)
+	RetryAfter bool   // whether Retry-After is honored on that status
 	Bucket     string // rate bucket name, e.g. "r2_rest_or_s3"
 }
 
