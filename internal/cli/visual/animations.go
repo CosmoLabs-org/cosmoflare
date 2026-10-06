@@ -32,41 +32,41 @@ const (
 
 // VisualTheme defines color schemes and styles
 type VisualTheme struct {
-	Primary     lipgloss.Color
-	Secondary   lipgloss.Color
-	Success     lipgloss.Color
-	Warning     lipgloss.Color
-	Error       lipgloss.Color
-	Info        lipgloss.Color
-	Background  lipgloss.Color
-	Foreground  lipgloss.Color
+	Primary    lipgloss.Color
+	Secondary  lipgloss.Color
+	Success    lipgloss.Color
+	Warning    lipgloss.Color
+	Error      lipgloss.Color
+	Info       lipgloss.Color
+	Background lipgloss.Color
+	Foreground lipgloss.Color
 }
 
 // DefaultTheme returns a professional color theme
 func DefaultTheme() *VisualTheme {
 	return &VisualTheme{
-		Primary:    lipgloss.Color("#007ACC"),  // Cloudflare blue
-		Secondary:  lipgloss.Color("#4A90E2"),  // Light blue
-		Success:    lipgloss.Color("#00C851"),  // Green
-		Warning:    lipgloss.Color("#FF8800"),  // Orange
-		Error:      lipgloss.Color("#FF4444"),  // Red
-		Info:       lipgloss.Color("#17A2B8"),  // Cyan
-		Background: lipgloss.Color("#1E1E1E"),  // Dark background
-		Foreground: lipgloss.Color("#FFFFFF"),  // White text
+		Primary:    lipgloss.Color("#007ACC"), // Cloudflare blue
+		Secondary:  lipgloss.Color("#4A90E2"), // Light blue
+		Success:    lipgloss.Color("#00C851"), // Green
+		Warning:    lipgloss.Color("#FF8800"), // Orange
+		Error:      lipgloss.Color("#FF4444"), // Red
+		Info:       lipgloss.Color("#17A2B8"), // Cyan
+		Background: lipgloss.Color("#1E1E1E"), // Dark background
+		Foreground: lipgloss.Color("#FFFFFF"), // White text
 	}
 }
 
 // DarkTheme returns a dark professional theme
 func DarkTheme() *VisualTheme {
 	return &VisualTheme{
-		Primary:    lipgloss.Color("#64B5F6"),  // Light blue
-		Secondary:  lipgloss.Color("#42A5F5"),  // Medium blue
-		Success:    lipgloss.Color("#66BB6A"),  // Light green
-		Warning:    lipgloss.Color("#FFA726"),  // Light orange
-		Error:      lipgloss.Color("#EF5350"),  // Light red
-		Info:       lipgloss.Color("#26C6DA"),  // Light cyan
-		Background: lipgloss.Color("#121212"),  // Very dark
-		Foreground: lipgloss.Color("#F5F5F5"),  // Light white
+		Primary:    lipgloss.Color("#64B5F6"), // Light blue
+		Secondary:  lipgloss.Color("#42A5F5"), // Medium blue
+		Success:    lipgloss.Color("#66BB6A"), // Light green
+		Warning:    lipgloss.Color("#FFA726"), // Light orange
+		Error:      lipgloss.Color("#EF5350"), // Light red
+		Info:       lipgloss.Color("#26C6DA"), // Light cyan
+		Background: lipgloss.Color("#121212"), // Very dark
+		Foreground: lipgloss.Color("#F5F5F5"), // Light white
 	}
 }
 

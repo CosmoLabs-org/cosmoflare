@@ -20,17 +20,17 @@ import (
 
 // CopyOptions contains options for enhanced copy operations
 type CopyOptions struct {
-	Resume       bool          // Resume interrupted transfers
-	Verify       bool          // Verify file integrity after copy
-	Overwrite    bool          // Overwrite existing files
-	Preserve     bool          // Preserve file attributes
-	ProgressBar  bool          // Show progress bar
-	Quiet        bool          // Suppress output
-	ChunkSize    int64         // Chunk size for large files
-	Concurrency  int           // Number of concurrent operations
-	Timeout      time.Duration // Operation timeout
-	Retries      int           // Number of retry attempts
-	DryRun       bool          // Dry run mode
+	Resume      bool          // Resume interrupted transfers
+	Verify      bool          // Verify file integrity after copy
+	Overwrite   bool          // Overwrite existing files
+	Preserve    bool          // Preserve file attributes
+	ProgressBar bool          // Show progress bar
+	Quiet       bool          // Suppress output
+	ChunkSize   int64         // Chunk size for large files
+	Concurrency int           // Number of concurrent operations
+	Timeout     time.Duration // Operation timeout
+	Retries     int           // Number of retry attempts
+	DryRun      bool          // Dry run mode
 }
 
 // DefaultCopyOptions returns default copy options
@@ -378,7 +378,7 @@ func (bc *BatchCopy) Execute() ([]*CopyResult, error) {
 	// Start workers
 	for i, op := range bc.Operations {
 		go func(index int, operation *CopyOperation) {
-			semaphore <- struct{}{} // Acquire
+			semaphore <- struct{}{}        // Acquire
 			defer func() { <-semaphore }() // Release
 
 			result, err := operation.Execute()
@@ -443,8 +443,8 @@ func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr ||
 		(len(s) > len(substr) &&
 			(s[:len(substr)] == substr ||
-			 s[len(s)-len(substr):] == substr ||
-			 findSubstring(s, substr))))
+				s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr))))
 }
 
 func findSubstring(s, substr string) bool {

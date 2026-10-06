@@ -11,14 +11,14 @@ import (
 
 // Worker represents a Cloudflare Worker script.
 type Worker struct {
-	Name        string          `json:"name"`
-	Modified    time.Time       `json:"modified"`
-	Size        int64           `json:"size"`
-	Runtime     string          `json:"runtime"`
-	Bindings    []WorkerBinding `json:"bindings,omitempty"`
-	Tags        []string        `json:"tags,omitempty"`
-	Script      string          `json:"script,omitempty"`
-	CompatibilityDate string   `json:"compatibility_date,omitempty"`
+	Name              string          `json:"name"`
+	Modified          time.Time       `json:"modified"`
+	Size              int64           `json:"size"`
+	Runtime           string          `json:"runtime"`
+	Bindings          []WorkerBinding `json:"bindings,omitempty"`
+	Tags              []string        `json:"tags,omitempty"`
+	Script            string          `json:"script,omitempty"`
+	CompatibilityDate string          `json:"compatibility_date,omitempty"`
 }
 
 // WorkerBinding represents a binding attached to a Worker.
@@ -30,8 +30,8 @@ type WorkerBinding struct {
 
 // WorkerSettings holds configurable Worker settings.
 type WorkerSettings struct {
-	CompatibilityDate string   `json:"compatibility_date"`
-	UsageModel        string   `json:"usage_model"` // "bundled" or "unbound"
+	CompatibilityDate string          `json:"compatibility_date"`
+	UsageModel        string          `json:"usage_model"` // "bundled" or "unbound"
 	Bindings          []WorkerBinding `json:"bindings,omitempty"`
 }
 

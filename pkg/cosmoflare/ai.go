@@ -53,18 +53,18 @@ type AIInferenceResult struct {
 
 // AIGateway represents a Cloudflare AI Gateway configuration.
 type AIGateway struct {
-	ID                string `json:"id"`
-	Name              string `json:"name,omitempty"`
-	Slug              string `json:"slug,omitempty"`
-	CacheTTL          int    `json:"cache_ttl,omitempty"`
-	CacheInvalidateOn string `json:"cache_invalidate_on,omitempty"`
-	CollectLogs       *bool  `json:"collect_logs,omitempty"`
-	RateLimitingRule  *AIGatewayRateLimit `json:"rate_limiting,omitempty"`
-	RateLimitInterval int    `json:"rate_limiting_interval,omitempty"`
-	RateLimitLimit    int    `json:"rate_limiting_limit,omitempty"`
-	RateLimitTechnique string `json:"rate_limiting_technique,omitempty"`
-	CreatedAt         string `json:"created_at,omitempty"`
-	ModifiedAt        string `json:"modified_at,omitempty"`
+	ID                 string              `json:"id"`
+	Name               string              `json:"name,omitempty"`
+	Slug               string              `json:"slug,omitempty"`
+	CacheTTL           int                 `json:"cache_ttl,omitempty"`
+	CacheInvalidateOn  string              `json:"cache_invalidate_on,omitempty"`
+	CollectLogs        *bool               `json:"collect_logs,omitempty"`
+	RateLimitingRule   *AIGatewayRateLimit `json:"rate_limiting,omitempty"`
+	RateLimitInterval  int                 `json:"rate_limiting_interval,omitempty"`
+	RateLimitLimit     int                 `json:"rate_limiting_limit,omitempty"`
+	RateLimitTechnique string              `json:"rate_limiting_technique,omitempty"`
+	CreatedAt          string              `json:"created_at,omitempty"`
+	ModifiedAt         string              `json:"modified_at,omitempty"`
 }
 
 // AIGatewayRateLimit holds rate limiting configuration for a gateway.
@@ -91,10 +91,10 @@ type AIGatewayLog struct {
 
 // AIGatewayCreateParams holds parameters for creating an AI Gateway.
 type AIGatewayCreateParams struct {
-	CacheTTL          int    `json:"cache_ttl,omitempty"`
-	CollectLogs       *bool  `json:"collect_logs,omitempty"`
-	RateLimitInterval int    `json:"rate_limiting_interval,omitempty"`
-	RateLimitLimit    int    `json:"rate_limiting_limit,omitempty"`
+	CacheTTL           int    `json:"cache_ttl,omitempty"`
+	CollectLogs        *bool  `json:"collect_logs,omitempty"`
+	RateLimitInterval  int    `json:"rate_limiting_interval,omitempty"`
+	RateLimitLimit     int    `json:"rate_limiting_limit,omitempty"`
 	RateLimitTechnique string `json:"rate_limiting_technique,omitempty"`
 }
 

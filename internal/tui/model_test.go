@@ -3,9 +3,9 @@ package tui
 import (
 	"testing"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/assert"
-	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 )
 
 // --- Key handling in Update() for navigation ---

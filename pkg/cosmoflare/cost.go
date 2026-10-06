@@ -6,7 +6,7 @@ package cosmoflare
 
 const (
 	// R2 Storage pricing
-	R2StoragePerGB    = 0.015 // $/GB/month
+	R2StoragePerGB     = 0.015 // $/GB/month
 	R2ClassAPerMillion = 4.50  // $/million Class A operations (PUT, POST, LIST)
 	R2ClassBPerMillion = 0.36  // $/million Class B operations (GET, HEAD)
 
@@ -59,10 +59,10 @@ type R2CostEstimate struct {
 
 // WorkersCostEstimate is the cost breakdown for Workers.
 type WorkersCostEstimate struct {
-	RequestsCost    float64      `json:"requests_cost"`
-	BillableRequests int64       `json:"billable_requests"`
-	TotalCost       float64      `json:"total_cost"`
-	Usage           WorkersUsage `json:"usage"`
+	RequestsCost     float64      `json:"requests_cost"`
+	BillableRequests int64        `json:"billable_requests"`
+	TotalCost        float64      `json:"total_cost"`
+	Usage            WorkersUsage `json:"usage"`
 }
 
 // KVCostEstimate is the cost breakdown for KV.
@@ -77,8 +77,8 @@ type KVCostEstimate struct {
 // TotalCostEstimate is the aggregate cost estimate across all services.
 type TotalCostEstimate struct {
 	R2               *R2CostEstimate      `json:"r2"`
-	Workers          *WorkersCostEstimate  `json:"workers"`
-	KV               *KVCostEstimate       `json:"kv"`
+	Workers          *WorkersCostEstimate `json:"workers"`
+	KV               *KVCostEstimate      `json:"kv"`
 	TotalMonthlyCost float64              `json:"total_monthly_cost"`
 	Period           string               `json:"period"`
 	Disclaimer       string               `json:"disclaimer"`

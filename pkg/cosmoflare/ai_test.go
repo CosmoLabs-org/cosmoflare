@@ -532,9 +532,9 @@ func TestAIModelJSONRoundtrip(t *testing.T) {
 func TestAIGatewayJSONRoundtrip(t *testing.T) {
 	collectLogs := true
 	gw := AIGateway{
-		ID:        "gw-123",
-		Name:      "prod-gateway",
-		CacheTTL:  300,
+		ID:          "gw-123",
+		Name:        "prod-gateway",
+		CacheTTL:    300,
 		CollectLogs: &collectLogs,
 	}
 	data, err := json.Marshal(gw)
@@ -957,12 +957,12 @@ func TestAIGatewayWithRateLimit(t *testing.T) {
 	collectLogs := false
 	rl := &AIGatewayRateLimit{Interval: 30, Limit: 50, Technique: "fixed"}
 	gw := AIGateway{
-		ID:               "gw-rl",
-		CacheTTL:         120,
-		CollectLogs:      &collectLogs,
-		RateLimitingRule: rl,
-		RateLimitInterval: 30,
-		RateLimitLimit:    50,
+		ID:                 "gw-rl",
+		CacheTTL:           120,
+		CollectLogs:        &collectLogs,
+		RateLimitingRule:   rl,
+		RateLimitInterval:  30,
+		RateLimitLimit:     50,
 		RateLimitTechnique: "fixed",
 	}
 	data, err := json.Marshal(gw)

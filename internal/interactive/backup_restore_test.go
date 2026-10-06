@@ -1018,7 +1018,7 @@ func TestDecryptBackupData_InvalidJSON(t *testing.T) {
 		salt[i] = byte(i)
 	}
 
-		key := pbkdf2.Key([]byte("password"), salt, 100000, 32, sha256.New)
+	key := pbkdf2.Key([]byte("password"), salt, 100000, 32, sha256.New)
 	block, _ := aes.NewCipher(key)
 	gcm, _ := cipher.NewGCM(block)
 	nonce := make([]byte, gcm.NonceSize())

@@ -41,12 +41,12 @@ type UploadResult struct {
 
 // DownloadResult contains the result of a download operation.
 type DownloadResult struct {
-	Key       string `json:"key"`
-	Bucket    string `json:"bucket"`
-	Size      int64  `json:"size"`
-	Content   io.ReadCloser
-	ContentType  string            `json:"content_type,omitempty"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
+	Key         string `json:"key"`
+	Bucket      string `json:"bucket"`
+	Size        int64  `json:"size"`
+	Content     io.ReadCloser
+	ContentType string            `json:"content_type,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 // ListResult is a generic paginated list result.
@@ -59,11 +59,11 @@ type ListResult[T any] struct {
 
 // CopyResult contains the result of a copy operation.
 type CopyResult struct {
-	Key        string `json:"key"`
-	SourceKey  string `json:"source_key"`
-	Bucket     string `json:"bucket"`
-	ETag       string `json:"etag"`
-	VersionID  string `json:"version_id,omitempty"`
+	Key       string `json:"key"`
+	SourceKey string `json:"source_key"`
+	Bucket    string `json:"bucket"`
+	ETag      string `json:"etag"`
+	VersionID string `json:"version_id,omitempty"`
 }
 
 // HeadResult contains object metadata without the body.

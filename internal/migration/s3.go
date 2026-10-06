@@ -20,52 +20,52 @@ import (
 	"syscall"
 	"time"
 
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cheggaaa/pb/v3"
-	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
 
 // S3Migration handles migration from AWS S3 to Cloudflare R2
 type S3Migration struct {
-	S3Bucket       string
-	R2Bucket       string
-	Filter         string
-	Concurrency    int
-	Resume         bool
-	Verify         bool
-	AWSRegion      string
-	AWSProfile     string
-	DryRun         bool
-	DeleteSource   bool
-	Compression    bool
-	ManifestFile   string
+	S3Bucket     string
+	R2Bucket     string
+	Filter       string
+	Concurrency  int
+	Resume       bool
+	Verify       bool
+	AWSRegion    string
+	AWSProfile   string
+	DryRun       bool
+	DeleteSource bool
+	Compression  bool
+	ManifestFile string
 }
 
 // MigrationResult represents the result of a migration
 type MigrationResult struct {
-	TotalObjects     int64         `json:"total_objects"`
-	TransferredSize  int64         `json:"transferred_size"`
-	SuccessCount     int64         `json:"success_count"`
-	ErrorCount       int64         `json:"error_count"`
-	SkippedCount     int64         `json:"skipped_count"`
-	Duration         time.Duration `json:"duration"`
-	Errors           []string      `json:"errors,omitempty"`
-	ManifestPath     string        `json:"manifest_path,omitempty"`
+	TotalObjects    int64         `json:"total_objects"`
+	TransferredSize int64         `json:"transferred_size"`
+	SuccessCount    int64         `json:"success_count"`
+	ErrorCount      int64         `json:"error_count"`
+	SkippedCount    int64         `json:"skipped_count"`
+	Duration        time.Duration `json:"duration"`
+	Errors          []string      `json:"errors,omitempty"`
+	ManifestPath    string        `json:"manifest_path,omitempty"`
 }
 
 // MigrationManifest tracks migration progress
 type MigrationManifest struct {
-	S3Bucket       string    `json:"s3_bucket"`
-	R2Bucket       string    `json:"r2_bucket"`
-	StartTime       time.Time `json:"start_time"`
-	TotalObjects    int64     `json:"total_objects"`
-	TotalSize       int64     `json:"total_size"`
-	CompletedObjects int64    `json:"completed_objects"`
-	CompletedSize   int64     `json:"completed_size"`
-	FailedObjects   []string  `json:"failed_objects"`
-	LastUpdated     time.Time `json:"last_updated"`
+	S3Bucket         string    `json:"s3_bucket"`
+	R2Bucket         string    `json:"r2_bucket"`
+	StartTime        time.Time `json:"start_time"`
+	TotalObjects     int64     `json:"total_objects"`
+	TotalSize        int64     `json:"total_size"`
+	CompletedObjects int64     `json:"completed_objects"`
+	CompletedSize    int64     `json:"completed_size"`
+	FailedObjects    []string  `json:"failed_objects"`
+	LastUpdated      time.Time `json:"last_updated"`
 }
 
 // S3Object represents an S3 object
@@ -463,7 +463,7 @@ func (m *S3Migration) performDryRun(objects []*S3Object) (*MigrationResult, erro
 	}
 
 	return &MigrationResult{
-		TotalObjects: int64(len(objects)),
+		TotalObjects:    int64(len(objects)),
 		TransferredSize: m.getTotalSize(objects),
 	}, nil
 }

@@ -122,8 +122,8 @@ func (k *keychainBackend) Delete(profile, key string) error {
 type noopBackend struct{}
 
 func (n *noopBackend) Get(_, _ string) (string, error) { return "", ErrNotFound }
-func (n *noopBackend) Set(_, _, _ string) error         { return nil }
-func (n *noopBackend) Delete(_, _ string) error         { return nil }
+func (n *noopBackend) Set(_, _, _ string) error        { return nil }
+func (n *noopBackend) Delete(_, _ string) error        { return nil }
 
 // memBackend is a process-local, in-memory secret store. It never shells out to
 // the OS keychain, so it produces no stderr noise and does not touch the real

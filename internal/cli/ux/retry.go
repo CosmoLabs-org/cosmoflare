@@ -43,16 +43,16 @@ type RetryStrategy struct {
 
 // ErrorInfo contains detailed error information
 type ErrorInfo struct {
-	Type         ErrorType
-	Message      string
-	Original     error
-	Retryable    bool
-	Suggestion   string
-	ErrorCode    string
-	Context      map[string]interface{}
-	Attempts     int
-	LastAttempt  time.Time
-	NextAttempt  time.Time
+	Type        ErrorType
+	Message     string
+	Original    error
+	Retryable   bool
+	Suggestion  string
+	ErrorCode   string
+	Context     map[string]interface{}
+	Attempts    int
+	LastAttempt time.Time
+	NextAttempt time.Time
 }
 
 // RetryResult contains the result of a retry attempt

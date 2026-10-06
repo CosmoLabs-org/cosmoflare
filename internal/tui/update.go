@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Update handles incoming messages and updates the model

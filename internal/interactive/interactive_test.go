@@ -108,12 +108,12 @@ func TestErrorType(t *testing.T) {
 // TestErrorContext verifies the documented behavior of ErrorContext.
 func TestErrorContext(t *testing.T) {
 	ctx := ErrorContext{
-		Error:      assert.AnError,
-		Type:       ErrorTypeNetwork,
-		Operation:  "upload file",
-		UserAction: "retry",
+		Error:        assert.AnError,
+		Type:         ErrorTypeNetwork,
+		Operation:    "upload file",
+		UserAction:   "retry",
 		Troubleshoot: []string{"check network", "check firewall"},
-		NextSteps:   []string{"retry upload"},
+		NextSteps:    []string{"retry upload"},
 	}
 
 	assert.Equal(t, ErrorTypeNetwork, ctx.Type)

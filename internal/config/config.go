@@ -360,13 +360,13 @@ func (cm *ConfigManager) JSON() (string, error) {
 // AutoDetectProfile tries to auto-detect configuration from environment
 func (cm *ConfigManager) AutoDetectProfile() *Profile {
 	profile := &Profile{
-		Name:       "auto-detected",
-		AccountID:  os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
-		APIToken:   os.Getenv("CLOUDFLARE_API_TOKEN"),
-		Endpoint:   os.Getenv("R2_ENDPOINT"),
-		AccessKey:  os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretKey:  os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		Region:     os.Getenv("AWS_REGION"),
+		Name:      "auto-detected",
+		AccountID: os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
+		APIToken:  os.Getenv("CLOUDFLARE_API_TOKEN"),
+		Endpoint:  os.Getenv("R2_ENDPOINT"),
+		AccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Region:    os.Getenv("AWS_REGION"),
 	}
 
 	// Only return profile if we have the essentials
@@ -380,19 +380,19 @@ func (cm *ConfigManager) AutoDetectProfile() *Profile {
 // LoadFromEnvironment loads configuration from environment variables
 func LoadFromEnvironment() *Profile {
 	return &Profile{
-		AccountID:  os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
-		APIToken:   os.Getenv("CLOUDFLARE_API_TOKEN"),
-		Endpoint:   os.Getenv("R2_ENDPOINT"),
-		AccessKey:  os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretKey:  os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		Region:     os.Getenv("AWS_REGION"),
+		AccountID: os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
+		APIToken:  os.Getenv("CLOUDFLARE_API_TOKEN"),
+		Endpoint:  os.Getenv("R2_ENDPOINT"),
+		AccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Region:    os.Getenv("AWS_REGION"),
 	}
 }
 
 // SanitizeForOutput returns a sanitized version of the config for output
 func (cm *ConfigManager) SanitizeForOutput() *Config {
 	sanitized := &Config{
-		Current: cm.config.Current,
+		Current:  cm.config.Current,
 		Profiles: make(map[string]*Profile),
 	}
 

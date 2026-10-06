@@ -349,8 +349,8 @@ func TestWithMetadataOverwrite(t *testing.T) {
 
 func TestSizeExceedsMultipartThreshold(t *testing.T) {
 	// Verify the threshold logic: sizes > 100MB should trigger multipart
-	smallSize := int64(50 * 1024 * 1024)  // 50MB
-	largeSize := int64(150 * 1024 * 1024) // 150MB
+	smallSize := int64(50 * 1024 * 1024)   // 50MB
+	largeSize := int64(150 * 1024 * 1024)  // 150MB
 	exactSize := int64(multipartThreshold) // exactly 100MB
 
 	if smallSize > multipartThreshold {

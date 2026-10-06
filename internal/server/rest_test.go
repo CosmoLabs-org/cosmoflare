@@ -15,13 +15,13 @@ import (
 // fakeSource is a test ServeSource. It records the profile each CF method was
 // called with so tests can assert the read-only ?profile= selection contract.
 type fakeSource struct {
-	zones     []*cosmoflare.Zone
-	accounts  []AccountProfile
-	r2        []*cosmoflare.Bucket
-	workers   []*cosmoflare.Worker
-	kv        []*cosmoflare.KVNamespace
-	zoneErr   error
-	seenProf  string // last profile passed to a CF method
+	zones    []*cosmoflare.Zone
+	accounts []AccountProfile
+	r2       []*cosmoflare.Bucket
+	workers  []*cosmoflare.Worker
+	kv       []*cosmoflare.KVNamespace
+	zoneErr  error
+	seenProf string // last profile passed to a CF method
 }
 
 func (f *fakeSource) Accounts(_ context.Context) ([]AccountProfile, error) {

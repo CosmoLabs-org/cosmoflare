@@ -47,9 +47,9 @@ type ObjectDetail struct {
 
 // ServiceMetrics aggregates metrics across Cloudflare services.
 type ServiceMetrics struct {
-	R2      R2Metrics
-	Workers WorkersMetrics
-	KV      KVMetrics
+	R2        R2Metrics
+	Workers   WorkersMetrics
+	KV        KVMetrics
 	FetchedAt time.Time
 }
 

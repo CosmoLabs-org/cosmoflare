@@ -525,7 +525,7 @@ func TestRegistrarService_DNSSEC(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": true,
 			"errors":  []interface{}{},
-			"result": map[string]interface{}{"status": status, "ds_records": ds},
+			"result":  map[string]interface{}{"status": status, "ds_records": ds},
 		})
 	})
 

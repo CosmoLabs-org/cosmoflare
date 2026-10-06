@@ -44,16 +44,16 @@ type TransitionState struct {
 
 // TransitionManager manages screen transitions
 type TransitionManager struct {
-	animator    *Animator
-	Disabled    bool
+	animator     *Animator
+	Disabled     bool
 	CurrentTheme string
 }
 
 // NewTransitionManager creates a new transition manager
 func NewTransitionManager() *TransitionManager {
 	return &TransitionManager{
-		animator:    NewAnimator(),
-		Disabled:    false,
+		animator:     NewAnimator(),
+		Disabled:     false,
 		CurrentTheme: "cosmic",
 	}
 }
@@ -215,7 +215,7 @@ func (tm *TransitionManager) renderSlide(from, to TransitionState, progress floa
 		tm.renderWithOffset(from, slideOffset)
 	} else {
 		// Show to state sliding in
-		slideOffset := int((progress-0.5)*2 * 10)
+		slideOffset := int((progress - 0.5) * 2 * 10)
 		tm.renderWithOffset(to, -10+slideOffset)
 	}
 }
@@ -362,7 +362,7 @@ var globalTransitionManager = NewTransitionManager()
 
 // SetupWizardTransition provides easy access to setup transitions
 type SetupWizardTransition struct {
-	steps []TransitionState
+	steps   []TransitionState
 	current int
 }
 

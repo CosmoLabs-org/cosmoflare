@@ -13,11 +13,11 @@ type Healthcheck struct {
 	ID                   string    `json:"id"`
 	Name                 string    `json:"name"`
 	Address              string    `json:"address"`
-	Type                 string    `json:"type"`                          // "HTTPS", "HTTP", "TCP"
-	Status               string    `json:"status"`                        // "healthy", "unhealthy", "suspended", "unknown"
+	Type                 string    `json:"type"`   // "HTTPS", "HTTP", "TCP"
+	Status               string    `json:"status"` // "healthy", "unhealthy", "suspended", "unknown"
 	Suspended            bool      `json:"suspended"`
-	Interval             int       `json:"interval"`                      // seconds between checks
-	Timeout              int       `json:"timeout"`                       // seconds before timeout
+	Interval             int       `json:"interval"` // seconds between checks
+	Timeout              int       `json:"timeout"`  // seconds before timeout
 	Retries              int       `json:"retries"`
 	Description          string    `json:"description,omitempty"`
 	ConsecutiveSuccesses int       `json:"consecutive_successes,omitempty"`

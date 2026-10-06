@@ -41,12 +41,12 @@ type ConfirmationOptions struct {
 
 // ConfirmationResult contains the result of a confirmation
 type ConfirmationResult struct {
-	Answer      bool
-	All         bool
-	Cancelled   bool
-	Timeout     bool
-	Confidence  string // "high", "medium", "low"
-	UserInput   string
+	Answer     bool
+	All        bool
+	Cancelled  bool
+	Timeout    bool
+	Confidence string // "high", "medium", "low"
+	UserInput  string
 }
 
 // DefaultConfirmationOptions returns default confirmation options

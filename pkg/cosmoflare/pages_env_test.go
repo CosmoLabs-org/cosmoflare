@@ -122,12 +122,12 @@ func TestPagesSetEnvVarsSuccess(t *testing.T) {
 				"success": true,
 				"errors":  []interface{}{},
 				"result": map[string]interface{}{
-					"id":                  "my-site",
-					"name":                "my-site",
-					"deployment_configs":  map[string]interface{}{"production": map[string]interface{}{}, "preview": map[string]interface{}{}},
-					"production_branch":   "main",
-					"build_config":        map[string]interface{}{},
-					"latest_deployment":   map[string]interface{}{},
+					"id":                   "my-site",
+					"name":                 "my-site",
+					"deployment_configs":   map[string]interface{}{"production": map[string]interface{}{}, "preview": map[string]interface{}{}},
+					"production_branch":    "main",
+					"build_config":         map[string]interface{}{},
+					"latest_deployment":    map[string]interface{}{},
 					"canonical_deployment": map[string]interface{}{},
 				},
 			})

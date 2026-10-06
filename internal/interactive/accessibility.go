@@ -425,10 +425,10 @@ func (ah *AccessibilityHelper) ConfirmAccessibleYesNo(prompt string, defaultYes 
 		if ah.manager.config.Verbose {
 			fmt.Printf("%s\n", prompt)
 			defaultAnswer := "no"
-	if defaultYes {
-		defaultAnswer = "yes"
-	}
-	fmt.Printf("Press Enter for '%s', or type 'y' for yes, 'n' for no: ", defaultAnswer)
+			if defaultYes {
+				defaultAnswer = "yes"
+			}
+			fmt.Printf("Press Enter for '%s', or type 'y' for yes, 'n' for no: ", defaultAnswer)
 		} else {
 			fmt.Printf("%s [%s]: ", prompt, defaultText)
 		}
@@ -436,10 +436,10 @@ func (ah *AccessibilityHelper) ConfirmAccessibleYesNo(prompt string, defaultYes 
 		if ah.manager.config.Verbose {
 			fmt.Printf("%s\n", prompt)
 			defaultAnswer := "no"
-	if defaultYes {
-		defaultAnswer = "yes"
-	}
-	fmt.Printf("Press Enter for '%s', or type 'y' for yes, 'n' for no: ", defaultAnswer)
+			if defaultYes {
+				defaultAnswer = "yes"
+			}
+			fmt.Printf("Press Enter for '%s', or type 'y' for yes, 'n' for no: ", defaultAnswer)
 		} else {
 			fmt.Printf("%s [%s]: ", prompt, defaultText)
 		}

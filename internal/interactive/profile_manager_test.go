@@ -512,13 +512,13 @@ func TestGetProfileIcon_SubstringMatches(t *testing.T) {
 		description string
 		want        string
 	}{
-		{"myprodserver", "🏭 "},      // contains "prod"
-		{"thestagingenv", "⚡ "},     // contains "stag"
-		{"development", "⚡ "},       // contains "dev"
-		{"mytestbucket", "🧪 "},     // contains "test"
-		{"mypersonalstuff", "💻 "},  // contains "personal"
-		{"theworkserver", "🏢 "},    // contains "work"
-		{"mycompanybucket", "🏢 "},  // contains "company"
+		{"myprodserver", "🏭 "},    // contains "prod"
+		{"thestagingenv", "⚡ "},   // contains "stag"
+		{"development", "⚡ "},     // contains "dev"
+		{"mytestbucket", "🧪 "},    // contains "test"
+		{"mypersonalstuff", "💻 "}, // contains "personal"
+		{"theworkserver", "🏢 "},   // contains "work"
+		{"mycompanybucket", "🏢 "}, // contains "company"
 	}
 
 	for _, tt := range tests {

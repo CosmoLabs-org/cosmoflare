@@ -95,11 +95,11 @@ type SyncPlanSummary struct {
 
 // SyncPlan contains all operations to be performed during a sync.
 type SyncPlan struct {
-	Bucket     string        `json:"bucket"`
-	Prefix     string        `json:"prefix,omitempty"`
-	Direction  SyncDirection `json:"direction"`
-	LocalDir   string        `json:"local_dir"`
-	Operations []SyncOp      `json:"operations"`
+	Bucket     string          `json:"bucket"`
+	Prefix     string          `json:"prefix,omitempty"`
+	Direction  SyncDirection   `json:"direction"`
+	LocalDir   string          `json:"local_dir"`
+	Operations []SyncOp        `json:"operations"`
 	Summary    SyncPlanSummary `json:"summary"`
 }
 
@@ -126,12 +126,12 @@ type SyncResult struct {
 
 // SyncProgress reports progress of a single operation during execution.
 type SyncProgress struct {
-	Current   int          `json:"current"`
-	Total     int          `json:"total"`
-	Action    SyncOpAction `json:"action"`
-	Key       string       `json:"key"`
-	Size      int64        `json:"size"`
-	Error     string       `json:"error,omitempty"`
+	Current int          `json:"current"`
+	Total   int          `json:"total"`
+	Action  SyncOpAction `json:"action"`
+	Key     string       `json:"key"`
+	Size    int64        `json:"size"`
+	Error   string       `json:"error,omitempty"`
 }
 
 // StorageBackend abstracts R2 operations so SyncService is testable without
@@ -569,9 +569,9 @@ func (s *SyncService) executeConcurrent(ctx context.Context, plan *SyncPlan) (*S
 	close(jobs)
 
 	var (
-		mu       sync.Mutex
+		mu        sync.Mutex
 		completed int64
-		wg       sync.WaitGroup
+		wg        sync.WaitGroup
 	)
 	result := &SyncResult{}
 

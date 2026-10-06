@@ -55,17 +55,17 @@ func NewManager(cf *cloudflare.API, accountID string) *Manager {
 
 // Webhook represents a webhook configuration
 type Webhook struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	URL         string            `json:"url"`
-	Events      []string          `json:"events"`
-	Enabled     bool              `json:"enabled"`
-	Secret      string            `json:"secret,omitempty"`
-	Headers     map[string]string `json:"headers,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
-	RetryCount  int               `json:"retry_count"`
-	Timeout     int               `json:"timeout"` // in seconds
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	URL        string            `json:"url"`
+	Events     []string          `json:"events"`
+	Enabled    bool              `json:"enabled"`
+	Secret     string            `json:"secret,omitempty"`
+	Headers    map[string]string `json:"headers,omitempty"`
+	CreatedAt  time.Time         `json:"created_at"`
+	UpdatedAt  time.Time         `json:"updated_at"`
+	RetryCount int               `json:"retry_count"`
+	Timeout    int               `json:"timeout"` // in seconds
 }
 
 // Event represents an event that can trigger webhooks
@@ -85,14 +85,14 @@ type Alert struct {
 	Type        AlertType         `json:"type"`
 	Threshold   float64           `json:"threshold"`
 	Metric      string            `json:"metric"`
-	Window      string            `json:"window"`     // time window (e.g., "1h", "24h")
+	Window      string            `json:"window"` // time window (e.g., "1h", "24h")
 	Enabled     bool              `json:"enabled"`
 	Webhooks    []string          `json:"webhooks"`   // webhook IDs to notify
 	Conditions  map[string]string `json:"conditions"` // additional conditions
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`
 	LastTrigger time.Time         `json:"last_trigger,omitempty"`
-	Count       int               `json:"count"`       // how many times triggered
+	Count       int               `json:"count"` // how many times triggered
 }
 
 // AlertType represents different types of alerts
@@ -108,17 +108,17 @@ const (
 
 // NotificationPayload represents a webhook notification payload
 type NotificationPayload struct {
-	Event      string                 `json:"event"`
-	Alert      *Alert                 `json:"alert,omitempty"`
-	Timestamp  time.Time              `json:"timestamp"`
-	Source     string                 `json:"source"`
-	Bucket     string                 `json:"bucket,omitempty"`
-	Object     string                 `json:"object,omitempty"`
-	Value      float64                `json:"value,omitempty"`
-	Threshold  float64                `json:"threshold,omitempty"`
-	Message    string                 `json:"message"`
-	Data       map[string]interface{} `json:"data,omitempty"`
-	Signature  string                 `json:"signature,omitempty"`
+	Event     string                 `json:"event"`
+	Alert     *Alert                 `json:"alert,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
+	Source    string                 `json:"source"`
+	Bucket    string                 `json:"bucket,omitempty"`
+	Object    string                 `json:"object,omitempty"`
+	Value     float64                `json:"value,omitempty"`
+	Threshold float64                `json:"threshold,omitempty"`
+	Message   string                 `json:"message"`
+	Data      map[string]interface{} `json:"data,omitempty"`
+	Signature string                 `json:"signature,omitempty"`
 }
 
 // CreateWebhook creates a new webhook
@@ -385,19 +385,19 @@ func generateID() string {
 
 // Common event types
 const (
-	EventTypeBucketCreated    = "bucket.created"
-	EventTypeBucketDeleted    = "bucket.deleted"
-	EventTypeObjectCreated    = "object.created"
-	EventTypeObjectDeleted    = "object.deleted"
-	EventTypeObjectUploaded   = "object.uploaded"
-	EventTypeObjectDownloaded = "object.downloaded"
-	EventTypeMigrationStart   = "migration.started"
+	EventTypeBucketCreated     = "bucket.created"
+	EventTypeBucketDeleted     = "bucket.deleted"
+	EventTypeObjectCreated     = "object.created"
+	EventTypeObjectDeleted     = "object.deleted"
+	EventTypeObjectUploaded    = "object.uploaded"
+	EventTypeObjectDownloaded  = "object.downloaded"
+	EventTypeMigrationStart    = "migration.started"
 	EventTypeMigrationComplete = "migration.completed"
 	EventTypeMigrationFailed   = "migration.failed"
 	EventTypeAlertTriggered    = "alert.triggered"
 	EventTypeHealthCheckFailed = "health_check.failed"
-	EventTypeDomainAttached   = "domain.attached"
-	EventTypeDomainDetached   = "domain.detached"
+	EventTypeDomainAttached    = "domain.attached"
+	EventTypeDomainDetached    = "domain.detached"
 )
 
 // Utility functions for creating common events

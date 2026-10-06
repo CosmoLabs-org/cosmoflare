@@ -19,7 +19,7 @@ const (
 // semicolons, tracking single-quoted strings, double-quoted and
 // backtick-quoted identifiers, and -- line / block comments so that
 // semicolons inside any of those are not treated as statement separators.
-// Doubled quote characters ('', "", ``) are treated as an escaped literal
+// Doubled quote characters (”, "", “) are treated as an escaped literal
 // quote rather than a closing quote, matching SQL's standard escaping.
 //
 // Each returned statement is trimmed of leading/trailing whitespace; empty

@@ -78,7 +78,7 @@ func (s *Server) SetCloudflareOnline(ok bool) {
 	old := s.cfOnline.Swap(ok)
 	if old != ok {
 		s.Publish(ChannelStatus, map[string]any{
-			"systems_online":   true,
+			"systems_online":    true,
 			"cloudflare_online": ok,
 		})
 		s.Publish(ChannelNotifications, map[string]any{
@@ -156,9 +156,9 @@ func (s *Server) authorized(r *http.Request) bool {
 // most recent Cloudflare API call outcome.
 func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{
-		"systems_online":   true,
+		"systems_online":    true,
 		"cloudflare_online": s.cfOnline.Load(),
-		"version":          s.cfg.Version,
+		"version":           s.cfg.Version,
 	})
 }
 

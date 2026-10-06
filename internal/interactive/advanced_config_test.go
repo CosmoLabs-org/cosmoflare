@@ -907,17 +907,17 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_AllDefaults(t *testing.T) {
 	disableAnimations(t)
 	profile := &config.Profile{Name: "test-profile", Description: "test", Region: "auto"}
 	acw, _ := newTestWizard(
-		"",   // bucket type default (standard)
-		"",   // retention default (30)
-		"",   // endpoint default (empty)
-		"",   // concurrency default (4)
-		"",   // chunk size default (8)
-		"",   // retries default (3)
-		"y",  // checksum enabled
-		"",   // region default (auto)
-		"",   // theme default (cosmic)
-		"n",  // analytics disabled
-		"n",  // accessibility disabled
+		"",  // bucket type default (standard)
+		"",  // retention default (30)
+		"",  // endpoint default (empty)
+		"",  // concurrency default (4)
+		"",  // chunk size default (8)
+		"",  // retries default (3)
+		"y", // checksum enabled
+		"",  // region default (auto)
+		"",  // theme default (cosmic)
+		"n", // analytics disabled
+		"n", // accessibility disabled
 	)
 	_ = profile
 
@@ -949,17 +949,17 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_CustomBucket(t *testing.T) {
 	disableAnimations(t)
 
 	acw, _ := newTestWizard(
-		"2",   // performance bucket
-		"60",  // 60 days retention
-		"",    // no custom endpoint
-		"",    // concurrency default
-		"16",  // 16MB chunks
-		"5",   // 5 retries
-		"n",   // no checksum
-		"2",   // us-east-1
-		"3",   // ocean theme
-		"y",   // analytics enabled
-		"y",   // accessibility enabled
+		"2",  // performance bucket
+		"60", // 60 days retention
+		"",   // no custom endpoint
+		"",   // concurrency default
+		"16", // 16MB chunks
+		"5",  // 5 retries
+		"n",  // no checksum
+		"2",  // us-east-1
+		"3",  // ocean theme
+		"y",  // analytics enabled
+		"y",  // accessibility enabled
 	)
 
 	old := os.Stdout
@@ -1017,9 +1017,9 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_InvalidInputs(t *testing.T) {
 	io.Copy(&buf, r)
 	require.NoError(t, err)
 	assert.Equal(t, "standard", cfg.BucketSettings.Type)
-	assert.Equal(t, 4, cfg.UploadSettings.Concurrency)  // default
+	assert.Equal(t, 4, cfg.UploadSettings.Concurrency)   // default
 	assert.Equal(t, "8MB", cfg.UploadSettings.ChunkSize) // default
-	assert.Equal(t, 3, cfg.UploadSettings.RetryAttempts)  // default
+	assert.Equal(t, 3, cfg.UploadSettings.RetryAttempts) // default
 	assert.Equal(t, "auto", cfg.RegionSettings.Primary)
 	assert.Equal(t, "cosmic", cfg.Theme)
 }
@@ -1029,17 +1029,17 @@ func TestAdvancedConfigWizard_ShowAdvancedConfig_CostOptimized(t *testing.T) {
 	disableAnimations(t)
 
 	acw, _ := newTestWizard(
-		"3",  // cost bucket
-		"",   // retention
-		"",   // endpoint
-		"2",  // concurrency 2
-		"",   // chunk default
-		"",   // retries default
-		"y",  // checksum
-		"4",  // ap-southeast-1
-		"5",  // monochrome
-		"n",  // analytics
-		"n",  // accessibility
+		"3", // cost bucket
+		"",  // retention
+		"",  // endpoint
+		"2", // concurrency 2
+		"",  // chunk default
+		"",  // retries default
+		"y", // checksum
+		"4", // ap-southeast-1
+		"5", // monochrome
+		"n", // analytics
+		"n", // accessibility
 	)
 
 	old := os.Stdout

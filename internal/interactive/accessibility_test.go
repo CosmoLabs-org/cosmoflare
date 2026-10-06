@@ -745,10 +745,10 @@ func TestAccessibilityHelper_ConfirmAccessibleYesNo(t *testing.T) {
 	ah.manager.SetMode(AccessibilityScreenReader)
 
 	tests := []struct {
-		name      string
-		input     string
+		name       string
+		input      string
 		defaultYes bool
-		want      bool
+		want       bool
 	}{
 		{"y with default no", "y", false, true},
 		{"empty with default yes", "", true, true},

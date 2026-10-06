@@ -28,12 +28,12 @@ const (
 
 // ErrorContext provides context for error handling
 type ErrorContext struct {
-	Error       error
-	Type        ErrorType
-	Operation   string
-	UserAction  string
+	Error        error
+	Type         ErrorType
+	Operation    string
+	UserAction   string
 	Troubleshoot []string
-	NextSteps   []string
+	NextSteps    []string
 }
 
 // HandleError displays a beautiful error message with helpful guidance
@@ -99,9 +99,9 @@ func HandleError(ctx ErrorContext) {
 // NetworkError creates a network error context
 func NetworkError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeNetwork,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeNetwork,
+		Operation:  operation,
 		UserAction: "Check your internet connection and try again.",
 		Troubleshoot: []string{
 			"Verify your internet connection is working",
@@ -119,9 +119,9 @@ func NetworkError(operation string, err error) ErrorContext {
 // AuthError creates an authentication error context
 func AuthError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeAuth,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeAuth,
+		Operation:  operation,
 		UserAction: "Please verify your API token and account ID.",
 		Troubleshoot: []string{
 			"Check that your API token hasn't expired",
@@ -140,9 +140,9 @@ func AuthError(operation string, err error) ErrorContext {
 // ConfigError creates a configuration error context
 func ConfigError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeConfig,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeConfig,
+		Operation:  operation,
 		UserAction: "Your configuration needs to be updated.",
 		Troubleshoot: []string{
 			"Run 'cosmoflare config list' to see your profiles",
@@ -161,9 +161,9 @@ func ConfigError(operation string, err error) ErrorContext {
 // InputError creates an input validation error context
 func InputError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeInput,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeInput,
+		Operation:  operation,
 		UserAction: "Please check your input and try again.",
 		Troubleshoot: []string{
 			"Bucket names must be 3-63 characters",
@@ -182,9 +182,9 @@ func InputError(operation string, err error) ErrorContext {
 // PermissionError creates a permission error context
 func PermissionError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypePermission,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypePermission,
+		Operation:  operation,
 		UserAction: "Your API token lacks required permissions.",
 		Troubleshoot: []string{
 			"Ensure your API token has 'R2:Read' and 'R2:Write' permissions",
@@ -202,9 +202,9 @@ func PermissionError(operation string, err error) ErrorContext {
 // NotFoundError creates a not found error context
 func NotFoundError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeNotFound,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeNotFound,
+		Operation:  operation,
 		UserAction: "The requested resource was not found.",
 		Troubleshoot: []string{
 			"Check if the bucket name is spelled correctly",
@@ -222,9 +222,9 @@ func NotFoundError(operation string, err error) ErrorContext {
 // ValidationError creates a validation error context
 func ValidationError(operation string, err error) ErrorContext {
 	return ErrorContext{
-		Error:     err,
-		Type:      ErrorTypeValidation,
-		Operation: operation,
+		Error:      err,
+		Type:       ErrorTypeValidation,
+		Operation:  operation,
 		UserAction: "The input validation failed.",
 		Troubleshoot: []string{
 			"Check that all required fields are provided",

@@ -38,10 +38,10 @@ type ExportedServices struct {
 
 // ExportedWorker represents a Worker in an export file.
 type ExportedWorker struct {
-	Name              string           `json:"name" yaml:"name"`
-	ScriptSize        int64            `json:"script_size" yaml:"script_size"`
-	CompatibilityDate string           `json:"compatibility_date,omitempty" yaml:"compatibility_date,omitempty"`
-	Bindings          []WorkerBinding  `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Name              string          `json:"name" yaml:"name"`
+	ScriptSize        int64           `json:"script_size" yaml:"script_size"`
+	CompatibilityDate string          `json:"compatibility_date,omitempty" yaml:"compatibility_date,omitempty"`
+	Bindings          []WorkerBinding `json:"bindings,omitempty" yaml:"bindings,omitempty"`
 }
 
 // ExportedKVNamespace represents a KV namespace in an export file.
@@ -58,12 +58,12 @@ type ExportedR2Bucket struct {
 
 // ExportedDNSRecord represents a DNS record in an export file.
 type ExportedDNSRecord struct {
-	ZoneID  string  `json:"zone_id" yaml:"zone_id"`
-	Type    string  `json:"type" yaml:"type"`
-	Name    string  `json:"name" yaml:"name"`
-	Content string  `json:"content" yaml:"content"`
-	Proxied bool    `json:"proxied" yaml:"proxied"`
-	TTL     int     `json:"ttl" yaml:"ttl"`
+	ZoneID   string  `json:"zone_id" yaml:"zone_id"`
+	Type     string  `json:"type" yaml:"type"`
+	Name     string  `json:"name" yaml:"name"`
+	Content  string  `json:"content" yaml:"content"`
+	Proxied  bool    `json:"proxied" yaml:"proxied"`
+	TTL      int     `json:"ttl" yaml:"ttl"`
 	Priority *uint16 `json:"priority,omitempty" yaml:"priority,omitempty"`
 }
 
