@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
 )
 
 // defaultRESTBaseURL is the Cloudflare v4 API root shared by the REST
@@ -70,7 +72,7 @@ func withRetryBaseDelay(d time.Duration) restClientOption {
 func newRESTClient(apiToken string, opts ...restClientOption) restClient {
 	c := restClient{
 		apiToken:       apiToken,
-		httpClient:     &http.Client{Timeout: 30 * time.Second},
+		httpClient:     &http.Client{Timeout: 30 * time.Second, Transport: &knowledge.Transport{}},
 		baseURL:        defaultRESTBaseURL,
 		maxRetries:     defaultMaxRetries,
 		retryBaseDelay: defaultRetryBaseDelay,
