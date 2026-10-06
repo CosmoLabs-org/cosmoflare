@@ -1,18 +1,19 @@
 id: ROAD-099
 created_at: 2026-09-13T15:38:34.286655+04:00
-updated_at: 2026-09-17T20:10:46.528748+04:00
+updated_at: 2026-10-06T22:57:09.048669+04:00
 title: Production-evidence reliability loop
 description: 'Convert production friction into tracked reliability work: MyCarGuide D1 batch-push/deploy-verify/parity (FEAT-018), token permission-name drift (FEAT-011), serve limits-snapshot cadence caching (FEAT-014 — premise updated, snapshot wired at cmd/serve.go:238). Source: audit 2026-09-13 agent-12-roadmap-health.md'
-status: captured
+status: completed
 tags:
     - audit-hydrated
 notes:
-    - '2026-09-16: FEAT-011 seed wave merged (8529017) — permissions knowledge pack (pack #2) with Zone WAF Edit mappings + 10405/10000 scope-decode; docs updated. Qwen full-permission dataset still pending (issue open).'
-    - FEAT-014 shipped from the evidence loop (FB-4 → limits-snapshot TTL cache + DNS 401/403 fail-fast, closed 2026-09-17); R2Error.Status plumbing is groundwork for retry-classification unification (TASK-012).
+    - 'All three linked deliverables shipped: FEAT-014 (2026-09-17), FEAT-018 (v0.31.0), FEAT-011 (2026-10-06, Qwen dataset). The loop-as-practice is standing infrastructure (feedback inbox + /triage) — not bounded roadmap scope. Health-check caution resolved: the closed issues WERE the item''s whole concrete scope.'
 linked_issues:
     - FEAT-018
     - FEAT-011
     - FEAT-014
+completed_in: v0.32.0
+completed_at: 2026-10-06T22:57:09.048656+04:00
 origin:
     session: 53
 ulid: 01M2D8ZPXFS12H1R1XGXWVATXS
