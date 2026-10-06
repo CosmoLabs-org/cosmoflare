@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // MenuOption represents a single menu option
@@ -44,16 +44,16 @@ type MenuModel struct {
 
 // MenuStyles contains styling definitions for the menu
 type MenuStyles struct {
-	NormalTitle     lipgloss.Style
-	SelectedTitle   lipgloss.Style
-	NormalSubtitle  lipgloss.Style
+	NormalTitle      lipgloss.Style
+	SelectedTitle    lipgloss.Style
+	NormalSubtitle   lipgloss.Style
 	SelectedSubtitle lipgloss.Style
-	NormalIcon      lipgloss.Style
-	SelectedIcon    lipgloss.Style
-	DisabledIcon    lipgloss.Style
-	Border          lipgloss.Style
-	SelectedBorder  lipgloss.Style
-	HelpText        lipgloss.Style
+	NormalIcon       lipgloss.Style
+	SelectedIcon     lipgloss.Style
+	DisabledIcon     lipgloss.Style
+	Border           lipgloss.Style
+	SelectedBorder   lipgloss.Style
+	HelpText         lipgloss.Style
 }
 
 // NewMenuModel creates a new menu selection model
@@ -302,7 +302,6 @@ func (m *MenuModel) renderHelpLine() string {
 		sepStyle.Render(" · ") +
 		keyStyle.Render("esc") + textStyle.Render(" exit")
 }
-
 
 // GetSelection returns the currently selected option
 func (m *MenuModel) GetSelection() *MenuOption {

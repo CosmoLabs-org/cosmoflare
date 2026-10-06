@@ -1200,12 +1200,12 @@ func TestWorkerStart_ProcessCopyWithOptions(t *testing.T) {
 		Source:      srcFile,
 		Destination: dstFile,
 		Options: map[string]interface{}{
-			"verify":    false,
-			"overwrite": true,
-			"preserve":  false,
-			"quiet":     true,
+			"verify":     false,
+			"overwrite":  true,
+			"preserve":   false,
+			"quiet":      true,
 			"chunk_size": 4096.0,
-			"retries":   1.0,
+			"retries":    1.0,
 		},
 	}
 

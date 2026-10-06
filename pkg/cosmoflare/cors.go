@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	corsPhase = "http_response_headers_transform"
+	corsPhase       = "http_response_headers_transform"
 	corsDefaultExpr = "true"
 
 	// CORSDefaultRuleName is the default identifier used for CORS rules managed by Cosmoflare.

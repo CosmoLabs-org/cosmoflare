@@ -114,10 +114,10 @@ func TestMetricsProducer_StopsOnContextCancel(t *testing.T) {
 
 func TestMetricsPartialSnapshot(t *testing.T) {
 	src := &metricsSource{
-		zones:    []*cosmoflare.Zone{{Name: "example.com"}},
-		r2Err:    errR2,
-		workers:  []*cosmoflare.Worker{{Name: "worker-1"}},
-		kv:       []*cosmoflare.KVNamespace{{Title: "ns-1"}},
+		zones:   []*cosmoflare.Zone{{Name: "example.com"}},
+		r2Err:   errR2,
+		workers: []*cosmoflare.Worker{{Name: "worker-1"}},
+		kv:      []*cosmoflare.KVNamespace{{Title: "ns-1"}},
 	}
 	s, url := newSourcedServer(t, src)
 

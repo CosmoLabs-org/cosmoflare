@@ -29,16 +29,16 @@ func fleetWriteJSON(w http.ResponseWriter, v interface{}) {
 // fleetFakeZone builds one zone's worth of API responses. certDaysFromNow
 // nil means no certificate pack is returned.
 type fleetFakeZone struct {
-	id             string
-	name           string
-	status         string
-	planLegacyID   string
-	dnssecStatus   string // "" -> handler returns 404
-	universalSSL   bool
+	id              string
+	name            string
+	status          string
+	planLegacyID    string
+	dnssecStatus    string // "" -> handler returns 404
+	universalSSL    bool
 	certDaysFromNow *int
-	minTLS         string
-	securityLevel  string
-	devMode        string // "on" | "off"
+	minTLS          string
+	securityLevel   string
+	devMode         string // "on" | "off"
 }
 
 func fleetTestServer(t *testing.T, zones []fleetFakeZone) *httptest.Server {

@@ -214,8 +214,8 @@ func TestDoctor_ComputeScore_Critical(t *testing.T) {
 func TestDoctor_AnalyzeIssues_DNSInconsistent(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: false},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
+		DNS:  &DNSPropagationResult{Consistent: false},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 	}
 	issues := svc.analyzeIssues(report)
@@ -233,8 +233,8 @@ func TestDoctor_AnalyzeIssues_DNSInconsistent(t *testing.T) {
 func TestDoctor_AnalyzeIssues_SSLExpired(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: false, DaysLeft: -5, TLSVersion: "TLS 1.2"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: false, DaysLeft: -5, TLSVersion: "TLS 1.2"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 	}
 	issues := svc.analyzeIssues(report)
@@ -252,8 +252,8 @@ func TestDoctor_AnalyzeIssues_SSLExpired(t *testing.T) {
 func TestDoctor_AnalyzeIssues_SSLExpiringSoon(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 15, TLSVersion: "TLS 1.3"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 15, TLSVersion: "TLS 1.3"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 	}
 	issues := svc.analyzeIssues(report)
@@ -271,8 +271,8 @@ func TestDoctor_AnalyzeIssues_SSLExpiringSoon(t *testing.T) {
 func TestDoctor_AnalyzeIssues_OldTLS(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.0"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.0"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 	}
 	issues := svc.analyzeIssues(report)
@@ -290,8 +290,8 @@ func TestDoctor_AnalyzeIssues_OldTLS(t *testing.T) {
 func TestDoctor_AnalyzeIssues_HTTPServerError(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
 		HTTP: &HTTPProbeResult{StatusCode: 503},
 	}
 	issues := svc.analyzeIssues(report)
@@ -309,8 +309,8 @@ func TestDoctor_AnalyzeIssues_HTTPServerError(t *testing.T) {
 func TestDoctor_AnalyzeIssues_NoCFRay(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: ""},
 	}
 	issues := svc.analyzeIssues(report)
@@ -328,8 +328,8 @@ func TestDoctor_AnalyzeIssues_NoCFRay(t *testing.T) {
 func TestDoctor_AnalyzeIssues_NSMismatch(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
+		DNS:  &DNSPropagationResult{Consistent: true},
+		SSL:  &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
 		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 		Nameservers: &NSProbeResult{
 			Expected: []string{"ns1.cf.com"},
@@ -352,9 +352,9 @@ func TestDoctor_AnalyzeIssues_NSMismatch(t *testing.T) {
 func TestDoctor_AnalyzeIssues_AllHealthy(t *testing.T) {
 	svc := NewDoctorService(0)
 	report := &DiagnosticReport{
-		DNS: &DNSPropagationResult{Consistent: true},
-		SSL: &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
-		HTTP: &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
+		DNS:         &DNSPropagationResult{Consistent: true},
+		SSL:         &SSLProbeResult{Valid: true, DaysLeft: 90, TLSVersion: "TLS 1.3"},
+		HTTP:        &HTTPProbeResult{StatusCode: 200, CloudflareRay: "abc123"},
 		Nameservers: &NSProbeResult{Match: true},
 	}
 	issues := svc.analyzeIssues(report)

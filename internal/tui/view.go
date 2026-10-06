@@ -38,7 +38,7 @@ func (m DashboardModel) View() string {
 	// Center content if window is large enough
 	if m.width > 80 {
 		content = lipgloss.NewStyle().
-			Width(m.width - 4).
+			Width(m.width-4).
 			Padding(0, 2).
 			Render(content)
 	}
@@ -149,7 +149,7 @@ func (m DashboardModel) renderLoading() string {
 		Render(fmt.Sprintf("%s Loading Cosmoflare Dashboard...", frame))
 
 	return lipgloss.NewStyle().
-		Height(m.height - 4).
+		Height(m.height-4).
 		Align(lipgloss.Center, lipgloss.Center).
 		Render(loadingText)
 }

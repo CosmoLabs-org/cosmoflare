@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // HeaderModel represents the professional installer header
@@ -31,10 +31,10 @@ type HeaderModel struct {
 
 // HeaderAnimation handles header animations
 type HeaderAnimation struct {
-	frame     int
-	lastTick  time.Time
-	frames    []string
-	active    bool
+	frame    int
+	lastTick time.Time
+	frames   []string
+	active   bool
 }
 
 // HeaderStyles contains styling for the header

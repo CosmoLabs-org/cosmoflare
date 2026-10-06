@@ -37,10 +37,10 @@ type tokenVerifyResponse struct {
 		Name      string    `json:"name"`
 		ExpiresOn time.Time `json:"expires_on"`
 		Policy    struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Effect      string `json:"effect"`
-			Resources   struct {
+			ID        string `json:"id"`
+			Name      string `json:"name"`
+			Effect    string `json:"effect"`
+			Resources struct {
 				Computation []any `json:"computation"`
 				AccountID   []any `json:"computation:cloudflare_account:account_id"`
 			} `json:"resources"`

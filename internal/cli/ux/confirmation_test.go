@@ -783,13 +783,13 @@ func TestBatchConfirmation_ManyOperations(t *testing.T) {
 
 func TestSecurity_ConfirmationBypass_CraftedInput(t *testing.T) {
 	bypassAttempts := []string{
-		"Y",          // uppercase (should be lowered)
-		"YES",        // uppercase (should be lowered)
-		" Yes",       // leading space
-		"y\nr\n",     // injection attempt
-		"y; rm -rf /", // command injection
+		"Y",            // uppercase (should be lowered)
+		"YES",          // uppercase (should be lowered)
+		" Yes",         // leading space
+		"y\nr\n",       // injection attempt
+		"y; rm -rf /",  // command injection
 		"y\rmalicious", // carriage return
-		"y\x00evil",   // null byte injection
+		"y\x00evil",    // null byte injection
 	}
 
 	for _, attempt := range bypassAttempts {

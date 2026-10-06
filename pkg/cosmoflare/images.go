@@ -21,9 +21,9 @@ type CFImage struct {
 
 // CFImageVariant represents a Cloudflare Images delivery variant.
 type CFImageVariant struct {
-	ID                     string                  `json:"id"`
-	NeverRequireSignedURLs bool                    `json:"neverRequireSignedURLs,omitempty"`
-	Options                CFImageVariantOptions   `json:"options"`
+	ID                     string                `json:"id"`
+	NeverRequireSignedURLs bool                  `json:"neverRequireSignedURLs,omitempty"`
+	Options                CFImageVariantOptions `json:"options"`
 }
 
 // CFImageVariantOptions holds variant resize/transform options.

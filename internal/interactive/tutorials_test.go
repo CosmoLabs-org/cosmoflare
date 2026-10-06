@@ -531,7 +531,7 @@ func TestTutorialAction_Handler(t *testing.T) {
 	called := false
 	action := TutorialAction{
 		ID: "custom", Label: "Custom",
-		Handler: func() error { called = true; return nil },
+		Handler:     func() error { called = true; return nil },
 		SkipAllowed: false,
 	}
 	assert.NoError(t, action.Handler())
@@ -597,7 +597,7 @@ func TestTutorialContent_ActionLabelsNotEmpty(t *testing.T) {
 // TestShowAccessibilityMenu_Options verifies ShowAccessibilityMenu behavior for the options case,...
 func TestShowAccessibilityMenu_Options(t *testing.T) {
 	tests := []struct {
-		input   string
+		input    string
 		wantMode AccessibilityMode
 	}{
 		{"1\n", AccessibilityScreenReader},
@@ -890,7 +890,6 @@ func TestSetAnimationStyle_Global(t *testing.T) {
 // First run stdin-mocked
 // ===========================================================================
 
-
 // ===========================================================================
 // Setup stdin-mocked
 // ===========================================================================
@@ -911,8 +910,9 @@ func TestPromptWithDefault_Stdin(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, cleanup := pipeStdin(t, tt.input)
 			defer cleanup()
-			got, err := PromptWithDefault("Enter:", tt.def); assert.NoError(t, err); assert.Equal(t, tt.want, got)
+			got, err := PromptWithDefault("Enter:", tt.def)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
-

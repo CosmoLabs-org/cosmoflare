@@ -17,13 +17,13 @@ import (
 // The data fields are the daemon's wire contract (FEAT-042): concrete
 // types, mirrored to TypeScript via make wire-types.
 type MetricsSnapshot struct {
-	Profile      string                     `json:"profile"`
-	CollectedAt  time.Time                  `json:"collected_at"`
-	Zones        []*cosmoflare.Zone         `json:"zones,omitempty"`
-	R2Buckets    []*cosmoflare.Bucket       `json:"r2_buckets,omitempty"`
-	Workers      []*cosmoflare.Worker       `json:"workers,omitempty"`
-	KVNamespaces []*cosmoflare.KVNamespace  `json:"kv_namespaces,omitempty"`
-	Errors       map[string]string          `json:"errors,omitempty"`
+	Profile      string                    `json:"profile"`
+	CollectedAt  time.Time                 `json:"collected_at"`
+	Zones        []*cosmoflare.Zone        `json:"zones,omitempty"`
+	R2Buckets    []*cosmoflare.Bucket      `json:"r2_buckets,omitempty"`
+	Workers      []*cosmoflare.Worker      `json:"workers,omitempty"`
+	KVNamespaces []*cosmoflare.KVNamespace `json:"kv_namespaces,omitempty"`
+	Errors       map[string]string         `json:"errors,omitempty"`
 }
 
 func (s *MetricsSnapshot) recordError(source string, err error) {

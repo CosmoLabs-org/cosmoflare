@@ -40,12 +40,12 @@ func logpushEnvelope(result any) map[string]any {
 // layer reads back.
 func logpushJobJSON(id int, name, dataset, destination, frequency string, enabled bool) map[string]any {
 	return map[string]any{
-		"id":              id,
-		"name":            name,
-		"dataset":         dataset,
+		"id":               id,
+		"name":             name,
+		"dataset":          dataset,
 		"destination_conf": destination,
-		"enabled":         enabled,
-		"frequency":       frequency,
+		"enabled":          enabled,
+		"frequency":        frequency,
 	}
 }
 

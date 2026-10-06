@@ -39,17 +39,17 @@ const (
 
 // ProgressInfo contains detailed progress information
 type ProgressInfo struct {
-	Operation     string        `json:"operation"`
-	Current       int64         `json:"current"`
-	Total         int64         `json:"total"`
-	Percentage    float64       `json:"percentage"`
-	Speed         float64       `json:"speed_mbps"`
-	ETA           time.Duration `json:"eta"`
-	StartTime     time.Time     `json:"start_time"`
-	LastUpdate    time.Time     `json:"last_update"`
-	State         ProgressState `json:"state"`
-	Message       string        `json:"message"`
-	Error         error         `json:"error,omitempty"`
+	Operation  string        `json:"operation"`
+	Current    int64         `json:"current"`
+	Total      int64         `json:"total"`
+	Percentage float64       `json:"percentage"`
+	Speed      float64       `json:"speed_mbps"`
+	ETA        time.Duration `json:"eta"`
+	StartTime  time.Time     `json:"start_time"`
+	LastUpdate time.Time     `json:"last_update"`
+	State      ProgressState `json:"state"`
+	Message    string        `json:"message"`
+	Error      error         `json:"error,omitempty"`
 }
 
 // ProgressBar defines the interface for progress display
@@ -77,14 +77,14 @@ type EnhancedProgressBar struct {
 
 // ProgressBarConfig contains configuration for progress bars
 type ProgressBarConfig struct {
-	Type         ProgressType
-	Template     string
-	ShowSpeed    bool
-	ShowETA      bool
-	ColorOutput  bool
-	RefreshRate  time.Duration
-	Width        int
-	HideCursor   bool
+	Type        ProgressType
+	Template    string
+	ShowSpeed   bool
+	ShowETA     bool
+	ColorOutput bool
+	RefreshRate time.Duration
+	Width       int
+	HideCursor  bool
 }
 
 // DefaultConfig returns a default progress bar configuration

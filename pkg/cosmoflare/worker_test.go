@@ -104,13 +104,13 @@ func TestLogOptions(t *testing.T) {
 
 func TestWorkerTypes(t *testing.T) {
 	w := &Worker{
-		Name:        "my-worker",
-		Modified:    time.Now(),
-		Size:        1024,
-		Runtime:     "workers",
-		Script:      "export default {}",
-		Bindings:    []WorkerBinding{{Name: "KV", Type: "kv", ID: "ns-1"}},
-		Tags:        []string{"prod"},
+		Name:              "my-worker",
+		Modified:          time.Now(),
+		Size:              1024,
+		Runtime:           "workers",
+		Script:            "export default {}",
+		Bindings:          []WorkerBinding{{Name: "KV", Type: "kv", ID: "ns-1"}},
+		Tags:              []string{"prod"},
 		CompatibilityDate: "2024-01-01",
 	}
 	if w.Name != "my-worker" {
@@ -479,8 +479,8 @@ func TestWorkerDeployAPIError(t *testing.T) {
 func TestWorkerJSONMarshal(t *testing.T) {
 	w := &Worker{
 		Name: "json-worker", Size: 2048, Runtime: "workers",
-		Bindings:    []WorkerBinding{{Name: "KV", Type: "kv", ID: "ns-1"}},
-		Tags:        []string{"prod"},
+		Bindings:          []WorkerBinding{{Name: "KV", Type: "kv", ID: "ns-1"}},
+		Tags:              []string{"prod"},
 		CompatibilityDate: "2024-01-01",
 	}
 	data, err := json.Marshal(w)

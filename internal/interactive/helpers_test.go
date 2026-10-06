@@ -16,11 +16,11 @@ import (
 // TestCenterText verifies CenterText behavior, one t.Run subtest per scenario.
 func TestCenterText(t *testing.T) {
 	tests := []struct {
-		name      string
-		text      string
-		width     int
-		want      string
-		wantLen   int // total length must equal width
+		name    string
+		text    string
+		width   int
+		want    string
+		wantLen int // total length must equal width
 	}{
 		{
 			name:    "text shorter than width",
@@ -785,7 +785,7 @@ func TestGetProfileDescription(t *testing.T) {
 		}
 		// Inner content should be 27 chars + "..."
 		inner := got[1 : len(got)-1] // strip parens
-		if len(inner) != 30 { // 27 + 3 for "..."
+		if len(inner) != 30 {        // 27 + 3 for "..."
 			t.Errorf("inner content should be 30 chars, got %d: %q", len(inner), inner)
 		}
 		if !strings.HasSuffix(inner, "...") {

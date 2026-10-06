@@ -30,11 +30,11 @@ func TestNewGuardrailChecker_NonNilConfig(t *testing.T) {
 
 func TestCheckBucketAccess(t *testing.T) {
 	tests := []struct {
-		name            string
-		topAllowed      []string
+		name             string
+		topAllowed       []string
 		guardrailAllowed []string
-		bucket          string
-		wantAllowed     bool
+		bucket           string
+		wantAllowed      bool
 	}{
 		{
 			name:        "no allowlists — all buckets allowed",

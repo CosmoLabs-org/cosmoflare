@@ -23,11 +23,11 @@ type statusError struct {
 	msg    string
 }
 
-func (e *statusError) Error() string                { return e.msg }
-func (e *statusError) StatusCode() int               { return e.status }
-func (e *statusError) Unwrap() error                 { return nil }
-func (e *statusError) Temporary() bool               { return false }
-func (e *statusError) Timeout() bool                 { return false }
+func (e *statusError) Error() string   { return e.msg }
+func (e *statusError) StatusCode() int { return e.status }
+func (e *statusError) Unwrap() error   { return nil }
+func (e *statusError) Temporary() bool { return false }
+func (e *statusError) Timeout() bool   { return false }
 
 // smithyStyleError implements HTTPStatusCode() (AWS SDK pattern).
 type smithyStyleError struct {
@@ -35,18 +35,18 @@ type smithyStyleError struct {
 	msg    string
 }
 
-func (e *smithyStyleError) Error() string           { return e.msg }
-func (e *smithyStyleError) HTTPStatusCode() int      { return e.status }
-func (e *smithyStyleError) Unwrap() error           { return nil }
+func (e *smithyStyleError) Error() string       { return e.msg }
+func (e *smithyStyleError) HTTPStatusCode() int { return e.status }
+func (e *smithyStyleError) Unwrap() error       { return nil }
 
 // timeoutNetError is a net.Error that is a timeout.
 type timeoutNetError struct {
 	msg string
 }
 
-func (e *timeoutNetError) Error() string      { return e.msg }
-func (e *timeoutNetError) Timeout() bool      { return true }
-func (e *timeoutNetError) Temporary() bool    { return true }
+func (e *timeoutNetError) Error() string   { return e.msg }
+func (e *timeoutNetError) Timeout() bool   { return true }
+func (e *timeoutNetError) Temporary() bool { return true }
 
 // --- Tests ---
 

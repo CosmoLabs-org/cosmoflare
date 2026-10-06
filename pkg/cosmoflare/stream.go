@@ -58,27 +58,27 @@ type CFStreamWatermark struct {
 
 // CFStreamLiveInput represents a Cloudflare Stream live input.
 type CFStreamLiveInput struct {
-	UID              string                    `json:"uid"`
-	Created          *time.Time                `json:"created,omitempty"`
-	Modified         *time.Time                `json:"modified,omitempty"`
-	Meta             map[string]interface{}    `json:"meta,omitempty"`
-	Status           string                    `json:"status,omitempty"`
-	Recording        CFStreamLiveRecording     `json:"recording,omitempty"`
-	RTMPS            CFStreamLiveRTMPS         `json:"rtmps,omitempty"`
-	RTMPSPLAYBACK    CFStreamLiveRTMPS         `json:"rtmpsPlayback,omitempty"`
-	SRT              CFStreamLiveSRT           `json:"srt,omitempty"`
-	SRTPlayback      CFStreamLiveSRT           `json:"srtPlayback,omitempty"`
-	WebRTC           CFStreamLiveWebRTC        `json:"webRTC,omitempty"`
-	WebRTCPlayback   CFStreamLiveWebRTC        `json:"webRTCPlayback,omitempty"`
-	DeleteRecording  bool                      `json:"deleteRecordingAfterDays,omitempty"`
+	UID             string                 `json:"uid"`
+	Created         *time.Time             `json:"created,omitempty"`
+	Modified        *time.Time             `json:"modified,omitempty"`
+	Meta            map[string]interface{} `json:"meta,omitempty"`
+	Status          string                 `json:"status,omitempty"`
+	Recording       CFStreamLiveRecording  `json:"recording,omitempty"`
+	RTMPS           CFStreamLiveRTMPS      `json:"rtmps,omitempty"`
+	RTMPSPLAYBACK   CFStreamLiveRTMPS      `json:"rtmpsPlayback,omitempty"`
+	SRT             CFStreamLiveSRT        `json:"srt,omitempty"`
+	SRTPlayback     CFStreamLiveSRT        `json:"srtPlayback,omitempty"`
+	WebRTC          CFStreamLiveWebRTC     `json:"webRTC,omitempty"`
+	WebRTCPlayback  CFStreamLiveWebRTC     `json:"webRTCPlayback,omitempty"`
+	DeleteRecording bool                   `json:"deleteRecordingAfterDays,omitempty"`
 }
 
 // CFStreamLiveRecording holds recording settings for a live input.
 type CFStreamLiveRecording struct {
-	Mode              string `json:"mode,omitempty"`
-	RequireSignedURLs bool   `json:"requireSignedURLs,omitempty"`
+	Mode              string   `json:"mode,omitempty"`
+	RequireSignedURLs bool     `json:"requireSignedURLs,omitempty"`
 	AllowedOrigins    []string `json:"allowedOrigins,omitempty"`
-	TimeoutSeconds    int    `json:"timeoutSeconds,omitempty"`
+	TimeoutSeconds    int      `json:"timeoutSeconds,omitempty"`
 }
 
 // CFStreamLiveRTMPS holds RTMPS connection details.

@@ -934,9 +934,9 @@ func TestInteractiveRetry_MultipleRetriesThenCancel(t *testing.T) {
 	os.Stdin = r
 
 	go func() {
-		w.WriteString("r\n")  // first: retry
-		w.WriteString("r\n")  // second: retry
-		w.WriteString("c\n")  // third: cancel
+		w.WriteString("r\n") // first: retry
+		w.WriteString("r\n") // second: retry
+		w.WriteString("c\n") // third: cancel
 		w.Close()
 	}()
 
@@ -1094,9 +1094,9 @@ func TestSecurity_ConfirmRetry_BypassAttempts(t *testing.T) {
 	}{
 		{"lowercase r", "r\n", true},
 		{"full retry", "retry\n", true},
-		{"uppercase R", "R\n", true},       // ConfirmRetry lowercases: "R" -> "r"
+		{"uppercase R", "R\n", true},         // ConfirmRetry lowercases: "R" -> "r"
 		{"uppercase RETRY", "RETRY\n", true}, // ConfirmRetry lowercases: "RETRY" -> "retry"
-		{"yes wrong type", "yes\n", false},  // "yes" is not "r" or "retry"
+		{"yes wrong type", "yes\n", false},   // "yes" is not "r" or "retry"
 		{"numeric", "1\n", false},
 		{"injection", "r;rm -rf /\n", false}, // "r;rm..." is not "r" or "retry"
 	}

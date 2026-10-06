@@ -94,13 +94,13 @@ func TestThemeDeep_ApplyTheme_AllSpeeds(t *testing.T) {
 	tm := NewThemeManager()
 
 	tests := []struct {
-		name           string
-		themeID        string
-		expectedStyle  string // not directly observable, but shouldn't panic
-		shouldDisable  bool
+		name          string
+		themeID       string
+		expectedStyle string // not directly observable, but shouldn't panic
+		shouldDisable bool
 	}{
 		{"disabled animations", "monochrome", "disabled", true},
-		{"speed 0 (fast)", "cosmic", "normal", false},   // cosmic speed=60 -> normal
+		{"speed 0 (fast)", "cosmic", "normal", false},    // cosmic speed=60 -> normal
 		{"speed 50 (normal)", "ocean", "normal", false},  // ocean speed=50 -> normal
 		{"speed 70 (normal)", "sunset", "normal", false}, // sunset speed=70 -> normal
 		{"speed 80 (slow)", "forest", "slow", false},     // forest speed=80 -> slow

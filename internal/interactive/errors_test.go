@@ -10,9 +10,9 @@ import (
 // TestHandleError_AllTypes verifies HandleError behavior for the all types case, one t.Run subtest...
 func TestHandleError_AllTypes(t *testing.T) {
 	types := []struct {
-		name     string
-		errType  ErrorType
-		header   string
+		name    string
+		errType ErrorType
+		header  string
 	}{
 		{"network", ErrorTypeNetwork, "Network Error"},
 		{"auth", ErrorTypeAuth, "Authentication Error"},

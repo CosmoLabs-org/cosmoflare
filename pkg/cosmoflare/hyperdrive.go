@@ -9,10 +9,10 @@ import (
 
 // HyperdriveConfig represents a Cloudflare Hyperdrive configuration.
 type HyperdriveConfig struct {
-	ID      string                  `json:"id"`
-	Name    string                  `json:"name"`
-	Origin  HyperdriveOrigin       `json:"origin"`
-	Caching HyperdriveCaching      `json:"caching"`
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Origin  HyperdriveOrigin  `json:"origin"`
+	Caching HyperdriveCaching `json:"caching"`
 }
 
 // HyperdriveOrigin holds the origin database connection details.

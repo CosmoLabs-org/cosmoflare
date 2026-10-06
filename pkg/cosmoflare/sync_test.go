@@ -15,11 +15,11 @@ import (
 // --- StorageBackend mock ---
 
 type mockStorageBackend struct {
-	objects   []ObjectInfo
-	uploaded  []string
+	objects    []ObjectInfo
+	uploaded   []string
 	downloaded []string
-	deleted   []string
-	failList  bool
+	deleted    []string
+	failList   bool
 }
 
 func (m *mockStorageBackend) ListRemoteObjects(ctx context.Context, bucket, prefix string) ([]ObjectInfo, error) {
@@ -116,10 +116,10 @@ func TestPlanUp_NewFilesUploaded(t *testing.T) {
 	}
 
 	plan, err := svc.Plan(context.Background(), SyncPlanInput{
-		Direction: SyncUp,
-		Bucket:    "test-bucket",
-		Prefix:    "",
-		LocalDir:  "/tmp/test",
+		Direction:  SyncUp,
+		Bucket:     "test-bucket",
+		Prefix:     "",
+		LocalDir:   "/tmp/test",
 		LocalFiles: localFiles,
 	})
 	if err != nil {

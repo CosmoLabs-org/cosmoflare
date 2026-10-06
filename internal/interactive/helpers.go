@@ -12,27 +12,27 @@ import (
 	"os"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"github.com/fatih/color"
 )
 
 // Color definitions for consistent theming
 var (
-	Bold       = color.New(color.Bold).SprintFunc()
-	Success    = color.New(color.FgGreen, color.Bold).SprintFunc()
-	Error      = color.New(color.FgRed, color.Bold).SprintFunc()
-	Warning    = color.New(color.FgYellow, color.Bold).SprintFunc()
-	Info       = color.New(color.FgCyan, color.Bold).SprintFunc()
-	Dim        = color.New(color.Faint).SprintFunc()
-	Muted      = color.New(color.FgHiBlack).SprintFunc()
-	Reset      = "\033[0m"
-	Red        = color.RedString
-	Green      = color.GreenString
-	Yellow     = color.YellowString
-	Blue       = color.BlueString
-	Magenta    = color.MagentaString
-	Cyan       = color.CyanString
-	White      = color.WhiteString
+	Bold    = color.New(color.Bold).SprintFunc()
+	Success = color.New(color.FgGreen, color.Bold).SprintFunc()
+	Error   = color.New(color.FgRed, color.Bold).SprintFunc()
+	Warning = color.New(color.FgYellow, color.Bold).SprintFunc()
+	Info    = color.New(color.FgCyan, color.Bold).SprintFunc()
+	Dim     = color.New(color.Faint).SprintFunc()
+	Muted   = color.New(color.FgHiBlack).SprintFunc()
+	Reset   = "\033[0m"
+	Red     = color.RedString
+	Green   = color.GreenString
+	Yellow  = color.YellowString
+	Blue    = color.BlueString
+	Magenta = color.MagentaString
+	Cyan    = color.CyanString
+	White   = color.WhiteString
 )
 
 // Print functions for consistent output

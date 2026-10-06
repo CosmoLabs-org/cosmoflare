@@ -13,19 +13,19 @@ import (
 
 // WranglerConfig represents a parsed wrangler.toml file.
 type WranglerConfig struct {
-	Name              string                       `toml:"name" json:"name"`
-	Main              string                       `toml:"main" json:"main,omitempty"`
-	CompatibilityDate string                       `toml:"compatibility_date" json:"compatibility_date,omitempty"`
-	CompatibilityFlags []string                    `toml:"compatibility_flags" json:"compatibility_flags,omitempty"`
-	AccountID         string                       `toml:"account_id" json:"account_id,omitempty"`
-	Route             string                       `toml:"route" json:"route,omitempty"`
-	Routes            []string                     `toml:"routes" json:"routes,omitempty"`
-	Workers_Dev       bool                         `toml:"workers_dev" json:"workers_dev,omitempty"`
-	KVNamespaces      []WranglerKVNamespace        `toml:"kv_namespaces" json:"kv_namespaces,omitempty"`
-	R2Buckets         []WranglerR2Bucket           `toml:"r2_buckets" json:"r2_buckets,omitempty"`
-	D1Databases       []WranglerD1Database         `toml:"d1_databases" json:"d1_databases,omitempty"`
-	Vars              map[string]string            `toml:"vars" json:"vars,omitempty"`
-	Env               map[string]*WranglerEnvConfig `toml:"-" json:"env,omitempty"`
+	Name               string                        `toml:"name" json:"name"`
+	Main               string                        `toml:"main" json:"main,omitempty"`
+	CompatibilityDate  string                        `toml:"compatibility_date" json:"compatibility_date,omitempty"`
+	CompatibilityFlags []string                      `toml:"compatibility_flags" json:"compatibility_flags,omitempty"`
+	AccountID          string                        `toml:"account_id" json:"account_id,omitempty"`
+	Route              string                        `toml:"route" json:"route,omitempty"`
+	Routes             []string                      `toml:"routes" json:"routes,omitempty"`
+	Workers_Dev        bool                          `toml:"workers_dev" json:"workers_dev,omitempty"`
+	KVNamespaces       []WranglerKVNamespace         `toml:"kv_namespaces" json:"kv_namespaces,omitempty"`
+	R2Buckets          []WranglerR2Bucket            `toml:"r2_buckets" json:"r2_buckets,omitempty"`
+	D1Databases        []WranglerD1Database          `toml:"d1_databases" json:"d1_databases,omitempty"`
+	Vars               map[string]string             `toml:"vars" json:"vars,omitempty"`
+	Env                map[string]*WranglerEnvConfig `toml:"-" json:"env,omitempty"`
 }
 
 // WranglerKVNamespace represents a KV namespace binding in wrangler.toml.
@@ -37,8 +37,8 @@ type WranglerKVNamespace struct {
 
 // WranglerR2Bucket represents an R2 bucket binding in wrangler.toml.
 type WranglerR2Bucket struct {
-	Binding    string `toml:"binding" json:"binding"`
-	BucketName string `toml:"bucket_name" json:"bucket_name"`
+	Binding           string `toml:"binding" json:"binding"`
+	BucketName        string `toml:"bucket_name" json:"bucket_name"`
 	PreviewBucketName string `toml:"preview_bucket_name" json:"preview_bucket_name,omitempty"`
 }
 
@@ -66,25 +66,25 @@ type WranglerEnvConfig struct {
 // representation of the full .cosmoflare.yaml including D1 and profiles
 // which the existing CosmoflareConfig (diff.go) does not yet cover.
 type WranglerImportResult struct {
-	Version  string                        `yaml:"version" json:"version"`
-	Name     string                        `yaml:"name" json:"name"`
-	Workers  map[string]WranglerWorkerYAML `yaml:"workers,omitempty" json:"workers,omitempty"`
-	KV       *WranglerKVYAML               `yaml:"kv,omitempty" json:"kv,omitempty"`
-	R2       *WranglerR2YAML               `yaml:"r2,omitempty" json:"r2,omitempty"`
-	D1       *WranglerD1YAML               `yaml:"d1,omitempty" json:"d1,omitempty"`
+	Version  string                          `yaml:"version" json:"version"`
+	Name     string                          `yaml:"name" json:"name"`
+	Workers  map[string]WranglerWorkerYAML   `yaml:"workers,omitempty" json:"workers,omitempty"`
+	KV       *WranglerKVYAML                 `yaml:"kv,omitempty" json:"kv,omitempty"`
+	R2       *WranglerR2YAML                 `yaml:"r2,omitempty" json:"r2,omitempty"`
+	D1       *WranglerD1YAML                 `yaml:"d1,omitempty" json:"d1,omitempty"`
 	Profiles map[string]*WranglerProfileYAML `yaml:"profiles,omitempty" json:"profiles,omitempty"`
 }
 
 // WranglerWorkerYAML represents a worker entry in the generated .cosmoflare.yaml.
 type WranglerWorkerYAML struct {
-	Name              string            `yaml:"name,omitempty" json:"name,omitempty"`
-	Script            string            `yaml:"script,omitempty" json:"script,omitempty"`
-	CompatibilityDate string            `yaml:"compatibility_date,omitempty" json:"compatibility_date,omitempty"`
-	CompatibilityFlags []string         `yaml:"compatibility_flags,omitempty" json:"compatibility_flags,omitempty"`
-	Route             string            `yaml:"route,omitempty" json:"route,omitempty"`
-	Routes            []string          `yaml:"routes,omitempty" json:"routes,omitempty"`
-	Vars              map[string]string `yaml:"vars,omitempty" json:"vars,omitempty"`
-	Bindings          *WranglerBindingsYAML `yaml:"bindings,omitempty" json:"bindings,omitempty"`
+	Name               string                `yaml:"name,omitempty" json:"name,omitempty"`
+	Script             string                `yaml:"script,omitempty" json:"script,omitempty"`
+	CompatibilityDate  string                `yaml:"compatibility_date,omitempty" json:"compatibility_date,omitempty"`
+	CompatibilityFlags []string              `yaml:"compatibility_flags,omitempty" json:"compatibility_flags,omitempty"`
+	Route              string                `yaml:"route,omitempty" json:"route,omitempty"`
+	Routes             []string              `yaml:"routes,omitempty" json:"routes,omitempty"`
+	Vars               map[string]string     `yaml:"vars,omitempty" json:"vars,omitempty"`
+	Bindings           *WranglerBindingsYAML `yaml:"bindings,omitempty" json:"bindings,omitempty"`
 }
 
 // WranglerBindingsYAML groups KV, R2, and D1 bindings for a worker.

@@ -789,9 +789,9 @@ func TestSecurity_NoControlCharsInView(t *testing.T) {
 func TestSecurity_UnicodeInBucketNames(t *testing.T) {
 	m := newTestModel()
 	m.buckets = []Bucket{
-		{Name: "中文存储桶", Size: 1024},       // Chinese
-		{Name: "Русский", Size: 2048}, // Russian
-		{Name: "💠-bucket", Size: 4096},                       // Emoji
+		{Name: "中文存储桶", Size: 1024},    // Chinese
+		{Name: "Русский", Size: 2048},  // Russian
+		{Name: "💠-bucket", Size: 4096}, // Emoji
 		{Name: "bucket-with-special", Size: 512},
 	}
 	m.currentSection = SectionBucketList
@@ -1001,9 +1001,9 @@ func TestRenderFooter_ContainsNavigationHint(t *testing.T) {
 func TestRenderMonitoring_Full(t *testing.T) {
 	m := newAvailableTestModel()
 	m.metrics = ServiceMetrics{
-		R2:      R2Metrics{BucketCount: 3, TotalSize: 1024 * 1024, TotalObjects: 150},
-		Workers: WorkersMetrics{Count: 5},
-		KV:      KVMetrics{NamespaceCount: 2},
+		R2:        R2Metrics{BucketCount: 3, TotalSize: 1024 * 1024, TotalObjects: 150},
+		Workers:   WorkersMetrics{Count: 5},
+		KV:        KVMetrics{NamespaceCount: 2},
 		FetchedAt: time.Now(),
 	}
 	m.notifications = []Notification{

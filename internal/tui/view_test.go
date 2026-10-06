@@ -209,7 +209,7 @@ func TestRenderOverview_ZeroValues(t *testing.T) {
 func TestRenderOverview_LargeNumbers(t *testing.T) {
 	m := newAvailableTestModel()
 	m.usageStats = UsageStats{
-		TotalUsed:   500 * 1024 * 1024 * 1024 * 1024, // 500 TB
+		TotalUsed:   500 * 1024 * 1024 * 1024 * 1024,  // 500 TB
 		TotalLimit:  1024 * 1024 * 1024 * 1024 * 1024, // 1 PB
 		BucketCount: 150,
 	}
@@ -223,7 +223,7 @@ func TestRenderOverview_LargeNumbers(t *testing.T) {
 func TestRenderOverview_WithPercentage(t *testing.T) {
 	m := newTestModel()
 	m.usageStats = UsageStats{
-		TotalUsed:   512 * 1024 * 1024 * 1024, // 512 GB = 0.5 TB
+		TotalUsed:   512 * 1024 * 1024 * 1024,  // 512 GB = 0.5 TB
 		TotalLimit:  1024 * 1024 * 1024 * 1024, // 1 TB
 		BucketCount: 3,
 	}

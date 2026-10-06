@@ -26,12 +26,12 @@ import (
 type OperationType string
 
 const (
-	OperationTypeCopy    OperationType = "copy"
-	OperationTypeMove    OperationType = "move"
-	OperationTypeDelete  OperationType = "delete"
-	OperationTypeUpload  OperationType = "upload"
+	OperationTypeCopy     OperationType = "copy"
+	OperationTypeMove     OperationType = "move"
+	OperationTypeDelete   OperationType = "delete"
+	OperationTypeUpload   OperationType = "upload"
 	OperationTypeDownload OperationType = "download"
-	OperationTypeSync    OperationType = "sync"
+	OperationTypeSync     OperationType = "sync"
 )
 
 // OperationStatus defines the status of an operation
@@ -76,21 +76,21 @@ type BatchConfig struct {
 
 // BatchStats contains statistics about batch operations
 type BatchStats struct {
-	Total          int32         `json:"total"`
-	Pending        int32         `json:"pending"`
-	Running        int32         `json:"running"`
-	Completed      int32         `json:"completed"`
-	Failed         int32         `json:"failed"`
-	Skipped        int32         `json:"skipped"`
-	Cancelled      int32         `json:"cancelled"`
-	TotalSize      int64         `json:"total_size"`
-	ProcessedSize  int64         `json:"processed_size"`
-	TotalDuration  time.Duration `json:"total_duration"`
-	AverageSpeed   float64       `json:"average_speed_mbps"`
-	StartTime      time.Time     `json:"start_time"`
-	EndTime        time.Time     `json:"end_time,omitempty"`
-	Progress       float64       `json:"progress"`
-	ETA            time.Duration `json:"eta"`
+	Total         int32         `json:"total"`
+	Pending       int32         `json:"pending"`
+	Running       int32         `json:"running"`
+	Completed     int32         `json:"completed"`
+	Failed        int32         `json:"failed"`
+	Skipped       int32         `json:"skipped"`
+	Cancelled     int32         `json:"cancelled"`
+	TotalSize     int64         `json:"total_size"`
+	ProcessedSize int64         `json:"processed_size"`
+	TotalDuration time.Duration `json:"total_duration"`
+	AverageSpeed  float64       `json:"average_speed_mbps"`
+	StartTime     time.Time     `json:"start_time"`
+	EndTime       time.Time     `json:"end_time,omitempty"`
+	Progress      float64       `json:"progress"`
+	ETA           time.Duration `json:"eta"`
 }
 
 // BatchManager manages and executes batch operations
@@ -169,12 +169,12 @@ func (bm *BatchManager) AddOperation(op *Operation) error {
 // AddCopyOperation adds a copy operation to the batch
 func (bm *BatchManager) AddCopyOperation(src, dst string, opts *operations.CopyOptions) error {
 	op := &Operation{
-		ID:       fmt.Sprintf("copy_%d_%s", time.Now().Unix(), filepath.Base(src)),
-		Type:     OperationTypeCopy,
-		Status:   StatusPending,
-		Source:   src,
+		ID:          fmt.Sprintf("copy_%d_%s", time.Now().Unix(), filepath.Base(src)),
+		Type:        OperationTypeCopy,
+		Status:      StatusPending,
+		Source:      src,
 		Destination: dst,
-		Options: make(map[string]interface{}),
+		Options:     make(map[string]interface{}),
 	}
 
 	if opts != nil {
@@ -237,8 +237,8 @@ func (bm *BatchManager) SaveToFile(filename string) error {
 	defer bm.mu.RUnlock()
 
 	batchSpec := BatchSpec{
-		Config:      bm.config,
-		Operations:  make([]BatchOperationSpec, len(bm.operations)),
+		Config:     bm.config,
+		Operations: make([]BatchOperationSpec, len(bm.operations)),
 	}
 
 	for i, op := range bm.operations {
@@ -394,7 +394,6 @@ func (bm *BatchManager) queueOperations() {
 	}
 }
 
-
 // processResult processes the result of an operation
 func (bm *BatchManager) processResult(op *Operation) {
 	atomic.AddInt32(&bm.stats.Running, -1)
@@ -483,15 +482,15 @@ func (bm *BatchManager) waitForCompletion() {
 }
 
 // Callback setters
-func (bm *BatchManager) OnProgress(fn func(*BatchStats))      { bm.onProgress = fn }
-func (bm *BatchManager) OnComplete(fn func(*BatchStats))      { bm.onComplete = fn }
-func (bm *BatchManager) OnError(fn func(*Operation, error))   { bm.onError = fn }
-func (bm *BatchManager) OnOperation(fn func(*Operation))      { bm.onOperation = fn }
+func (bm *BatchManager) OnProgress(fn func(*BatchStats))    { bm.onProgress = fn }
+func (bm *BatchManager) OnComplete(fn func(*BatchStats))    { bm.onComplete = fn }
+func (bm *BatchManager) OnError(fn func(*Operation, error)) { bm.onError = fn }
+func (bm *BatchManager) OnOperation(fn func(*Operation))    { bm.onOperation = fn }
 
 // BatchSpec represents a batch specification file
 type BatchSpec struct {
-	Config     *BatchConfig           `json:"config,omitempty"`
-	Operations []BatchOperationSpec   `json:"operations"`
+	Config     *BatchConfig         `json:"config,omitempty"`
+	Operations []BatchOperationSpec `json:"operations"`
 }
 
 // BatchOperationSpec represents an operation in the specification

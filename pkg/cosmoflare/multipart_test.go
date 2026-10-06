@@ -391,12 +391,12 @@ func TestShouldUseMultipart(t *testing.T) {
 		threshold int64
 		want      bool
 	}{
-		{50 * 1024 * 1024, 0, false},                        // 50MB < 100MB default
-		{150 * 1024 * 1024, 0, true},                        // 150MB > 100MB default
-		{100 * 1024 * 1024, 0, false},                       // exactly 100MB, strict >
-		{10 * 1024 * 1024, 5 * 1024 * 1024, true},           // 10MB > 5MB custom
-		{5 * 1024 * 1024, 5 * 1024 * 1024, false},           // exactly at custom
-		{1024, 5 * 1024 * 1024, false},                      // 1KB < 5MB custom
+		{50 * 1024 * 1024, 0, false},              // 50MB < 100MB default
+		{150 * 1024 * 1024, 0, true},              // 150MB > 100MB default
+		{100 * 1024 * 1024, 0, false},             // exactly 100MB, strict >
+		{10 * 1024 * 1024, 5 * 1024 * 1024, true}, // 10MB > 5MB custom
+		{5 * 1024 * 1024, 5 * 1024 * 1024, false}, // exactly at custom
+		{1024, 5 * 1024 * 1024, false},            // 1KB < 5MB custom
 	}
 
 	for _, tt := range tests {

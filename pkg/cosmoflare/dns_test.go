@@ -396,14 +396,14 @@ func TestCfDNSToRecordNilOptionals(t *testing.T) {
 
 func TestDNSRecordType(t *testing.T) {
 	rec := &DNSRecord{
-		ID:       "rec-001",
-		Type:     "AAAA",
-		Name:     "ipv6.example.com",
-		Content:  "2001:db8::1",
-		TTL:      300,
-		Proxied:  false,
-		ZoneID:   "zone-test",
-		Comment:  "IPv6 record",
+		ID:      "rec-001",
+		Type:    "AAAA",
+		Name:    "ipv6.example.com",
+		Content: "2001:db8::1",
+		TTL:     300,
+		Proxied: false,
+		ZoneID:  "zone-test",
+		Comment: "IPv6 record",
 	}
 	if rec.ID != "rec-001" {
 		t.Errorf("unexpected ID: %s", rec.ID)
@@ -431,14 +431,14 @@ func TestDNSCreateWithMock(t *testing.T) {
 			"success": true,
 			"errors":  []interface{}{},
 			"result": map[string]interface{}{
-				"id":         "rec-new-001",
-				"type":       "A",
-				"name":       "test.example.com",
-				"content":    "1.2.3.4",
-				"ttl":        300,
-				"proxied":    proxied,
-				"proxiable":  true,
-				"created_on": time.Now().Format(time.RFC3339),
+				"id":          "rec-new-001",
+				"type":        "A",
+				"name":        "test.example.com",
+				"content":     "1.2.3.4",
+				"ttl":         300,
+				"proxied":     proxied,
+				"proxiable":   true,
+				"created_on":  time.Now().Format(time.RFC3339),
 				"modified_on": time.Now().Format(time.RFC3339),
 			},
 		})
@@ -665,9 +665,9 @@ func TestDNSCreateWithPriority(t *testing.T) {
 func TestDNSListEmpty(t *testing.T) {
 	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
 		dnsWriteJSON(w, map[string]interface{}{
-			"success": true,
-			"errors":  []interface{}{},
-			"result":  []interface{}{},
+			"success":     true,
+			"errors":      []interface{}{},
+			"result":      []interface{}{},
 			"result_info": map[string]interface{}{"page": 1, "total_pages": 1, "count": 0},
 		})
 	})

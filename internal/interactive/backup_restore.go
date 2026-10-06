@@ -20,17 +20,17 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/pbkdf2"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // BackupData represents the backup structure
 type BackupData struct {
-	Version     string                    `json:"version"`
-	CreatedAt   time.Time                 `json:"created_at"`
-	Description string                    `json:"description,omitempty"`
-	Profiles    map[string]BackupProfile  `json:"profiles"`
-	Metadata    map[string]interface{}    `json:"metadata,omitempty"`
+	Version     string                   `json:"version"`
+	CreatedAt   time.Time                `json:"created_at"`
+	Description string                   `json:"description,omitempty"`
+	Profiles    map[string]BackupProfile `json:"profiles"`
+	Metadata    map[string]interface{}   `json:"metadata,omitempty"`
 }
 
 // BackupProfile represents a backed up profile
@@ -675,8 +675,8 @@ func (bm *BackupManager) findLatestBackup(dir string) string {
 
 	for _, file := range files {
 		name := file.Name()
-		if (strings.HasPrefix(name, ".cosmoflare-backup-") &&
-			(strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".enc"))) {
+		if strings.HasPrefix(name, ".cosmoflare-backup-") &&
+			(strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".enc")) {
 
 			info, err := file.Info()
 			if err != nil {

@@ -12,17 +12,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/CosmoLabs-org/cosmoflare/internal/tui/components/palette"
 )
 
 // Section represents different sections of the dashboard
 type Section int
 
 const (
-	SectionOverview Section = iota
-	SectionBucketList // Browser (buckets + objects in split-pane)
+	SectionOverview   Section = iota
+	SectionBucketList         // Browser (buckets + objects in split-pane)
 	SectionUpload
 	SectionMonitoring
 	SectionSettings
@@ -83,22 +83,22 @@ type BackgroundTask struct {
 
 // UploadTask represents a file upload operation
 type UploadTask struct {
-	ID          string
-	FileName    string
-	FilePath    string
-	Bucket      string
-	Progress    int
-	Status      string
-	StartTime   time.Time
-	Error       error
+	ID        string
+	FileName  string
+	FilePath  string
+	Bucket    string
+	Progress  int
+	Status    string
+	StartTime time.Time
+	Error     error
 }
 
 // DashboardModel is the main TUI model
 type DashboardModel struct {
 	// Navigation state
 	currentSection Section
-	selectedRow     int
-	cursor          int
+	selectedRow    int
+	cursor         int
 
 	// Data source
 	data DataSource
@@ -125,15 +125,15 @@ type DashboardModel struct {
 	confirmTarget string
 
 	// UI state
-	showHelp       bool
-	notifications  []Notification
-	searchQuery    string
-	sortBy         SortField
-	filterActive   bool
-	loading        bool
-	loadingFrame   int
-	width          int
-	height         int
+	showHelp      bool
+	notifications []Notification
+	searchQuery   string
+	sortBy        SortField
+	filterActive  bool
+	loading       bool
+	loadingFrame  int
+	width         int
+	height        int
 
 	// Background operations
 	backgroundTasks []BackgroundTask
@@ -159,35 +159,35 @@ const (
 
 // Theme represents color scheme
 type Theme struct {
-	Primary   lipgloss.Color
-	Success   lipgloss.Color
-	Warning   lipgloss.Color
-	Error     lipgloss.Color
-	Muted     lipgloss.Color
+	Primary    lipgloss.Color
+	Success    lipgloss.Color
+	Warning    lipgloss.Color
+	Error      lipgloss.Color
+	Muted      lipgloss.Color
 	Background lipgloss.Color
-	Text      lipgloss.Color
+	Text       lipgloss.Color
 }
 
 // Default themes
 var (
 	// Dark theme (default)
 	darkTheme = Theme{
-		Primary:   "#5DADE2", // Light blue
-		Success:   "#2ECC71", // Green
-		Warning:   "#F39C12", // Orange
-		Error:     "#E74C3C", // Red
-		Muted:     "#7F8C8D", // Gray
+		Primary:    "#5DADE2", // Light blue
+		Success:    "#2ECC71", // Green
+		Warning:    "#F39C12", // Orange
+		Error:      "#E74C3C", // Red
+		Muted:      "#7F8C8D", // Gray
 		Background: "#2C3E50", // Dark blue-gray
 		Text:       "#ECF0F1", // Light gray
 	}
 
 	// Light theme
 	lightTheme = Theme{
-		Primary:   "#3498DB", // Blue
-		Success:   "#2ECC71", // Green
-		Warning:   "#F39C12", // Orange
-		Error:     "#E74C3C", // Red
-		Muted:     "#95A5A6", // Gray
+		Primary:    "#3498DB", // Blue
+		Success:    "#2ECC71", // Green
+		Warning:    "#F39C12", // Orange
+		Error:      "#E74C3C", // Red
+		Muted:      "#95A5A6", // Gray
 		Background: "#FFFFFF", // White
 		Text:       "#2C3E50", // Dark blue-gray
 	}
@@ -195,13 +195,13 @@ var (
 
 // Color scheme variables (will be initialized with theme)
 var (
-	primaryColor   lipgloss.Color
-	successColor   lipgloss.Color
-	warningColor   lipgloss.Color
-	errorColor     lipgloss.Color
-	mutedColor     lipgloss.Color
+	primaryColor    lipgloss.Color
+	successColor    lipgloss.Color
+	warningColor    lipgloss.Color
+	errorColor      lipgloss.Color
+	mutedColor      lipgloss.Color
 	backgroundColor lipgloss.Color
-	textColor      lipgloss.Color
+	textColor       lipgloss.Color
 )
 
 // Styles (will be initialized with theme)

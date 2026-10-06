@@ -37,7 +37,7 @@ func TestR2BucketCRUD_Integration(t *testing.T) {
 				return
 			}
 			buckets[body.Name] = map[string]interface{}{
-				"name":         body.Name,
+				"name":          body.Name,
 				"creation_date": time.Now().Format(time.RFC3339),
 			}
 			w.WriteHeader(http.StatusOK)

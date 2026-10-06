@@ -23,21 +23,21 @@ import (
 
 // R2UploadState represents the state of an R2 upload
 type R2UploadState struct {
-	FileName        string
-	Bucket          string
-	ObjectKey       string
-	TotalSize       int64
-	UploadedBytes   int64
-	Speed           float64
-	ETA             time.Duration
-	StartTime       time.Time
-	LastUpdate      time.Time
-	Status          UploadStatus
-	Error           error
-	Progress        float64
-	PartsCompleted  int
-	TotalParts      int
-	UploadID        string
+	FileName       string
+	Bucket         string
+	ObjectKey      string
+	TotalSize      int64
+	UploadedBytes  int64
+	Speed          float64
+	ETA            time.Duration
+	StartTime      time.Time
+	LastUpdate     time.Time
+	Status         UploadStatus
+	Error          error
+	Progress       float64
+	PartsCompleted int
+	TotalParts     int
+	UploadID       string
 }
 
 // UploadStatus represents the current status
@@ -496,12 +496,12 @@ func (m *R2ProgressModel) formatDuration(d time.Duration) string {
 
 // R2ProgressReader wraps an io.Reader to show upload progress
 type R2ProgressReader struct {
-	reader      io.Reader
-	progress    *R2UploadProgress
-	upload      *R2UploadState
-	bytesRead   int64
-	lastUpdate  time.Time
-	startTime   time.Time
+	reader     io.Reader
+	progress   *R2UploadProgress
+	upload     *R2UploadState
+	bytesRead  int64
+	lastUpdate time.Time
+	startTime  time.Time
 }
 
 // NewR2ProgressReader creates a new progress reader for R2 uploads

@@ -14,12 +14,12 @@ import (
 
 // VectorizeIndex represents a Cloudflare Vectorize index.
 type VectorizeIndex struct {
-	Name         string            `json:"name"`
-	Description  string            `json:"description,omitempty"`
-	Dimensions   int               `json:"dimensions"`
-	Metric       string            `json:"metric"`
-	VectorCount  int64             `json:"vectors_count,omitempty"`
-	Config       *VectorizeConfig  `json:"config,omitempty"`
+	Name        string           `json:"name"`
+	Description string           `json:"description,omitempty"`
+	Dimensions  int              `json:"dimensions"`
+	Metric      string           `json:"metric"`
+	VectorCount int64            `json:"vectors_count,omitempty"`
+	Config      *VectorizeConfig `json:"config,omitempty"`
 }
 
 // VectorizeConfig holds index configuration details.

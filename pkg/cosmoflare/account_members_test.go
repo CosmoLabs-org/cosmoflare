@@ -53,10 +53,10 @@ func TestAccountMemberListWithMock(t *testing.T) {
 				"id":     "member-1",
 				"status": "active",
 				"user": map[string]interface{}{
-					"id":                              "user-1",
-					"first_name":                      "Ada",
-					"last_name":                       "Lovelace",
-					"email":                           "ada@example.com",
+					"id":                                "user-1",
+					"first_name":                        "Ada",
+					"last_name":                         "Lovelace",
+					"email":                             "ada@example.com",
 					"two_factor_authentication_enabled": true,
 				},
 				"roles": []map[string]interface{}{

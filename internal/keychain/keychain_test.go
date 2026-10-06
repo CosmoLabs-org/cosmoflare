@@ -126,8 +126,8 @@ func TestNew_NoOSKeychainUnderTest(t *testing.T) {
 type failingBackend struct{}
 
 func (f *failingBackend) Get(_, _ string) (string, error) { return "", ErrNotFound }
-func (f *failingBackend) Set(_, _, _ string) error         { return ErrNotFound }
-func (f *failingBackend) Delete(_, _ string) error         { return ErrNotFound }
+func (f *failingBackend) Set(_, _, _ string) error        { return ErrNotFound }
+func (f *failingBackend) Delete(_, _ string) error        { return ErrNotFound }
 
 // memoryBackend stores secrets in memory (for tests).
 type memoryBackend struct {

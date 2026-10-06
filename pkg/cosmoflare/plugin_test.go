@@ -294,10 +294,10 @@ func TestPluginServiceInitInvalidName(t *testing.T) {
 		{"valid_name", false},
 		{"ValidName123", false},
 		{"", true},
-		{"invalid name", true},   // space
-		{"invalid/name", true},   // slash
-		{"invalid.name", true},   // dot
-		{"invalid@name", true},   // at sign
+		{"invalid name", true}, // space
+		{"invalid/name", true}, // slash
+		{"invalid.name", true}, // dot
+		{"invalid@name", true}, // at sign
 	}
 
 	for _, tc := range tests {
@@ -1057,11 +1057,11 @@ func TestIsGitURLAdditionalCases(t *testing.T) {
 		source string
 		want   bool
 	}{
-		{"http://github.com/user/repo", true},  // http:// contains "://"
-		{"file:///local/repo", true},            // file:// contains "://"
-		{"just-a-name", false},                  // plain name
-		{"path/to/dir", false},                  // relative path, no ://, no .git
-		{"cosmoflare-plugin.git", true},         // ends in .git
+		{"http://github.com/user/repo", true}, // http:// contains "://"
+		{"file:///local/repo", true},          // file:// contains "://"
+		{"just-a-name", false},                // plain name
+		{"path/to/dir", false},                // relative path, no ://, no .git
+		{"cosmoflare-plugin.git", true},       // ends in .git
 	}
 	for _, tc := range tests {
 		got := isGitURL(tc.source)

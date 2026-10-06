@@ -168,7 +168,7 @@ func TestWAFListRulesSuccess(t *testing.T) {
 					"id": "rule1", "description": "SQL Injection", "priority": "5",
 					"package_id": "pkg1", "mode": "block", "default_mode": "block",
 					"allowed_modes": []string{"block", "simulate", "disable"},
-					"group": map[string]interface{}{"id": "grp1", "name": "SQLi"},
+					"group":         map[string]interface{}{"id": "grp1", "name": "SQLi"},
 				},
 			},
 			"result_info": map[string]interface{}{"page": 1, "per_page": 50, "total_count": 1, "count": 1, "total_pages": 1},
@@ -215,7 +215,7 @@ func TestWAFGetRuleSuccess(t *testing.T) {
 				"id": "rule1", "description": "XSS Attack", "priority": "3",
 				"package_id": "pkg1", "mode": "simulate", "default_mode": "block",
 				"allowed_modes": []string{"block", "simulate", "disable"},
-				"group": map[string]interface{}{"id": "grp2", "name": "XSS"},
+				"group":         map[string]interface{}{"id": "grp2", "name": "XSS"},
 			},
 		})
 	})

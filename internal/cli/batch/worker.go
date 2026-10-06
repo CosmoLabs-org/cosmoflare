@@ -19,25 +19,25 @@ import (
 
 // Worker represents a worker that processes operations
 type Worker struct {
-	ID       int
-	queue    chan *Operation
-	results  chan *Operation
-	config   *BatchConfig
-	stats    *WorkerStats
+	ID      int
+	queue   chan *Operation
+	results chan *Operation
+	config  *BatchConfig
+	stats   *WorkerStats
 }
 
 // WorkerStats contains statistics for a worker
 type WorkerStats struct {
-	Processed     int32         `json:"processed"`
-	Completed     int32         `json:"completed"`
-	Failed        int32         `json:"failed"`
-	Skipped       int32         `json:"skipped"`
-	Cancelled     int32         `json:"cancelled"`
-	TotalDuration time.Duration `json:"total_duration"`
-	AverageSpeed  float64       `json:"average_speed_mbps"`
-	BytesProcessed int64        `json:"bytes_processed"`
-	StartTime     time.Time     `json:"start_time"`
-	LastActivity  time.Time     `json:"last_activity"`
+	Processed      int32         `json:"processed"`
+	Completed      int32         `json:"completed"`
+	Failed         int32         `json:"failed"`
+	Skipped        int32         `json:"skipped"`
+	Cancelled      int32         `json:"cancelled"`
+	TotalDuration  time.Duration `json:"total_duration"`
+	AverageSpeed   float64       `json:"average_speed_mbps"`
+	BytesProcessed int64         `json:"bytes_processed"`
+	StartTime      time.Time     `json:"start_time"`
+	LastActivity   time.Time     `json:"last_activity"`
 }
 
 // NewWorker creates a new worker
@@ -309,8 +309,8 @@ func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr ||
 		(len(s) > len(substr) &&
 			(s[:len(substr)] == substr ||
-			 s[len(s)-len(substr):] == substr ||
-			 findSubstring(s, substr))))
+				s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr))))
 }
 
 func findSubstring(s, substr string) bool {
