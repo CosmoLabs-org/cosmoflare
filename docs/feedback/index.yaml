@@ -1,12 +1,12 @@
 version: "1.0"
-next_id: 8
-last_updated: "2026-09-09T18:38:32.698979+04:00"
+next_id: 10
+last_updated: "2026-10-06T20:17:02.203125+04:00"
 stats:
-    total: 7
-    pending: 2
+    total: 9
+    pending: 1
     implemented: 1
     rejected: 0
-    converted: 4
+    converted: 5
 entries:
     - id: FB-001
       title: GetNamespace does O(n) list scan
@@ -15,12 +15,12 @@ entries:
       created: "2026-05-14T05:28:12.546155-03:00"
     - id: FB-2
       title: Continuation prompt goals are invisible to machine verification (0/0 parsed)
-      status: pending
+      status: in_progress
       from_project: cosmoflare
       created: "2026-09-06T23:07:13.131812+04:00"
     - id: FB-3
       title: FEAT-006 memory description stale — Waves B-D shipped, ROAD-087 hydrated from stale line
-      status: pending
+      status: in_progress
       from_project: cosmoflare
       created: "2026-09-09T02:09:25.961666+04:00"
     - id: FB-4
@@ -43,3 +43,13 @@ entries:
       status: converted
       from_project: MyCarGuide
       created: "2026-09-09T15:59:10.247572+04:00"
+    - id: FB-8
+      title: 'FEATURE BRIEF from a real production session (MyCarGuide, 2026-09-10) — every item below is friction cosmoflare could have erased. Context: Cloudflare Pages + D1 (1.41M-row specs table, 0.94GB DB) + R2 + KV; all ops driven by an AI session agent.'
+      status: converted
+      from_project: MyCarGuide
+      created: "2026-09-10T19:46:55.604743+04:00"
+    - id: FB-9
+      title: 'Auto-memory: cosmoflare public launch 2026-09-13'
+      status: pending
+      from_project: cosmoflare
+      created: "2026-09-14T04:06:04.854326+04:00"

@@ -1,5 +1,6 @@
 ---
 ulid: 01M26009ZMNH2ZQDAJNW3YTKXZ
+id: FB-8
 title: 'FEATURE BRIEF from a real production session (MyCarGuide, 2026-09-10) — every item below is friction cosmoflare could have erased. Context: Cloudflare Pages + D1 (1.41M-row specs table, 0.94GB DB) + R2 + KV; all ops driven by an AI session agent.'
 type: feature
 status: converted

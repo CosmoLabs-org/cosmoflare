@@ -1,5 +1,6 @@
 ---
 ulid: 01M2EKRE9PSHYTQ8FCXR26FGWZ
+id: FB-9
 title: 'Auto-memory: cosmoflare public launch 2026-09-13'
 type: idea
 status: pending
