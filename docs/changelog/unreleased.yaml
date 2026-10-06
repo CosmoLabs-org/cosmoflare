@@ -11,6 +11,9 @@ entries:
         - description: 'FEAT-020: command registry complete — permission columns filled for all API commands, NoPermsRequired marker for verified-none endpoints, invariant test enforcing completeness'
           source: manual
           date: 2026-10-06T19:19:25.134498+04:00
+        - description: 'FEAT-044: knowledge.Transport wired at the control-plane chokepoint — every CF API call now gets the endpoint registry; WithHTTPClient overrides wrapped (wrap-always); R2 data plane stays registry-free'
+          source: manual
+          date: 2026-10-06T22:35:33.722085+04:00
     fixed: []
     changed: []
     deprecated: []

@@ -1,10 +1,10 @@
 id: FEAT-044
 type: feature
 created_at: 2026-10-06T20:20:39.245262+04:00
-updated_at: 2026-10-06T20:20:42.036281+04:00
+updated_at: 2026-10-06T22:35:33.558292+04:00
 source: local
 ulid: 01M4908RQHFKEFA6XHNFJCV8DM
-status: open
+status: closed
 origin:
     idea_slug: 2026-09-10-wire-knowledge-transport-into-the-shared-cf-client-factory
     session: 49
@@ -21,3 +21,10 @@ description: |-
     Triage 2026-09-16 (session 58): HOLD confirmed — wiring is safe (pass-through design) but user value is gated on the second knowledge pack; with one pack only ratelimit-scope errors decode at the ~24 unwired sites. Revisit when pack #2 lands.
 
     Origin: session-end simplify review (altitude finding 1)
+resolution:
+    notes: 'Landed via glm-agent 0314, S334-gated (merge 98ae620, feat 4504d69 + gofmt 334c490): knowledge.Transport installed at the controlPlaneClient/newCloudflareAPI chokepoint; NewRateLimitServiceFromCreds folded to the chokepoint; NewClient wraps default AND WithHTTPClient-override transports (shallow copy, Base chain preserved, data plane keeps the caller''s original unwrapped client — BUG-042 policy intact); restClient default construction wrapped. Tests: full-path in-process block (zero hits at base), wrap-always chain pin, no-caller-mutation pin, chokepoint count pinned at exactly 1 NewWithAPIToken site. Spec: docs/brainstorming/2026-10-06-feat044-knowledge-transport-wiring.md. BUG-726 ancestry flag traced to the post-merge bookkeeping commit (1ddddb1, session metadata created after the merge snapshot) — content verified landed by grep + fresh tests on master.'
+    resolved_at: 2026-10-06T22:35:33.557395+04:00
+revisions:
+    - date: "2026-10-06T22:35:33.55739+04:00"
+      action: closed
+      context: 'Landed via glm-agent 0314, S334-gated (merge 98ae620, feat 4504d69 + gofmt 334c490): knowledge.Transport installed at the controlPlaneClient/newCloudflareAPI chokepoint; NewRateLimitServiceFromCreds folded to the chokepoint; NewClient wraps default AND WithHTTPClient-override transports (shallow copy, Base chain preserved, data plane keeps the caller''s original unwrapped client — BUG-042 policy intact); restClient default construction wrapped. Tests: full-path in-process block (zero hits at base), wrap-always chain pin, no-caller-mutation pin, chokepoint count pinned at exactly 1 NewWithAPIToken site. Spec: docs/brainstorming/2026-10-06-feat044-knowledge-transport-wiring.md. BUG-726 ancestry flag traced to the post-merge bookkeeping commit (1ddddb1, session metadata created after the merge snapshot) — content verified landed by grep + fresh tests on master.'
