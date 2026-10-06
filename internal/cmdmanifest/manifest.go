@@ -8,9 +8,11 @@
 // derives descriptions.
 //
 // The registry is Go source on purpose: compile-time typed, diffable in
-// review, and impossible to ship half-loaded. Permissions columns are
-// intentionally sparse until the FEAT-011 catalog dataset lands; an empty
-// list means "not yet authored", never "none required".
+// review, and impossible to ship half-loaded. Permissions semantics: an
+// empty Permissions list with NoPermsRequired=false means "not yet
+// authored", never "none required"; NoPermsRequired=true means a command's
+// API calls were verified to need no token permission at all (e.g.
+// account.verify against /user/tokens/verify).
 package cmdmanifest
 
 import (
@@ -29,6 +31,12 @@ type Command struct {
 	Verb               string   // read | write | delete | list
 	APIOps             []string // endpoints the command touches (method + path)
 	Permissions        Permissions
+	// NoPermsRequired is true when it was verified that no token permission
+	// gates this command's API calls (e.g. any valid token may hit
+	// /user/tokens/verify). It exists so an empty Permissions list stays
+	// unambiguous: sparse means "not yet authored", this flag means
+	// "verified none required".
+	NoPermsRequired bool
 	Limits             []string // limit catalog ids guarding this command
 	LocalChecks        []string // preflight checks run before any API call
 	APIChecks          []string // checks run against the API before mutating

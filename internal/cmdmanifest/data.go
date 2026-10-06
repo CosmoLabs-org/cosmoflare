@@ -273,13 +273,15 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 
-	// --- worker domains (permission group pending the FEAT-011 dataset) ---
+	// --- worker domains (gated by the "Workers Scripts" permission group:
+	// developers.cloudflare.com/api/resources/workers/subresources/domains
+	// lists "Workers Scripts Read"/"Workers Scripts Write"; family
+	// account.workers_scripts in pkg/cosmoflare/permdata) ---
 	{
 		ID: "worker.domain.list", CLIPath: []string{"worker", "domain", "list"},
 		Service: "workers", Scope: "domain", Verb: "list",
-		APIOps: []string{"GET /accounts/{account_id}/workers/domains"},
-		// "Workers Custom Domains" not yet in the Qwen dataset — awaiting
-		// FEAT-011 ingest rather than guessing the token-UI spelling.
+		APIOps:      []string{"GET /accounts/{account_id}/workers/domains"},
+		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
 	{
@@ -287,14 +289,14 @@ var registry = []Command{
 		Service: "workers", Scope: "domain", Verb: "write",
 		APIOps:      []string{"POST /accounts/{account_id}/workers/domains"},
 		LocalChecks: []string{"dns_record_resolves"},
-		// permission pending FEAT-011 dataset
+		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 	{
 		ID: "worker.domain.detach", CLIPath: []string{"worker", "domain", "detach"},
 		Service: "workers", Scope: "domain", Verb: "delete",
-		APIOps: []string{"DELETE /accounts/{account_id}/workers/domains/{domain_id}"},
-		// permission pending FEAT-011 dataset
+		APIOps:      []string{"DELETE /accounts/{account_id}/workers/domains/{domain_id}"},
+		Permissions: Permissions{Account: []string{"Workers Scripts"}},
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 
@@ -1111,7 +1113,10 @@ var registry = []Command{
 		ID: "account.verify", CLIPath: []string{"account", "verify"},
 		Service: "account", Scope: "config", Verb: "read",
 		APIOps:      []string{"GET /user/tokens/verify"},
-		DangerLevel: "low", Destructive: false, Trackable: true,
+		// /user/tokens/verify accepts any valid token regardless of scopes —
+		// verified none required (NoPermsRequired), not "not yet authored".
+		NoPermsRequired: true,
+		DangerLevel:     "low", Destructive: false, Trackable: true,
 	},
 
 	// member/role commands; "Memberships" is a user-scoped permission in the
