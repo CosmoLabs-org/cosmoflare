@@ -3,7 +3,6 @@ package cosmoflare
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
@@ -26,7 +25,7 @@ type RateLimitRule struct {
 
 // RateLimitCreateInput captures what a caller supplies to create one rule.
 type RateLimitCreateInput struct {
-	ZoneID            string
+	ZoneID string
 	// Action is the phase rule action: "block" (default when empty) or
 	// "challenge".
 	Action            string
@@ -57,8 +56,9 @@ func NewRateLimitService(cf *cloudflare.API, zones *ZoneService) (*RateLimitServ
 	return &RateLimitService{cf: cf, zones: zones}, nil
 }
 
-// NewRateLimitServiceFromCreds builds the service with the knowledge
-// transport wired into its client.
+// NewRateLimitServiceFromCreds builds the service over the shared
+// control-plane client, which carries the knowledge registry and timeout
+// policy (FEAT-044 — manual wiring folded into the chokepoint).
 func NewRateLimitServiceFromCreds(accountID, apiToken string) (*RateLimitService, error) {
 	if accountID == "" {
 		return nil, validationError("NewRateLimitService", "account ID is required")
@@ -66,8 +66,7 @@ func NewRateLimitServiceFromCreds(accountID, apiToken string) (*RateLimitService
 	if apiToken == "" {
 		return nil, validationError("NewRateLimitService", "API token is required")
 	}
-	cf, err := cloudflare.NewWithAPIToken(apiToken,
-		cloudflare.HTTPClient(&http.Client{Transport: &knowledge.Transport{}}))
+	cf, err := newCloudflareAPI(apiToken)
 	if err != nil {
 		return nil, newError("NewRateLimitService", "failed to create cloudflare client", err)
 	}

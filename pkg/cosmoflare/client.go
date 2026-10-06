@@ -12,6 +12,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cloudflare/cloudflare-go"
+
+	"github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
 )
 
 // R2Client is the primary interface for R2 storage operations.
@@ -69,15 +71,18 @@ type client struct {
 // read for compatibility) selected via WithProfile.
 //
 // Transport policy: an explicit WithHTTPClient is used by both transports
-// (the Cloudflare API client and the R2 S3 client). Otherwise the Cloudflare
-// API control plane uses a client carrying the WithTimeout timeout (default
-// 30s), while the S3 data plane gets a separate client with NO whole-request
-// timeout — large transfers are bounded by context deadlines and SDK retries,
-// not the API timeout (BUG-042).
+// (the Cloudflare API client and the R2 S3 client) — the Cloudflare-side
+// copy is wrapped with the knowledge endpoint registry (FEAT-044
+// wrap-always; the S3 side keeps the caller's original client). Otherwise
+// the Cloudflare API control plane uses a client carrying the WithTimeout
+// timeout (default 30s) plus knowledge.Transport, while the S3 data plane
+// gets a separate client with NO whole-request timeout and NO registry —
+// large transfers are bounded by context deadlines and SDK retries, not
+// the API timeout (BUG-042).
 func NewClient(opts ...ClientOption) (R2Client, error) {
 	cfg := &clientConfig{
-		region:     "auto",
-		timeout:    30 * time.Second,
+		region:       "auto",
+		timeout:      30 * time.Second,
 		cacheControl: true,
 	}
 	for _, o := range opts {
@@ -110,14 +115,25 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 		return nil, validationError("NewClient", "CLOUDFLARE_API_TOKEN is required (set env or use WithAPIToken)")
 	}
 
-	// HTTP client shared by both transports.
+	// Control-plane HTTP client (FEAT-044): it always carries the
+	// knowledge endpoint registry. Default construction bakes it in; a
+	// caller-supplied WithHTTPClient is WRAPPED, not replaced — the caller
+	// keeps their tuning (timeout, dialer) and the registry still applies.
+	// Bypass is documented: pass a client whose Transport is already a
+	// bare RoundTripper of your own. A shallow copy avoids mutating a
+	// caller-owned (possibly shared) http.Client in place; the original
+	// stays reserved for the R2 data plane below.
 	httpClient := cfg.httpClient
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: cfg.timeout}
+		httpClient = &http.Client{Timeout: cfg.timeout, Transport: &knowledge.Transport{}}
+	} else {
+		wrapped := *httpClient
+		wrapped.Transport = &knowledge.Transport{Base: httpClient.Transport}
+		httpClient = &wrapped
 	}
 
-	// Cloudflare API client
-	cfAPI, err := cloudflare.NewWithAPIToken(cfg.apiToken, cloudflare.HTTPClient(httpClient))
+	// Cloudflare API client (built at the transport chokepoint)
+	cfAPI, err := newCloudflareAPIWithClient(cfg.apiToken, httpClient)
 	if err != nil {
 		return nil, authError("NewClient", "failed to create Cloudflare API client", err)
 	}
@@ -160,9 +176,11 @@ func (c *client) initS3() error {
 	// whole-request timeout (default 30s) — large transfers die mid-body.
 	// Transfer limits come from context deadlines; retries come from the SDK.
 	// An explicitly provided WithHTTPClient is honored on both transports
-	// (caller's deliberate choice).
-	dataPlaneClient := c.httpClient
-	if c.cfg.httpClient == nil {
+	// (caller's deliberate choice), but the data plane gets the caller's
+	// ORIGINAL client: c.httpClient is the knowledge-wrapped control-plane
+	// copy, and the registry never applies to S3 transfers (FEAT-044).
+	dataPlaneClient := c.cfg.httpClient
+	if dataPlaneClient == nil {
 		dataPlaneClient = &http.Client{}
 	}
 
@@ -226,5 +244,5 @@ func (c *client) TestConnection(ctx context.Context) error {
 }
 
 // Convenience: s3Client returns the underlying S3 client for CopyObject.
-func (c *client) s3Client() *s3.Client { return c.s3 }
+func (c *client) s3Client() *s3.Client      { return c.s3 }
 func (c *client) cfClient() *cloudflare.API { return c.cf }

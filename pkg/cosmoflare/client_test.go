@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/knowledge"
 )
 
 func TestR2ErrorInterfaces(t *testing.T) {
@@ -225,8 +227,16 @@ func TestNewClientPassesHTTPClientToCloudflareAPI(t *testing.T) {
 	hc := &http.Client{Transport: rt, Timeout: 10 * time.Second}
 	c := newTestClient(t, WithHTTPClient(hc))
 
-	if c.httpClient != hc {
-		t.Error("custom HTTP client not stored on client")
+	if c.httpClient == hc {
+		t.Error("control-plane client must be a wrapped copy, not the caller-owned struct (FEAT-044 wrap-always)")
+	}
+	if kt, ok := c.httpClient.Transport.(*knowledge.Transport); !ok {
+		t.Errorf("control-plane transport = %T, want *knowledge.Transport wrapping the caller's transport", c.httpClient.Transport)
+	} else if kt.Base != http.RoundTripper(rt) {
+		t.Errorf("knowledge.Transport.Base = %v, want the caller's recording transport", kt.Base)
+	}
+	if c.httpClient.Timeout != hc.Timeout {
+		t.Errorf("wrapped control-plane client timeout = %v, want the caller's %v preserved", c.httpClient.Timeout, hc.Timeout)
 	}
 
 	s3HC, ok := c.s3.Options().HTTPClient.(*http.Client)
