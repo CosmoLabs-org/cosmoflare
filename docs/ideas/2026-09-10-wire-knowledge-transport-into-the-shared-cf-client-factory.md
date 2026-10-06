@@ -2,12 +2,15 @@
 ulid: 01M25W87Z6A8QTFXE9ZQFQQZ1A
 title: Wire knowledge.Transport into the shared CF client factory
 created: "2026-09-10T18:41:21.382929+04:00"
-status: seed
+status: harvested
 source: agent
 origin:
     session: 49
     trigger: session-end simplify review (altitude finding 1)
+promoted_to: FEAT-044
 ---
+
+# Wire knowledge.Transport into the shared CF client factory
 
 # Wire knowledge.Transport into the shared CF client factory
 
