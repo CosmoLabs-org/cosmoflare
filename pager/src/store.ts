@@ -58,9 +58,11 @@ export async function putAlert(record: AlertRecord): Promise<void> {
       allReq.onsuccess = () => {
         const all = allReq.result as AlertRecord[];
         // Ascending by received_at = oldest first; everything before the
-        // newest MAX_ALERTS records is stale.
+        // newest MAX_ALERTS records is stale. Guard the slice: below the
+        // cap the end index goes NEGATIVE, and slice(0, -k) silently drops
+        // the newest k instead of returning empty.
         all.sort((a, b) => a.received_at - b.received_at);
-        const stale = all.slice(0, all.length - MAX_ALERTS);
+        const stale = all.length > MAX_ALERTS ? all.slice(0, all.length - MAX_ALERTS) : [];
         for (const old of stale) {
           store.delete(old.id);
         }
