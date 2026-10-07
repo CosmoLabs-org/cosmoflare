@@ -1013,6 +1013,29 @@ var registry = []Command{
 		Service: "alerts", Scope: "config", Verb: "read",
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+	// alerts push subcommands are local push-config operations (FEAT-045):
+	// VAPID keypair + subscription management in ~/.cosmoflare/push.json —
+	// no Cloudflare API calls, hence no APIOps and no permissions.
+	{
+		ID: "alerts.push.keygen", CLIPath: []string{"alerts", "push", "keygen"},
+		Service: "alerts", Scope: "config", Verb: "write",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "alerts.push.add", CLIPath: []string{"alerts", "push", "add"},
+		Service: "alerts", Scope: "config", Verb: "write",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "alerts.push.list", CLIPath: []string{"alerts", "push", "list"},
+		Service: "alerts", Scope: "config", Verb: "list",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
+		ID: "alerts.push.remove", CLIPath: []string{"alerts", "push", "remove"},
+		Service: "alerts", Scope: "config", Verb: "delete",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
 	{
 		ID: "alerts.watch", CLIPath: []string{"alerts", "watch"},
 		Service: "alerts", Scope: "config", Verb: "read",
