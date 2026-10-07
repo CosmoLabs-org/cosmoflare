@@ -4,7 +4,10 @@
 
 version: pending
 entries:
-    added: []
+    added:
+        - description: 'BR-03: LimitsService v2 — embedded 66-entry limits catalog (schema v1, provenance + 90-day stale warning) as single source of truth; hardcoded limit maps deleted; per-service plan resolution chain; limits catalog export command'
+          source: manual
+          date: 2026-10-07T23:22:51.746185+04:00
     fixed: []
     changed: []
     deprecated: []
