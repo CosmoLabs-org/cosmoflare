@@ -1,0 +1,118 @@
+/* Cosmoflare Pager design tokens — mirror desktop/src/styles.css verbatim
+   (FEAT-045): dark-first, severity ramp, 8px radius. */
+
+:root {
+  color-scheme: dark;
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --surface-raised: #2e2e2e;
+  --border: #3a3a3a;
+  --text: #e6e6e6;
+  --muted: #a8a8a8;
+  --accent: #f59e0b;
+  --focus: #7dd3fc;
+  --sev-info: #7dd3fc;
+  --sev-warning: #f59e0b;
+  --sev-critical: #f87171;
+  --radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+body { margin: 0; min-height: 100vh; }
+
+/* App header with the two-tab switch. */
+.cf-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.cf-top h1 { font-size: 20px; margin: 0; }
+.cf-tabs button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.cf-tabs button[aria-selected="true"] { color: var(--text); background: var(--surface-raised); }
+
+.cf-main { padding: 16px; max-width: 640px; margin: 0 auto; }
+
+/* Alert cards: severity is encoded as the 3px left border (desktop parity). */
+.cf-alert {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--sev-info);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.cf-alert.is-warning { border-left-color: var(--sev-warning); }
+.cf-alert.is-critical { border-left-color: var(--sev-critical); }
+.cf-alert[data-acked="true"] { opacity: 0.55; }
+.cf-alert[data-acked="true"] .cf-alert-title { text-decoration: line-through; }
+
+.cf-alert-header { display: flex; align-items: center; gap: 8px; }
+.cf-severity-mark {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sev-info);
+}
+.cf-alert.is-warning .cf-severity-mark { color: var(--sev-warning); }
+.cf-alert.is-critical .cf-severity-mark { color: var(--sev-critical); }
+.cf-alert-title { font-size: 16px; }
+.cf-alert-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.cf-alert-detail { color: var(--muted); font-size: 13px; margin: 8px 0; }
+.cf-alert-actions { display: flex; gap: 8px; }
+
+.cf-btn {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.cf-btn-primary { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+.cf-btn-ghost { background: none; }
+.cf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cf-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.cf-empty { color: var(--muted); text-align: center; padding: 48px 0; }
+
+.cf-pairing {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.cf-pairing h2 { margin: 0; font-size: 20px; }
+.cf-pairing-status { color: var(--muted); margin: 0; }
+.cf-pairing-cmd {
+  background: var(--surface-raised);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--text);
+}
