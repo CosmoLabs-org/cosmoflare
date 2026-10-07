@@ -30,6 +30,8 @@ schema_version: 1
 status: PENDING
 title: FEAT-045 Cosmoflare Pager — Full Implementation
 type: prompt
+implemented_commits:
+    - '68baf3b4f1db' # wave completion: registry invariant fixed post-merge
 ---
 # FEAT-045 Cosmoflare Pager — Full Implementation
 
