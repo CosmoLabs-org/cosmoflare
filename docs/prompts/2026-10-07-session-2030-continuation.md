@@ -22,12 +22,8 @@ Acceptance: Show HN + r/Cloudflare URLs recorded in a ROAD-096 note
 Acceptance: alerts watch --test-fire buzzes a paired phone; note on FEAT-045
 ### [ ] 4. Operator research pastes (carried)
 Acceptance: grok limits results + grok/gemini perms results + MCP/registrar research land; ingestion goals close
+Covers migrated G-05..G-08 (session-2029 goals 1-4, identical items).
 
-
-### [ ] G-05 TASK-010 + shader hero + pager PWA deployed on cosmolabs.org (carried from docs/prompts/2026-10-07-session-2029-continuation.md G-01)
-### [ ] G-06 G-02 launch posts live (migrated) (carried from docs/prompts/2026-10-07-session-2029-continuation.md G-02)
-### [ ] G-07 Real-phone E2E pager smoke (carried from docs/prompts/2026-10-07-session-2029-continuation.md G-03)
-### [ ] G-08 G-03 remainder: grok/gemini ingestion (migrated) (carried from docs/prompts/2026-10-07-session-2029-continuation.md G-04)
 ## Carry-Over
 
 All remaining goals are operator-gated (deploy session, posts, phone smoke, three research pastes). No code debt queued; no unmerged worktrees; changelog queue holds 1 entry (BR-03) for the next release cut. Queued feedback for ClaudeCodeSetup: supersede --migrate-goals duplicates authored goals (second occurrence).
