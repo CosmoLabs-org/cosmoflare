@@ -15,7 +15,7 @@ import (
 
 func cacheMockSetup(handler http.HandlerFunc) (*CacheService, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewCacheService(cf, "zone-cache-123")
 	return svc, server
 }

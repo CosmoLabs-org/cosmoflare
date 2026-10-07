@@ -16,7 +16,7 @@ import (
 
 func sslMockSetup(handler http.HandlerFunc) (*SSLService, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewSSLService(cf, "zone-ssl-123")
 	return svc, server
 }

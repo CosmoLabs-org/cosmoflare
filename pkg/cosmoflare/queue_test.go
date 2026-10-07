@@ -18,7 +18,7 @@ import (
 
 func queueMockSetup(handler http.HandlerFunc) (*QueueService, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewQueueService(cf, "account-test-123")
 	return svc, server
 }
@@ -532,7 +532,7 @@ func queueProducerMockSetup(t *testing.T, messagesHandler func(w http.ResponseWr
 			queueWriteJSON(w, map[string]interface{}{"success": false, "errors": []interface{}{}})
 		}
 	}))
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewQueueService(cf, "account-test-123")
 	return svc, &capturedBody, server
 }
@@ -638,7 +638,7 @@ func TestQueueServiceSendUnknownQueue(t *testing.T) {
 		})
 	}))
 	defer server.Close()
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewQueueService(cf, "account-test-123")
 
 	_, err := svc.Send(context.Background(), "missing-queue", QueueMessage{Body: "hi"})
@@ -852,7 +852,7 @@ func queueDLQMockSetup(t *testing.T, configHandler func(w http.ResponseWriter, r
 			queueWriteJSON(w, map[string]interface{}{"success": false, "errors": []interface{}{}})
 		}
 	}))
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewQueueService(cf, "account-test-123")
 	return svc, &capturedBody, server
 }
@@ -953,7 +953,7 @@ func TestQueueConfigureDLQUnknownQueue(t *testing.T) {
 		})
 	}))
 	defer server.Close()
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewQueueService(cf, "account-test-123")
 
 	_, err := svc.ConfigureDLQ(context.Background(), "missing-queue", "my-dlq", "", false)

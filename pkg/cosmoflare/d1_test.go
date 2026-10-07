@@ -13,7 +13,7 @@ import (
 
 func d1MockSetup(handler http.HandlerFunc) (*D1Service, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewD1Service(cf, "account-test-123")
 	return svc, server
 }

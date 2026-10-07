@@ -14,7 +14,7 @@ import (
 
 func tunnelMockSetup(handler http.HandlerFunc) (*TunnelService, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewTunnelService(cf, "account-test-123")
 	return svc, server
 }

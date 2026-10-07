@@ -15,7 +15,7 @@ import (
 
 func workerMockSetup(handler http.HandlerFunc) (*WorkerService, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL))
+	cf, _ := cloudflare.NewWithAPIToken("test-token", cloudflare.BaseURL(server.URL), cloudflare.UsingRetryPolicy(0, 0, 0))
 	svc, _ := NewWorkerService(cf, "acct-worker-123")
 	return svc, server
 }
