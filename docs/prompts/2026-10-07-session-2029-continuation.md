@@ -3,7 +3,7 @@ title: "Session 2029 Continuation Prompt"
 created: 2026-10-07
 status: PENDING
 branch: master
-goals_total: 6
+goals_total: 4
 goals_completed: 0
 supersedes: "docs/prompts/2026-09-24-session-2028-continuation.md"
 ---
@@ -16,16 +16,15 @@ GitHub releases v0.30.0-v0.32.0 all published with full assets and proxy-serving
 
 ### [ ] 1. TASK-010 + shader hero + pager PWA deployed on cosmolabs.org
 Acceptance: https://cosmolabs.org/cosmoflare serves OG+JSON-LD (curl greps og:title); /pager installs on a phone; TASK-010 closed with the live URL; FEAT-046 site half closes
+Covers migrated G-01 (session-2028 TASK-010).
 ### [ ] 2. G-02 launch posts live (migrated)
 Acceptance: Show HN + r/Cloudflare post URLs recorded in a ROAD-096 note; drafts may gain one pager paragraph referencing v0.32.0
+Covers migrated G-02 (session-2028 launch posts).
 ### [ ] 3. Real-phone E2E pager smoke
 Acceptance: alerts push keygen → PWA pairing → alerts watch --test-fire buzzes the phone; note recorded on FEAT-045
 ### [ ] 4. G-03 remainder: grok/gemini ingestion (migrated)
 Acceptance: grok-results.md + gemini-results.md land in docs/research/2026-09-17-cf-perms-next-waves-tiers/ and the ingestion prompt's goals 2-4 complete
 
-
-### [ ] G-05 G-01: TASK-010 product page live on cosmolabs.org/cosmoflare (carried from docs/prompts/2026-09-24-session-2028-continuation.md G-01)
-### [ ] G-06 G-02: Publish launch posts in operator voice (carried from docs/prompts/2026-09-24-session-2028-continuation.md G-02)
 ## Carry-Over
 
 All remaining work is operator-gated: launch posts (Thu 8-10am ET window), the cosmolabs.org session (clipboard ready), grok/gemini results paste, FEAT-029 OAuth registration decision. No code debt queued; no unmerged worktrees; GLM pool idle.
