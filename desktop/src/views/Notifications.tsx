@@ -66,7 +66,36 @@ function severityOf(it: NotificationItem): NotificationSeverity {
   return it.severity ?? "info";
 }
 
+/**
+ * FEAT-045: snooze window offered by the "Snooze 10m" action. The item stays
+ * hidden until `snoozed_at + SNOOZE_MINUTES` passes, then re-appears on the
+ * next render with no summary-row entry.
+ */
+export const SNOOZE_MINUTES = 10;
+
+/** Stable per-item key for the local ack/snooze maps (mirrors the list key). */
+function itemKey(it: NotificationItem, i: number): string {
+  return String(it.id ?? i);
+}
+
 export function Notifications({ items, unread, onSeen }: NotificationsProps) {
+  // FEAT-045: ack/snooze parity with the pager PWA, purely local — the
+  // desktop panel has no ack/snooze API to call, so these maps live only in
+  // component state (keyed by the same id ?? index the list keys use).
+  const [acked, setAcked] = useState<Record<string, boolean>>({});
+  const [snoozedUntil, setSnoozedUntil] = useState<Record<string, number>>({});
+
+  // An item is snoozed while its expiry lies in the future. Evaluated at
+  // render time: once the wall clock passes the timestamp, the next render
+  // (any state/prop change) reveals the item again.
+  const now = Date.now();
+  const snoozedKeys = new Set(
+    Object.keys(snoozedUntil).filter((k) => (snoozedUntil[k] ?? 0) > now)
+  );
+  const snoozedCount = items.filter((it, i) =>
+    snoozedKeys.has(itemKey(it, i))
+  ).length;
+
   return (
     <div className="cf-notifications">
       <div className="cf-notifications-header">
@@ -96,27 +125,78 @@ export function Notifications({ items, unread, onSeen }: NotificationsProps) {
         {items.length === 0 ? (
           <p className="cf-empty">No notifications yet.</p>
         ) : (
-          <ul className="cf-notification-list">
-            {items.map((it, i) => {
-              const severity = severityOf(it);
-              return (
-                <li
-                  key={it.id ?? i}
-                  data-testid={`notification-${i}`}
-                  data-severity={severity}
-                  className={`cf-notification-item is-${severity}`}
-                >
-                  <span className="cf-notification-severity">
-                    <span className="cf-severity-mark" aria-hidden />
-                    <span className="cf-severity-label">{severity}</span>
-                  </span>
-                  <span className="cf-notification-message">
-                    {it.message ?? JSON.stringify(it.raw)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            <ul className="cf-notification-list">
+              {items.map((it, i) => {
+                const key = itemKey(it, i);
+                // Snoozed items are hidden until their expiry passes; the
+                // testid keeps the original items index so identities stay
+                // stable across snooze/un-snooze transitions.
+                if (snoozedKeys.has(key)) return null;
+                const severity = severityOf(it);
+                const isAcked = acked[key] === true;
+                return (
+                  <li
+                    key={key}
+                    data-testid={`notification-${i}`}
+                    data-severity={severity}
+                    data-acked={isAcked ? "true" : undefined}
+                    className={`cf-notification-item is-${severity}${
+                      isAcked ? " is-acked" : ""
+                    }`}
+                  >
+                    <span className="cf-notification-severity">
+                      <span className="cf-severity-mark" aria-hidden />
+                      <span className="cf-severity-label">{severity}</span>
+                    </span>
+                    <span className="cf-notification-message">
+                      {it.message ?? JSON.stringify(it.raw)}
+                    </span>
+                    {/* FEAT-045: local triage actions, mirroring the pager
+                        PWA. Acknowledge dims + strikes the item; Snooze hides
+                        it for SNOOZE_MINUTES. No network, no persistence. */}
+                    <span className="cf-notification-actions">
+                      <button
+                        type="button"
+                        data-testid={`ack-${i}`}
+                        className="cf-ack-btn"
+                        onClick={() =>
+                          setAcked((prev) => ({ ...prev, [key]: true }))
+                        }
+                      >
+                        Acknowledge
+                      </button>
+                      <button
+                        type="button"
+                        data-testid={`snooze-${i}`}
+                        className="cf-snooze-btn"
+                        onClick={() =>
+                          setSnoozedUntil((prev) => ({
+                            ...prev,
+                            [key]: Date.now() + SNOOZE_MINUTES * 60_000,
+                          }))
+                        }
+                      >
+                        Snooze 10m
+                      </button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {snoozedCount > 0 && (
+              <p
+                className="cf-snoozed-summary"
+                data-testid="snoozed-summary"
+                role="status"
+                aria-label={`${snoozedCount} snoozed notification${
+                  snoozedCount === 1 ? "" : "s"
+                }`}
+              >
+                Snoozed ({snoozedCount})
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>

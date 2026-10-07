@@ -449,6 +449,44 @@ select option {
   display: block;
 }
 
+/* FEAT-045: acked items are dimmed and struck through (parity with the pager
+   PWA); the data-acked attribute is the state contract, the class the style. */
+.cf-notification-item.is-acked {
+  opacity: 0.55;
+}
+
+.cf-notification-item.is-acked .cf-notification-message {
+  text-decoration: line-through;
+}
+
+.cf-notification-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 0.375rem;
+}
+
+.cf-ack-btn,
+.cf-snooze-btn {
+  min-height: 28px;
+  padding: 0.25rem 0.625rem;
+  font-size: var(--text-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.cf-ack-btn:hover,
+.cf-snooze-btn:hover {
+  border-color: var(--accent);
+}
+
+/* FEAT-045: summary row standing in for the currently-snoozed items. */
+.cf-snoozed-summary {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
 .cf-empty {
   margin: 0;
   font-size: var(--text-sm);
