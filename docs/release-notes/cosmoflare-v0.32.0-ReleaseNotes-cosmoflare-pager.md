@@ -18,7 +18,7 @@ This release brings 4 new features.
 
 ## Highlights
 
-_No highlights provided._
+The Cosmoflare Pager ships: zero-infrastructure Web Push alerting from the Go core to an installable PWA, with ack/snooze parity on the desktop dashboard (ADR-001 mobile strategy — one Go core, PWA-first, gomobile for future native). The permission catalog doubles to 157 families from the verified Qwen dataset, the command registry reaches enforced completeness, and the knowledge endpoint registry now guards every Cloudflare API call.
 
 ## What's New
 
