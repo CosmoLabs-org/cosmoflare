@@ -1,9 +1,11 @@
 id: FEAT-046
 type: feature
 created_at: 2026-10-07T16:15:28.499741+04:00
-updated_at: 2026-10-07T16:15:29.232635+04:00
+updated_at: 2026-10-07T16:15:31.426434+04:00
 source: local
 ulid: 01M4B4MHYG68Q9NP5962C82VRV
 status: open
+origin:
+    session: 63
 title: Shader design pass — signature WebGPU moments via open-source Shaders library
 description: 'Integrate MIT-licensed Shaders (npm ''shaders'', shader-effects-inc/shaders; clone at ~/.analysis-clones/shader-effects-inc-shaders) for restrained signature visual moments: (1) cosmolabs.org product-page hero — animated gradient/noise echoing amber-on-dark (folds into TASK-010 integration); (2) desktop empty-state/onboarding AT MOST — never an always-on ambient layer (battery/CPU on a monitoring dashboard; verify WebGPU in WKWebView/WebKitGTK first). One signature moment per surface — anti-slop rule. Bonus: shaders ships an MCP server + llms.txt full reference (agent-friendly, on-brand).'

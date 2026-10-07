@@ -1,9 +1,11 @@
 id: FEAT-045
 type: feature
 created_at: 2026-10-07T16:15:24.513182+04:00
-updated_at: 2026-10-07T16:15:25.079676+04:00
+updated_at: 2026-10-07T16:15:27.90147+04:00
 source: local
 ulid: 01M4B4MDWQYQWAP9742731JNZF
 status: open
+origin:
+    session: 63
 title: Cosmoflare Pager — open-source mobile + desktop alerting companion
 description: 'New open-source app (mobile + desktop) surfacing Cosmoflare alert monitoring: receives pushes from the existing alerts engine + webhook layer (internal/webhook, ''cosmoflare alerts'' rules for error rates/limits/failures), on-call acknowledgment, severity triage (FEAT-041 ramp). Product-vision pivot: pager is open source (mobile tier was previously paid-subscription in docs/PRODUCT-VISION.md — update vision doc in scope). Needs its own brainplan: push infra (APNs/FCM vs websocket-when-open), escalation model, pairing/auth (FEAT-029 device-flow synergy), standalone app vs desktop companion.'
