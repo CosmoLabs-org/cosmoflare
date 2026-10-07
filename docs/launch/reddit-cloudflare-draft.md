@@ -30,11 +30,17 @@ Things r/Cloudflare folks might care about:
   allow switch; uploads can be capped by bucket allowlist / key patterns /
   max size. This is the part I'd most like feedback on: is fail-closed the
   right default for agent-driven infra changes?
+- Alert rules with phone delivery, no SaaS pager: `cosmoflare alerts watch`
+  evaluates rules (error rates, plan limits, worker failures) and sends Web
+  Push notifications (VAPID) to an installable PWA in the repo. Rules run
+  on your machine; payloads are encrypted end-to-end — no Firebase/APNs
+  account, no notification vendor.
 - `cosmoflare wrangler` imports your existing wrangler.toml;
   `cosmoflare terraform` exports live state if you're heading to IaC
 
 What it does NOT do: local workerd dev runtime (`cosmoflare dev` is a
-proxy). The rest of the Workers lifecycle — secrets, versions, deployments
+local dev-server scaffold; service proxying is still in progress). The
+rest of the Workers lifecycle — secrets, versions, deployments
 with rollback, custom domains — landed in v0.28.2. Comparison here [2].
 
 Install: `go install github.com/CosmoLabs-org/cosmoflare@latest` or

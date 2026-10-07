@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="85%" cy="8%" r="65%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#f59e0b" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#1a1a1a"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="0" y="0" width="8" height="630" fill="#f59e0b"/>
+
+  <text x="80" y="212" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="112" font-weight="700" fill="#f5f0e8">Cosmoflare</text>
+  <text x="84" y="278" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="38" fill="#a8a8a8">The whole Cloudflare platform in one Go binary.</text>
+
+  <rect x="80" y="360" width="1040" height="96" rx="12" fill="#242424" stroke="#3a3a3a" stroke-width="1"/>
+  <text x="112" y="418" font-family="Menlo, Monaco, monospace" font-size="27">
+    <tspan fill="#f59e0b">$</tspan><tspan fill="#e6e6e6" dx="12">go install github.com/CosmoLabs-org/cosmoflare@latest</tspan>
+  </text>
+
+  <text x="80" y="560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="24" fill="#a8a8a8">CosmoLabs · MIT</text>
+  <text x="1120" y="560" text-anchor="end" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="24" fill="#a8a8a8">30+ services · JSON everywhere · agent-safe MCP · push-alert pager</text>
+</svg>

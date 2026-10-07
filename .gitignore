@@ -216,6 +216,10 @@ GOrchestra/worktrees/**/recovery_*.patch
 .cosmoflare-time-travel-cache.json
 
 # Internal session artifacts (audit 2026-09-13, action-plan #8) — never ship in the public tree
+# GOrchestra/ holds ~2k local runtime files (intel, cmd-output logs, worktree history).
+# ccs doctor's gitignore heuristic flags this blanket, but every tracked artifact ccs
+# writes lands under docs/ (e.g. FEAT-045 wave manifests in docs/prompts/) — pipelines
+# functioned across v0.26-v0.32 with zero GOrchestra paths tracked. Warning accepted.
 docs/conversation-transcripts/
 docs/sessions/transcripts/*.jsonl
 GOrchestra/

@@ -22,9 +22,11 @@ OG + JSON-LD.
    copy and link targets unchanged.
 3. Route: `/cosmoflare`. If the site is static, add the page to its
    generator; ensure trailing-slash behavior matches the canonical.
-4. Social card: generate a 1200x630 image at `/img/cosmoflare-og.png`
-   (marked `TODO(site)` in the artifact). The repo social preview can be
-   reused as the base.
+4. Social card: copy `docs/launch/cosmoflare-og.png` (1200x630, produced
+   2026-10-08) to `/img/cosmoflare-og.png` on the site. Source SVG:
+   `docs/launch/cosmoflare-og.svg`. A 1280x640 variant for the GitHub repo
+   social preview ships as `docs/launch/cosmoflare-social-preview.png`
+   (upload in repo Settings > Social preview — operator action).
 5. Post-deploy checks:
    - `curl -s https://cosmolabs.org/cosmoflare | grep 'og:title'`
    - Rich-results check on the JSON-LD (search Google's Rich Results Test
@@ -33,10 +35,11 @@ OG + JSON-LD.
 
 ## Facts already true (do not re-verify in copy)
 
-- Version at time of writing: v0.28.2 (JSON-LD `softwareVersion` is set
+- Version at time of writing: v0.32.0 (JSON-LD `softwareVersion` is set
   to it). Bump this field on future releases — the cosmoflare repo's
   `docs/launch/product-page.html` is the SSOT; update there first, then
-  mirror in the site.
+  mirror in the site. Refreshed 2026-10-08: hero/features/quickstart now
+  cover the FEAT-045 pager (alerts watch + Web Push).
 - Both install paths work: `go install github.com/CosmoLabs-org/cosmoflare@latest`
   (proxy.golang.org serves v0.28.2+) and `brew install
   CosmoLabs-org/cosmoflare/cosmoflare` (tap live).

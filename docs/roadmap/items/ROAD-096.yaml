@@ -1,6 +1,6 @@
 id: ROAD-096
 created_at: 2026-09-13T15:38:27.827191+04:00
-updated_at: 2026-09-18T15:19:56.089242+04:00
+updated_at: 2026-10-08T01:33:55.695737+04:00
 title: Launch and distribution program (0 to 1,000 stars)
 description: 'Sequenced: Phase 0 sync-engine fixes (BUG-040..043) then purge transcripts/GOrchestra from tracked tree, publish v0.26.0 (staged in dist/upload/), flip repo public, fix install URLs, brand sweep, then Show HN / r/Cloudflare / Cloudflare Community / awesome-list PRs + vs-Wrangler comparison page. Source: audit 2026-09-13 agent-4-competitive.md + agent-6-seo-content.md'
 status: in_progress
@@ -12,6 +12,8 @@ notes:
     - '2026-09-16: v0.28.2 published — module distribution restored (BUG-052: emoji-named dir poisoned proxy.golang.org zips for v0.28.0/v0.28.1; release gate now rejects non-ASCII tree paths). pkg.go.dev re-indexed with corrected package name. Drafts de-staled post-FEAT-021 (Workers lifecycle now covered) + fresh-eyes reviewed; vs-Wrangler table row fixed to match. Remaining: launch posts (operator voice), awesome-list PRs, social preview image, cosmolabs.org product-page integration (TASK-010 handoff ready).'
     - 'Session 2026-09-17: v0.29.0 released + tap/proxy verified + research packs out. Remaining: launch posts (operator) + TASK-010 product page (cosmolabs.org session).'
     - 'Evening 2026-09-18: v0.29.0 live + registry/audit spine (FEAT-020 w1) + onboarding closed (FEAT-017). Remaining: launch posts (operator, next HN window Tue-Thu) + TASK-010 product page (cosmolabs.org session).'
+    - '2026-10-08: launch artifacts refreshed to v0.32.0 — Show HN + r/Cloudflare drafts gained the FEAT-045 pager (alerts watch + VAPID Web Push PWA, encryption claim verified against alertspush/sender.go); product-page.html bumped to 0.32.0 with pager features; social cards produced (docs/launch/cosmoflare-og.png 1200x630 for site /img/, cosmoflare-social-preview.png 1280x640 for GitHub repo settings). Remaining: operator posts, TASK-010 site integration, GitHub preview upload, awesome-list PRs.'
+    - '2026-10-08 fresh-eyes review (3 Opus agents, claims verified vs code/tags): 3 false claims caught and fixed — alerts registry has no sync-failure rule (now quotas/worker failures), cosmoflare dev is a 502 scaffold not a proxy (BUG-046, cmd/dev.go:29-33), mobile app is upcoming not shipped. Product page clean (JSON-LD parses, all 5 quickstart commands match cobra defs, MCP 243-tool floor). Brew tap verified public. Drafts operator-ready.'
 linked_issues:
     - TASK-010
 origin:
