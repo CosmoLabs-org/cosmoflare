@@ -1,9 +1,13 @@
 id: BASE-011
 created_at: 2026-05-24T08:28:39.667621-03:00
-updated_at: 2026-05-24T08:28:39.669368-03:00
+updated_at: 2026-10-07T15:47:16.524901+04:00
 title: Error tracking configured
 description: Sentry, Bugsnag, or equivalent catches production errors with source maps
-status: captured
+status: completed
 category: infra
 tags:
     - foundation
+notes:
+    - 'N/A by design: the embedded knowledge layer decodes CF API errors in-product (now wired globally via FEAT-044); no external error tracker for a CLI.'
+completed_in: v0.32.0
+completed_at: 2026-10-07T15:47:16.524894+04:00

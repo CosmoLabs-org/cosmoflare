@@ -1,9 +1,13 @@
 id: BASE-002
 created_at: 2026-05-24T08:28:39.667621-03:00
-updated_at: 2026-05-24T08:28:39.667962-03:00
+updated_at: 2026-10-07T15:47:16.048296+04:00
 title: Tech stack defined
 description: Technology choices documented via ccs tech-stack or tech-stack.yaml
-status: captured
+status: completed
 category: core
 tags:
     - foundation
+notes:
+    - 'Evidence: CLAUDE.md Project section + go.mod (Go 1.26) + .version-registry.json are the stack SSOT; a separate SPEC.md is deliberately absent for this repo.'
+completed_in: v0.32.0
+completed_at: 2026-10-07T15:47:16.048285+04:00

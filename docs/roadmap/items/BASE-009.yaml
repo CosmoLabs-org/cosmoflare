@@ -1,9 +1,13 @@
 id: BASE-009
 created_at: 2026-05-24T08:28:39.667621-03:00
-updated_at: 2026-05-24T08:28:39.694592-03:00
+updated_at: 2026-10-07T15:47:16.417466+04:00
 title: Testing framework configured
 description: Test runner works, at least one test exists, CI can execute tests
 status: completed
 category: testing
 tags:
     - foundation
+notes:
+    - 'Evidence: 50+ *_test.go files; 21 packages green in this session''s fresh sweeps (internal/... + pkg/...).'
+completed_in: v0.32.0
+completed_at: 2026-10-07T15:47:16.417435+04:00

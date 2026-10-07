@@ -1,77 +1,91 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-07T15:45:00.309259+04:00
+last_updated: 2026-10-07T15:47:16.738782+04:00
 next_id: 101
 items:
     - id: BASE-001
       title: Git remote configured
       status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-002
       title: Tech stack defined
-      status: captured
+      status: completed
       category: core
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-003
       title: Credentials set up
-      status: captured
+      status: completed
       category: security
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-004
       title: Security baseline
       status: completed
       category: security
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-005
       title: Documentation structure
       status: completed
       category: docs
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-006
       title: Domain & hosting configured
-      status: captured
+      status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-007
       title: Backup strategy defined
-      status: captured
+      status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-008
       title: Monitoring & uptime
-      status: captured
+      status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-009
       title: Testing framework configured
       status: completed
       category: testing
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-010
       title: Linting & formatting enforced
-      status: captured
+      status: completed
       category: core
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-011
       title: Error tracking configured
-      status: captured
+      status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-012
       title: Database initialized
-      status: captured
+      status: completed
       category: infra
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-013
       title: License defined
       status: completed
       category: docs
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-014
       title: Dependency audit clean
       status: completed
       category: security
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: BASE-015
       title: Environment separation
@@ -79,7 +93,7 @@ items:
       category: infra
       linked_issues:
         - FEAT-026
-      completed_in: v0.29.0
+      completed_in: v0.32.0
       created_at: 2026-05-24T08:28:39.667621-03:00
     - id: ROAD-000
       title: Wire up real S3 API client (replace placeholders)
