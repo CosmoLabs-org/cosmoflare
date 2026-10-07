@@ -1013,6 +1013,11 @@ var registry = []Command{
 		Service: "alerts", Scope: "config", Verb: "read",
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+	{
+		ID: "alerts.watch", CLIPath: []string{"alerts", "watch"},
+		Service: "alerts", Scope: "config", Verb: "read",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
 
 	// --- tunnel (wave 4; permissions from the Qwen dataset) ---
 	// cloudflared/Wrangler have no stable REST-tunnel equivalent commands, so
