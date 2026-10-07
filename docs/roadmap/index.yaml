@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-07T15:47:16.738782+04:00
+last_updated: 2026-10-07T21:10:17.537532+04:00
 next_id: 101
 items:
     - id: BASE-001
@@ -619,10 +619,12 @@ items:
       created_at: 2026-05-16T00:10:46.882401-03:00
     - id: ROAD-064
       title: React Native mobile app — on-the-go monitoring and quick actions
-      status: captured
+      status: in_progress
       priority: 80
       category: ux
       effort: large
+      linked_issues:
+        - FEAT-045
       created_at: 2026-05-16T00:10:55.225465-03:00
     - id: ROAD-065
       title: Plugin system — community extensions with cosmoflare plugin install
