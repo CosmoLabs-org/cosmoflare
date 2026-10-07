@@ -3,7 +3,7 @@ ulid: 01M2EKRE9PSHYTQ8FCXR26FGWZ
 id: FB-9
 title: 'Auto-memory: cosmoflare public launch 2026-09-13'
 type: idea
-status: pending
+status: implemented
 priority: medium
 complexity: ""
 from_project: cosmoflare
@@ -11,7 +11,7 @@ from_path: /Users/gabstudio/PROJECTS/cosmoflare
 to_project: cosmoflare
 to_target: self
 created: "2026-09-14T04:06:04.854326+04:00"
-updated: "2026-09-15T04:24:33.430904+04:00"
+updated: "2026-10-07T15:45:00.243214+04:00"
 suggested_conversion: feature
 converted_to: null
 related_issues: []
@@ -25,7 +25,7 @@ response:
   implemented: null
   rejected: null
   rejection_reason: null
-    notes: "[2026-09-15 04:24] Triage 2026-09-15: valid request, execution blocked by cosmohooks cross-project-guard misfire (it blocks this project's OWN memory dir at ~/.claude/projects/-Users-gabstudio-PROJECTS-cosmoflare/memory/). Root cause filed to ClaudeCodeSetup (incoming: 2026-09-15-cosmoflare-cross-project-guard-blocks-a-projects-o.md). Item stays OPEN until the guard is fixed and the memory file exists."
+    notes: 'Memory file created 2026-10-07: ~/.claude/projects/-Users-gabstudio-PROJECTS-cosmoflare/memory/cosmoflare-public-launch-2026-09-13.md with all FB-9 facts (mirror path, push quirks, Trash-move rule) + MEMORY.md index line + the 09-07 purge memory updated with the 09-13 supersession. Open condition satisfied.'
 ---
 
 # FB-p26FGWZ: Auto-memory: cosmoflare public launch 2026-09-13
