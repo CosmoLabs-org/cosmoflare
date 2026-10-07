@@ -28,6 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thread-safe operations** with proper goroutine coordination
 - **Memory-efficient streaming** for large file operations
 
+## [v0.32.0] - 2026-10-07
+
+### Added
+- FEAT-011: ingest Qwen permission dataset — catalog grows 76 to 157 token-permission families with endpoint unlocks, spectrum/web-analytics permission sparseness filled in the command registry
+- FEAT-020: command registry complete — permission columns filled for all API commands, NoPermsRequired marker for verified-none endpoints, invariant test enforcing completeness
+- FEAT-044: knowledge.Transport wired at the control-plane chokepoint — every CF API call now gets the endpoint registry; WithHTTPClient overrides wrapped (wrap-always); R2 data plane stays registry-free
+- FEAT-045: Cosmoflare Pager v1 — Web Push (VAPID) zero-infra alert delivery: alertspush package (keypair/subscription store, 2KB severity payload, dispatch with expiry pruning), alerts watch + push CLI, installable static PWA with ack/snooze history, desktop notifications parity, ADR-001 mobile strategy
+- wire knowledge.Transport into CF chokepoint (FEAT-044) (commit:4504d691)
+- ingest Qwen permission dataset — 76 to 157 families, unlocks pinned (FEAT-011) (commit:85b2623a)
+
+### Fixed
+- register alerts push subcommands — FEAT-020 tree invariant (FEAT-045) (commit:68baf3b4)
+- FIFO cap slice-underflow bug + complete T7 views/styles/wiring (FEAT-45) (commit:1aa855d4)
+
 ## [0.31.0] - 2026-09-24
 
 ### Added

@@ -4,19 +4,7 @@
 
 version: pending
 entries:
-    added:
-        - description: 'FEAT-011: ingest Qwen permission dataset — catalog grows 76 to 157 token-permission families with endpoint unlocks, spectrum/web-analytics permission sparseness filled in the command registry'
-          source: manual
-          date: 2026-09-25T05:34:25.315838+04:00
-        - description: 'FEAT-020: command registry complete — permission columns filled for all API commands, NoPermsRequired marker for verified-none endpoints, invariant test enforcing completeness'
-          source: manual
-          date: 2026-10-06T19:19:25.134498+04:00
-        - description: 'FEAT-044: knowledge.Transport wired at the control-plane chokepoint — every CF API call now gets the endpoint registry; WithHTTPClient overrides wrapped (wrap-always); R2 data plane stays registry-free'
-          source: manual
-          date: 2026-10-06T22:35:33.722085+04:00
-        - description: 'FEAT-045: Cosmoflare Pager v1 — Web Push (VAPID) zero-infra alert delivery: alertspush package (keypair/subscription store, 2KB severity payload, dispatch with expiry pruning), alerts watch + push CLI, installable static PWA with ack/snooze history, desktop notifications parity, ADR-001 mobile strategy'
-          source: manual
-          date: 2026-10-07T18:19:22.337887+04:00
+    added: []
     fixed: []
     changed: []
     deprecated: []
