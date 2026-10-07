@@ -1,0 +1,13 @@
+{
+  "name": "Cosmoflare Pager",
+  "short_name": "Pager",
+  "description": "Cosmoflare push-alert pager (FEAT-045). Fully static; the phone holds no Cloudflare credentials.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1a1a1a",
+  "background_color": "#1a1a1a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
