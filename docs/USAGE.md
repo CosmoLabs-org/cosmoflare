@@ -2729,6 +2729,39 @@ cosmoflare account remove production --force   # Remove even if active
 
 Configure alert rules that notify on error rates, storage limits, worker failures, and other conditions across Cloudflare services. Alert rules are stored locally in `.cosmoflare-alerts.yaml`. Alert history is logged to `~/.cosmoflare/alert-history.log` (NDJSON).
 
+### Watch rules continuously and page your phone
+
+`alerts watch` evaluates every rule on a fixed interval and fires pushes to
+every paired device (the Cosmoflare Pager PWA — Web Push, zero
+infrastructure; see `cosmoflare alerts push --help` and the pairing flow
+below). One failing rule never stops the loop.
+
+```bash
+cosmoflare alerts watch                # evaluate every 60s (minimum 10s)
+cosmoflare alerts watch --interval 30  # every 30 seconds
+cosmoflare alerts watch --test-fire    # send one canned info-severity push, then exit
+```
+
+`--test-fire` is the end-to-end pairing check: if the phone buzzes, keygen,
+subscription, and dispatch all work.
+
+### Pair a device (push subscriptions)
+
+One-time setup, one paste. VAPID keys live only on your machine
+(`~/.cosmoflare/push.json`, mode 0600); the phone receives pushes and holds
+zero Cloudflare credentials.
+
+```bash
+cosmoflare alerts push keygen          # create the VAPID keypair (idempotent)
+# On the phone: install the PWA → Pairing → Enable notifications → Copy subscription
+cosmoflare alerts push add             # paste the copied subscription blob
+cosmoflare alerts push list --json     # paired devices
+cosmoflare alerts push remove https://push.example/endpoint/...
+```
+
+Expired subscriptions (device uninstalled the PWA) are pruned automatically
+on the next send; `push list` shows what remains.
+
 ### List alert rules
 
 ```bash
