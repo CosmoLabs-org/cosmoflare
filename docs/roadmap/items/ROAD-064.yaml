@@ -7,5 +7,7 @@ status: captured
 priority: 80
 category: ux
 effort: large
+linked_issues:
+    - FEAT-045
 origin:
     session: 2027

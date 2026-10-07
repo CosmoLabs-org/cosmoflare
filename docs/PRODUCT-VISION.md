@@ -17,7 +17,7 @@ Cosmoflare is the MCP-powered Cloudflare control plane. It exists so that Claude
 3. **Security is paramount** — API keys handled securely (never logged, never in output unless explicit). The CLI is the trust boundary between agents and Cloudflare infrastructure.
 4. **Library-first** — The Go library (`pkg/cosmoflare/`) is the stable API surface. The CLI wraps it. The future mobile app wraps it. No separate implementations.
 5. **MCP-native** — Cosmoflare will serve as an MCP server, letting Claude Code and other AI tools control Cloudflare natively through tool-use protocol.
-6. **Open-source core, paid mobile** — The CLI is free (MIT). The React Native mobile app with push notifications and one-tap actions is the paid product.
+6. **Open-source core, open-source pager** — The CLI is free (MIT). The pager (mobile + desktop alerting) is open source too. Paid tiers are desktop dashboard depth and managed conveniences.
 7. **Backward compatible** — `r2go2` binary always works. `cosmoflare` is the primary name. Module path changes are planned, not forced.
 
 ## What is Cosmoflare?
@@ -31,7 +31,7 @@ Cosmoflare is the ultimate open-source CLI for managing the entire Cloudflare de
 | Tier | Product | Model | Status |
 |------|---------|-------|--------|
 | **CLI** | `cosmoflare` (alias: `r2go2`) | Free, MIT, open-source | Active |
-| **Mobile** | React Native (iOS/Android) | Paid subscription | Planned |
+| **Mobile** | React Native app → Installable PWA (Web Push); native shells via gomobile later | Open source | Pager v1 shipping |
 | **Desktop** | Tauri app (macOS/Windows/Linux) | Paid | Future |
 
 **Mobile is the priority over desktop.** People already have dash.cloudflare.com for a browser-based dashboard. What they lack is a native mobile app with push notifications and one-tap actions. That's the gap worth filling.
