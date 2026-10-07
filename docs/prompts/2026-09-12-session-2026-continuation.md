@@ -2,12 +2,12 @@
 branch: master
 completed: "2026-10-07T23:02:18+04:00"
 created: "2026-09-12T12:00:00+04:00"
-goals_completed: 0
+goals_completed: 1
 goals_total: 4
 related_prompts: []
 requires_reading: []
 schema_version: 1
-status: SUPERSEDED
+status: PENDING
 tags: []
 title: Session 2027 Continuation Prompt
 ---
@@ -22,7 +22,7 @@ Ten features and one refactor closed and merged through the full gate (diff-read
 Acceptance: docs/research/2026-09-10-cf-limits-corpus/ contains grok-results.md and gemini-results.md; conflicts.md and catalog-draft.json exist after /run-continuation on the ingestion prompt; brainstorm gains a Corpus findings section
 ### [ ] 2. Implement BR-03 LimitsService v2 from the catalog
 Acceptance: pkg/cosmoflare/limitsdata/catalog.json embedded via go:embed; limitFor reads the catalog; hardcoded workerPlanLimits/staticLimits deleted; per-service plan resolution; stale-entry warning at 90 days; full-package tests green
-### [ ] 3. Dispatch FEAT-021 Workers depth (38 verbs)
+### [x] 3. Dispatch FEAT-021 Workers depth (38 verbs)
 Acceptance: workers block of corpus section 9 checklist fully present with --json; versions rollback works; tail streams; cron CRUD round-trips
 ### [ ] 4. Run the two queued deep-research prompts (MCP ecosystem, registrar doctrine)
 Acceptance: gemini-results-mcp-ecosystem.md and registrar results land in the corpus with parsed JSON blocks; cosmoflare mcp scope decision recorded

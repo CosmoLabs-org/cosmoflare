@@ -186,3 +186,21 @@ Domains / Registrar, CORS response headers, Cloudflare API rate limits.
   for desktop/mobile/MCP).
 - **BR-06** — Phase 2/3 spec sections (D4, D5) reviewed and accepted as the
   contract for the next two builds.
+
+## Corpus findings (2026-09-10 ingestion, synthesized 2026-10-08)
+
+Catalog: `docs/research/2026-09-10-cf-limits-corpus/catalog-draft.json` (66 verified entries, schema v1, every row carries source_url + verified_on). Conflicts register: `conflicts.md` — zero value conflicts; the two landed sources use disjoint vocabularies (qwen catalogs hard limits; gemini catalogs price points; single shared id agrees). Grok results never arrived — the register is a two-way comparison.
+
+Corrected values for the previously-hardcoded resources:
+
+| resource | catalog id | free | paid | note |
+|---|---|---|---|---|
+| worker daily requests | `workers.requests_daily` | 100,000 | — | paid tier billed per-request, not a fixed cap |
+| subrequests/invocation | `workers.subrequests` | 50 | 10,000 | configurable to 10M |
+| script size | `workers.script_size` | 64 MB | 64 MB | — |
+| DNS records/zone | `dns.records_zone` | 200 | — | paid tiers docs-silent on a fixed cap |
+| zones per account | `zones.organization` | — | — | docs-silent: no verifiable numeric tiers in the corpus |
+| R2 buckets per account | — (absent) | — | — | the corpus carries no verified entry; keep the existing local constant and flag it `unverified` in LimitsService v2 until a source lands |
+| worker scripts per account | — (absent) | — | — | same: docs-silent in the corpus |
+
+Consequence for BR-03: the catalog becomes the lookup source for everything it carries; the two absent resources stay as explicitly-marked local constants (not silent hardcoding) with a `verified_on: null` marker so the stale-entry warning can name them.

@@ -5,7 +5,7 @@ covers_brainstorm_deliverables:
     - BR-01
     - BR-02
 created: "2026-09-10T19:32:07+04:00"
-goals_completed: 0
+goals_completed: 5
 goals_total: 6
 id: P-2026-09-10-cf-limits-corpus-research-ingestion
 priority: high
@@ -16,7 +16,7 @@ requires_reading:
     - docs/research/2026-09-10-cf-limits-corpus/gemini-pack.md
     - docs/research/2026-09-10-cf-limits-corpus/qwen-pack.md
 schema_version: 1
-status: SUPERSEDED
+status: PENDING
 tags:
     - research
     - limits
@@ -60,24 +60,24 @@ is missing, stop and tell the user to paste it first:
 Parse `grok-results.md` CATALOG JSON. Record every RECENT CHANGES item with
 its source URL. Covers BR-02.
 
-### [ ] G-02 Ingest Gemini results
+### [x] G-02 Ingest Gemini results
 Parse `gemini-results.md` CATALOG JSON. Elevate INCLUDED QUOTAS entries the
 same way the pack defined. Covers BR-02.
 
-### [ ] G-03 Ingest Qwen results
+### [x] G-03 Ingest Qwen results
 Parse `qwen-results.md` CATALOG JSON. Preserve `enforceability` and `soft`
 fields (defined by the qwen pack's catalog schema — they are not part of
 brainstorm D1) — they determine what phase-2 guards (brainstorm D4) can
 actually enforce. Record EDGE CASES items. Covers BR-02.
 
-### [ ] G-04 Synthesize cross-model findings
+### [x] G-04 Synthesize cross-model findings
 For every catalog id: compare values across the three sources. Agreement →
 consensus value (provenance = majority source_url). Disagreement → conflict
 row. Write `docs/research/2026-09-10-cf-limits-corpus/conflicts.md` with the
 full register (id, values, sources, recommended resolution, confidence).
 Covers BR-02.
 
-### [ ] G-05 Draft the catalog
+### [x] G-05 Draft the catalog
 Write `docs/research/2026-09-10-cf-limits-corpus/catalog-draft.json` —
 schema v1 per the brainstorm (D1), one entry per consensus limit, every
 entry with `source_url` + `verified_on` (full ISO8601 with timezone per
@@ -88,7 +88,7 @@ conflicts: keep the more-conservative documented value, mark the conflict in
 Covers BR-01 (as the research-dir draft; BR-03 embeds it as
 `pkg/cosmoflare/limitsdata/catalog.json`).
 
-### [ ] G-06 Update the brainstorm with reality
+### [x] G-06 Update the brainstorm with reality
 Append a "## Corpus findings (2026-09-10 ingestion)" section to the
 brainstorm doc: corrected values for the 6 currently-hardcoded resources
 (workers.scripts, workers.daily_requests, r2.buckets,
