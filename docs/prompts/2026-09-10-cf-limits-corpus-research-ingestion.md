@@ -1,24 +1,29 @@
 ---
 brainstorm_ref: docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md
+completed: "2026-10-07T23:02:18+04:00"
 covers_brainstorm_deliverables:
     - BR-01
     - BR-02
 created: "2026-09-10T19:32:07+04:00"
+goals_completed: 0
+goals_total: 6
 id: P-2026-09-10-cf-limits-corpus-research-ingestion
 priority: high
+related_prompts: []
 requires_reading:
     - docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md
     - docs/research/2026-09-10-cf-limits-corpus/grok-pack.md
     - docs/research/2026-09-10-cf-limits-corpus/gemini-pack.md
     - docs/research/2026-09-10-cf-limits-corpus/qwen-pack.md
 schema_version: 1
-status: PENDING
+status: SUPERSEDED
 tags:
     - research
     - limits
     - cloudflare
 title: CF limits corpus — research ingestion
 ---
+
 # CF limits corpus — research ingestion
 
 ## BEFORE Starting — Required Reading
