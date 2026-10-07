@@ -22,15 +22,18 @@ func TestLimitFor(t *testing.T) {
 		want     uint64
 		wantOK   bool
 	}{
-		{"workers scripts free", "workers.scripts", "free", 100, true},
-		{"workers scripts paid", "workers.scripts", "paid", 500, true},
-		{"workers daily requests free", "workers.daily_requests", "free", 100000, true},
-		{"workers daily requests paid is unlimited", "workers.daily_requests", "paid", 0, true},
-		{"r2 buckets plan-independent", "r2.buckets", "", 1000000, true},
-		{"r2 custom domains plan-independent", "r2.custom_domains_per_bucket", "paid", 100, true},
-		{"workers resource with unknown plan", "workers.scripts", "unknown", 0, false},
+		{"workers scripts free (local constant)", "workers.scripts", "free", 100, true},
+		{"workers scripts paid (local constant)", "workers.scripts", "paid", 500, true},
+		{"workers daily requests free (catalog)", "workers.daily_requests", "free", 100000, true},
+		{"workers requests daily catalog id free", "workers.requests_daily", "free", 100000, true},
+		{"workers requests daily paid is null in catalog", "workers.requests_daily", "paid", 0, false},
+		{"workers subrequests paid", "workers.subrequests", "paid", 10000, true},
+		{"workers subrequests free", "workers.subrequests", "free", 50, true},
+		{"r2 buckets via local constant", "r2.buckets", "", 1000000, true},
+		{"unknown plan resolves to paid tier", "workers.subrequests", "unknown", 10000, true},
+		{"empty plan resolves to paid tier", "workers.subrequests", "", 10000, true},
+		{"r2 custom domains absent from catalog", "r2.custom_domains_per_bucket", "paid", 0, false},
 		{"unknown resource", "nope", "free", 0, false},
-		{"workers resource with empty plan", "workers.scripts", "", 0, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -426,8 +429,11 @@ func TestSnapshotBucketScope(t *testing.T) {
 	}
 	for _, row := range snap.Rows {
 		if row.Resource == "r2.custom_domains_per_bucket" {
-			if row.Scope != "my-bucket" || row.Used != 99 || row.Limit != 100 || row.Percent != 99 {
-				t.Fatalf("bucket row = %+v, want my-bucket 99/100=99%%", row)
+			// The corpus carries no verified entry for per-bucket custom
+			// domains (BR-03 corpus findings) — usage reports without a
+			// limit instead of a fabricated one.
+			if row.Scope != "my-bucket" || row.Used != 99 || row.Limit != 0 || row.Percent != 0 || row.LimitSource != "unknown" {
+				t.Fatalf("bucket row = %+v, want my-bucket used=99 limit=unknown", row)
 			}
 			return
 		}
@@ -521,4 +527,108 @@ func TestSnapshotDNSUsage404StillFallsBack(t *testing.T) {
 		}
 	}
 	t.Fatal("dns.records fallback row missing on 404")
+}
+
+// TestPlanForPrecedence pins the D2 per-service chain: subscriptions API →
+// per-service --plan override → config plans: map → unknown. With the API
+// reachable it wins; with the API unavailable (scoped token, 403), the
+// override outranks the config map; with neither, unknown.
+func TestPlanForPrecedence(t *testing.T) {
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/accounts/acct/subscriptions" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprint(w, `{"success": true, "result": [
+			{"product": {"name": "r2"}, "rate_plan": {"id": "r2_free"}},
+			{"product": {"name": "d1"}, "rate_plan": {"id": "d1_paid"}}
+		]}`)
+	})
+
+	// API reachable: it outranks both override and config.
+	WithLimitsPlanOverrides(map[string]string{"r2": "paid"})(s)
+	WithLimitsConfigPlans(map[string]string{"r2": "paid"})(s)
+	if tier, err := s.planFor(context.Background(), "r2"); err != nil || tier != "free" {
+		t.Fatalf("planFor(r2) with live API = (%q, %v), want (free, nil)", tier, err)
+	}
+
+	// API unreachable: override beats config.
+	s2, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"success": false}`)
+	})
+	WithLimitsPlanOverrides(map[string]string{"d1": "paid"})(s2)
+	WithLimitsConfigPlans(map[string]string{"d1": "free"})(s2)
+	if tier, _ := s2.planFor(context.Background(), "d1"); tier != "paid" {
+		t.Fatalf("planFor(d1) override-vs-config = %q, want paid (override wins)", tier)
+	}
+
+	// Config beats unknown when no override is set for that service.
+	WithLimitsConfigPlans(map[string]string{"kv": "enterprise"})(s2)
+	if tier, _ := s2.planFor(context.Background(), "kv"); tier != "enterprise" {
+		t.Fatalf("planFor(kv) config fallback = %q, want enterprise", tier)
+	}
+
+	// Nothing resolves: unknown (error is diagnostics-only, tier is the contract).
+	if tier, _ := s2.planFor(context.Background(), "queues"); tier != "unknown" {
+		t.Fatalf("planFor(queues) with no sources = %q, want unknown", tier)
+	}
+}
+
+// TestPlanForSharesOneSubscriptionsCall pins the D2 "one call" rule: Workers
+// and R2 resolution share a single subscriptions round-trip.
+func TestPlanForSharesOneSubscriptionsCall(t *testing.T) {
+	var calls int32
+	s, _ := testLimitServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/accounts/acct/subscriptions" {
+			http.NotFound(w, r)
+			return
+		}
+		atomic.AddInt32(&calls, 1)
+		fmt.Fprint(w, `{"success": true, "result": [
+			{"product": {"name": "workers"}, "rate_plan": {"id": "workers_paid"}}
+		]}`)
+	})
+	for _, svc := range []string{"workers", "r2", "d1"} {
+		if _, err := s.planFor(context.Background(), svc); err != nil {
+			t.Fatalf("planFor(%s): %v", svc, err)
+		}
+	}
+	s.resolveWorkersPlan(context.Background())
+	if got := atomic.LoadInt32(&calls); got != 1 {
+		t.Fatalf("subscriptions calls = %d, want 1 (cached across services)", got)
+	}
+}
+
+// TestSnapshotFreshness pins the D3 wiring: rows carry verified_on from the
+// catalog, and unverified local constants (nil verified_on) surface in
+// snap.Stale so the CLI can print one warning naming the ids.
+func TestSnapshotFreshness(t *testing.T) {
+	s := snapshotFixture(t,
+		WithLimitsWorkers(fakeWorkersLister{n: 3}),
+		WithLimitsAnalytics(fakeWorkersAnalytics{sum: []WorkersSummary{{Requests: 10}}}),
+	)
+	s.configPlan = "free"
+	snap, err := s.Snapshot(context.Background(), "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var scriptsRow, requestsRow LimitRow
+	for _, row := range snap.Rows {
+		switch row.Resource {
+		case "workers.scripts":
+			scriptsRow = row
+		case "workers.daily_requests":
+			requestsRow = row
+		}
+	}
+	if scriptsRow.VerifiedOn != "" {
+		t.Fatalf("local-constant row verified_on = %q, want empty (unverified)", scriptsRow.VerifiedOn)
+	}
+	if requestsRow.VerifiedOn != "2026-09-10T10:00:00Z" {
+		t.Fatalf("workers.daily_requests verified_on = %q, want catalog timestamp", requestsRow.VerifiedOn)
+	}
+	if len(snap.Stale) != 1 || snap.Stale[0] != "workers.scripts_per_account" {
+		t.Fatalf("snap.Stale = %v, want [workers.scripts_per_account] (nil verified_on is always stale)", snap.Stale)
+	}
 }

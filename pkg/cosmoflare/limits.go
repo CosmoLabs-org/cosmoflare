@@ -2,65 +2,127 @@ package cosmoflare
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	limitsdata "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/limitsdata"
 )
 
-// workerPlanLimits maps plan-dependent resources to their per-tier limits.
-// Limit 0 means "unlimited". Sources (verified 2026-09-09):
-//   - https://developers.cloudflare.com/workers/platform/limits/
-var workerPlanLimits = map[string]map[string]uint64{
-	"workers.scripts":        {"free": 100, "paid": 500},
-	"workers.daily_requests": {"free": 100000, "paid": 0},
+// catalogAliases maps stable Snapshot row ids to catalog ids where the
+// research corpus renamed the resource (BR-03 corpus findings). Row ids are
+// the CLI surface and stay unchanged; catalog ids are the SSOT vocabulary.
+var catalogAliases = map[string]string{
+	"workers.scripts":        "workers.scripts_per_account",
+	"workers.daily_requests": "workers.requests_daily",
+	"r2.buckets":             "r2.buckets_per_account",
+	"dns.records":            "dns.records_zone",
 }
 
-// staticLimits maps plan-independent account resources to documented limits.
-// Source (verified 2026-09-09):
-//   - https://developers.cloudflare.com/r2/platform/limits/
-var staticLimits = map[string]uint64{
-	"r2.buckets":                   1000000,
-	"r2.custom_domains_per_bucket": 100,
+// catalogID resolves a row id to its catalog id (identity when unaliased).
+func catalogID(resource string) string {
+	if id, ok := catalogAliases[resource]; ok {
+		return id
+	}
+	return resource
 }
+
+// tierValue picks the tier field matching the plan. Unknown or empty plan
+// resolves to "paid" (D2). Zone-specific tiers (pro/business) are handled by
+// dnsRecordsStaticLimit, which reads the zone plan off the zone object.
+func tierValue(t *limitsdata.Tiers, plan string) *json.Number {
+	switch plan {
+	case "free":
+		return t.Free
+	case "enterprise":
+		return t.Enterprise
+	default: // "paid" and any unresolved plan
+		return t.Paid
+	}
+}
+
+// limitFor returns the documented limit for a resource by looking it up in
+// the embedded catalog (the single source of truth — BR-03). ok=false when
+// the resource is not in the catalog or the tier value is null ("no
+// published number" — unknown, never fabricated).
+func limitFor(resource, plan string) (limit uint64, ok bool) {
+	entry, found := limitsdata.Lookup(catalogID(resource))
+	if !found || entry.Tiers == nil {
+		return 0, false
+	}
+	n := tierValue(entry.Tiers, plan)
+	if n == nil {
+		return 0, false // null tier = no published number
+	}
+	v, err := strconv.ParseUint(n.String(), 10, 64)
+	if err != nil {
+		return 0, false // fractional/decimal value — not a countable quota
+	}
+	return v, true
+}
+
+// catalogVerifiedOn returns the catalog entry's verification timestamp for a
+// row id ("" when absent or unverified) — the D3 freshness provenance.
+func catalogVerifiedOn(resource string) string {
+	entry, found := limitsdata.Lookup(catalogID(resource))
+	if !found || entry.VerifiedOn == nil {
+		return ""
+	}
+	return entry.VerifiedOn.UTC().Format(time.RFC3339)
+}
+
+// unverifiedZoneFallback is the DNS record quota for free zones created
+// BEFORE dnsFreeZoneCutoff (2024-09-01). The corpus mentions the 1,000 value
+// only in the dns.records_zone notes — the tiers carry 200 — so this stays a
+// named, flagged local constant instead of a silent hardcode (BR-03 corpus
+// findings: no verified entry ⇒ local constant, flagged unverified).
+const unverifiedZoneFallback uint64 = 1000
 
 // dnsFreeZoneCutoff splits Free-zone DNS record quotas: zones created on or
 // after this UTC date get 200 records, older ones keep 1,000.
 // Source: https://developers.cloudflare.com/dns/manage-dns-records/
 var dnsFreeZoneCutoff = time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC)
 
-// limitFor returns the documented limit for a resource given the Workers plan
-// tier ("free" or "paid"). ok=false when the resource is unknown or the plan
-// is required but unresolved. A returned limit of 0 with ok=true means
-// "unlimited".
-func limitFor(resource, plan string) (limit uint64, ok bool) {
-	if tiers, exists := workerPlanLimits[resource]; exists {
-		limit, ok = tiers[plan]
-		return limit, ok
-	}
-	limit, ok = staticLimits[resource]
-	return limit, ok
-}
-
 // dnsRecordsStaticLimit returns the per-zone DNS record quota by zone plan
-// tier. Used only as the fallback when the live DNS usage API is unavailable
-// to the token. Enterprise has no per-zone limit (account-level quota), so
-// ok=false there.
+// tier, reading its numbers from the catalog entry dns.records_zone (D2:
+// zones carry their plan on the zone object). Used only as the fallback when
+// the live DNS usage API is unavailable to the token. Enterprise has no
+// per-zone limit (tiers null — account-level quota), so ok=false there, as
+// for unknown plans. Only the pre-cutoff free-zone 1,000 comes from the
+// named unverifiedZoneFallback constant.
 func dnsRecordsStaticLimit(zonePlan string, createdOn time.Time) (limit uint64, ok bool) {
-	switch zonePlan {
-	case "pro", "business":
-		return 3500, true
-	case "free":
-		if createdOn.Before(dnsFreeZoneCutoff) {
-			return 1000, true
-		}
-		return 200, true
-	default: // enterprise or unknown
+	entry, found := limitsdata.Lookup("dns.records_zone")
+	if !found || entry.Tiers == nil {
 		return 0, false
 	}
+	var n *json.Number
+	switch zonePlan {
+	case "free":
+		if createdOn.Before(dnsFreeZoneCutoff) {
+			return unverifiedZoneFallback, true // corpus docs-silent — flagged above
+		}
+		n = entry.Tiers.Free
+	case "pro":
+		n = entry.Tiers.Pro
+	case "business":
+		n = entry.Tiers.Business
+	default: // enterprise (null tiers) or unknown plan
+		n = entry.Tiers.Enterprise
+	}
+	if n == nil {
+		return 0, false
+	}
+	v, err := strconv.ParseUint(n.String(), 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return v, true
 }
 
 // LimitRow is one usage-vs-limit observation.
@@ -72,6 +134,10 @@ type LimitRow struct {
 	Percent     float64 `json:"percent,omitempty"`   // 0 when Limit == 0 or unknown
 	PlanTier    string  `json:"plan_tier,omitempty"` // "free" | "paid" | "unknown" | "" when not plan-dependent
 	LimitSource string  `json:"limit_source"`        // "static-docs" | "live-api" | "unknown"
+	// VerifiedOn is the catalog entry's verification timestamp (RFC3339,
+	// D3 freshness provenance). Empty for live-api limits and unverified
+	// local constants.
+	VerifiedOn string `json:"verified_on,omitempty"`
 }
 
 // SourceError records one failed producer without failing the snapshot.
@@ -85,7 +151,10 @@ type LimitsSnapshot struct {
 	Rows        []LimitRow    `json:"rows"`
 	Sources     []SourceError `json:"sources,omitempty"`
 	WorkersPlan string        `json:"workers_plan"` // "free" | "paid" | "unknown"
-	PlanSource  string        `json:"plan_source"`  // "auto" | "config" | "flag" | "unknown"
+	PlanSource  string        `json:"plan_source"`  // "auto" | "override" | "config" | "flag" | "unknown"
+	// Stale lists the catalog ids behind static-docs rows that are older
+	// than 90 days or unverified (nil verified_on — D3 freshness warning).
+	Stale []string `json:"stale,omitempty"`
 }
 
 // Consumer interfaces: LimitsService composes existing services through the
@@ -113,15 +182,21 @@ type WorkersAnalytics interface {
 
 // LimitsService joins live usage counts against documented plan limits.
 type LimitsService struct {
-	accountID  string
-	rest       restClient
-	workers    WorkersLister
-	r2         BucketLister
-	zones      ZoneLister
-	domains    BucketDomainLister
-	analytics  WorkersAnalytics
-	configPlan string
-	flagPlan   string
+	accountID     string
+	rest          restClient
+	workers       WorkersLister
+	r2            BucketLister
+	zones         ZoneLister
+	domains       BucketDomainLister
+	analytics     WorkersAnalytics
+	configPlan    string
+	flagPlan      string
+	planOverrides map[string]string // per-service --plan overrides (D2)
+	configPlans   map[string]string // .cosmoflare.yaml plans: map (D2)
+	// subscriptions cache: Workers/R2/D1 resolve from ONE call (D2).
+	subs       []subscription
+	subsLoaded bool
+	subsErr    error
 }
 
 // LimitsOption configures the LimitsService.
@@ -171,6 +246,21 @@ func WithLimitsConfigPlan(plan string) LimitsOption {
 // The flag outranks config.
 func WithLimitsFlagPlan(plan string) LimitsOption {
 	return func(s *LimitsService) { s.flagPlan = plan }
+}
+
+// WithLimitsPlanOverrides supplies per-service plan tier overrides (D2),
+// keyed by service name — e.g. {"d1": "paid", "r2": "free"} — from
+// `--plan <service>=<tier>` flags. Precedence per service: subscriptions
+// API → override → config plans map → unknown.
+func WithLimitsPlanOverrides(m map[string]string) LimitsOption {
+	return func(s *LimitsService) { s.planOverrides = m }
+}
+
+// WithLimitsConfigPlans supplies the plans: map from .cosmoflare.yaml (D2),
+// keyed by service name. It ranks below the subscriptions API and the
+// per-service --plan overrides.
+func WithLimitsConfigPlans(m map[string]string) LimitsOption {
+	return func(s *LimitsService) { s.configPlans = m }
 }
 
 // NewLimitsService creates a limits collector for one account. Sources are
@@ -309,13 +399,40 @@ func (s *LimitsService) Snapshot(ctx context.Context, bucket string) (*LimitsSna
 	if len(snap.Rows) == 0 && len(snap.Sources) > 0 {
 		return nil, newError(op, "all limit sources failed", nil)
 	}
+	s.appendFreshness(snap)
 	return snap, nil
 }
 
-// countRow builds a usage-vs-documented-limit row. limitFor decides the
-// limit and source: a known limit yields Limit/Percent/"static-docs"; an
-// unknown one (unresolved plan or undocumented resource) yields
-// Limit 0 with "unknown" — never fabricated.
+// staleAfter is the D3 freshness horizon: catalog entries whose verified_on
+// is older than this (or nil — the unverified local constants) are named in
+// the snapshot's stale warning.
+const staleAfter = 90 * 24 * time.Hour
+
+// appendFreshness fills snap.Stale with the catalog ids behind static-docs
+// rows that are older than 90 days or unverified (D3). Live-api rows are
+// skipped: their limit value comes from the live quota API, not the catalog.
+func (s *LimitsService) appendFreshness(snap *LimitsSnapshot) {
+	cutoff := time.Now().UTC().Add(-staleAfter)
+	seen := map[string]bool{}
+	for _, row := range snap.Rows {
+		if row.LimitSource != "static-docs" {
+			continue
+		}
+		entry, ok := limitsdata.Lookup(catalogID(row.Resource))
+		if !ok || seen[entry.ID] {
+			continue
+		}
+		seen[entry.ID] = true
+		if entry.VerifiedOn == nil || entry.VerifiedOn.Before(cutoff) {
+			snap.Stale = append(snap.Stale, entry.ID)
+		}
+	}
+}
+
+// countRow builds a usage-vs-catalog-limit row. limitFor decides the
+// limit and source: a known limit yields Limit/Percent/"static-docs" plus
+// the catalog entry's verified_on; an unknown one (null tier or resource
+// absent from the catalog) yields Limit 0 with "unknown" — never fabricated.
 func countRow(resource, scope string, used uint64, plan string) LimitRow {
 	limit, ok := limitFor(resource, plan)
 	src := "static-docs"
@@ -325,6 +442,7 @@ func countRow(resource, scope string, used uint64, plan string) LimitRow {
 	return LimitRow{
 		Resource: resource, Scope: scope, Used: used, Limit: limit,
 		Percent: percentOf(used, limit), PlanTier: plan, LimitSource: src,
+		VerifiedOn: catalogVerifiedOn(resource),
 	}
 }
 
@@ -401,6 +519,9 @@ func (s *LimitsSnapshot) recordSourceError(source string, err error) {
 
 // subscription wraps the parts of a /subscriptions result entry we join on.
 type subscription struct {
+	Product struct {
+		Name string `json:"name"`
+	} `json:"product"`
 	RatePlan struct {
 		ID         string `json:"id"`
 		PublicName string `json:"public_name"`
@@ -421,32 +542,74 @@ func (s *LimitsService) fetchSubscriptions(ctx context.Context) ([]subscription,
 // normalizePlanTier validates a tier string from any source. Only "free" and
 // "paid" are Workers plan tiers; anything else is "unknown".
 func normalizePlanTier(plan string) string {
+	switch normalizeCatalogPlan(plan) {
+	case "":
+		return "unknown"
+	case "enterprise":
+		// Not a self-serve Workers tier — rejected, not trusted.
+		return "unknown"
+	default:
+		return normalizeCatalogPlan(plan)
+	}
+}
+
+// normalizeCatalogPlan validates a tier string against the catalog's tier
+// vocabulary (free | paid | enterprise — zone-only tiers are read off the
+// zone object, never resolved here). Returns "" for anything invalid.
+func normalizeCatalogPlan(plan string) string {
 	switch strings.ToLower(strings.TrimSpace(plan)) {
 	case "free":
 		return "free"
 	case "paid":
 		return "paid"
+	case "enterprise":
+		return "enterprise"
 	default:
-		return "unknown"
+		return ""
 	}
 }
 
-// resolveWorkersPlan resolves the Workers plan tier. Order: subscriptions
-// API → flag → config → unknown. A subscriptions failure is silent — the
-// source string records which path decided.
-func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string) {
-	subs, err := s.fetchSubscriptions(ctx)
-	if err == nil {
-		for _, sub := range subs {
-			id := sub.RatePlan.ID
-			if strings.HasPrefix(id, "workers") {
-				if strings.Contains(id, "paid") || strings.Contains(strings.ToLower(sub.RatePlan.PublicName), "paid") {
-					return "paid", "auto"
-				}
-				return "free", "auto"
+// cachedSubscriptions fetches the account subscriptions once per service
+// lifetime (Workers/R2/D1 all resolve from the same call — D2).
+func (s *LimitsService) cachedSubscriptions(ctx context.Context) ([]subscription, error) {
+	if !s.subsLoaded {
+		s.subs, s.subsErr = s.fetchSubscriptions(ctx)
+		s.subsLoaded = true
+	}
+	return s.subs, s.subsErr
+}
+
+// tierFromSubscriptions resolves a service's tier from the cached
+// subscriptions list: the entry whose rate-plan id starts with
+// "<service>_" or whose product name matches. "paid" in the rate-plan id or
+// public name means paid; anything else readable means free.
+func (s *LimitsService) tierFromSubscriptions(ctx context.Context, service string) (string, bool) {
+	subs, err := s.cachedSubscriptions(ctx)
+	if err != nil {
+		return "", false
+	}
+	for _, sub := range subs {
+		id := sub.RatePlan.ID
+		if strings.HasPrefix(id, service+"_") || sub.Product.Name == service {
+			if strings.Contains(id, "paid") || strings.Contains(strings.ToLower(sub.RatePlan.PublicName), "paid") {
+				return "paid", true
 			}
+			return "free", true
 		}
-		// Subscriptions readable but no workers entry: fall through to config.
+	}
+	return "", false
+}
+
+// resolveWorkersPlan resolves the Workers plan tier. Order (D2): cached
+// subscriptions API → per-service --plan override → --plan flag →
+// workers_plan config → config plans: map → unknown. A subscriptions
+// failure is silent — the source string records which path decided.
+func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source string) {
+	if tier, ok := s.tierFromSubscriptions(ctx, "workers"); ok {
+		return tier, "auto"
+	}
+	if tier := normalizePlanTier(s.planOverrides["workers"]); tier != "unknown" {
+		return tier, "override"
 	}
 	if tier := normalizePlanTier(s.flagPlan); tier != "unknown" {
 		return tier, "flag"
@@ -454,7 +617,30 @@ func (s *LimitsService) resolveWorkersPlan(ctx context.Context) (plan, source st
 	if tier := normalizePlanTier(s.configPlan); tier != "unknown" {
 		return tier, "config"
 	}
+	if tier := normalizeCatalogPlan(s.configPlans["workers"]); tier != "" {
+		return tier, "config"
+	}
 	return "unknown", "unknown"
+}
+
+// planFor resolves the plan tier for one service (D2 per-service chain).
+// Order: cached subscriptions API → per-service --plan override → config
+// plans: map → "unknown". The subscriptions call is shared with the Workers
+// resolution (one round-trip). The returned error is non-nil only when the
+// subscriptions API failed — the tier is still the best-effort value, so
+// callers may ignore the error for tier purposes.
+func (s *LimitsService) planFor(ctx context.Context, service string) (tier string, err error) {
+	if tier, ok := s.tierFromSubscriptions(ctx, service); ok {
+		return tier, nil
+	}
+	_, subsErr := s.cachedSubscriptions(ctx)
+	if tier := normalizeCatalogPlan(s.planOverrides[service]); tier != "" {
+		return tier, subsErr
+	}
+	if tier := normalizeCatalogPlan(s.configPlans[service]); tier != "" {
+		return tier, subsErr
+	}
+	return "unknown", subsErr
 }
 
 // dnsUsage fetches one zone's DNS record usage and quota from the live API.
