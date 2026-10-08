@@ -1,11 +1,11 @@
 id: BUG-054
 type: bug
 created_at: 2026-10-08T23:28:04.194371+04:00
-updated_at: 2026-10-08T23:28:07.181731+04:00
+updated_at: 2026-10-08T23:28:17.22218+04:00
 source: local
 ulid: 01M4EFSCB2K2TJY4SRJWDVEBK8
 severity: high
-status: open
+status: fixed
 origin:
     session: 68
 title: Evaluator cooldown keyed on rule name silences second offender of fan-out conditions
@@ -14,3 +14,10 @@ fix_direction: Key lastFired and fires on the per-scope alert ID (rule name for 
 affected_files:
     - internal/webhook/evaluator.go
     - internal/webhook/evaluator_test.go
+resolution:
+    notes: Fixed in a545c29; TestEvaluateFanOutPagesEveryOffender pins it
+    resolved_at: 2026-10-08T23:28:17.221131+04:00
+revisions:
+    - date: "2026-10-08T23:28:17.221126+04:00"
+      action: closed
+      context: Fixed in a545c29; TestEvaluateFanOutPagesEveryOffender pins it

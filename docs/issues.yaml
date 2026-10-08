@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T23:28:04.198136+04:00
+last_updated: 2026-10-08T23:28:17.228249+04:00
 next_bug_id: 55
 next_feat_id: 51
 next_task_id: 17
@@ -331,7 +331,7 @@ issues:
       created_at: 2026-09-17T04:39:02.247571+04:00
     - id: BUG-054
       type: bug
-      status: open
+      status: fixed
       title: Evaluator cooldown keyed on rule name silences second offender of fan-out conditions
       severity: high
       created_at: 2026-10-08T23:28:04.194371+04:00

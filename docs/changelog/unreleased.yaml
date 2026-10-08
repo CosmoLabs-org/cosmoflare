@@ -14,7 +14,10 @@ entries:
         - description: 'usage pacing wave 2: monthly usage view + projected-overage alerts'
           source: FEAT-048
           date: 2026-10-08T21:21:04.212872+04:00
-    fixed: []
+    fixed:
+        - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
+          source: manual
+          date: 2026-10-08T23:28:24.31847+04:00
     changed: []
     deprecated: []
     removed: []
