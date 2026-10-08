@@ -1,0 +1,21 @@
+id: FEAT-048
+type: feature
+created_at: 2026-10-08T20:28:55.24882+04:00
+updated_at: 2026-10-08T20:28:55.714579+04:00
+source: local
+ulid: 01M4E5HB1218XJ2G14J953FGHF
+status: open
+area: reliability
+title: 'Usage pacing wave 2: monthly usage view + projected-overage alerts'
+description: 'ROAD-101 wave 2. cosmoflare usage shows every monthly usage dimension against its plan limit (verified catalog rows) with linear cycle pacing; usage-pct + usage-projected-pct alert conditions page on projected overrun. Billing anchor defaults to calendar month, --anchor-day covers anniversary billing. Dual cadence (D3) lands here: usage snapshot cached ~15min inside the 60s watch loop. Plan: docs/planning-mode/2026-10-08-feat048-usage-pacing.md'
+acceptance_criteria:
+    - criterion: cosmoflare usage renders table + --json envelope with per-dimension used/limit/pct/projected
+      met: false
+    - criterion: usage-pct and usage-projected-pct registered and evaluated (max-across-dimensions)
+      met: false
+    - criterion: watch collects usage at most once per 15min
+      met: false
+    - criterion: catalog rows carry source_url+verified_on
+      met: false
+    - criterion: --json + help present
+      met: false
