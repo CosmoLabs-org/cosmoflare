@@ -1041,6 +1041,13 @@ var registry = []Command{
 		Service: "alerts", Scope: "config", Verb: "read",
 		DangerLevel: "low", Destructive: false, Trackable: true,
 	},
+	// usage reads the GraphQL Analytics API across services (FEAT-048) —
+	// same read-only analytics surface the alerts cycle uses.
+	{
+		ID: "usage", CLIPath: []string{"usage"},
+		Service: "usage", Scope: "account", Verb: "read",
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
 
 	// --- tunnel (wave 4; permissions from the Qwen dataset) ---
 	// cloudflared/Wrangler have no stable REST-tunnel equivalent commands, so
