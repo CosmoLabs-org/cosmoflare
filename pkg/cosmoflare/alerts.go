@@ -118,6 +118,8 @@ var alertConditionRegistry = []AlertConditionDescriptor{
 	{Name: "worker-errors", Scope: "script", Unit: "errors", Help: "per-script Workers error count over the window", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Errors", Service: "workers"},
 	{Name: "worker-requests", Scope: "script", Unit: "requests", Help: "per-script Workers request volume over the window", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Requests", Service: "workers"},
 	{Name: "worker-subrequests", Scope: "script", Unit: "subrequests", Help: "per-script subrequest count over the window — the stuck-loop fan-out signature", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Subrequests", Service: "workers"},
+	{Name: "do-cpu", Scope: "do", Unit: "ms", Help: "per-namespace Durable Object wall time over the window", FedBy: "DO analytics per-namespace rows", DataKey: "DurableObjects[].WallTimeMS", Service: "workers"},
+	{Name: "do-requests", Scope: "do", Unit: "requests", Help: "per-namespace Durable Object request volume over the window", FedBy: "DO analytics per-namespace rows", DataKey: "DurableObjects[].Requests", Service: "workers"},
 }
 
 // AlertConditions returns the condition registry in registration order.

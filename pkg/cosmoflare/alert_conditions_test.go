@@ -60,6 +60,15 @@ func TestAlertConditionScopes(t *testing.T) {
 			t.Errorf("%s: Scope=%q, want script", name, desc.Scope)
 		}
 	}
+	for _, name := range []string{"do-cpu", "do-requests"} {
+		desc, ok := LookupAlertCondition(name)
+		if !ok {
+			t.Fatalf("condition %s not registered", name)
+		}
+		if desc.Scope != "do" {
+			t.Errorf("%s: Scope=%q, want do", name, desc.Scope)
+		}
+	}
 	for _, name := range []string{"error-rate", "storage-limit", "latency", "failure-count", "workers-script-count", "r2-bucket-count", "dns-record-quota"} {
 		desc, ok := LookupAlertCondition(name)
 		if !ok {

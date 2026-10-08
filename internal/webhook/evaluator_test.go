@@ -477,6 +477,9 @@ func TestConditionValueCoversRegistry(t *testing.T) {
 		Scripts: []cosmoflare.WorkersSummary{
 			{Script: "a", Requests: 100, Errors: 1, Subrequests: 5, CPUP99: 42},
 		},
+		DurableObjects: []cosmoflare.DurableObjectSummary{
+			{Script: "lobby-do", Namespace: "aaaaaaaa1", Requests: 60, Errors: 0, WallTimeMS: 30},
+		},
 	}
 	for _, c := range cosmoflare.AlertConditions() {
 		values := conditionValues(c.Name, populated)
@@ -525,6 +528,33 @@ func TestEvaluateWorkerCPUNamesOffender(t *testing.T) {
 	}
 	if !strings.Contains(p.Message, "api-proxy") || !strings.Contains(p.Message, "812") {
 		t.Errorf("message must name script and observed value: %q", p.Message)
+	}
+}
+
+// TestEvaluateDOCPU names the Durable Object namespace: the scope key is
+// script/namespace so the operator knows WHICH DO is burning wall time.
+func TestEvaluateDOCPU(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
+		evalRule("do-hot", "do-cpu", 500),
+	)
+	m := EvalMetrics{DurableObjects: []cosmoflare.DurableObjectSummary{
+		{Script: "lobby-do", Namespace: "aaaaaaaa1", Requests: 100, WallTimeMS: 910.5},
+		{Script: "lobby-do", Namespace: "bbbbbbbb2", Requests: 100, WallTimeMS: 40},
+	}}
+	fired := eval.Evaluate(m)
+	if len(fired) != 1 || fired[0] != "do-hot" {
+		t.Fatalf("fired = %v, want exactly [do-hot]", fired)
+	}
+	p := rec.first()
+	if p == nil {
+		t.Fatal("no notification recorded")
+	}
+	if p.Alert.ID != "do-hot/lobby-do/aaaaaaaa1" {
+		t.Errorf("Alert.ID = %q, want do-hot/lobby-do/aaaaaaaa1", p.Alert.ID)
+	}
+	if !strings.Contains(p.Message, "lobby-do/aaaaaaaa1") || !strings.Contains(p.Message, "910.5") {
+		t.Errorf("message must name DO namespace and value: %q", p.Message)
 	}
 }
 

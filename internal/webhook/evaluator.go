@@ -27,6 +27,8 @@ type EvalMetrics struct {
 
 	Scripts []cosmoflare.WorkersSummary // per-script rows, kept for stuck-work (script-scoped) conditions; flat fields above stay account sums
 
+	DurableObjects []cosmoflare.DurableObjectSummary // per-namespace DO rows for do-scoped conditions (FEAT-047)
+
 	WorkersScriptCount uint64  // live script count (LimitsService)
 	R2BucketCount      uint64  // live bucket count (LimitsService)
 	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
@@ -148,6 +150,24 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			out = append(out, scopedValue{ScopeID: s.Script, Value: v, Unit: desc.Unit})
 		}
 		return out
+	case "do":
+		out := make([]scopedValue, 0, len(m.DurableObjects))
+		for _, d := range m.DurableObjects {
+			var v float64
+			switch condition {
+			case "do-cpu":
+				v = d.WallTimeMS
+			case "do-requests":
+				v = float64(d.Requests)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			if d.Requests == 0 && d.Errors == 0 && d.WallTimeMS == 0 {
+				continue // idle namespace carries no stuck-work signal
+			}
+			out = append(out, scopedValue{ScopeID: d.Script + "/" + d.Namespace, Value: v, Unit: desc.Unit})
+		}
+		return out
 	default: // account scope
 		v, unit, ok := conditionValue(condition, m)
 		if !ok {
@@ -259,11 +279,20 @@ func CollectEvalMetrics(ctx context.Context, analytics *cosmoflare.AnalyticsServ
 	if err != nil {
 		return EvalMetrics{}, fmt.Errorf("r2 storage analytics: %w", err)
 	}
+	// DO telemetry is additive signal, not load-bearing: an account without
+	// DOs (or a dataset hiccup) must never break the watch cycle — the
+	// do-scoped conditions simply see no rows and skip.
+	dos, doErr := analytics.DurableObjects(ctx, w)
+	if doErr != nil {
+		log.Printf("[alerts] durable objects analytics unavailable, do-* conditions skip this cycle: %v", doErr)
+		dos = nil
+	}
 
 	var m EvalMetrics
 	var cpuSum float64
 	var cpuCount int
-	m.Scripts = scripts // per-script rows for stuck-work conditions (FEAT-047)
+	m.Scripts = scripts    // per-script rows for stuck-work conditions (FEAT-047)
+	m.DurableObjects = dos // per-namespace rows for do-scoped conditions
 	for _, s := range scripts {
 		m.WorkersRequests += s.Requests
 		m.WorkersErrors += s.Errors
