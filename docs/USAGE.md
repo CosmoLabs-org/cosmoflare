@@ -2802,10 +2802,45 @@ cosmoflare alerts create worker-failures \
 | Flag | Values | Description |
 |------|--------|-------------|
 | `--service` | `r2`, `workers`, `kv`, `dns` | Cloudflare service to monitor |
-| `--condition` | `error-rate`, `storage-limit`, `latency`, `failure-count` | Condition that triggers the alert |
+| `--condition` | any registered condition (see the Alert conditions table below) | Condition that triggers the alert |
 | `--threshold` | numeric | Value at which the alert fires |
 | `--action` | `webhook`, `email`, `log` | Notification method |
 | `--target` | URL or email | Where the notification goes |
+
+### Alert conditions
+
+`--condition` accepts any registered condition. `account` scope evaluates one value per cycle; `script` and `do` scope fan out per Worker script or Durable Object namespace so the fired alert names the offender.
+
+| Condition | Scope | Unit | Fires on |
+|-----------|-------|------|----------|
+| `error-rate` | account | `%` | share of Workers requests that errored over the window |
+| `storage-limit` | account | bytes | R2 storage in use |
+| `latency` | account | ms | Workers CPU p99 average |
+| `failure-count` | account | errors | absolute Workers error count over the window |
+| `workers-script-count` | account | scripts | Workers scripts on the account against the plan limit |
+| `r2-bucket-count` | account | buckets | R2 buckets on the account against the plan limit |
+| `dns-record-quota` | account | `%` | highest per-zone DNS record usage against the zone quota |
+| `worker-cpu` | per-script | ms | per-script Workers CPU p99 over the window |
+| `worker-errors` | per-script | errors | per-script Workers error count over the window |
+| `worker-requests` | per-script | requests | per-script Workers request volume over the window |
+| `worker-subrequests` | per-script | subrequests | per-script subrequest count over the window (stuck-loop fan-out signature) |
+| `do-cpu` | per-DO-namespace | ms | per-namespace Durable Object wall time over the window |
+| `do-requests` | per-DO-namespace | requests | per-namespace Durable Object request volume over the window |
+
+### Stuck-work detection
+
+The `worker-*` and `do-*` conditions catch one Worker stuck in a loop (burning CPU or fanning out subrequests) or one Durable Object namespace overworking — they page on the offending script, not the account total. Data source: one batched GraphQL analytics query per dataset per cycle (`workersInvocationsAdaptive` per script; `durableObjectsInvocationsAdaptiveGroups` per script+namespace, wall time reported in ms).
+
+```bash
+cosmoflare alerts create hot-cpu \
+  --service workers \
+  --condition worker-cpu \
+  --threshold 500 \
+  --action webhook \
+  --target https://hooks.example.com/alert
+```
+
+Fired alerts name the offender. Script-scoped alerts carry ID `rule-name/script-name`; DO-scoped carry `rule-name/script/namespace`. The push message reads `worker-cpu api-proxy [hot-cpu]: observed 812 meets threshold 500 (ms)`. Idle scripts and namespaces (no traffic, no CPU samples) never fire. DO telemetry errors are non-fatal: `do-*` conditions skip that cycle and the watch keeps running.
 
 ### Get alert rule details
 

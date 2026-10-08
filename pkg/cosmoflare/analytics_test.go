@@ -260,3 +260,46 @@ func TestAnalyticsWindowValidation(t *testing.T) {
 		t.Error("server was hit despite validation failure")
 	}
 }
+
+// TestAnalyticsDurableObjects verifies the DO telemetry dataset (FEAT-047):
+// durableObjectsInvocationsAdaptiveGroups rows aggregate per
+// script+namespace, wallTime arrives in microseconds and converts to
+// milliseconds, and requests/errors sum across time buckets.
+func TestAnalyticsDurableObjects(t *testing.T) {
+	t.Parallel()
+	var cap analyticsCapture
+	resp := `{"data":{"viewer":{"accounts":[{"durableObjectsInvocationsAdaptiveGroups":[` +
+		`{"sum":{"requests":100,"errors":2,"wallTime":1000000},"dimensions":{"scriptName":"lobby-do","namespaceId":"aaaaaaaa1"}},` +
+		`{"sum":{"requests":50,"errors":0,"wallTime":250000},"dimensions":{"scriptName":"lobby-do","namespaceId":"aaaaaaaa1"}},` +
+		`{"sum":{"requests":7,"errors":7,"wallTime":99000},"dimensions":{"scriptName":"lobby-do","namespaceId":"bbbbbbbb2"}}` +
+		`]}]}}}`
+	srv := analyticsServer(t, resp, &cap)
+	defer srv.Close()
+
+	s := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+	got, err := s.DurableObjects(context.Background(), analyticsWindow())
+	if err != nil {
+		t.Fatalf("DurableObjects: %v", err)
+	}
+	if !strings.Contains(cap.Body, "durableObjectsInvocationsAdaptiveGroups") {
+		t.Errorf("body missing DO dataset: %s", cap.Body)
+	}
+	if len(got) != 2 {
+		t.Fatalf("rows = %d, want 2 (per script+namespace aggregation)", len(got))
+	}
+	byKey := map[string]DurableObjectSummary{}
+	for _, r := range got {
+		byKey[r.Script+"/"+r.Namespace] = r
+	}
+	first := byKey["lobby-do/aaaaaaaa1"]
+	if first.Requests != 150 || first.Errors != 2 {
+		t.Errorf("namespace aaaaaaaa1 = %+v, want requests=150 errors=2 (bucket rollup)", first)
+	}
+	if first.WallTimeMS != 1250 {
+		t.Errorf("wallTimeMS = %v, want 1250 (1,250,000µs → ms)", first.WallTimeMS)
+	}
+	second := byKey["lobby-do/bbbbbbbb2"]
+	if second.Requests != 7 || second.Errors != 7 || second.WallTimeMS != 99 {
+		t.Errorf("namespace bbbbbbbb2 = %+v, want requests=7 errors=7 wallTime=99ms", second)
+	}
+}

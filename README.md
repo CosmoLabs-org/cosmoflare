@@ -58,7 +58,7 @@ Full comparison: [docs/vs-wrangler.md](docs/vs-wrangler.md)
 | **Diagnostics** | Implemented | `doctor` |
 | **Domains** | Implemented | `domains` |
 
-Workflow commands (not tied to one service): `dev`, `init`, `diff`, `apply`, `cost`, `export`/`import`, `templates`, `validate`, `terraform`, `wrangler`, `mcp`, `audit`, `alerts`, `account`, `plugin`, `status`, `metrics`, `dashboard`.
+Workflow commands (not tied to one service): `dev`, `init`, `diff`, `apply`, `cost`, `export`/`import`, `templates`, `validate`, `terraform`, `wrangler`, `mcp`, `audit`, `alerts`, `account`, `plugin`, `status`, `metrics`, `dashboard`. `alerts watch` also detects stuck work per Worker script (CPU p99, errors, requests, subrequests thresholds) and per Durable Object namespace (wall-time and request thresholds), so each alert names the offending script or namespace -- all on the existing 60-second watch loop.
 
 ## Quick Start
 

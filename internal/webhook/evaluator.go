@@ -25,6 +25,10 @@ type EvalMetrics struct {
 	R2StorageBytes  uint64  // total payloadSize across buckets
 	R2ObjectCount   uint64  // total objectCount across buckets
 
+	Scripts []cosmoflare.WorkersSummary // per-script rows, kept for stuck-work (script-scoped) conditions; flat fields above stay account sums
+
+	DurableObjects []cosmoflare.DurableObjectSummary // per-namespace DO rows for do-scoped conditions (FEAT-047)
+
 	WorkersScriptCount uint64  // live script count (LimitsService)
 	R2BucketCount      uint64  // live bucket count (LimitsService)
 	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
@@ -105,6 +109,74 @@ func conditionValue(condition string, m EvalMetrics) (value float64, unit string
 	}
 }
 
+// scopedValue is one observable value of a condition: account-scoped
+// conditions yield exactly one (ScopeID empty); script/do-scoped conditions
+// yield one per script or Durable Object row (FEAT-047).
+type scopedValue struct {
+	ScopeID string // "" for account scope; script/DO name otherwise
+	Value   float64
+	Unit    string
+}
+
+// conditionValues fans a condition out over the metrics: one value per
+// scope instance. An empty slice means the condition cannot fire this
+// cycle (unknown condition, or no signal in the metrics).
+func conditionValues(condition string, m EvalMetrics) []scopedValue {
+	desc, registered := cosmoflare.LookupAlertCondition(condition)
+	if !registered {
+		return nil
+	}
+	switch desc.Scope {
+	case "script":
+		out := make([]scopedValue, 0, len(m.Scripts))
+		for _, s := range m.Scripts {
+			var v float64
+			switch condition {
+			case "worker-cpu":
+				v = s.CPUP99
+			case "worker-errors":
+				v = float64(s.Errors)
+			case "worker-requests":
+				v = float64(s.Requests)
+			case "worker-subrequests":
+				v = float64(s.Subrequests)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			// idle scripts (no traffic, no CPU samples) carry no stuck-work signal
+			if s.Requests == 0 && s.Errors == 0 && s.Subrequests == 0 && s.CPUP99 == 0 {
+				continue
+			}
+			out = append(out, scopedValue{ScopeID: s.Script, Value: v, Unit: desc.Unit})
+		}
+		return out
+	case "do":
+		out := make([]scopedValue, 0, len(m.DurableObjects))
+		for _, d := range m.DurableObjects {
+			var v float64
+			switch condition {
+			case "do-cpu":
+				v = d.WallTimeMS
+			case "do-requests":
+				v = float64(d.Requests)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			if d.Requests == 0 && d.Errors == 0 && d.WallTimeMS == 0 {
+				continue // idle namespace carries no stuck-work signal
+			}
+			out = append(out, scopedValue{ScopeID: d.Script + "/" + d.Namespace, Value: v, Unit: desc.Unit})
+		}
+		return out
+	default: // account scope
+		v, unit, ok := conditionValue(condition, m)
+		if !ok {
+			return nil
+		}
+		return []scopedValue{{Value: v, Unit: unit}}
+	}
+}
+
 // metricData builds the TriggerAlert data map from the raw metrics.
 func metricData(m EvalMetrics) map[string]interface{} {
 	return map[string]interface{}{
@@ -140,42 +212,55 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 		if rule == nil || !rule.Enabled {
 			continue
 		}
-		value, unit, ok := conditionValue(rule.Condition, m)
-		if !ok || value < rule.Threshold {
-			continue
-		}
-		if last, seen := e.lastFired[rule.Name]; seen && now.Sub(last) < e.cooldown {
-			continue
-		}
+		for _, sv := range conditionValues(rule.Condition, m) {
+			if sv.Value < rule.Threshold {
+				continue
+			}
+			if last, seen := e.lastFired[rule.Name]; seen && now.Sub(last) < e.cooldown {
+				continue
+			}
 
-		e.lastFired[rule.Name] = now
-		prev := e.fires[rule.Name]
-		e.fires[rule.Name] = prev + 1
-		fired = append(fired, rule.Name)
+			e.lastFired[rule.Name] = now
+			prev := e.fires[rule.Name]
+			e.fires[rule.Name] = prev + 1
+			fired = append(fired, rule.Name)
 
-		updatedAt := rule.UpdatedAt
-		if updatedAt.IsZero() {
-			updatedAt = now
-		}
-		alert := &Alert{
-			ID:        rule.Name, // deterministic: re-fires update the same alert
-			Name:      rule.Name,
-			Type:      AlertTypeThreshold,
-			Threshold: rule.Threshold,
-			Metric:    rule.Condition,
-			Enabled:   true,
-			CreatedAt: updatedAt,
-			UpdatedAt: updatedAt,
-			Count:     prev, // TriggerAlert increments, landing on prev+1
-		}
-		message := fmt.Sprintf("%s %s: observed %g meets threshold %g (%s)",
-			rule.Condition, rule.Name, value, rule.Threshold, unit)
+			updatedAt := rule.UpdatedAt
+			if updatedAt.IsZero() {
+				updatedAt = now
+			}
+			// Per-script/do fires key the alert identity on the scope
+			// instance so re-fires update the same per-script alert; the
+			// NAME stays the rule name — cmd/alerts_watch.go resolves
+			// severity/service through byName[Alert.Name].
+			alertID := rule.Name
+			if sv.ScopeID != "" {
+				alertID = rule.Name + "/" + sv.ScopeID
+			}
+			alert := &Alert{
+				ID:        alertID, // deterministic: re-fires update the same alert
+				Name:      rule.Name,
+				Type:      AlertTypeThreshold,
+				Threshold: rule.Threshold,
+				Metric:    rule.Condition,
+				Enabled:   true,
+				CreatedAt: updatedAt,
+				UpdatedAt: updatedAt,
+				Count:     prev, // TriggerAlert increments, landing on prev+1
+			}
+			message := fmt.Sprintf("%s %s: observed %g meets threshold %g (%s)",
+				rule.Condition, rule.Name, sv.Value, rule.Threshold, sv.Unit)
+			if sv.ScopeID != "" {
+				message = fmt.Sprintf("%s %s [%s]: observed %g meets threshold %g (%s)",
+					rule.Condition, sv.ScopeID, rule.Name, sv.Value, rule.Threshold, sv.Unit)
+			}
 
-		if e.manager == nil {
-			continue
-		}
-		if err := e.manager.TriggerAlert(alert, value, message, metricData(m)); err != nil {
-			log.Printf("[alerts] trigger %q: %v", rule.Name, err)
+			if e.manager == nil {
+				continue
+			}
+			if err := e.manager.TriggerAlert(alert, sv.Value, message, metricData(m)); err != nil {
+				log.Printf("[alerts] trigger %q: %v", alertID, err)
+			}
 		}
 	}
 	return fired
@@ -194,10 +279,20 @@ func CollectEvalMetrics(ctx context.Context, analytics *cosmoflare.AnalyticsServ
 	if err != nil {
 		return EvalMetrics{}, fmt.Errorf("r2 storage analytics: %w", err)
 	}
+	// DO telemetry is additive signal, not load-bearing: an account without
+	// DOs (or a dataset hiccup) must never break the watch cycle — the
+	// do-scoped conditions simply see no rows and skip.
+	dos, doErr := analytics.DurableObjects(ctx, w)
+	if doErr != nil {
+		log.Printf("[alerts] durable objects analytics unavailable, do-* conditions skip this cycle: %v", doErr)
+		dos = nil
+	}
 
 	var m EvalMetrics
 	var cpuSum float64
 	var cpuCount int
+	m.Scripts = scripts    // per-script rows for stuck-work conditions (FEAT-047)
+	m.DurableObjects = dos // per-namespace rows for do-scoped conditions
 	for _, s := range scripts {
 		m.WorkersRequests += s.Requests
 		m.WorkersErrors += s.Errors
