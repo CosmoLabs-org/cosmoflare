@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -52,6 +53,7 @@ var (
 	alertLimit     int
 	alertSince     string
 	alertEnabled   bool
+	alertExclude   []string
 )
 
 // Pointer helpers for building an AlertRuleUpdate from changed flags.
@@ -76,7 +78,7 @@ var alertsCreateCmd = &cobra.Command{
 	Long: `Create a new alert rule for monitoring Cloudflare services.
 
 Required flags:
-  --service     Service to monitor (r2, workers, kv, dns)
+  --service     Service to monitor (r2, workers, kv, dns, zone, d1)
   --condition   Alert condition (` + cosmoflare.AlertConditionList() + `)
   --threshold   Numeric threshold value that triggers the alert
   --action      Notification action (webhook, email, log)
@@ -93,7 +95,10 @@ Examples:
   cosmoflare alerts create worker-failures --service workers --condition failure-count --threshold 10 --action log --target /var/log/cosmoflare.log
 
   # JSON output
-  cosmoflare alerts create dns-latency --service dns --condition latency --threshold 500 --action webhook --target https://hooks.example.com/dns --json`,
+  cosmoflare alerts create dns-latency --service dns --condition latency --threshold 500 --action webhook --target https://hooks.example.com/dns --json
+
+  # Skip a D1 database by name
+  cosmoflare alerts create d1-scan --service d1 --condition d1-rows-read --threshold 1e9 --action log --target - --exclude analytics-db`,
 	Args: cobra.ExactArgs(1),
 	RunE: runAlertsCreate,
 }
@@ -198,12 +203,13 @@ func init() {
 	alertsCmd.AddCommand(alertsCheckCmd)
 
 	// Create flags
-	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns)")
+	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns, zone, d1)")
 	alertsCreateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition ("+cosmoflare.AlertConditionList()+")")
 	alertsCreateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsCreateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsCreateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
 	alertsCreateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Create the rule enabled (use --enabled=false to create it disabled)")
+	alertsCreateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zone or database names a zone/d1 rule skips (comma-separated)")
 	_ = alertsCreateCmd.MarkFlagRequired("service")
 	_ = alertsCreateCmd.MarkFlagRequired("condition")
 	_ = alertsCreateCmd.MarkFlagRequired("threshold")
@@ -211,12 +217,13 @@ func init() {
 	_ = alertsCreateCmd.MarkFlagRequired("target")
 
 	// Update flags (same as create but not required)
-	alertsUpdateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns)")
+	alertsUpdateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns, zone, d1)")
 	alertsUpdateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition ("+cosmoflare.AlertConditionList()+")")
 	alertsUpdateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsUpdateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsUpdateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
 	alertsUpdateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Enable or disable the rule (only applied when the flag is set)")
+	alertsUpdateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zone or database names a zone/d1 rule skips (comma-separated; --exclude \"\" clears)")
 
 	// Delete flags
 	alertsDeleteCmd.Flags().BoolVar(&alertForce, "force", false, "Confirm deletion")
@@ -350,6 +357,7 @@ func runAlertsCreate(cmd *cobra.Command, args []string) error {
 		Threshold: alertThreshold,
 		Action:    alertAction,
 		Target:    alertTarget,
+		Exclude:   alertExclude,
 	}
 
 	if DryRun {
@@ -399,6 +407,9 @@ func runAlertsGet(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(w, "Action:\t%s\n", rule.Action)
 		fmt.Fprintf(w, "Target:\t%s\n", rule.Target)
 		fmt.Fprintf(w, "Enabled:\t%v\n", rule.Enabled)
+		if len(rule.Exclude) > 0 {
+			fmt.Fprintf(w, "Exclude:\t%s\n", strings.Join(rule.Exclude, ", "))
+		}
 		fmt.Fprintf(w, "Created:\t%s\n", rule.CreatedAt.Format(time.RFC3339))
 		fmt.Fprintf(w, "Updated:\t%s\n", rule.UpdatedAt.Format(time.RFC3339))
 		w.Flush()
@@ -426,6 +437,10 @@ func runAlertsUpdate(cmd *cobra.Command, args []string) error {
 	}
 	if cmd.Flags().Changed("enabled") {
 		update.Enabled = alertsBoolPtr(alertEnabled)
+	}
+	if cmd.Flags().Changed("exclude") {
+		ex := alertExclude
+		update.Exclude = &ex
 	}
 
 	if DryRun {
