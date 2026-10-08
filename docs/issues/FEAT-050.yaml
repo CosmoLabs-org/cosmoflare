@@ -1,34 +1,27 @@
 ---
-ulid: 01M4E6CMG3SP9FYEXFX6PN1FX5
-id: FB-12
-title: 'CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects'
+id: FEAT-050
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: Churches-app
-from_path: /Users/gabstudio/PROJECTS/Churches-app
-to_project: cosmoflare
-to_target: project
-created: "2026-10-08T20:43:50.147246+04:00"
-updated: "2026-10-08T23:21:36.709623+04:00"
-suggested_conversion: feature
-converted_to: FEAT-050
-related_issues: []
-brainstorm_ref: null
-session: 47
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+created: "2026-10-08"
+updated: "2026-10-08T23:21:55.858175+04:00"
+priority: 70
+status: open
+area: infra
+origin:
+    feedback_id: FB-12
+    roadmap_items:
+        - ROAD-102
+    from_project: Churches-app
+    received: "2026-10-08"
+    converted: "2026-10-08"
+title: Pre-launch CF verdict — one command gives pass/fail efficiency + security verdict for any CosmoLabs project
+
 ---
 
-# FB-pPN1FX5: CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects
+# FEAT-050: Pre-launch CF verdict — one command gives pass/fail efficiency + security verdict for any CosmoLabs project
+
+## Origin
+
+Converted from feedback **FB-12** (from Churches-app)
 
 What happened: Owner directive 2026-10-08 (Churches-app session, CF efficiency audit): Cosmoflare is designated the meta project for Cloudflare workflows across all CosmoLabs projects. It becomes the layer that (1) audits CF infrastructure for efficiency and security, (2) ensures resources are not wasted unnecessarily, and (3) owns the CF best-practice standards every project follows.
 
@@ -45,3 +38,15 @@ Proposed solution: treat this as a charter/roadmap anchor, not a single feature:
 - twin ulid: 01M4E6CMG3SP9FYEXFX6PN1FX5
 - twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-08-churches-app-fb-ppn1fx5.md
 - folded: 2026-10-08T23:21:09+04:00
+## Description
+
+Charter success metric (owner directive 2026-10-08): any CosmoLabs project runs one cosmoflare command before launch and gets a pass/fail efficiency + security verdict. The command composes audit dimensions as rules: caching (FEAT-049, first rule set, reference Churches-app 155d1d3e), then security posture (WAF/firewall, token scope), cost (D1 rows-read/write trends, KV op waste, Pages vs Workers fit), compliance (CORS, no cache on user-scoped routes). Every new CF best-practice standard lands as a cosmoflare audit rule first. Existing building blocks to compose, not rebuild: doctor (domain health), validate, limits catalog, alerts conditions. Naming conflict: 'cosmoflare audit' is the CLI mutation audit log today — the verdict command needs a non-colliding name or a subcommand. Program anchor: the roadmap pillar for CF governance (see linked ROAD item).
+
+## Acceptance Criteria
+
+- [ ] One command returns pass/fail with per-rule findings and --json
+- [ ] Exit code is non-zero on fail for CI and scripts
+- [ ] Caching rule set (FEAT-049) is the first rule set
+- [ ] Rule framework lets a new standard land as a rule without a new command
+- [ ] Command name does not collide with the audit log command
+

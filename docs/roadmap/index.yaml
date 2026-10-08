@@ -1,15 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T23:21:41.904056+04:00
+last_updated: 2026-10-08T23:21:55.980795+04:00
 next_id: 103
 items:
-    - id: ROAD-102
-      title: CF governance pillar — Cosmoflare as CosmoLabs meta-project for Cloudflare auditing, security, efficiency
-      status: planned
-      priority: 90
-      category: core
-      effort: large
-      created_at: 2026-10-08T23:21:41.903776+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -880,6 +873,19 @@ items:
       status: captured
       category: core
       effort: large
+      parent: ROAD-102
       linked_issues:
         - FEAT-047
+        - FEAT-048
+        - FEAT-049
       created_at: 2026-10-08T19:33:14.454462+04:00
+    - id: ROAD-102
+      title: CF governance pillar — Cosmoflare as CosmoLabs meta-project for Cloudflare auditing, security, efficiency
+      status: planned
+      priority: 90
+      category: core
+      effort: large
+      linked_issues:
+        - FEAT-050
+        - FEAT-049
+      created_at: 2026-10-08T23:21:41.903776+04:00

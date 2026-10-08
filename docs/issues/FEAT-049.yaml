@@ -1,0 +1,39 @@
+---
+id: FEAT-049
+type: feature
+created: "2026-10-08"
+updated: "2026-10-08T23:21:55.930303+04:00"
+priority: 70
+status: open
+area: performance
+origin:
+    feedback_id: FB-11
+    roadmap_items:
+        - ROAD-102
+        - ROAD-101
+    from_project: Churches-app
+    received: "2026-10-08"
+    converted: "2026-10-08"
+title: Caching efficiency audit dimension — edge headers, repeat-probe, D1 rows-read, KV hit rate, unused bindings
+
+---
+
+# FEAT-049: Caching efficiency audit dimension — edge headers, repeat-probe, D1 rows-read, KV hit rate, unused bindings
+
+## Origin
+
+Converted from feedback **FB-11** (from Churches-app)
+
+# CF efficiency audit dimension — caching, D1 rows-read, edge headers
+## Description
+
+The original feedback arrived with an empty body (sender queued title-only). The real spec is Churches-app docs/audits/2026-10-08-cf-efficiency-audit.md §6 and reference commit 155d1d3e (IMP-017). Requirements: (1) header sweep — probe public GET endpoints for Cache-Control and cf-cache-status; flag responses with none; (2) repeat-probe — request twice and check x-cache/cf-cache-status flips MISS to HIT; (3) D1 rows-read analytics per database — surface rows-read spikes (Churches-app /api/meta/stats read ~1.08M rows per cold call); (4) KV hit rates per namespace; (5) unused bindings in Worker scripts. Safety rule from the standard: auth/user-scoped routes must NOT be cached — the sweep reports cacheable headers on those as a finding. Overlaps wave 3 of ROAD-101 (zone cache hit ratio from httpRequestsAdaptiveGroups). Naming conflict: 'cosmoflare audit' today is the CLI mutation audit log; the charter (FB-12) wants a pass/fail efficiency+security verdict — pick a non-colliding name in the design.
+
+## Acceptance Criteria
+
+- [ ] Zone cache hit ratio condition evaluated per zone and names the zone
+- [ ] D1 rows-read per database surfaced with a threshold condition
+- [ ] Header sweep + repeat-probe report public GETs lacking Cache-Control and MISS-to-HIT failures
+- [ ] Cacheable headers on auth/user-scoped routes reported as a finding
+- [ ] Command name does not collide with the existing audit log command
+

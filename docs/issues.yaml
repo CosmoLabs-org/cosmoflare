@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T20:28:55.251673+04:00
+last_updated: 2026-10-08T23:21:36.708416+04:00
 next_bug_id: 54
-next_feat_id: 49
+next_feat_id: 51
 next_task_id: 17
 next_imp_id: 1
 issues:
@@ -573,6 +573,16 @@ issues:
       title: 'Usage pacing wave 2: monthly usage view + projected-overage alerts'
       area: reliability
       created_at: 2026-10-08T20:28:55.24882+04:00
+    - id: FEAT-049
+      type: feature
+      status: open
+      title: Caching efficiency audit dimension — edge headers, repeat-probe, D1 rows-read, KV hit rate, unused bindings
+      created_at: 2026-10-08T23:21:22.914898+04:00
+    - id: FEAT-050
+      type: feature
+      status: open
+      title: Pre-launch CF verdict — one command gives pass/fail efficiency + security verdict for any CosmoLabs project
+      created_at: 2026-10-08T23:21:36.705143+04:00
     - id: TASK-001
       type: task
       status: closed
