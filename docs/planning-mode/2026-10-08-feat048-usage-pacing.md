@@ -7,7 +7,7 @@ status: PLANNED
 deliverables:
     - P-01: Verified monthly usage rows in the limits catalog (limitsdata)
     - P-02: UsageService — cycle-to-date collection + pacing math (pkg/cosmoflare/usage.go)
-    - P-03: `cosmoflare usage` command — table + --json + help (cmd/usage.go)
+    - P-03: "cosmoflare usage command — table + --json + help (cmd/usage.go)"
     - P-04: usage-pct + usage-projected-pct alert conditions wired into the watch
     - P-05: USAGE.md + README documentation (parallel doc agents)
 ---
