@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T01:33:55.701759+04:00
-next_id: 101
+last_updated: 2026-10-08T19:33:14.454682+04:00
+next_id: 102
 items:
+    - id: ROAD-101
+      title: Usage monitoring and waste-prevention program (waves 1-3)
+      status: captured
+      created_at: 2026-10-08T19:33:14.454462+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed

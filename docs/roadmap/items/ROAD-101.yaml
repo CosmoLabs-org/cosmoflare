@@ -1,0 +1,11 @@
+id: ROAD-101
+created_at: 2026-10-08T19:33:14.454462+04:00
+updated_at: 2026-10-08T19:33:14.455866+04:00
+title: Usage monitoring and waste-prevention program (waves 1-3)
+status: captured
+refs:
+    - type: issue
+      path: docs/issues/FEAT-047.yaml
+origin:
+    session: 67
+ulid: 01M4E2BC2QJ4877N5R05ZBVDJJ
