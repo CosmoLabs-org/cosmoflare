@@ -229,9 +229,19 @@ func CollectUsageMetrics(m *EvalMetrics, snap *cosmoflare.UsageSnapshot) {
 // conditions yield exactly one (ScopeID empty); script/do-scoped conditions
 // yield one per script or Durable Object row (FEAT-047).
 type scopedValue struct {
-	ScopeID string // "" for account scope; script/DO name otherwise
+	ScopeID string // display name: "" for account scope; script, DO, zone or database name otherwise
+	Key     string // stable identity for alert IDs and cooldowns (zone ID, database ID); "" = ScopeID
 	Value   float64
 	Unit    string
+}
+
+// key returns the stable identity: zone and database names can change (or be
+// unknown while a name list is down), their IDs cannot (FEAT-049 review).
+func (sv scopedValue) key() string {
+	if sv.Key != "" {
+		return sv.Key
+	}
+	return sv.ScopeID
 }
 
 // conditionValues fans a condition out over the metrics: one value per
@@ -304,7 +314,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			if name == "" {
 				name = z.ZoneID
 			}
-			out = append(out, scopedValue{ScopeID: name, Value: v, Unit: desc.Unit})
+			out = append(out, scopedValue{ScopeID: name, Key: z.ZoneID, Value: v, Unit: desc.Unit})
 		}
 		return out
 	case "d1":
@@ -321,7 +331,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			if name == "" {
 				name = d.DatabaseID
 			}
-			out = append(out, scopedValue{ScopeID: name, Value: v, Unit: desc.Unit})
+			out = append(out, scopedValue{ScopeID: name, Key: d.DatabaseID, Value: v, Unit: desc.Unit})
 		}
 		return out
 	default: // account scope
@@ -376,7 +386,7 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			if sv.Value < rule.Threshold {
 				continue
 			}
-			if rule.Excludes(sv.ScopeID) {
+			if rule.Excludes(sv.ScopeID) || (sv.Key != "" && rule.Excludes(sv.Key)) {
 				continue // operator-excluded zone/database (FEAT-049)
 			}
 			// Per-script/do fires key the alert identity on the scope
@@ -386,8 +396,8 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			// fire counts key on the same identity: two offenders breaching
 			// one rule are two incidents, and both page.
 			alertID := rule.Name
-			if sv.ScopeID != "" {
-				alertID = rule.Name + "/" + sv.ScopeID
+			if sv.key() != "" {
+				alertID = rule.Name + "/" + sv.key()
 			}
 			escalated := false
 			if last, seen := e.state.lastFired[alertID]; seen && now.Sub(last) < cooldown {

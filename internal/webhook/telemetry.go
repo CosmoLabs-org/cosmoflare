@@ -52,9 +52,8 @@ func CollectTelemetryMetrics(ctx context.Context, analytics *cosmoflare.Analytic
 	}
 
 	if wantD1 {
-		if refs.DBNamesErr != nil {
-			log.Printf("[alerts] D1 database list unavailable, d1 alerts name databases by ID: %v", refs.DBNamesErr)
-		}
+		// refs.DBNamesErr is reported by the caller at fetch time (the watch
+		// caches and backs off; logging here would repeat every cycle).
 		rows, err := analytics.D1RowsRead(ctx, w)
 		if err != nil {
 			gap("d1", err)

@@ -20,10 +20,10 @@ func resetWatchState(t *testing.T) {
 	t.Helper()
 	origState, origRefsFn, origNow := watchFireState, telemetryRefsFn, telemetryNowFn
 	watchFireState = webhook.NewFireState()
-	telemetryRefsCache, telemetryRefsFetchedAt, telemetryRefsWant = webhook.TelemetryRefs{}, time.Time{}, [2]bool{}
+	telemetryRefsCache, telemetryZonesAttempt, telemetryDBAttempt = webhook.TelemetryRefs{}, time.Time{}, time.Time{}
 	t.Cleanup(func() {
 		watchFireState, telemetryRefsFn, telemetryNowFn = origState, origRefsFn, origNow
-		telemetryRefsCache, telemetryRefsFetchedAt, telemetryRefsWant = webhook.TelemetryRefs{}, time.Time{}, [2]bool{}
+		telemetryRefsCache, telemetryZonesAttempt, telemetryDBAttempt = webhook.TelemetryRefs{}, time.Time{}, time.Time{}
 	})
 }
 
@@ -202,5 +202,41 @@ func TestServeZoneD1Warning(t *testing.T) {
 	msg := serveZoneD1Warning([]*cosmoflare.AlertRule{{Name: "scan", Condition: "d1-rows-read", Enabled: true}})
 	if !strings.Contains(msg, "alerts watch") || !strings.Contains(msg, "scan") {
 		t.Errorf("warning must name the rule and point at alerts watch: %q", msg)
+	}
+}
+
+// TestCachedTelemetryRefsBackoff pins the review fix: a list that keeps
+// failing (e.g. a token without D1:Read) is retried every 5 min, not every
+// cycle, and a refresh fetches only the lists that are due.
+func TestCachedTelemetryRefsBackoff(t *testing.T) {
+	resetWatchState(t)
+	now := time.Date(2026, 10, 9, 10, 0, 0, 0, time.UTC)
+	telemetryNowFn = func() time.Time { return now }
+	var calls [][2]bool
+	telemetryRefsFn = func(_ context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+		calls = append(calls, [2]bool{wantZones, wantD1})
+		refs := webhook.TelemetryRefs{DBNamesErr: errors.New("d1 list: 403")}
+		if wantZones {
+			refs.Zones = []cosmoflare.ZoneRef{{ID: "z1", Name: "churches.app"}}
+		}
+		return refs
+	}
+
+	refs := cachedTelemetryRefs(context.Background(), true, true)
+	if len(calls) != 1 || refs.DBNamesErr == nil || len(refs.Zones) != 1 {
+		t.Fatalf("first: calls=%v refs=%+v", calls, refs)
+	}
+	now = now.Add(time.Minute)
+	refs = cachedTelemetryRefs(context.Background(), true, true)
+	if len(calls) != 1 {
+		t.Fatalf("1 min later: calls=%v, want no refetch (failed list backs off 5 min)", calls)
+	}
+	if refs.DBNamesErr == nil {
+		t.Error("the cached D1 list error must still be reported while backing off")
+	}
+	now = now.Add(5 * time.Minute)
+	cachedTelemetryRefs(context.Background(), true, true)
+	if len(calls) != 2 || calls[1] != [2]bool{false, true} {
+		t.Fatalf("6 min later: calls=%v, want one retry of the D1 list only (zones still fresh)", calls)
 	}
 }

@@ -45,8 +45,8 @@ func TestEvaluateZoneUncachedNamesZone(t *testing.T) {
 	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-pct", 60))
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone(), healthyZone()}})
 	ids := recordedIDs(rec)
-	if len(ids) != 1 || ids[0] != "uncached/churches.app" {
-		t.Fatalf("alert IDs = %v, want [uncached/churches.app]", ids)
+	if len(ids) != 1 || ids[0] != "uncached/z1" {
+		t.Fatalf("alert IDs = %v, want [uncached/z1] (keyed on the stable zone ID)", ids)
 	}
 	if p := rec.first(); !strings.Contains(p.Message, "churches.app") || !strings.Contains(p.Message, "71.4") {
 		t.Errorf("message must name the zone and the uncached %%: %q", p.Message)
@@ -58,8 +58,8 @@ func TestEvaluateZoneCacheMissPct(t *testing.T) {
 	// churches.app miss% = 87/384 = 22.7; cdn.example = 100/1100 = 9.1
 	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("misses", "zone", "zone-cache-miss-pct", 20))
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone(), healthyZone()}})
-	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "misses/churches.app" {
-		t.Fatalf("alert IDs = %v, want [misses/churches.app]", ids)
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "misses/z1" {
+		t.Fatalf("alert IDs = %v, want [misses/z1]", ids)
 	}
 }
 
@@ -82,8 +82,8 @@ func TestEvaluateExcludeSkipsScope(t *testing.T) {
 	other.ZoneID, other.Zone = "z9", "api.example"
 	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-pct", 60, "Churches.App"))
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone(), other}})
-	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "uncached/api.example" {
-		t.Fatalf("alert IDs = %v, want [uncached/api.example] (churches.app excluded)", ids)
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "uncached/z9" {
+		t.Fatalf("alert IDs = %v, want [uncached/z9] (churches.app excluded)", ids)
 	}
 }
 
@@ -94,8 +94,8 @@ func TestEvaluateD1HumanReadable(t *testing.T) {
 		{DatabaseID: "db1", Name: "mycarguide-db", RowsRead: 2945546702},
 		{DatabaseID: "db2", Name: "churches-db", RowsRead: 52332502},
 	}})
-	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "scan/mycarguide-db" {
-		t.Fatalf("alert IDs = %v, want [scan/mycarguide-db]", ids)
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "scan/db1" {
+		t.Fatalf("alert IDs = %v, want [scan/db1]", ids)
 	}
 	p := rec.first()
 	if !strings.Contains(p.Message, "2.9B") || strings.Contains(p.Message, "e+09") {
@@ -141,7 +141,7 @@ func TestEvaluateScopeCooldownPersists(t *testing.T) {
 	var zone, script int
 	for _, id := range recordedIDs(rec) {
 		switch id {
-		case "uncached/churches.app":
+		case "uncached/z1":
 			zone++
 		case "hot-cpu/api-proxy":
 			script++
@@ -160,7 +160,7 @@ func TestEvaluateScopeCooldownPersists(t *testing.T) {
 	eval.Evaluate(m)
 	zone = 0
 	for _, id := range recordedIDs(rec) {
-		if id == "uncached/churches.app" {
+		if id == "uncached/z1" {
 			zone++
 		}
 	}
@@ -245,5 +245,47 @@ func TestUsageMaxSkipsD1(t *testing.T) {
 	}
 	if got := usageMax(dims, true); got != 60 {
 		t.Errorf("usageMax projected = %v, want 60 (d1 excluded)", got)
+	}
+}
+
+// TestEvaluateD1KeyStableAcrossNameChange: when the D1 name list is down the
+// row is named by its ID; when it recovers the name appears. The alert key is
+// the database ID either way, so the hourly cooldown holds (review finding).
+func TestEvaluateD1KeyStableAcrossNameChange(t *testing.T) {
+	t.Parallel()
+	svc, _ := newEvalService(t, scopedRule("scan", "d1", "d1-rows-read", 1e9))
+	rec := &alertRecorder{}
+	st := NewFireState()
+	base := time.Date(2026, 10, 9, 10, 0, 0, 0, time.UTC)
+	for i, name := range []string{"db1", "mycarguide-db"} {
+		eval := NewEvaluator(svc, newEvalManager(rec), 0)
+		eval.UseState(st)
+		eval.SetCooldownPolicy(0, map[string]time.Duration{"d1": time.Hour})
+		now := base.Add(time.Duration(i) * time.Minute)
+		eval.SetClock(func() time.Time { return now })
+		eval.Evaluate(EvalMetrics{D1: []cosmoflare.D1RowsReadSummary{{DatabaseID: "db1", Name: name, RowsRead: 2e9}}})
+	}
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "scan/db1" {
+		t.Fatalf("pages = %v, want exactly [scan/db1] (name change must not reset the cooldown)", ids)
+	}
+}
+
+// TestEvaluateExcludeMatchesNameOrID: an exclude entry matches the display
+// name or the stable ID, so excludes still work when names are unknown.
+func TestEvaluateExcludeMatchesNameOrID(t *testing.T) {
+	t.Parallel()
+	rows := []cosmoflare.D1RowsReadSummary{
+		{DatabaseID: "db1", Name: "db1", RowsRead: 2e9},           // name list down: ID fallback
+		{DatabaseID: "db2", Name: "churches-db", RowsRead: 2e9},   // excluded by name
+		{DatabaseID: "db3", Name: "analytics-db", RowsRead: 2e9}, // excluded by ID
+		{DatabaseID: "db4", Name: "noble-db", RowsRead: 2e9},
+	}
+	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("scan", "d1", "d1-rows-read", 1e9, "db1", "churches-db", "db3"))
+	eval.Evaluate(EvalMetrics{D1: rows})
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "scan/db4" {
+		t.Fatalf("pages = %v, want only [scan/db4]", ids)
+	}
+	if p := rec.first(); !strings.Contains(p.Message, "noble-db") {
+		t.Errorf("message must show the display name: %q", p.Message)
 	}
 }

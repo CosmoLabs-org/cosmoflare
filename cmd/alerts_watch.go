@@ -79,15 +79,17 @@ var (
 )
 
 // Zone/D1 name-list cache + seams. The lists change on a days timescale, so
-// they are fetched at most every 15 min; a failed refresh keeps the last
-// good list (stale names beat a gap page).
+// each list is fetched at most every 15 min; a failed fetch is retried after
+// 5 min, never every cycle (a token without D1:Read fails forever); a failed
+// refresh keeps the last good list (stale names beat a gap page).
 var (
-	telemetryRefsCache     webhook.TelemetryRefs
-	telemetryRefsFetchedAt time.Time
-	telemetryRefsWant      [2]bool // [zones, d1] the cache was fetched for
-	telemetryRefsTTL       = 15 * time.Minute
-	telemetryNowFn         = time.Now
-	telemetryRefsFn        = defaultTelemetryRefs
+	telemetryRefsCache    webhook.TelemetryRefs
+	telemetryZonesAttempt time.Time // last zone-list fetch attempt
+	telemetryDBAttempt    time.Time // last D1-list fetch attempt
+	telemetryRefsTTL      = 15 * time.Minute
+	telemetryRefsRetry    = 5 * time.Minute
+	telemetryNowFn        = time.Now
+	telemetryRefsFn       = defaultTelemetryRefs
 )
 
 // defaultTelemetryRefs lists active zones and D1 databases for the wanted
@@ -128,31 +130,58 @@ func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.T
 	return refs
 }
 
-// cachedTelemetryRefs returns the cached lists within the TTL when they
-// cover the wanted scopes, else refreshes. A failed refresh keeps the last
-// good list for that scope; with no last good list the error surfaces and
-// CollectTelemetryMetrics turns it into a gap page.
+// cachedTelemetryRefs returns the wanted lists, fetching only those that are
+// due: never attempted, older than the TTL, or failed more than the retry
+// interval ago. A failed refresh keeps the last good list for that scope;
+// with no last good list the error surfaces (a zone-list error becomes a gap
+// page in CollectTelemetryMetrics; a D1-list error names databases by ID).
 func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
 	now := telemetryNowFn()
-	covered := (!wantZones || telemetryRefsWant[0]) && (!wantD1 || telemetryRefsWant[1])
-	if covered && !telemetryRefsFetchedAt.IsZero() && now.Sub(telemetryRefsFetchedAt) < telemetryRefsTTL {
-		return telemetryRefsCache
+	due := func(attempt time.Time, err error) bool {
+		if attempt.IsZero() {
+			return true
+		}
+		wait := telemetryRefsTTL
+		if err != nil {
+			wait = telemetryRefsRetry
+		}
+		return now.Sub(attempt) >= wait
 	}
-	fresh := telemetryRefsFn(ctx, wantZones, wantD1)
-	if fresh.ZonesErr != nil && len(telemetryRefsCache.Zones) > 0 {
-		printWarning("zone list refresh failed, using last known zones: %v", fresh.ZonesErr)
-		fresh.Zones, fresh.ZonesErr = telemetryRefsCache.Zones, nil
+	needZones := wantZones && due(telemetryZonesAttempt, telemetryRefsCache.ZonesErr)
+	needD1 := wantD1 && due(telemetryDBAttempt, telemetryRefsCache.DBNamesErr)
+	if needZones || needD1 {
+		fresh := telemetryRefsFn(ctx, needZones, needD1)
+		if needZones {
+			telemetryZonesAttempt = now
+			if fresh.ZonesErr != nil && len(telemetryRefsCache.Zones) > 0 {
+				printWarning("zone list refresh failed, using last known zones: %v", fresh.ZonesErr)
+				telemetryRefsCache.ZonesErr = nil
+			} else {
+				telemetryRefsCache.Zones, telemetryRefsCache.ZonesErr = fresh.Zones, fresh.ZonesErr
+			}
+		}
+		if needD1 {
+			telemetryDBAttempt = now
+			switch {
+			case fresh.DBNamesErr != nil && len(telemetryRefsCache.DBNames) > 0:
+				printWarning("D1 list refresh failed, using last known database names: %v", fresh.DBNamesErr)
+				telemetryRefsCache.DBNamesErr = nil
+			case fresh.DBNamesErr != nil:
+				printWarning("D1 list unavailable, d1 alerts name databases by ID (retry in %s): %v", telemetryRefsRetry, fresh.DBNamesErr)
+				telemetryRefsCache.DBNames, telemetryRefsCache.DBNamesErr = fresh.DBNames, fresh.DBNamesErr
+			default:
+				telemetryRefsCache.DBNames, telemetryRefsCache.DBNamesErr = fresh.DBNames, nil
+			}
+		}
 	}
-	if fresh.DBNamesErr != nil && len(telemetryRefsCache.DBNames) > 0 {
-		printWarning("D1 list refresh failed, using last known database names: %v", fresh.DBNamesErr)
-		fresh.DBNames, fresh.DBNamesErr = telemetryRefsCache.DBNames, nil
+	out := telemetryRefsCache
+	if !wantZones {
+		out.Zones, out.ZonesErr = nil, nil
 	}
-	if fresh.ZonesErr == nil && fresh.DBNamesErr == nil {
-		telemetryRefsFetchedAt = now // errors retry next cycle
-		telemetryRefsWant = [2]bool{wantZones, wantD1}
+	if !wantD1 {
+		out.DBNames, out.DBNamesErr = nil, nil
 	}
-	telemetryRefsCache = fresh
-	return fresh
+	return out
 }
 
 // Usage snapshot cache + seams (tests drive the clock and the collector).

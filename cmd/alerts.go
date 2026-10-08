@@ -279,7 +279,11 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 		// (FEAT-049). One-shot run: refs are fetched fresh, never cached.
 		wantZones, wantD1 := webhook.RulesUseScope(rules, "zone"), webhook.RulesUseScope(rules, "d1")
 		if wantZones || wantD1 {
-			webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, telemetryRefsFn(ctx, wantZones, wantD1), w, &metrics)
+			refs := telemetryRefsFn(ctx, wantZones, wantD1)
+			if refs.DBNamesErr != nil {
+				printWarning("D1 list unavailable, d1 alerts name databases by ID: %v", refs.DBNamesErr)
+			}
+			webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, refs, w, &metrics)
 		}
 	}
 
