@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -405,6 +406,93 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
 		})
 	}
 	return scripts, nil
+}
+
+// DurableObjectSummary is one Durable Object namespace's telemetry over the
+// window (FEAT-047). The invocations dataset exposes no quantiles — wallTime
+// (µs from the API, converted to ms here) is the usage measure.
+type DurableObjectSummary struct {
+	Script     string  `json:"script"`       // scriptName dimension
+	Namespace  string  `json:"namespace"`    // namespaceId dimension
+	Requests   uint64  `json:"requests"`     // sum of requests
+	Errors     uint64  `json:"errors"`       // sum of errors
+	WallTimeMS float64 `json:"wall_time_ms"` // sum wallTime converted µs → ms
+}
+
+// DurableObjects returns per-namespace Durable Object telemetry over the
+// window, aggregated by scriptName+namespaceId from one batched GraphQL
+// query. Dataset and fields verified against the live schema 2026-10-08
+// (durableObjectsInvocationsAdaptiveGroups: sum{requests,errors,wallTime},
+// dimensions{scriptName,namespaceId}).
+func (s *AnalyticsService) DurableObjects(ctx context.Context, w AnalyticsWindow) ([]DurableObjectSummary, error) {
+	const op = "AnalyticsDurableObjects"
+	if err := s.validateAccount(op); err != nil {
+		return nil, err
+	}
+	if err := validateAnalyticsWindow(op, w, 92*24*time.Hour); err != nil {
+		return nil, err
+	}
+	gql := `query($accountTag: String!, $start: Time!, $end: Time!) {
+  viewer {
+    accounts(filter: {accountTag: $accountTag}) {
+      durableObjectsInvocationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
+        sum { requests errors wallTime }
+        dimensions { scriptName namespaceId }
+      }
+    }
+  }
+}`
+	var out struct {
+		Viewer struct {
+			Accounts []struct {
+				DurableObjectsInvocationsAdaptiveGroups []struct {
+					Sum struct {
+						Requests uint64 `json:"requests"`
+						Errors   uint64 `json:"errors"`
+						WallTime uint64 `json:"wallTime"`
+					} `json:"sum"`
+					Dimensions struct {
+						ScriptName  string `json:"scriptName"`
+						NamespaceID string `json:"namespaceId"`
+					} `json:"dimensions"`
+				} `json:"durableObjectsInvocationsAdaptiveGroups"`
+			} `json:"accounts"`
+		} `json:"viewer"`
+	}
+	if err := s.query(ctx, op, gql, s.windowVars(w), &out); err != nil {
+		return nil, err
+	}
+	type acc struct {
+		requests, errors uint64
+		wallTimeUS       uint64
+	}
+	byNS := map[string]*acc{}
+	keyOf := func(script, ns string) string { return script + "\x00" + ns }
+	for _, a := range out.Viewer.Accounts {
+		for _, g := range a.DurableObjectsInvocationsAdaptiveGroups {
+			key := keyOf(g.Dimensions.ScriptName, g.Dimensions.NamespaceID)
+			cur, ok := byNS[key]
+			if !ok {
+				cur = &acc{}
+				byNS[key] = cur
+			}
+			cur.requests += g.Sum.Requests
+			cur.errors += g.Sum.Errors
+			cur.wallTimeUS += g.Sum.WallTime
+		}
+	}
+	rows := make([]DurableObjectSummary, 0, len(byNS))
+	for key, a := range byNS {
+		script, ns, _ := strings.Cut(key, "\x00")
+		rows = append(rows, DurableObjectSummary{
+			Script:     script,
+			Namespace:  ns,
+			Requests:   a.requests,
+			Errors:     a.errors,
+			WallTimeMS: float64(a.wallTimeUS) / 1000.0,
+		})
+	}
+	return rows, nil
 }
 
 // validateAccount ensures account-scoped queries have credentials.
