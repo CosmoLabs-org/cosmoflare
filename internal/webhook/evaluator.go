@@ -25,6 +25,8 @@ type EvalMetrics struct {
 	R2StorageBytes  uint64  // total payloadSize across buckets
 	R2ObjectCount   uint64  // total objectCount across buckets
 
+	Scripts []cosmoflare.WorkersSummary // per-script rows, kept for stuck-work (script-scoped) conditions; flat fields above stay account sums
+
 	WorkersScriptCount uint64  // live script count (LimitsService)
 	R2BucketCount      uint64  // live bucket count (LimitsService)
 	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
@@ -198,6 +200,7 @@ func CollectEvalMetrics(ctx context.Context, analytics *cosmoflare.AnalyticsServ
 	var m EvalMetrics
 	var cpuSum float64
 	var cpuCount int
+	m.Scripts = scripts // per-script rows for stuck-work conditions (FEAT-047)
 	for _, s := range scripts {
 		m.WorkersRequests += s.Requests
 		m.WorkersErrors += s.Errors

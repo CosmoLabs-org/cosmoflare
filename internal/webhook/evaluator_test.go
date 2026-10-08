@@ -301,6 +301,21 @@ func TestCollectEvalMetrics(t *testing.T) {
 	if m.CPUP99AvgMS != 100 {
 		t.Errorf("cpu p99 avg = %v, want 100", m.CPUP99AvgMS)
 	}
+	// FEAT-047: per-script rows must survive collection (stuck-work
+	// conditions evaluate them); only the flat account sums may flatten.
+	if len(m.Scripts) != 2 {
+		t.Fatalf("Scripts len = %d, want 2 (per-script rows discarded)", len(m.Scripts))
+	}
+	byName := map[string]cosmoflare.WorkersSummary{}
+	for _, s := range m.Scripts {
+		byName[s.Script] = s
+	}
+	if s := byName["a"]; s.Requests != 1000 || s.Errors != 50 || s.CPUP99 != 120 || s.Subrequests != 0 {
+		t.Errorf("script a row = %+v, want {1000 50 0 0 120}", s)
+	}
+	if s := byName["b"]; s.Requests != 500 || s.CPUP99 != 80 {
+		t.Errorf("script b row = %+v, want requests=500 cpuP99=80", s)
+	}
 	if m.R2StorageBytes != 1500 || m.R2ObjectCount != 150 {
 		t.Errorf("r2 bytes/objects = %d/%d, want 1500/150", m.R2StorageBytes, m.R2ObjectCount)
 	}
