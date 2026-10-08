@@ -1,0 +1,15 @@
+id: ROAD-102
+created_at: 2026-10-08T23:21:41.903776+04:00
+updated_at: 2026-10-08T23:21:41.905521+04:00
+title: CF governance pillar — Cosmoflare as CosmoLabs meta-project for Cloudflare auditing, security, efficiency
+description: 'Charter from owner directive 2026-10-08 (FB-12, via Churches-app): Cosmoflare is the CosmoLabs meta-project for Cloudflare workflows across all projects (Churches-app, Noble.Coffee, BaristaBase, AXO, BeeKey, future). Three duties: (1) audit CF infrastructure for efficiency and security, (2) prevent wasted resources, (3) own the CF best-practice standards every project follows. Every new standard lands as a cosmoflare audit rule first. Children: FEAT-050 pre-launch verdict command (success metric), FEAT-049 caching dimension (rule set 1), ROAD-101 usage-waste program (detection substrate). Future dimensions: security audit (WAF/firewall posture, token scope), cost audit (D1 rows-read/write, KV op waste, Pages vs Workers fit), compliance sweep (CORS, no cache on user-scoped routes). Sibling deliveries outside this repo: CosmoKit cf-cache module, ClaudeCodeSetup CF efficiency SOP + cf-audit skill.'
+status: planned
+priority: 90
+category: core
+effort: large
+refs:
+    - type: issue
+      path: docs/issues/FEAT-050.yaml
+origin:
+    session: 68
+ulid: 01M4EFDP8H5S1V1SY4WFY2MTQJ
