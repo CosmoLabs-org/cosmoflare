@@ -1,14 +1,23 @@
 id: BUG-055
 type: bug
 created_at: 2026-10-08T23:32:04.221818+04:00
-updated_at: 2026-10-08T23:32:04.73539+04:00
+updated_at: 2026-10-08T23:32:13.899624+04:00
 source: local
 ulid: 01M4EG0PFZKRET1FVMNESBG2DR
 severity: high
-status: open
+status: fixed
+origin:
+    session: 68
 title: ZoneHTTP analytics query rejected live — count requested inside sum
 description: AnalyticsService.ZoneHTTP asked for sum { count edgeResponseBytes visits } on httpRequestsAdaptiveGroups. The live schema (introspected 2026-10-08) has count on the group, not on ZoneHttpRequestsAdaptiveGroupsSum, so every zone failed with 'unknown field "count"' and cosmoflare metrics showed no zone traffic. The unit test mock mirrored the wrong shape, so the suite stayed green.
 fix_direction: Request count at group level, read g.Count; test asserts count is never inside the sum block and the mock uses the live response shape.
 affected_files:
     - pkg/cosmoflare/analytics.go
     - pkg/cosmoflare/analytics_test.go
+resolution:
+    notes: Fixed in fb17689; live metrics shows 0 zone errors
+    resolved_at: 2026-10-08T23:32:13.898573+04:00
+revisions:
+    - date: "2026-10-08T23:32:13.898567+04:00"
+      action: closed
+      context: Fixed in fb17689; live metrics shows 0 zone errors

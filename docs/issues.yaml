@@ -1,7 +1,7 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T23:28:17.228249+04:00
-next_bug_id: 55
+last_updated: 2026-10-08T23:32:13.903789+04:00
+next_bug_id: 56
 next_feat_id: 51
 next_task_id: 17
 next_imp_id: 1
@@ -335,6 +335,12 @@ issues:
       title: Evaluator cooldown keyed on rule name silences second offender of fan-out conditions
       severity: high
       created_at: 2026-10-08T23:28:04.194371+04:00
+    - id: BUG-055
+      type: bug
+      status: fixed
+      title: ZoneHTTP analytics query rejected live — count requested inside sum
+      severity: high
+      created_at: 2026-10-08T23:32:04.221818+04:00
     - id: FEAT-001
       type: feature
       status: closed
