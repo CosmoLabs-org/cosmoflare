@@ -170,7 +170,8 @@ func (s *AnalyticsService) ZoneHTTP(ctx context.Context, zoneID string, w Analyt
   viewer {
     zones(filter: {zoneTag: $zoneTag}) {
       httpRequestsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end, requestSource: "eyeball"}) {
-        sum { count edgeResponseBytes visits }
+        count
+        sum { edgeResponseBytes visits }
         dimensions { datetimeHour }
       }
     }
@@ -180,8 +181,8 @@ func (s *AnalyticsService) ZoneHTTP(ctx context.Context, zoneID string, w Analyt
 		Viewer struct {
 			Zones []struct {
 				HTTPRequestsAdaptiveGroups []struct {
-					Sum struct {
-						Count             uint64 `json:"count"`
+					Count uint64 `json:"count"` // group-level field, not part of sum (live schema)
+					Sum   struct {
 						EdgeResponseBytes uint64 `json:"edgeResponseBytes"`
 						Visits            uint64 `json:"visits"`
 					} `json:"sum"`
@@ -200,7 +201,7 @@ func (s *AnalyticsService) ZoneHTTP(ctx context.Context, zoneID string, w Analyt
 	summary := &ZoneHTTPSummary{}
 	for _, z := range out.Viewer.Zones {
 		for _, g := range z.HTTPRequestsAdaptiveGroups {
-			summary.Requests += g.Sum.Count
+			summary.Requests += g.Count
 			summary.Bytes += g.Sum.EdgeResponseBytes
 			summary.Visits += g.Sum.Visits
 		}

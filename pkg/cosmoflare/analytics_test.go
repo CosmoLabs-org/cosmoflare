@@ -51,8 +51,8 @@ func TestAnalyticsZoneHTTP(t *testing.T) {
 	t.Parallel()
 	var cap analyticsCapture
 	resp := `{"data":{"viewer":{"zones":[{"httpRequestsAdaptiveGroups":[` +
-		`{"sum":{"count":10,"edgeResponseBytes":2048,"visits":3},"dimensions":{"datetimeHour":"2026-08-01T00:00:00Z"}},` +
-		`{"sum":{"count":5,"edgeResponseBytes":512,"visits":1},"dimensions":{"datetimeHour":"2026-08-01T01:00:00Z"}}` +
+		`{"count":10,"sum":{"edgeResponseBytes":2048,"visits":3},"dimensions":{"datetimeHour":"2026-08-01T00:00:00Z"}},` +
+		`{"count":5,"sum":{"edgeResponseBytes":512,"visits":1},"dimensions":{"datetimeHour":"2026-08-01T01:00:00Z"}}` +
 		`]}]}}}`
 	srv := analyticsServer(t, resp, &cap)
 	defer srv.Close()
@@ -84,6 +84,16 @@ func TestAnalyticsZoneHTTP(t *testing.T) {
 	}
 	if reqBody["query"] == "" {
 		t.Errorf("body missing query field: %s", cap.Body)
+	}
+	// Live schema (introspected 2026-10-08): count is a field of the group,
+	// not of ZoneHttpRequestsAdaptiveGroupsSum — "sum { count }" is rejected
+	// with `unknown field "count"` on every zone.
+	q, _ := reqBody["query"].(string)
+	if sumAt := strings.Index(q, "sum {"); sumAt >= 0 {
+		sumBlock := q[sumAt : sumAt+strings.Index(q[sumAt:], "}")]
+		if strings.Contains(sumBlock, "count") {
+			t.Errorf("query requests count inside sum (rejected by the live API): %s", sumBlock)
+		}
 	}
 
 	want := ZoneHTTPSummary{Requests: 15, Bytes: 2560, Visits: 4}
