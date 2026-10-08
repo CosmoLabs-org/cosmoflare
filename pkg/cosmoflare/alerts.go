@@ -120,6 +120,8 @@ var alertConditionRegistry = []AlertConditionDescriptor{
 	{Name: "worker-subrequests", Scope: "script", Unit: "subrequests", Help: "per-script subrequest count over the window — the stuck-loop fan-out signature", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Subrequests", Service: "workers"},
 	{Name: "do-cpu", Scope: "do", Unit: "ms", Help: "per-namespace Durable Object wall time over the window", FedBy: "DO analytics per-namespace rows", DataKey: "DurableObjects[].WallTimeMS", Service: "workers"},
 	{Name: "do-requests", Scope: "do", Unit: "requests", Help: "per-namespace Durable Object request volume over the window", FedBy: "DO analytics per-namespace rows", DataKey: "DurableObjects[].Requests", Service: "workers"},
+	{Name: "usage-pct", Scope: "account", Unit: "%", Help: "highest monthly usage percent across dimensions with known plan limits", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsagePctMax", Service: "usage"},
+	{Name: "usage-projected-pct", Scope: "account", Unit: "%", Help: "highest projected monthly usage percent at cycle end (linear pacing)", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsageProjectedPctMax", Service: "usage"},
 }
 
 // AlertConditions returns the condition registry in registration order.

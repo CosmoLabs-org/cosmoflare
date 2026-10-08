@@ -29,6 +29,8 @@ type EvalMetrics struct {
 
 	DurableObjects []cosmoflare.DurableObjectSummary // per-namespace DO rows for do-scoped conditions (FEAT-047)
 
+	Usage []cosmoflare.UsageDimension // monthly pacing rows for usage-pct conditions (FEAT-048); nil = no snapshot this cycle
+
 	WorkersScriptCount uint64  // live script count (LimitsService)
 	R2BucketCount      uint64  // live bucket count (LimitsService)
 	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
@@ -104,9 +106,49 @@ func conditionValue(condition string, m EvalMetrics) (value float64, unit string
 			return 0, desc.Unit, false // no quota rows → nothing to judge
 		}
 		return m.DNSRecordQuotaPct, desc.Unit, true
+	case "usage-pct":
+		if v := usageMax(m.Usage, false); v > 0 {
+			return v, desc.Unit, true
+		}
+		return 0, desc.Unit, false // no known-limit dims → nothing to judge
+	case "usage-projected-pct":
+		if v := usageMax(m.Usage, true); v > 0 {
+			return v, desc.Unit, true
+		}
+		return 0, desc.Unit, false
 	default:
 		return 0, "", false // registered but unimplemented — the coverage test catches this
 	}
+}
+
+// usageMax returns the highest percent (or projected percent) across usage
+// dimensions with a known limit — one hot dimension fires the rule, the
+// dns-record-quota pattern. 0 means no judgeable dimension.
+func usageMax(dims []cosmoflare.UsageDimension, projected bool) float64 {
+	var max float64
+	for _, d := range dims {
+		if d.Limit <= 0 {
+			continue
+		}
+		v := d.Pct
+		if projected {
+			v = d.ProjectedPct
+		}
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}
+
+// CollectUsageMetrics augments m with the monthly usage snapshot (FEAT-048).
+// Callers own cadence: the watch caches ~15 min so the 60s loop does not
+// re-query cycle telemetry every cycle.
+func CollectUsageMetrics(m *EvalMetrics, snap *cosmoflare.UsageSnapshot) {
+	if m == nil || snap == nil {
+		return
+	}
+	m.Usage = snap.Dimensions
 }
 
 // scopedValue is one observable value of a condition: account-scoped
@@ -180,14 +222,16 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 // metricData builds the TriggerAlert data map from the raw metrics.
 func metricData(m EvalMetrics) map[string]interface{} {
 	return map[string]interface{}{
-		"workers_requests":     m.WorkersRequests,
-		"workers_errors":       m.WorkersErrors,
-		"r2_storage_bytes":     m.R2StorageBytes,
-		"r2_object_count":      m.R2ObjectCount,
-		"cpu_p99_ms":           m.CPUP99AvgMS,
-		"workers_script_count": m.WorkersScriptCount,
-		"r2_bucket_count":      m.R2BucketCount,
-		"dns_record_quota_pct": m.DNSRecordQuotaPct,
+		"workers_requests":        m.WorkersRequests,
+		"workers_errors":          m.WorkersErrors,
+		"r2_storage_bytes":        m.R2StorageBytes,
+		"r2_object_count":         m.R2ObjectCount,
+		"cpu_p99_ms":              m.CPUP99AvgMS,
+		"workers_script_count":    m.WorkersScriptCount,
+		"r2_bucket_count":         m.R2BucketCount,
+		"dns_record_quota_pct":    m.DNSRecordQuotaPct,
+		"usage_pct_max":           usageMax(m.Usage, false),
+		"usage_projected_pct_max": usageMax(m.Usage, true),
 	}
 }
 
