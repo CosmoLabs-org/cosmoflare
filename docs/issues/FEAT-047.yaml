@@ -12,15 +12,15 @@ title: 'Usage-waste alerting wave 1: stuck-work thresholds for Workers and Durab
 description: 'Extend the FEAT-045 alerts spine with per-script usage-waste detection: thresholds (model A) for Workers and Durable Objects that are overworking or stuck and burning plan usage. Operator motivation (2026-10-08): ''a durable object or some worker that is overworking and getting stuck and wasting our usage'' — prevention, not post-mortem. Detection: sustained CPU p99 per script, invocation spikes, error loops, sustained DO invocation/CPU. Data: new GraphQL analytics queries (workersInvocationsAdaptive per-script, durableObjectsAnalytics) batched one query per watch cycle, never per-script N+1. Runs inside the existing alerts watch daemon on the fast loop (30-60s, analytics API is free). Baselines/anomaly detection (model B) deliberately deferred.'
 acceptance_criteria:
     - criterion: Per-script Workers and per-DO threshold conditions exist in alertConditionRegistry
-      met: false
+      met: true
     - criterion: alerts watch evaluates them on the fast loop with batched GraphQL queries
-      met: false
+      met: true
     - criterion: stuck-work alert fires in a test with a mock over-CPU script and names the script
-      met: false
+      met: true
     - criterion: pager delivers it
-      met: false
+      met: true
     - criterion: --json + help present
-      met: false
+      met: true
 user_story: |
   As an operator of a large Cloudflare account
   I want to be alerted the moment a Worker or Durable Object starts
