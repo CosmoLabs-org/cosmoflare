@@ -1,18 +1,21 @@
 id: ROAD-102
 created_at: 2026-10-08T23:21:41.903776+04:00
-updated_at: 2026-10-08T23:21:55.858542+04:00
+updated_at: 2026-10-09T03:10:06.571137+04:00
 title: CF governance pillar — Cosmoflare as CosmoLabs meta-project for Cloudflare auditing, security, efficiency
 description: 'Charter from owner directive 2026-10-08 (FB-12, via Churches-app): Cosmoflare is the CosmoLabs meta-project for Cloudflare workflows across all projects (Churches-app, Noble.Coffee, BaristaBase, AXO, BeeKey, future). Three duties: (1) audit CF infrastructure for efficiency and security, (2) prevent wasted resources, (3) own the CF best-practice standards every project follows. Every new standard lands as a cosmoflare audit rule first. Children: FEAT-050 pre-launch verdict command (success metric), FEAT-049 caching dimension (rule set 1), ROAD-101 usage-waste program (detection substrate). Future dimensions: security audit (WAF/firewall posture, token scope), cost audit (D1 rows-read/write, KV op waste, Pages vs Workers fit), compliance sweep (CORS, no cache on user-scoped routes). Sibling deliveries outside this repo: CosmoKit cf-cache module, ClaudeCodeSetup CF efficiency SOP + cf-audit skill.'
 status: planned
 priority: 90
 category: core
 effort: large
+notes:
+    - '2026-10-09: FB-14 (Churches-app) delivered the 12-class detection matrix — the rule catalog for FEAT-050''s verdict engine (each class = one check with severity cost/correctness/security, detection method, fix pointer to Churches-app 155d1d3e). Classes 2-3 (schema drift, migration/FK linter) split out as FEAT-051; class 1 rows-read trend ships as d1-rows-read in FEAT-049 wave 3a; classes 5-7 are FEAT-049/FEAT-050 caching rules.'
 refs:
     - type: issue
       path: docs/issues/FEAT-050.yaml
 linked_issues:
     - FEAT-050
     - FEAT-049
+    - FEAT-051
 origin:
     session: 68
 ulid: 01M4EFDP8H5S1V1SY4WFY2MTQJ

@@ -1,34 +1,27 @@
 ---
-ulid: 01M4ENH22QRRJQHHZ4AYJCRENC
-id: FB-14
-title: 'Detection matrix: the D1/Cloudflare problem classes systematic vetting catches (evidence-backed from Churches-app 2026-10-08)'
+id: FEAT-051
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: Churches-app
-from_path: /Users/gabstudio/PROJECTS/Churches-app
-to_project: cosmoflare
-to_target: project
-created: "2026-10-09T01:08:23.767206+04:00"
-updated: "2026-10-09T03:09:59.414904+04:00"
-suggested_conversion: feature
-converted_to: FEAT-051
-related_issues: []
-brainstorm_ref: null
-session: 47
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+created: "2026-10-09"
+updated: "2026-10-09T03:10:06.533247+04:00"
+priority: 70
+status: open
+area: reliability
+origin:
+    feedback_id: FB-14
+    roadmap_items:
+        - ROAD-102
+    from_project: Churches-app
+    received: "2026-10-09"
+    converted: "2026-10-09"
+title: D1 schema-drift parity + migration linter (detection matrix classes 2-3)
+
 ---
 
-# FB-pJCRENC: Detection matrix: the D1/Cloudflare problem classes systematic vetting catches (evidence-backed from Churches-app 2026-10-08)
+# FEAT-051: D1 schema-drift parity + migration linter (detection matrix classes 2-3)
+
+## Origin
+
+Converted from feedback **FB-14** (from Churches-app)
 
 What happened: following the charter + audit-caching specs already in this inbox, here is the evidence-backed problem catalog those checks would have caught. Every item below is a REAL incident from Churches-app on 2026-08..10, most discovered only by manual audit or by hitting production errors. The question this feedback answers: what classes of problems does proper vetting/auditing/optimization in cosmoflare fix for all projects?
 
@@ -57,4 +50,13 @@ Why it matters: every one of these was found by hand AFTER the code shipped or d
 Proposed solution: structure the audit engine as this detection matrix — each class = one check with severity (cost vs correctness vs security), a detection method, and a fix pointer to the standard (Churches-app commit 155d1d3e + docs/optimization/2026-10-08-cf-efficiency-audit.md are the reference). Classes 2 and 3 (drift + FK linter) are NEW capabilities beyond the audit-caching spec and have the freshest incident evidence — recommend prioritizing them with class 1.
 
 Priority: high — complements the charter and audit-caching specs; this is the input catalog for both.
+## Description
+
+From FB-14 (Churches-app detection matrix, 12 evidence-backed CF problem classes). Classes 2-3 are new capabilities beyond FEAT-049/FEAT-050 and carry the freshest incident evidence. Class 2 schema drift: prod D1 lacked tables (masstimes_review, poi_figures, poi_approach_guidance) and a column (feast_days.church_id) because local migrations never ran remotely; 1,020 rows existed in prod but not locally. Detection: table/column parity diff + per-table row-count diff between a local SQLite snapshot and remote D1. Class 3 FK/migration semantics: local SQLite runs with FKs off while D1 enforces them, so a migration that ran clean locally failed remotely (children updated before parent rename); D1 also rejects explicit BEGIN TRANSACTION via remote execute (hit twice in one day). Detection: migration linter flagging parent/child write order and explicit transaction blocks. The full 12-class matrix (rows-read blowups, unindexed hot paths, uncached GETs, cache-key collisions, over-caching auth routes, Pages-vs-Workers fit, rate-limit coverage, token scope, cron coverage, FTS drift) is the rule catalog for FEAT-050; class 1 rows-read trend ships as d1-rows-read in FEAT-049 wave 3a.
+
+## Acceptance Criteria
+
+- [ ] A command diffs table and column sets plus per-table row counts between a local D1/SQLite file and remote D1 with --json
+- [ ] A migration lint flags explicit BEGIN TRANSACTION and child-before-parent writes under enforced FKs
+- [ ] Both checks can run as FEAT-050 verdict rules with severity correctness
 

@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T23:21:55.980795+04:00
+last_updated: 2026-10-09T03:10:06.576077+04:00
 next_id: 103
 items:
     - id: BASE-001
@@ -888,4 +888,5 @@ items:
       linked_issues:
         - FEAT-050
         - FEAT-049
+        - FEAT-051
       created_at: 2026-10-08T23:21:41.903776+04:00

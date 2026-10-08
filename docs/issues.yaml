@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-08T23:32:13.903789+04:00
+last_updated: 2026-10-09T03:09:59.413571+04:00
 next_bug_id: 56
-next_feat_id: 51
+next_feat_id: 52
 next_task_id: 17
 next_imp_id: 1
 issues:
@@ -595,6 +595,11 @@ issues:
       status: open
       title: Pre-launch CF verdict — one command gives pass/fail efficiency + security verdict for any CosmoLabs project
       created_at: 2026-10-08T23:21:36.705143+04:00
+    - id: FEAT-051
+      type: feature
+      status: open
+      title: D1 schema-drift parity + migration linter (detection matrix classes 2-3)
+      created_at: 2026-10-09T03:09:59.410137+04:00
     - id: TASK-001
       type: task
       status: closed
