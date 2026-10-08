@@ -1,11 +1,13 @@
 id: BUG-054
 type: bug
 created_at: 2026-10-08T23:28:04.194371+04:00
-updated_at: 2026-10-08T23:28:04.96211+04:00
+updated_at: 2026-10-08T23:28:07.181731+04:00
 source: local
 ulid: 01M4EFSCB2K2TJY4SRJWDVEBK8
 severity: high
 status: open
+origin:
+    session: 68
 title: Evaluator cooldown keyed on rule name silences second offender of fan-out conditions
 description: Fan-out conditions (worker-cpu, worker-errors, do-cpu, …; FEAT-047) fire once per offending scope instance, but Evaluator.lastFired and fires were keyed on rule.Name. The first offender in a cycle set the cooldown, so every other offender breaching the same rule in that cycle was silently skipped — two stuck Workers paged as one. Alert.Count also mixed counts across scopes.
 fix_direction: Key lastFired and fires on the per-scope alert ID (rule name for account scope, rule/scope for fan-out). Account-scope behavior is unchanged because alertID == rule.Name there.

@@ -44,8 +44,8 @@ type Evaluator struct {
 	manager   *Manager
 	cooldown  time.Duration
 	clock     func() time.Time     // injectable for tests
-	lastFired map[string]time.Time // rule name → last fire time
-	fires     map[string]int       // rule name → fire count (drives Alert.Count)
+	lastFired map[string]time.Time // alert ID (rule name, or rule/scope for fan-out) → last fire time
+	fires     map[string]int       // alert ID → fire count (drives Alert.Count)
 }
 
 // NewEvaluator creates an evaluator over the given rule service and alert
@@ -235,8 +235,8 @@ func metricData(m EvalMetrics) map[string]interface{} {
 	}
 }
 
-// Evaluate runs every enabled rule against m and returns the names of rules
-// that fired (after cooldown filtering). Each firing rule calls
+// Evaluate runs every enabled rule against m and returns one rule name per
+// fire (after cooldown filtering; a fan-out rule repeats per offender). Each fire calls
 // manager.TriggerAlert with a converted Alert and a message that includes the
 // observed value and threshold. A TriggerAlert error is logged but does not
 // stop other rules; the rule still counts as fired.
@@ -260,26 +260,28 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			if sv.Value < rule.Threshold {
 				continue
 			}
-			if last, seen := e.lastFired[rule.Name]; seen && now.Sub(last) < e.cooldown {
+			// Per-script/do fires key the alert identity on the scope
+			// instance so re-fires update the same per-script alert; the
+			// NAME stays the rule name — cmd/alerts_watch.go resolves
+			// severity/service through byName[Alert.Name]. Cooldown and
+			// fire counts key on the same identity: two offenders breaching
+			// one rule are two incidents, and both page.
+			alertID := rule.Name
+			if sv.ScopeID != "" {
+				alertID = rule.Name + "/" + sv.ScopeID
+			}
+			if last, seen := e.lastFired[alertID]; seen && now.Sub(last) < e.cooldown {
 				continue
 			}
 
-			e.lastFired[rule.Name] = now
-			prev := e.fires[rule.Name]
-			e.fires[rule.Name] = prev + 1
+			e.lastFired[alertID] = now
+			prev := e.fires[alertID]
+			e.fires[alertID] = prev + 1
 			fired = append(fired, rule.Name)
 
 			updatedAt := rule.UpdatedAt
 			if updatedAt.IsZero() {
 				updatedAt = now
-			}
-			// Per-script/do fires key the alert identity on the scope
-			// instance so re-fires update the same per-script alert; the
-			// NAME stays the rule name — cmd/alerts_watch.go resolves
-			// severity/service through byName[Alert.Name].
-			alertID := rule.Name
-			if sv.ScopeID != "" {
-				alertID = rule.Name + "/" + sv.ScopeID
 			}
 			alert := &Alert{
 				ID:        alertID, // deterministic: re-fires update the same alert

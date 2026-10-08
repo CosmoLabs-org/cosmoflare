@@ -534,6 +534,39 @@ func TestEvaluateWorkerCPUNamesOffender(t *testing.T) {
 	}
 }
 
+// TestEvaluateFanOutPagesEveryOffender pins the cooldown identity: two
+// scripts breaching the same rule in one cycle are two incidents, so both
+// page. Cooldown keyed on the rule name alone silenced the second offender.
+func TestEvaluateFanOutPagesEveryOffender(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
+		evalRule("hot-cpu", "worker-cpu", 500),
+	)
+	m := EvalMetrics{Scripts: []cosmoflare.WorkersSummary{
+		{Script: "api-proxy", Requests: 100, CPUP99: 812},
+		{Script: "queue-drain", Requests: 100, CPUP99: 640},
+	}}
+	eval.Evaluate(m)
+	rec.mu.Lock()
+	ids := make([]string, 0, len(rec.payloads))
+	for _, p := range rec.payloads {
+		ids = append(ids, p.Alert.ID)
+	}
+	rec.mu.Unlock()
+	if len(ids) != 2 {
+		t.Fatalf("notified alert IDs = %v, want hot-cpu/api-proxy and hot-cpu/queue-drain", ids)
+	}
+
+	// Same cycle again inside the cooldown: neither offender re-pages.
+	eval.Evaluate(m)
+	rec.mu.Lock()
+	n := len(rec.payloads)
+	rec.mu.Unlock()
+	if n != 2 {
+		t.Errorf("payloads after in-cooldown re-evaluate = %d, want 2 (cooldown per scope instance)", n)
+	}
+}
+
 // TestEvaluateDOCPU names the Durable Object namespace: the scope key is
 // script/namespace so the operator knows WHICH DO is burning wall time.
 func TestEvaluateDOCPU(t *testing.T) {
