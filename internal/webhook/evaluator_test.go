@@ -462,7 +462,7 @@ func (f fakeAnalytics) Workers(ctx context.Context, w cosmoflare.AnalyticsWindow
 
 // TestConditionValueCoversRegistry pins the FEAT-015 contract across
 // packages: every condition cosmoflare.AlertConditions() registers must be
-// a case in conditionValue. The original bug: the limits feature extended
+// a case in conditionValues. The original bug: the limits feature extended
 // the registry without the evaluator, and the CLI rejected valid conditions.
 func TestConditionValueCoversRegistry(t *testing.T) {
 	t.Parallel()
@@ -474,18 +474,77 @@ func TestConditionValueCoversRegistry(t *testing.T) {
 		WorkersScriptCount: 30,
 		R2BucketCount:      7,
 		DNSRecordQuotaPct:  55,
+		Scripts: []cosmoflare.WorkersSummary{
+			{Script: "a", Requests: 100, Errors: 1, Subrequests: 5, CPUP99: 42},
+		},
 	}
 	for _, c := range cosmoflare.AlertConditions() {
-		value, unit, ok := conditionValue(c.Name, populated)
-		if !ok {
-			t.Errorf("conditionValue(%q) not ok with populated metrics — evaluator does not cover the registry", c.Name)
+		values := conditionValues(c.Name, populated)
+		if len(values) == 0 {
+			t.Errorf("conditionValues(%q) empty with populated metrics — evaluator does not cover the registry", c.Name)
 			continue
 		}
-		if unit != c.Unit {
-			t.Errorf("conditionValue(%q) unit = %q, registry says %q", c.Name, unit, c.Unit)
+		for _, sv := range values {
+			if sv.Unit != c.Unit {
+				t.Errorf("conditionValues(%q) unit = %q, registry says %q", c.Name, sv.Unit, c.Unit)
+			}
+			if sv.Value == 0 && c.Name != "storage-limit" {
+				t.Errorf("conditionValues(%q) = 0 with populated metrics, want non-zero", c.Name)
+			}
 		}
-		if value == 0 && c.Name != "storage-limit" {
-			t.Errorf("conditionValue(%q) = 0 with populated metrics, want non-zero", c.Name)
-		}
+	}
+}
+
+// TestEvaluateWorkerCPUNamesOffender pins the FEAT-047 contract: a
+// script-scoped rule fires once per offending script, the alert identity
+// carries the script (deterministic re-fires), the alert NAME stays the
+// rule name (cmd/alerts_watch.go looks rules up by it), and the message
+// names the script and its observed value.
+func TestEvaluateWorkerCPUNamesOffender(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
+		evalRule("hot-cpu", "worker-cpu", 500),
+	)
+	m := EvalMetrics{Scripts: []cosmoflare.WorkersSummary{
+		{Script: "api-proxy", Requests: 100, CPUP99: 812},
+		{Script: "calm-worker", Requests: 100, CPUP99: 40},
+	}}
+	fired := eval.Evaluate(m)
+	if len(fired) != 1 || fired[0] != "hot-cpu" {
+		t.Fatalf("fired = %v, want exactly [hot-cpu] (calm-worker under threshold)", fired)
+	}
+	p := rec.first()
+	if p == nil {
+		t.Fatal("no notification recorded")
+	}
+	if p.Alert.ID != "hot-cpu/api-proxy" {
+		t.Errorf("Alert.ID = %q, want hot-cpu/api-proxy (per-script identity)", p.Alert.ID)
+	}
+	if p.Alert.Name != "hot-cpu" {
+		t.Errorf("Alert.Name = %q, want hot-cpu (rule-name lookup drives severity mapping)", p.Alert.Name)
+	}
+	if !strings.Contains(p.Message, "api-proxy") || !strings.Contains(p.Message, "812") {
+		t.Errorf("message must name script and observed value: %q", p.Message)
+	}
+}
+
+// TestEvaluateAccountConditionsUnchanged guards the scoped-evaluation
+// refactor: account-scoped rules keep their exact pre-FEAT-047 identity and
+// message shape — no scope suffix, no behavioral drift.
+func TestEvaluateAccountConditionsUnchanged(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
+		evalRule("err-over", "error-rate", 4),
+	)
+	fired := eval.Evaluate(EvalMetrics{WorkersRequests: 100, WorkersErrors: 50})
+	if len(fired) != 1 || fired[0] != "err-over" {
+		t.Fatalf("fired = %v, want [err-over]", fired)
+	}
+	p := rec.first()
+	if p.Alert.ID != "err-over" || p.Alert.Name != "err-over" {
+		t.Errorf("account alert ID/Name = %q/%q, want err-over/err-over", p.Alert.ID, p.Alert.Name)
+	}
+	if !strings.Contains(p.Message, "50") || strings.Contains(p.Message, "[") {
+		t.Errorf("account message shape drifted: %q", p.Message)
 	}
 }
