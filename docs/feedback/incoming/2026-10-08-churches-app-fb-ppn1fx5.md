@@ -1,9 +1,8 @@
 ---
 ulid: 01M4E6CMG3SP9FYEXFX6PN1FX5
-id: FB-12
 title: 'CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects'
 type: feature
-status: pending
+status: duplicate
 priority: high
 complexity: ""
 from_project: Churches-app
@@ -26,6 +25,7 @@ response:
   rejected: null
   rejection_reason: null
   notes: ""
+duplicate_of: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-08-churches-app-charter-cosmoflare-is-the-cosmolabs-met.md
 ---
 
 # FB-pPN1FX5: CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects
@@ -39,9 +39,3 @@ Proposed solution: treat this as a charter/roadmap anchor, not a single feature:
 2. Every new CF best-practice standard lands as a cosmoflare audit rule first — Churches-app commit 155d1d3e is the reference implementation of rule set 1; CosmoKit cf-cache module and ClaudeCodeSetup SOP specs were delivered in parallel
 3. Success metric: any project can run `cosmoflare audit` before a launch and get a pass/fail efficiency + security verdict
 
-
-## Recurrence (ingest duplicate)
-
-- twin ulid: 01M4E6CMG3SP9FYEXFX6PN1FX5
-- twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-08-churches-app-fb-ppn1fx5.md
-- folded: 2026-10-08T23:21:09+04:00

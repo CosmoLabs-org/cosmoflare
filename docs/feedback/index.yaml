@@ -1,10 +1,10 @@
 version: "1.0"
-next_id: 10
-last_updated: "2026-10-06T20:17:02.203125+04:00"
+next_id: 13
+last_updated: "2026-10-08T23:21:09.596339+04:00"
 stats:
-    total: 9
-    pending: 1
-    implemented: 1
+    total: 13
+    pending: 2
+    implemented: 2
     rejected: 0
     converted: 5
 entries:
@@ -50,6 +50,26 @@ entries:
       created: "2026-09-10T19:46:55.604743+04:00"
     - id: FB-9
       title: 'Auto-memory: cosmoflare public launch 2026-09-13'
-      status: pending
+      status: implemented
       from_project: cosmoflare
       created: "2026-09-14T04:06:04.854326+04:00"
+    - id: FB-11
+      title: CF efficiency audit dimension — caching, D1 rows-read, edge headers
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-08T20:35:19.472728+04:00"
+    - id: FB-12
+      title: 'CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects'
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-08T20:43:50.147246+04:00"
+    - id: ""
+      title: Makefile tree-path gate misses colons — proxy.golang.org zip poisoning class
+      status: ""
+      from_project: ""
+      created: "2026-10-07T23:46:16.556108+04:00"
+    - id: ""
+      title: 'CHARTER: Cosmoflare is the CosmoLabs meta project for Cloudflare workflows — auditing, security, resource efficiency for ALL projects'
+      status: duplicate
+      from_project: Churches-app
+      created: "2026-10-08T20:43:50.147246+04:00"
