@@ -115,6 +115,14 @@ func CollectUsage(ctx context.Context, analytics *AnalyticsService, plan string,
 		return nil, err
 	}
 
+	// D1 is additive (design D15): a D1 analytics failure must not drop the
+	// Workers/DO/R2 pacing rows, so the dimension is simply omitted.
+	var d1Rows uint64
+	d1Summaries, d1Err := analytics.D1RowsRead(ctx, cycleWin)
+	for _, r := range d1Summaries {
+		d1Rows += r.RowsRead
+	}
+
 	var reqs, cpuMS uint64
 	for _, s := range scripts {
 		reqs += s.Requests
@@ -150,6 +158,9 @@ func CollectUsage(ctx context.Context, analytics *AnalyticsService, plan string,
 		"r2.storage_gb_monthly":    float64(storageBytes) / 1e9,
 		"r2.class_a_monthly":       float64(classA),
 		"r2.class_b_monthly":       float64(classB),
+	}
+	if d1Err == nil {
+		used["d1.rows_read_monthly"] = float64(d1Rows)
 	}
 
 	ids := make([]string, 0, len(used))

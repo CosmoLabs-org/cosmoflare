@@ -1411,6 +1411,25 @@
    "source_url": "https://developers.cloudflare.com/r2/pricing/",
    "verified_on": "2026-10-08T21:40:00Z",
    "notes": "'Class B Operations | 10 million requests / month'. HeadBucket, HeadObject, GetObject, UsageSummary, GetBucketEncryption, GetBucketLocation, GetBucketCors, GetBucketLifecycleConfiguration. DeleteObject/DeleteBucket/AbortMultipartUpload are free."
+  },
+  {
+   "id": "d1.rows_read_monthly",
+   "service": "d1",
+   "kind": "quota",
+   "unit": "rows_per_month",
+   "name": "Monthly D1 rows-read allowance",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": 25000000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+   "verified_on": "2026-10-08T23:50:00Z",
+   "notes": "Paid: 'First 25 billion / month included + $0.001 / million rows' (page last updated Apr 21, 2026). Free: '5 million / day' — daily, no monthly aggregate, so free stays null."
   }
  ]
 }

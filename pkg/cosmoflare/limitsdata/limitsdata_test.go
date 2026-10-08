@@ -10,9 +10,9 @@ func TestLoadEntryCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	// 73 embedded corpus entries + 2 appended local constants.
-	if len(entries) != 75 {
-		t.Fatalf("Load returned %d entries, want 75 (73 catalog + 2 local)", len(entries))
+	// 74 embedded corpus entries + 2 appended local constants.
+	if len(entries) != 76 {
+		t.Fatalf("Load returned %d entries, want 76 (74 catalog + 2 local)", len(entries))
 	}
 }
 
@@ -123,6 +123,7 @@ func TestMonthlyUsageRowsPresent(t *testing.T) {
 		"r2.storage_gb_monthly":    10,
 		"r2.class_a_monthly":       1_000_000,
 		"r2.class_b_monthly":       10_000_000,
+		"d1.rows_read_monthly":     25_000_000_000,
 	}
 	for id, wantPaid := range expected {
 		e, ok := Lookup(id)
@@ -140,5 +141,15 @@ func TestMonthlyUsageRowsPresent(t *testing.T) {
 		if e.SourceURL == "" || e.VerifiedOn == nil {
 			t.Errorf("%s: provenance incomplete (source_url/verified_on)", id)
 		}
+	}
+}
+
+func TestD1RowsReadMonthlyFreeTierNull(t *testing.T) {
+	e, ok := Lookup("d1.rows_read_monthly")
+	if !ok {
+		t.Fatal("catalog row d1.rows_read_monthly missing")
+	}
+	if e.Tiers.Free != nil {
+		t.Errorf("free tier = %v, want null (Free is a daily 5M allowance, not monthly)", *e.Tiers.Free)
 	}
 }
