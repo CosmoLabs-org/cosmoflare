@@ -61,6 +61,17 @@ Live evidence on the operator's account, 2026-10-08, last 24h:
 | D15 | **Zone and D1 telemetry are additive** — in the watch (DO pattern) and in `CollectUsage` (a D1 failure keeps Workers/R2 pacing rows) | One missing token permission must not stop every alert |
 | D16 | **`alerts watch` help lists the new datasets** | Help is the agent-facing contract |
 
+### Operator decision log
+
+The full list of big decisions (decided and open) lives in one table: the
+"Decisions for the operator" section of
+`docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md` (O1–O15).
+Open at planning time: O9 pager severity, O10 starter thresholds, O11
+rolling-24h vs Free-plan UTC day, O14 mycarguide-db fix (MyCarGuide's call).
+Mitigations approved 2026-10-09 after the risk review: telemetry-gap page,
+per-rule exclude list, 2× escalation inside the cooldown, opt-in live smoke
+test.
+
 ## Live schema facts (BR-02, introspected 2026-10-08 with the operator token, read-only)
 
 - `ZoneHttpRequestsAdaptiveGroupsDimensions` has `cacheStatus`, `datetimeHour`, `datetimeFiveMinutes`, `edgeResponseStatus`, `requestSource`.
