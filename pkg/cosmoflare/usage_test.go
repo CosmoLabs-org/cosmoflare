@@ -30,6 +30,10 @@ func usageMockServer(t *testing.T) *httptest.Server {
 		`{"sum":{"requests":500000},"dimensions":{"actionType":"PutObject","actionStatus":"success","bucketName":"media"}},` +
 		`{"sum":{"requests":200000},"dimensions":{"actionType":"ListObjects","actionStatus":"success","bucketName":"media"}}` +
 		`]}]}}}`
+	d1Resp := `{"data":{"viewer":{"accounts":[{"d1AnalyticsAdaptiveGroups":[` +
+		`{"sum":{"rowsRead":1000000000,"rowsWritten":0,"readQueries":10},"dimensions":{"databaseId":"db-a"}},` +
+		`{"sum":{"rowsRead":500000000,"rowsWritten":0,"readQueries":5},"dimensions":{"databaseId":"db-b"}}` +
+		`]}]}}}`
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		q := string(body)
@@ -41,6 +45,8 @@ func usageMockServer(t *testing.T) *httptest.Server {
 			w.Write([]byte(doResp))
 		case strings.Contains(q, "GetObject") || strings.Contains(q, "actionType"):
 			w.Write([]byte(opsResp))
+		case strings.Contains(q, "d1AnalyticsAdaptiveGroups"):
+			w.Write([]byte(d1Resp))
 		default:
 			w.Write([]byte(storageResp))
 		}
@@ -158,5 +164,81 @@ func TestCollectUsageUnknownPlanLimit(t *testing.T) {
 	}
 	if wr.Used == 0 {
 		t.Error("usage should still be collected when the limit is unknown")
+	}
+}
+
+// usageD1FailureMockServer is usageMockServer with the D1 branch replaced by
+// a GraphQL error response, to prove D1 analytics failures are additive.
+func usageD1FailureMockServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	workersResp := `{"data":{"viewer":{"accounts":[{"workersInvocationsAdaptive":[` +
+		`{"sum":{"requests":6000000,"errors":1,"subrequests":0,"cpuTimeUs":15000000000},"quantiles":{"cpuTimeP50":1,"cpuTimeP99":10},"dimensions":{"scriptName":"a","status":"ok"}}` +
+		`]}]}}}`
+	doResp := `{"data":{"viewer":{"accounts":[{"durableObjectsInvocationsAdaptiveGroups":[` +
+		`{"sum":{"requests":600000,"errors":0,"wallTime":640000000000},"dimensions":{"scriptName":"lobby","namespaceId":"aaaaaaaa1"}}` +
+		`]}]}}}`
+	storageResp := `{"data":{"viewer":{"accounts":[{"r2StorageAdaptiveGroups":[` +
+		`{"max":{"objectCount":10,"payloadSize":2000000000},"dimensions":{"bucketName":"media"}}` +
+		`]}]}}}`
+	opsResp := `{"data":{"viewer":{"accounts":[{"r2OperationsAdaptiveGroups":[` +
+		`{"sum":{"requests":4000000},"dimensions":{"actionType":"GetObject","actionStatus":"success","bucketName":"media"}}` +
+		`]}]}}}`
+	d1Resp := `{"errors":[{"message":"boom"}]}`
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		q := string(body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.Contains(q, "workersInvocationsAdaptive"):
+			w.Write([]byte(workersResp))
+		case strings.Contains(q, "durableObjectsInvocationsAdaptiveGroups"):
+			w.Write([]byte(doResp))
+		case strings.Contains(q, "GetObject") || strings.Contains(q, "actionType"):
+			w.Write([]byte(opsResp))
+		case strings.Contains(q, "d1AnalyticsAdaptiveGroups"):
+			w.Write([]byte(d1Resp))
+		default:
+			w.Write([]byte(storageResp))
+		}
+	}))
+}
+
+// TestCollectUsageD1Dimension pins the D1 rows-read pacing dimension: the
+// per-database summaries sum into one monthly account-wide figure.
+func TestCollectUsageD1Dimension(t *testing.T) {
+	srv := usageMockServer(t)
+	defer srv.Close()
+	analytics := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+
+	now := time.Date(2026, 10, 16, 0, 0, 0, 0, time.UTC)
+	snap, err := CollectUsage(context.Background(), analytics, "paid", 0, now)
+	if err != nil {
+		t.Fatalf("CollectUsage: %v", err)
+	}
+	d := usageDim(snap, "d1.rows_read_monthly")
+	approx(t, d.Used, 1.5e9, "d1 rows read used")
+	approx(t, d.Limit, 2.5e10, "d1 rows read limit")
+}
+
+// TestCollectUsageD1FailureIsAdditive pins design D15: a D1 analytics failure
+// must not fail CollectUsage or drop the Workers/DO/R2 pacing rows — the D1
+// dimension is simply omitted.
+func TestCollectUsageD1FailureIsAdditive(t *testing.T) {
+	srv := usageD1FailureMockServer(t)
+	defer srv.Close()
+	analytics := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+
+	now := time.Date(2026, 10, 16, 0, 0, 0, 0, time.UTC)
+	snap, err := CollectUsage(context.Background(), analytics, "paid", 0, now)
+	if err != nil {
+		t.Fatalf("CollectUsage: %v", err)
+	}
+	if usageDim(snap, "workers.requests_monthly").Used == 0 {
+		t.Error("workers.requests_monthly must remain present when D1 analytics fail")
+	}
+	for _, d := range snap.Dimensions {
+		if d.ID == "d1.rows_read_monthly" {
+			t.Error("d1.rows_read_monthly must be omitted when D1 analytics fail")
+		}
 	}
 }
