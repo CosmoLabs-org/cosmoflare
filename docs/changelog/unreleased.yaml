@@ -11,6 +11,9 @@ entries:
         - description: 'usage-waste alerting wave 1: stuck-work thresholds for Workers and Durable Objects'
           source: FEAT-047
           date: 2026-10-08T20:24:39.422815+04:00
+        - description: 'usage pacing wave 2: monthly usage view + projected-overage alerts'
+          source: FEAT-048
+          date: 2026-10-08T21:21:04.212872+04:00
     fixed: []
     changed: []
     deprecated: []
