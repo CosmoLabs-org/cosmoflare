@@ -455,7 +455,7 @@ func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, now t
 	sort.Strings(scopes)
 	var fired []string
 	for _, scope := range scopes {
-		if !rulesUseScope(rules, scope) {
+		if !RulesUseScope(rules, scope) {
 			continue
 		}
 		id := "telemetry-gap/" + scope
@@ -481,8 +481,8 @@ func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, now t
 	return fired
 }
 
-// rulesUseScope reports whether any enabled rule's condition has the scope.
-func rulesUseScope(rules []*cosmoflare.AlertRule, scope string) bool {
+// RulesUseScope reports whether any enabled rule's condition has the scope.
+func RulesUseScope(rules []*cosmoflare.AlertRule, scope string) bool {
 	for _, r := range rules {
 		if r == nil || !r.Enabled {
 			continue

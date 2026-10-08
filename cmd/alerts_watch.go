@@ -42,17 +42,16 @@ var newWebPushSenderFn = func(publicKey, privateKey string) alertspush.Sender {
 // against. It is a package-level var (same seam pattern as getAlertServiceFn)
 // so tests drive one iteration against canned metrics instead of the live
 // analytics API. The production implementation mirrors runAlertsCheck: 24h
-// window ending now, credentials from the configured account.
-var collectWatchMetricsFn = func(ctx context.Context) (webhook.EvalMetrics, error) {
+// window ending now, credentials from the configured account. rules lets it
+// fetch zone/d1 telemetry only when an enabled rule needs it (FEAT-049).
+var collectWatchMetricsFn = func(ctx context.Context, rules []*cosmoflare.AlertRule) (webhook.EvalMetrics, error) {
 	if AccountID == "" || APIToken == "" {
 		return webhook.EvalMetrics{}, fmt.Errorf("account ID and API token are required for alert evaluation (run 'cosmoflare account' to configure)")
 	}
 	analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
 	now := time.Now()
-	m, err := webhook.CollectEvalMetrics(ctx, analytics, cosmoflare.AnalyticsWindow{
-		Start: now.Add(-24 * time.Hour),
-		End:   now,
-	})
+	w := cosmoflare.AnalyticsWindow{Start: now.Add(-24 * time.Hour), End: now}
+	m, err := webhook.CollectEvalMetrics(ctx, analytics, w)
 	if err != nil {
 		return m, err
 	}
@@ -60,7 +59,100 @@ var collectWatchMetricsFn = func(ctx context.Context) (webhook.EvalMetrics, erro
 	// snapshot is cached ~15 min so the 60s cycle never re-queries cycle
 	// telemetry. A nil snapshot leaves the usage-* conditions skipped.
 	webhook.CollectUsageMetrics(&m, cachedUsageSnapshot(ctx))
+	// Zone cache + D1 rows-read telemetry is additive (FEAT-049 D15):
+	// failures become telemetry-gap pages, never a skipped cycle.
+	wantZones, wantD1 := webhook.RulesUseScope(rules, "zone"), webhook.RulesUseScope(rules, "d1")
+	if wantZones || wantD1 {
+		webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, cachedTelemetryRefs(ctx, wantZones, wantD1), w, &m)
+	}
 	return m, nil
+}
+
+// Watch cooldown memory (FEAT-049 O3). The watch builds a fresh evaluator
+// each cycle; sharing one FireState keeps zone/d1 cooldowns across cycles.
+// It is in memory only: a restart re-pages every current zone/d1 breach
+// once. Scopes without an entry use cooldown 0 — they keep re-paging every
+// cycle, the watch's long-standing policy.
+var (
+	watchFireState      = webhook.NewFireState()
+	watchScopeCooldowns = map[string]time.Duration{"zone": time.Hour, "d1": time.Hour}
+)
+
+// Zone/D1 name-list cache + seams. The lists change on a days timescale, so
+// they are fetched at most every 15 min; a failed refresh keeps the last
+// good list (stale names beat a gap page).
+var (
+	telemetryRefsCache     webhook.TelemetryRefs
+	telemetryRefsFetchedAt time.Time
+	telemetryRefsWant      [2]bool // [zones, d1] the cache was fetched for
+	telemetryRefsTTL       = 15 * time.Minute
+	telemetryNowFn         = time.Now
+	telemetryRefsFn        = defaultTelemetryRefs
+)
+
+// defaultTelemetryRefs lists active zones and D1 databases for the wanted
+// scopes. Each list's error is carried in the refs, never returned.
+func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+	var refs webhook.TelemetryRefs
+	if wantZones {
+		zs, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
+		var zones []*cosmoflare.Zone
+		if err == nil {
+			zones, err = zs.List(ctx)
+		}
+		if err != nil {
+			refs.ZonesErr = fmt.Errorf("zone list: %w", err)
+		}
+		for _, z := range zones {
+			if z != nil && z.Status == "active" {
+				refs.Zones = append(refs.Zones, cosmoflare.ZoneRef{ID: z.ID, Name: z.Name})
+			}
+		}
+	}
+	if wantD1 {
+		ds, err := cosmoflare.NewD1ServiceFromCreds(AccountID, APIToken)
+		var dbs []*cosmoflare.D1Database
+		if err == nil {
+			dbs, err = ds.List(ctx)
+		}
+		if err != nil {
+			refs.DBNamesErr = fmt.Errorf("d1 list: %w", err)
+		}
+		refs.DBNames = make(map[string]string, len(dbs))
+		for _, d := range dbs {
+			if d != nil {
+				refs.DBNames[d.UUID] = d.Name
+			}
+		}
+	}
+	return refs
+}
+
+// cachedTelemetryRefs returns the cached lists within the TTL when they
+// cover the wanted scopes, else refreshes. A failed refresh keeps the last
+// good list for that scope; with no last good list the error surfaces and
+// CollectTelemetryMetrics turns it into a gap page.
+func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+	now := telemetryNowFn()
+	covered := (!wantZones || telemetryRefsWant[0]) && (!wantD1 || telemetryRefsWant[1])
+	if covered && !telemetryRefsFetchedAt.IsZero() && now.Sub(telemetryRefsFetchedAt) < telemetryRefsTTL {
+		return telemetryRefsCache
+	}
+	fresh := telemetryRefsFn(ctx, wantZones, wantD1)
+	if fresh.ZonesErr != nil && len(telemetryRefsCache.Zones) > 0 {
+		printWarning("zone list refresh failed, using last known zones: %v", fresh.ZonesErr)
+		fresh.Zones, fresh.ZonesErr = telemetryRefsCache.Zones, nil
+	}
+	if fresh.DBNamesErr != nil && len(telemetryRefsCache.DBNames) > 0 {
+		printWarning("D1 list refresh failed, using last known database names: %v", fresh.DBNamesErr)
+		fresh.DBNames, fresh.DBNamesErr = telemetryRefsCache.DBNames, nil
+	}
+	if fresh.ZonesErr == nil && fresh.DBNamesErr == nil {
+		telemetryRefsFetchedAt = now // errors retry next cycle
+		telemetryRefsWant = [2]bool{wantZones, wantD1}
+	}
+	telemetryRefsCache = fresh
+	return fresh
 }
 
 // Usage snapshot cache + seams (tests drive the clock and the collector).
@@ -112,8 +204,21 @@ analytics and deliver fired alerts as Web Push notifications to paired
 pager devices (FEAT-045).
 
 Each cycle collects a rolling 24h metrics window (Workers invocations and
-errors, R2 storage) and judges every enabled rule — the same evaluation
-'cosmoflare alerts check' runs once. Fired alerts are pushed to every
+errors, Durable Objects, R2 storage, monthly usage pacing) and judges every
+enabled rule — the same evaluation 'cosmoflare alerts check' runs once.
+When a zone or d1 rule is enabled the cycle also collects zone cache
+status per zone and D1 rows read per database (FEAT-049).
+
+Re-paging: account, script and do rules re-page every cycle while
+tripped. zone and d1 rules page at most once an hour per zone or
+database, unless the value doubles since the last page; a recovery and
+re-breach inside the hour stays quiet. If zone or D1 telemetry cannot be
+collected, a telemetry gap page fires once an hour so silent rules are
+never mistaken for healthy ones. Cooldown memory is in-process: a
+restart re-pages current zone/d1 breaches once. Zones need at least 100
+requests in the window before their cache ratios are judged.
+
+Fired alerts are pushed to every
 device subscribed via 'cosmoflare alerts push add'; expired device
 endpoints (404/410 from the push service) are pruned automatically.
 
@@ -258,7 +363,7 @@ func evaluateOnce(ctx context.Context, svc *cosmoflare.AlertService, st *alertsp
 		return 0, 0, nil
 	}
 
-	metrics, err := collectWatchMetricsFn(ctx)
+	metrics, err := collectWatchMetricsFn(ctx, rules)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -289,11 +394,16 @@ func evaluateOnce(ctx context.Context, svc *cosmoflare.AlertService, st *alertsp
 		}
 	})
 
-	// One-shot evaluator per cycle: cooldown state dies with the evaluator,
-	// so a persistently-tripped rule re-fires every interval (deliberate —
-	// a broken service keeps buzzing the pager until it is fixed or
-	// disabled, mirroring 'alerts check' semantics).
+	// Fresh evaluator per cycle over shared cooldown memory. Scopes without
+	// a cooldown entry (account, script, do) re-fire every interval
+	// (deliberate — a broken service keeps buzzing the pager until it is
+	// fixed or disabled, mirroring 'alerts check' semantics). zone/d1 rules
+	// over rolling 24h windows stay tripped for hours after a fix, so they
+	// page at most hourly per zone/database unless the value doubles
+	// (FEAT-049 O3/O4).
 	eval := webhook.NewEvaluator(svc, mgr, 0)
+	eval.UseState(watchFireState)
+	eval.SetCooldownPolicy(0, watchScopeCooldowns)
 	_ = eval.Evaluate(metrics)
 	return sent, pruned, firstErr
 }

@@ -224,6 +224,10 @@ func runServeAlertEvalCycle(ctx context.Context, cm *config.ConfigManager, eval 
 	if len(listed) == 0 {
 		return // nothing configured — skip the analytics round-trip entirely
 	}
+	if msg := serveZoneD1Warning(listed); msg != "" && msg != serveZoneD1Warned {
+		log.Print(msg) // once per distinct rule set, not every tick (FEAT-049 O17)
+		serveZoneD1Warned = msg
+	}
 
 	p, err := cm.GetCurrent()
 	if err != nil {

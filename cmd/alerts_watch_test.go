@@ -68,7 +68,7 @@ func watchAlertEnv(t *testing.T) (*cosmoflare.AlertService, string) {
 	getAlertServiceFn = func() (*cosmoflare.AlertService, error) {
 		return cosmoflare.NewAlertService(rulesPath, historyPath)
 	}
-	collectWatchMetricsFn = func(context.Context) (webhook.EvalMetrics, error) {
+	collectWatchMetricsFn = func(context.Context, []*cosmoflare.AlertRule) (webhook.EvalMetrics, error) {
 		return webhook.EvalMetrics{WorkersRequests: 1000, WorkersErrors: 5, R2StorageBytes: 100}, nil
 	}
 
@@ -211,7 +211,7 @@ func TestEvaluateOnceNoEnabledRulesIsOffline(t *testing.T) {
 
 	called := false
 	orig := collectWatchMetricsFn
-	collectWatchMetricsFn = func(context.Context) (webhook.EvalMetrics, error) {
+	collectWatchMetricsFn = func(context.Context, []*cosmoflare.AlertRule) (webhook.EvalMetrics, error) {
 		called = true
 		return webhook.EvalMetrics{}, nil
 	}
