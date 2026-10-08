@@ -46,3 +46,27 @@ func TestAlertConditionListMatchesRegistry(t *testing.T) {
 		t.Errorf("AlertConditionList() = %q, want %q", got, strings.Join(want, ", "))
 	}
 }
+
+// TestAlertConditionScopes pins the FEAT-047 scope contract: stuck-work
+// conditions fan out per script/do-object; legacy conditions stay account
+// scope with an explicit value (never the zero-value ambiguity).
+func TestAlertConditionScopes(t *testing.T) {
+	for _, name := range []string{"worker-cpu", "worker-errors", "worker-requests", "worker-subrequests"} {
+		desc, ok := LookupAlertCondition(name)
+		if !ok {
+			t.Fatalf("condition %s not registered", name)
+		}
+		if desc.Scope != "script" {
+			t.Errorf("%s: Scope=%q, want script", name, desc.Scope)
+		}
+	}
+	for _, name := range []string{"error-rate", "storage-limit", "latency", "failure-count", "workers-script-count", "r2-bucket-count", "dns-record-quota"} {
+		desc, ok := LookupAlertCondition(name)
+		if !ok {
+			t.Fatalf("condition %s not registered", name)
+		}
+		if desc.Scope != "account" {
+			t.Errorf("%s: Scope=%q, want account (explicit, not zero value)", name, desc.Scope)
+		}
+	}
+}

@@ -99,19 +99,25 @@ type AlertConditionDescriptor struct {
 	FedBy   string // availability rule: which metric source feeds it
 	DataKey string // EvalMetrics field the evaluator reads
 	Service string // service tag for grouping in help output
+	Scope   string // "account" (one value per cycle), "script", "do" — instances the evaluator fans out over (FEAT-047)
 }
 
 // alertConditionRegistry is the ordered condition registry. The three
 // count/quota conditions are fed by the serve alert cycle's LimitsService
-// snapshot (CollectLimitMetrics).
+// snapshot (CollectLimitMetrics). script/do-scoped rows fan out per
+// script or Durable Object so alerts name the offender.
 var alertConditionRegistry = []AlertConditionDescriptor{
-	{Name: "error-rate", Unit: "%", Help: "share of Workers requests that errored over the window", FedBy: "Workers analytics (requests > 0)", DataKey: "WorkersErrors/WorkersRequests", Service: "workers"},
-	{Name: "storage-limit", Unit: "bytes", Help: "R2 storage in use", FedBy: "R2 analytics", DataKey: "R2StorageBytes", Service: "r2"},
-	{Name: "latency", Unit: "ms", Help: "Workers CPU p99 average", FedBy: "Workers analytics (CPU samples > 0)", DataKey: "CPUP99AvgMS", Service: "workers"},
-	{Name: "failure-count", Unit: "errors", Help: "absolute Workers error count over the window", FedBy: "Workers analytics", DataKey: "WorkersErrors", Service: "workers"},
-	{Name: "workers-script-count", Unit: "scripts", Help: "Workers scripts on the account against the plan limit", FedBy: "limits snapshot", DataKey: "WorkersScriptCount", Service: "workers"},
-	{Name: "r2-bucket-count", Unit: "buckets", Help: "R2 buckets on the account against the plan limit", FedBy: "limits snapshot", DataKey: "R2BucketCount", Service: "r2"},
-	{Name: "dns-record-quota", Unit: "%", Help: "highest per-zone DNS record usage against the zone quota", FedBy: "limits snapshot (DNS rows)", DataKey: "DNSRecordQuotaPct", Service: "dns"},
+	{Name: "error-rate", Scope: "account", Unit: "%", Help: "share of Workers requests that errored over the window", FedBy: "Workers analytics (requests > 0)", DataKey: "WorkersErrors/WorkersRequests", Service: "workers"},
+	{Name: "storage-limit", Scope: "account", Unit: "bytes", Help: "R2 storage in use", FedBy: "R2 analytics", DataKey: "R2StorageBytes", Service: "r2"},
+	{Name: "latency", Scope: "account", Unit: "ms", Help: "Workers CPU p99 average", FedBy: "Workers analytics (CPU samples > 0)", DataKey: "CPUP99AvgMS", Service: "workers"},
+	{Name: "failure-count", Scope: "account", Unit: "errors", Help: "absolute Workers error count over the window", FedBy: "Workers analytics", DataKey: "WorkersErrors", Service: "workers"},
+	{Name: "workers-script-count", Scope: "account", Unit: "scripts", Help: "Workers scripts on the account against the plan limit", FedBy: "limits snapshot", DataKey: "WorkersScriptCount", Service: "workers"},
+	{Name: "r2-bucket-count", Scope: "account", Unit: "buckets", Help: "R2 buckets on the account against the plan limit", FedBy: "limits snapshot", DataKey: "R2BucketCount", Service: "r2"},
+	{Name: "dns-record-quota", Scope: "account", Unit: "%", Help: "highest per-zone DNS record usage against the zone quota", FedBy: "limits snapshot (DNS rows)", DataKey: "DNSRecordQuotaPct", Service: "dns"},
+	{Name: "worker-cpu", Scope: "script", Unit: "ms", Help: "per-script Workers CPU p99 over the window", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].CPUP99", Service: "workers"},
+	{Name: "worker-errors", Scope: "script", Unit: "errors", Help: "per-script Workers error count over the window", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Errors", Service: "workers"},
+	{Name: "worker-requests", Scope: "script", Unit: "requests", Help: "per-script Workers request volume over the window", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Requests", Service: "workers"},
+	{Name: "worker-subrequests", Scope: "script", Unit: "subrequests", Help: "per-script subrequest count over the window — the stuck-loop fan-out signature", FedBy: "Workers analytics per-script rows", DataKey: "Scripts[].Subrequests", Service: "workers"},
 }
 
 // AlertConditions returns the condition registry in registration order.
