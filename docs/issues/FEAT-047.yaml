@@ -1,11 +1,13 @@
 id: FEAT-047
 type: feature
 created_at: 2026-10-08T19:32:13.867253+04:00
-updated_at: 2026-10-08T19:32:14.393682+04:00
+updated_at: 2026-10-08T19:32:18.598385+04:00
 source: local
 ulid: 01M4E29HDSGM3K4MBWKHPN3G9J
 status: open
 area: reliability
+origin:
+    session: 67
 title: 'Usage-waste alerting wave 1: stuck-work thresholds for Workers and Durable Objects'
 description: 'Extend the FEAT-045 alerts spine with per-script usage-waste detection: thresholds (model A) for Workers and Durable Objects that are overworking or stuck and burning plan usage. Operator motivation (2026-10-08): ''a durable object or some worker that is overworking and getting stuck and wasting our usage'' — prevention, not post-mortem. Detection: sustained CPU p99 per script, invocation spikes, error loops, sustained DO invocation/CPU. Data: new GraphQL analytics queries (workersInvocationsAdaptive per-script, durableObjectsAnalytics) batched one query per watch cycle, never per-script N+1. Runs inside the existing alerts watch daemon on the fast loop (30-60s, analytics API is free). Baselines/anomaly detection (model B) deliberately deferred.'
 acceptance_criteria:
@@ -19,3 +21,40 @@ acceptance_criteria:
       met: false
     - criterion: --json + help present
       met: false
+user_story: |
+  As an operator of a large Cloudflare account
+  I want to be alerted the moment a Worker or Durable Object starts
+  overworking, stuck-looping, or otherwise burning usage
+  So that waste is caught in minutes, not on the monthly invoice.
+session_ref: "Session 67 (2026-10-08): operator brainstorm — 'I keep thinking about the many applications cosmoflare will have to help us with ambitious Cloudflare accounts... we should do more to alert of high usage'. Design settled: model A (thresholds) now, model B (baselines) later; waves 1→2→3 under the alerts watch daemon with dual cadence."
+affected_files:
+    - pkg/cosmoflare/alerts.go
+    - pkg/cosmoflare/analytics.go
+    - internal/webhook/evaluator.go
+    - cmd/alerts_watch.go
+technical_considerations: |
+  Detection model A (thresholds), not B (baselines) — B deferred (see linked
+  idea). Per-script granularity required: EvalMetrics today is account-flat;
+  needs per-script rows so alerts NAME the offender ("worker api-proxy CPU
+  p99 812ms for 3 windows"). Analytics queries via GraphQL
+  workersInvocationsAdaptive (per-script) and durableObjectsAnalytics —
+  batch as ONE multi-dataset query per cycle, never per-script N+1.
+  API cost: GraphQL analytics is free (rate-limited, not billed); REST list
+  calls for limits snapshot are Class B — cacheable, fractions of a cent.
+  Dual cadence in alerts watch: fast loop 30-60s (analytics only, free),
+  slow loop 5-15min (limits snapshot + usage counters). Window counting for
+  "sustained" conditions (N consecutive windows) needs small in-memory
+  state in the evaluator, keyed by script id, capped.
+fix_direction: |
+  1) Extend AnalyticsService with per-script Workers + DO datasets (one
+  batched GraphQL query). 2) Widen EvalMetrics to carry per-script rows.
+  3) Add registry conditions: worker-cpu-sustained, worker-error-loop,
+  worker-invocation-spike, do-cpu-sustained (names provisional). 4)
+  Evaluator: window-count state per script, threshold compare, alert text
+  names the script. 5) TDD: mock analytics fixture with an over-CPU script.
+scope_boundaries: |
+  In scope: threshold conditions, per-script analytics, dual-cadence watch,
+  naming the offender in the alert.
+  Out of scope: baselines/anomaly detection (model B — separate idea),
+  usage pacing + `cosmoflare usage` view (wave 2, FEAT-048 when promoted),
+  cache-miss warning (wave 3), desktop dashboard graphs (desktop tier).
