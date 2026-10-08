@@ -33,6 +33,7 @@ func setupAlertTestEnv(t *testing.T) func() {
 	alertForce = false
 	alertLimit = 0
 	alertSince = ""
+	alertExclude = nil
 
 	return func() {
 		getAlertServiceFn = origFn
@@ -381,5 +382,52 @@ func TestAlertsConfigPersistence(t *testing.T) {
 	// Verify file exists on disk
 	if _, err := os.Stat(rulesPath); err != nil {
 		t.Errorf("rules file should exist: %v", err)
+	}
+}
+
+// TestAlertsExcludeFlag verifies the --exclude flag on alerts create/update
+// persists the rule's exclude list, and that --exclude "" clears it (FEAT-049).
+func TestAlertsExcludeFlag(t *testing.T) {
+	cleanup := setupAlertTestEnv(t)
+	defer cleanup()
+
+	JSONOutput = true
+	defer func() { JSONOutput = false }()
+
+	_, err := executeAlertsCommand("alerts", "create", "d1-hot",
+		"--service", "d1",
+		"--condition", "error-rate",
+		"--threshold", "1",
+		"--action", "log",
+		"--target", "x",
+		"--exclude", "a.example,b.example",
+		"--json",
+	)
+	if err != nil {
+		t.Fatalf("alerts create: %v", err)
+	}
+
+	svc, err := getAlertServiceFn()
+	if err != nil {
+		t.Fatalf("getAlertServiceFn: %v", err)
+	}
+	rule, err := svc.Get("d1-hot")
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if len(rule.Exclude) != 2 || rule.Exclude[0] != "a.example" || rule.Exclude[1] != "b.example" {
+		t.Fatalf("stored Exclude = %v; want [a.example b.example]", rule.Exclude)
+	}
+
+	_, err = executeAlertsCommand("alerts", "update", "d1-hot", "--exclude", "c.example")
+	if err != nil {
+		t.Fatalf("alerts update: %v", err)
+	}
+	rule, err = svc.Get("d1-hot")
+	if err != nil {
+		t.Fatalf("Get after update: %v", err)
+	}
+	if len(rule.Exclude) != 1 || rule.Exclude[0] != "c.example" {
+		t.Fatalf("stored Exclude after update = %v; want [c.example]", rule.Exclude)
 	}
 }

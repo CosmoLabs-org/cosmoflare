@@ -30,8 +30,25 @@ type AlertRule struct {
 	Action    string    `json:"action" yaml:"action"` // webhook, email, log
 	Target    string    `json:"target" yaml:"target"` // URL or email address
 	Enabled   bool      `json:"enabled" yaml:"enabled"`
+	Exclude   []string  `json:"exclude,omitempty" yaml:"exclude,omitempty"` // scope instances (zone or database names) zone/d1 rules skip (FEAT-049)
 	CreatedAt time.Time `json:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" yaml:"updated_at"`
+}
+
+// Excludes reports whether scopeID is on the rule's exclude list
+// (case-insensitive exact match, surrounding spaces ignored). A nil rule
+// excludes nothing.
+func (r *AlertRule) Excludes(scopeID string) bool {
+	scopeID = strings.TrimSpace(scopeID)
+	if r == nil || scopeID == "" {
+		return false
+	}
+	for _, e := range r.Exclude {
+		if strings.EqualFold(strings.TrimSpace(e), scopeID) {
+			return true
+		}
+	}
+	return false
 }
 
 // AlertRuleUpdate is the patch payload for AlertService.Update. Nil fields
@@ -39,12 +56,13 @@ type AlertRule struct {
 // so a rule can be explicitly disabled — a plain bool could not distinguish
 // "set to false" from "not provided".
 type AlertRuleUpdate struct {
-	Service   *string  `json:"service,omitempty"`
-	Condition *string  `json:"condition,omitempty"`
-	Threshold *float64 `json:"threshold,omitempty"`
-	Action    *string  `json:"action,omitempty"`
-	Target    *string  `json:"target,omitempty"`
-	Enabled   *bool    `json:"enabled,omitempty"`
+	Service   *string   `json:"service,omitempty"`
+	Condition *string   `json:"condition,omitempty"`
+	Threshold *float64  `json:"threshold,omitempty"`
+	Action    *string   `json:"action,omitempty"`
+	Target    *string   `json:"target,omitempty"`
+	Enabled   *bool     `json:"enabled,omitempty"`
+	Exclude   *[]string `json:"exclude,omitempty"`
 }
 
 // CreateOption customizes rule creation in AlertService.Create.
@@ -84,6 +102,8 @@ var validAlertServices = map[string]bool{
 	"workers": true,
 	"kv":      true,
 	"dns":     true,
+	"zone":    true,
+	"d1":      true,
 }
 
 // AlertConditionDescriptor describes one alertable condition — the single
@@ -330,7 +350,7 @@ func (s *AlertService) Update(name string, update *AlertRuleUpdate) (*AlertRule,
 	// Apply provided updates; nil fields are no-ops
 	if update.Service != nil {
 		if !validAlertServices[*update.Service] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", *update.Service))
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns, zone, d1", *update.Service))
 		}
 		found.Service = *update.Service
 	}
@@ -354,6 +374,9 @@ func (s *AlertService) Update(name string, update *AlertRuleUpdate) (*AlertRule,
 	}
 	if update.Enabled != nil {
 		found.Enabled = *update.Enabled
+	}
+	if update.Exclude != nil {
+		found.Exclude = append([]string(nil), (*update.Exclude)...)
 	}
 
 	found.UpdatedAt = time.Now()
@@ -533,7 +556,7 @@ func validateAlertRule(rule *AlertRule) error {
 		return validationError("validateAlertRule", "alert rule name is required")
 	}
 	if !validAlertServices[rule.Service] {
-		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns", rule.Service))
+		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns, zone, d1", rule.Service))
 	}
 	if !validAlertCondition(rule.Condition) {
 		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: %s", rule.Condition, AlertConditionList()))

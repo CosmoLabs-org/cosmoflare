@@ -1168,6 +1168,46 @@ func TestAlertHistoryIsTestOmitEmpty(t *testing.T) {
 	}
 }
 
+func TestAlertRuleExcludes(t *testing.T) {
+	t.Parallel()
+	r := &AlertRule{Exclude: []string{"api.churches.app", " Auth-DB"}}
+	if !r.Excludes("api.churches.app") || !r.Excludes("auth-db") {
+		t.Error("Excludes must match listed names case-insensitively, ignoring surrounding spaces (pflag keeps the space in --exclude \"a, b\")")
+	}
+	if r.Excludes("churches.app") || r.Excludes("") {
+		t.Error("Excludes must be exact (no substring, no empty match)")
+	}
+	var nilRule *AlertRule
+	if nilRule.Excludes("x") {
+		t.Error("nil rule excludes nothing")
+	}
+}
+
+func TestAlertServiceZoneD1ServicesAndExclude(t *testing.T) {
+	t.Parallel()
+	svc := newTestAlertService(t) // existing helper, alerts_test.go:11
+	for _, service := range []string{"zone", "d1"} {
+		_, err := svc.Create(&AlertRule{Name: "r-" + service, Service: service, Condition: "error-rate", Threshold: 1, Action: "log", Target: "x", Exclude: []string{"a.example"}})
+		if err != nil {
+			t.Fatalf("Create service %q: %v", service, err)
+		}
+	}
+	got, err := svc.Get("r-d1")
+	if err != nil || len(got.Exclude) != 1 || got.Exclude[0] != "a.example" {
+		t.Fatalf("Get r-d1 = %+v, %v; want Exclude [a.example] persisted", got, err)
+	}
+	ex := []string{"b.example", "c.example"}
+	upd, err := svc.Update("r-d1", &AlertRuleUpdate{Exclude: &ex})
+	if err != nil || len(upd.Exclude) != 2 {
+		t.Fatalf("Update Exclude = %+v, %v", upd, err)
+	}
+	empty := []string{}
+	upd, err = svc.Update("r-d1", &AlertRuleUpdate{Exclude: &empty})
+	if err != nil || len(upd.Exclude) != 0 {
+		t.Fatalf("Update to empty Exclude = %+v, %v; want cleared", upd, err)
+	}
+}
+
 // TestAlertHistoryIsTestPresent verifies IsTest appears in JSON when true.
 func TestAlertHistoryIsTestPresent(t *testing.T) {
 	entry := &AlertHistory{
