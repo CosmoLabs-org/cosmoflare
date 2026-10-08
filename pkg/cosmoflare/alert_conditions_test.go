@@ -1,6 +1,7 @@
 package cosmoflare
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -76,6 +77,28 @@ func TestAlertConditionScopes(t *testing.T) {
 		}
 		if desc.Scope != "account" {
 			t.Errorf("%s: Scope=%q, want account (explicit, not zero value)", name, desc.Scope)
+		}
+	}
+}
+
+// TestStuckWorkConditionsPassValidation pins the full Create path (not the
+// seeded-YAML path the evaluator tests use): rules with the stuck-work
+// conditions must survive validateAlertRule.
+func TestStuckWorkConditionsPassValidation(t *testing.T) {
+	for _, condition := range []string{"worker-cpu", "worker-errors", "worker-requests", "worker-subrequests", "do-cpu", "do-requests"} {
+		svc, err := NewAlertService(filepath.Join(t.TempDir(), ".cosmoflare-alerts.yaml"), filepath.Join(t.TempDir(), "history.log"))
+		if err != nil {
+			t.Fatalf("NewAlertService: %v", err)
+		}
+		if _, err := svc.Create(&AlertRule{
+			Name:      "r-" + condition,
+			Service:   "workers",
+			Condition: condition,
+			Threshold: 500,
+			Action:    "log",
+			Target:    "/dev/null",
+		}); err != nil {
+			t.Errorf("Create with condition %s: %v", condition, err)
 		}
 	}
 }
