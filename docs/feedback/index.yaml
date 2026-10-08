@@ -1,9 +1,9 @@
 version: "1.0"
-next_id: 13
-last_updated: "2026-10-08T23:21:36.7098+04:00"
+next_id: 15
+last_updated: "2026-10-09T03:09:46.830468+04:00"
 stats:
-    total: 13
-    pending: 0
+    total: 14
+    pending: 1
     implemented: 2
     rejected: 0
     converted: 7
@@ -63,6 +63,11 @@ entries:
       status: converted
       from_project: Churches-app
       created: "2026-10-08T20:43:50.147246+04:00"
+    - id: FB-14
+      title: 'Detection matrix: the D1/Cloudflare problem classes systematic vetting catches (evidence-backed from Churches-app 2026-10-08)'
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-09T01:08:23.767206+04:00"
     - id: ""
       title: Makefile tree-path gate misses colons — proxy.golang.org zip poisoning class
       status: ""
