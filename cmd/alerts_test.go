@@ -8,8 +8,28 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
+
+// resetExcludeFlags gives the --exclude flag on create/update a fresh pflag
+// value. pflag slice values remember that they were already set and APPEND
+// on the next Set, and Flag.Changed stays true across Execute calls — so in
+// one test process a second `--exclude ""` would append instead of clearing.
+// A real CLI run parses once and is unaffected (verified with the built
+// binary: update --exclude "" clears the stored list).
+func resetExcludeFlags() {
+	fresh := pflag.NewFlagSet("reset-exclude", pflag.ContinueOnError)
+	fresh.StringSliceVar(&alertExclude, "exclude", nil, "")
+	for _, c := range []*cobra.Command{alertsCreateCmd, alertsUpdateCmd} {
+		if f := c.Flags().Lookup("exclude"); f != nil {
+			f.Value = fresh.Lookup("exclude").Value
+			f.Changed = false
+		}
+	}
+}
 
 // setupAlertTestEnv sets up a temporary environment for alert tests.
 // It overrides getAlertService to use temp paths and returns a cleanup function.
@@ -34,6 +54,7 @@ func setupAlertTestEnv(t *testing.T) func() {
 	alertLimit = 0
 	alertSince = ""
 	alertExclude = nil
+	resetExcludeFlags()
 
 	return func() {
 		getAlertServiceFn = origFn
@@ -419,6 +440,7 @@ func TestAlertsExcludeFlag(t *testing.T) {
 		t.Fatalf("stored Exclude = %v; want [a.example b.example]", rule.Exclude)
 	}
 
+	resetExcludeFlags() // each Execute below stands for a separate CLI run
 	_, err = executeAlertsCommand("alerts", "update", "d1-hot", "--exclude", "c.example")
 	if err != nil {
 		t.Fatalf("alerts update: %v", err)
@@ -429,5 +451,18 @@ func TestAlertsExcludeFlag(t *testing.T) {
 	}
 	if len(rule.Exclude) != 1 || rule.Exclude[0] != "c.example" {
 		t.Fatalf("stored Exclude after update = %v; want [c.example]", rule.Exclude)
+	}
+
+	resetExcludeFlags()
+	_, err = executeAlertsCommand("alerts", "update", "d1-hot", "--exclude", "")
+	if err != nil {
+		t.Fatalf("alerts update --exclude \"\": %v", err)
+	}
+	rule, err = svc.Get("d1-hot")
+	if err != nil {
+		t.Fatalf("Get after clear: %v", err)
+	}
+	if len(rule.Exclude) != 0 {
+		t.Fatalf("stored Exclude after --exclude \"\" = %v; want cleared", rule.Exclude)
 	}
 }
