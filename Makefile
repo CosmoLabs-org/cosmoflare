@@ -558,6 +558,9 @@ test-integration:
 	@read -p "Continue? (y/N) " confirm && [ "$$confirm" = "y" ] || exit 1
 	$(GOTEST) -v -tags=integration ./...
 
+test-live: ## Live Cloudflare API smoke test (needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN)
+	go test -tags live ./pkg/cosmoflare/ -run '^TestLive' -v -count=1
+
 # Tidy go modules
 .PHONY: tidy
 tidy:
