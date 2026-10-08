@@ -24,7 +24,7 @@ func liveEnv(primary, fallback string) string {
 // tests cannot catch schema drift or window limits (BUG-055 shipped green).
 // Opt-in only:
 //
-//	CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_API_TOKEN=… go test -tags live ./pkg/cosmoflare/ -run Live -v
+//	CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_API_TOKEN=… go test -tags live ./pkg/cosmoflare/ -run '^TestLive' -v
 func TestLiveAnalyticsQueries(t *testing.T) {
 	acct := liveEnv("CLOUDFLARE_ACCOUNT_ID", "CF_ACCOUNT_ID")
 	tok := liveEnv("CLOUDFLARE_API_TOKEN", "CF_API_TOKEN")

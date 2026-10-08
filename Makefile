@@ -559,7 +559,7 @@ test-integration:
 	$(GOTEST) -v -tags=integration ./...
 
 test-live: ## Live Cloudflare API smoke test (needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN)
-	go test -tags live ./pkg/cosmoflare/ -run Live -v -count=1
+	go test -tags live ./pkg/cosmoflare/ -run '^TestLive' -v -count=1
 
 # Tidy go modules
 .PHONY: tidy
