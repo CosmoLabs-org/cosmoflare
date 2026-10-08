@@ -12,6 +12,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
@@ -31,21 +34,57 @@ type EvalMetrics struct {
 
 	Usage []cosmoflare.UsageDimension // monthly pacing rows for usage-pct conditions (FEAT-048); nil = no snapshot this cycle
 
+	Zones []cosmoflare.ZoneCacheSummary  // per-zone cacheStatus counts for zone-scoped conditions (FEAT-049)
+	D1    []cosmoflare.D1RowsReadSummary // per-database rows read for d1-scoped conditions (FEAT-049)
+	Gaps  map[string]string              // scope → error text for telemetry that failed this cycle (FEAT-049); pages once an hour
+
 	WorkersScriptCount uint64  // live script count (LimitsService)
 	R2BucketCount      uint64  // live bucket count (LimitsService)
 	DNSRecordQuotaPct  float64 // max percent across per-zone dns.records rows (0 = no rows)
+}
+
+// ZoneCacheFloor is the minimum denominator (eligible or known-status
+// requests) a zone needs in the window before its cache ratios are judged —
+// a zone with 3 requests and 2 misses must not page at 67% (design D6).
+const ZoneCacheFloor = 100
+
+// telemetryGapCooldown spaces telemetry-gap pages per scope (design O5).
+const telemetryGapCooldown = time.Hour
+
+// FireState is the evaluator's cooldown memory: last fire time, last paged
+// value and fire count per alert ID. It lives in memory only. The watch
+// shares one FireState across the evaluators it builds each cycle so zone
+// and d1 cooldowns survive between cycles (FEAT-049 D11).
+type FireState struct {
+	lastFired map[string]time.Time // alert ID (rule name, or rule/scope for fan-out) → last fire time
+	lastValue map[string]float64   // alert ID → value of the last page (drives 2× escalation)
+	fires     map[string]int       // alert ID → fire count (drives Alert.Count)
+}
+
+// NewFireState returns empty cooldown memory.
+func NewFireState() *FireState {
+	return &FireState{
+		lastFired: make(map[string]time.Time),
+		lastValue: make(map[string]float64),
+		fires:     make(map[string]int),
+	}
 }
 
 // Evaluator evaluates AlertRules against EvalMetrics and fires the manager's
 // TriggerAlert, with a per-rule cooldown so a persistently-broken condition
 // does not re-fire every cycle.
 type Evaluator struct {
-	rules     *cosmoflare.AlertService
-	manager   *Manager
-	cooldown  time.Duration
-	clock     func() time.Time     // injectable for tests
-	lastFired map[string]time.Time // alert ID (rule name, or rule/scope for fan-out) → last fire time
-	fires     map[string]int       // alert ID → fire count (drives Alert.Count)
+	rules    *cosmoflare.AlertService
+	manager  *Manager
+	cooldown time.Duration
+	clock    func() time.Time // injectable for tests
+	state    *FireState
+
+	// Cooldown policy (SetCooldownPolicy). Without a policy every scope uses
+	// cooldown and nothing escalates — cosmoflare serve's behavior.
+	policySet       bool
+	defaultCooldown time.Duration
+	scopeCooldowns  map[string]time.Duration
 }
 
 // NewEvaluator creates an evaluator over the given rule service and alert
@@ -55,13 +94,42 @@ func NewEvaluator(rules *cosmoflare.AlertService, manager *Manager, cooldown tim
 		cooldown = 15 * time.Minute
 	}
 	return &Evaluator{
-		rules:     rules,
-		manager:   manager,
-		cooldown:  cooldown,
-		clock:     time.Now,
-		lastFired: make(map[string]time.Time),
-		fires:     make(map[string]int),
+		rules:    rules,
+		manager:  manager,
+		cooldown: cooldown,
+		clock:    time.Now,
+		state:    NewFireState(),
 	}
+}
+
+// UseState makes the evaluator read and write st instead of its own
+// cooldown memory, so state outlives the evaluator.
+func (e *Evaluator) UseState(st *FireState) {
+	if st != nil {
+		e.state = st
+	}
+}
+
+// SetCooldownPolicy sets per-scope cooldowns. def applies to scopes without
+// an entry (0 = no cooldown: page every evaluation). Scopes with an entry
+// > 0 also escalate: inside the cooldown, a value at least 2× the last paged
+// value pages again. Without a policy the constructor cooldown applies to
+// every scope and nothing escalates.
+func (e *Evaluator) SetCooldownPolicy(def time.Duration, perScope map[string]time.Duration) {
+	e.policySet = true
+	e.defaultCooldown = def
+	e.scopeCooldowns = perScope
+}
+
+// cooldownFor returns the cooldown for a scope and whether escalation applies.
+func (e *Evaluator) cooldownFor(scope string) (time.Duration, bool) {
+	if !e.policySet {
+		return e.cooldown, false
+	}
+	if d, ok := e.scopeCooldowns[scope]; ok {
+		return d, d > 0
+	}
+	return e.defaultCooldown, false
 }
 
 // SetClock overrides the evaluator's clock. Used by tests to exercise the
@@ -128,6 +196,12 @@ func usageMax(dims []cosmoflare.UsageDimension, projected bool) float64 {
 	var max float64
 	for _, d := range dims {
 		if d.Limit <= 0 {
+			continue
+		}
+		// D1 shows in the usage view but never drives usage-pct (O16):
+		// these account rules re-page every cycle, and d1-rows-read (hourly
+		// cooldown, names the database) is the D1 alert.
+		if strings.HasPrefix(d.ID, "d1.") {
 			continue
 		}
 		v := d.Pct
@@ -210,6 +284,46 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			out = append(out, scopedValue{ScopeID: d.Script + "/" + d.Namespace, Value: v, Unit: desc.Unit})
 		}
 		return out
+	case "zone":
+		out := make([]scopedValue, 0, len(m.Zones))
+		for _, z := range m.Zones {
+			var v float64
+			var ok bool
+			switch condition {
+			case "zone-cache-miss-pct":
+				v, ok = z.MissPct(ZoneCacheFloor)
+			case "zone-uncached-pct":
+				v, ok = z.UncachedPct(ZoneCacheFloor)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			if !ok {
+				continue // under the request floor: not judgeable (D6)
+			}
+			name := z.Zone
+			if name == "" {
+				name = z.ZoneID
+			}
+			out = append(out, scopedValue{ScopeID: name, Value: v, Unit: desc.Unit})
+		}
+		return out
+	case "d1":
+		out := make([]scopedValue, 0, len(m.D1))
+		for _, d := range m.D1 {
+			var v float64
+			switch condition {
+			case "d1-rows-read":
+				v = float64(d.RowsRead)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			name := d.Name
+			if name == "" {
+				name = d.DatabaseID
+			}
+			out = append(out, scopedValue{ScopeID: name, Value: v, Unit: desc.Unit})
+		}
+		return out
 	default: // account scope
 		v, unit, ok := conditionValue(condition, m)
 		if !ok {
@@ -256,9 +370,14 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 		if rule == nil || !rule.Enabled {
 			continue
 		}
+		desc, _ := cosmoflare.LookupAlertCondition(rule.Condition)
+		cooldown, escalates := e.cooldownFor(desc.Scope)
 		for _, sv := range conditionValues(rule.Condition, m) {
 			if sv.Value < rule.Threshold {
 				continue
+			}
+			if rule.Excludes(sv.ScopeID) {
+				continue // operator-excluded zone/database (FEAT-049)
 			}
 			// Per-script/do fires key the alert identity on the scope
 			// instance so re-fires update the same per-script alert; the
@@ -270,13 +389,19 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			if sv.ScopeID != "" {
 				alertID = rule.Name + "/" + sv.ScopeID
 			}
-			if last, seen := e.lastFired[alertID]; seen && now.Sub(last) < e.cooldown {
-				continue
+			escalated := false
+			if last, seen := e.state.lastFired[alertID]; seen && now.Sub(last) < cooldown {
+				prevValue := e.state.lastValue[alertID]
+				if !escalates || prevValue <= 0 || sv.Value < 2*prevValue {
+					continue
+				}
+				escalated = true // worse by ≥2× inside the cooldown: page anyway
 			}
 
-			e.lastFired[alertID] = now
-			prev := e.fires[alertID]
-			e.fires[alertID] = prev + 1
+			e.state.lastFired[alertID] = now
+			e.state.lastValue[alertID] = sv.Value
+			prev := e.state.fires[alertID]
+			e.state.fires[alertID] = prev + 1
 			fired = append(fired, rule.Name)
 
 			updatedAt := rule.UpdatedAt
@@ -294,11 +419,15 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 				UpdatedAt: updatedAt,
 				Count:     prev, // TriggerAlert increments, landing on prev+1
 			}
-			message := fmt.Sprintf("%s %s: observed %g meets threshold %g (%s)",
-				rule.Condition, rule.Name, sv.Value, rule.Threshold, sv.Unit)
+			observed, threshold := formatValue(sv.Value, sv.Unit), formatValue(rule.Threshold, sv.Unit)
+			message := fmt.Sprintf("%s %s: observed %s meets threshold %s (%s)",
+				rule.Condition, rule.Name, observed, threshold, sv.Unit)
 			if sv.ScopeID != "" {
-				message = fmt.Sprintf("%s %s [%s]: observed %g meets threshold %g (%s)",
-					rule.Condition, sv.ScopeID, rule.Name, sv.Value, rule.Threshold, sv.Unit)
+				message = fmt.Sprintf("%s %s [%s]: observed %s meets threshold %s (%s)",
+					rule.Condition, sv.ScopeID, rule.Name, observed, threshold, sv.Unit)
+			}
+			if escalated {
+				message = "escalated (≥2× last page): " + message
 			}
 
 			if e.manager == nil {
@@ -309,7 +438,83 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			}
 		}
 	}
+	return append(fired, e.fireGaps(rules, m, now)...)
+}
+
+// fireGaps pages once per hour per scope whose telemetry failed this cycle,
+// but only when an enabled rule depends on that scope — otherwise the gap
+// changes nothing the operator relies on (design O5).
+func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, now time.Time) []string {
+	if len(m.Gaps) == 0 {
+		return nil
+	}
+	scopes := make([]string, 0, len(m.Gaps))
+	for s := range m.Gaps {
+		scopes = append(scopes, s)
+	}
+	sort.Strings(scopes)
+	var fired []string
+	for _, scope := range scopes {
+		if !rulesUseScope(rules, scope) {
+			continue
+		}
+		id := "telemetry-gap/" + scope
+		if last, seen := e.state.lastFired[id]; seen && now.Sub(last) < telemetryGapCooldown {
+			continue
+		}
+		e.state.lastFired[id] = now
+		prev := e.state.fires[id]
+		e.state.fires[id] = prev + 1
+		fired = append(fired, "telemetry-gap")
+		if e.manager == nil {
+			continue
+		}
+		alert := &Alert{
+			ID: id, Name: "telemetry-gap", Type: AlertTypeThreshold, Metric: "telemetry-gap",
+			Enabled: true, CreatedAt: now, UpdatedAt: now, Count: prev,
+		}
+		message := fmt.Sprintf("telemetry gap: %s analytics unavailable, %s rules cannot fire: %s", scope, scope, m.Gaps[scope])
+		if err := e.manager.TriggerAlert(alert, 0, message, metricData(m)); err != nil {
+			log.Printf("[alerts] trigger %q: %v", id, err)
+		}
+	}
 	return fired
+}
+
+// rulesUseScope reports whether any enabled rule's condition has the scope.
+func rulesUseScope(rules []*cosmoflare.AlertRule, scope string) bool {
+	for _, r := range rules {
+		if r == nil || !r.Enabled {
+			continue
+		}
+		if d, ok := cosmoflare.LookupAlertCondition(r.Condition); ok && d.Scope == scope {
+			return true
+		}
+	}
+	return false
+}
+
+// formatValue renders an observed value or threshold for a page. Row counts
+// read as 2.9B / 52.3M / 3.3k on a phone (design D14); other units keep %g.
+func formatValue(v float64, unit string) string {
+	if unit == "rows" {
+		return humanCount(v)
+	}
+	return strconv.FormatFloat(v, 'g', -1, 64)
+}
+
+// humanCount abbreviates a count to one decimal with a k/M/B suffix.
+func humanCount(v float64) string {
+	switch {
+	case v >= 1e9:
+		return fmt.Sprintf("%.1fB", v/1e9)
+	case v >= 1e6:
+		return fmt.Sprintf("%.1fM", v/1e6)
+	case v >= 1e3:
+		return fmt.Sprintf("%.1fk", v/1e3)
+	default:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	}
 }
 
 // CollectEvalMetrics builds EvalMetrics from the analytics service over the
