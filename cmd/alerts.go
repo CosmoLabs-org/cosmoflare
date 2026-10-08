@@ -270,12 +270,20 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 		defer cancel()
 		analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
 		now := time.Now()
-		metrics, err = webhook.CollectEvalMetrics(ctx, analytics, cosmoflare.AnalyticsWindow{
-			Start: now.Add(-24 * time.Hour),
-			End:   now,
-		})
+		w := cosmoflare.AnalyticsWindow{Start: now.Add(-24 * time.Hour), End: now}
+		metrics, err = webhook.CollectEvalMetrics(ctx, analytics, w)
 		if err != nil {
 			return outErr("failed to collect metrics", err)
+		}
+		// Zone cache + D1 rows-read telemetry, only when a rule needs it
+		// (FEAT-049). One-shot run: refs are fetched fresh, never cached.
+		wantZones, wantD1 := webhook.RulesUseScope(rules, "zone"), webhook.RulesUseScope(rules, "d1")
+		if wantZones || wantD1 {
+			refs := telemetryRefsFn(ctx, wantZones, wantD1)
+			if refs.DBNamesErr != nil {
+				printWarning("D1 list unavailable, d1 alerts name databases by ID: %v", refs.DBNamesErr)
+			}
+			webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, refs, w, &metrics)
 		}
 	}
 

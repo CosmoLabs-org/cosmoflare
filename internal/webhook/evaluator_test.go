@@ -483,6 +483,8 @@ func TestConditionValueCoversRegistry(t *testing.T) {
 		Usage: []cosmoflare.UsageDimension{
 			{ID: "workers.requests_monthly", Name: "Monthly request allowance", Unit: "requests_per_month", Used: 62, Limit: 100, Pct: 62, ProjectedPct: 120},
 		},
+		Zones: []cosmoflare.ZoneCacheSummary{churchesZone()},
+		D1:    []cosmoflare.D1RowsReadSummary{{DatabaseID: "db1", Name: "mycarguide-db", RowsRead: 2945546702}},
 	}
 	for _, c := range cosmoflare.AlertConditions() {
 		values := conditionValues(c.Name, populated)

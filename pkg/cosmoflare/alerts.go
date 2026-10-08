@@ -119,7 +119,7 @@ type AlertConditionDescriptor struct {
 	FedBy   string // availability rule: which metric source feeds it
 	DataKey string // EvalMetrics field the evaluator reads
 	Service string // service tag for grouping in help output
-	Scope   string // "account" (one value per cycle), "script", "do" — instances the evaluator fans out over (FEAT-047)
+	Scope   string // "account" (one value per cycle), "script", "do", "zone", "d1" — instances the evaluator fans out over (FEAT-047, FEAT-049)
 }
 
 // alertConditionRegistry is the ordered condition registry. The three
@@ -142,6 +142,9 @@ var alertConditionRegistry = []AlertConditionDescriptor{
 	{Name: "do-requests", Scope: "do", Unit: "requests", Help: "per-namespace Durable Object request volume over the window", FedBy: "DO analytics per-namespace rows", DataKey: "DurableObjects[].Requests", Service: "workers"},
 	{Name: "usage-pct", Scope: "account", Unit: "%", Help: "highest monthly usage percent across dimensions with known plan limits", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsagePctMax", Service: "usage"},
 	{Name: "usage-projected-pct", Scope: "account", Unit: "%", Help: "highest projected monthly usage percent at cycle end (linear pacing)", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsageProjectedPctMax", Service: "usage"},
+	{Name: "zone-cache-miss-pct", Scope: "zone", Unit: "%", Help: "per-zone share of cache-eligible eyeball requests that missed (miss+expired); zones under 100 eligible requests skip", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].MissPct", Service: "zone"},
+	{Name: "zone-uncached-pct", Scope: "zone", Unit: "%", Help: "per-zone share of eyeball requests that never reach the cache (dynamic+bypass); zones under 100 known-status requests skip", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].UncachedPct", Service: "zone"},
+	{Name: "d1-rows-read", Scope: "d1", Unit: "rows", Help: "per-database D1 rows read (scanned, the billed unit) over the window", FedBy: "D1 analytics per-database rows (watch/check only)", DataKey: "D1[].RowsRead", Service: "d1"},
 }
 
 // AlertConditions returns the condition registry in registration order.
