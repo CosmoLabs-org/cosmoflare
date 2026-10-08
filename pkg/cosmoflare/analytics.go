@@ -41,7 +41,10 @@ type R2OperationCount struct {
 	Requests uint64 `json:"requests"`
 }
 
-// WorkersSummary is invocation volume for one script.
+// WorkersSummary is invocation volume for one script. CPUTimeMS is the
+// summed CPU time over the window (µs from the API, converted to ms) —
+// the monthly CPU allowance (FEAT-048) meters this aggregate, not the
+// per-invocation quantiles.
 type WorkersSummary struct {
 	Script      string  `json:"script"`
 	Requests    uint64  `json:"requests"`
@@ -49,6 +52,7 @@ type WorkersSummary struct {
 	Subrequests uint64  `json:"subrequests"`
 	CPUP50      float64 `json:"cpu_time_p50"`
 	CPUP99      float64 `json:"cpu_time_p99"`
+	CPUTimeMS   float64 `json:"cpu_time_ms"`
 }
 
 // AnalyticsService queries Cloudflare's GraphQL Analytics API.
@@ -340,7 +344,7 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
   viewer {
     accounts(filter: {accountTag: $accountTag}) {
       workersInvocationsAdaptive(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
-        sum { requests errors subrequests }
+        sum { requests errors subrequests cpuTimeUs }
         quantiles { cpuTimeP50 cpuTimeP99 }
         dimensions { datetime scriptName status }
       }
@@ -355,6 +359,7 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
 						Requests    uint64 `json:"requests"`
 						Errors      uint64 `json:"errors"`
 						Subrequests uint64 `json:"subrequests"`
+						CPUTimeUS   uint64 `json:"cpuTimeUs"`
 					} `json:"sum"`
 					Quantiles struct {
 						CPUTimeP50 float64 `json:"cpuTimeP50"`
@@ -372,6 +377,7 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
 	}
 	type acc struct {
 		requests, errors, subrequests uint64
+		cpuTimeUS                     uint64
 		cpuP50, cpuP99                float64
 	}
 	byScript := map[string]*acc{}
@@ -386,6 +392,7 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
 			cur.requests += g.Sum.Requests
 			cur.errors += g.Sum.Errors
 			cur.subrequests += g.Sum.Subrequests
+			cur.cpuTimeUS += g.Sum.CPUTimeUS
 			if g.Quantiles.CPUTimeP50 > cur.cpuP50 {
 				cur.cpuP50 = g.Quantiles.CPUTimeP50
 			}
@@ -403,6 +410,7 @@ func (s *AnalyticsService) Workers(ctx context.Context, w AnalyticsWindow) ([]Wo
 			Subrequests: a.subrequests,
 			CPUP50:      a.cpuP50,
 			CPUP99:      a.cpuP99,
+			CPUTimeMS:   float64(a.cpuTimeUS) / 1000.0,
 		})
 	}
 	return scripts, nil

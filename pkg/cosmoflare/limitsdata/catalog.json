@@ -1278,6 +1278,139 @@
    "source_url": "https://developers.cloudflare.com/fundamentals/api/reference/limits/",
    "verified_on": "2026-09-10T11:40:00Z",
    "notes": "Account API tokens have quota of 500."
+  },
+  {
+   "id": "workers.requests_monthly",
+   "service": "workers",
+   "kind": "quota",
+   "unit": "requests_per_month",
+   "name": "Monthly request allowance",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": 10000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "Paid (Standard): '10 million included per month +$0.30 per additional million'. Free plan caps requests daily (100,000/day), no monthly aggregate stated."
+  },
+  {
+   "id": "workers.cpu_ms_monthly",
+   "service": "workers",
+   "kind": "quota",
+   "unit": "cpu_ms_per_month",
+   "name": "Monthly CPU time allowance",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": 30000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/workers/platform/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "Paid (Standard): '30 million CPU milliseconds included per month +$0.02 per additional million CPU milliseconds'. No monthly CPU aggregate stated for Free (10 ms/invocation only)."
+  },
+  {
+   "id": "do.requests_monthly",
+   "service": "durable_objects",
+   "kind": "quota",
+   "unit": "requests_per_month",
+   "name": "Monthly Durable Object request allowance",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": 1000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/durable-objects/platform/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "Paid: '1 million, + $0.15/million'. Free: 100,000/day. 'billable usage is the amount consumed in excess of the included monthly allocation.'"
+  },
+  {
+   "id": "do.duration_gb_s_monthly",
+   "service": "durable_objects",
+   "kind": "quota",
+   "unit": "gb_seconds_per_month",
+   "name": "Monthly Durable Object duration allowance",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": 400000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/durable-objects/platform/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "Paid: '400,000 GB-s, + $12.50/million GB-s'. Free: 13,000 GB-s/day. Memory billed at 128 MB regardless of usage."
+  },
+  {
+   "id": "r2.storage_gb_monthly",
+   "service": "r2",
+   "kind": "quota",
+   "unit": "gb_month_per_month",
+   "name": "Monthly R2 storage allowance",
+   "scope": "account",
+   "tiers": {
+    "free": 10,
+    "paid": 10,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/r2/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "'Storage | 10 GB-month / month' — the included monthly amount applies to all plans ('All included usage is on a monthly basis'); billed per GB-month."
+  },
+  {
+   "id": "r2.class_a_monthly",
+   "service": "r2",
+   "kind": "quota",
+   "unit": "requests_per_month",
+   "name": "Monthly R2 Class A operation allowance",
+   "scope": "account",
+   "tiers": {
+    "free": 1000000,
+    "paid": 1000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/r2/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "'Class A Operations | 1 million requests / month'. ListBuckets, PutBucket, ListObjects, PutObject, CopyObject, CompleteMultipartUpload, CreateMultipartUpload, LifecycleStorageTierTransition, ListMultipartUploads, UploadPart, UploadPartCopy, ListParts, PutBucketEncryption, PutBucketCors, PutBucketLifecycleConfiguration."
+  },
+  {
+   "id": "r2.class_b_monthly",
+   "service": "r2",
+   "kind": "quota",
+   "unit": "requests_per_month",
+   "name": "Monthly R2 Class B operation allowance",
+   "scope": "account",
+   "tiers": {
+    "free": 10000000,
+    "paid": 10000000,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/r2/pricing/",
+   "verified_on": "2026-10-08T21:40:00Z",
+   "notes": "'Class B Operations | 10 million requests / month'. HeadBucket, HeadObject, GetObject, UsageSummary, GetBucketEncryption, GetBucketLocation, GetBucketCors, GetBucketLifecycleConfiguration. DeleteObject/DeleteBucket/AbortMultipartUpload are free."
   }
  ]
 }

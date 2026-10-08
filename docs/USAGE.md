@@ -2745,6 +2745,11 @@ cosmoflare alerts watch --test-fire    # send one canned info-severity push, the
 `--test-fire` is the end-to-end pairing check: if the phone buzzes, keygen,
 subscription, and dispatch all work.
 
+The `usage-pct` and `usage-projected-pct` conditions ride the same loop on a
+~15-minute usage-snapshot cache, so the 60s cycle never re-queries cycle
+telemetry. A collection error keeps the last known snapshot (a warning is
+logged); with no snapshot yet, the usage conditions skip the cycle.
+
 ### Pair a device (push subscriptions)
 
 One-time setup, one paste. VAPID keys live only on your machine
@@ -2826,6 +2831,8 @@ cosmoflare alerts create worker-failures \
 | `worker-subrequests` | per-script | subrequests | per-script subrequest count over the window (stuck-loop fan-out signature) |
 | `do-cpu` | per-DO-namespace | ms | per-namespace Durable Object wall time over the window |
 | `do-requests` | per-DO-namespace | requests | per-namespace Durable Object request volume over the window |
+| `usage-pct` | account | `%` | highest monthly usage percent across dimensions with known plan limits |
+| `usage-projected-pct` | account | `%` | highest projected monthly usage percent at cycle end (linear pacing) |
 
 ### Stuck-work detection
 
@@ -2958,6 +2965,43 @@ The `cosmoflare serve` alert evaluator collects one limits snapshot per evaluati
 | `dns-record-quota` | maximum `percent` across per-zone `dns.records` rows | percent of DNS record quota (0–100); skipped when no rows report a percent |
 
 A limits-collection failure logs a warning and never blanks the analytics-based rules.
+
+## cosmoflare usage
+
+Monthly usage pacing against plan allowances — the burn-rate companion to `cosmoflare limits`. Shows every monthly dimension (Workers requests and CPU time, Durable Object requests and duration, R2 storage and Class A/B operations) with cycle-to-date usage, the plan allowance, percent consumed, and the linear projection to cycle end. A dimension projected past 100% will overrun the cycle at the current burn rate — `STATUS` marks it `projected-over`, `over` when the limit is already passed, `unknown` when the tier has no catalog value (e.g. enterprise custom pricing).
+
+```bash
+cosmoflare usage                     # paid tier, calendar-month cycle (UTC)
+cosmoflare usage --anchor-day 15     # anniversary billing: cycle resets on the 15th
+cosmoflare usage --plan free --json  # free-tier allowances, JSON envelope
+```
+
+### Output
+
+```
+Monthly usage — cycle Oct 01 → Nov 01 (7 of 31 days elapsed)
+
+DIMENSION                                        USED          LIMIT      PCT  PROJECTED  STATUS
+Monthly Durable Object duration allowance          92.0k         400.0k    23.0%     101.9%  projected-over
+Monthly Durable Object request allowance           1.1M           1.0M   110.0%     487.1%  over
+Monthly R2 Class A operation allowance          90.0k           1.0M     9.0%      39.9%  ok
+Monthly R2 Class B operation allowance           1.2M          10.0M    12.0%      53.1%  ok
+Monthly R2 storage allowance                      1.4           10.0    14.0%      62.0%  ok
+Monthly CPU time allowance                       4.7M          30.0M    15.7%      69.4%  ok
+Monthly request allowance                        3.4M          10.0M    34.0%     150.6%  projected-over
+
+Projection is linear (usage to date ÷ days elapsed × cycle length). Set usage-pct / usage-projected-pct alert rules to page before an overrun.
+```
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--plan` | `paid` | Allowance tier: `free` \| `paid` \| `enterprise` |
+| `--anchor-day` | `0` | Billing cycle reset day 1-31; `0` = calendar month (UTC). An anchor past a month's end clamps to that month's last day. |
+| `--json` | `false` | Output the full `UsageSnapshot` as a JSON envelope |
+
+Dimension notes: Durable Object duration is billed GB-seconds (wall time converted at Cloudflare's 128 MB billed memory); R2 storage is a gauge read over the trailing 24 hours while cumulative dimensions read cycle-to-date analytics. Dimensions with no tier value report `USED` with `LIMIT` = `limit unknown` and no percent — never NaN. `--json` emits `{"status": "success", "data": …}` with `cycle_start`, `cycle_end`, `days_elapsed`, `days_total`, and one `dimensions[]` entry per row (`id`, `name`, `unit`, `used`, `limit`, `pct`, `projected_pct`).
 
 ## Library Usage (Workers and KV)
 

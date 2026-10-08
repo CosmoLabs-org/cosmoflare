@@ -10,9 +10,9 @@ func TestLoadEntryCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	// 66 embedded corpus entries + 2 appended local constants.
-	if len(entries) != 68 {
-		t.Fatalf("Load returned %d entries, want 68 (66 catalog + 2 local)", len(entries))
+	// 73 embedded corpus entries + 2 appended local constants.
+	if len(entries) != 75 {
+		t.Fatalf("Load returned %d entries, want 75 (73 catalog + 2 local)", len(entries))
 	}
 }
 
@@ -78,8 +78,9 @@ func TestStale(t *testing.T) {
 		t.Fatalf("Stale(fresh cutoff) = %v, want exactly the 2 local constants", fresh)
 	}
 
-	// Cutoff after every verification date: everything is stale.
-	old := Stale(time.Date(2026, 9, 11, 0, 0, 0, 0, time.UTC))
+	// Cutoff after every verification date (last batch: FEAT-048 monthly rows
+	// verified 2026-10-08): everything is stale.
+	old := Stale(time.Date(2026, 10, 9, 0, 0, 0, 0, time.UTC))
 	if len(old) != len(entries) {
 		t.Fatalf("Stale(post-verification cutoff) = %d ids, want all %d", len(old), len(entries))
 	}
@@ -105,5 +106,39 @@ func TestStale(t *testing.T) {
 	}
 	if has(mid, "api.token_quota") {
 		t.Fatalf("Stale(10:30 cutoff) must not include api.token_quota (verified %v)", *last.VerifiedOn)
+	}
+}
+
+// TestMonthlyUsageRowsPresent pins the FEAT-048 pacing inputs: the monthly
+// usage dimensions the pacing engine resolves limits for. Values verified
+// against live Cloudflare docs on 2026-10-08 (workers + DO + R2 pricing
+// pages); free monthly aggregates are null where docs state only daily or
+// per-invocation free limits — never derived.
+func TestMonthlyUsageRowsPresent(t *testing.T) {
+	expected := map[string]float64{
+		"workers.requests_monthly": 10_000_000,
+		"workers.cpu_ms_monthly":   30_000_000,
+		"do.requests_monthly":      1_000_000,
+		"do.duration_gb_s_monthly": 400_000,
+		"r2.storage_gb_monthly":    10,
+		"r2.class_a_monthly":       1_000_000,
+		"r2.class_b_monthly":       10_000_000,
+	}
+	for id, wantPaid := range expected {
+		e, ok := Lookup(id)
+		if !ok {
+			t.Errorf("catalog row %s missing", id)
+			continue
+		}
+		if e.Tiers.Paid == nil {
+			t.Errorf("%s: paid tier null", id)
+			continue
+		}
+		if got, _ := e.Tiers.Paid.Float64(); got != wantPaid {
+			t.Errorf("%s: paid = %v, want %v", id, got, wantPaid)
+		}
+		if e.SourceURL == "" || e.VerifiedOn == nil {
+			t.Errorf("%s: provenance incomplete (source_url/verified_on)", id)
+		}
 	}
 }

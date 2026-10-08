@@ -49,10 +49,49 @@ var collectWatchMetricsFn = func(ctx context.Context) (webhook.EvalMetrics, erro
 	}
 	analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
 	now := time.Now()
-	return webhook.CollectEvalMetrics(ctx, analytics, cosmoflare.AnalyticsWindow{
+	m, err := webhook.CollectEvalMetrics(ctx, analytics, cosmoflare.AnalyticsWindow{
 		Start: now.Add(-24 * time.Hour),
 		End:   now,
 	})
+	if err != nil {
+		return m, err
+	}
+	// Monthly pacing rides the watch on the slow loop (FEAT-048 D3): the
+	// snapshot is cached ~15 min so the 60s cycle never re-queries cycle
+	// telemetry. A nil snapshot leaves the usage-* conditions skipped.
+	webhook.CollectUsageMetrics(&m, cachedUsageSnapshot(ctx))
+	return m, nil
+}
+
+// Usage snapshot cache + seams (tests drive the clock and the collector).
+var (
+	usageSnapCache      *cosmoflare.UsageSnapshot
+	usageSnapFetchedAt  time.Time
+	usageCacheTTL       = 15 * time.Minute
+	usageNowFn          = time.Now
+	usageCollectWatchFn = defaultUsageCollectWatch
+)
+
+func defaultUsageCollectWatch(ctx context.Context) (*cosmoflare.UsageSnapshot, error) {
+	analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
+	return cosmoflare.CollectUsage(ctx, analytics, "paid", 0, usageNowFn().UTC())
+}
+
+// cachedUsageSnapshot returns the cached snapshot within the TTL, else
+// collects a fresh one. Collection errors keep the last good snapshot
+// (stale pacing beats no pacing); nil when never collected successfully.
+func cachedUsageSnapshot(ctx context.Context) *cosmoflare.UsageSnapshot {
+	if usageSnapCache != nil && usageNowFn().Sub(usageSnapFetchedAt) < usageCacheTTL {
+		return usageSnapCache
+	}
+	snap, err := usageCollectWatchFn(ctx)
+	if err != nil {
+		printWarning("usage snapshot unavailable, usage-* conditions use last known: %v", err)
+		return usageSnapCache
+	}
+	usageSnapCache = snap
+	usageSnapFetchedAt = usageNowFn()
+	return snap
 }
 
 // pushStorePath resolves ~/.cosmoflare/push.json, using the same

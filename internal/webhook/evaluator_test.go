@@ -480,6 +480,9 @@ func TestConditionValueCoversRegistry(t *testing.T) {
 		DurableObjects: []cosmoflare.DurableObjectSummary{
 			{Script: "lobby-do", Namespace: "aaaaaaaa1", Requests: 60, Errors: 0, WallTimeMS: 30},
 		},
+		Usage: []cosmoflare.UsageDimension{
+			{ID: "workers.requests_monthly", Name: "Monthly request allowance", Unit: "requests_per_month", Used: 62, Limit: 100, Pct: 62, ProjectedPct: 120},
+		},
 	}
 	for _, c := range cosmoflare.AlertConditions() {
 		values := conditionValues(c.Name, populated)
@@ -555,6 +558,52 @@ func TestEvaluateDOCPU(t *testing.T) {
 	}
 	if !strings.Contains(p.Message, "lobby-do/aaaaaaaa1") || !strings.Contains(p.Message, "910.5") {
 		t.Errorf("message must name DO namespace and value: %q", p.Message)
+	}
+}
+
+// TestEvaluateUsagePacing pins the FEAT-048 pacing conditions: with one
+// dimension at 62% used but projected 120%, usage-pct stays quiet under an
+// 80 threshold while usage-projected-pct fires — the operator learns about
+// the overrun before it happens, not after.
+func TestEvaluateUsagePacing(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute,
+		evalRule("usage-now", "usage-pct", 80),
+		evalRule("usage-soon", "usage-projected-pct", 80),
+	)
+	m := EvalMetrics{Usage: []cosmoflare.UsageDimension{
+		{ID: "workers.requests_monthly", Name: "Monthly request allowance", Unit: "requests_per_month", Used: 6.2e6, Limit: 1e7, Pct: 62, ProjectedPct: 120},
+		{ID: "r2.storage_gb_monthly", Name: "Monthly R2 storage allowance", Unit: "gb_month_per_month", Used: 3, Limit: 0}, // unknown limit: never judged
+	}}
+	fired := eval.Evaluate(m)
+	if len(fired) != 1 || fired[0] != "usage-soon" {
+		t.Fatalf("fired = %v, want exactly [usage-soon]", fired)
+	}
+	p := rec.first()
+	if p == nil {
+		t.Fatal("no notification recorded")
+	}
+	if !strings.Contains(p.Message, "120") {
+		t.Errorf("message must carry the projected value: %q", p.Message)
+	}
+	if p.Data == nil || p.Data["usage_pct_max"] != 62.0 {
+		t.Errorf("payload data usage_pct_max = %v, want 62", p.Data["usage_pct_max"])
+	}
+}
+
+// TestEvaluateUsageNoLimitsNeverFires: an all-unknown-limit snapshot leaves
+// both pacing conditions quiet (usageMax 0 → not judgeable).
+func TestEvaluateUsageNoLimitsNeverFires(t *testing.T) {
+	t.Parallel()
+	eval, _ := newEvalEvaluator(t, time.Minute,
+		evalRule("usage-now", "usage-pct", 1),
+		evalRule("usage-soon", "usage-projected-pct", 1),
+	)
+	m := EvalMetrics{Usage: []cosmoflare.UsageDimension{
+		{ID: "r2.storage_gb_monthly", Name: "Monthly R2 storage allowance", Unit: "gb_month_per_month", Used: 3, Limit: 0},
+	}}
+	if fired := eval.Evaluate(m); len(fired) != 0 {
+		t.Errorf("fired = %v, want none for unknown-limit dims", fired)
 	}
 }
 

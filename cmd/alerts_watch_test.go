@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -320,5 +321,50 @@ func TestAlertsWatchIntervalBounds(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "10s") {
 		t.Errorf("error %q does not name the 10s minimum", err)
+	}
+}
+
+// TestCachedUsageSnapshotTTL pins the FEAT-048 slow loop: within the TTL
+// the collector is not called again; past it, it is. A collection error
+// keeps the last good snapshot rather than nil-ing the pacing conditions.
+func TestCachedUsageSnapshotTTL(t *testing.T) {
+	calls := 0
+	base := time.Date(2026, 10, 8, 12, 0, 0, 0, time.UTC)
+	clock := base
+	prevCollect, prevNow := usageCollectWatchFn, usageNowFn
+	prevCache, prevAt := usageSnapCache, usageSnapFetchedAt
+	usageCollectWatchFn = func(ctx context.Context) (*cosmoflare.UsageSnapshot, error) {
+		calls++
+		return &cosmoflare.UsageSnapshot{DaysElapsed: float64(calls)}, nil
+	}
+	usageNowFn = func() time.Time { return clock }
+	t.Cleanup(func() {
+		usageCollectWatchFn, usageNowFn = prevCollect, prevNow
+		usageSnapCache, usageSnapFetchedAt = prevCache, prevAt
+	})
+
+	first := cachedUsageSnapshot(context.Background())
+	if first == nil || first.DaysElapsed != 1 {
+		t.Fatalf("first snapshot = %+v, want DaysElapsed 1", first)
+	}
+	if again := cachedUsageSnapshot(context.Background()); again != first {
+		t.Fatal("within TTL the cache must return the same snapshot without collecting")
+	}
+	if calls != 1 {
+		t.Fatalf("collector calls = %d, want 1 within TTL", calls)
+	}
+
+	clock = base.Add(16 * time.Minute)
+	second := cachedUsageSnapshot(context.Background())
+	if second == first || second.DaysElapsed != 2 {
+		t.Fatalf("past TTL snapshot = %+v, want a fresh collect", second)
+	}
+
+	usageCollectWatchFn = func(ctx context.Context) (*cosmoflare.UsageSnapshot, error) {
+		return nil, fmt.Errorf("analytics down")
+	}
+	clock = base.Add(32 * time.Minute)
+	if kept := cachedUsageSnapshot(context.Background()); kept != second {
+		t.Fatal("collection error must keep the last good snapshot, not nil")
 	}
 }

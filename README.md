@@ -58,7 +58,7 @@ Full comparison: [docs/vs-wrangler.md](docs/vs-wrangler.md)
 | **Diagnostics** | Implemented | `doctor` |
 | **Domains** | Implemented | `domains` |
 
-Workflow commands (not tied to one service): `dev`, `init`, `diff`, `apply`, `cost`, `export`/`import`, `templates`, `validate`, `terraform`, `wrangler`, `mcp`, `audit`, `alerts`, `account`, `plugin`, `status`, `metrics`, `dashboard`. `alerts watch` also detects stuck work per Worker script (CPU p99, errors, requests, subrequests thresholds) and per Durable Object namespace (wall-time and request thresholds), so each alert names the offending script or namespace -- all on the existing 60-second watch loop.
+Workflow commands (not tied to one service): `dev`, `init`, `diff`, `apply`, `cost`, `export`/`import`, `templates`, `validate`, `terraform`, `wrangler`, `mcp`, `audit`, `alerts`, `account`, `plugin`, `status`, `metrics`, `dashboard`. `alerts watch` also detects stuck work per Worker script (CPU p99, errors, requests, subrequests thresholds) and per Durable Object namespace (wall-time and request thresholds), so each alert names the offending script or namespace -- all on the existing 60-second watch loop. `cosmoflare usage` paces monthly usage against plan allowances (Workers requests and CPU-ms, Durable Object requests and duration, R2 storage and Class A/B operations) drawn from a verified limits catalog, and `usage-pct` / `usage-projected-pct` alert rules page on projected overage before it happens.
 
 ## Quick Start
 
