@@ -18,9 +18,11 @@ the clone at `~/.analysis-clones/cloudflare-cf` (clone: **`/Users/gabstudio/.ana
   will point users to cf; 18 months maintenance after beta). cf still delegates
   bundling (esbuild/Rust/Python Workers) to Wrangler internally.
 - **Scale**: 165 generated top-level command roots, ~2,947 generated command
-  leaves (`packages/cli/src/commands/_generated/_meta/commands.json`) + 52
-  hand-written commands (`_meta/hand-written-commands.json`: auth, build, cli,
-  complete, deploy, dev, init, migrate, schema, tools). Wrangler has ~280.
+  leaves (`packages/cli/src/commands/_generated/_meta/commands.json`) + 49
+  hand-written commands across 19 roots (`_meta/hand-written-commands.json`:
+  access, ai, auth, build, cli, complete, containers, d1, deploy, dev, init,
+  migrate, pages, previews, registrar, schema, tools, tunnels, workers).
+  Wrangler has ~280.
 - **Context**: Cloudflare reports agent share of Wrangler usage grew 25%
   (2026-03) → 48% (2026-10).
 
@@ -32,7 +34,7 @@ the clone at `~/.analysis-clones/cloudflare-cf` (clone: **`/Users/gabstudio/.ana
 | Errors | Human-readable boxed `APIError` with `[code]` + status + path; **no machine-readable error JSON mode** | `packages/cli/src/lib/errors.ts` |
 | Exit codes | `CliExit` class thrown, mapped in `bin/cf`; other throws → exit 1 | `packages/cli/src/lib/cli-exit.ts` |
 | Discovery | `cf cli search <query>` — MiniSearch fuzzy over the generated command index, top-5 compact JSON | `packages/cli/src/commands/cli/search.ts` |
-| Agent help | When an agent harness is detected (12 harnesses via env: CLAUDECODE etc.), `AGENT_DISCOVERY_HELP` is prepended to `--help` | `packages/cli/src/lib/agent-context.ts`, `src/index.ts:143-158` |
+| Agent help | When an agent harness is detected (12 harnesses via env: CLAUDECODE etc.), `AGENT_DISCOVERY_HELP` is prepended to `--help` | `packages/cli/src/lib/agent-context.ts`, `src/index.ts:141-159` |
 | Schema help | `cf schema <cmd>` prints the API schema behind a command; 1h schema cache | `packages/cli/src/commands/api-schema-help.ts`, `src/lib/schema-cache.ts` |
 | Reality check | README's "condensed for agents" output mode is **aspirational — not implemented**; actual mechanism is pretty JSON + `--quiet` + null suppression | `README.md:6` vs `src/lib/output.ts` |
 
@@ -50,8 +52,11 @@ the clone at `~/.analysis-clones/cloudflare-cf` (clone: **`/Users/gabstudio/.ana
 
 ## Agent integration (scout 3 area, orchestrator-verified)
 
-- **No MCP server mode** in cf (grep for "mcp" hits only the unrelated
-  `ZonesWebmcp*` SDK types — Cloudflare's WebMCP product config).
+- **No MCP server mode** in cf (case-insensitive grep for "mcp" hits only
+  unrelated SDK type/enum values — `ZonesWebmcp*` (Cloudflare's WebMCP
+  product config), Logpush `mcp_portal_logs`, Access `mcp`/`mcp_portal` —
+  plus one index.ts comment about MCP-tool metadata; no server
+  implementation anywhere).
 - `AGENTS.md` at the repo root defines how coding agents contribute to cf
   itself; `agent-context.ts` is how cf detects it runs INSIDE an agent.
 - Declarative identity: JSON output + `cli search` + schema help = the entire
@@ -127,7 +132,7 @@ the clone at `~/.analysis-clones/cloudflare-cf` (clone: **`/Users/gabstudio/.ana
    `packages/cli/src/commands/_generated/billing/usage/get-account-usage-v2.ts`;
    mirror the call in our billing collector after live shape verification.
 5. **ADOPT bounded retry** — counter-example: cf sets `maxRetries: 0`
-   (`packages/cli/src/lib/raw-fetch.ts` area); we keep retries ON.
+   (`packages/cli/src/lib/auth.ts:256,307`); we keep retries ON.
 6. **ADOPT typed config** — `cloudflare.config.ts` + `cf workers types`
    (`packages/cli/src/commands/workers/types/generate.ts`) → `cosmoflare types`.
 7. **SKIP JSON-only output** — cf's `lib/output.ts` has no human mode; our
