@@ -1,9 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:35.533628+04:00
-next_id: 108
+last_updated: 2026-10-09T20:34:37.497266+04:00
+next_id: 109
 items:
-    - id: ROAD-107
+    - id: ROAD-108
+      title: Ops billing period from the real subscription (token needs Billing Read)
+      status: captured
+      category: core
+      effort: small
+      parent: ROAD-pJ25XG5
+      created_at: 2026-10-09T20:34:37.497034+04:00
+    - id: ROAD-pMBBH62
       title: Ops cron push — Worker pages the phone with the Mac off
       status: in_progress
       category: core

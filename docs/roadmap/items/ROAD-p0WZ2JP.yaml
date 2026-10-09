@@ -1,0 +1,15 @@
+id: ROAD-p0WZ2JP
+created_at: 2026-10-09T20:34:37.497034+04:00
+updated_at: 2026-10-09T20:34:38.696991+04:00
+title: Ops billing period from the real subscription (token needs Billing Read)
+description: GET /accounts/{id}/subscriptions returns 403 for the ops token, so billing uses the UTC calendar month. Add Billing Read to the token or set BILLING_ANCHOR_DAY.
+status: captured
+category: core
+effort: small
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR8FST1X7CAG4E920WZ2JP
+provisional: true
