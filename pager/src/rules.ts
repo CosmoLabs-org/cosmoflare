@@ -7,6 +7,7 @@
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount } from "./format";
 import { api, LoginExpiredError, type FetchResult } from "./api";
+import { refreshButton } from "./refresh";
 
 // ---- /api/rules contract (built by agent B; consumed here) ----
 
@@ -262,8 +263,7 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
 
   const bar = el("div", "cf-dash-bar");
   const line = statusLine(res.ageSec, { demo: res.demo });
-  const refresh = el("button", "cf-btn", "Refresh");
-  refresh.addEventListener("click", () => void renderRules(root));
+  const refresh = refreshButton(() => renderRules(root));
   bar.append(line, refresh);
 
   const note = payload.starter

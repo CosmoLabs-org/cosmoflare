@@ -10,6 +10,7 @@ import { api, LoginExpiredError, type Billing, type BillingPeriod, type ProductU
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
 import { gaugeLevel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
 import { hrefFor } from "./routes";
+import { refreshButton } from "./refresh";
 
 export type Level = "ok" | "warning" | "critical";
 
@@ -177,8 +178,7 @@ function statusBar(sumRes: { data: Summary; demo: boolean; ageSec: number }, bil
   const serverAge = sumRes.data.cache ? sumRes.data.cache.ageSec : null;
   const line = statusLine(maxAge, { cached: Boolean(sumRes.data.cache?.stale || billRes.data.cache?.stale), demo: sumRes.demo || billRes.demo });
   if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${sumRes.data.cache?.stale ? " · cached" : ""}`;
-  const refresh = el("button", "cf-btn", "Refresh");
-  refresh.addEventListener("click", () => void renderOverview(root, { refresh: true }));
+  const refresh = refreshButton(() => renderOverview(root, { refresh: true }));
   bar.append(line, refresh);
   return bar;
 }
