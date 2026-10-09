@@ -26,10 +26,13 @@ export interface PushOutcome {
 
 // VapidConfig is the slice of OpsEnv sendPushes needs; the worker Env
 // satisfies it structurally.
+// VAPID vars are `string | undefined`: unset wrangler vars arrive as
+// undefined at runtime (live crash 2026-10-09), so the type must not claim
+// otherwise — missing keys are a reported issue, never a throw.
 export interface VapidConfig {
-  VAPID_PUBLIC_KEY: string;
-  VAPID_PRIVATE_KEY: string;
-  VAPID_SUBJECT: string;
+  VAPID_PUBLIC_KEY: string | undefined;
+  VAPID_PRIVATE_KEY: string | undefined;
+  VAPID_SUBJECT: string | undefined;
 }
 
 /**
@@ -39,9 +42,10 @@ export interface VapidConfig {
  * get rejected, so: absent prefix → add one; more than one "mailto:" → the
  * configured value is already broken, keep it and let sendPushes report it.
  * Returns the normalized subject plus an error text when unusable.
+ * Undefined/null is treated as empty: missing env vars are reported, not thrown.
  */
-export function vapidSubject(raw: string): { subject: string; error?: string } {
-  const trimmed = raw.trim();
+export function vapidSubject(raw: string | undefined): { subject: string; error?: string } {
+  const trimmed = (raw ?? "").trim();
   if (!trimmed) return { subject: "", error: "VAPID_SUBJECT is empty; push services require a mailto: contact" };
   const occurrences = trimmed.split("mailto:").length - 1;
   if (occurrences === 0) return { subject: `mailto:${trimmed}` };
@@ -63,6 +67,15 @@ export async function sendPushes(
   payload: unknown,
 ): Promise<PushOutcome> {
   const outcome: PushOutcome = { sent: 0, pruned: 0, prunedEndpoints: [], issues: [] };
+  // Nothing to deliver: zero fetch calls, no VAPID checks (the common
+  // pre-pairing state — never an error).
+  if (subs.length === 0) return outcome;
+  // Missing VAPID keys are an operator-setup issue, not a crash (the cron
+  // used to throw on `.trim()` of an unset var before this guard existed).
+  if (!vapid.VAPID_PRIVATE_KEY || !vapid.VAPID_PUBLIC_KEY) {
+    outcome.issues.push(!vapid.VAPID_PRIVATE_KEY ? "VAPID_PRIVATE_KEY is not set" : "VAPID_PUBLIC_KEY is not set");
+    return outcome;
+  }
   const subj = vapidSubject(vapid.VAPID_SUBJECT);
   if (subj.error) {
     outcome.issues.push(subj.error);

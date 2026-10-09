@@ -127,6 +127,12 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
   const enabled = rules.filter((r) => r.enabled);
   if (enabled.length === 0) return result; // stay offline: zero fetch calls
 
+  // No paired device: nothing can be delivered, so skip every upstream call
+  // (telemetry included) and return before the code path that used to crash
+  // on unset VAPID vars.
+  const subs = await readSubs(env);
+  if (subs.length === 0) return result;
+
   const needZones = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "zone");
   const needD1 = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "d1");
   if (!needZones && !needD1) return result; // rules exist but need no telemetry we collect
@@ -196,24 +202,31 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   const prunedEndpoints: string[] = [];
   if (fires.length > 0) {
-    const subs = await readSubs(env);
-    for (const fire of fires) {
-      const payload = {
-        id: fire.alertId,
-        severity: "info",
-        service: "cloudflare",
-        title: fire.ruleName,
-        detail: fire.message,
-        fired_at: end,
-      };
-      const outcome = await sendPushes(env, subs, payload);
-      result.sent += outcome.sent;
-      result.pruned += outcome.pruned;
-      prunedEndpoints.push(...outcome.prunedEndpoints);
-      result.issues.push(...outcome.issues);
+    // Delivery problems must never throw out of runScheduled (the cron
+    // crashed here when VAPID vars were unset, skipping the fire-state write
+    // below and re-evaluating the same fires every run): a push error becomes
+    // an issue and the state write still happens.
+    try {
+      for (const fire of fires) {
+        const payload = {
+          id: fire.alertId,
+          severity: "info",
+          service: "cloudflare",
+          title: fire.ruleName,
+          detail: fire.message,
+          fired_at: end,
+        };
+        const outcome = await sendPushes(env, subs, payload);
+        result.sent += outcome.sent;
+        result.pruned += outcome.pruned;
+        prunedEndpoints.push(...outcome.prunedEndpoints);
+        result.issues.push(...outcome.issues);
+      }
+      // Dead devices leave in ONE read-modify-write for the whole run.
+      await removeSubscriptions(env, prunedEndpoints);
+    } catch (err) {
+      result.issues.push(`push delivery failed: ${(err as Error).message}`);
     }
-    // Dead devices leave in ONE read-modify-write for the whole run.
-    await removeSubscriptions(env, prunedEndpoints);
   }
 
   if (JSON.stringify(state) !== stateBefore) {

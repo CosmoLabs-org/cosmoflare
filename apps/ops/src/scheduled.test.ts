@@ -183,6 +183,7 @@ describe("runScheduled", () => {
   });
   it("caches the zone/D1 name lists in KV for 1h (no REST list calls on the second run)", async () => {
     const kv = fakeKV();
+    await seedSubs(kv); // telemetry (and its list calls) only run with a paired device
     const { calls } = routeFetch();
     await runScheduled(envP(kv), NOW);
     const listCallsFirstRun = calls.filter((c) => c.includes("/zones?") || c.includes("/d1/database")).length;
@@ -246,6 +247,27 @@ describe("runScheduled", () => {
     const d1Fire = envelopes.map((e) => JSON.parse(e.data)).find((p) => p.title === "d1 rows read");
     expect(d1Fire.detail).toContain("db-1");
     expect(calls.length).toBeGreaterThan(0);
+  });
+  it("no paired device: zero upstream calls (the pre-pairing cron state), no throw", async () => {
+    const kv = fakeKV();
+    const { calls } = routeFetch();
+    const out = await runScheduled(envP(kv), NOW);
+    expect(calls).toHaveLength(0);
+    expect(out).toEqual({ fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] });
+  });
+  it("fires with subs but VAPID unset: the delivery problem lands in issues and fire-state still persists", async () => {
+    const kv = fakeKV();
+    await seedSubs(kv);
+    routeFetch();
+    // wrangler delivers unset vars as undefined at runtime; mirror that here.
+    const env = { ...envP(kv), VAPID_PUBLIC_KEY: undefined, VAPID_PRIVATE_KEY: undefined } as unknown as OpsEnvLike;
+    const out = await runScheduled(env, NOW);
+    expect(out.fired).toBe(2); // rules still evaluate and fire
+    expect(out.sent).toBe(0);
+    expect(out.issues).toContain("VAPID_PRIVATE_KEY is not set");
+    expect(envelopes).toHaveLength(0); // nothing was deliverable
+    // the crash used to skip this write, re-evaluating the same fires every run
+    expect(kv.puts.filter((k) => k === STATE_KEY).length).toBe(1);
   });
   it("a 410 push prunes the dead endpoint from KV 'subs' in one write, keeping the live one", async () => {
     const kv = fakeKV();
