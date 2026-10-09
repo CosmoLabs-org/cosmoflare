@@ -1,93 +1,135 @@
-// Dashboard view (FEAT-052): monthly pacing, D1 rows read and zone cache
-// health from the Ops Worker's /api/summary. Levels mirror the starter alert
-// thresholds (O10) so the screen and the pager agree on what is "red".
+// Overview view (FEAT-052): KPI tiles (projected overage, billing-period
+// progress, D1 and Workers pacing, attention count), then the merged
+// "Needs attention" list. Data: /api/summary v2 + /api/billing through the
+// shared ApiClient. Levels mirror the starter alert thresholds (O10) so the
+// screen and the pager agree on what is "red".
+
+import { el, skeleton, statusLine } from "./dom";
+import { formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+import { api, LoginExpiredError, type Billing, type ProductUsage, type Summary } from "./api";
+import { collectAttention } from "./attention";
+import { hrefFor } from "./routes";
 
 export type Level = "ok" | "warning" | "critical";
-
-export function formatCount(v: number): string {
-  if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
-  if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
-  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}k`;
-  return String(Math.round(v));
-}
 
 export const levelForUncached = (n: number): Level => (n >= 10_000 ? "critical" : n >= 5_000 ? "warning" : "ok");
 export const levelForMiss = (pct: number | null): Level => (pct === null ? "ok" : pct >= 80 ? "critical" : pct >= 50 ? "warning" : "ok");
 export const levelForD1 = (rows24h: number): Level => (rows24h >= 1e9 ? "critical" : rows24h >= 1e8 ? "warning" : "ok");
 export const levelForUsage = (projectedPct: number | null): Level =>
   projectedPct === null ? "ok" : projectedPct >= 100 ? "critical" : projectedPct >= 80 ? "warning" : "ok";
+// Workers error rate: 1% is "look at this", 5% is "act now".
+export const levelForErrorPct = (pct: number): Level => (pct >= 5 ? "critical" : pct >= 1 ? "warning" : "ok");
 
-interface Summary {
-  generatedAt: string;
-  usage: { name: string; used: number; limit: number; pct: number; projectedPct: number | null }[];
-  d1: { name: string; rowsRead: number; readQueries: number; rowsPerQuery: number }[];
-  zones: { zone: string; total: number; uncached: number; missPct: number | null }[];
-  errors: string[];
+export { formatCount } from "./format";
+
+// pacingPct is the KPI tile number: where a product's linear projection
+// lands relative to its included allowance (100% = exactly at allowance at
+// period end; 184% = will use the allowance plus most of an extra one).
+export function pacingPct(p: ProductUsage): number {
+  return p.included > 0 ? (p.projected / p.included) * 100 : 0;
 }
 
-function el(tag: string, className?: string, text?: string): HTMLElement {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
+function kpiTile(value: string, label: string, level: Level = "ok"): HTMLElement {
+  const tile = el("div", `cf-kpi cf-level-${level}`);
+  tile.append(el("div", "cf-kpi-value", value), el("div", "cf-kpi-label", label));
+  tile.setAttribute("role", "group");
+  return tile;
 }
 
-function row(label: string, value: string, level: Level, detail?: string): HTMLElement {
-  const r = el("div", `cf-row cf-level-${level}`);
-  const left = el("div", "cf-row-label", label);
-  if (detail) left.append(el("div", "cf-row-detail", detail));
-  r.append(left, el("div", "cf-row-value", value));
-  return r;
-}
-
-export async function renderDashboard(root: HTMLElement, refresh = false): Promise<void> {
-  root.replaceChildren(el("p", "cf-empty", "Loading…"));
-  let data: Summary;
-  try {
-    const res = await fetch(`/api/summary${refresh ? "?refresh" : ""}`, { credentials: "same-origin", redirect: "manual" });
-    // An expired Access session answers with a redirect to the login page.
-    if (res.type === "opaqueredirect" || res.status === 403) throw new Error("your login expired — close and reopen the app to sign in again");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    data = (await res.json()) as Summary;
-  } catch (err) {
-    root.replaceChildren(el("p", "cf-empty", `Could not load the summary: ${err instanceof Error ? err.message : String(err)}`));
+function errorState(root: HTMLElement, err: unknown): void {
+  if (err instanceof LoginExpiredError) {
+    root.replaceChildren(el("p", "cf-empty cf-login-expired", err.message));
     return;
   }
+  const box = el("section", "cf-card cf-level-warning");
+  box.append(
+    el("h2", undefined, "Could not load the overview"),
+    el("p", "cf-row-detail", err instanceof Error ? err.message : String(err)),
+  );
+  const retry = el("button", "cf-btn", "Retry");
+  retry.addEventListener("click", () => void renderOverview(root));
+  box.append(retry);
+  root.replaceChildren(box);
+}
 
+// findProduct locates a billing product by id, for the pacing KPI tiles.
+const findProduct = (b: Billing | null, id: string): ProductUsage | null => b?.products.find((p) => p.id === id) ?? null;
+
+export async function renderOverview(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
+  if (!opts.refresh) root.replaceChildren(skeleton());
+  try {
+    const [sumRes, billRes] = await Promise.all([
+      api.fetchJson<Summary>("api/summary", { refresh: opts.refresh }),
+      api.fetchJson<Billing>("api/billing", { refresh: opts.refresh }),
+    ]);
+    const summary = sumRes.data;
+    const billing = billRes.data;
+    const grid = el("div", "cf-kpis");
+    const attention = collectAttention(summary, billing);
+
+    // KPI tiles. The billing-period tile embeds its own thin progress bar —
+    // the orphan full-width bar that used to sit under the grid is gone.
+    const d1Prod = findProduct(billing, "d1.rows_read");
+    const wProd = findProduct(billing, "workers.requests");
+    const periodTile = kpiTile(`day ${billing.period.day} of ${billing.period.days}`, `period ends ${formatDateShort(billing.period.end)}`);
+    const prog = el("div", "cf-progress");
+    prog.setAttribute("aria-label", `Billing period: day ${billing.period.day} of ${billing.period.days}`);
+    const fill = el("div", "cf-progress-fill");
+    fill.style.width = `${periodProgress(billing.period.day, billing.period.days).elapsedPct}%`;
+    prog.append(fill);
+    periodTile.append(prog);
+    grid.append(
+      kpiTile(formatUsd(billing.totalProjectedOverageUsd), "projected overage",
+        billing.totalProjectedOverageUsd >= 0.01 ? (billing.totalProjectedOverageUsd >= 50 ? "critical" : "warning") : "ok"),
+      periodTile,
+      kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok"),
+      kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok"),
+      kpiTile(String(attention.length), attention.length === 1 ? "item needs attention" : "items need attention",
+        attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"),
+    );
+
+    // Needs attention list
+    const attentionCard = el("section", "cf-card");
+    attentionCard.append(el("h2", undefined, "Needs attention"));
+    if (attention.length === 0) {
+      attentionCard.append(el("p", "cf-empty cf-empty-quiet", "All clear — nothing above threshold."));
+    } else {
+      for (const item of attention) {
+        const link = el("a", `cf-attention cf-level-${item.level}`);
+        link.href = hrefFor(item.route);
+        link.append(
+          el("span", "cf-attention-mark", item.level === "critical" ? "!" : "•"),
+          el("span", "cf-attention-body",
+            `${item.title} — ${item.detail}`),
+          el("span", "cf-attention-chevron", "→"),
+        );
+        attentionCard.append(link);
+      }
+    }
+    root.replaceChildren(statusBar(sumRes, billRes, root), grid, attentionCard);
+  } catch (err) {
+    errorState(root, err);
+  }
+}
+
+// usageLevelFromPct colors the pacing KPI tiles with the same bands as
+// levelForUsage (the projected % of limit from the summary rows).
+export function usageLevelFromPct(pct: number): Level {
+  return levelForUsage(pct);
+}
+
+// statusBar builds the "Updated … / cached / demo" line plus the Refresh
+// button. Ages come from the responses' server cache field when present,
+// else the client-side copy age.
+function statusBar(sumRes: { data: Summary; demo: boolean; ageSec: number }, billRes: { data: Billing; demo: boolean; ageSec: number }, root: HTMLElement): HTMLElement {
   const bar = el("div", "cf-dash-bar");
-  bar.append(el("span", "cf-row-detail", `Updated ${new Date(data.generatedAt).toLocaleTimeString()}`));
-  const reload = el("button", "cf-btn", "Refresh") as HTMLButtonElement;
-  reload.addEventListener("click", () => void renderDashboard(root, true));
-  bar.append(reload);
-
-  const usage = el("section", "cf-card");
-  usage.append(el("h2", undefined, "This month"));
-  for (const u of data.usage) {
-    usage.append(row(u.name, `${u.pct.toFixed(1)}%`, levelForUsage(u.projectedPct),
-      `${formatCount(u.used)} of ${formatCount(u.limit)}${u.projectedPct !== null ? ` · projected ${u.projectedPct.toFixed(0)}%` : ""}`));
-  }
-
-  const d1 = el("section", "cf-card");
-  d1.append(el("h2", undefined, "D1 rows read (24h)"));
-  for (const d of data.d1.slice(0, 8)) {
-    d1.append(row(d.name, formatCount(d.rowsRead), levelForD1(d.rowsRead), `${formatCount(d.readQueries)} queries · ${formatCount(d.rowsPerQuery)} rows/query`));
-  }
-  if (data.d1.length === 0) d1.append(el("p", "cf-empty", "No D1 activity."));
-
-  const zones = el("section", "cf-card");
-  zones.append(el("h2", undefined, "Zones (24h)"));
-  for (const z of data.zones.filter((z) => z.total > 0).slice(0, 15)) {
-    const level: Level = levelForUncached(z.uncached) === "critical" || levelForMiss(z.missPct) === "critical" ? "critical"
-      : levelForUncached(z.uncached) === "warning" || levelForMiss(z.missPct) === "warning" ? "warning" : "ok";
-    zones.append(row(z.zone, `${formatCount(z.uncached)} uncached`, level,
-      `${formatCount(z.total)} requests${z.missPct !== null ? ` · ${z.missPct.toFixed(1)}% miss` : ""}`));
-  }
-
-  root.replaceChildren(bar, usage, d1, zones);
-  if (data.errors.length) {
-    const gaps = el("section", "cf-card cf-level-warning");
-    gaps.append(el("h2", undefined, "Telemetry gaps"));
-    for (const e of data.errors) gaps.append(el("p", "cf-row-detail", e));
-    root.append(gaps);
-  }
+  const ages = [sumRes, billRes];
+  const maxAge = Math.max(...ages.map((r) => r.ageSec));
+  const serverAge = sumRes.data.cache ? sumRes.data.cache.ageSec : null;
+  const line = statusLine(maxAge, { cached: Boolean(sumRes.data.cache?.stale || billRes.data.cache?.stale), demo: sumRes.demo || billRes.demo });
+  if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${sumRes.data.cache?.stale ? " · cached" : ""}`;
+  const refresh = el("button", "cf-btn", "Refresh");
+  refresh.addEventListener("click", () => void renderOverview(root, { refresh: true }));
+  bar.append(line, refresh);
+  return bar;
 }
