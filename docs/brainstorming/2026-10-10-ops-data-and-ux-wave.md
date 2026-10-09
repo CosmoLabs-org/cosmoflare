@@ -1,3 +1,15 @@
+---
+title: Ops data + UX wave
+created: 2026-10-10T01:20:00+04:00
+status: captured
+deliverables:
+    - BR-01: Domains view wave 1 (zones-based list with status + expiry, cached 1h)
+    - BR-02: Email metrics view (token-gated behind Email Routing Read)
+    - BR-03: Projects view over the existing billing payload (zero new upstream calls)
+    - BR-04: Table sort controls top-right with numeric-desc default and saved preference
+    - BR-05: Reusable progress-bar/heading/filter-bar components + motion polish
+---
+
 # Ops data + UX wave — brainstorm (2026-10-10)
 
 Operator asks, streamed live during session 2034's tail. Every API claim

@@ -1,6 +1,6 @@
 id: ROAD-107
 created_at: 2026-10-09T20:34:02.099499+04:00
-updated_at: 2026-10-10T03:26:36.97491+04:00
+updated_at: 2026-10-10T03:27:10.922008+04:00
 title: Cosmoflare Ops — private web/phone tier at ops.cosmolabs.org (dashboard, billing, push alerts)
 description: Owner-only PWA + Worker (apps/ops, pager/) behind Cloudflare Access on ops.cosmolabs.org only (workers.dev and preview URLs off). Live telemetry dashboard, billing-period cost view with per-project attribution, KV-backed upstream cache, and a 5-minute cron that pages the phone via Web Push without the Mac. FEAT-052.
 status: in_progress
