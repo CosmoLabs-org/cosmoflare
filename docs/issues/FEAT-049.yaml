@@ -2,9 +2,9 @@
 id: FEAT-049
 type: feature
 created: "2026-10-08"
-updated: "2026-10-08T23:21:55.930303+04:00"
+updated: "2026-10-09T05:12:48.667839+04:00"
 priority: 70
-status: open
+status: implemented
 area: performance
 origin:
     feedback_id: FB-11
@@ -15,6 +15,13 @@ origin:
     received: "2026-10-08"
     converted: "2026-10-08"
 title: Caching efficiency audit dimension — edge headers, repeat-probe, D1 rows-read, KV hit rate, unused bindings
+resolution:
+    notes: 'Wave 3a telemetry shipped locally (not released): zone-cache-miss-pct, zone-uncached-requests (volume replaced the % after the live dry run), d1-rows-read, exclude lists, gap pages, live smoke test. Probe half (header sweep, repeat-probe, auth-route check, unused bindings) moved to FEAT-050 per O1.'
+    resolved_at: 2026-10-09T05:12:48.666899+04:00
+revisions:
+    - date: "2026-10-09T05:12:48.666849+04:00"
+      action: closed
+      context: 'Wave 3a telemetry shipped locally (not released): zone-cache-miss-pct, zone-uncached-requests (volume replaced the % after the live dry run), d1-rows-read, exclude lists, gap pages, live smoke test. Probe half (header sweep, repeat-probe, auth-route check, unused bindings) moved to FEAT-050 per O1.'
 
 ---
 

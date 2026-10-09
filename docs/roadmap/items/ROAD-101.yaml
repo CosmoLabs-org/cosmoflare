@@ -1,6 +1,6 @@
 id: ROAD-101
 created_at: 2026-10-08T19:33:14.454462+04:00
-updated_at: 2026-10-08T23:21:55.975561+04:00
+updated_at: 2026-10-09T05:12:48.843288+04:00
 title: Usage monitoring and waste-prevention program (waves 1-3)
 status: captured
 category: core
@@ -9,6 +9,7 @@ parent: ROAD-102
 notes:
     - '2026-10-08 operator brainstorm (session 67): ''cosmoflare should help us with ambitious Cloudflare accounts — alert when a DO or worker is overworking/stuck and wasting usage; high-usage early warning; lack-of-caching detection; monitor in near-real-time with alerts and a monthly usage view.'' Design: threshold model now, baselines later (idea filed); waves under the existing alerts watch daemon with dual cadence (fast analytics loop 30-60s free GraphQL; slow limits/usage loop 5-15min). Wave 1 = FEAT-047 stuck-work thresholds (per-script Workers + DO). Wave 2 = usage pacing vs limits catalog (BR-03) + ''cosmoflare usage'' monthly view; promote to FEAT when wave 1 lands. Wave 3 = zone cache hit-ratio warning; promote likewise. Desktop dashboard graphs remain the desktop tier''s job.'
     - '2026-10-08 session 2033: wave 3 scope widened by FB-11 → FEAT-049 (Churches-app caching audit: header sweep, repeat-probe, D1 rows-read, KV hit rate, unused bindings) on top of the zone cache hit-ratio condition. Program now sits under ROAD-102 (CF governance charter, FB-12 → FEAT-050).'
+    - '2026-10-09: wave 3a (FEAT-049) merged locally — zone cache miss %, uncached request volume, D1 rows-read per database; live dry run at starter thresholds = 7 pages on the account. Waves 1-3 of the program are done; release v0.33.0 still held (O8).'
 refs:
     - type: issue
       path: docs/issues/FEAT-047.yaml
