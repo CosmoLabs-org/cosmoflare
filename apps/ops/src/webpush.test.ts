@@ -51,6 +51,12 @@ describe("vapidSubject", () => {
     const out = vapidSubject("mailto:mailto:ops@example.com");
     expect(out.error).toContain("exactly once");
   });
+  it("treats undefined as empty: reports an error, never throws (the 2026-10-09 cron crash)", () => {
+    expect(() => vapidSubject(undefined)).not.toThrow();
+    const out = vapidSubject(undefined);
+    expect(out.subject).toBe("");
+    expect(out.error).toContain("VAPID_SUBJECT is empty");
+  });
 });
 
 describe("sendPushes", () => {
@@ -95,5 +101,30 @@ describe("sendPushes", () => {
     const out = await sendPushes(vapidP({ VAPID_SUBJECT: "mailto:mailto:x@y" }), [subFor("https://p/1")], payloadP());
     expect(out.sent).toBe(0);
     expect(out.issues[0]).toContain("exactly once");
+  });
+  it("returns the empty outcome with zero fetches when there are no subscriptions", async () => {
+    let fetchCalls = 0;
+    globalThis.fetch = (async () => {
+      fetchCalls++;
+      return new Response(null, { status: 201 });
+    }) as typeof fetch;
+    const out = await sendPushes(vapidP(), [], payloadP());
+    expect(out).toEqual({ sent: 0, pruned: 0, prunedEndpoints: [], issues: [] });
+    expect(fetchCalls).toBe(0);
+    expect(builtRequests).toHaveLength(0);
+  });
+  it("a missing private or public VAPID key is an issue, not a throw (env vars unset)", async () => {
+    let fetchCalls = 0;
+    globalThis.fetch = (async () => {
+      fetchCalls++;
+      return new Response(null, { status: 201 });
+    }) as typeof fetch;
+    const noPriv = await sendPushes(vapidP({ VAPID_PRIVATE_KEY: undefined, VAPID_SUBJECT: undefined }), [subFor("https://p/1")], payloadP());
+    expect(noPriv.issues).toContain("VAPID_PRIVATE_KEY is not set");
+    const noPub = await sendPushes(vapidP({ VAPID_PUBLIC_KEY: undefined }), [subFor("https://p/1")], payloadP());
+    expect(noPub.issues).toContain("VAPID_PUBLIC_KEY is not set");
+    expect(fetchCalls).toBe(0);
+    expect(noPriv.sent).toBe(0);
+    expect(noPub.sent).toBe(0);
   });
 });
