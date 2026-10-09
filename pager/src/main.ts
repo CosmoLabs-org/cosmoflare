@@ -37,7 +37,7 @@ const ICONS: Record<RouteId, string> = {
   d1: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
   zones: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"/></svg>`,
   alerts: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>`,
-  pairing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="7" cy="18" r="2" fill="var(--surface)"/></svg>`,
+  pairing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M16.5 7a4.5 4.5 0 0 1 2.6 4.1M19.8 4.2a8 8 0 0 1 1.6 4.9"/></svg>`,
   // Sliders — the Rules view edits rule rows (name, condition, threshold).
   rules: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>`,
 };
@@ -99,7 +99,7 @@ function mount(): void {
   burger.setAttribute("aria-label", "Open navigation");
   burger.setAttribute("aria-expanded", "false");
   burger.setAttribute("aria-controls", "cf-drawer");
-  burger.innerHTML = burgerSvg;
+  burger.innerHTML = burgerBars;
   const brand = brandLockup("h1", "top");
   top.append(burger, brand);
 
@@ -271,10 +271,13 @@ function mount(): void {
   burger.addEventListener("click", () => (drawerOpen ? closeDrawer() : openDrawer()));
 }
 
-// Inline hamburger glyph (two bars) — no icon dependency.
-const burgerSvg = `<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
-  <path d="M3 6.5h16M3 15.5h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-</svg>`;
+// Inline hamburger glyph (three bars, middle shorter) — spans so the open
+// state can animate them into an X with plain CSS transforms.
+const burgerBars = `<span class="cf-burger-box" aria-hidden="true">
+  <span class="cf-burger-bar"></span>
+  <span class="cf-burger-bar"></span>
+  <span class="cf-burger-bar"></span>
+</span>`;
 
 mount();
 void registerServiceWorker();

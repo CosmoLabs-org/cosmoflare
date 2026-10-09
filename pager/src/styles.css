@@ -64,6 +64,25 @@ body { margin: 0; min-height: 100vh; }
 }
 .cf-hamburger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
+/* Three bars, middle one shorter; open state animates them into an X
+   (transform/opacity only, 200ms ease-out). */
+.cf-burger-box { position: relative; width: 22px; height: 22px; display: block; }
+.cf-burger-bar {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+.cf-burger-bar:nth-child(1) { top: 4px; }
+.cf-burger-bar:nth-child(2) { top: 10px; width: 60%; }
+.cf-burger-bar:nth-child(3) { top: 16px; }
+body.cf-nav-open .cf-burger-bar:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+body.cf-nav-open .cf-burger-bar:nth-child(2) { opacity: 0; transform: translateX(-4px); }
+body.cf-nav-open .cf-burger-bar:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
 .cf-skip-link {
   position: absolute;
   inset-inline-start: -999px;
@@ -80,7 +99,9 @@ body { margin: 0; min-height: 100vh; }
 .cf-shell { display: block; }
 
 @media (min-width: 1024px) {
-  .cf-hamburger { display: none; }
+  /* The sidebar carries the brand lockup at ≥1024px — the top bar would
+     duplicate it, so the top bar (and hamburger) only exist below. */
+  .cf-top, .cf-hamburger { display: none; }
   .cf-shell {
     display: grid;
     grid-template-columns: var(--nav-w) minmax(0, 1fr);
@@ -93,8 +114,8 @@ body { margin: 0; min-height: 100vh; }
     padding-top: calc(12px + env(safe-area-inset-top));
     border-right: 1px solid var(--border);
     position: sticky;
-    top: 57px;
-    height: calc(100vh - 57px);
+    top: 0;
+    height: 100vh;
     overflow-y: auto;
   }
   .cf-drawer, .cf-backdrop { display: none !important; }
@@ -265,10 +286,16 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--muted);
   margin-top: 2px;
 }
-.cf-kpi.cf-level-critical { border-color: var(--sev-critical); }
+/* Tile borders stay neutral — only the big value takes the severity color. */
 .cf-kpi.cf-level-critical .cf-kpi-value { color: var(--sev-critical); }
-.cf-kpi.cf-level-warning { border-color: color-mix(in srgb, var(--sev-warning) 60%, var(--border)); }
 .cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
+
+/* Mobile: 5 tiles leave an orphan at auto-fit. Two columns with the first
+   tile (projected overage) spanning both fills 1 + 2 + 2 evenly. */
+@media (max-width: 599.98px) {
+  .cf-kpis { grid-template-columns: 1fr 1fr; }
+  .cf-kpi:first-child { grid-column: 1 / -1; }
+}
 
 /* Progress bar (billing period). Inside a KPI tile it runs thin and flush
    with the tile bottom; standalone (billing view) it stays 8px. */
@@ -461,15 +488,13 @@ body.cf-nav-open { overflow: hidden; }
 .cf-mobile-list li {
   display: grid;
   gap: 6px;
-  padding: 8px 0 8px 10px;
+  padding: 8px 0;
   border-top: 1px solid var(--border);
-  border-left: 3px solid transparent;
 }
 .cf-mobile-list li:first-child { border-top: none; }
 .cf-mobile-list li.cf-showall-row {
   display: flex;
   justify-content: center;
-  border-left: none;
   padding-block: 6px;
 }
 .cf-mrow-top {
@@ -579,17 +604,15 @@ body.cf-nav-open { overflow: hidden; }
 .cf-empty-quiet { padding: 12px 0; }
 .cf-login-expired { color: var(--sev-warning); }
 
-/* Alert cards: severity encoded as the 3px left border (desktop parity). */
+/* Alert cards: neutral 1px border; severity is carried by the uppercase
+   severity word (text, never color-only) tinted by level. */
 .cf-alert {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--sev-info);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-bottom: 10px;
 }
-.cf-alert.is-warning { border-left-color: var(--sev-warning); }
-.cf-alert.is-critical { border-left-color: var(--sev-critical); }
 .cf-alert[data-acked="true"] { opacity: 0.55; }
 .cf-alert[data-acked="true"] .cf-alert-title { text-decoration: line-through; }
 
@@ -632,12 +655,10 @@ body.cf-nav-open { overflow: hidden; }
   font-size: 13px;
 }
 
-/* Summary rows (level-colored rows, overview + detail rows). */
-.cf-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); border-left: 3px solid transparent; padding-left: 8px; }
+/* Summary rows (level-tinted values, overview + detail rows). */
+.cf-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
 .cf-row-detail { color: var(--muted); font-size: 13px; }
 .cf-row-value { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
-.cf-level-warning { border-left-color: var(--sev-warning); }
-.cf-level-critical { border-left-color: var(--sev-critical); }
 .cf-level-critical .cf-row-value { color: var(--sev-critical); }
 .cf-level-warning .cf-row-value { color: var(--sev-warning); }
 
@@ -655,6 +676,7 @@ body.cf-nav-open { overflow: hidden; }
   .cf-drawer, .cf-backdrop { transition: none; }
   .cf-skeleton { animation: none; }
   .cf-btn, .cf-btn:active { transition: none; transform: none; }
+  .cf-burger-bar { transition: none; }
 }
 
 /* ---- Rules view (FEAT-052 agent I): editable rule cards ---- */
