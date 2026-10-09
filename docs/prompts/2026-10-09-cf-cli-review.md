@@ -19,7 +19,7 @@ related_prompts: []
 requires_reading:
     - docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
 schema_version: 1
-status: PENDING
+status: SUPERSEDED
 tags: []
 title: CF agent CLI review + Ops push completion
 type: prompt
@@ -35,6 +35,8 @@ implemented_commits:
     - {sha: '9e5280e4e544', covers: [P-05]}
     - {sha: 'c7b8590125cc', covers: [P-07]}
     - {sha: '445514fcde1c', covers: [P-07]}
+superseded_by: "docs/prompts/2026-10-10-session-2034-continuation.md"
+completed: "2026-10-10T01:30:34+04:00"
 ---
 
 # CF agent CLI review + Ops push completion
