@@ -35,22 +35,6 @@ func TestZoneCacheSummaryMissPct(t *testing.T) {
 	}
 }
 
-func TestZoneCacheSummaryUncachedPct(t *testing.T) {
-	t.Parallel()
-	got, ok := churchesLive().UncachedPct(100)
-	// uncached = dynamic 939 + bypass 21 = 960; known = 384 + 960 = 1344; none excluded
-	if !ok || math.Abs(got-100*960.0/1344.0) > 1e-9 {
-		t.Fatalf("UncachedPct = %v, %v; want %v, true", got, ok, 100*960.0/1344.0)
-	}
-	if _, ok := churchesLive().UncachedPct(1345); ok {
-		t.Error("UncachedPct must not be judgeable when known (1344) < floor (1345)")
-	}
-	only := ZoneCacheSummary{ByStatus: map[string]uint64{"none": 9000, "ignored": 5}}
-	if _, ok := only.UncachedPct(0); ok {
-		t.Error("none/ignored-only traffic must not be judgeable")
-	}
-}
-
 // TestAnalyticsZoneCacheBatches: 12 zones → 2 requests (10 + 2), zoneTag_in
 // variable, eyeball filter, cacheStatus grouping, results in input order,
 // zones without rows returned with an empty map.

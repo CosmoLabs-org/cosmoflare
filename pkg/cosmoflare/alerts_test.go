@@ -1227,3 +1227,15 @@ func TestAlertHistoryIsTestPresent(t *testing.T) {
 		t.Error("expected is_test=true to be present in JSON")
 	}
 }
+
+func TestAlertServiceList(t *testing.T) {
+	t.Parallel()
+	if got := AlertServiceList(); got != "r2, workers, kv, dns, zone, d1" {
+		t.Errorf("AlertServiceList() = %q", got)
+	}
+	for _, s := range []string{"r2", "workers", "kv", "dns", "zone", "d1"} {
+		if !validAlertServices[s] {
+			t.Errorf("service %q missing from validation map", s)
+		}
+	}
+}

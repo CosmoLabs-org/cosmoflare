@@ -24,7 +24,17 @@ type UsageDimension struct {
 	Limit        float64 `json:"limit"`
 	Pct          float64 `json:"pct"`
 	ProjectedPct float64 `json:"projected_pct"`
+
+	// PacingAlertsExempt marks a dimension shown in the usage view that
+	// usage-pct / usage-projected-pct must ignore: those account rules re-page
+	// every cycle, and the dimension has its own scoped alert (O16: D1 rows
+	// read pages through d1-rows-read).
+	PacingAlertsExempt bool `json:"pacing_alerts_exempt,omitempty"`
 }
+
+// pacingAlertExempt lists the dimensions usage-pct ignores (see
+// UsageDimension.PacingAlertsExempt).
+var pacingAlertExempt = map[string]bool{"d1.rows_read_monthly": true}
 
 // UsageSnapshot is the monthly usage view: every catalog monthly row with
 // cycle-to-date usage and linear pacing.
@@ -184,7 +194,7 @@ func CollectUsage(ctx context.Context, analytics *AnalyticsService, plan string,
 		if !ok {
 			continue
 		}
-		d := UsageDimension{ID: id, Name: e.Name, Unit: e.Unit, Used: used[id]}
+		d := UsageDimension{ID: id, Name: e.Name, Unit: e.Unit, Used: used[id], PacingAlertsExempt: pacingAlertExempt[id]}
 		if limit, ok := limitFor(id, plan); ok {
 			d.Limit = float64(limit)
 		}

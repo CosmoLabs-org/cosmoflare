@@ -120,3 +120,29 @@ func TestCollectTelemetryWantFlagsOff(t *testing.T) {
 		t.Errorf("nothing wanted → nothing collected, no gaps: %+v", m)
 	}
 }
+
+// TestCollectRuleTelemetryGating: the shared watch/check entry point fetches
+// name lists only when an enabled rule needs that scope.
+func TestCollectRuleTelemetryGating(t *testing.T) {
+	t.Parallel()
+	var zoneCalls int32
+	srv := telemetryServer(t, d1OK, &zoneCalls)
+	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
+	asked := 0
+	refsFor := func(wantZones, wantD1 bool) TelemetryRefs {
+		asked++
+		if wantZones || !wantD1 {
+			t.Errorf("refsFor(%v, %v), want (false, true) for a d1-only rule set", wantZones, wantD1)
+		}
+		return TelemetryRefs{DBNames: map[string]string{"db-big": "mycarguide-db"}}
+	}
+	var m EvalMetrics
+	CollectRuleTelemetry(context.Background(), a, []*cosmoflare.AlertRule{{Name: "cpu", Condition: "worker-cpu", Enabled: true}}, refsFor, telemetryWindow(), &m)
+	if asked != 0 || len(m.D1) != 0 {
+		t.Fatalf("no zone/d1 rule: refsFor called %d times, D1=%v; want none", asked, m.D1)
+	}
+	CollectRuleTelemetry(context.Background(), a, []*cosmoflare.AlertRule{{Name: "scan", Condition: "d1-rows-read", Enabled: true}}, refsFor, telemetryWindow(), &m)
+	if asked != 1 || len(m.D1) != 1 || m.D1[0].Name != "mycarguide-db" || atomic.LoadInt32(&zoneCalls) != 0 {
+		t.Fatalf("d1 rule: asked=%d D1=%+v zoneCalls=%d", asked, m.D1, zoneCalls)
+	}
+}

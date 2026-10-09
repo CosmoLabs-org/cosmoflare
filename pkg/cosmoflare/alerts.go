@@ -24,7 +24,7 @@ type AlertService struct {
 // AlertRule defines a single alerting rule configuration.
 type AlertRule struct {
 	Name      string    `json:"name" yaml:"name"`
-	Service   string    `json:"service" yaml:"service"`     // r2, workers, kv, dns
+	Service   string    `json:"service" yaml:"service"`     // one of AlertServiceList()
 	Condition string    `json:"condition" yaml:"condition"` // error-rate, storage-limit, latency, failure-count, workers-script-count, r2-bucket-count, dns-record-quota
 	Threshold float64   `json:"threshold" yaml:"threshold"`
 	Action    string    `json:"action" yaml:"action"` // webhook, email, log
@@ -97,14 +97,32 @@ type AlertsConfig struct {
 }
 
 // Valid services for alert rules.
-var validAlertServices = map[string]bool{
-	"r2":      true,
-	"workers": true,
-	"kv":      true,
-	"dns":     true,
-	"zone":    true,
-	"d1":      true,
+// alertServiceNames is the ordered list of rule services; validation, error
+// messages and CLI help all derive from it so a new service cannot leave
+// stale text behind.
+var alertServiceNames = []string{"r2", "workers", "kv", "dns", "zone", "d1"}
+
+var validAlertServices = func() map[string]bool {
+	m := make(map[string]bool, len(alertServiceNames))
+	for _, s := range alertServiceNames {
+		m[s] = true
+	}
+	return m
+}()
+
+// AlertServiceList returns the valid rule services as "r2, workers, ...".
+func AlertServiceList() string {
+	return strings.Join(alertServiceNames, ", ")
 }
+
+// Condition scopes: the instances the evaluator fans a condition out over.
+const (
+	ScopeAccount = "account"
+	ScopeScript  = "script"
+	ScopeDO      = "do"
+	ScopeZone    = "zone"
+	ScopeD1      = "d1"
+)
 
 // AlertConditionDescriptor describes one alertable condition — the single
 // registry every surface derives from (FEAT-015): validation, error
@@ -353,7 +371,7 @@ func (s *AlertService) Update(name string, update *AlertRuleUpdate) (*AlertRule,
 	// Apply provided updates; nil fields are no-ops
 	if update.Service != nil {
 		if !validAlertServices[*update.Service] {
-			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns, zone, d1", *update.Service))
+			return nil, validationError("AlertService.Update", fmt.Sprintf("invalid service %q, must be one of: %s", *update.Service, AlertServiceList()))
 		}
 		found.Service = *update.Service
 	}
@@ -559,7 +577,7 @@ func validateAlertRule(rule *AlertRule) error {
 		return validationError("validateAlertRule", "alert rule name is required")
 	}
 	if !validAlertServices[rule.Service] {
-		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: r2, workers, kv, dns, zone, d1", rule.Service))
+		return validationError("validateAlertRule", fmt.Sprintf("invalid service %q, must be one of: %s", rule.Service, AlertServiceList()))
 	}
 	if !validAlertCondition(rule.Condition) {
 		return validationError("validateAlertRule", fmt.Sprintf("invalid condition %q, must be one of: %s", rule.Condition, AlertConditionList()))

@@ -14,7 +14,6 @@ import (
 	"log"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
@@ -198,10 +197,10 @@ func usageMax(dims []cosmoflare.UsageDimension, projected bool) float64 {
 		if d.Limit <= 0 {
 			continue
 		}
-		// D1 shows in the usage view but never drives usage-pct (O16):
-		// these account rules re-page every cycle, and d1-rows-read (hourly
-		// cooldown, names the database) is the D1 alert.
-		if strings.HasPrefix(d.ID, "d1.") {
+		// Pacing-exempt dimensions (D1 rows read, O16) show in the usage view
+		// but never drive usage-pct: these account rules re-page every cycle,
+		// and the dimension has its own scoped alert.
+		if d.PacingAlertsExempt {
 			continue
 		}
 		v := d.Pct
@@ -253,7 +252,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 		return nil
 	}
 	switch desc.Scope {
-	case "script":
+	case cosmoflare.ScopeScript:
 		out := make([]scopedValue, 0, len(m.Scripts))
 		for _, s := range m.Scripts {
 			var v float64
@@ -276,7 +275,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			out = append(out, scopedValue{ScopeID: s.Script, Value: v, Unit: desc.Unit})
 		}
 		return out
-	case "do":
+	case cosmoflare.ScopeDO:
 		out := make([]scopedValue, 0, len(m.DurableObjects))
 		for _, d := range m.DurableObjects {
 			var v float64
@@ -294,7 +293,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			out = append(out, scopedValue{ScopeID: d.Script + "/" + d.Namespace, Value: v, Unit: desc.Unit})
 		}
 		return out
-	case "zone":
+	case cosmoflare.ScopeZone:
 		out := make([]scopedValue, 0, len(m.Zones))
 		for _, z := range m.Zones {
 			var v float64
@@ -317,7 +316,7 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			out = append(out, scopedValue{ScopeID: name, Key: z.ZoneID, Value: v, Unit: desc.Unit})
 		}
 		return out
-	case "d1":
+	case cosmoflare.ScopeD1:
 		out := make([]scopedValue, 0, len(m.D1))
 		for _, d := range m.D1 {
 			var v float64
@@ -376,6 +375,7 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 
 	now := e.clock()
 	fired := make([]string, 0, len(rules))
+	data := metricData(m) // same snapshot for every fire this evaluation
 	for _, rule := range rules {
 		if rule == nil || !rule.Enabled {
 			continue
@@ -443,18 +443,18 @@ func (e *Evaluator) Evaluate(m EvalMetrics) []string {
 			if e.manager == nil {
 				continue
 			}
-			if err := e.manager.TriggerAlert(alert, sv.Value, message, metricData(m)); err != nil {
+			if err := e.manager.TriggerAlert(alert, sv.Value, message, data); err != nil {
 				log.Printf("[alerts] trigger %q: %v", alertID, err)
 			}
 		}
 	}
-	return append(fired, e.fireGaps(rules, m, now)...)
+	return append(fired, e.fireGaps(rules, m, data, now)...)
 }
 
 // fireGaps pages once per hour per scope whose telemetry failed this cycle,
 // but only when an enabled rule depends on that scope — otherwise the gap
 // changes nothing the operator relies on (design O5).
-func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, now time.Time) []string {
+func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, data map[string]interface{}, now time.Time) []string {
 	if len(m.Gaps) == 0 {
 		return nil
 	}
@@ -484,7 +484,7 @@ func (e *Evaluator) fireGaps(rules []*cosmoflare.AlertRule, m EvalMetrics, now t
 			Enabled: true, CreatedAt: now, UpdatedAt: now, Count: prev,
 		}
 		message := fmt.Sprintf("telemetry gap: %s analytics unavailable, %s rules cannot fire: %s", scope, scope, m.Gaps[scope])
-		if err := e.manager.TriggerAlert(alert, 0, message, metricData(m)); err != nil {
+		if err := e.manager.TriggerAlert(alert, 0, message, data); err != nil {
 			log.Printf("[alerts] trigger %q: %v", id, err)
 		}
 	}
@@ -506,29 +506,16 @@ func RulesUseScope(rules []*cosmoflare.AlertRule, scope string) bool {
 
 // formatValue renders an observed value or threshold for a page. Row counts
 // read as 2.9B / 52.3M / 3.3k on a phone (design D14); percents print one
-// decimal (operator choice 2026-10-09); other units keep %g.
+// decimal (operator choice 2026-10-09); other units print plainly, never in
+// exponent form.
 func formatValue(v float64, unit string) string {
 	if unit == "rows" {
-		return humanCount(v)
+		return cosmoflare.HumanCount(v)
 	}
 	if unit == "%" {
 		return strconv.FormatFloat(v, 'f', 1, 64) // one decimal on a phone; payload keeps full precision
 	}
-	return strconv.FormatFloat(v, 'g', -1, 64)
-}
-
-// humanCount abbreviates a count to one decimal with a k/M/B suffix.
-func humanCount(v float64) string {
-	switch {
-	case v >= 1e9:
-		return fmt.Sprintf("%.1fB", v/1e9)
-	case v >= 1e6:
-		return fmt.Sprintf("%.1fM", v/1e6)
-	case v >= 1e3:
-		return fmt.Sprintf("%.1fk", v/1e3)
-	default:
-		return strconv.FormatFloat(v, 'f', -1, 64)
-	}
+	return strconv.FormatFloat(v, 'f', -1, 64) // never exponent form (1200000, not 1.2e+06)
 }
 
 // CollectEvalMetrics builds EvalMetrics from the analytics service over the
