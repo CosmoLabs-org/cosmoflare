@@ -1,0 +1,17 @@
+{
+  "name": "cosmoflare-ops",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "cd ../../pager && bun run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0",
+    "wrangler": "^4.0.0"
+  }
+}

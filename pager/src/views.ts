@@ -5,6 +5,8 @@
 import { acknowledge, listAlerts, snooze, type AlertRecord } from "./store";
 
 /** The exact command shown next to the copied subscription blob. */
+import { fetchVapidPublicKey, urlBase64ToUint8Array } from "./vapid";
+
 export const PAIRING_COMMAND = "cosmoflare alerts push add";
 
 /** Relative-time formatter: "just now", "4m ago", "2h ago", "3d ago". */
@@ -104,7 +106,13 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
         return;
       }
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
+      // Safari and Chrome require the VAPID application server key; the
+      // key must match the one the sender signs with (FEAT-052 fix).
+      const key = await fetchVapidPublicKey();
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key),
+      });
       copy.disabled = false;
       status.textContent = "Notifications enabled. Copy the subscription below.";
       copy.addEventListener("click", async () => {

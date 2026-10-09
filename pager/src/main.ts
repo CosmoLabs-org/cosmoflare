@@ -1,7 +1,9 @@
-// Cosmoflare Pager entry point (FEAT-045): registers the push service
-// worker and mounts the two views — alert list and pairing.
+// Cosmoflare Ops / Pager entry point (FEAT-045, FEAT-052): registers the
+// push service worker and mounts three views — the live dashboard (served by
+// the Ops Worker's /api/summary), the alert list, and device pairing.
 
 import "./styles.css";
+import { renderDashboard } from "./dashboard";
 import { renderAlertList, renderPairing } from "./views";
 
 async function registerServiceWorker(): Promise<void> {
@@ -16,6 +18,17 @@ async function registerServiceWorker(): Promise<void> {
   }
 }
 
+interface Tab {
+  label: string;
+  render: (host: HTMLElement) => void | Promise<void>;
+}
+
+const TABS: Tab[] = [
+  { label: "Dashboard", render: (host) => renderDashboard(host) },
+  { label: "Alerts", render: (host) => renderAlertList(host) },
+  { label: "Pairing", render: (host) => renderPairing(host) },
+];
+
 function mount(): void {
   const root = document.getElementById("app");
   if (!root) return;
@@ -23,46 +36,33 @@ function mount(): void {
   const top = document.createElement("header");
   top.className = "cf-top";
   const brand = document.createElement("h1");
-  brand.textContent = "Cosmoflare Pager";
-  const tabs = document.createElement("nav");
-  tabs.className = "cf-tabs";
-  tabs.setAttribute("role", "tablist");
-  const alertsTab = document.createElement("button");
-  alertsTab.textContent = "Alerts";
-  alertsTab.setAttribute("role", "tab");
-  alertsTab.setAttribute("aria-selected", "true");
-  const pairingTab = document.createElement("button");
-  pairingTab.textContent = "Pairing";
-  pairingTab.setAttribute("role", "tab");
-  pairingTab.setAttribute("aria-selected", "false");
-  tabs.append(alertsTab, pairingTab);
-  top.append(brand, tabs);
+  brand.textContent = "Cosmoflare Ops";
+  const nav = document.createElement("nav");
+  nav.className = "cf-tabs";
+  nav.setAttribute("role", "tablist");
+  top.append(brand, nav);
 
   const main = document.createElement("main");
   main.className = "cf-main";
-  const listHost = document.createElement("div");
-  const pairingHost = document.createElement("div");
-  pairingHost.hidden = true;
-  main.append(listHost, pairingHost);
-
   root.replaceChildren(top, main);
 
-  alertsTab.addEventListener("click", () => {
-    alertsTab.setAttribute("aria-selected", "true");
-    pairingTab.setAttribute("aria-selected", "false");
-    pairingHost.hidden = true;
-    listHost.hidden = false;
-    renderAlertList(listHost);
-  });
-  pairingTab.addEventListener("click", () => {
-    pairingTab.setAttribute("aria-selected", "true");
-    alertsTab.setAttribute("aria-selected", "false");
-    listHost.hidden = true;
-    pairingHost.hidden = false;
-    void renderPairing(pairingHost);
+  const hosts = TABS.map(() => document.createElement("div"));
+  main.append(...hosts);
+  const buttons = TABS.map((tab, i) => {
+    const button = document.createElement("button");
+    button.textContent = tab.label;
+    button.setAttribute("role", "tab");
+    button.addEventListener("click", () => select(i));
+    nav.append(button);
+    return button;
   });
 
-  renderAlertList(listHost);
+  function select(index: number): void {
+    buttons.forEach((b, i) => b.setAttribute("aria-selected", String(i === index)));
+    hosts.forEach((h, i) => (h.hidden = i !== index));
+    void TABS[index].render(hosts[index]);
+  }
+  select(0);
 }
 
 mount();
