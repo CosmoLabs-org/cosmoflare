@@ -1,10 +1,11 @@
-id: FEAT-pDRP0BD
+id: FEAT-055
 type: feature
 created_at: 2026-10-09T23:20:49.518874+04:00
 updated_at: 2026-10-09T23:20:51.099738+04:00
 source: local
 ulid: 01M4H1RTG3F2V4G68V8BDRP0BD
-provisional: true
+aliases:
+    - FEAT-pDRP0BD
 priority: 70
 status: open
 area: ux

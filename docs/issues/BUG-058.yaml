@@ -1,10 +1,11 @@
-id: BUG-pQV6P4X
+id: BUG-058
 type: bug
 created_at: 2026-10-09T23:22:17.158916+04:00
 updated_at: 2026-10-09T23:22:19.177942+04:00
 source: local
 ulid: 01M4H1VGDS4GRDCJJ23YQV6P4X
-provisional: true
+aliases:
+    - BUG-pQV6P4X
 severity: medium
 priority: 70
 status: open

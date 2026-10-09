@@ -11,7 +11,7 @@ completed: "2026-10-09T23:25:20+04:00"
 
 ## Context
 
-ops.cosmolabs.org (version 14dcd3ab) is owner-only and custom-domain-only, and shows live data: billing-period cost view anchored on the 23rd with per-project attribution, usage rings and bars for every Workers Paid allowance (red with flowing glow near/over limit), Workers/D1/Zones views, a Rules editor, a refresh icon, and the CosmoLabs Ops · Cosmoflare brand with a new logo. Upstream calls are cached in KV; the 5-minute cron no longer crashes and skips Cloudflare calls with no paired phone. Roadmap ROAD-107 tracks the Ops tier; issues FEAT-053, IMP-001, BUG-056 are done; IMP-002, BUG-p87APZK, BUG-pQV6P4X, FEAT-pDRP0BD are open. Master is pushed to origin.
+ops.cosmolabs.org (version 14dcd3ab) is owner-only and custom-domain-only, and shows live data: billing-period cost view anchored on the 23rd with per-project attribution, usage rings and bars for every Workers Paid allowance (red with flowing glow near/over limit), Workers/D1/Zones views, a Rules editor, a refresh icon, and the CosmoLabs Ops · Cosmoflare brand with a new logo. Upstream calls are cached in KV; the 5-minute cron no longer crashes and skips Cloudflare calls with no paired phone. Roadmap ROAD-107 tracks the Ops tier; issues FEAT-053, IMP-001, BUG-056 are done; IMP-002, BUG-057, BUG-058, FEAT-055 are open. Master is pushed to origin.
 
 ## Goals
 
@@ -21,7 +21,7 @@ Acceptance: ccs prompts verify docs/prompts/2026-10-09-cf-cli-review.md --mechan
 
 ## Carry-Over
 
-Operator-blocked: VAPID secrets + phone pairing (G-06), Billing Read on the token (G-10), v0.33.0 release go. Deferred by operator: the 9 integration defects (BUG-p87APZK, BUG-pQV6P4X), desktop redesign (FEAT-pDRP0BD), styles pass (G-11), gauge nits (IMP-002), CLI review (G-08). Session-2032 carry-overs: FEAT-050 design, cosmolabs.org deploy, launch posts, research pastes. Next action for each is written in the cf-cli-review prompt.
+Operator-blocked: VAPID secrets + phone pairing (G-06), Billing Read on the token (G-10), v0.33.0 release go. Deferred by operator: the 9 integration defects (BUG-057, BUG-058), desktop redesign (FEAT-055), styles pass (G-11), gauge nits (IMP-002), CLI review (G-08). Session-2032 carry-overs: FEAT-050 design, cosmolabs.org deploy, launch posts, research pastes. Next action for each is written in the cf-cli-review prompt.
 
 ## Next Session Context
 
@@ -30,10 +30,10 @@ Start with /run-continuation on docs/prompts/2026-10-09-cf-cli-review.md (16 goa
 ## File Scope
 
 - d825511 chore: agent history and roadmap links from session close
-- e265a06 docs(prompts): next session — independent verification first, integration bugs, desktop redesign (FEAT-pDRP0BD)
-- c6235a9 chore(issues): create BUG-pQV6P4X (provisional)
-- 919f531 chore(issues): create BUG-p87APZK (provisional)
-- 8a15c5f chore(issues): create FEAT-pDRP0BD (provisional)
+- e265a06 docs(prompts): next session — independent verification first, integration bugs, desktop redesign (FEAT-055)
+- c6235a9 chore(issues): create BUG-058 (provisional)
+- 919f531 chore(issues): create BUG-057 (provisional)
+- 8a15c5f chore(issues): create FEAT-055 (provisional)
 - af9d9e3 chore(issues): IMP-002 canonical file; prompt references updated
 - 6226f5e docs(prompts): next session — CLI review, styles pass (G-11), gauge nits (G-12), billing period via Billing Read
 - f933251 chore(issues): commit canonical IDs from sync (BUG-056; provisional files removed)

@@ -1,10 +1,11 @@
-id: BUG-p87APZK
+id: BUG-057
 type: bug
 created_at: 2026-10-09T23:22:14.765947+04:00
 updated_at: 2026-10-09T23:22:16.622308+04:00
 source: local
 ulid: 01M4H1VDVVJTZDACWVEP87APZK
-provisional: true
+aliases:
+    - BUG-p87APZK
 severity: high
 priority: 70
 status: open
