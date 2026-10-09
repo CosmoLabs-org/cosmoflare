@@ -1,11 +1,13 @@
 // Billing view (FEAT-052): billing period progress, per-product allowance
-// meters (used solid, projected hatched, allowance marker), expandable top
-// consumers, projects sorted by projected cost, pricing footnote, telemetry
-// gaps notice. Data: /api/billing via the shared ApiClient.
+// bar gauges (FEAT-pDQ8JET — used solid, projected lighter, allowance +
+// today markers, level badge), expandable top consumers, projects sorted by
+// projected cost, pricing footnote, telemetry gaps notice. Data: /api/billing
+// via the shared ApiClient.
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
-import { api, LoginExpiredError, type Billing, type FetchResult, type ProductUsage } from "./api";
+import { formatAmount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+import { api, LoginExpiredError, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
+import { barGauge, scaleFitPct } from "./gauges";
 
 // meterPct computes the meter geometry for one product row: solid used
 // width, hatched projected extension, and the allowance marker position —
@@ -35,12 +37,10 @@ function errorState(root: HTMLElement, err: unknown): void {
   root.replaceChildren(box);
 }
 
-// productRow renders one product's meter card. The meter: a track scaled to
-// fit projected (so an over-allowance projection is visible), solid fill up
-// to used, hatched fill from used to projected, and a marker line at the
-// included allowance.
-function productRow(p: ProductUsage): HTMLElement {
-  const m = meterPct(p);
+// productRow renders one product's bar-gauge card: name + overage USD head,
+// the gauge (solid used fill, projected fill, allowance + today markers,
+// level badge, text row), then the expandable top consumers.
+function productRow(p: ProductUsage, period: BillingPeriod): HTMLElement {
   const card = el("section", `cf-card cf-product ${p.projectedOverageUsd > 0 ? "cf-over" : ""}`);
   const head = el("div", "cf-product-head");
   head.append(
@@ -49,26 +49,22 @@ function productRow(p: ProductUsage): HTMLElement {
       p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)} overage` : "within allowance"),
   );
 
-  const meter = el("div", "cf-meter");
-  const track = el("div", "cf-meter-track");
-  const used = el("div", "cf-meter-used");
-  used.style.width = `${m.usedPct}%`;
-  const projected = el("div", "cf-meter-projected");
-  projected.style.width = `${Math.max(0, m.projectedPct - m.usedPct)}%`;
-  projected.style.insetInlineStart = `${m.usedPct}%`;
-  const marker = el("div", "cf-meter-marker");
-  marker.style.insetInlineStart = `${m.includedPct}%`;
-  track.append(used, projected, marker);
+  // Bar percentages are of the fitted track scale (max of used/projected/
+  // included) so an over-allowance projection stays on the track; the level
+  // and badge run on the % of allowance. The today marker sits at the
+  // expected-to-date use (allowance × period elapsed).
+  const scale = Math.max(p.used, p.projected, p.included, 1e-9);
+  const gauge = barGauge({
+    usedPct: p.included > 0 ? (p.used / p.included) * 100 : 0,
+    projectedPct: p.included > 0 ? (p.projected / p.included) * 100 : 0,
+    usedScalePct: scaleFitPct(p.used, scale),
+    projectedScalePct: scaleFitPct(p.projected, scale),
+    includedScalePct: scaleFitPct(p.included, scale),
+    expectedPct: scaleFitPct(p.included * (period.day / period.days), scale),
+    label: "",
+    detailText: `${formatAmount(p.used, p.unit)} of ${formatAmount(p.included, p.unit)} used · projected ${formatAmount(p.projected, p.unit)} (${formatPct(p.included > 0 ? (p.projected / p.included) * 100 : 0, 0)} of allowance)`,
+  });
 
-  const legend = el("div", "cf-meter-legend");
-  legend.append(
-    el("span", "cf-legend-swatch cf-swatch-used", "used"),
-    el("span", "cf-legend-swatch cf-swatch-projected", "projected"),
-    el("span", "cf-legend-swatch cf-swatch-allowance", "allowance"),
-  );
-
-  const detail = el("p", "cf-row-detail",
-    `${formatCount(p.used)} ${p.unit} of ${formatCount(p.included)} ${p.unit} used · projected ${formatCount(p.projected)} (${formatPct(p.included > 0 ? (p.projected / p.included) * 100 : 0, 0)} of allowance)`);
   const consumers = el("details", "cf-consumers");
   const summary = el("summary", "cf-consumers-summary", `Top consumers (${p.topConsumers.length})`);
   const list = el("ul", "cf-consumers-list");
@@ -82,8 +78,7 @@ function productRow(p: ProductUsage): HTMLElement {
     list.append(li);
   }
   consumers.append(summary, list);
-  meter.append(track, legend);
-  card.append(head, meter, detail, consumers);
+  card.append(head, gauge, consumers);
   return card;
 }
 
@@ -124,7 +119,7 @@ function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
 
   // Products (sorted by projected overage desc — the server sends them so)
   const products = el("div", "cf-products");
-  for (const p of b.products) products.append(productRow(p));
+  for (const p of b.products) products.append(productRow(p, b.period));
 
   // Projects table — "who to optimize"
   const projectsCard = el("section", "cf-card");
