@@ -1,6 +1,6 @@
 {
-  "name": "Cosmoflare Ops",
-  "short_name": "CF Ops",
+  "name": "CosmoLabs Ops — Cosmoflare",
+  "short_name": "CL Ops",
   "description": "Cosmoflare Ops (FEAT-045, FEAT-052): private dashboard and push-alert pager. The phone holds no Cloudflare credentials.",
   "id": "/",
   "scope": "/",
