@@ -1,0 +1,15 @@
+id: IMP-pJZ1JYP
+type: improvement
+created_at: 2026-10-09T22:04:05.293515+04:00
+updated_at: 2026-10-09T22:04:05.817604+04:00
+source: local
+ulid: 01M4GXCA9S3MYWXQCCDJJZ1JYP
+provisional: true
+priority: 30
+status: open
+area: ux
+title: 'Ops gauge nits: one status per billing card, solid legend swatches, no duplicate % on storage rings'
+description: 'Screenshot review 2026-10-09 after the gauge polish: (1) a billing card shows ''within allowance'' (green) next to ''Near limit'' (red) — show one status line; (2) legend swatches for used/projected render like broken images; (3) storage rings repeat the same number (389% / 389% used so far) because storage projection equals usage.'
+current_behavior: Conflicting status labels, odd swatches, duplicate storage numbers
+desired_behavior: One status per card, solid swatches matching the bar fills, storage rings show used % once plus the size
+roadmap_ref: ROAD-107
