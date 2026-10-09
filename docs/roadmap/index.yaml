@@ -1,8 +1,15 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T06:00:27.236461+04:00
-next_id: 103
+last_updated: 2026-10-09T20:34:02.099889+04:00
+next_id: 104
 items:
+    - id: ROAD-103
+      title: Cosmoflare Ops — private web/phone tier at ops.cosmolabs.org (dashboard, billing, push alerts)
+      status: in_progress
+      category: core
+      effort: large
+      parent: ROAD-102
+      created_at: 2026-10-09T20:34:02.099499+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
