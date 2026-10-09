@@ -153,6 +153,14 @@ describe("runScheduled", () => {
     expect(calls).toHaveLength(0);
     expect(out).toEqual({ fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] });
   });
+  it("makes zero fetch calls when no device is paired, even with enabled rules (FEAT-052)", async () => {
+    const kv = fakeKV(); // rules fall back to starters (all enabled); no subs seeded
+    const { calls } = routeFetch();
+    const out = await runScheduled(envP(kv), NOW);
+    expect(calls).toHaveLength(0); // no telemetry, no pushes
+    expect(out).toEqual({ fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] });
+    expect(kv.puts).not.toContain(STATE_KEY); // no state churn either
+  });
   it("uses starter rules when KV 'rules' is absent; threshold fire names the zone and validates against the pager schema", async () => {
     const kv = fakeKV();
     await seedSubs(kv);
@@ -183,6 +191,7 @@ describe("runScheduled", () => {
   });
   it("caches the zone/D1 name lists in KV for 1h (no REST list calls on the second run)", async () => {
     const kv = fakeKV();
+    await seedSubs(kv); // no paired device now short-circuits before telemetry
     const { calls } = routeFetch();
     await runScheduled(envP(kv), NOW);
     const listCallsFirstRun = calls.filter((c) => c.includes("/zones?") || c.includes("/d1/database")).length;
@@ -196,6 +205,7 @@ describe("runScheduled", () => {
   });
   it("cooldown suppresses a second run within 1h (no pushes, no state rewrite)", async () => {
     const kv = fakeKV();
+    await seedSubs(kv); // no paired device now short-circuits before telemetry
     routeFetch();
     await runScheduled(envP(kv), NOW);
     const putsAfterFirst = kv.puts.filter((k) => k === STATE_KEY).length;

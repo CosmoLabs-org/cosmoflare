@@ -116,9 +116,10 @@ const ZONE_QUERY = `query($t:[String!],$s:Time!,$e:Time!){viewer{zones(filter:{z
 /**
  * runScheduled is the cron entry point: load rules (KV "rules", starters
  * when absent) → skip early when nothing is enabled (zero upstream calls) →
- * collect only the telemetry an enabled rule needs (zone list + D1 list are
- * KV-cached 1h; the analytics GraphQL runs every cycle) → evaluate → push
- * each fire to every subscription → persist fire-state only when changed.
+ * skip early when no device is paired (zero upstream calls) → collect only
+ * the telemetry an enabled rule needs (zone list + D1 list are KV-cached 1h;
+ * the analytics GraphQL runs every cycle) → evaluate → push each fire to
+ * every subscription → persist fire-state only when changed.
  */
 export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise<RunResult> {
   const result: RunResult = { fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] };
@@ -126,6 +127,12 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
   const rules = await getRules(env);
   const enabled = rules.filter((r) => r.enabled);
   if (enabled.length === 0) return result; // stay offline: zero fetch calls
+
+  // No paired device → zero upstream calls: evaluating rules nobody receives
+  // would only burn the analytics quota. The list is reused for delivery
+  // below instead of reading KV a second time.
+  const subs = await readSubs(env);
+  if (subs.length === 0) return result;
 
   const needZones = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "zone");
   const needD1 = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "d1");
@@ -196,7 +203,6 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   const prunedEndpoints: string[] = [];
   if (fires.length > 0) {
-    const subs = await readSubs(env);
     for (const fire of fires) {
       const payload = {
         id: fire.alertId,
