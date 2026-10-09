@@ -14,14 +14,14 @@ cosmoflare alerts watch and alerts check page on zone cache misses (zone-cache-m
 
 ## Goals
 
-### [ ] 1. Release v0.33.0 when the operator says go (local build + publish per the no-CI rule)
+### [ ] 1. CosmoLabs Ops PWA (FEAT-052) — private Cloudflare-hosted monitoring on the operator's iPhone
+Acceptance: Phase 1 — a Worker + page behind Cloudflare Access (only the operator can open it), CF API token stored as a Worker secret (read-only scope), showing monthly usage pacing, zone cache miss %/uncached volume and D1 rows read per database from the FEAT-049 GraphQL datasets; installed to the iPhone home screen. Phase 2 — a Cron Trigger evaluates the alert rules (zone-cache-miss-pct, zone-uncached-requests 10000, d1-rows-read 1e9, usage pacing) with the hourly per-scope cooldown and Web Push reaches the phone with no Mac running. Start with a short brainstorm (TS port vs Go->Wasm, reuse of pager/, verify iOS home-screen Web Push + Access availability live). First deploy needs the operator's explicit go (local-only rule). Supersedes the old 'deploy pager + background watch' goal and carried goal 7 (phone smoke).
+### [ ] 2. Release v0.33.0 when the operator says go (local build + publish per the no-CI rule)
 Acceptance: Operator gives an explicit go in-session; then ccs sync, ccs version --bump minor, tag v0.33.0, local build, make test-live passes, GitHub release published with the changelog (BR-03, FEAT-047, FEAT-048, FEAT-049, BUG-054, BUG-055). Until then: no push.
-### [ ] 2. FEAT-050 design: pre-launch CF verdict command with the caching probe rule set
-Acceptance: Brainstorm + plan docs exist under docs/brainstorming and docs/planning-mode for FEAT-050, covering the FB-14 detection matrix as the rule catalog, a non-colliding command name (cosmoflare audit is taken), and the probe rules moved from FEAT-049 (header sweep, repeat-probe, auth-route cache check, unused bindings).
-### [ ] 3. Make alerts reach the phone: deploy the pager PWA, run watch in the background, wire the starter rules
-Acceptance: (a) the pager PWA in pager/ is served over HTTPS (cosmolabs.org/pager returned 404 on 2026-10-09 — deploy it there or as its own Pages project) and installs on the operator's phone; (b) alerts watch runs as a background service that survives terminal close and reboot (no install path exists yet — e.g. a launchd agent); (c) the operator's .cosmoflare-alerts.yaml holds zone-uncached-requests 10000, zone-cache-miss-pct 50 and d1-rows-read 1e9 rules with chosen excludes; (d) alerts watch --test-fire buzzes the paired phone (closes carried goal 7, note on FEAT-045).
-### [ ] 4. cosmolabs.org deploy: TASK-010 + shader hero + pager PWA (carried)
-Acceptance: /cosmoflare serves OG+JSON-LD using the committed cosmoflare-og.png; /pager installs; TASK-010 closed with live URL.
+### [ ] 3. FEAT-050 design: pre-launch CF verdict command with the caching probe rule set
+Acceptance: Brainstorm + plan docs exist under docs/brainstorming and docs/planning-mode for FEAT-050, covering the FB-14 detection matrix plus the ROAD-102 2026-10-09 rule candidates as the rule catalog, a non-colliding command name (cosmoflare audit is taken), and the probe rules moved from FEAT-049 (header sweep, repeat-probe, auth-route cache check, unused bindings).
+### [ ] 4. cosmolabs.org deploy: TASK-010 + shader hero (carried; the pager part moved to goal 1)
+Acceptance: /cosmoflare serves OG+JSON-LD using the committed cosmoflare-og.png; TASK-010 closed with live URL.
 ### [ ] 5. Launch posts live (carried)
 Acceptance: Show HN + r/Cloudflare URLs recorded in a ROAD-096 note.
 ### [ ] 6. Operator research pastes (carried)
