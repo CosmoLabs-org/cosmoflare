@@ -1,0 +1,15 @@
+id: ROAD-pKHNBPX
+created_at: 2026-10-09T20:34:38.969672+04:00
+updated_at: 2026-10-09T20:34:40.107735+04:00
+title: Ops rules editor — view and edit alert rules and excludes from the phone
+description: 'Rules live in KV key ''rules'' with starter defaults (O10). Add a Rules view: list, enable/disable, threshold, exclude list; skip the cron when no device is subscribed.'
+status: captured
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR8H7VBNABEM9JVPKHNBPX
+provisional: true

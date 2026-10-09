@@ -1,9 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:37.497266+04:00
-next_id: 109
+last_updated: 2026-10-09T20:34:38.969929+04:00
+next_id: 110
 items:
-    - id: ROAD-108
+    - id: ROAD-109
+      title: Ops rules editor — view and edit alert rules and excludes from the phone
+      status: captured
+      category: core
+      effort: medium
+      parent: ROAD-pJ25XG5
+      created_at: 2026-10-09T20:34:38.969672+04:00
+    - id: ROAD-p0WZ2JP
       title: Ops billing period from the real subscription (token needs Billing Read)
       status: captured
       category: core
