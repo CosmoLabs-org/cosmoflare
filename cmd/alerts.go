@@ -209,7 +209,7 @@ func init() {
 	alertsCreateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsCreateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
 	alertsCreateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Create the rule enabled (use --enabled=false to create it disabled)")
-	alertsCreateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zone or database names a zone/d1 rule skips (comma-separated)")
+	alertsCreateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zones or databases a zone/d1 rule skips, by name or ID (comma-separated; use IDs if the token cannot list D1 databases)")
 	_ = alertsCreateCmd.MarkFlagRequired("service")
 	_ = alertsCreateCmd.MarkFlagRequired("condition")
 	_ = alertsCreateCmd.MarkFlagRequired("threshold")
@@ -223,7 +223,7 @@ func init() {
 	alertsUpdateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
 	alertsUpdateCmd.Flags().StringVar(&alertTarget, "target", "", "Action target (URL, email, or log path)")
 	alertsUpdateCmd.Flags().BoolVar(&alertEnabled, "enabled", true, "Enable or disable the rule (only applied when the flag is set)")
-	alertsUpdateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zone or database names a zone/d1 rule skips (comma-separated; --exclude \"\" clears)")
+	alertsUpdateCmd.Flags().StringSliceVar(&alertExclude, "exclude", nil, "Zones or databases a zone/d1 rule skips, by name or ID (comma-separated; --exclude \"\" clears)")
 
 	// Delete flags
 	alertsDeleteCmd.Flags().BoolVar(&alertForce, "force", false, "Confirm deletion")

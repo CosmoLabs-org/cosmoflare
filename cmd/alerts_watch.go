@@ -309,7 +309,9 @@ func runAlertsWatch(cmd *cobra.Command, args []string) error {
 	}
 	printInfo("Watching alert rules every %s (%d pager device(s) subscribed, Ctrl+C to stop)", alertsWatchInterval, len(st.Subscriptions))
 	for {
-		sent, pruned, err := evaluateOnce(ctx, svc, st, sender)
+		cycleCtx, cancel := context.WithTimeout(ctx, watchCycleTimeout(alertsWatchInterval))
+		sent, pruned, err := evaluateOnce(cycleCtx, svc, st, sender)
+		cancel()
 		if err != nil {
 			// A failed cycle (transient network, missing credentials) must
 			// not kill the watch; the next cycle retries.
@@ -362,6 +364,17 @@ func runAlertsWatchTestFire(ctx context.Context, st *alertspush.Store) error {
 		}
 		printInfo("Test push delivered to %d device(s), %d pruned", sent, pruned)
 	})
+}
+
+// watchCycleTimeout bounds one watch cycle: max(interval, 60s). A cycle now
+// chains many sequential API calls (analytics, usage, zone/D1 lists, zone
+// batches, D1); without a deadline a degraded API could stall every pager
+// rule for minutes. Telemetry hit by the deadline becomes a gap page.
+func watchCycleTimeout(interval time.Duration) time.Duration {
+	if interval < 60*time.Second {
+		return 60 * time.Second
+	}
+	return interval
 }
 
 // evaluateOnce runs ONE watch cycle: evaluate every enabled rule against the
