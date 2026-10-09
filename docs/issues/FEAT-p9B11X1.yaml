@@ -1,0 +1,14 @@
+id: FEAT-p9B11X1
+type: feature
+created_at: 2026-10-10T03:26:15.61962+04:00
+updated_at: 2026-10-10T03:26:16.143111+04:00
+source: local
+ulid: 01M4HFT7JF44Z71H2HCJ9B11X1
+provisional: true
+status: open
+title: Ops email metrics — emails sent per zone
+description: 'Email Routing metrics in Ops (emails forwarded/sent per zone). Verified live 2026-10-10: /zones/{id}/email/routing returns 10000 without Email Routing Read on the token — operator-gated like Billing Read. Design: summary tile (24h emails sent across zones) + per-zone rows once the token allows; cache 15min.'
+acceptance_criteria:
+    - criterion: email metrics tile + per-zone rows render from live API once token has Email Routing Read
+      met: false
+roadmap_ref: ROAD-107
