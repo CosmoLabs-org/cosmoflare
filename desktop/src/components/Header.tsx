@@ -5,6 +5,7 @@
 // never computes into the accessible name).
 
 import { useEffect, useState } from "react";
+import { Logo } from "./Logo";
 
 export interface Account {
   name: string;
@@ -66,7 +67,7 @@ function ThemeToggle() {
     <button
       type="button"
       data-testid="theme-toggle"
-      className="cf-theme-toggle"
+      className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-border px-2 text-base leading-none transition-colors duration-150 ease-out hover:border-accent/60"
       onClick={toggle}
       aria-label={`Switch to ${next} theme`}
       aria-pressed={theme === "light"}
@@ -85,13 +86,20 @@ export function Header({
   onAccountChange,
 }: HeaderProps) {
   return (
-    <header className="cf-header">
-      <h1 className="cf-brand">⚡ Cosmoflare</h1>
+    // NOTE: the account switcher stays a native <select> (styled with the
+    // Ops tokens) rather than the Radix-based ui/select.tsx: the test
+    // contract reads `.options` off an HTMLSelectElement, and a native
+    // select is the stronger a11y primitive in a plain webview anyway.
+    <header className="flex flex-none items-center gap-4 border-b border-border bg-surface px-4 py-2">
+      <h1 className="m-0 flex items-center gap-2 text-xl font-bold tracking-wide">
+        <Logo size={24} />
+        <span>Cosmoflare</span>
+      </h1>
 
       {accounts.length > 1 ? (
         <select
           data-testid="account-switcher"
-          className="cf-account-switcher"
+          className="h-8 rounded-md border border-border bg-raised px-2 py-1 text-sm"
           value={selectedAccount ?? accounts[0]?.name ?? ""}
           onChange={(e) => onAccountChange?.(e.target.value)}
           aria-label="Account"
@@ -103,12 +111,12 @@ export function Header({
           ))}
         </select>
       ) : accounts.length === 1 ? (
-        <span data-testid="account-label" className="cf-account-label">
+        <span data-testid="account-label" className="text-sm text-muted-foreground">
           {accounts[0].name}
         </span>
       ) : null}
 
-      <div className="cf-health">
+      <div className="ml-auto flex items-center gap-4">
         <HealthDot testId="health-systems" label="Systems" online={systemsOnline} />
         <HealthDot testId="health-cloudflare" label="Cloudflare" online={cloudflareOnline} />
         <ThemeToggle />
@@ -129,13 +137,20 @@ function HealthDot({
   const state = online ? "online" : "offline";
   return (
     <span
-      className={`cf-health-dot ${online ? "is-online" : "is-offline"}`}
+      className={`inline-flex items-center gap-2 text-sm text-foreground ${
+        online ? "is-online" : "is-offline"
+      }`}
       data-testid={testId}
       data-online={String(online)}
       title={`${label}: ${state}`}
       aria-label={`${label}: ${state}`}
     >
-      <span className="cf-dot-mark" aria-hidden />
+      <span
+        aria-hidden
+        className={`size-2.5 shrink-0 rounded-full ${
+          online ? "bg-success" : "bg-danger"
+        }`}
+      />
       {label}
     </span>
   );

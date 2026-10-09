@@ -5,6 +5,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Bell, LayoutDashboard } from "lucide-react";
 import { Header, type Account } from "./components/Header";
 import { ApiClient, type DaemonEndpoint, resolveEndpoint } from "./api/client";
 import { useDaemonSSE, type StatusPayload } from "./api/sse";
@@ -121,7 +122,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="cf-app">
+      <div className="flex h-screen flex-col">
         <Header
           systemsOnline={systemsOnline}
           cloudflareOnline={cloudflareOnline}
@@ -129,25 +130,46 @@ export default function App() {
           selectedAccount={selected}
           onAccountChange={setSelected}
         />
-        <div className="cf-body">
-          <nav className="cf-sidebar" aria-label="Views">
-            {SIDEBAR_ITEMS.map((item) => (
-              <button
-                key={item}
-                className={`cf-nav-item ${view === item ? "is-active" : ""}`}
-                aria-current={view === item ? "page" : undefined}
-                aria-label={
-                  item === "Notifications" && unread > 0
-                    ? `Notifications, ${unread} unread`
-                    : undefined
-                }
-                onClick={() => setView(item)}
-              >
-                {item}
-              </button>
-            ))}
+        <div className="flex min-h-0 flex-1 items-stretch">
+          <nav
+            aria-label="Views"
+            className="flex w-56 flex-none flex-col gap-1 overflow-y-auto border-r border-border bg-surface p-3"
+          >
+            {SIDEBAR_ITEMS.map((item) => {
+              const active = view === item;
+              const Icon = item === "Dashboard" ? LayoutDashboard : Bell;
+              return (
+                <button
+                  key={item}
+                  className={`flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors duration-150 ease-out ${
+                    active
+                      ? "bg-raised font-semibold text-foreground"
+                      : "text-foreground hover:bg-raised"
+                  }`}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={
+                    item === "Notifications" && unread > 0
+                      ? `Notifications, ${unread} unread`
+                      : undefined
+                  }
+                  onClick={() => setView(item)}
+                >
+                  <Icon aria-hidden className="size-4 shrink-0" />
+                  <span>{item}</span>
+                  {item === "Notifications" && unread > 0 && (
+                    <span
+                      aria-hidden
+                      data-testid="nav-unread-badge"
+                      className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold tabular-nums text-accent-foreground"
+                    >
+                      {unread}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
-          <main className="cf-main">
+          <main className="min-w-0 flex-1 overflow-y-auto px-8 py-6">
             {view === "Dashboard" &&
               (client ? (
                 <Dashboard client={client} profile={selected} />

@@ -1,10 +1,17 @@
 /// <reference types="vitest" />
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 // Tauri expects a fixed port in dev. See: https://vitejs.dev/config/server-options
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   // Vitest needs jsdom for component tests (@testing-library/react).
   test: {
     environment: "jsdom",

@@ -1,506 +1,273 @@
 /* ============================================================================
-   Cosmoflare desktop design system (BUG-036)
+   Cosmoflare desktop design system — FEAT-055 wave A.
    ----------------------------------------------------------------------------
-   Plain CSS, dark-first, token-driven. Every cf-* class referenced by the
-   TSX is defined here. Verified contrast pairs against the #1a1a1a ground:
-     --text    #e6e6e6  13.94:1     --accent  #f59e0b   8.10:1
-     --success #4ade80   9.99:1     --danger  #f87171   6.29:1
-     --muted   #a8a8a8   7.32:1     --focus   #7dd3fc  10.44:1
-   State colors are the dot fills (.is-online/.is-offline) and clear 3:1.
+   Tailwind v4 entry (via @tailwindcss/vite) + a small Ops token layer, then
+   the cf-* component classes the views/tests still rely on.
 
-   FEAT-041 adds the notification severity ramp (--sev-*) and a light theme:
-   [data-theme="light"] overrides every :root token below. Light values are
-   picked for ≥ 4.5:1 text contrast on their surfaces (see the light block).
+   Language: dark-first, amber accent, sky secondary, neutrals tinted toward
+   the amber hue (never pure mid-grays). Tiles are separated by surface
+   elevation + soft shadows — NO left-border accents, NO tile outlines, NO
+   purple-blue gradients, NO bounce/elastic easing (FEAT-055 hard rules).
+
+   Contrast pairs (dark ground #1b1713):
+     --foreground #ede8df  ~13.5:1   --accent  #f59e0b  ~8.1:1
+     --muted-foreground #a99f8f ~7:1 --ring    #7dd3fc ~10:1
+     --success #4ade80 ~10:1         --danger  #f87171  ~6.3:1
+   Light values picked for ≥ 4.5:1 text contrast on their surfaces.
    ========================================================================== */
 
+@import "tailwindcss";
+
+/* The app themes through [data-theme] on <html> (Header ThemeToggle), so the
+   `dark:` variant keys off that attribute instead of media queries. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* --- Ops tokens: dark is the ground truth --------------------------------- */
+
 :root {
-  /* Render native controls (select, scrollbar, buttons) dark, then pin them
-     to tokens below so nothing ships OS-light on the dark ground. */
   color-scheme: dark;
 
-  --bg: #1a1a1a;
-  --surface: #242424;
-  --surface-raised: #2e2e2e;
-  --border: #3a3a3a;
+  --background: #1b1713; /* warm near-black, amber-tinted */
+  --surface: #241f19;
+  --raised: #2e2820;
+  --border: #3b342a;
+  --foreground: #ede8df;
+  --muted-foreground: #a99f8f;
 
-  --text: #e6e6e6;
-  --muted: #a8a8a8;
-  --accent: #f59e0b;
+  --accent: #f59e0b; /* amber-500 */
+  --accent-foreground: #221c12;
+  --primary: #f59e0b;
+  --primary-foreground: #221c12;
+  --ring: #7dd3fc; /* sky-300, the secondary/focus hue */
+
   --success: #4ade80;
   --danger: #f87171;
-  --focus: #7dd3fc;
-
-  /* FEAT-041 severity ramp (left borders, dots, labels). All ≥ 6:1 against
-     --surface #242424, so they carry both the border and the small label. */
-  --sev-info: #7dd3fc; /* sky-300, 10.44:1 on #1a1a1a */
-  --sev-warning: #f59e0b; /* amber-500, 8.10:1 on #1a1a1a */
-  --sev-critical: #f87171; /* red-400, 6.29:1 on #1a1a1a */
-
-  /* Minimal type scale: 12 / 13 / 16 / 20 / 24. */
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-md: 1rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.5rem;
-
-  --radius: 8px;
-  --radius-lg: 10px;
-
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: var(--text-md);
-  line-height: 1.5;
-  color: var(--text);
-  background-color: var(--bg);
+  --info: #7dd3fc;
+  --warning: #f59e0b;
+  --critical: #f87171;
 }
 
-/* --- Light theme (FEAT-041) ------------------------------------------------
-   [data-theme="light"] on <html> overrides EVERY :root token above; the
-   cascade keeps the type scale / radius untouched. Contrast pairs (text /
-   label colors vs their worst-case surface #ffffff and bg #f5f5f5):
-     --text    #1f1f1f  16.7:1 (on #fff)
-     --muted   #565656   7.4:1 (on #fff)
-     --accent  #b45309   6.4:1 (on #fff; amber-700 — the badge's #1f1f1f
-                               text on it still clears 4.5:1)
-     --success #15803d   5.0:1 (green-700)
-     --danger  #b91c1c   6.0:1 (red-700)
-     --focus   #0369a1   5.9:1 (sky-700)
-     --sev-info     #1d4ed8  6.3:1 (blue-700)
-     --sev-warning  #92600a  5.3:1 (amber-800, ≥ 4.5:1 on #fff)
-     --sev-critical #b91c1c  6.0:1 (red-700)
-   The unread badge keeps dark-on-accent text, mirroring the dark theme. */
 [data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f5f5f5;
+  --background: #f6f3ee;
   --surface: #ffffff;
-  --surface-raised: #ececec;
-  --border: #d4d4d4;
+  --raised: #efeae2;
+  --border: #e0d9cd;
+  --foreground: #241e14;
+  --muted-foreground: #6d6455;
 
-  --text: #1f1f1f;
-  --muted: #565656;
-  --accent: #b45309;
+  --accent: #b45309; /* amber-700 */
+  --accent-foreground: #ffffff;
+  --primary: #b45309;
+  --primary-foreground: #ffffff;
+  --ring: #0369a1; /* sky-700 */
+
   --success: #15803d;
   --danger: #b91c1c;
-  --focus: #0369a1;
-
-  --sev-info: #1d4ed8;
-  --sev-warning: #92600a;
-  --sev-critical: #b91c1c;
+  --info: #1d4ed8;
+  --warning: #92600a;
+  --critical: #b91c1c;
 }
 
-* {
-  box-sizing: border-box;
+/* --- Map tokens into Tailwind's theme (utilities like bg-surface) --------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-critical: var(--critical);
+
+  /* Radius scale: 6 / 8 / 10 / full. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Spacing scale: 4 / 8 / 12 / 16 / 24 / 32 (Tailwind's 1..8 steps). */
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  color: var(--text);
-  background-color: var(--bg);
+/* --- Base ------------------------------------------------------------------ */
+
+@layer base {
+  body {
+    min-height: 100vh;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  /* Native controls must never fall back to UA light chrome. */
+  button,
+  select,
+  input,
+  textarea {
+    font: inherit;
+    color: var(--foreground);
+    background-color: var(--raised);
+  }
+
+  select option {
+    color: var(--foreground);
+    background-color: var(--surface);
+  }
+
+  /* Visible focus for ALL interactive elements (BUG-036 audit gate). */
+  :is(button, select, input, textarea, a, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
-/* Native controls must never fall back to UA light chrome. */
-button,
-select,
-input,
-textarea {
-  font: inherit;
-  color: var(--text);
-  background-color: var(--surface-raised);
-}
+/* ============================================================================
+   cf-* component classes (views + a11y contract).
+   The class names are load-bearing: tests assert on .cf-live-region,
+   .cf-notification-item and its is-info/is-warning/is-critical/is-acked
+   states. Severity is encoded by the dot + label color ONLY — the old
+   3px left-border accent is gone (FEAT-055 hard rule).
+   ========================================================================== */
 
-select option {
-  color: var(--text);
-  background-color: var(--surface);
-}
+@layer components {
+  /* --- Dashboard ----------------------------------------------------------- */
 
-/* :focus-visible on ALL interactive elements (audit: keyboard users had no
-   visible focus indicator anywhere). */
-:is(button, select, input, textarea, a, [tabindex]):focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
+  .cf-dashboard {
+    @apply flex flex-col gap-4;
+  }
 
-/* --- App shell: header spans the top, sidebar + main side by side. -------- */
+  .cf-view-title {
+    @apply m-0 text-xl font-semibold;
+  }
 
-.cf-app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+  .cf-card-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
 
-.cf-body {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-  align-items: stretch;
-}
+  /* Surface elevation only — no tile outline (FEAT-055). */
+  .cf-card {
+    @apply flex flex-col gap-2 rounded-lg bg-surface p-4 shadow-sm;
+  }
 
-.cf-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-y: auto;
-  padding: 1.5rem 2rem;
-}
+  .cf-card-label {
+    @apply m-0 text-sm font-semibold text-muted-foreground;
+  }
 
-/* --- Header --------------------------------------------------------------- */
+  .cf-card-count {
+    @apply m-0 text-2xl font-bold tabular-nums;
+  }
 
-.cf-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: none;
-  padding: 0.5rem 1rem;
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
+  .cf-card-error {
+    @apply wrap-anywhere text-sm font-medium text-danger;
+  }
 
-.cf-brand {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
+  /* --- Notifications -------------------------------------------------------- */
 
-.cf-account-switcher {
-  min-height: 32px;
-  padding: 0.25rem 0.5rem;
-  font-size: var(--text-sm);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
+  .cf-notifications {
+    @apply flex flex-col gap-4;
+  }
 
-.cf-account-label {
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
+  .cf-notifications-header {
+    @apply flex items-center gap-3;
+  }
 
-.cf-health {
-  display: flex;
-  gap: 1rem;
-  margin-left: auto;
-}
+  .cf-unread-badge {
+    @apply inline-flex min-w-7 items-center justify-center rounded-full bg-accent px-2 py-0.5 text-xs font-bold tabular-nums text-accent-foreground;
+  }
 
-.cf-health-dot {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--text-sm);
-  color: var(--text);
-}
+  .cf-mark-seen {
+    @apply ml-auto h-8 rounded-md border border-border px-3 text-sm transition-colors duration-150 ease-out hover:border-accent/60 disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--raised);
+  }
 
-.cf-dot-mark {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: var(--muted);
-}
+  .cf-notification-log {
+    @apply flex min-h-0 flex-col gap-2;
+  }
 
-/* BUG-037: the dot's fill is the visual state carrier — success green when
-   online, danger red when offline. Both clear 3:1 against --bg. */
-.cf-health-dot.is-online .cf-dot-mark {
-  background-color: var(--success);
-}
+  .cf-notification-list {
+    @apply m-0 flex max-h-[calc(100vh-14rem)] list-none flex-col gap-2 overflow-y-auto p-0;
+  }
 
-.cf-health-dot.is-offline .cf-dot-mark {
-  background-color: var(--danger);
-}
+  .cf-notification-item {
+    @apply rounded-md bg-surface p-2.5 text-sm break-words shadow-sm;
+  }
 
-/* FEAT-041: sun/moon theme toggle pinned into the health cluster. */
-.cf-theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  min-width: 32px;
-  padding: 0 0.5rem;
-  font-size: var(--text-md);
-  line-height: 1;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
+  /* Acked items dim + strike (FEAT-045 contract). */
+  .cf-notification-item.is-acked {
+    @apply opacity-55;
+  }
 
-.cf-theme-toggle:hover {
-  border-color: var(--accent);
-}
+  .cf-notification-item.is-acked .cf-notification-message {
+    @apply line-through;
+  }
 
-/* --- Sidebar / navigation -------------------------------------------------- */
+  .cf-notification-severity {
+    @apply mb-0.5 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase;
+  }
 
-.cf-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: none;
-  width: 220px;
-  padding: 1rem 0.5rem;
-  background-color: var(--surface);
-  border-right: 1px solid var(--border);
-  overflow-y: auto;
-}
+  .cf-severity-mark {
+    @apply size-2 shrink-0 rounded-full bg-info;
+  }
 
-.cf-nav-item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 44px; /* comfortable pointer + touch target, never below 24px */
-  padding: 0.5rem 0.75rem;
-  font-size: var(--text-sm);
-  text-align: left;
-  color: var(--text);
-  background-color: transparent;
-  border: none;
-  border-left: 3px solid transparent;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
+  .cf-notification-item.is-info .cf-severity-label {
+    color: var(--info);
+  }
+  .cf-notification-item.is-warning .cf-severity-label {
+    color: var(--warning);
+  }
+  .cf-notification-item.is-critical .cf-severity-label {
+    color: var(--critical);
+  }
+  .cf-notification-item.is-warning .cf-severity-mark {
+    background-color: var(--warning);
+  }
+  .cf-notification-item.is-critical .cf-severity-mark {
+    background-color: var(--critical);
+  }
 
-.cf-nav-item:hover {
-  background-color: var(--surface-raised);
-}
+  .cf-notification-actions {
+    @apply mt-1.5 inline-flex gap-2;
+  }
 
-.cf-nav-item.is-active {
-  font-weight: 600;
-  color: var(--text);
-  background-color: var(--surface-raised);
-  border-left-color: var(--accent);
-}
+  .cf-ack-btn,
+  .cf-snooze-btn {
+    @apply h-7 rounded-md border border-border px-2.5 text-xs transition-colors duration-150 ease-out hover:border-accent/60;
+    background-color: var(--raised);
+  }
 
-/* --- Dashboard ------------------------------------------------------------ */
+  .cf-snoozed-summary {
+    @apply m-0 text-xs text-muted-foreground;
+  }
 
-.cf-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+  .cf-empty {
+    @apply m-0 text-sm text-muted-foreground;
+  }
 
-.cf-view-title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 600;
-}
-
-.cf-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.cf-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.25rem;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.cf-card-label {
-  margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.cf-card-count {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.cf-card-error {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--danger);
-  overflow-wrap: anywhere;
-}
-
-/* --- Notifications --------------------------------------------------------- */
-
-.cf-notifications {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.cf-notifications-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.cf-unread-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.75rem;
-  padding: 0.125rem 0.5rem;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--bg);
-  background-color: var(--accent); /* #1a1a1a on #f59e0b = 8.10:1 */
-  border-radius: 999px;
-}
-
-.cf-mark-seen {
-  min-height: 32px;
-  margin-left: auto;
-  padding: 0.375rem 0.75rem;
-  font-size: var(--text-sm);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.cf-mark-seen:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.cf-mark-seen:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cf-notification-log {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-height: 0;
-}
-
-.cf-notification-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: calc(100vh - 14rem);
-  overflow-y: auto;
-}
-
-/* FEAT-041: severity is encoded twice — the 3px left border AND a dot +
-   visible text label (never color alone). Defaults to info; .is-warning /
-   .is-critical override. Border shades clear 3:1 against --surface in both
-   themes; the label colors clear 4.5:1 (see token comments). */
-.cf-notification-item {
-  padding: 0.625rem 0.875rem;
-  font-size: var(--text-sm);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--sev-info);
-  border-radius: var(--radius);
-  overflow-wrap: anywhere;
-}
-
-.cf-notification-item.is-warning {
-  border-left-color: var(--sev-warning);
-}
-
-.cf-notification-item.is-critical {
-  border-left-color: var(--sev-critical);
-}
-
-.cf-notification-severity {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-bottom: 0.125rem;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.cf-notification-item.is-info .cf-severity-label {
-  color: var(--sev-info);
-}
-
-.cf-notification-item.is-warning .cf-severity-label {
-  color: var(--sev-warning);
-}
-
-.cf-notification-item.is-critical .cf-severity-label {
-  color: var(--sev-critical);
-}
-
-.cf-severity-mark {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--sev-info);
-}
-
-.cf-notification-item.is-warning .cf-severity-mark {
-  background-color: var(--sev-warning);
-}
-
-.cf-notification-item.is-critical .cf-severity-mark {
-  background-color: var(--sev-critical);
-}
-
-.cf-notification-message {
-  display: block;
-}
-
-/* FEAT-045: acked items are dimmed and struck through (parity with the pager
-   PWA); the data-acked attribute is the state contract, the class the style. */
-.cf-notification-item.is-acked {
-  opacity: 0.55;
-}
-
-.cf-notification-item.is-acked .cf-notification-message {
-  text-decoration: line-through;
-}
-
-.cf-notification-actions {
-  display: inline-flex;
-  gap: 0.5rem;
-  margin-top: 0.375rem;
-}
-
-.cf-ack-btn,
-.cf-snooze-btn {
-  min-height: 28px;
-  padding: 0.25rem 0.625rem;
-  font-size: var(--text-xs);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.cf-ack-btn:hover,
-.cf-snooze-btn:hover {
-  border-color: var(--accent);
-}
-
-/* FEAT-045: summary row standing in for the currently-snoozed items. */
-.cf-snoozed-summary {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-.cf-empty {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-/* BUG-047: visually-hidden live region for screen-reader announcements
-   (WCAG 4.1.3). Clip pattern keeps the content in the accessibility tree
-   without affecting layout. */
-.cf-live-region {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  /* BUG-047: visually-hidden live region for screen-reader announcements
+     (WCAG 4.1.3). Clip pattern keeps the content in the accessibility tree
+     without affecting layout. Tests select on this class — do not rename. */
+  .cf-live-region {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
