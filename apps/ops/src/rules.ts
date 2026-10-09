@@ -1,8 +1,7 @@
 // Cosmoflare Ops cron alert engine (FEAT-052): a TS port of the FEAT-049
-// zone/D1 alert semantics from internal/webhook/ vitest observability test-coverage
-// internal/webhook/evaluator.go, so the Worker can page the phone with the Mac
-// off. Pure module: no fetch, no KV — the caller (scheduled.ts) owns I/O and
-// passes observations in.
+// zone/D1 alert semantics from internal/webhook/evaluator.go, so the Worker
+// can page the phone with the Mac off. Pure module: no fetch, no KV — the
+// caller (scheduled.ts) owns I/O and passes observations in.
 
 // Conditions this engine implements. Scope and unit mirror the Go registry
 // (pkg/cosmoflare/alerts.go); dataset names the upstream telemetry source the
@@ -54,6 +53,23 @@ export interface FireState {
   lastFired: Record<string, number>; // alert ID → last fire (epoch ms)
   lastValue: Record<string, number>; // alert ID → value of the last page (drives 2× escalation)
   fires: Record<string, number>; // alert ID → fire count
+}
+
+// STATE_TTL_MS bounds the cooldown memory: entries whose lastFired is older
+// than 24h can no longer affect a run (cooldowns are 1h) and are pruned so
+// the KV blob does not grow forever with retired alert IDs.
+export const STATE_TTL_MS = 24 * 60 * 60 * 1000;
+
+// pruneState drops lastFired/lastValue/fires entries whose lastFired is older
+// than 24h, mutating state in place. Call before the changed-check so a prune
+// alone still persists the smaller blob.
+export function pruneState(state: FireState, now: number): void {
+  for (const [alertId, at] of Object.entries(state.lastFired)) {
+    if (now - at <= STATE_TTL_MS) continue; // "older than 24h" is strict
+    delete state.lastFired[alertId];
+    delete state.lastValue[alertId];
+    delete state.fires[alertId];
+  }
 }
 
 // Cooldown is per rule/scope, 1h (operator decision O5, watch parity). While

@@ -7,8 +7,8 @@
 
 import type { ZoneGroups } from "./summary";
 import { summarizeD1, summarizeZones } from "./summary";
-import { CONDITIONS, evaluate, type D1Obs, type FireState, type Rule, type ZoneObs } from "./rules";
-import { readSubs } from "./subscriptions";
+import { CONDITIONS, evaluate, pruneState, type D1Obs, type FireState, type Rule, type ZoneObs } from "./rules";
+import { readSubs, removeSubscriptions } from "./subscriptions";
 import { sendPushes } from "./webpush";
 
 const GRAPHQL = "https://api.cloudflare.com/client/v4/graphql";
@@ -172,14 +172,14 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
       return [] as { uuid: string; name: string }[];
     });
     try {
-      const data = await gql<{ viewer: { accounts: { g: { sum: { rowsRead: number; readQueries: number }; dimensions: { databaseId: string } }[] }[] } }>(
+      const data = await gql<{ viewer: { accounts: { g: { sum: { rowsRead: number; readQueries: number; rowsWritten: number }; dimensions: { databaseId: string } }[] }[] } }>(
         env.CF_API_TOKEN,
-        `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead readQueries} dimensions{databaseId}}}}}`,
+        `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead readQueries rowsWritten} dimensions{databaseId}}}}}`,
         { a: env.CF_ACCOUNT_ID, s: start, e: end },
       );
       const names = Object.fromEntries(dbList.map((d) => [d.uuid, d.name]));
       d1.push(...summarizeD1(
-        (data.viewer.accounts[0]?.g ?? []).map((g) => ({ databaseId: g.dimensions.databaseId, rowsRead: g.sum.rowsRead, readQueries: g.sum.readQueries })),
+        (data.viewer.accounts[0]?.g ?? []).map((g) => ({ databaseId: g.dimensions.databaseId, rowsRead: g.sum.rowsRead, readQueries: g.sum.readQueries, rowsWritten: g.sum.rowsWritten })),
         names,
       ));
     } catch (err) {
@@ -190,6 +190,11 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
   const fires = evaluate(enabled, zones, d1, gapMap, state, now.getTime());
   result.gaps = Object.keys(gapMap).sort().map((ds) => `${ds}: ${gapMap[ds]}`);
 
+  // Bounded fire-state: drop cooldown entries older than 24h before the
+  // changed-check, so a prune alone still persists the smaller blob.
+  pruneState(state, now.getTime());
+
+  const prunedEndpoints: string[] = [];
   if (fires.length > 0) {
     const subs = await readSubs(env);
     for (const fire of fires) {
@@ -204,8 +209,11 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
       const outcome = await sendPushes(env, subs, payload);
       result.sent += outcome.sent;
       result.pruned += outcome.pruned;
+      prunedEndpoints.push(...outcome.prunedEndpoints);
       result.issues.push(...outcome.issues);
     }
+    // Dead devices leave in ONE read-modify-write for the whole run.
+    await removeSubscriptions(env, prunedEndpoints);
   }
 
   if (JSON.stringify(state) !== stateBefore) {
@@ -229,5 +237,8 @@ export async function testFire(env: OpsEnv): Promise<{ sent: number; pruned: num
     detail: "Test fire from 'cosmoflare alerts watch --test-fire'. Seeing this on your pager means pairing works.",
     fired_at: new Date().toISOString(),
   };
-  return sendPushes(env, subs, payload);
+  const outcome = await sendPushes(env, subs, payload);
+  // A test fire also prunes dead endpoints the push service reports gone.
+  await removeSubscriptions(env, outcome.prunedEndpoints);
+  return { sent: outcome.sent, pruned: outcome.pruned, issues: outcome.issues };
 }

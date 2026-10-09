@@ -247,6 +247,27 @@ describe("runScheduled", () => {
     expect(d1Fire.detail).toContain("db-1");
     expect(calls.length).toBeGreaterThan(0);
   });
+  it("a 410 push prunes the dead endpoint from KV 'subs' in one write, keeping the live one", async () => {
+    const kv = fakeKV();
+    await kv.put(SUBS_KEY, JSON.stringify([
+      { endpoint: "https://push.example/1", p256dh: "pk", auth: "ak" },
+      { endpoint: "https://push.example/2", p256dh: "pk", auth: "ak" },
+    ]));
+    routeFetch();
+    const inner = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === "https://push.example/2") return new Response(null, { status: 410 });
+      return inner(input as never, init);
+    }) as typeof fetch;
+    const subsWritesBefore = kv.puts.filter((k) => k === SUBS_KEY).length;
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.pruned).toBe(2); // two fires, both hit the dead endpoint
+    expect(out.sent).toBe(2);
+    // one read-modify-write for the whole run removed only the dead endpoint
+    const kept = (await kv.get(SUBS_KEY, "json")) as { endpoint: string }[];
+    expect(kept.map((s) => s.endpoint)).toEqual(["https://push.example/1"]);
+    expect(kv.puts.filter((k) => k === SUBS_KEY).length).toBe(subsWritesBefore + 1);
+  });
 });
 
 describe("testFire", () => {

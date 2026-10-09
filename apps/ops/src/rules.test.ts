@@ -5,6 +5,8 @@ import {
   evaluate,
   formatValue,
   humanCount,
+  pruneState,
+  STATE_TTL_MS,
   type FireState,
   type Rule,
   type ZoneObs,
@@ -122,6 +124,32 @@ describe("cooldown and escalation", () => {
     expect(CONDITIONS["zone-uncached-requests"].unit).toBe("requests");
     expect(CONDITIONS["zone-cache-miss-pct"].unit).toBe("%");
     expect(CONDITIONS["d1-rows-read"].unit).toBe("rows");
+  });
+});
+
+describe("pruneState (bounded fire-state)", () => {
+  it("drops lastFired/lastValue/fires entries whose lastFired is older than 24h", () => {
+    const now = 10 * STATE_TTL_MS;
+    const st: FireState = {
+      lastFired: { "old/x": now - STATE_TTL_MS - 1, "fresh/y": now - 1000 },
+      lastValue: { "old/x": 5, "fresh/y": 6 },
+      fires: { "old/x": 3, "fresh/y": 1 },
+    };
+    pruneState(st, now);
+    expect(st.lastFired).toEqual({ "fresh/y": now - 1000 });
+    expect(st.lastValue).toEqual({ "fresh/y": 6 });
+    expect(st.fires).toEqual({ "fresh/y": 1 });
+  });
+  it("keeps an entry exactly at the 24h boundary (older-than is strict)", () => {
+    const now = 5 * STATE_TTL_MS;
+    const st: FireState = { lastFired: { "edge/z": now - STATE_TTL_MS }, lastValue: { "edge/z": 1 }, fires: { "edge/z": 1 } };
+    pruneState(st, now);
+    expect(st.lastFired).toEqual({ "edge/z": now - STATE_TTL_MS });
+  });
+  it("leaves empty state untouched", () => {
+    const st = stateP();
+    pruneState(st, 1000);
+    expect(st).toEqual({ lastFired: {}, lastValue: {}, fires: {} });
   });
 });
 

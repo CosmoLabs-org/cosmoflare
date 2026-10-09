@@ -37,6 +37,20 @@ export async function writeSubs(env: OpsEnv, subs: StoredSubscription[]): Promis
   await env.OPS_KV.put(SUBS_KEY, JSON.stringify(subs));
 }
 
+/**
+ * removeSubscriptions drops dead endpoints (404/410 from the push service)
+ * from KV "subs" in ONE read-modify-write. No write when nothing matched, so
+ * a fully-live subscription list costs zero KV writes per cron run.
+ */
+export async function removeSubscriptions(env: OpsEnv, endpoints: string[]): Promise<void> {
+  if (endpoints.length === 0) return;
+  const dead = new Set(endpoints);
+  const subs = await readSubs(env);
+  const next = subs.filter((s) => !dead.has(s.endpoint));
+  if (next.length === subs.length) return; // nothing matched: skip the write
+  await writeSubs(env, next);
+}
+
 // validateSubscription checks the browser's PushSubscription shape: an https
 // endpoint plus the two client keys the aes128gcm encryption needs. Anything
 // else is rejected with a reason the caller can show.

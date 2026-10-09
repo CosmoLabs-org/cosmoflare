@@ -18,6 +18,8 @@ const PUSH_URGENCY = "normal" as const;
 export interface PushOutcome {
   sent: number;
   pruned: number;
+  /** Endpoints the push service reported gone (404/410): the caller removes them from KV. */
+  prunedEndpoints: string[];
   /** One line per failed delivery: status + push-service reason text, or a transport error. */
   issues: string[];
 }
@@ -60,7 +62,7 @@ export async function sendPushes(
   subs: StoredSubscription[],
   payload: unknown,
 ): Promise<PushOutcome> {
-  const outcome: PushOutcome = { sent: 0, pruned: 0, issues: [] };
+  const outcome: PushOutcome = { sent: 0, pruned: 0, prunedEndpoints: [], issues: [] };
   const subj = vapidSubject(vapid.VAPID_SUBJECT);
   if (subj.error) {
     outcome.issues.push(subj.error);
@@ -75,6 +77,7 @@ export async function sendPushes(
       const res = await fetch(sub.endpoint, request);
       if (res.status === 404 || res.status === 410) {
         outcome.pruned++; // endpoint gone: caller prunes it from KV
+        outcome.prunedEndpoints.push(sub.endpoint);
         continue;
       }
       if (res.status >= 200 && res.status < 300) {

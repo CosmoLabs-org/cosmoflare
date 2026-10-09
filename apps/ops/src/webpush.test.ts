@@ -57,7 +57,7 @@ describe("sendPushes", () => {
   it("delivers to every subscription and counts sends", async () => {
     globalThis.fetch = (async () => new Response(null, { status: 201 })) as typeof fetch;
     const out = await sendPushes(vapidP(), [subFor("https://p/1"), subFor("https://p/2")], payloadP());
-    expect(out).toEqual({ sent: 2, pruned: 0, issues: [] });
+    expect(out).toEqual({ sent: 2, pruned: 0, prunedEndpoints: [], issues: [] });
     expect(builtRequests.map((r) => r.url)).toEqual(["https://p/1", "https://p/2"]);
     // the envelope is the JSON payload string
     const envelope = new TextDecoder().decode(builtRequests[0].init.body as Uint8Array);
@@ -71,7 +71,7 @@ describe("sendPushes", () => {
       return new Response(null, { status: 201 });
     }) as typeof fetch;
     const out = await sendPushes(vapidP(), [subFor("https://p/gone"), subFor("https://p/ok"), subFor("https://p/gone2")], payloadP());
-    expect(out).toEqual({ sent: 1, pruned: 2, issues: [] });
+    expect(out).toEqual({ sent: 1, pruned: 2, prunedEndpoints: ["https://p/gone", "https://p/gone2"], issues: [] });
   });
   it("records status + reason for other non-2xx without aborting", async () => {
     globalThis.fetch = (async () => new Response(JSON.stringify({ reason: "BadJwtToken" }), { status: 403 })) as typeof fetch;
