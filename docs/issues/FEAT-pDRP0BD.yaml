@@ -1,0 +1,25 @@
+id: FEAT-pDRP0BD
+type: feature
+created_at: 2026-10-09T23:20:49.518874+04:00
+updated_at: 2026-10-09T23:20:49.923927+04:00
+source: local
+ulid: 01M4H1RTG3F2V4G68V8BDRP0BD
+provisional: true
+priority: 70
+status: open
+area: ux
+title: Desktop app redesign — Tailwind + shadcn/ui + icon set, no AI slop, impeccable-gated
+description: 'Operator 2026-10-09: fix the design of the Cosmoflare desktop app (desktop/, Tauri, v0.16.0) and make it much better with less slop: top-tier UX/UI using Tailwind and shadcn/ui components with a consistent icon set (lucide), vetted with the impeccable detector (0 anti-patterns) and screenshot review. Bring it to parity with the Ops PWA design language (CosmoLabs Ops · Cosmoflare brand, new logo mark, no left-border accents, red flowing over-limit gauges).'
+acceptance_criteria:
+    - criterion: Tailwind + shadcn/ui installed and used for all views
+      met: false
+    - criterion: One icon set (lucide) across the app
+      met: false
+    - criterion: impeccable detect = 0 on desktop/src
+      met: false
+    - criterion: Brand lockup and logo match Ops
+      met: false
+    - criterion: Screenshots of every view reviewed by Opus before merge
+      met: false
+    - criterion: Existing desktop tests green
+      met: false
