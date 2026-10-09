@@ -1,0 +1,24 @@
+id: BUG-p87APZK
+type: bug
+created_at: 2026-10-09T23:22:14.765947+04:00
+updated_at: 2026-10-09T23:22:15.292024+04:00
+source: local
+ulid: 01M4H1VDVVJTZDACWVEP87APZK
+provisional: true
+severity: high
+priority: 70
+status: open
+area: reliability
+title: 'Ops pager integration defects: rules revert after save, stale data never repainted, refresh reports false success, legend CSS clash'
+description: 'Opus integration review 2026-10-09 (combined diff ff53903..HEAD). CONFIRMED: (1) rules.ts:376 putRules bypasses ApiClient cache -> Rules view shows pre-save rules for 60s/after reload and a second Save PUTs them back; (2) no view passes onRevalidate (api.ts:173) and ''Updated Xm ago'' uses only server cache.ageSec, so hours-old sessionStorage data reads as fresh; (3) renderWorkers/D1/Zones return void and renderOverview/Billing swallow errors, so the refresh button shows success before data arrives, a failed refresh replaces good data with an error card, repaint destroys the button, Rules refresh lacks {refresh:true}; (4) styles.css ~1042 .cf-legend-dot overrides zone .cf-seg-* dots (grey 5px) and old .cf-legend-swatch::before (~407) paints over billing swatches; (5) rules-api index:-1 shown as ''Rule 0''; (6) gauges.ts:419 cf-level-warning-text has no CSS rule; (7) views.ts:149 test-fire lacks redirect:manual + login-expired handling and hides response issues.'
+fix_direction: 'ApiClient.store/invalidate after PUT; onRevalidate repaint + age = res.ageSec + cache.ageSec; refresh path returns the fetch promise, rethrows, keeps old DOM, keeps the button node; scope legend rules under .cf-legend and disable ::before; index<0 = request-level; add .cf-level-warning-text; test-fire shows issues. Gate: tsc/tests/build, impeccable detect 0, live-data screenshots.'
+affected_files:
+    - pager/src/rules.ts
+    - pager/src/api.ts
+    - pager/src/dashboard.ts
+    - pager/src/billing.ts
+    - pager/src/tables.ts
+    - pager/src/styles.css
+    - pager/src/gauges.ts
+    - pager/src/views.ts
+roadmap_ref: ROAD-107
