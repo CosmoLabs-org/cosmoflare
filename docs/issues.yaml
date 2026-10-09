@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T22:04:07.058356+04:00
-next_bug_id: 57
-next_feat_id: 54
+last_updated: 2026-10-09T23:22:19.167502+04:00
+next_bug_id: 58
+next_feat_id: 56
 next_task_id: 17
 next_imp_id: 3
 issues:
@@ -341,13 +341,28 @@ issues:
       title: ZoneHTTP analytics query rejected live — count requested inside sum
       severity: high
       created_at: 2026-10-08T23:32:04.221818+04:00
-    - id: BUG-pNXAHPD
+    - id: BUG-056
       type: bug
       status: open
       title: Ops billing period assumed calendar month (ends Nov 1); the real cycle runs from the 23rd (Sep 23 - Oct 23)
       severity: high
+      priority: 70
       area: reliability
       created_at: 2026-10-09T21:14:51.881034+04:00
+    - id: BUG-p87APZK
+      type: bug
+      status: open
+      title: 'Ops pager integration defects: rules revert after save, stale data never repainted, refresh reports false success, legend CSS clash'
+      severity: high
+      area: reliability
+      created_at: 2026-10-09T23:22:14.765947+04:00
+    - id: BUG-pQV6P4X
+      type: bug
+      status: open
+      title: 'Ops Worker: cron and API cache share KV keys in incompatible formats; scheduled handler has no rejection catch'
+      severity: medium
+      area: reliability
+      created_at: 2026-10-09T23:22:17.158916+04:00
     - id: FEAT-001
       type: feature
       status: closed
@@ -614,34 +629,42 @@ issues:
       type: feature
       status: open
       title: CosmoLabs Ops PWA — private Cloudflare-hosted monitoring dashboard + push alerts for iPhone
-      delegated_to: "0362"
+      delegated_to: "0364"
       created_at: 2026-10-09T15:35:36.537715+04:00
-    - id: FEAT-pDQ8JET
+    - id: FEAT-053
       type: feature
       status: open
       title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
       priority: 70
       area: ux
       created_at: 2026-10-09T21:14:17.006648+04:00
-    - id: FEAT-pTS4SNG
+    - id: FEAT-054
       type: feature
       status: closed
       title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
       priority: 70
       area: ux
       created_at: 2026-10-09T21:14:26.739424+04:00
-    - id: IMP-pJZ1JYP
-      type: improvement
+    - id: FEAT-pDRP0BD
+      type: feature
       status: open
-      title: 'Ops gauge nits: one status per billing card, solid legend swatches, no duplicate % on storage rings'
+      title: Desktop app redesign — Tailwind + shadcn/ui + icon set, no AI slop, impeccable-gated
       area: ux
-      created_at: 2026-10-09T22:04:05.293515+04:00
-    - id: IMP-pPFDXJA
+      created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: IMP-001
       type: improvement
       status: open
       title: 'Ops refresh control: refresh icon button with micro-animations'
+      priority: 50
       area: ux
       created_at: 2026-10-09T21:14:19.897673+04:00
+    - id: IMP-002
+      type: improvement
+      status: open
+      title: 'Ops gauge nits: one status per billing card, solid legend swatches, no duplicate % on storage rings'
+      priority: 30
+      area: ux
+      created_at: 2026-10-09T22:04:05.293515+04:00
     - id: TASK-001
       type: task
       status: closed

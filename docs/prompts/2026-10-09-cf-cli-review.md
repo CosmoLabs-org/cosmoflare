@@ -11,7 +11,7 @@ covers_plan_deliverables:
 created: "2026-10-09T20:36:13+04:00"
 date: "2026-10-09T20:36:13+04:00"
 goals_completed: 7
-goals_total: 12
+goals_total: 16
 id: P-2026-10-09-cf-cli-review
 plan_ref: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
 priority: medium
@@ -120,6 +120,18 @@ Steps: (1) consolidate styles.css into ordered sections (tokens → base → she
 ### [ ] G-12 Gauge nits (IMP-002)
 **Model:** `glm-turbo` | **Files:** `pager/src/billing.ts`, `pager/src/gauges.ts`, gauges block in `styles.css`. (1) one status per billing card — "within allowance" (green) must not sit next to "Near limit" (red): show the level badge only, and the overage USD only when > 0; (2) legend swatches for used/projected render like broken images — solid swatches matching the bar fills; (3) storage rings repeat the same number (389% and "389% used so far") — for storage show the % once plus the size ("3.9 GB of 1 GB"). Acceptance: tsc/tests/build green, detector 0, screenshots read.
 
+### [ ] G-13 FIRST: independently verify this session's Ops work before building on it (operator request)
+**Model:** `opus` (fresh eyes; do not trust this prompt's claims). Re-verify from the tree and the live site, not from prose: (1) `cd apps/ops && bunx tsc --noEmit && bun run test` and `cd pager && bunx tsc --noEmit && bun run test && bun run build && bunx impeccable detect src/` all green; (2) run the pager against LIVE data (scratchpad bun server importing summaryResponse/billingResponse with a Map KV + `BILLING_ANCHOR_DAY: "23"`, serving pager/dist; Playwright screenshots of every route at 375x812 and 1280x800) and confirm every `/api/*` returns 200 and the numbers match the Cloudflare dashboard the operator sees; (3) confirm ops.cosmolabs.org lockdown: anonymous → 302 to cosmolabs.cloudflareaccess.com, workers.dev → 404, Access app destinations = ops.cosmolabs.org only, `wrangler tail cosmoflare-ops --format json` shows no exceptions over two cron runs; (4) list anything that contradicts this prompt before starting other goals.
+
+### [ ] G-14 Ops pager integration defects (BUG-p87APZK, 7 items)
+**Model:** `sonnet` (= glm-5.3-flash), one bounded brief — the issue's description + fix-direction ARE the spec (rules cache after save, onRevalidate repaint + honest age, refresh returns/rethrows and keeps old DOM + button node, legend CSS scoped under .cf-legend, index<0 request-level errors, .cf-level-warning-text rule, test-fire redirect:manual + issues). Gate: tsc/tests/build, detector 0, live-data screenshots; Opus reviews before merge.
+
+### [ ] G-15 Ops Worker KV key collision + scheduled rejection catch (BUG-pQV6P4X)
+**Model:** `glm-turbo` | **Files:** `apps/ops/src/scheduled.ts`, `apps/ops/src/index.ts`. Cron list keys → `cron:d1-list` / `cron:zones` with expirationTtl 86400; `.catch` logging `{cron:"alerts",error}` on the scheduled waitUntil. After deploy, delete the stale KV keys `d1-list` and `zones` written by the old cron (`wrangler kv key delete --remote`).
+
+### [ ] G-16 Desktop app redesign — Tailwind + shadcn/ui + icons, no slop (FEAT-pDRP0BD)
+**Model:** `opus` designs the system and briefs; `sonnet` (= glm-5.3-flash) agents implement per view in parallel. **Files:** `desktop/` (Tauri, v0.16.0, product "Cosmoflare"). Steps: (1) audit the current desktop UI with screenshots (`bun run dev` in desktop/ or a Tauri dev window) and `bunx impeccable detect desktop/src/`; (2) install Tailwind + shadcn/ui (Vite + React/TS — confirm desktop's framework from desktop/package.json first) and lucide icons; (3) design language = Ops PWA: "CosmoLabs Ops · Cosmoflare" lockup, the new logo (pager/src/logo.ts), dark-first tokens, red flowing over-limit gauges, no left borders/tile outlines; (4) rebuild each view with shadcn components; (5) gate: impeccable detect 0, desktop tests green, Opus reads screenshots of every view. The operator asked for the /impeccable skill — it is NOT installed as a Claude skill on this machine (only the `impeccable` CLI detector); offer to install the skill/plugin at session start.
+
 ## Carry-Overs
 
 1. **Session 2032 prompt** (2/8) → `docs/prompts/2026-10-09-session-2032-continuation.md`: goal 2 v0.33.0 release (operator go only), goal 3 FEAT-050 design (non-colliding command name; ROAD-102 rule catalog), goals 4-6 operator-driven (cosmolabs.org TASK-010 deploy, launch posts, research pastes). Goal 1 = G-06 here.
@@ -130,10 +142,13 @@ Steps: (1) consolidate styles.css into ordered sections (tokens → base → she
 Cosmoflare's governance pillar (ROAD-102) now has a working phone tier the operator is happy with. The CLI review decides the next big moves: which agent-UX conventions to adopt, and how to pull richer data with fewer calls — useful for both the CLI and Ops. The operator keeps giving UI feedback live: file every request immediately (`ccs issues create ... --roadmap ROAD-107`) so nothing is lost. After that: FEAT-050 (pre-launch verdict command) and the v0.33.0 release once the operator gives the go.
 
 ## Priority Order
-1. G-06 (operator: two secret commands + phone pairing) — unblocks paging, minutes of work.
-2. G-08 CLI review — the session's main goal.
-3. G-11 styles pass + G-12 gauge nits (parallel flash agents while G-08 runs).
-4. G-10 billing period (operator: Billing Read on the token), carry-overs.
+1. G-13 independent verification of this session's work (first, before anything else).
+2. G-06 (operator: two secret commands + phone pairing) — unblocks paging, minutes of work.
+3. G-14 + G-15 integration defects (parallel flash agents) — then deploy.
+4. G-08 CLI review — the session's main research goal.
+5. G-16 desktop redesign, G-11 styles pass, G-12 gauge nits (parallel flash agents while G-08 runs).
+6. G-10 billing period (operator: Billing Read on the token), carry-overs.
+Note: smoke "Docker build" fails only because the Docker daemon is not running (Dockerfile unchanged since 2026-09-13).
 
 ## Related
 
