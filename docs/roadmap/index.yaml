@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T00:33:32.564656+04:00
+last_updated: 2026-10-10T01:37:51.991337+04:00
 next_id: 112
 items:
     - id: BASE-001
@@ -904,10 +904,11 @@ items:
       created_at: 2026-10-09T20:34:37.497034+04:00
     - id: ROAD-104
       title: Review Cloudflare's new agent-friendly CLI — full-repo gap analysis vs cosmoflare
-      status: planned
+      status: completed
       category: core
       effort: medium
       parent: ROAD-102
+      completed_in: v0.33.0
       created_at: 2026-10-09T20:34:40.47305+04:00
     - id: ROAD-105
       title: Ops upstream cache — KV stale-while-revalidate, single-flight, refresh-storm guard
