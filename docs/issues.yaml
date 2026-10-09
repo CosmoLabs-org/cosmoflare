@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T03:31:33.898343+04:00
+last_updated: 2026-10-10T03:33:49.501307+04:00
 next_bug_id: 59
 next_feat_id: 57
 next_task_id: 17
@@ -690,7 +690,7 @@ issues:
       created_at: 2026-10-10T00:32:54.603077+04:00
     - id: FEAT-pN68ZRM
       type: feature
-      status: open
+      status: implemented
       title: Agent-context detection + agent help preamble
       created_at: 2026-10-10T00:32:57.232638+04:00
     - id: FEAT-pRC6EDA

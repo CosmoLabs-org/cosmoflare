@@ -1,11 +1,11 @@
 id: FEAT-pN68ZRM
 type: feature
 created_at: 2026-10-10T00:32:57.232638+04:00
-updated_at: 2026-10-10T00:33:00.649345+04:00
+updated_at: 2026-10-10T03:33:49.495877+04:00
 source: local
 ulid: 01M4H5WWWNHJW50P6X5FN68ZRM
 provisional: true
-status: open
+status: implemented
 origin:
     roadmap_items:
         - ROAD-102
@@ -16,3 +16,10 @@ acceptance_criteria:
     - criterion: CLAUDECODE=1 cosmoflare --help shows agent section; normal terminal unchanged; tests
       met: false
 roadmap_ref: ROAD-102
+resolution:
+    notes: 'Implemented: internal/cli/agentcontext.go + root.go help wrapper. go build/vet, internal/cli + full cmd suite green; binary smoke-tested with and without markers.'
+    resolved_at: 2026-10-10T03:33:49.494693+04:00
+revisions:
+    - date: "2026-10-10T03:33:49.494687+04:00"
+      action: closed
+      context: 'Implemented: internal/cli/agentcontext.go + root.go help wrapper. go build/vet, internal/cli + full cmd suite green; binary smoke-tested with and without markers.'
