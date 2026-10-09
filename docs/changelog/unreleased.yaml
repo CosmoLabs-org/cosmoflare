@@ -33,6 +33,12 @@ entries:
         - description: 'push alerts never reached iPhones: VAPID subject was mailto:mailto:, and the pager subscribed without the VAPID application server key'
           source: manual
           date: 2026-10-09T16:01:18.728105+04:00
+        - description: 'Ops pager: 7 integration fixes (BUG-057) — rules cache after save, honest data age with revalidation repaint, refresh keeps old DOM and button, legend CSS scoped, request-level rule errors, warning-text style, test-fire redirect handling'
+          source: manual
+          date: 2026-10-10T00:12:38.138012+04:00
+        - description: 'Ops Worker: cron KV keys renamed cron:d1-list/cron:zones with 24h TTL and scheduled-handler rejection audit line (BUG-058)'
+          source: manual
+          date: 2026-10-10T00:12:38.178108+04:00
     changed: []
     deprecated: []
     removed: []

@@ -1,14 +1,14 @@
 id: BUG-058
 type: bug
 created_at: 2026-10-09T23:22:17.158916+04:00
-updated_at: 2026-10-09T23:22:19.177942+04:00
+updated_at: 2026-10-10T00:11:58.704249+04:00
 source: local
 ulid: 01M4H1VGDS4GRDCJJ23YQV6P4X
 aliases:
     - BUG-pQV6P4X
 severity: medium
 priority: 70
-status: open
+status: fixed
 area: reliability
 origin:
     roadmap_items:
@@ -21,3 +21,10 @@ affected_files:
     - apps/ops/src/scheduled.ts
     - apps/ops/src/index.ts
 roadmap_ref: ROAD-107
+resolution:
+    notes: Fixed on master (783e457, 00930c5) by GLM flash agents 0366/0365 + orchestrator completion; verified S334 (diff review, 136 pager tests / 123 ops tests green, detector 0); deployed as worker version 07536c99; stale KV keys d1-list/zones deleted
+    resolved_at: 2026-10-10T00:11:58.703397+04:00
+revisions:
+    - date: "2026-10-10T00:11:58.703395+04:00"
+      action: closed
+      context: Fixed on master (783e457, 00930c5) by GLM flash agents 0366/0365 + orchestrator completion; verified S334 (diff review, 136 pager tests / 123 ops tests green, detector 0); deployed as worker version 07536c99; stale KV keys d1-list/zones deleted

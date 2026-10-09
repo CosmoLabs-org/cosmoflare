@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T23:22:19.167502+04:00
+last_updated: 2026-10-10T00:11:58.707442+04:00
 next_bug_id: 58
 next_feat_id: 56
 next_task_id: 17
@@ -349,6 +349,22 @@ issues:
       priority: 70
       area: reliability
       created_at: 2026-10-09T21:14:51.881034+04:00
+    - id: BUG-057
+      type: bug
+      status: fixed
+      title: 'Ops pager integration defects: rules revert after save, stale data never repainted, refresh reports false success, legend CSS clash'
+      severity: high
+      priority: 70
+      area: reliability
+      created_at: 2026-10-09T23:22:14.765947+04:00
+    - id: BUG-058
+      type: bug
+      status: fixed
+      title: 'Ops Worker: cron and API cache share KV keys in incompatible formats; scheduled handler has no rejection catch'
+      severity: medium
+      priority: 70
+      area: reliability
+      created_at: 2026-10-09T23:22:17.158916+04:00
     - id: BUG-p87APZK
       type: bug
       status: open

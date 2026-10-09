@@ -10,7 +10,7 @@ covers_plan_deliverables:
     - P-07
 created: "2026-10-09T20:36:13+04:00"
 date: "2026-10-09T20:36:13+04:00"
-goals_completed: 7
+goals_completed: 9
 goals_total: 16
 id: P-2026-10-09-cf-cli-review
 plan_ref: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
@@ -124,10 +124,10 @@ Steps: (1) consolidate styles.css into ordered sections (tokens → base → she
 ### [ ] G-13 FIRST: independently verify this session's Ops work before building on it (operator request)
 **Model:** `opus` (fresh eyes; do not trust this prompt's claims). Re-verify from the tree and the live site, not from prose: (1) `cd apps/ops && bunx tsc --noEmit && bun run test` and `cd pager && bunx tsc --noEmit && bun run test && bun run build && bunx impeccable detect src/` all green; (2) run the pager against LIVE data (scratchpad bun server importing summaryResponse/billingResponse with a Map KV + `BILLING_ANCHOR_DAY: "23"`, serving pager/dist; Playwright screenshots of every route at 375x812 and 1280x800) and confirm every `/api/*` returns 200 and the numbers match the Cloudflare dashboard the operator sees; (3) confirm ops.cosmolabs.org lockdown: anonymous → 302 to cosmolabs.cloudflareaccess.com, workers.dev → 404, Access app destinations = ops.cosmolabs.org only, `wrangler tail cosmoflare-ops --format json` shows no exceptions over two cron runs; (4) list anything that contradicts this prompt before starting other goals.
 
-### [ ] G-14 Ops pager integration defects (BUG-057, 7 items)
+### [x] G-14 Ops pager integration defects (BUG-057, 7 items)
 **Model:** `sonnet` (= glm-5.3-flash), one bounded brief — the issue's description + fix-direction ARE the spec (rules cache after save, onRevalidate repaint + honest age, refresh returns/rethrows and keeps old DOM + button node, legend CSS scoped under .cf-legend, index<0 request-level errors, .cf-level-warning-text rule, test-fire redirect:manual + issues). Gate: tsc/tests/build, detector 0, live-data screenshots; Opus reviews before merge.
 
-### [ ] G-15 Ops Worker KV key collision + scheduled rejection catch (BUG-058)
+### [x] G-15 Ops Worker KV key collision + scheduled rejection catch (BUG-058)
 **Model:** `glm-turbo` | **Files:** `apps/ops/src/scheduled.ts`, `apps/ops/src/index.ts`. Cron list keys → `cron:d1-list` / `cron:zones` with expirationTtl 86400; `.catch` logging `{cron:"alerts",error}` on the scheduled waitUntil. After deploy, delete the stale KV keys `d1-list` and `zones` written by the old cron (`wrangler kv key delete --remote`).
 
 ### [ ] G-16 Desktop app redesign — Tailwind + shadcn/ui + icons, no slop (FEAT-055)
