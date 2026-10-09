@@ -10,6 +10,11 @@ import { classifyR2, collectBilling, makePeriod, overageUsd, project, resolvePer
 // Day 8 of the 31-day calendar period October 2026 (00:00 UTC).
 const OCT8 = new Date("2026-10-08T00:00:00Z");
 
+// The REST namespace list and kvOperationsAdaptiveGroups report 32-char hex
+// ids; kvStorageAdaptiveGroups reports the same namespace as a dashed UUID.
+const KV_HEX = "abcdef0123456789abcdef0123456789";
+const KV_DASHED = "abcdef01-2345-6789-abcd-ef0123456789";
+
 const REST_OK = () => new Response(JSON.stringify({ success: true, result: [], result_info: { total_pages: 1 } }));
 const SUB_403 = () => new Response(JSON.stringify({ success: false, errors: [{ message: "Authentication error" }] }), { status: 403 });
 const SUB_OK = () =>
@@ -33,7 +38,7 @@ const DATASETS: Record<string, GqlRow[]> = {
     { dimensions: { bucketName: "churches-bucket", actionType: "GetObject" }, sum: { requests: 12_000_000 } },
     { dimensions: { bucketName: "churches-bucket", actionType: "PutObject" }, sum: { requests: 500_000 } },
   ],
-  k: [{ dimensions: { namespaceId: "ns1", actionType: "read" }, sum: { requests: 2_000_000 } }],
+  k: [{ dimensions: { namespaceId: KV_HEX, actionType: "read" }, sum: { requests: 2_000_000 } }],
   o: [{ dimensions: { scriptName: "churches-api" }, sum: { requests: 1_000 } }],
   p: [{ dimensions: { date: "2026-10-07" }, sum: { duration: 40_000 } }],
 };
@@ -83,10 +88,10 @@ function billingHappyHandler(options: {
     failSnapMerged = false,
     failKvStorageSingle = false,
     d1Names = [{ uuid: "db1", name: "mycarguide-db" }],
-    kvNames = [{ id: "ns1", title: "cosmoflare-kv" }],
+    kvNames = [{ id: KV_HEX, title: "cosmoflare-kv" }],
     snap = [{ dimensions: { databaseId: "db1" }, max: { databaseSizeBytes: 2_000_000_000 } }],
     r2Snap = [{ dimensions: { bucketName: "churches-bucket" }, max: { payloadSize: 3_000_000_000, metadataSize: 100_000_000 } }],
-    kvSnap = [{ dimensions: { namespaceId: "ns1" }, max: { byteCount: 500_000_000 } }],
+    kvSnap = [{ dimensions: { namespaceId: KV_DASHED }, max: { byteCount: 500_000_000 } }],
   } = options;
   return (url: string, body: string): Response => {
     if (url.includes("/subscriptions")) return SUB_403();
@@ -290,6 +295,22 @@ describe("collectBilling", () => {
       expect(d1.topConsumers[0]).toMatchObject({ name: "mycarguide-db", project: "mycarguide" });
       expect(b.products.find((p) => p.id === "do.requests")!.used).toBe(1_000);
     });
+  });
+
+  it("resolves a dashed kvStorage namespace ID to the REST title, with the project from that title", async () => {
+    await billingWithFetch(
+      billingHappyHandler({
+        kvNames: [{ id: KV_HEX, title: "cosmoflare-kv" }],
+        kvSnap: [{ dimensions: { namespaceId: KV_DASHED }, max: { byteCount: 500_000_000 } }],
+      }),
+      async () => {
+        const b = await collectBilling("acct", "tok", OCT8);
+        const kv = b.products.find((p) => p.id === "kv.storage")!;
+        expect(kv.topConsumers[0].name).toBe("cosmoflare-kv"); // dashed ID → 32-hex REST row title
+        expect(kv.topConsumers[0].project).toBe("cosmoflare"); // attributed via the title, not the raw ID
+        expect(b.errors).toEqual([]);
+      },
+    );
   });
 
   it("keeps the other storage snapshots alive when one snapshot dataset fails", async () => {

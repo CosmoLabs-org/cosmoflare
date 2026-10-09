@@ -353,6 +353,9 @@ export async function collectBilling(accountId: string, token: string, now = new
   }
 
   // Name lists — one paginated REST call each; failure shows raw IDs.
+  // kvStorageAdaptiveGroups returns dashed UUIDs while the REST list and the
+  // operations dataset use 32-hex — normalise both sides before matching.
+  const kvKey = (id: string) => id.replace(/-/g, "").toLowerCase();
   const names = { d1: {} as Record<string, string>, kv: {} as Record<string, string> };
   singles.push(
     rest<{ uuid: string; name: string }>(token, `/accounts/${accountId}/d1/database`, calls)
@@ -366,7 +369,7 @@ export async function collectBilling(accountId: string, token: string, now = new
   singles.push(
     rest<{ id: string; title: string }>(token, `/accounts/${accountId}/storage/kv/namespaces`, calls)
       .then((ns) => {
-        names.kv = Object.fromEntries(ns.map((x) => [x.id, x.title]));
+        names.kv = Object.fromEntries(ns.map((x) => [kvKey(x.id), x.title]));
       })
       .catch((e: Error) => {
         errors.push(`kv names (showing IDs): ${e.message}`);
@@ -399,8 +402,8 @@ export async function collectBilling(accountId: string, token: string, now = new
     if (cls) bump(cls === "A" ? "r2.class_a" : "r2.class_b", g.dimensions.bucketName, g.sum?.requests ?? 0);
   }
   for (const g of rows("k")) {
-    if (g.dimensions.actionType === "read") bump("kv.reads", names.kv[g.dimensions.namespaceId] ?? g.dimensions.namespaceId, g.sum?.requests ?? 0);
-    if (g.dimensions.actionType === "write" || g.dimensions.actionType === "list") bump("kv.writes", names.kv[g.dimensions.namespaceId] ?? g.dimensions.namespaceId, g.sum?.requests ?? 0);
+    if (g.dimensions.actionType === "read") bump("kv.reads", names.kv[kvKey(g.dimensions.namespaceId)] ?? g.dimensions.namespaceId, g.sum?.requests ?? 0);
+    if (g.dimensions.actionType === "write" || g.dimensions.actionType === "list") bump("kv.writes", names.kv[kvKey(g.dimensions.namespaceId)] ?? g.dimensions.namespaceId, g.sum?.requests ?? 0);
   }
   for (const g of rows("o")) bump("do.requests", g.dimensions.scriptName, g.sum?.requests ?? 0);
   for (const g of rows("p")) bump("do.duration", "all scripts", g.sum?.duration ?? 0); // account total (per-day GB-s)
@@ -419,7 +422,7 @@ export async function collectBilling(accountId: string, token: string, now = new
   };
   const d1Store = maxBy("s", (d) => names.d1[d.databaseId] ?? d.databaseId, (g) => g.max?.databaseSizeBytes ?? 0);
   const r2Store = maxBy("rs", (d) => d.bucketName, (g) => (g.max?.payloadSize ?? 0) + (g.max?.metadataSize ?? 0));
-  const kvStore = maxBy("ks", (d) => names.kv[d.namespaceId] ?? d.namespaceId, (g) => g.max?.byteCount ?? 0);
+  const kvStore = maxBy("ks", (d) => names.kv[kvKey(d.namespaceId)] ?? d.namespaceId, (g) => g.max?.byteCount ?? 0);
   if (d1Store.size) accs.set("d1.storage", d1Store);
   if (r2Store.size) accs.set("r2.storage", r2Store);
   if (kvStore.size) accs.set("kv.storage", kvStore);
