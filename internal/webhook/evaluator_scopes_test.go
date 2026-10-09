@@ -42,14 +42,14 @@ func recordedIDs(rec *alertRecorder) []string {
 
 func TestEvaluateZoneUncachedNamesZone(t *testing.T) {
 	t.Parallel()
-	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-pct", 60))
+	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-requests", 900))
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone(), healthyZone()}})
 	ids := recordedIDs(rec)
 	if len(ids) != 1 || ids[0] != "uncached/z1" {
 		t.Fatalf("alert IDs = %v, want [uncached/z1] (keyed on the stable zone ID)", ids)
 	}
-	if p := rec.first(); !strings.Contains(p.Message, "churches.app") || !strings.Contains(p.Message, "71.4") {
-		t.Errorf("message must name the zone and the uncached %%: %q", p.Message)
+	if p := rec.first(); !strings.Contains(p.Message, "churches.app") || !strings.Contains(p.Message, "960") {
+		t.Errorf("message must name the zone and its uncached request count: %q", p.Message)
 	}
 }
 
@@ -67,7 +67,6 @@ func TestEvaluateZoneFloorSkips(t *testing.T) {
 	t.Parallel()
 	tiny := cosmoflare.ZoneCacheSummary{ZoneID: "z3", Zone: "tiny.example", ByStatus: map[string]uint64{"dynamic": 40, "hit": 10}}
 	eval, rec := newEvalEvaluator(t, time.Minute,
-		scopedRule("uncached", "zone", "zone-uncached-pct", 1),
 		scopedRule("misses", "zone", "zone-cache-miss-pct", 0.01),
 	)
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{tiny}})
@@ -80,7 +79,7 @@ func TestEvaluateExcludeSkipsScope(t *testing.T) {
 	t.Parallel()
 	other := churchesZone()
 	other.ZoneID, other.Zone = "z9", "api.example"
-	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-pct", 60, "Churches.App"))
+	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("uncached", "zone", "zone-uncached-requests", 900, "Churches.App"))
 	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone(), other}})
 	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "uncached/z9" {
 		t.Fatalf("alert IDs = %v, want [uncached/z9] (churches.app excluded)", ids)
@@ -120,7 +119,7 @@ func TestHumanCount(t *testing.T) {
 func TestEvaluateScopeCooldownPersists(t *testing.T) {
 	t.Parallel()
 	svc, _ := newEvalService(t,
-		scopedRule("uncached", "zone", "zone-uncached-pct", 60),
+		scopedRule("uncached", "zone", "zone-uncached-requests", 900),
 		evalRule("hot-cpu", "worker-cpu", 500),
 	)
 	rec := &alertRecorder{}
@@ -287,5 +286,23 @@ func TestEvaluateExcludeMatchesNameOrID(t *testing.T) {
 	}
 	if p := rec.first(); !strings.Contains(p.Message, "noble-db") {
 		t.Errorf("message must show the display name: %q", p.Message)
+	}
+}
+
+// TestPercentOneDecimal: % values print one decimal in page text (operator
+// choice 2026-10-09); the raw value keeps full precision.
+func TestPercentOneDecimal(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("misses", "zone", "zone-cache-miss-pct", 20))
+	eval.Evaluate(EvalMetrics{Zones: []cosmoflare.ZoneCacheSummary{churchesZone()}})
+	p := rec.first()
+	if p == nil {
+		t.Fatal("no page")
+	}
+	if !strings.Contains(p.Message, "observed 22.7 meets threshold 20.0 (%)") {
+		t.Errorf("message = %q, want 'observed 22.7 meets threshold 20.0 (%%)'", p.Message)
+	}
+	if p.Value < 22.65 || p.Value > 22.66 {
+		t.Errorf("payload value = %v, want full precision 22.65625", p.Value)
 	}
 }

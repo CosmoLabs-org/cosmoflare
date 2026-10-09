@@ -143,7 +143,7 @@ var alertConditionRegistry = []AlertConditionDescriptor{
 	{Name: "usage-pct", Scope: "account", Unit: "%", Help: "highest monthly usage percent across dimensions with known plan limits", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsagePctMax", Service: "usage"},
 	{Name: "usage-projected-pct", Scope: "account", Unit: "%", Help: "highest projected monthly usage percent at cycle end (linear pacing)", FedBy: "usage snapshot (cached ~15 min in the watch)", DataKey: "UsageProjectedPctMax", Service: "usage"},
 	{Name: "zone-cache-miss-pct", Scope: "zone", Unit: "%", Help: "per-zone share of cache-eligible eyeball requests that missed (miss+expired); zones under 100 eligible requests skip", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].MissPct", Service: "zone"},
-	{Name: "zone-uncached-pct", Scope: "zone", Unit: "%", Help: "per-zone share of eyeball requests that never reach the cache (dynamic+bypass); zones under 100 known-status requests skip", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].UncachedPct", Service: "zone"},
+	{Name: "zone-uncached-requests", Scope: "zone", Unit: "requests", Help: "per-zone eyeball requests that never reach the cache (dynamic+bypass) over the window; each is a billed Worker or origin hit", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].UncachedRequests", Service: "zone"},
 	{Name: "d1-rows-read", Scope: "d1", Unit: "rows", Help: "per-database D1 rows read (scanned, the billed unit) over the window", FedBy: "D1 analytics per-database rows (watch/check only)", DataKey: "D1[].RowsRead", Service: "d1"},
 }
 

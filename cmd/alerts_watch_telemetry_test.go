@@ -30,8 +30,8 @@ func resetWatchState(t *testing.T) {
 const watchZoneAndScriptRulesYAML = "rules:\n" +
 	"  - name: uncached\n" +
 	"    service: zone\n" +
-	"    condition: zone-uncached-pct\n" +
-	"    threshold: 60\n" +
+	"    condition: zone-uncached-requests\n" +
+	"    threshold: 500\n" +
 	"    action: log\n" +
 	"    target: /dev/null\n" +
 	"    enabled: true\n" +
@@ -175,7 +175,7 @@ func TestCachedTelemetryRefs(t *testing.T) {
 
 func TestRulesNeedScope(t *testing.T) {
 	rules := []*cosmoflare.AlertRule{
-		{Name: "a", Condition: "zone-uncached-pct", Enabled: false},
+		{Name: "a", Condition: "zone-uncached-requests", Enabled: false},
 		{Name: "b", Condition: "worker-cpu", Enabled: true},
 		{Name: "c", Condition: "d1-rows-read", Enabled: true},
 	}
