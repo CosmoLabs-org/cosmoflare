@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	"github.com/CosmoLabs-org/cosmoflare/internal/config"
 	"github.com/CosmoLabs-org/cosmoflare/internal/updatecheck"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
@@ -104,7 +105,7 @@ Examples:
 		// explicit flag and the environment variables, and so validation
 		// below sees the effective token.
 		if err := resolveActiveEnv(); err != nil {
-			emitConfigError("Configuration error: %v", err)
+			emitCodedError(cli.CodeFor(err), "Configuration error: %v", err)
 			os.Exit(1)
 		}
 
@@ -115,7 +116,7 @@ Examples:
 
 		// Validate API token is available (from flag or env)
 		if err := validateEnvironment(); err != nil {
-			emitConfigError("Configuration error: %v", err)
+			emitCodedError(cli.CodeFor(err), "Configuration error: %v", err)
 			os.Exit(1)
 		}
 
@@ -123,7 +124,7 @@ Examples:
 		if AccountID == "" {
 			AccountID = os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 			if AccountID == "" {
-				emitConfigError("Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
+				emitCodedError(cli.CodeConfigMissing, "Cloudflare Account ID is required. Set CLOUDFLARE_ACCOUNT_ID environment variable or use --account-id flag")
 				os.Exit(1)
 			}
 		}
@@ -225,12 +226,13 @@ func resolveActiveEnv() error {
 
 	cm, err := config.NewConfigManager()
 	if err != nil {
-		return fmt.Errorf("failed to load configuration for --env: %w", err)
+		// Coded (FEAT-p8KYM5K): CONFIG_INVALID reaches the --json envelope.
+		return cli.NewCoded(cli.CodeConfigInvalid, fmt.Errorf("failed to load configuration for --env: %w", err))
 	}
 
 	profile, err := cm.ValidateEnv(EnvProfile)
 	if err != nil {
-		return err
+		return cli.NewCoded(cli.CodeConfigInvalid, err)
 	}
 
 	ActiveProfile = profile
@@ -249,12 +251,14 @@ func resolveActiveEnv() error {
 func validateEnvironment() error {
 	token := APIToken
 	if token == "" {
-		return fmt.Errorf("Cloudflare API token is required. Set CLOUDFLARE_API_TOKEN environment variable or use --api-token flag")
+		// Coded (FEAT-p8KYM5K): AUTH_MISSING_TOKEN reaches the --json
+		// envelope; Error() delegates so the human message is unchanged.
+		return cli.NewCoded(cli.CodeAuthMissingToken, fmt.Errorf("Cloudflare API token is required. Set CLOUDFLARE_API_TOKEN environment variable or use --api-token flag"))
 	}
 
 	// Basic token format validation
 	if len(token) < 10 {
-		return fmt.Errorf("API token appears to be invalid (too short)")
+		return cli.NewCoded(cli.CodeAuthInvalidToken, fmt.Errorf("API token appears to be invalid (too short)"))
 	}
 
 	return nil
@@ -324,14 +328,19 @@ func printSuccessJSON(message string, data interface{}) error {
 	return printJSON(response)
 }
 
-// printErrorJSON prints an error response in JSON format
+// printErrorJSON prints an error response in JSON format with the fallback
+// API_ERROR code (FEAT-p8KYM5K): call sites that only have a formatted
+// message, not the originating error, classify as API_ERROR.
 func printErrorJSON(message string) error {
-	response := OutputResponse{
-		Success: false,
-		Error:   message,
-		DryRun:  DryRun,
-	}
-	_ = printJSON(response)
+	return printErrorJSONCode(cli.CodeAPIError, message)
+}
+
+// printErrorJSONCode prints the JSON error envelope carrying a stable
+// machine-readable error_code (FEAT-p8KYM5K wave 1). The envelope extends
+// the historical OutputResponse error shape with "error_code" — no fields
+// are removed.
+func printErrorJSONCode(code cli.ErrorCode, message string) error {
+	_ = printJSON(cli.Envelope(code, message, DryRun))
 	// Decision 2026-09-14: JSON-mode errors must exit non-zero. The
 	// envelope is printed to stdout for machine consumers; the returned
 	// error makes cobra exit 1 (and prints "Error: <msg>" to stderr).
@@ -347,11 +356,20 @@ func printErrorJSON(message string) error {
 // human-readable error line via printError. The os.Exit(1) that follows is
 // left to the caller so this emission stays unit-testable.
 func emitConfigError(format string, args ...interface{}) {
+	emitCodedError(cli.CodeAPIError, format, args...)
+}
+
+// emitCodedError renders a fatal error with a stable machine-readable code
+// (FEAT-p8KYM5K wave 1) to stdout in the active output mode. In --json mode
+// the envelope carries "error_code"; in human mode the message is identical
+// to emitConfigError's — the code is never shown. The os.Exit(1) that
+// follows is left to the caller so this emission stays unit-testable.
+func emitCodedError(code cli.ErrorCode, format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 	if JSONOutput {
-		// Marshal of OutputResponse (bool/string fields) cannot fail; the
+		// Marshal of the envelope (bool/string fields) cannot fail; the
 		// error return is ignored the same way printErrorAndExit does.
-		printErrorJSON(message)
+		printErrorJSONCode(code, message)
 	} else {
 		printError("%s", message)
 	}
@@ -360,7 +378,9 @@ func emitConfigError(format string, args ...interface{}) {
 // printErrorAndExit prints an error and exits with status 1
 func printErrorAndExit(err error, context string) {
 	if JSONOutput {
-		printErrorJSON(fmt.Sprintf("%s: %v", context, err))
+		// FEAT-p8KYM5K: classify the real error so the envelope carries
+		// its stable code (fallback API_ERROR for plain errors).
+		printErrorJSONCode(cli.CodeFor(err), fmt.Sprintf("%s: %v", context, err))
 	} else {
 		printError("%s: %v", context, err)
 		fmt.Println()

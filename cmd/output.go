@@ -1,6 +1,10 @@
 package cmd
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
+)
 
 // Presenter renders command output in the active output mode (FEAT-040).
 //
@@ -39,10 +43,12 @@ func (p *Presenter) Error(format string, args ...any) error {
 
 // ErrorWrap renders a wrapped upstream error (the `%w` legacy shape) in the
 // active mode: "msg: err" both ways, %w-preserved for errors.Is/As in plain
-// mode.
+// mode. In JSON mode the envelope carries the error's stable code
+// (FEAT-p8KYM5K): CodeFor classifies the chain (auth, not-found, network,
+// …) with API_ERROR as fallback.
 func (p *Presenter) ErrorWrap(msg string, err error) error {
 	if p.json {
-		return printErrorJSON(fmt.Sprintf("%s: %v", msg, err))
+		return printErrorJSONCode(cli.CodeFor(err), fmt.Sprintf("%s: %v", msg, err))
 	}
 	return fmt.Errorf("%s: %w", msg, err)
 }
@@ -87,8 +93,19 @@ func (p *Presenter) Success(message string, data any) error {
 // Package-level conveniences for the mechanical sweep (FEAT-040). A
 // Presenter is a bool copy — constructing one per call is free and avoids
 // per-handler plumbing in files that only need the error species.
-func outErr(msg string, err error) error        { return NewPresenter().ErrorWrap(msg, err) }
-func outErrf(format string, a ...any) error     { return NewPresenter().Error(format, a...) }
+func outErr(msg string, err error) error    { return NewPresenter().ErrorWrap(msg, err) }
+func outErrf(format string, a ...any) error { return NewPresenter().Error(format, a...) }
+
+// outErrCodef renders a command error with an explicit stable code
+// (FEAT-p8KYM5K wave 1) for local failures that never originate from an
+// error value (e.g. a not-found check on locally computed state). Human
+// mode is identical to outErrf.
+func outErrCodef(code cli.ErrorCode, format string, a ...any) error {
+	if NewPresenter().IsJSON() {
+		return printErrorJSONCode(code, fmt.Sprintf(format, a...))
+	}
+	return fmt.Errorf(format, a...)
+}
 func outResult(data any, human func()) error    { return NewPresenter().Result(data, human) }
 func outSuccess(message string, data any) error { return NewPresenter().Success(message, data) }
 func outPayload(message string, json func() any, human func()) error {
