@@ -8,6 +8,7 @@ import { el, skeleton, statusLine } from "./dom";
 import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
 import { api, LoginExpiredError, type Billing, type BillingPeriod, type ProductUsage, type Summary } from "./api";
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
+import { gaugeLevel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
 import { hrefFor } from "./routes";
 
 export type Level = "ok" | "warning" | "critical";
@@ -33,6 +34,20 @@ export function pacingPct(p: ProductUsage): number {
 // is a projection, and which allowance it is a percentage OF.
 export function pacingLabel(p: ProductUsage): string {
   return `${p.product} ${p.metric.toLowerCase()} · projected % of ${formatCount(p.included)} ${p.unit}`;
+}
+
+// ringPropsFor maps one billing product + the period into ring-gauge props:
+// the percentages are of the product's allowance, the tick is the
+// expected-to-date share of the period, and the sublabel reads "10M requests".
+export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeProps {
+  const included = p.included > 0 ? p.included : 0;
+  return {
+    usedPct: included > 0 ? (p.used / included) * 100 : 0,
+    projectedPct: pacingPct(p),
+    expectedPct: periodProgress(period.day, period.days).elapsedPct,
+    label: `${p.product} ${p.metric.toLowerCase()}`,
+    sublabel: `${formatCount(p.included)} ${p.unit}`,
+  };
 }
 
 // periodEndsLabel marks a calendar-sourced period as an assumption — the
@@ -125,7 +140,22 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
         attentionCard.append(more);
       }
     }
-    root.replaceChildren(statusBar(sumRes, billRes, root), grid, attentionCard);
+
+    // Workers Paid allowances — one ring per product metric, worst-first
+    // (projected % desc), each tapping through to the billing view.
+    const ringsCard = el("section", "cf-card");
+    ringsCard.append(el("h2", undefined, "Workers Paid allowances"));
+    const rings = el("div", "cf-rings");
+    for (const p of sortByProjectedDesc(billing.products)) {
+      const props = ringPropsFor(p, billing.period);
+      const { level, overLimit } = gaugeLevel(props.usedPct, props.projectedPct);
+      const link = el("a", `cf-ring cf-level-${level}${overLimit ? " cf-over" : ""}`);
+      link.href = hrefFor("billing");
+      link.append(ringGauge(props));
+      rings.append(link);
+    }
+    ringsCard.append(rings);
+    root.replaceChildren(statusBar(sumRes, billRes, root), grid, ringsCard, attentionCard);
   } catch (err) {
     errorState(root, err);
   }

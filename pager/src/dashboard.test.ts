@@ -7,8 +7,9 @@ import {
   levelForUsage,
   pacingLabel,
   periodEndsLabel,
+  ringPropsFor,
 } from "./dashboard";
-import type { ProductUsage } from "./api";
+import type { BillingPeriod, ProductUsage } from "./api";
 
 describe("dashboard formatting", () => {
   it("formats counts like the CLI (2.9B / 52.3M / 3.3k / 522)", () => {
@@ -39,6 +40,33 @@ describe("pacingLabel", () => {
       priceUnit: 1e6, projectedOverageUsd: 2, topConsumers: [],
     };
     expect(pacingLabel(d1)).toBe("D1 rows read · projected % of 25.0B rows");
+  });
+});
+
+describe("ringPropsFor", () => {
+  const period: BillingPeriod = {
+    start: "2026-09-23T00:00:00Z",
+    end: "2026-10-23T00:00:00Z",
+    day: 16,
+    days: 30,
+    source: "anchor",
+  };
+  const d1: ProductUsage = {
+    id: "d1.rows_read", product: "D1", metric: "Rows read", unit: "rows",
+    included: 25e9, used: 640e6, projected: 27e9, unitPriceUsd: 0.001,
+    priceUnit: 1e6, projectedOverageUsd: 2, topConsumers: [],
+  };
+  it("maps usage into ring geometry: % of allowance, expected tick, label", () => {
+    const props = ringPropsFor(d1, period);
+    expect(props.usedPct).toBeCloseTo((640e6 / 25e9) * 100);
+    expect(props.projectedPct).toBeCloseTo(108);
+    expect(props.expectedPct).toBeCloseTo((16 / 30) * 100);
+    expect(props.label).toBe("D1 rows read");
+    expect(props.sublabel).toBe("25.0B rows");
+  });
+  it("a zero allowance never divides by zero", () => {
+    const empty: ProductUsage = { ...d1, included: 0 };
+    expect(ringPropsFor(empty, period).usedPct).toBe(0);
   });
 });
 
