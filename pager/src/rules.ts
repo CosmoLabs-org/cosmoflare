@@ -90,6 +90,14 @@ function errorState(root: HTMLElement, err: unknown): void {
   root.replaceChildren(box);
 }
 
+// rulesDirty: the user has interacted with the drafts since the last paint.
+// A background revalidation must NOT repaint over unsaved edits (BUG-057
+// defect 2 follow-up) — the repaint waits until the drafts are saved.
+let rulesDirty = false;
+function markRulesDirty(): void {
+  rulesDirty = true;
+}
+
 /**
  * Render the Rules view into `root`: skeleton while loading, cards after.
  * A refresh failure rethrows (BUG-057 defect 3) so the old DOM — good data
@@ -101,8 +109,10 @@ export async function renderRules(root: HTMLElement, opts: { refresh?: boolean }
     const res = await api.fetchJson<RulesPayload>("api/rules", {
       refresh: opts.refresh,
       // A background revalidation repaints the view with the fresh copy
-      // (BUG-057 defect 2) instead of leaving hours-old data on screen.
-      onRevalidate: (fresh) => renderRulesInto(root, { data: fresh, source: "network", ageSec: 0, demo: false }),
+      // (BUG-057 defect 2) — unless the user has unsaved draft edits.
+      onRevalidate: (fresh) => {
+        if (!rulesDirty) renderRulesInto(root, { data: fresh, source: "network", ageSec: 0, demo: false });
+      },
     });
     renderRulesInto(root, res);
   } catch (err) {
@@ -117,6 +127,13 @@ export async function renderRules(root: HTMLElement, opts: { refresh?: boolean }
 // the card list from drafts, so the DOM never drifts from state.
 function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): void {
   const payload = res.data;
+  rulesDirty = false;
+  // Capturing listeners: any edit inside the view (typed input, toggle,
+  // select change, chip/add/delete click) marks the drafts dirty so the
+  // onRevalidate repaint above stays away until Save clears it.
+  root.addEventListener("input", markRulesDirty, true);
+  root.addEventListener("change", markRulesDirty, true);
+  root.addEventListener("click", markRulesDirty, true);
   const drafts: AlertRule[] = payload.rules.map((r) => ({
     ...r,
     exclude: r.exclude ? [...r.exclude] : undefined,
@@ -349,6 +366,7 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
         // condition list is preserved for the <select> options.
         api.updateCache("api/rules", { rules: echo.rules, conditions: payload.conditions, starter: false });
         highlightIndex = -1;
+        rulesDirty = false;
         flashStatus();
         paintList();
       })

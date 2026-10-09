@@ -27,6 +27,18 @@ export interface Column<T> {
 // COLLAPSE_AFTER: lists longer than this render 10 rows + "Show all N".
 const COLLAPSE_AFTER = 10;
 
+// Table interaction state (sort/filter/collapse), keyed by the PERSISTENT
+// section host so a background-revalidation repaint (BUG-057 defect 2)
+// re-applies the user's view instead of resetting it — the table host
+// element itself is rebuilt on every paint and cannot carry state.
+interface TableUiState {
+  sortKey: string;
+  sortDir: SortDir;
+  filterText: string;
+  showAll: boolean;
+}
+const tableState = new WeakMap<HTMLElement, TableUiState>();
+
 // renderSortableTable renders `rows` under one local sort/filter/collapse
 // state. State changes rebuild the tbody only — header buttons and the
 // filter box keep their value and focus across re-renders.
@@ -39,11 +51,18 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   // One legend for the whole table (e.g. the zones byStatus colors), shown
   // under the filter/sort controls on phones (<600px) only.
   sharedLegend?: HTMLElement;
+  // Persistent section root whose WeakMap entry carries sort/filter/collapse
+  // across repaints (background revalidation, refresh).
+  persistKey?: HTMLElement;
 }): void {
-  let sortKey = opts.initial.key;
-  let sortDir = opts.initial.dir;
-  let filterText = "";
-  let showAll = false;
+  const saved = opts.persistKey ? tableState.get(opts.persistKey) : undefined;
+  let sortKey = saved?.sortKey ?? opts.initial.key;
+  let sortDir = saved?.sortDir ?? opts.initial.dir;
+  let filterText = saved?.filterText ?? "";
+  let showAll = saved?.showAll ?? false;
+  const persist = (): void => {
+    if (opts.persistKey) tableState.set(opts.persistKey, { sortKey, sortDir, filterText, showAll });
+  };
 
   const table = el("table", "cf-table");
   const thead = el("thead");
@@ -62,6 +81,7 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
         sortKey = col.key;
         sortDir = col.numeric ? "desc" : "asc";
       }
+      persist();
       render();
     });
     th.append(b);
@@ -88,16 +108,19 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
       sortKey = col.key;
       sortDir = col.numeric ? "desc" : "asc";
     }
+    persist();
     render();
   });
 
   const filter = el("input", "cf-filter") as HTMLInputElement;
   filter.type = "search";
   filter.placeholder = "Filter…";
+  filter.value = filterText;
   filter.setAttribute("aria-label", "Filter rows");
   filter.addEventListener("input", () => {
     filterText = filter.value;
     showAll = false;
+    persist();
     render();
   });
 
@@ -144,6 +167,7 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
     if (!showAll && rows.length > COLLAPSE_AFTER) {
       const more = () => {
         showAll = true;
+        persist();
         render();
       };
       const wrap = el("tr", "cf-showall-row");
@@ -251,6 +275,7 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
       card.append(el("p", "cf-empty cf-empty-quiet", "No Worker traffic in the window."));
     } else {
       renderSortableTable(card, {
+        persistKey: host,
         columns: [
           { key: "script", label: "Script", text: (w) => w.script },
           { key: "requests", label: "Requests", numeric: true, text: (w) => formatCount(w.requests), num: (w) => w.requests },
@@ -289,6 +314,7 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): P
       card.append(el("p", "cf-empty cf-empty-quiet", "No D1 activity in the window."));
     } else {
       renderSortableTable(card, {
+        persistKey: host,
         columns: [
           { key: "name", label: "Database", text: (d) => d.name },
           { key: "rowsRead", label: "Rows read", numeric: true, text: (d) => formatCount(d.rowsRead), num: (d) => d.rowsRead },
@@ -386,6 +412,7 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
       const sharedLegend = byStatusLegend(agg);
       sharedLegend.classList.add("cf-shared-legend");
       renderSortableTable(card, {
+        persistKey: host,
         columns: [
           { key: "zone", label: "Zone", text: (z) => z.zone },
           { key: "total", label: "Requests", numeric: true, text: (z) => formatCount(z.total), num: (z) => z.total },
