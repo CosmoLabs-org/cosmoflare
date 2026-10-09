@@ -24,6 +24,17 @@ tags: []
 title: CF agent CLI review + Ops push completion
 type: prompt
 supersedes: "docs/prompts/2026-10-09-session-2033-continuation.md"
+implemented_commits:
+    - {sha: 'a43bb7502c02', covers: [P-01, P-02]}
+    - {sha: '7bd6492eed9e', covers: [P-01]}
+    - {sha: '34b98ddb24d5', covers: [P-03]}
+    - {sha: '825f0832666c', covers: [P-03]}
+    - {sha: '7479c8431a37', covers: [P-03]}
+    - {sha: '9004e0a758ed', covers: [P-04]}
+    - {sha: 'c5eba990bb3c', covers: [P-04]}
+    - {sha: '9e5280e4e544', covers: [P-05]}
+    - {sha: 'c7b8590125cc', covers: [P-07]}
+    - {sha: '445514fcde1c', covers: [P-07]}
 ---
 
 # CF agent CLI review + Ops push completion
