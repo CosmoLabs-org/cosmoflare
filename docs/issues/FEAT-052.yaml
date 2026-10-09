@@ -1,0 +1,9 @@
+id: FEAT-052
+type: feature
+created_at: 2026-10-09T15:35:36.537715+04:00
+updated_at: 2026-10-09T15:35:36.959303+04:00
+source: local
+ulid: 01M4G74ZQZM09NMCC8XSS1DTRF
+status: open
+title: CosmoLabs Ops PWA — private Cloudflare-hosted monitoring dashboard + push alerts for iPhone
+description: 'Operator idea 2026-10-09: instead of waiting for the native iOS app or running alerts watch on a Mac, host a private PWA on Cloudflare that only the operator can open. Phase 1: Worker + static page behind Cloudflare Access (email login); the CF API token lives as a Worker secret (read-only scope); the page shows monthly usage pacing, zone cache miss/uncached volume and D1 rows read per database, reading the same GraphQL datasets verified in FEAT-049. Phase 2: a Cron Trigger evaluates the alert rules (zone-cache-miss-pct, zone-uncached-requests, d1-rows-read, usage pacing) with the hourly per-scope cooldown and sends Web Push to the installed PWA — monitoring with no Mac running. Decisions to settle: port the rule logic to TypeScript vs Go->Wasm; verify iOS home-screen Web Push and Cloudflare Access plan availability live; reuse pager/ (built, not deployed — cosmolabs.org/pager 404). Deploy needs an explicit operator go (local-only rule). Supersedes the ''pager PWA deploy + background watch'' path for the phone.'
