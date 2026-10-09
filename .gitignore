@@ -226,7 +226,3 @@ GOrchestra/
 
 # Claude Code local session state (harness bookkeeping, not source)
 .claude/
-
-# Per-worktree review stamps (ccs verify-worktree) — never tracked: a committed
-# copy is restored over fresh stamps by ccs merge and blocks every merge.
-.review.json
