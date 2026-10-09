@@ -20,6 +20,9 @@ entries:
         - description: 'Cosmoflare Ops (FEAT-052): private dashboard and pager at ops.cosmolabs.org, behind Cloudflare Access (owner email only, custom domain only) — month-to-date usage pacing, billing-period cost view with per-product overage projection and per-project attribution, per-Worker/D1/zone detail with a responsive hamburger-drawer UI and new icon set, a KV-backed upstream cache, and a 5-minute Worker cron that sends Web Push alerts'
           source: manual
           date: 2026-10-09T16:01:18.687985+04:00
+        - description: 'Desktop app redesign on Tailwind v4 + shadcn/ui: Ops design tokens, logo mark, icon sidebar with unread badge, Dashboard and Notifications rebuilt on shadcn primitives, light/dark theme with dark default (FEAT-055)'
+          source: manual
+          date: 2026-10-10T00:48:09.113041+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
@@ -42,7 +45,10 @@ entries:
         - description: 'Ops pager gauge nits: one status per billing card, solid legend swatches, storage rings show the size once (IMP-002)'
           source: manual
           date: 2026-10-10T00:29:31.97379+04:00
-    changed: []
+    changed:
+        - description: 'Ops pager styles pass: token-driven sections (spacing/type/motion), Space Grotesk display face, amber-tinted neutrals, deduplicated stylesheet (G-11)'
+          source: manual
+          date: 2026-10-10T00:48:09.069806+04:00
     deprecated: []
     removed: []
     security: []

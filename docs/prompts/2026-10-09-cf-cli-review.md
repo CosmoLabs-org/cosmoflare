@@ -10,7 +10,7 @@ covers_plan_deliverables:
     - P-07
 created: "2026-10-09T20:36:13+04:00"
 date: "2026-10-09T20:36:13+04:00"
-goals_completed: 10
+goals_completed: 13
 goals_total: 16
 id: P-2026-10-09-cf-cli-review
 plan_ref: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
@@ -104,7 +104,7 @@ Covers P-06. **Model:** operator + opus. Code is live (d3a9ab9, f2fc377, c7b8590
 ### [x] G-07 Integration docs — Ops section in docs/USAGE.md
 Covers P-07. **Model:** `glm-turbo` | **Files:** `docs/USAGE.md`. Integration and deploy are done (c7b8590, 445514f, 9f012605); apps/ops/README.md is current. Add a "Cosmoflare Ops (web/phone)" section to docs/USAGE.md that summarises apps/ops/README.md: URL, Access lockdown, endpoints (/api/summary, /api/billing, /api/subscribe, /api/test-fire), cron cadence, cache TTL table, secrets list, deploy command. Acceptance: `grep -c "/api/billing" docs/USAGE.md` ≥ 1.
 
-### [ ] G-08 Full-repo review of Cloudflare's newest agent-friendly CLI vs cosmoflare (ROAD-104)
+### [x] G-08 Full-repo review of Cloudflare's newest agent-friendly CLI vs cosmoflare (ROAD-104)
 **Model:** `opus` orchestrates; parallel read-only flash scouts per area. **Files:** `docs/research/2026-10-10-cf-agent-cli-gap-analysis.md` (new).
 Steps: (1) identify the tool and its repo URL live (Cloudflare blog/changelog/GitHub via web subagents — do not guess the name); (2) `ccs analyze-clone <github-url>` (out-of-tree clone); (3) map its command surface, output formats (JSON/agent modes), auth model, MCP/agent integration, config, error/exit-code conventions; (4) map HOW it pulls account data — which REST/GraphQL endpoints and datasets, batching, pagination, caching, rate-limit handling — and compare against pkg/cosmoflare/ and apps/ops (summary.ts, billing.ts, cache.ts); (5) write a gap matrix: feature | them | cosmoflare CLI | Ops | adopt? | effort, plus a "data-pull strategies to adopt" list with expected upstream-call savings; (6) file roadmap/issue items for the top gaps (`/feature`, `ccs roadmap add --parent ROAD-102`). Acceptance: the research doc exists with the matrix and ≥ 5 concrete adopt/skip decisions, each citing a file in their repo.
 
@@ -114,7 +114,7 @@ Steps: (1) identify the tool and its repo URL live (Cloudflare blog/changelog/Gi
 ### [ ] G-10 Billing period from the real subscription (ROAD-103, BUG-056)
 **Model:** operator decision. Interim fix is live: wrangler var `BILLING_ANCHOR_DAY=23` (period.source = "anchor", Sep 23 - Oct 23). To make it certain, the operator adds Billing Read to the API token (then `wrangler secret put CF_API_TOKEN`); then confirm GET /accounts/{id}/subscriptions returns current_period_start/end and period.source becomes "subscription". Also ask the operator to compare the Billing view's numbers with the Cloudflare dashboard (D1 rows read ≈ 14B used on Oct 9).
 
-### [ ] G-11 CSS and styles improvement pass (operator: "keep improving the CSS and styles")
+### [x] G-11 CSS and styles improvement pass (operator: "keep improving the CSS and styles")
 **Model:** `sonnet` (= glm-5.3-flash) in 2-3 parallel bounded briefs, Opus reviews screenshots. **Files:** `pager/src/styles.css` (now ~1,000 lines, three agent-appended blocks: shell, `/* gauges */`, `/* refresh */`), `pager/src/*.ts` markup only where needed.
 Steps: (1) consolidate styles.css into ordered sections (tokens → base → shell → components → views → gauges → motion → reduced-motion) and dedupe the appended blocks; one spacing scale (4/8/12/16/24/32) and one type scale as tokens; (2) typography: pick a characterful display face for numbers/headings with a system fallback (Google Fonts allowed), tabular-nums everywhere numeric; (3) surfaces: tint neutrals toward the amber accent, consistent radius and elevation, no colored outlines, no left borders; (4) motion: one easing/duration token set, ease-out enters, reduced-motion respected; (5) touch: all controls ≥ 44px, focus-visible rings consistent. Gate: `bunx impeccable detect src/` exit 0, tsc + tests + build green, Playwright screenshots at 375x812 and 1280x800 of every route on LIVE data (scratchpad api-server technique), Opus reads every screenshot before merge.
 
@@ -130,7 +130,7 @@ Steps: (1) consolidate styles.css into ordered sections (tokens → base → she
 ### [x] G-15 Ops Worker KV key collision + scheduled rejection catch (BUG-058)
 **Model:** `glm-turbo` | **Files:** `apps/ops/src/scheduled.ts`, `apps/ops/src/index.ts`. Cron list keys → `cron:d1-list` / `cron:zones` with expirationTtl 86400; `.catch` logging `{cron:"alerts",error}` on the scheduled waitUntil. After deploy, delete the stale KV keys `d1-list` and `zones` written by the old cron (`wrangler kv key delete --remote`).
 
-### [ ] G-16 Desktop app redesign — Tailwind + shadcn/ui + icons, no slop (FEAT-055)
+### [x] G-16 Desktop app redesign — Tailwind + shadcn/ui + icons, no slop (FEAT-055)
 **Model:** `opus` designs the system and briefs; `sonnet` (= glm-5.3-flash) agents implement per view in parallel. **Files:** `desktop/` (Tauri, v0.16.0, product "Cosmoflare"). Steps: (1) audit the current desktop UI with screenshots (`bun run dev` in desktop/ or a Tauri dev window) and `bunx impeccable detect desktop/src/`; (2) install Tailwind + shadcn/ui (Vite + React/TS — confirm desktop's framework from desktop/package.json first) and lucide icons; (3) design language = Ops PWA: "CosmoLabs Ops · Cosmoflare" lockup, the new logo (pager/src/logo.ts), dark-first tokens, red flowing over-limit gauges, no left borders/tile outlines; (4) rebuild each view with shadcn components; (5) gate: impeccable detect 0, desktop tests green, Opus reads screenshots of every view. The operator asked for the /impeccable skill — it is NOT installed as a Claude skill on this machine (only the `impeccable` CLI detector); offer to install the skill/plugin at session start.
 
 ## Carry-Overs
