@@ -6,16 +6,33 @@ branch: master
 goals_total: 6
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-08-session-2032-continuation.md"
+plan_ref: docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md
+requires_reading:
+    - docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md
+    - docs/USAGE.md
+    - cmd/alerts_watch.go
+schema_version: 1
 ---
 
 ## Context
+
+## BEFORE Starting — Required Reading
+
+**You MUST read these files in full before writing any code. `ccs prompts load-context` enforces this.**
+
+Read in order:
+
+1. **`docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md`** — the implementation plan.
+
 
 cosmoflare alerts watch and alerts check page on zone cache misses (zone-cache-miss-pct), uncached request volume (zone-uncached-requests) and D1 rows read per database (d1-rows-read), naming the zone or database, at most hourly per offender unless the value doubles, with telemetry-gap pages when data cannot be collected and per-rule --exclude by name or ID. Fan-out alerts page every offender (BUG-054). cosmoflare metrics returns zone traffic again (BUG-055). cosmoflare usage shows D1 monthly rows read against the verified 25B Paid allowance and prints billions as 2.9B. An opt-in live smoke test (make test-live) exercises every alert query against the real API and passes. Each watch cycle is bounded by max(interval, 60s). FEAT-049 is implemented; FEAT-050, FEAT-051 and ROAD-102 exist; the Churches-app inbox items are converted; the mycarguide-db scan finding (~2.9B rows/day, ~$63/month over allowance) is in MyCarGuide's inbox. ccs merge works again in this repo (.review.json untracked). All of it is on local master only: ~30 commits ahead of origin, nothing pushed, v0.33.0 not cut.
 
 ## Goals
 
-### [ ] 1. CosmoLabs Ops PWA (FEAT-052) — private Cloudflare-hosted monitoring on the operator's iPhone
-Acceptance: Phase 1 — a Worker + page behind Cloudflare Access (only the operator can open it), CF API token stored as a Worker secret (read-only scope), showing monthly usage pacing, zone cache miss %/uncached volume and D1 rows read per database from the FEAT-049 GraphQL datasets; installed to the iPhone home screen. Phase 2 — a Cron Trigger evaluates the alert rules (zone-cache-miss-pct, zone-uncached-requests 10000, d1-rows-read 1e9, usage pacing) with the hourly per-scope cooldown and Web Push reaches the phone with no Mac running. Start with a short brainstorm (TS port vs Go->Wasm, reuse of pager/, verify iOS home-screen Web Push + Access availability live). First deploy needs the operator's explicit go (local-only rule). Supersedes the old 'deploy pager + background watch' goal and carried goal 7 (phone smoke).
+### [ ] 1. Finish Cosmoflare Ops (FEAT-052): phone pairing + starter rules now, then push from Cloudflare (no Mac)
+Phase 1 is DONE and live (2026-10-09, merge bdebb56): https://cosmoflare-ops.cosmolabs-ltd.workers.dev — dashboard (month-to-date pacing, D1 rows read per database, zone cache health) behind Cloudflare Access. Do not rebuild it.
+Acceptance, step A (operator present): (a) operator installs the app to the iPhone home screen, opens Pairing → Enable notifications → Copy subscription and pastes the JSON; (b) `cosmoflare alerts push add '<json>'` registers it (VAPID keys already in ~/.cosmoflare/push.json; the Worker's VAPID_PUBLIC_KEY secret is that public key); (c) starter rules exist — zone-uncached-requests 10000, zone-cache-miss-pct 50, d1-rows-read 1e9 (ask the operator for excludes; decide with them which directory holds .cosmoflare-alerts.yaml for the watch); (d) `cosmoflare alerts watch --test-fire` buzzes the phone. If the push is rejected, read the push service status code (Apple: BadJwtToken / BadVapidPublicKey / VapidPkHashMismatch).
+Acceptance, step C: a Cron Trigger on the Ops Worker evaluates the zone/d1/usage rules (port the FEAT-049 logic to TS: thresholds, 100-request floor, hourly per-scope cooldown with 2x escalation, gap pages; cooldown state in KV) and sends Web Push with @block65/webcrypto-web-push ^2.0.0 (aes128gcm; v1.x uses legacy aesgcm which Apple rejects); subscriptions stored in KV via a new /api/subscribe (Access-verified) so pairing no longer needs the CLI; VAPID private key as a Worker secret; a test fire reaches the phone with the Mac off. Deploying the Ops Worker is allowed (operator go 2026-10-09); git push/release still needs a fresh go.
 ### [ ] 2. Release v0.33.0 when the operator says go (local build + publish per the no-CI rule)
 Acceptance: Operator gives an explicit go in-session; then ccs sync, ccs version --bump minor, tag v0.33.0, local build, make test-live passes, GitHub release published with the changelog (BR-03, FEAT-047, FEAT-048, FEAT-049, BUG-054, BUG-055). Until then: no push.
 ### [ ] 3. FEAT-050 design: pre-launch CF verdict command with the caching probe rule set
@@ -33,6 +50,13 @@ Acceptance: grok limits results + grok/gemini perms results land; the limits cor
 v0.33.0 release: held by the operator's local-only rule — next action is the operator's go. Cloudflare MCP re-auth: operator OAuth flow. ccs memory scan: low priority, one out-of-repo ClaudeCodeSetup-worktree memory file. Carried goals 5-8 (deploy, launch posts, phone smoke, research pastes) are operator-driven. Deferred refactors and gaps listed in NEXT_SESSION_CONTEXT are candidates for a cleanup task, not blockers.
 
 ## Next Session Context
+
+Update after session close (2026-10-09, later the same day):
+- Cosmoflare Ops (FEAT-052) phase 1 is live: Worker `cosmoflare-ops` (apps/ops) serves pager/dist + /api/summary + /api/vapid-public-key on cosmoflare-ops.cosmolabs-ltd.workers.dev. Access app "[cosmoflare-ops] Owner only" (id 228d8267-c541-4a4f-8e3b-3d4cda4b1d41, team cosmolabs.cloudflareaccess.com, session 720h, policy = operator's email only). The Worker also verifies the Access JWT (RS256 team keys, aud/iss/exp) and fails closed. Worker secrets: CF_ACCOUNT_ID, CF_API_TOKEN (the existing account token — a read-only token is optional, mention only if the operator asks), VAPID_PUBLIC_KEY, ACCESS_TEAM_DOMAIN, ACCESS_AUD. Preview URLs off (Access covers the main hostname only). Deploy: `bun run deploy` in apps/ops with CLOUDFLARE_API_TOKEN/ACCOUNT_ID from `ccs credentials source`. Anonymous and forged-header requests verified to redirect to the Access login.
+- Two push bugs that stopped alerts from ever reaching an iPhone were fixed: the pager subscribed without applicationServerKey, and the CLI's VAPID subject was mailto:mailto:. The local build/cosmoflare is rebuilt with the fix; the installed ~/go/bin/cosmoflare is still v0.32.0 (use build/cosmoflare).
+- Live finding on the dashboard: D1 rows read month-to-date 6.9B = 27.6% of 25B, projected ~101% by month end — almost all mycarguide-db.
+- D1/caching feedback delivered with evidence and verified fixes to MyCarGuide (root cause: name filters bypass indexes → SCAN complaints 399k rows/call; no sqlite_stat1; /compare uncached), CosmoLearning (uncached listing pages/RSS), Churches-app (stats fix confirmed working; geojson/scanner/index polish), Noble.Coffee (scanner probes → WAF). HandleShop's item stays queued (project dir empty, not in registry); noelymaria.com has no local project. ROAD-102 holds the new FEAT-050 rule candidates.
+- Operator preferences recorded in memory: keep local (no push/release without a go), no token-rotation reminders.
 
 State: cosmoflare master holds ~30 local commits not on origin. The operator's standing rule is local-only — do not run ccs sync, git push, version bumps, tags or releases without a fresh explicit go. The staged changelog is the full v0.33.0 candidate (BR-03, FEAT-047, FEAT-048, FEAT-049 adds; BUG-054, BUG-055, percent-format fixes). FEAT-049 wave 3a is implemented and documented (docs/USAGE.md Alerts section; plan docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md holds the full operator decision log O1-O18). The live dry run at starter thresholds pages 7 items on the account: uncached volume cosmolearning.org (36k/day) and mycar.guide (13k), cache misses churches.app, handle.shop, noble.coffee, noelymaria.com, and D1 mycarguide-db (~2.9B rows/day). No real alert rules are configured yet in the operator's rules file. Known open items from reviews, deliberately deferred: two D1 GraphQL queries could share one helper (d1_usage.go vs analytics_d1rows.go); the two TTL caches in cmd/alerts_watch.go could share a generic cache; FireState could become one record map; alerts check --json does not carry the zone/database of fan-out fires; ZoneService.List is not filtered by account for multi-account tokens; pager severity is always info (O9). Disk was at the 40 GiB GLM dispatch floor (cleared the Go build cache to 45 GiB); WikipediaDB uses 306 GiB. The installed cosmoflare binary is v0.32.0, so doc-lint flags 'usage' as unknown until release.
 
