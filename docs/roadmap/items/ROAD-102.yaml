@@ -1,6 +1,6 @@
 id: ROAD-102
 created_at: 2026-10-08T23:21:41.903776+04:00
-updated_at: 2026-10-09T03:10:06.571137+04:00
+updated_at: 2026-10-09T06:00:27.21576+04:00
 title: CF governance pillar — Cosmoflare as CosmoLabs meta-project for Cloudflare auditing, security, efficiency
 description: 'Charter from owner directive 2026-10-08 (FB-12, via Churches-app): Cosmoflare is the CosmoLabs meta-project for Cloudflare workflows across all projects (Churches-app, Noble.Coffee, BaristaBase, AXO, BeeKey, future). Three duties: (1) audit CF infrastructure for efficiency and security, (2) prevent wasted resources, (3) own the CF best-practice standards every project follows. Every new standard lands as a cosmoflare audit rule first. Children: FEAT-050 pre-launch verdict command (success metric), FEAT-049 caching dimension (rule set 1), ROAD-101 usage-waste program (detection substrate). Future dimensions: security audit (WAF/firewall posture, token scope), cost audit (D1 rows-read/write, KV op waste, Pages vs Workers fit), compliance sweep (CORS, no cache on user-scoped routes). Sibling deliveries outside this repo: CosmoKit cf-cache module, ClaudeCodeSetup CF efficiency SOP + cf-audit skill.'
 status: planned
@@ -9,6 +9,7 @@ category: core
 effort: large
 notes:
     - '2026-10-09: FB-14 (Churches-app) delivered the 12-class detection matrix — the rule catalog for FEAT-050''s verdict engine (each class = one check with severity cost/correctness/security, detection method, fix pointer to Churches-app 155d1d3e). Classes 2-3 (schema drift, migration/FK linter) split out as FEAT-051; class 1 rows-read trend ships as d1-rows-read in FEAT-049 wave 3a; classes 5-7 are FEAT-049/FEAT-050 caching rules.'
+    - '2026-10-09 live findings → FEAT-050 rule candidates (each detected read-only from cosmoflare, each delivered to the owning project): (1) planner-blind D1 query — EXPLAIN QUERY PLAN shows SCAN on a large table because the filter columns sit on a joined table without an index (mycarguide-db complaints: 399k rows read per call to return 17; fix = resolve the FK first or index the join filter); (2) no planner statistics — sqlite_stat1 missing, so the planner picks the wrong index (mycarguide-db specs; fix = PRAGMA optimize after migrations, per D1 docs); (3) hot uncached page driving D1 load — top dynamic path volume matches top query run count (mycar.guide /compare 5,018/day ≈ 4,968 query runs); (4) public listing pages/RSS served dynamic (cosmolearning.org 36k/day); (5) static assets served dynamic (churches.app geojson); (6) scanner-probe traffic billed as Worker invocations (noble.coffee, handle.shop, mycar.guide, churches.app — WAF custom rule with contains, Free plan allows 5). Detection data: d1QueriesAdaptiveGroups (query text, rowsRead, count) + httpRequestsAdaptiveGroups by clientRequestPath and cacheStatus.'
 refs:
     - type: issue
       path: docs/issues/FEAT-050.yaml
