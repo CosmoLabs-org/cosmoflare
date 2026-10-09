@@ -394,3 +394,13 @@ entries:
       completed: 2026-09-24T18:32:55.895293+04:00
       status: discarded
       reason: manually discarded by user
+    - id: "0363"
+      task: 'Agent R: pager integration fixes'
+      started: 2026-10-09T23:21:28.383248+04:00
+      completed: 2026-10-09T23:21:54.460049+04:00
+      status: failed
+    - id: "0364"
+      task: 'Agent S: worker integration fixes'
+      started: 2026-10-09T23:21:42.419697+04:00
+      completed: 2026-10-09T23:21:57.130336+04:00
+      status: failed
