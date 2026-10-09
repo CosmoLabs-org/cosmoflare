@@ -106,6 +106,88 @@ export function ariaLabelFor(p: { label: string; usedPct: number; projectedPct: 
 }
 
 /**
+ * Proper product names for the ring/bar labels — the raw "product + metric"
+ * join reads "Workers requests" for CPU time ("Workers cpu time"), so the
+ * billing ids map to the names Cloudflare's own docs use. Unknown ids fall
+ * back to "product metric" so a new Workers Paid line item never renders "".
+ */
+export function productLabel(id: string, product: string, metric: string): string {
+  const known = PRODUCT_LABELS[id];
+  return known ?? `${product} ${metric.toLowerCase()}`;
+}
+
+const PRODUCT_LABELS: Record<string, string> = {
+  "workers.requests": "Workers requests",
+  "workers.cpu_time": "Workers CPU time",
+  "r2.class_a": "R2 Class A ops",
+  "r2.class_b": "R2 Class B ops",
+  "durable_objects.requests": "Durable Objects requests",
+  "durable_objects.duration": "Durable Objects duration",
+  "kv.reads": "KV reads",
+  "kv.writes": "KV writes",
+  "kv.storage": "KV storage",
+  "d1.rows_read": "D1 rows read",
+  "d1.rows_written": "D1 rows written",
+  "d1.storage": "D1 storage",
+  "r2.storage": "R2 storage",
+};
+
+/**
+ * Rings show only the 8 closest to their limit (worst-first); the rest sit
+ * behind a "Show all N" toggle. The cap applies to the already-sorted list,
+ * so the top-8 cut is deterministic.
+ */
+export function capTopRings<T>(sorted: T[], cap = 8): { shown: T[]; hiddenCount: number } {
+  return {
+    shown: sorted.slice(0, cap),
+    hiddenCount: Math.max(0, sorted.length - cap),
+  };
+}
+
+/** "106%" / "7%" — the ring's big center number is the projected share. */
+export function ringCenterValue(projectedPct: number): string {
+  return `${fmtGaugePct(projectedPct)}%`;
+}
+
+/** "30.7% used so far" — the muted second line under the projected value. */
+export function ringUsedLine(usedPct: number): string {
+  return `${fmtGaugePct(usedPct)}% used so far`;
+}
+
+/**
+ * Ring labels never truncate: split on word boundaries into at most two
+ * balanced lines (the shorter of the two wins), so "Durable Objects
+ * duration" renders on two centered rows inside the label band.
+ */
+export function labelLines(label: string, maxChars = 16): string[] {
+  if (label.length <= maxChars) return [label];
+  const words = label.split(" ");
+  if (words.length === 1) return [label];
+  let best: string[] = [label];
+  let bestLen = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(" ");
+    const b = words.slice(i).join(" ");
+    const len = Math.max(a.length, b.length);
+    if (len < bestLen) {
+      best = [a, b];
+      bestLen = len;
+    }
+  }
+  return best;
+}
+
+/**
+ * Today-dot position: ON the track (not a line crossing it), at the
+ * expected-to-date angle — 0% at 12 o'clock, clockwise, matching the arcs.
+ */
+export function todayDotPos(expectedPct: number, cx: number, cy: number, r: number): { x: number; y: number } {
+  const angle = (clampPct(expectedPct) / 100) * 360 - 90;
+  const rad = (angle * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+/**
  * Rings sort worst-first: projected % of allowance desc, ties broken by id
  * so the order is deterministic when two products pace identically.
  */
@@ -133,7 +215,7 @@ export interface RingGaugeProps {
   sublabel?: string;
   /** Square ring size in px; default 120. */
   size?: number;
-  /** Expected-to-date position 0..100 (period.day/period.days) — small tick on the ring. */
+  /** Expected-to-date position 0..100 (period.day/period.days) — 3px dot on the ring. */
   expectedPct?: number;
 }
 
@@ -151,8 +233,8 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
     : `cf-level-${level}${level === "critical" ? " cf-flow" : ""}`;
 
   const svg = document.createElementNS(SVG_NS, "svg");
-  // 18px band below the ring holds the label text.
-  svg.setAttribute("viewBox", `0 0 ${size} ${size + 18}`);
+  // 26px band below the ring holds the (up to two-line) label text.
+  svg.setAttribute("viewBox", `0 0 ${size} ${size + 26}`);
   svg.classList.add("cf-ring-svg", ...levelClass.split(" "));
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", ariaLabelFor(props));
@@ -210,17 +292,16 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
     glow.setAttribute("filter", `url(#${filterId})`);
   }
 
-  // Expected-to-date tick (period.day/period.days around the ring).
+  // Expected-to-date today dot (period.day/period.days around the ring):
+  // a 3px dot ON the track at the angle — not a line crossing the ring.
   if (props.expectedPct !== undefined) {
-    const angle = (clampPct(props.expectedPct) / 100) * 360;
-    const tick = document.createElementNS(SVG_NS, "line");
-    tick.setAttribute("x1", String(cx + r - stroke / 2 - 2));
-    tick.setAttribute("y1", String(cy));
-    tick.setAttribute("x2", String(cx + r + stroke / 2 + 2));
-    tick.setAttribute("y2", String(cy));
-    tick.setAttribute("transform", `rotate(${angle} ${cx} ${cy})`);
-    tick.classList.add("cf-ring-today");
-    svg.append(tick);
+    const { x, y } = todayDotPos(props.expectedPct, cx, cy, r);
+    const dot = document.createElementNS(SVG_NS, "circle");
+    dot.setAttribute("cx", String(x));
+    dot.setAttribute("cy", String(y));
+    dot.setAttribute("r", "3");
+    dot.classList.add("cf-ring-today");
+    svg.append(dot);
   }
 
   // Overflow notch: a short red line crossing the ring at the 100% position
@@ -235,33 +316,52 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
     svg.append(notch);
   }
 
-  // Center value (used %), sublabel under it, label below the ring.
+  // Center: projected % (big, level-colored), "N% used so far" and the
+  // allowance ("of 25.0B rows") muted under it — the projection is the
+  // headline; the used share is context, the allowance is the reference.
   const value = document.createElementNS(SVG_NS, "text");
   value.setAttribute("x", String(cx));
-  value.setAttribute("y", String(cy - 2));
+  value.setAttribute("y", String(cy - 12));
   value.setAttribute("text-anchor", "middle");
   value.setAttribute("dominant-baseline", "central");
   value.classList.add("cf-ring-value");
-  value.textContent = `${fmtGaugePct(props.usedPct)}%`;
+  value.textContent = ringCenterValue(props.projectedPct);
   svg.append(value);
+
+  const usedLine = document.createElementNS(SVG_NS, "text");
+  usedLine.setAttribute("x", String(cx));
+  usedLine.setAttribute("y", String(cy + 4));
+  usedLine.setAttribute("text-anchor", "middle");
+  usedLine.setAttribute("dominant-baseline", "central");
+  usedLine.classList.add("cf-ring-usedpct");
+  usedLine.textContent = ringUsedLine(props.usedPct);
+  svg.append(usedLine);
 
   if (props.sublabel) {
     const sub = document.createElementNS(SVG_NS, "text");
     sub.setAttribute("x", String(cx));
-    sub.setAttribute("y", String(cy + 16));
+    sub.setAttribute("y", String(cy + 18));
     sub.setAttribute("text-anchor", "middle");
     sub.setAttribute("dominant-baseline", "central");
     sub.classList.add("cf-ring-sub");
-    sub.textContent = props.sublabel;
+    sub.textContent = `of ${props.sublabel}`;
     svg.append(sub);
   }
 
+  // Label below the ring — up to two centered lines, never truncated.
+  const lines = labelLines(props.label);
   const label = document.createElementNS(SVG_NS, "text");
   label.setAttribute("x", String(cx));
-  label.setAttribute("y", String(size + 12));
   label.setAttribute("text-anchor", "middle");
   label.classList.add("cf-ring-label");
-  label.textContent = props.label;
+  const ys = lines.length === 1 ? [size + 13] : [size + 9, size + 21];
+  lines.forEach((line, i) => {
+    const tspan = document.createElementNS(SVG_NS, "tspan");
+    tspan.setAttribute("x", String(cx));
+    tspan.setAttribute("y", String(ys[i]));
+    tspan.textContent = line;
+    label.append(tspan);
+  });
   svg.append(label);
 
   return svg;
@@ -323,6 +423,11 @@ export function barGauge(props: BarGaugeProps): HTMLElement {
   // An empty head (no label, no badge) would only add its own margin — the
   // caller appends it only when it has content (guarded at the final append).
 
+  // Track + today dot live in a wrapper: the track clips its fills
+  // (overflow:hidden), the today dot floats ABOVE the bar so it is never
+  // clipped and never reads as a line crossing the fill.
+  const bar = document.createElement("div");
+  bar.className = "cf-gauge-bar";
   const track = document.createElement("div");
   track.className = "cf-gauge-track";
   const usedFill = document.createElement("div");
@@ -340,16 +445,17 @@ export function barGauge(props: BarGaugeProps): HTMLElement {
   marker.className = "cf-gauge-marker";
   marker.style.insetInlineStart = `${clampPct(props.includedScalePct)}%`;
   track.append(marker);
+  bar.append(track);
   if (props.expectedPct !== undefined) {
     const today = document.createElement("span");
     today.className = "cf-gauge-today";
     today.style.insetInlineStart = `${clampPct(props.expectedPct)}%`;
-    track.append(today);
+    bar.append(today);
   }
   const detail = document.createElement("p");
   detail.className = "cf-gauge-detail cf-row-detail";
   detail.textContent = props.detailText;
   if (head.childElementCount > 0) card.append(head);
-  card.append(track, detail);
+  card.append(bar, detail);
   return card;
 }
