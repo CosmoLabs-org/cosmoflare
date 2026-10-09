@@ -1,0 +1,14 @@
+id: FEAT-p8KYM5K
+type: feature
+created_at: 2026-10-10T00:33:01.434889+04:00
+updated_at: 2026-10-10T00:33:01.9457+04:00
+source: local
+ulid: 01M4H5X0ZS3T27RH2PGP8KYM5K
+provisional: true
+status: open
+title: Stable error codes in --json error output
+description: 'cf''s errors are human-only (clone ref: packages/cli/src/lib/errors.ts — no machine-readable mode). Improve on it: every cosmoflare --json error gains a stable error_code field (e.g. AUTH_MISSING_TOKEN, R2_BUCKET_NOT_FOUND) plus the existing actionable message. From gap analysis adopt #3.'
+acceptance_criteria:
+    - criterion: error_code present on JSON errors across cmd/; codes documented in USAGE.md; tests
+      met: false
+roadmap_ref: ROAD-102
