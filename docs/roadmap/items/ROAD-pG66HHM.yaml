@@ -1,0 +1,15 @@
+id: ROAD-pG66HHM
+created_at: 2026-10-09T20:34:31.08068+04:00
+updated_at: 2026-10-09T20:34:32.218447+04:00
+title: Ops upstream cache — KV stale-while-revalidate, single-flight, refresh-storm guard
+description: 'cached() in apps/ops/src/cache.ts: L1 isolate memo + L2 KV (Cache API is unavailable behind Access per CF docs). TTLs: lists 1h/24h, summary 5m/1h, billing 15m/6h. Billing costs 5 upstream calls per refresh via aliased GraphQL.'
+status: completed
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR89HBCFDMWGPSH7G66HHM
+provisional: true

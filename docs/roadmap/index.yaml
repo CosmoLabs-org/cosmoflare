@@ -1,9 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:29.902224+04:00
-next_id: 104
+last_updated: 2026-10-09T20:34:31.080911+04:00
+next_id: 105
 items:
-    - id: ROAD-103
+    - id: ROAD-104
+      title: Ops upstream cache — KV stale-while-revalidate, single-flight, refresh-storm guard
+      status: completed
+      category: core
+      effort: medium
+      parent: ROAD-pJ25XG5
+      created_at: 2026-10-09T20:34:31.08068+04:00
+    - id: ROAD-pMA5QCQ
       title: Ops phase 1 — live dashboard, Access lockdown, custom domain only
       status: completed
       category: core
