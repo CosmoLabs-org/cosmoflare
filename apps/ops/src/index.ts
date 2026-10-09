@@ -101,7 +101,11 @@ export default {
   // whole run; the result line is the cron's audit log.
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(
-      runScheduled(env).then((r) => console.log(JSON.stringify({ cron: "alerts", ...r }))),
+      runScheduled(env)
+        .then((r) => console.log(JSON.stringify({ cron: "alerts", ...r })))
+        // A rejected runScheduled (e.g. a KV failure) must still leave an
+        // audit line, not become an unhandled rejection inside waitUntil.
+        .catch((error: unknown) => console.log(JSON.stringify({ cron: "alerts", error: String(error) }))),
     );
   },
 } satisfies ExportedHandler<Env>;

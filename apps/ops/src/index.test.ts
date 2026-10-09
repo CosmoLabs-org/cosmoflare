@@ -252,4 +252,20 @@ describe("api routes behind the Access gate", () => {
     expect(waits.length).toBe(1);
     await Promise.all(waits);
   });
+  it("a rejected runScheduled logs a {cron:'alerts', error} audit line instead of becoming an unhandled rejection (BUG-058)", async () => {
+    scheduledMocks.runScheduled.mockRejectedValueOnce(new Error("KV put failed: 429"));
+    const { ctx, waits } = fakeCtx();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      const controller = { cron: "*/5 * * * *" } as unknown as ScheduledController;
+      await worker.scheduled!(controller, env as never, ctx);
+      await Promise.all(waits); // must settle, not reject
+      const lines = logSpy.mock.calls.map((args) => String(args[0]));
+      const audit = lines.find((l) => l.includes('"cron":"alerts"'));
+      expect(audit).toBeDefined();
+      expect(JSON.parse(audit!)).toEqual({ cron: "alerts", error: "Error: KV put failed: 429" });
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
 });

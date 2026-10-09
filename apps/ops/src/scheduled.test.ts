@@ -19,17 +19,22 @@ vi.mock("@block65/webcrypto-web-push", () => ({
 // FakeKV exposes put-call tracking for write-only-when-changed assertions.
 interface FakeKV extends KVNamespace {
   puts: string[];
+  /** Every put call with its options (expirationTtl assertions, BUG-058). */
+  putCalls: { key: string; value: string; options?: { expirationTtl?: number } }[];
 }
 
 // fakeKV builds an in-memory KVNamespace stand-in with put-call tracking.
 function fakeKV(): FakeKV {
   const store = new Map<string, unknown>();
   const puts: string[] = [];
+  const putCalls: { key: string; value: string; options?: { expirationTtl?: number } }[] = [];
   return {
     puts,
+    putCalls,
     get: async (key: string, type?: string) => (type === "json" ? (store.get(key) ?? null) : (store.get(key) ?? null)),
-    put: async (key: string, value: string) => {
+    put: async (key: string, value: string, options?: { expirationTtl?: number }) => {
       puts.push(key);
+      putCalls.push({ key, value, options });
       store.set(key, JSON.parse(value));
     },
   } as unknown as FakeKV;
@@ -185,9 +190,29 @@ describe("runScheduled", () => {
     expect(uncached.id).toBe("uncached requests/hot.example");
     // fire-state persisted exactly once
     expect(kv.puts.filter((k) => k === STATE_KEY).length).toBe(1);
-    // list caches written
-    expect(kv.puts).toContain("zones");
-    expect(kv.puts).toContain("d1-list");
+    // list caches written under the cron-prefixed keys (BUG-058: no collision
+    // with cache.ts's API-side KV keys)
+    expect(kv.puts).toContain("cron:zones");
+    expect(kv.puts).toContain("cron:d1-list");
+    expect(kv.puts).not.toContain("zones");
+    expect(kv.puts).not.toContain("d1-list");
+  });
+  it("writes the cron list caches with expirationTtl 86400 and never on cache.ts's API keys (BUG-058)", async () => {
+    const kv = fakeKV();
+    await seedSubs(kv);
+    routeFetch();
+    await runScheduled(envP(kv), NOW);
+    for (const key of ["cron:zones", "cron:d1-list"]) {
+      const call = kv.putCalls.find((c) => c.key === key);
+      expect(call).toBeDefined();
+      expect(call!.options?.expirationTtl).toBe(86400);
+    }
+    // cache.ts's API-side keys (index.ts LIST_TTL: "zones-list", "d1-list")
+    // stay untouched by the cron path — a {at, value} cron write over those
+    // keys parsed as storedAt=undefined → NaN age → fresh forever.
+    for (const call of kv.putCalls) {
+      expect(["zones-list", "d1-list", "summary", "billing", "zones"]).not.toContain(call.key);
+    }
   });
   it("caches the zone/D1 name lists in KV for 1h (no REST list calls on the second run)", async () => {
     const kv = fakeKV();

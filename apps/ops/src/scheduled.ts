@@ -14,13 +14,19 @@ import { sendPushes } from "./webpush";
 const GRAPHQL = "https://api.cloudflare.com/client/v4/graphql";
 const API = "https://api.cloudflare.com/client/v4";
 
-// KV keys. Rules and fire-state follow the agent brief; "zones" and
-// "d1-list" cache the two REST name lists for 1h so the per-5min run costs
-// only the analytics GraphQL.
+// KV keys. Rules and fire-state follow the agent brief; "cron:zones" and
+// "cron:d1-list" cache the two REST name lists for 1h so the per-5min run
+// costs only the analytics GraphQL. The "cron:" prefix keeps them clear of
+// cache.ts's API-side keys (BUG-058): those expect {storedAt, value}, and a
+// cron {at, value} write over a shared key once parsed as storedAt=undefined
+// → NaN age → served fresh forever.
 export const RULES_KEY = "rules";
 export const STATE_KEY = "fire-state";
-const ZONES_CACHE_KEY = "zones";
-const D1_CACHE_KEY = "d1-list";
+const ZONES_CACHE_KEY = "cron:zones";
+const D1_CACHE_KEY = "cron:d1-list";
+// KV-side expiry matching the 1h LIST_TTL_MS check above (written as 24h so
+// the wall-time check inside kvCache stays the authority on freshness).
+const KV_LIST_TTL_SEC = 86400;
 const LIST_TTL_MS = 60 * 60 * 1000;
 
 // OpsEnv extends the worker Env with everything the cron path needs: the KV
@@ -76,7 +82,7 @@ async function kvCache<T>(env: OpsEnv, key: string, fetcher: () => Promise<T>): 
   const cached = await env.OPS_KV.get<{ at: number; value: T }>(key, "json");
   if (cached && typeof cached.at === "number" && Date.now() - cached.at < LIST_TTL_MS) return cached.value;
   const value = await fetcher();
-  await env.OPS_KV.put(key, JSON.stringify({ at: Date.now(), value }));
+  await env.OPS_KV.put(key, JSON.stringify({ at: Date.now(), value }), { expirationTtl: KV_LIST_TTL_SEC });
   return value;
 }
 
