@@ -13,6 +13,7 @@ import { renderBilling } from "./billing";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
 import { renderRules } from "./rules";
+import { logoMark } from "./logo";
 import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
 
 /** Nav labels per route. */
@@ -42,24 +43,7 @@ const ICONS: Record<RouteId, string> = {
   rules: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>`,
 };
 
-// Inline logo mark (FEAT-052): a monitoring pulse crossing an orbit ring —
-// operations on Cloudflare's edge. Same geometry as /icon-master.svg, amber
-// #f59e0b primary plus one cool secondary #7dd3fc satellite tick. The dark
-// halos become transparent via a mask so the gap shows the real background
-// on any surface. `idSuffix` keeps the mask id unique per lockup instance.
-function logoMark(idSuffix: string): string {
-  const maskId = `cf-ops-pulse-${idSuffix}`;
-  return `<svg width="24" height="24" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
-  <defs><mask id="${maskId}">
-    <rect width="512" height="512" fill="#fff"/>
-    <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442" fill="none" stroke="#000" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="150" cy="150" r="38" fill="#000"/>
-  </mask></defs>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#f59e0b" stroke-width="54" mask="url(#${maskId})"/>
-  <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442" fill="none" stroke="#f59e0b" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="150" cy="150" r="21" fill="#7dd3fc"/>
-</svg>`;
-}
+// Logo mark lives in ./logo (one source for the inline lockup and the icon set).
 
 /** Brand lockup: logo mark + "CosmoLabs Ops" (primary) with "Cosmoflare"
  *  beneath it as a muted secondary label. Shared by the top bar (h1),
