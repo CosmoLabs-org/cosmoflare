@@ -143,7 +143,10 @@ export class ApiClient {
   private readonly memory = new Map<string, { data: unknown; fetchedAt: number }>();
 
   constructor(opts: ApiClientOptions = {}) {
-    this.fetchFn = opts.fetchFn ?? fetch;
+    // Never store the bare global: calling it as this.fetchFn(...) binds
+    // `this` to the client and browsers throw "Illegal invocation" before any
+    // request leaves (production showed "Could not load" on every view).
+    this.fetchFn = opts.fetchFn ?? ((input, init) => fetch(input, init));
     this.storage = opts.storage === undefined ? defaultStorage() : opts.storage;
     this.now = opts.now ?? Date.now;
     this.allowFixtures = opts.allowFixtures ?? isLocalhost();
