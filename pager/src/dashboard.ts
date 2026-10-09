@@ -131,6 +131,24 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
 // paintOverview renders one (summary, billing) pair into the view host —
 // the try-body of renderOverview, split out so background revalidations can
 // repaint without touching the skeleton/error flow.
+// The plan this account runs on and its base price — neutral grey — plus
+// the month's projected overage in its severity color (operator request
+// 2026-10-10: "$5.00 in neutral grey then + whatever overage").
+// Workers Paid base: $5.00/mo (cloudflare.com/workers/pricing, the same
+// source pricing.ts verifies product prices against).
+const WORKERS_PAID_BASE_USD = 5;
+
+function planLine(billing: Billing): HTMLElement {
+  const over = billing.totalProjectedOverageUsd;
+  const line = el("p", "cf-plan-line");
+  line.append(
+    el("span", "cf-plan-base", `Workers Paid · $${WORKERS_PAID_BASE_USD}.00/mo`),
+    el("span", `cf-plan-overage ${over >= 0.01 ? (over >= 50 ? "cf-level-critical-text" : "cf-level-warning-text") : "cf-ok-text"}`,
+      over >= 0.01 ? `+ ${formatUsd(over)} overage this month` : "no overage projected"),
+  );
+  return line;
+}
+
 function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>): void {
   {
     const summary = sumRes.data;
@@ -219,7 +237,7 @@ function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes:
     } else {
       ringsCard.append(rings);
     }
-    root.replaceChildren(statusBar(sumRes, billRes, root), grid, ringsCard, attentionCard);
+    root.replaceChildren(statusBar(sumRes, billRes, root), planLine(billing), grid, ringsCard, attentionCard);
   }
 }
 

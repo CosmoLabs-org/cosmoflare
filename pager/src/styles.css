@@ -650,6 +650,20 @@ body.cf-nav-open { overflow: hidden; }
    ============================================================ */
 
 /* ---- Overview / dashboard ---- */
+/* Plan line (overview): the base plan in neutral grey, the month's overage
+   in its severity color — tabular so the two amounts align. */
+.cf-plan-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.cf-plan-base { color: var(--muted); }
+.cf-plan-overage { font-weight: 600; }
+
 
 /* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
 .cf-kpis {
@@ -777,14 +791,28 @@ body.cf-nav-open { overflow: hidden; }
 
 /* ---- Pairing view ---- */
 
+/* Pairing: one centered ritual — glyph, three true steps, live status. */
 .cf-pairing {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   display: grid;
   gap: var(--space-3);
-  justify-items: start;
+  justify-items: stretch;
+  max-width: 26rem;
+  margin-inline: auto;
+}
+.cf-pairing-hero {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+.cf-pairing-glyph {
+  color: var(--accent);
+  display: inline-flex;
 }
 .cf-pairing h2 {
   font-family: var(--font-display);
@@ -792,13 +820,57 @@ body.cf-nav-open { overflow: hidden; }
   font-size: 20px;
   line-height: var(--lh-tight);
 }
-.cf-pairing-status { color: var(--muted); margin: 0; }
+.cf-pairing-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.cf-pairing-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-2);
+}
+.cf-pairing-stepnum {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cf-pairing-steplabel {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.cf-pairing-step .cf-btn {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+}
+.cf-pairing-step .cf-btn.is-done {
+  background: var(--sev-ok);
+  border-color: var(--sev-ok);
+  color: var(--bg);
+}
+.cf-pairing-step .cf-btn.is-busy {
+  opacity: 0.7;
+  cursor: progress;
+}
+.cf-pairing-status {
+  color: var(--muted);
+  margin: var(--space-1) 0 0;
+  text-align: center;
+  min-height: 1.4em;
+  font-size: var(--text-sm);
+}
 .cf-pairing-cmd {
   background: var(--surface-raised);
   border-radius: var(--radius);
   padding: var(--space-2) var(--space-3);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--text-sm);
+  justify-self: center;
+  text-align: center;
 }
 
 /* ---- Rules view (FEAT-052 agent I): editable rule cards ---- */

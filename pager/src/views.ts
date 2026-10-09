@@ -80,97 +80,159 @@ export function renderAlertList(root: HTMLElement): void {
 }
 
 /**
- * Pairing view: enable notifications (userVisibleOnly subscription), then
- * copy the subscription blob with the exact CLI command that consumes it.
+ * Pairing view: a centered three-step ritual — allow push, prove it with a
+ * test alert, and the CLI copy fallback. Every button reports its own busy
+ * state and lands its result in the status line (level-colored), so a tap
+ * is never silent.
  */
 export async function renderPairing(root: HTMLElement): Promise<void> {
   root.replaceChildren();
   const panel = el("section", "cf-pairing");
-  panel.append(el("h2", undefined, "Pair this device"));
+
+  // Hero: the push glyph, the title, one line of purpose.
+  const hero = el("div", "cf-pairing-hero");
+  const glyph = el("span", "cf-pairing-glyph");
+  glyph.innerHTML = PAIRING_GLYPH;
+  hero.append(glyph, el("h2", undefined, "Pair this device"), el("p", "cf-pairing-sub", "Over-limit alerts land on this phone."));
 
   // Load the VAPID key before any tap: Apple asks for subscribe() to follow
   // the user gesture directly, with no network round-trip in between.
   const keyPromise = fetchVapidPublicKey();
   keyPromise.catch(() => undefined); // surfaced on click
+
   const status = el("p", "cf-pairing-status", "Notifications are not enabled yet.");
-  const enable = document.createElement("button");
-  enable.className = "cf-btn cf-btn-primary";
-  enable.textContent = "Enable notifications";
-  const copy = document.createElement("button");
-  copy.className = "cf-btn";
-  copy.textContent = "Copy subscription";
-  copy.disabled = true;
-  const test = document.createElement("button");
-  test.className = "cf-btn";
-  test.textContent = "Send test alert";
+  status.setAttribute("role", "status");
+  const setStatus = (text: string, level: "info" | "ok" | "warn" | "error" = "info"): void => {
+    status.textContent = text;
+    status.className = `cf-pairing-status ${PAIRING_STATUS_LEVEL[level]}`;
+  };
 
-  enable.addEventListener("click", async () => {
+  // busy() runs an async action with honest button feedback: disabled +
+  // busy label while in flight, restored label after.
+  async function busy(btn: HTMLButtonElement, busyLabel: string, action: () => Promise<void>): Promise<void> {
+    const idleLabel = btn.textContent ?? "";
+    btn.disabled = true;
+    btn.classList.add("is-busy");
+    btn.textContent = busyLabel;
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        status.textContent = "Permission denied — push cannot be received.";
-        return;
-      }
-      const registration = await navigator.serviceWorker.ready;
-      // Safari and Chrome require the VAPID application server key; the
-      // key must match the one the sender signs with (FEAT-052 fix).
-      const key = await keyPromise;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key),
-      });
-      // Register the device with the Worker so the cron can page it; the
-      // CLI "Copy subscription" path below stays as the secondary option.
-      const res = await fetch("/api/subscribe", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription.toJSON()),
-      });
-      if (res.ok) {
-        status.textContent = "This device will receive alerts from the Worker.";
-      } else {
-        status.textContent = `The Worker rejected the subscription (HTTP ${res.status}). Use "Copy subscription" instead.`;
-      }
-      copy.disabled = false;
-      copy.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(JSON.stringify(subscription.toJSON()));
-        status.textContent = "Copied. On your machine, run:";
-        panel.append(el("code", "cf-pairing-cmd", PAIRING_COMMAND));
-      });
-    } catch (err) {
-      status.textContent = `Subscription failed: ${err instanceof Error ? err.message : String(err)}`;
-    }
-  });
-
-  test.addEventListener("click", async () => {
-    test.disabled = true;
-    try {
-      // redirect:"manual" (BUG-057 defect 7): an expired Access session
-      // answers with a redirect; without this the browser would follow it
-      // and the JSON parse would fail with a confusing CORS/network error.
-      const res = await fetch("/api/test-fire", { method: "POST", credentials: "same-origin", redirect: "manual" });
-      // An opaque redirect or 403 means Access re-auth is needed.
-      if (res.type === "opaqueredirect" || res.status === 403) {
-        status.textContent = "Your login expired — close and reopen the app to sign in again.";
-        return;
-      }
-      const body = (await res.json().catch(() => undefined)) as { sent?: number; issues?: string[] } | undefined;
-      if (!res.ok) {
-        status.textContent = `Test failed (HTTP ${res.status})`;
-        return;
-      }
-      // Surface the Worker's per-delivery issues when it reports any.
-      status.textContent = body?.issues?.length
-        ? `Test push: sent ${body.sent ?? 0} — ${body.issues.join(" ")}`
-        : `Test push: sent ${body?.sent ?? 0}`;
-    } catch (err) {
-      status.textContent = `Test failed: ${err instanceof Error ? err.message : String(err)}`;
+      await action();
     } finally {
-      test.disabled = false;
+      btn.classList.remove("is-busy");
+      if (!btn.classList.contains("is-done")) btn.disabled = false;
+      if (!btn.classList.contains("is-done")) btn.textContent = idleLabel;
     }
-  });
+  }
 
-  panel.append(status, enable, copy, test);
+  const enable = el("button", "cf-btn cf-btn-primary", "Enable notifications") as HTMLButtonElement;
+  const test = el("button", "cf-btn", "Send test alert") as HTMLButtonElement;
+  const copy = el("button", "cf-btn", "Copy subscription") as HTMLButtonElement;
+  copy.disabled = true;
+  let subscriptionJson: string | null = null;
+
+  enable.addEventListener("click", () =>
+    busy(enable, "Enabling…", async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setStatus("Permission denied — push cannot be received.", "error");
+          return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        // Safari and Chrome require the VAPID application server key; the
+        // key must match the one the sender signs with (FEAT-052 fix).
+        const key = await keyPromise;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(key),
+        });
+        subscriptionJson = JSON.stringify(subscription.toJSON());
+        // Register the device with the Worker so the cron can page it; the
+        // CLI "Copy subscription" path below stays as the secondary option.
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: subscriptionJson,
+        });
+        if (res.ok) {
+          enable.classList.add("is-done");
+          enable.textContent = "Enabled";
+          copy.disabled = false;
+          setStatus("This device will receive alerts. Send a test to be sure.", "ok");
+        } else {
+          setStatus(`The Worker rejected the subscription (HTTP ${res.status}). Use "Copy subscription" instead.`, "warn");
+        }
+      } catch (err) {
+        setStatus(`Subscription failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+      }
+    }),
+  );
+
+  test.addEventListener("click", () =>
+    busy(test, "Sending…", async () => {
+      try {
+        // redirect:"manual" (BUG-057 defect 7): an expired Access session
+        // answers with a redirect; without this the browser would follow it
+        // and the JSON parse would fail with a confusing CORS/network error.
+        const res = await fetch("/api/test-fire", { method: "POST", credentials: "same-origin", redirect: "manual" });
+        // An opaque redirect or 403 means Access re-auth is needed.
+        if (res.type === "opaqueredirect" || res.status === 403) {
+          setStatus("Your login expired — close and reopen the app to sign in again.", "warn");
+          return;
+        }
+        const body = (await res.json().catch(() => undefined)) as { sent?: number; issues?: string[] } | undefined;
+        if (!res.ok) {
+          setStatus(`Test failed (HTTP ${res.status})`, "error");
+          return;
+        }
+        // Surface the Worker's per-delivery issues when it reports any.
+        if (body?.issues?.length) {
+          setStatus(`Sent ${body.sent ?? 0} — ${body.issues.join(" ")}`, "warn");
+        } else if ((body?.sent ?? 0) > 0) {
+          setStatus("Test sent — check your notification shade.", "ok");
+        } else {
+          setStatus("Nothing was sent — no device is subscribed yet. Enable first.", "warn");
+        }
+      } catch (err) {
+        setStatus(`Test failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+      }
+    }),
+  );
+
+  copy.addEventListener("click", () =>
+    busy(copy, "Copying…", async () => {
+      if (subscriptionJson === null) return;
+      try {
+        await navigator.clipboard.writeText(subscriptionJson);
+        setStatus("Copied. On your machine, run:", "ok");
+        panel.append(el("code", "cf-pairing-cmd", PAIRING_COMMAND));
+      } catch (err) {
+        setStatus(`Copy failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+      }
+    }),
+  );
+
+  // Steps are a real sequence: push permission first, proof second, the
+  // CLI fallback last — the numbers encode that order.
+  const step = (num: number, label: string, btn: HTMLButtonElement): HTMLElement => {
+    const row = el("div", "cf-pairing-step");
+    row.append(el("span", "cf-pairing-stepnum", String(num)), el("span", "cf-pairing-steplabel", label));
+    row.append(btn);
+    return row;
+  };
+
+  panel.append(hero, step(1, "Allow push from this phone", enable), step(2, "Prove it with a test", test), step(3, "Fallback — pair from the CLI", copy), status);
   root.append(panel);
 }
+
+/** The pairing status line's level classes (existing severity text colors). */
+const PAIRING_STATUS_LEVEL: Record<string, string> = {
+  info: "",
+  ok: "cf-ok-text",
+  warn: "cf-level-warning-text",
+  error: "cf-level-critical-text",
+};
+
+/** The nav's push glyph at hero scale (same paths as the route icon). */
+const PAIRING_GLYPH =
+  '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M16.5 7a4.5 4.5 0 0 1 2.6 4.1M19.8 4.2a8 8 0 0 1 1.6 4.9"/></svg>';

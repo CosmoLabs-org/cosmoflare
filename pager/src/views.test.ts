@@ -12,6 +12,8 @@ interface FakeNode {
   dataset: Record<string, string>;
   disabled: boolean;
   children: FakeNode[];
+  classList: { add: (...c: string[]) => void; remove: (...c: string[]) => void; contains: (c: string) => boolean };
+  setAttribute: (name: string, value: string) => void;
   append: (...nodes: FakeNode[]) => void;
   replaceChildren: () => void;
   addEventListener: (type: string, fn: Handler) => void;
@@ -20,6 +22,7 @@ interface FakeNode {
 
 function fakeEl(tag: string): FakeNode {
   const handlers: Record<string, Handler[]> = {};
+  const classes = new Set<string>();
   const node: FakeNode = {
     tagName: tag.toUpperCase(),
     className: "",
@@ -27,6 +30,12 @@ function fakeEl(tag: string): FakeNode {
     dataset: {},
     disabled: false,
     children: [],
+    classList: {
+      add: (...c) => c.forEach((x) => classes.add(x)),
+      remove: (...c) => c.forEach((x) => classes.delete(x)),
+      contains: (c) => classes.has(c),
+    },
+    setAttribute: () => undefined,
     append(...nodes) {
       node.children.push(...nodes);
     },
@@ -57,7 +66,9 @@ function findByClass(root: FakeNode, className: string): FakeNode {
   const stack = [...root.children];
   while (stack.length > 0) {
     const node = stack.shift()!;
-    if (node.className === className) return node;
+    // Token match: elements may carry additional state classes (e.g. the
+    // pairing status line appends a severity class).
+    if (node.className === className || node.className.split(/\s+/).includes(className)) return node;
     stack.unshift(...node.children);
   }
   throw new Error(`element not found: .${className}`);
@@ -108,7 +119,7 @@ describe("renderPairing", () => {
     expect(calls).toEqual(["/api/vapid-public-key", "/api/subscribe"]);
     expect(bodies).toEqual([JSON.stringify(SUB)]);
     const status = findByClass(root, "cf-pairing-status");
-    expect(status.textContent).toBe("This device will receive alerts from the Worker.");
+    expect(status.textContent).toBe("This device will receive alerts. Send a test to be sure.");
   });
 
   it("shows the Worker rejection reason when /api/subscribe fails", async () => {
@@ -134,6 +145,6 @@ describe("renderPairing", () => {
     await findButton(root, "Send test alert")._click();
     expect(calls).toContain("/api/test-fire");
     const status = findByClass(root, "cf-pairing-status");
-    expect(status.textContent).toBe("Test push: sent 2");
+    expect(status.textContent).toBe("Test sent — check your notification shade.");
   });
 });
