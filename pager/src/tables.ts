@@ -39,6 +39,31 @@ interface TableUiState {
 }
 const tableState = new WeakMap<HTMLElement, TableUiState>();
 
+/** Cross-reload sort preference (FEAT-pRC6EDA): "cf-sort:<table>" holds
+ *  {"key","dir"} in localStorage. Pure helpers take the storage so tests
+ *  can pass a Map stand-in. */
+export function readSortPref(id: string, storage: Storage | Pick<Storage, "getItem"> = window.localStorage): { key: string; dir: SortDir } | undefined {
+  try {
+    const raw = storage.getItem(`cf-sort:${id}`);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { key?: string; dir?: string };
+    if (typeof parsed.key === "string" && (parsed.dir === "asc" || parsed.dir === "desc")) {
+      return { key: parsed.key, dir: parsed.dir };
+    }
+  } catch {
+    // corrupt or unavailable storage: fall back to defaults
+  }
+  return undefined;
+}
+
+export function writeSortPref(id: string, key: string, dir: SortDir, storage: Storage | Pick<Storage, "setItem"> = window.localStorage): void {
+  try {
+    storage.setItem(`cf-sort:${id}`, JSON.stringify({ key, dir }));
+  } catch {
+    // private mode / quota: preference just doesn't persist
+  }
+}
+
 // renderSortableTable renders `rows` under one local sort/filter/collapse
 // state. State changes rebuild the tbody only — header buttons and the
 // filter box keep their value and focus across re-renders.
@@ -54,14 +79,19 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   // Persistent section root whose WeakMap entry carries sort/filter/collapse
   // across repaints (background revalidation, refresh).
   persistKey?: HTMLElement;
+  // Stable per-table id ("workers"/"d1"/"zones") — persists the chosen sort
+  // across reloads via localStorage (FEAT-pRC6EDA).
+  sortPrefId?: string;
 }): void {
+  const stored = opts.sortPrefId ? readSortPref(opts.sortPrefId) : undefined;
   const saved = opts.persistKey ? tableState.get(opts.persistKey) : undefined;
-  let sortKey = saved?.sortKey ?? opts.initial.key;
-  let sortDir = saved?.sortDir ?? opts.initial.dir;
+  let sortKey = stored?.key ?? saved?.sortKey ?? opts.initial.key;
+  let sortDir = stored?.dir ?? saved?.sortDir ?? opts.initial.dir;
   let filterText = saved?.filterText ?? "";
   let showAll = saved?.showAll ?? false;
   const persist = (): void => {
     if (opts.persistKey) tableState.set(opts.persistKey, { sortKey, sortDir, filterText, showAll });
+    if (opts.sortPrefId) writeSortPref(opts.sortPrefId, sortKey, sortDir);
   };
 
   const table = el("table", "cf-table");
@@ -108,9 +138,30 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
       sortKey = col.key;
       sortDir = col.numeric ? "desc" : "asc";
     }
+    paintDirToggle();
     persist();
     render();
   });
+
+  // Direction toggle (FEAT-pRC6EDA): the standard ↑/↓ control beside the
+  // sort-by select — one tap flips the order without re-finding the column.
+  const dirToggle = el("button", "cf-btn cf-btn-ghost cf-sort-dir") as HTMLButtonElement;
+  dirToggle.type = "button";
+  const paintDirToggle = (): void => {
+    dirToggle.textContent = sortDir === "asc" ? "↑" : "↓";
+    dirToggle.setAttribute("aria-label", sortDir === "asc" ? "Sort ascending — tap for largest first" : "Sort descending — tap for smallest first");
+    dirToggle.setAttribute("aria-pressed", String(sortDir === "desc"));
+  };
+  paintDirToggle();
+  dirToggle.addEventListener("click", () => {
+    sortDir = sortDir === "asc" ? "desc" : "asc";
+    paintDirToggle();
+    persist();
+    render();
+  });
+
+  const sortCluster = el("div", "cf-sort-controls");
+  sortCluster.append(sortSelect, dirToggle);
 
   const filter = el("input", "cf-filter") as HTMLInputElement;
   filter.type = "search";
@@ -125,7 +176,7 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   });
 
   const filterBar = el("div", "cf-table-bar");
-  filterBar.append(filter, sortSelect);
+  filterBar.append(filter, sortCluster);
 
   function render(): void {
     const col = opts.columns.find((c) => c.key === sortKey) ?? opts.columns[0];
@@ -285,6 +336,7 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
           { key: "cpuP99", label: "CPU p99", numeric: true, text: (w) => (w.cpuP99Ms === null ? "—" : `${w.cpuP99Ms.toFixed(1)}ms`), num: (w) => w.cpuP99Ms },
         ],
         rows: res.data.workers,
+        sortPrefId: "workers",
         initial: { key: "requests", dir: "desc" },
         rowClass: (w) => {
           const lv = levelForErrorPct(w.errorPct);
@@ -323,6 +375,7 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): P
           { key: "rowsPerQuery", label: "Rows/query", numeric: true, text: (d) => formatCount(d.rowsPerQuery), num: (d) => d.rowsPerQuery },
         ],
         rows: res.data.d1,
+        sortPrefId: "d1",
         initial: { key: "rowsRead", dir: "desc" },
         rowClass: (d) => {
           const lv = levelForD1(d.rowsRead);
@@ -428,6 +481,7 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
         ],
         rows,
         sharedLegend,
+        sortPrefId: "zones",
         initial: { key: "uncached", dir: "desc" },
         rowClass: (z) => {
           const lv = zoneAttentionLevel(z.uncached, z.missPct);
