@@ -1,18 +1,20 @@
 {
-  "branch": "wf466094ba-e74-1",
+  "version": "1.0.0",
+  "id": "wf466094ba-e74-1",
+  "name": "wf466094ba-e74-1",
   "dependencies": [],
   "dependents": [],
-  "id": "wf466094ba-e74-1",
-  "merge": {
-    "baseBranch": "master",
-    "order": 0,
-    "readyToMerge": false
-  },
-  "name": "wf466094ba-e74-1",
-  "status": "finished",
+  "status": "merged",
   "timestamps": {
     "created": "2026-05-29T05:37:28.7224-03:00",
-    "lastActivity": "2026-05-29T05:37:28.722438-03:00"
+    "lastActivity": "2026-10-10T00:45:21.909752+04:00",
+    "merged": "2026-10-10T00:45:21.903544+04:00"
   },
-  "version": "1.0.0"
+  "merge": {
+    "order": 0,
+    "readyToMerge": false,
+    "baseBranch": "master",
+    "mergedHeadSHA": "a1869128fd4060d776d822341440e82be0afb259"
+  },
+  "branch": "wf466094ba-e74-1"
 }
