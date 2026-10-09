@@ -1,0 +1,18 @@
+id: BUG-pQV6P4X
+type: bug
+created_at: 2026-10-09T23:22:17.158916+04:00
+updated_at: 2026-10-09T23:22:17.91388+04:00
+source: local
+ulid: 01M4H1VGDS4GRDCJJ23YQV6P4X
+provisional: true
+severity: medium
+priority: 70
+status: open
+area: reliability
+title: 'Ops Worker: cron and API cache share KV keys in incompatible formats; scheduled handler has no rejection catch'
+description: 'Opus integration review 2026-10-09: scheduled.ts:23 writes ''d1-list''/''zones'' as {at,value} with no TTL while cache.ts cached() reads the same keys as {storedAt,value} -> storedAt undefined -> NaN age -> the API serves the cron''s entry as fresh forever. index.ts:104 ctx.waitUntil(runScheduled(env).then(...)) has no .catch, so a KV failure becomes an unhandled rejection with no audit line.'
+fix_direction: Rename cron keys to cron:d1-list / cron:zones with expirationTtl 86400; add .catch that logs {cron:'alerts',error}. Tests for both.
+affected_files:
+    - apps/ops/src/scheduled.ts
+    - apps/ops/src/index.ts
+roadmap_ref: ROAD-107
