@@ -1,7 +1,7 @@
 version: "1.0"
-project: cosmoflare
-last_updated: 2026-10-09T21:14:53.681669+04:00
-next_id: 103
+project: .
+last_updated: 2026-10-09T21:51:22.587971+04:00
+next_id: 112
 items:
     - id: BASE-001
       title: Git remote configured
@@ -890,35 +890,35 @@ items:
         - FEAT-049
         - FEAT-051
       created_at: 2026-10-08T23:21:41.903776+04:00
-    - id: ROAD-p0WZ2JP
+    - id: ROAD-103
       title: Ops billing period from the real subscription (token needs Billing Read)
       status: captured
       category: core
       effort: small
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:37.497034+04:00
-    - id: ROAD-pCC8KKR
+    - id: ROAD-104
       title: Review Cloudflare's new agent-friendly CLI — full-repo gap analysis vs cosmoflare
       status: planned
       category: core
       effort: medium
       parent: ROAD-102
       created_at: 2026-10-09T20:34:40.47305+04:00
-    - id: ROAD-pG66HHM
+    - id: ROAD-105
       title: Ops upstream cache — KV stale-while-revalidate, single-flight, refresh-storm guard
       status: completed
       category: core
       effort: medium
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:31.08068+04:00
-    - id: ROAD-pHVTJDK
+    - id: ROAD-106
       title: Ops UI pass — responsive shell, hamburger drawer, sortable views, new icon set
       status: completed
       category: core
       effort: medium
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:33.850944+04:00
-    - id: ROAD-pJ25XG5
+    - id: ROAD-107
       title: Cosmoflare Ops — private web/phone tier at ops.cosmolabs.org (dashboard, billing, push alerts)
       status: in_progress
       category: core
@@ -930,28 +930,28 @@ items:
         - FEAT-pTS4SNG
         - BUG-pNXAHPD
       created_at: 2026-10-09T20:34:02.099499+04:00
-    - id: ROAD-pKHNBPX
+    - id: ROAD-108
       title: Ops rules editor — view and edit alert rules and excludes from the phone
       status: captured
       category: core
       effort: medium
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:38.969672+04:00
-    - id: ROAD-pMA5QCQ
+    - id: ROAD-109
       title: Ops phase 1 — live dashboard, Access lockdown, custom domain only
       status: completed
       category: core
       effort: medium
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:29.902038+04:00
-    - id: ROAD-pMBBH62
+    - id: ROAD-110
       title: Ops cron push — Worker pages the phone with the Mac off
       status: in_progress
       category: core
       effort: medium
       parent: ROAD-pJ25XG5
       created_at: 2026-10-09T20:34:35.533374+04:00
-    - id: ROAD-pR73WHE
+    - id: ROAD-111
       title: Ops billing view — period progress, per-product overage projection, project attribution
       status: completed
       category: core
