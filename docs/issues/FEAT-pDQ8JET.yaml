@@ -1,13 +1,17 @@
 id: FEAT-pDQ8JET
 type: feature
 created_at: 2026-10-09T21:14:17.006648+04:00
-updated_at: 2026-10-09T21:14:17.659889+04:00
+updated_at: 2026-10-09T21:14:19.069449+04:00
 source: local
 ulid: 01M4GTH45VWY8SKZSN14DQ8JET
 provisional: true
 priority: 70
 status: open
 area: ux
+origin:
+    roadmap_items:
+        - ROAD-PJ25XG5
+    session: 70
 title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
 description: 'Operator 2026-10-09: bring the Cloudflare dashboard''s usage visuals into Ops and make them clearer. For every Workers Paid allowance (Workers requests, CPU ms, D1 rows read/written/storage, KV reads/writes/storage, R2 class A/B/storage, DO requests/duration) show used vs included and projected-to-period-end as a progress ring (overview) and progress bar (billing), with warning at 75% and critical at 90% of the allowance, so the operator sees what is close to the limit before overage.'
 acceptance_criteria:

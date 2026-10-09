@@ -19,6 +19,10 @@
   "kv_namespaces": [
     { "binding": "OPS_KV", "id": "cb6f0656fe4d47a5826202e70ab9d281" }
   ],
+  // Billing cycle renews on the 23rd (operator's dashboard shows Workers usage
+  // Sep 23 - Oct 23). The token lacks Billing Read, so the subscription API
+  // cannot confirm it; this anchor is the source until it can (BUG-pNXAHPD).
+  "vars": { "BILLING_ANCHOR_DAY": "23" },
   // Served on a Workers Custom Domain attached via the API (kept out of this
   // public config); the workers.dev route stays off so the custom domain is
   // the only entry point. Verify after each deploy that the domain remains.

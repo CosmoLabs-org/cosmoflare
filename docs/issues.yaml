@@ -1,10 +1,10 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T18:22:13.352825+04:00
-next_bug_id: 56
-next_feat_id: 53
+last_updated: 2026-10-09T21:14:53.656561+04:00
+next_bug_id: 57
+next_feat_id: 54
 next_task_id: 17
-next_imp_id: 1
+next_imp_id: 2
 issues:
     - id: BUG-001
       type: bug
@@ -341,6 +341,13 @@ issues:
       title: ZoneHTTP analytics query rejected live — count requested inside sum
       severity: high
       created_at: 2026-10-08T23:32:04.221818+04:00
+    - id: BUG-pNXAHPD
+      type: bug
+      status: open
+      title: Ops billing period assumed calendar month (ends Nov 1); the real cycle runs from the 23rd (Sep 23 - Oct 23)
+      severity: high
+      area: reliability
+      created_at: 2026-10-09T21:14:51.881034+04:00
     - id: FEAT-001
       type: feature
       status: closed
@@ -607,8 +614,27 @@ issues:
       type: feature
       status: open
       title: CosmoLabs Ops PWA — private Cloudflare-hosted monitoring dashboard + push alerts for iPhone
-      delegated_to: "0351"
+      delegated_to: "0359"
       created_at: 2026-10-09T15:35:36.537715+04:00
+    - id: FEAT-pDQ8JET
+      type: feature
+      status: open
+      title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
+      area: ux
+      created_at: 2026-10-09T21:14:17.006648+04:00
+    - id: FEAT-pTS4SNG
+      type: feature
+      status: closed
+      title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
+      priority: 70
+      area: ux
+      created_at: 2026-10-09T21:14:26.739424+04:00
+    - id: IMP-pPFDXJA
+      type: improvement
+      status: open
+      title: 'Ops refresh control: refresh icon button with micro-animations'
+      area: ux
+      created_at: 2026-10-09T21:14:19.897673+04:00
     - id: TASK-001
       type: task
       status: closed

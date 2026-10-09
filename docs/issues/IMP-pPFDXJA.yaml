@@ -1,13 +1,17 @@
 id: IMP-pPFDXJA
 type: improvement
 created_at: 2026-10-09T21:14:19.897673+04:00
-updated_at: 2026-10-09T21:14:20.423882+04:00
+updated_at: 2026-10-09T21:14:21.673883+04:00
 source: local
 ulid: 01M4GTH6W7X4RTJ33HT9PFDXJA
 provisional: true
 priority: 50
 status: open
 area: ux
+origin:
+    roadmap_items:
+        - ROAD-PJ25XG5
+    session: 70
 title: 'Ops refresh control: refresh icon button with micro-animations'
 description: Replace the text Refresh button with an icon button (circular-arrow SVG, 44px target, aria-label Refresh data) that spins while a refresh is in flight, shows a brief check on success, and respects prefers-reduced-motion; apply the same micro-interaction polish to data updates (fade-in of new values, skeleton to content transition).
 roadmap_ref: ROAD-pJ25XG5

@@ -1,13 +1,17 @@
 id: FEAT-pTS4SNG
 type: feature
 created_at: 2026-10-09T21:14:26.739424+04:00
-updated_at: 2026-10-09T21:14:27.239681+04:00
+updated_at: 2026-10-09T21:14:50.996423+04:00
 source: local
 ulid: 01M4GTHDH7SBS10R9NDZTS4SNG
 provisional: true
 priority: 70
-status: open
+status: closed
 area: ux
+origin:
+    roadmap_items:
+        - ROAD-PJ25XG5
+    session: 70
 title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
 description: 'Operator 2026-10-09: bring the Cloudflare dashboard''s usage visuals into Ops and make them clearer. For every Workers Paid allowance show used vs included and projected-to-period-end as a progress ring (overview) and progress bar (billing), warning at 75% and critical at 90% of the allowance.'
 acceptance_criteria:
@@ -18,3 +22,10 @@ acceptance_criteria:
     - criterion: Thresholds 75/90 with text label
       met: false
 roadmap_ref: ROAD-pJ25XG5
+resolution:
+    notes: Duplicate of FEAT-pDQ8JET (created twice by the orchestrator on 2026-10-09).
+    resolved_at: 2026-10-09T21:14:50.995445+04:00
+revisions:
+    - date: "2026-10-09T21:14:50.995436+04:00"
+      action: closed
+      context: Duplicate of FEAT-pDQ8JET (created twice by the orchestrator on 2026-10-09).
