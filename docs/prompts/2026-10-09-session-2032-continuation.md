@@ -18,8 +18,8 @@ cosmoflare alerts watch and alerts check page on zone cache misses (zone-cache-m
 Acceptance: Operator gives an explicit go in-session; then ccs sync, ccs version --bump minor, tag v0.33.0, local build, make test-live passes, GitHub release published with the changelog (BR-03, FEAT-047, FEAT-048, FEAT-049, BUG-054, BUG-055). Until then: no push.
 ### [ ] 2. FEAT-050 design: pre-launch CF verdict command with the caching probe rule set
 Acceptance: Brainstorm + plan docs exist under docs/brainstorming and docs/planning-mode for FEAT-050, covering the FB-14 detection matrix as the rule catalog, a non-colliding command name (cosmoflare audit is taken), and the probe rules moved from FEAT-049 (header sweep, repeat-probe, auth-route cache check, unused bindings).
-### [ ] 3. Wire the operator's real alert rules from the starter set and pair the pager
-Acceptance: The operator's .cosmoflare-alerts.yaml holds zone-uncached-requests 10000, zone-cache-miss-pct 50 and d1-rows-read 1e9 rules (with chosen excludes), and alerts watch --test-fire buzzes a paired phone (also closes carried goal 7, note on FEAT-045).
+### [ ] 3. Make alerts reach the phone: deploy the pager PWA, run watch in the background, wire the starter rules
+Acceptance: (a) the pager PWA in pager/ is served over HTTPS (cosmolabs.org/pager returned 404 on 2026-10-09 — deploy it there or as its own Pages project) and installs on the operator's phone; (b) alerts watch runs as a background service that survives terminal close and reboot (no install path exists yet — e.g. a launchd agent); (c) the operator's .cosmoflare-alerts.yaml holds zone-uncached-requests 10000, zone-cache-miss-pct 50 and d1-rows-read 1e9 rules with chosen excludes; (d) alerts watch --test-fire buzzes the paired phone (closes carried goal 7, note on FEAT-045).
 ### [ ] 4. cosmolabs.org deploy: TASK-010 + shader hero + pager PWA (carried)
 Acceptance: /cosmoflare serves OG+JSON-LD using the committed cosmoflare-og.png; /pager installs; TASK-010 closed with live URL.
 ### [ ] 5. Launch posts live (carried)
