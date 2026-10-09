@@ -736,6 +736,25 @@ body.cf-nav-open { overflow: hidden; }
 .cf-attention.cf-level-critical .cf-attention-mark { color: var(--sev-critical); }
 .cf-attention.cf-level-warning .cf-attention-mark { color: var(--sev-warning); }
 
+/* ---- Projects view: consumption grouped by project ---- */
+.cf-projects-list {
+  display: grid;
+  gap: var(--space-3);
+}
+.cf-project-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.cf-project-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+.cf-project-overage { font-variant-numeric: tabular-nums; }
+.cf-project .cf-chips { margin-top: var(--space-2); }
+
 /* ---- Billing: product cards ---- */
 
 .cf-product-head {

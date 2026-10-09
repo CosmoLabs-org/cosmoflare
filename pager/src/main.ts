@@ -10,6 +10,7 @@ import "./styles.css";
 import { el } from "./dom";
 import { renderOverview } from "./dashboard";
 import { renderBilling } from "./billing";
+import { renderProjects } from "./projects";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
 import { renderRules } from "./rules";
@@ -20,6 +21,7 @@ import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
 const NAV: Record<RouteId, { label: string }> = {
   overview: { label: "Overview" },
   billing: { label: "Billing" },
+  projects: { label: "Projects" },
   workers: { label: "Workers" },
   d1: { label: "D1" },
   zones: { label: "Zones" },
@@ -34,6 +36,8 @@ const NAV: Record<RouteId, { label: string }> = {
 const ICONS: Record<RouteId, string> = {
   overview: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
   billing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/></svg>`,
+  // Folder tree — the Projects view groups consumption by project.
+  projects: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3.5 7a1.5 1.5 0 0 1 1.5-1.5h4l2 2.5h8A1.5 1.5 0 0 1 20.5 9.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg>`,
   workers: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 4.5 13.5H11L9.5 22 19 10.5h-6.5z"/></svg>`,
   d1: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
   zones: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"/></svg>`,
@@ -223,6 +227,7 @@ function mount(): void {
   const RENDER: Record<RouteId, (host: HTMLElement, opts?: { refresh?: boolean }) => void | Promise<void>> = {
     overview: (h, o) => void renderOverview(h, o),
     billing: (h, o) => void renderBilling(h, o),
+    projects: (h, o) => void renderProjects(h, o ?? {}),
     workers: (h, o) => void renderWorkers(h, o ?? {}),
     d1: (h, o) => void renderD1(h, o ?? {}),
     zones: (h, o) => void renderZones(h, o ?? {}),
