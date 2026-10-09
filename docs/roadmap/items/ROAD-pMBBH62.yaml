@@ -1,0 +1,15 @@
+id: ROAD-pMBBH62
+created_at: 2026-10-09T20:34:35.533374+04:00
+updated_at: 2026-10-09T20:34:37.255234+04:00
+title: Ops cron push — Worker pages the phone with the Mac off
+description: 'rules.ts/scheduled.ts/webpush.ts: FEAT-049 zone/D1 rules ported to TS, 1h cooldown + 2x escalation, gap pages, aes128gcm Web Push, /api/subscribe + /api/test-fire, 5-min cron live. Remaining: VAPID_PRIVATE_KEY + VAPID_SUBJECT Worker secrets (operator), pair the iPhone from the app, confirm a test push lands.'
+status: in_progress
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR8DWEBHQSRPMRT3MBBH62
+provisional: true
