@@ -2750,6 +2750,10 @@ The `usage-pct` and `usage-projected-pct` conditions ride the same loop on a
 telemetry. A collection error keeps the last known snapshot (a warning is
 logged); with no snapshot yet, the usage conditions skip the cycle.
 
+Re-paging: account, script and do rules re-page every cycle while tripped. zone and d1 rules page at most once an hour per zone or database, unless the value doubles since the last page; a recovery and re-breach inside the hour stays quiet. If zone or D1 telemetry cannot be collected, a telemetry gap page fires once an hour so silent rules are never mistaken for healthy ones. Cooldown memory is in-process: a restart re-pages current zone/d1 breaches once. Zones need at least 100 requests in the window before their cache ratios are judged.
+
+Percent values in the page text print one decimal (52.5); the push payload keeps full precision.
+
 ### Pair a device (push subscriptions)
 
 One-time setup, one paste. VAPID keys live only on your machine
@@ -2806,11 +2810,12 @@ cosmoflare alerts create worker-failures \
 
 | Flag | Values | Description |
 |------|--------|-------------|
-| `--service` | `r2`, `workers`, `kv`, `dns` | Cloudflare service to monitor |
+| `--service` | `r2`, `workers`, `kv`, `dns`, `zone`, `d1` | Cloudflare service to monitor |
 | `--condition` | any registered condition (see the Alert conditions table below) | Condition that triggers the alert |
 | `--threshold` | numeric | Value at which the alert fires |
 | `--action` | `webhook`, `email`, `log` | Notification method |
 | `--target` | URL or email | Where the notification goes |
+| `--exclude` | comma-separated zone or database names or IDs | Zones or databases a `zone`/`d1` rule skips (name or ID, case-insensitive); `--exclude ""` on update clears the list |
 
 ### Alert conditions
 
@@ -2833,6 +2838,27 @@ cosmoflare alerts create worker-failures \
 | `do-requests` | per-DO-namespace | requests | per-namespace Durable Object request volume over the window |
 | `usage-pct` | account | `%` | highest monthly usage percent across dimensions with known plan limits |
 | `usage-projected-pct` | account | `%` | highest projected monthly usage percent at cycle end (linear pacing) |
+| `zone-cache-miss-pct` | zone | % | per-zone share of cache-eligible eyeball requests that missed (miss+expired); zones under 100 eligible requests skip |
+| `zone-uncached-requests` | zone | requests | per-zone eyeball requests that never reach the cache (dynamic+bypass) over the window; each is a billed Worker or origin hit |
+| `d1-rows-read` | d1 | rows | per-database D1 rows read (scanned, the billed unit) over the window |
+
+#### Zone cache and D1 rows-read conditions (FEAT-049)
+
+Zone rules fan out per zone and the fired alert names the zone; d1 rules fan out per D1 database and name the database. Both families are evaluated by `alerts watch` and `alerts check` only — `cosmoflare serve` logs a warning and skips them.
+
+Miss % is (miss + expired) ÷ cache-eligible requests (hit, miss, expired, revalidated, updating, stale), and it is judged only when a zone has at least 100 eligible requests in the window. Uncached requests are eyeball requests with cacheStatus `dynamic` or `bypass` over the window — an absolute count with no floor, where every one is a billed Worker invocation or an origin hit. Workers-served sites are ~97-100% dynamic by design, which is why the uncached signal is a volume, not a percentage (the 2026-10-09 dry run showed a percentage flagging 23 of 42 zones). cacheStatus `none` and other statuses count in neither metric, and only eyeball traffic is counted.
+
+Starter thresholds (suggestions, not defaults): `zone-uncached-requests` at 10000 per 24h (≈ 300k uncached requests/month, ~3% of the 10M Workers Paid allowance), `zone-cache-miss-pct` at 50, and `d1-rows-read` at 1e9 per 24h (≈ 30B rows/month, above the 25B Workers Paid allowance).
+
+```bash
+cosmoflare alerts create uncached-zones --service zone --condition zone-uncached-requests --threshold 10000 --action log --target - --exclude api.example.com
+cosmoflare alerts create cache-misses --service zone --condition zone-cache-miss-pct --threshold 50 --action log --target -
+cosmoflare alerts create d1-scans --service d1 --condition d1-rows-read --threshold 1e9 --action log --target -
+```
+
+`--exclude` takes comma-separated zone or database names or IDs, matched case-insensitively (an ID still matches while the name list is unavailable and alerts fall back to IDs); `alerts update NAME --exclude ""` clears the list, and `alerts get` shows it.
+
+Known limitation: the watch window is a rolling 24h, while D1 Free-plan limits reset at 00:00 UTC — on Free accounts the d1 value and the daily limit do not line up exactly.
 
 ### Stuck-work detection
 
@@ -2861,9 +2887,10 @@ cosmoflare alerts get high-errors --json
 ```bash
 cosmoflare alerts update high-errors --threshold 10
 cosmoflare alerts update high-errors --action email --target admin@example.com
+cosmoflare alerts update uncached-zones --exclude api.example.com,status.example.com
 ```
 
-Only provided flags are modified; other fields remain unchanged.
+Only provided flags are modified; other fields remain unchanged. `--exclude ""` clears the exclude list on a `zone`/`d1` rule.
 
 ### Delete an alert rule
 
@@ -2894,6 +2921,10 @@ cosmoflare alerts history --json
 |------|-------------|
 | `--limit` | Maximum number of entries (most recent first) |
 | `--since` | Show entries after this time (RFC3339 format) |
+
+### Live API smoke test
+
+`make test-live` runs `TestLiveAnalyticsQueries` against the real Cloudflare API using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. It is never part of the default test suite.
 
 ## cosmoflare limits
 
@@ -3002,6 +3033,8 @@ Projection is linear (usage to date ÷ days elapsed × cycle length). Set usage-
 | `--json` | `false` | Output the full `UsageSnapshot` as a JSON envelope |
 
 Dimension notes: Durable Object duration is billed GB-seconds (wall time converted at Cloudflare's 128 MB billed memory); R2 storage is a gauge read over the trailing 24 hours while cumulative dimensions read cycle-to-date analytics. Dimensions with no tier value report `USED` with `LIMIT` = `limit unknown` and no percent — never NaN. `--json` emits `{"status": "success", "data": …}` with `cycle_start`, `cycle_end`, `days_elapsed`, `days_total`, and one `dimensions[]` entry per row (`id`, `name`, `unit`, `used`, `limit`, `pct`, `projected_pct`).
+
+The usage view also shows the `d1.rows_read_monthly` dimension (Workers Paid: 25 billion rows read per month included; source https://developers.cloudflare.com/d1/platform/pricing/). D1 is shown here but `usage-pct` / `usage-projected-pct` ignore it — use a `d1-rows-read` alert rule for D1 alerting.
 
 ## Library Usage (Workers and KV)
 
