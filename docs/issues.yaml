@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T21:14:53.656561+04:00
+last_updated: 2026-10-09T21:20:09.417334+04:00
 next_bug_id: 57
 next_feat_id: 54
 next_task_id: 17
@@ -620,6 +620,7 @@ issues:
       type: feature
       status: open
       title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
+      priority: 70
       area: ux
       created_at: 2026-10-09T21:14:17.006648+04:00
     - id: FEAT-pTS4SNG

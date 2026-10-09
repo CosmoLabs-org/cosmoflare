@@ -1,7 +1,7 @@
 id: FEAT-pDQ8JET
 type: feature
 created_at: 2026-10-09T21:14:17.006648+04:00
-updated_at: 2026-10-09T21:14:19.069449+04:00
+updated_at: 2026-10-09T21:20:09.414731+04:00
 source: local
 ulid: 01M4GTH45VWY8SKZSN14DQ8JET
 provisional: true
@@ -26,3 +26,5 @@ acceptance_criteria:
     - criterion: Verified at 375px and 1280px
       met: false
 roadmap_ref: ROAD-pJ25XG5
+resolution:
+    notes: 'Operator 2026-10-09: over-limit and critical bars/rings render red with a continuous flowing stripe and soft pulsing glow; ok/warning bars only animate on first fill; reduced-motion disables all motion.'
