@@ -7,7 +7,7 @@
 import { el, skeleton, statusLine } from "./dom";
 import { formatAmount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
 import { api, LoginExpiredError, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
-import { barGauge, scaleFitPct } from "./gauges";
+import { barGauge, productLabel, scaleFitPct } from "./gauges";
 import { refreshButton } from "./refresh";
 
 // meterPct computes the meter geometry for one product row: solid used
@@ -45,7 +45,7 @@ function productRow(p: ProductUsage, period: BillingPeriod): HTMLElement {
   const card = el("section", `cf-card cf-product ${p.projectedOverageUsd > 0 ? "cf-over" : ""}`);
   const head = el("div", "cf-product-head");
   head.append(
-    el("strong", "cf-product-name", `${p.product} — ${p.metric}`),
+    el("strong", "cf-product-name", productLabel(p.id, p.product, p.metric)),
     el("span", `cf-product-overage ${p.projectedOverageUsd > 0 ? "cf-level-critical-text" : "cf-ok-text"}`,
       p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)} overage` : "within allowance"),
   );
@@ -91,6 +91,27 @@ export async function renderBilling(root: HTMLElement, opts: { refresh?: boolean
   } catch (err) {
     errorState(root, err);
   }
+}
+
+// billingLegend is the one-line key under the period card: solid = used,
+// hatched = projected, line = allowance, dot = today. The bar gauges repeat
+// these encodings; the legend spells them out once.
+export function billingLegend(): HTMLElement {
+  const row = el("div", "cf-legend");
+  row.setAttribute("role", "list");
+  row.setAttribute("aria-label", "Gauge legend: solid used, hatched projected, line allowance, dot today");
+  const item = (swatchClass: string, text: string): HTMLElement => {
+    const s = el("span", "cf-legend-item");
+    s.append(el("span", swatchClass), document.createTextNode(text));
+    return s;
+  };
+  row.append(
+    item("cf-legend-swatch cf-legend-used", "used"),
+    item("cf-legend-swatch cf-legend-projected", "projected"),
+    item("cf-legend-allowance", "allowance"),
+    item("cf-legend-dot", "today"),
+  );
+  return row;
 }
 
 // renderBillingInto paints one Billing result into the view host.
@@ -159,7 +180,7 @@ function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
   });
 
   // Telemetry gaps notice
-  root.replaceChildren(bar, period, products);
+  root.replaceChildren(bar, period, billingLegend(), products);
   if (b.errors.length) {
     const gaps = el("section", "cf-card cf-level-warning");
     gaps.append(el("h2", undefined, "Telemetry gaps"));

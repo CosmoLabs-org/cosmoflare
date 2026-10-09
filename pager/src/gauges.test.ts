@@ -2,13 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   ariaLabelFor,
   arcLens,
+  capTopRings,
   clampPct,
   fmtGaugePct,
   gaugeLevel,
+  labelLines,
   levelFor,
   limitLabel,
+  productLabel,
+  ringCenterValue,
+  ringUsedLine,
   scaleFitPct,
   sortByProjectedDesc,
+  todayDotPos,
 } from "./gauges";
 
 describe("levelFor", () => {
@@ -129,5 +135,96 @@ describe("scaleFitPct", () => {
     expect(scaleFitPct(50, 200)).toBe(25);
     expect(scaleFitPct(200, 200)).toBe(100);
     expect(scaleFitPct(10, 0)).toBe(0);
+  });
+});
+
+describe("productLabel", () => {
+  it("maps the Workers Paid billing ids to proper product names", () => {
+    expect(productLabel("workers.requests", "Workers", "Requests")).toBe("Workers requests");
+    expect(productLabel("workers.cpu_time", "Workers", "CPU time")).toBe("Workers CPU time");
+    expect(productLabel("r2.class_a", "R2", "Class A")).toBe("R2 Class A ops");
+    expect(productLabel("r2.class_b", "R2", "Class B")).toBe("R2 Class B ops");
+    expect(productLabel("durable_objects.requests", "Durable Objects", "Requests")).toBe("Durable Objects requests");
+    expect(productLabel("durable_objects.duration", "Durable Objects", "Duration")).toBe("Durable Objects duration");
+    expect(productLabel("kv.reads", "KV", "Reads")).toBe("KV reads");
+    expect(productLabel("kv.writes", "KV", "Writes")).toBe("KV writes");
+    expect(productLabel("kv.storage", "KV", "Storage")).toBe("KV storage");
+    expect(productLabel("d1.rows_read", "D1", "Rows read")).toBe("D1 rows read");
+    expect(productLabel("d1.rows_written", "D1", "Rows written")).toBe("D1 rows written");
+    expect(productLabel("d1.storage", "D1", "Storage")).toBe("D1 storage");
+    expect(productLabel("r2.storage", "R2", "Storage (average)")).toBe("R2 storage");
+  });
+  it("falls back to 'product metric' for unknown ids (never an empty label)", () => {
+    expect(productLabel("queuing.messages", "Queues", "Messages")).toBe("Queues messages");
+  });
+});
+
+describe("capTopRings", () => {
+  const ids = (n: number): { id: string }[] => Array.from({ length: n }, (_, i) => ({ id: `p${i}` }));
+  it("keeps the 8 closest to their limit and counts the hidden rest", () => {
+    const { shown, hiddenCount } = capTopRings(ids(13));
+    expect(shown.map((p) => p.id)).toEqual(["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"]);
+    expect(hiddenCount).toBe(5);
+  });
+  it("exactly 8 products hide nothing", () => {
+    const { shown, hiddenCount } = capTopRings(ids(8));
+    expect(shown).toHaveLength(8);
+    expect(hiddenCount).toBe(0);
+  });
+  it("fewer than 8 products hide nothing", () => {
+    const { shown, hiddenCount } = capTopRings(ids(3));
+    expect(shown).toHaveLength(3);
+    expect(hiddenCount).toBe(0);
+  });
+});
+
+describe("ring center text", () => {
+  it("the big value is the projected %, not the used %", () => {
+    expect(ringCenterValue(106)).toBe("106%");
+    expect(ringCenterValue(7.25)).toBe("7.3%");
+    expect(ringCenterValue(214)).toBe("214%");
+  });
+  it("the muted second line states the used share so far", () => {
+    expect(ringUsedLine(30.7)).toBe("30.7% used so far");
+    expect(ringUsedLine(4)).toBe("4% used so far");
+  });
+});
+
+describe("todayDotPos", () => {
+  const cx = 60;
+  const cy = 60;
+  const r = 50;
+  it("sits on the track: 0% at 12 o'clock, 25% right, 50% bottom, back at top for 100%", () => {
+    expect(todayDotPos(0, cx, cy, r)).toEqual({ x: 60, y: 10 });
+    expect(todayDotPos(25, cx, cy, r).x).toBeCloseTo(110);
+    expect(todayDotPos(25, cx, cy, r).y).toBeCloseTo(60);
+    expect(todayDotPos(50, cx, cy, r)).toEqual({ x: 60, y: 110 });
+    const full = todayDotPos(100, cx, cy, r);
+    expect(full.x).toBeCloseTo(60);
+    expect(full.y).toBeCloseTo(10);
+  });
+  it("clamps out-of-range positions onto the ring", () => {
+    expect(todayDotPos(-10, cx, cy, r)).toEqual({ x: 60, y: 10 });
+    const over = todayDotPos(140, cx, cy, r);
+    expect(over.x).toBeCloseTo(60);
+    expect(over.y).toBeCloseTo(10);
+  });
+  it("a half-period day lands at the 6 o'clock angle (day/days on the ring)", () => {
+    const { x, y } = todayDotPos((17 / 30) * 100, cx, cy, r);
+    expect(y).toBeGreaterThan(cy); // past the horizontal midline → lower half
+    expect(x).toBeLessThan(cx); // 17/30 is just past 6 o'clock → left half
+  });
+});
+
+describe("labelLines", () => {
+  it("short labels stay one line", () => {
+    expect(labelLines("D1 rows read")).toEqual(["D1 rows read"]);
+  });
+  it("long labels split into two balanced lines on a word boundary", () => {
+    expect(labelLines("Durable Objects duration")).toEqual(["Durable Objects", "duration"]);
+    expect(labelLines("Durable Objects requests")).toEqual(["Durable Objects", "requests"]);
+  });
+  it("a single long word never splits", () => {
+    expect(labelLines("Supercalifragilisticexpialidocious")).toEqual(["Supercalifragilisticexpialidocious"]);
   });
 });

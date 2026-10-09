@@ -6,9 +6,10 @@
 
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+
 import { api, LoginExpiredError, type Billing, type BillingPeriod, type ProductUsage, type Summary } from "./api";
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
-import { gaugeLevel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
+import { capTopRings, gaugeLevel, productLabel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
 import { hrefFor } from "./routes";
 import { refreshButton } from "./refresh";
 
@@ -34,7 +35,15 @@ export function pacingPct(p: ProductUsage): number {
 // pacingLabel states the projection honestly: what metric, that the number
 // is a projection, and which allowance it is a percentage OF.
 export function pacingLabel(p: ProductUsage): string {
-  return `${p.product} ${p.metric.toLowerCase()} · projected % of ${formatCount(p.included)} ${p.unit}`;
+  return `${productLabel(p.id, p.product, p.metric)} · projected % of ${formatCount(p.included)} ${p.unit}`;
+}
+
+// pacingSublabel is the KPI tile's second line: "projected 106% of 25.0B
+// rows" — the tile value is the projected %, the sublabel repeats what that
+// number is a projection OF.
+export function pacingSublabel(p: ProductUsage): string {
+  const pct = p.included > 0 ? (p.projected / p.included) * 100 : 0;
+  return `projected ${formatPct(pct, 0)} of ${formatCount(p.included)} ${p.unit}`;
 }
 
 // ringPropsFor maps one billing product + the period into ring-gauge props:
@@ -46,7 +55,7 @@ export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeP
     usedPct: included > 0 ? (p.used / included) * 100 : 0,
     projectedPct: pacingPct(p),
     expectedPct: periodProgress(period.day, period.days).elapsedPct,
-    label: `${p.product} ${p.metric.toLowerCase()}`,
+    label: productLabel(p.id, p.product, p.metric),
     sublabel: `${formatCount(p.included)} ${p.unit}`,
   };
 }
@@ -54,12 +63,13 @@ export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeP
 // periodEndsLabel marks a calendar-sourced period as an assumption — the
 // operator should know "(calendar month)" is not the invoice's own date.
 export function periodEndsLabel(end: string, source: BillingPeriod["source"]): string {
-  return `period ends ${formatDateShort(end)}${source === "calendar" ? " (calendar month)" : ""}`;
+  return `ends ${formatDateShort(end)}${source === "calendar" ? " (calendar month)" : ""}`;
 }
 
-function kpiTile(value: string, label: string, level: Level = "ok"): HTMLElement {
+function kpiTile(value: string, label: string, level: Level = "ok", sublabel?: string): HTMLElement {
   const tile = el("div", `cf-kpi cf-level-${level}`);
   tile.append(el("div", "cf-kpi-value", value), el("div", "cf-kpi-label", label));
+  if (sublabel) tile.append(el("div", "cf-kpi-sub", sublabel));
   tile.setAttribute("role", "group");
   return tile;
 }
@@ -110,8 +120,8 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
       kpiTile(formatUsd(billing.totalProjectedOverageUsd), "projected overage",
         billing.totalProjectedOverageUsd >= 0.01 ? (billing.totalProjectedOverageUsd >= 50 ? "critical" : "warning") : "ok"),
       periodTile,
-      kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", d1Prod ? pacingLabel(d1Prod) : "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok"),
-      kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", wProd ? pacingLabel(wProd) : "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok"),
+      kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", d1Prod ? productLabel(d1Prod.id, d1Prod.product, d1Prod.metric) : "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok", d1Prod ? pacingSublabel(d1Prod) : undefined),
+      kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", wProd ? productLabel(wProd.id, wProd.product, wProd.metric) : "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok", wProd ? pacingSublabel(wProd) : undefined),
       kpiTile(String(attention.length), attention.length === 1 ? "item needs attention" : "items need attention",
         attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"),
     );
@@ -142,20 +152,40 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
       }
     }
 
-    // Workers Paid allowances — one ring per product metric, worst-first
-    // (projected % desc), each tapping through to the billing view.
+    // Workers Paid allowances — the 8 rings closest to their limit,
+    // worst-first (projected % desc), the rest behind a "Show all N"
+    // toggle. Each ring taps through to the billing view.
     const ringsCard = el("section", "cf-card");
     ringsCard.append(el("h2", undefined, "Workers Paid allowances"));
+    const sorted = sortByProjectedDesc(billing.products);
+    const { shown, hiddenCount } = capTopRings(sorted);
     const rings = el("div", "cf-rings");
-    for (const p of sortByProjectedDesc(billing.products)) {
+    const ringFor = (p: (typeof sorted)[number]): HTMLElement => {
       const props = ringPropsFor(p, billing.period);
       const { level, overLimit } = gaugeLevel(props.usedPct, props.projectedPct);
       const link = el("a", `cf-ring cf-level-${level}${overLimit ? " cf-over" : ""}`);
       link.href = hrefFor("billing");
       link.append(ringGauge(props));
-      rings.append(link);
+      return link;
+    };
+    for (const p of shown) rings.append(ringFor(p));
+    if (hiddenCount > 0) {
+      let expanded = false;
+      const toggle = el("button", "cf-btn cf-show-all", `Show all ${sorted.length}`);
+      toggle.addEventListener("click", () => {
+        expanded = !expanded;
+        if (expanded) {
+          for (const p of sorted.slice(shown.length)) rings.append(ringFor(p));
+          toggle.textContent = "Show top 8";
+        } else {
+          rings.replaceChildren(...shown.map(ringFor));
+          toggle.textContent = `Show all ${sorted.length}`;
+        }
+      });
+      ringsCard.append(rings, toggle);
+    } else {
+      ringsCard.append(rings);
     }
-    ringsCard.append(rings);
     root.replaceChildren(statusBar(sumRes, billRes, root), grid, ringsCard, attentionCard);
   } catch (err) {
     errorState(root, err);
