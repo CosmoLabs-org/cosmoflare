@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/CosmoLabs-org/cosmoflare/internal/webhook"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare/alertspush"
@@ -238,5 +240,28 @@ func TestCachedTelemetryRefsBackoff(t *testing.T) {
 	cachedTelemetryRefs(context.Background(), true, true)
 	if len(calls) != 2 || calls[1] != [2]bool{false, true} {
 		t.Fatalf("6 min later: calls=%v, want one retry of the D1 list only (zones still fresh)", calls)
+	}
+}
+
+// TestWatchCycleTimeout pins the per-cycle deadline (combined-review fix):
+// one cycle may never run longer than max(interval, 60s), so a degraded API
+// cannot stall every pager rule for minutes.
+func TestWatchCycleTimeout(t *testing.T) {
+	for interval, want := range map[time.Duration]time.Duration{
+		10 * time.Second: 60 * time.Second,
+		60 * time.Second: 60 * time.Second,
+		5 * time.Minute:  5 * time.Minute,
+	} {
+		if got := watchCycleTimeout(interval); got != want {
+			t.Errorf("watchCycleTimeout(%s) = %s, want %s", interval, got, want)
+		}
+	}
+}
+
+func TestExcludeHelpSaysNameOrID(t *testing.T) {
+	for _, c := range []*cobra.Command{alertsCreateCmd, alertsUpdateCmd} {
+		if u := c.Flags().Lookup("exclude").Usage; !strings.Contains(u, "name or ID") {
+			t.Errorf("%s --exclude help %q must say 'name or ID'", c.Name(), u)
+		}
 	}
 }
