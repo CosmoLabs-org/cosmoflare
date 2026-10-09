@@ -1,9 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:38.969929+04:00
-next_id: 110
+last_updated: 2026-10-09T20:34:40.473349+04:00
+next_id: 111
 items:
-    - id: ROAD-109
+    - id: ROAD-110
+      title: Review Cloudflare's new agent-friendly CLI — full-repo gap analysis vs cosmoflare
+      status: planned
+      category: core
+      effort: medium
+      parent: ROAD-102
+      created_at: 2026-10-09T20:34:40.47305+04:00
+    - id: ROAD-pKHNBPX
       title: Ops rules editor — view and edit alert rules and excludes from the phone
       status: captured
       category: core

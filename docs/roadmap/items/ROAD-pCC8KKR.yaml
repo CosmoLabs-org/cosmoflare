@@ -1,0 +1,15 @@
+id: ROAD-pCC8KKR
+created_at: 2026-10-09T20:34:40.47305+04:00
+updated_at: 2026-10-09T20:34:41.659196+04:00
+title: Review Cloudflare's new agent-friendly CLI — full-repo gap analysis vs cosmoflare
+description: 'Next session (operator 2026-10-09): evaluate Cloudflare''s newest agent-oriented CLI repo end to end — command surface, output formats, auth model, MCP/agent integration, how it pulls account data (APIs, GraphQL datasets, batching, caching). Produce a feature-gap matrix vs cosmoflare CLI + Ops, and adopt better data-pull strategies (fewer upstream calls, wider dataset coverage). Clone out-of-tree via ccs analyze-clone; confirm the repo name and URL live first.'
+status: planned
+category: core
+effort: medium
+tags:
+    - area:agent-ux
+parent: ROAD-102
+origin:
+    session: 70
+ulid: 01M4GR8JPTZYM9Q5MFGDCC8KKR
+provisional: true
