@@ -1,13 +1,24 @@
 // Cosmoflare Ops (FEAT-052): private dashboard + push-alert pager.
-// Lock-down: a Cloudflare Access application covers the workers.dev
-// hostname (owner email only) and the Worker verifies its JWT
-// (ACCESS_TEAM_DOMAIN + ACCESS_AUD secrets). Preview URLs stay off — the Access app does
-// not cover them. Account ID, API token and VAPID public key are Worker
-// secrets (wrangler secret put …), never committed: this repo is public.
+// Lock-down: a Cloudflare Access application covers the custom hostname
+// (owner email only) and the Worker verifies its JWT (ACCESS_TEAM_DOMAIN +
+// ACCESS_AUD secrets). Preview URLs stay off — the Access app does
+// not cover them. Secrets (wrangler secret put …), never committed — this
+// repo is public: CF_ACCOUNT_ID, CF_API_TOKEN, VAPID_PUBLIC_KEY,
+// VAPID_PRIVATE_KEY, VAPID_SUBJECT (e.g. "mailto:alerts@cosmolabs.org").
+// Optional var BILLING_ANCHOR_DAY ("1"-"31") is the billing-period fallback.
+// The cron trigger fires every 5 minutes to evaluate the alert rules; OPS_KV
+// holds rules, fire-state, subscriptions and the upstream cache (fill in the
+// namespace id below before the first deploy).
 {
   "name": "cosmoflare-ops",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "kv_namespaces": [
+    { "binding": "OPS_KV", "id": "REPLACE_WITH_KV_ID" }
+  ],
   // Served on a Workers Custom Domain attached via the API (kept out of this
   // public config); the workers.dev route stays off so the custom domain is
   // the only entry point. Verify after each deploy that the domain remains.

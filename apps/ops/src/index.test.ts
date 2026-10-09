@@ -1,5 +1,29 @@
-import { describe, expect, it } from "vitest";
-import worker, { summaryResponse } from "./index";
+import { describe, expect, it, vi } from "vitest";
+import worker, { billingResponse, summaryResponse } from "./index";
+
+// Mock the cron engine module: the routing tests below stub its entry points
+// instead of running the real rule evaluation (that is scheduled.test.ts's job).
+const scheduledMocks = vi.hoisted(() => ({
+  runScheduled: vi.fn(),
+  testFire: vi.fn(),
+}));
+vi.mock("./scheduled", () => ({
+  runScheduled: scheduledMocks.runScheduled,
+  testFire: scheduledMocks.testFire,
+}));
+
+// Auth bypass switch: the real verifyAccessJwt fails closed without Access
+// config, so tests that exercise post-auth routing flip this on; the default
+// false keeps the forbidden tests on the real fail-closed path.
+const authBypass = vi.hoisted(() => ({ value: false }));
+vi.mock("./access", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("./access")>();
+  return {
+    ...mod,
+    verifyAccessJwt: async (...args: Parameters<typeof mod.verifyAccessJwt>) =>
+      authBypass.value ? { ok: true as const, email: "owner@example.com" } : mod.verifyAccessJwt(...args),
+  };
+});
 
 const env = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "tok", VAPID_PUBLIC_KEY: "BPUBLICKEY", ACCESS_TEAM_DOMAIN: "", ACCESS_AUD: "", ASSETS: { fetch: async () => new Response("asset") } };
 
@@ -106,5 +130,121 @@ describe("summaryResponse upstream cache", () => {
     } finally {
       globalThis.fetch = real;
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// /api/billing, /api/subscribe, /api/test-fire and the cron handler (FEAT-052)
+
+// Billing upstream mock: the subscriptions REST call is a live-verified 403
+// with the ops token's scopes (billing.ts), so resolvePeriod falls through to
+// the calendar; GraphQL returns an empty account row (no usage rows to merge).
+function mockBillingUpstream(counts: { fetches: number }): typeof fetch {
+  const real = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    counts.fetches++;
+    const url = String(input);
+    if (url.includes("/subscriptions")) return new Response("Authentication error", { status: 403 });
+    return new Response(JSON.stringify({ data: { viewer: { accounts: [{}] } } }));
+  }) as typeof fetch;
+  return real;
+}
+
+describe("billingResponse upstream cache", () => {
+  it("loads once, serves the second call from cache, and reports cache metadata", async () => {
+    const counts = { fetches: 0 };
+    const real = mockBillingUpstream(counts);
+    try {
+      const { ctx } = fakeCtx();
+      const first = await billingResponse(ctx, env as never, false);
+      const body1 = (await first.json()) as { cache: { ageSec: number; stale: boolean }; period: { source: string }; products: unknown[] };
+      expect(body1.cache.stale).toBe(false);
+      expect(body1.period.source).toBe("calendar");
+      expect(Array.isArray(body1.products)).toBe(true);
+      const afterFirst = counts.fetches;
+      expect(afterFirst).toBeGreaterThan(0);
+      const second = await billingResponse(fakeCtx().ctx, env as never, false);
+      const body2 = (await second.json()) as { cache: { ageSec: number; stale: boolean } };
+      expect(body2.cache.stale).toBe(false);
+      expect(body2.cache.ageSec).toBeLessThan(900);
+      expect(counts.fetches).toBe(afterFirst); // zero extra upstream calls: served from L1
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+});
+
+describe("api routes behind the Access gate", () => {
+  it("rejects /api/subscribe without a valid Access JWT (defense in depth)", async () => {
+    const { ctx } = fakeCtx();
+    const res = await worker.fetch(new Request("https://ops.example/api/subscribe", { method: "POST", body: JSON.stringify({}) }), env as never, ctx);
+    expect(res.status).toBe(403);
+  });
+  it("rejects /api/test-fire without a valid Access JWT (defense in depth)", async () => {
+    const { ctx } = fakeCtx();
+    const res = await worker.fetch(new Request("https://ops.example/api/test-fire", { method: "POST" }), env as never, ctx);
+    expect(res.status).toBe(403);
+  });
+  it("returns 404 for an unknown /api path", async () => {
+    authBypass.value = true;
+    try {
+      const { ctx } = fakeCtx();
+      const res = await worker.fetch(new Request("https://ops.example/api/nope"), env as never, ctx);
+      expect(res.status).toBe(404);
+    } finally {
+      authBypass.value = false;
+    }
+  });
+  it("registers a subscription (POST /api/subscribe) and serves GET count", async () => {
+    authBypass.value = true;
+    const store = new Map<string, string>();
+    const kv = {
+      // emulates KVNamespace.get(key, "json"): parses the stored string
+      get: async (key: string, type?: string) =>
+        type === "json" && store.has(key) ? JSON.parse(store.get(key)!) : (store.get(key) ?? null),
+      put: async (key: string, value: string) => void store.set(key, value),
+    } as unknown as KVNamespace;
+    const subEnv = { ...env, OPS_KV: kv } as never;
+    try {
+      const { ctx } = fakeCtx();
+      const post = await worker.fetch(
+        new Request("https://ops.example/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: "https://push.example/endpoint1", keys: { p256dh: "k1", auth: "a1" } }),
+        }),
+        subEnv,
+        ctx,
+      );
+      expect(post.status).toBe(201);
+      expect(await post.json()).toEqual({ ok: true, count: 1 });
+      const get = await worker.fetch(new Request("https://ops.example/api/subscribe"), subEnv, ctx);
+      expect(await get.json()).toEqual({ count: 1 });
+    } finally {
+      authBypass.value = false;
+    }
+  });
+  it("POST /api/test-fire fires the test push; GET returns 405", async () => {
+    authBypass.value = true;
+    scheduledMocks.testFire.mockResolvedValueOnce({ sent: 2, pruned: 0, issues: [] });
+    try {
+      const { ctx } = fakeCtx();
+      const post = await worker.fetch(new Request("https://ops.example/api/test-fire", { method: "POST" }), env as never, ctx);
+      expect(post.status).toBe(200);
+      expect(await post.json()).toEqual({ sent: 2, pruned: 0, issues: [] });
+      const get = await worker.fetch(new Request("https://ops.example/api/test-fire"), env as never, ctx);
+      expect(get.status).toBe(405);
+    } finally {
+      authBypass.value = false;
+    }
+  });
+  it("the scheduled handler delegates to runScheduled via ctx.waitUntil (no floating promise)", async () => {
+    scheduledMocks.runScheduled.mockResolvedValueOnce({ fired: 1, sent: 1, pruned: 0, gaps: [], issues: [] });
+    const { ctx, waits } = fakeCtx();
+    const controller = { cron: "*/5 * * * *" } as unknown as ScheduledController;
+    await worker.scheduled!(controller, env as never, ctx);
+    expect(scheduledMocks.runScheduled).toHaveBeenCalledWith(env);
+    expect(waits.length).toBe(1);
+    await Promise.all(waits);
   });
 });
