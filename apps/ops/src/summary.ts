@@ -123,10 +123,12 @@ async function rest<T>(token: string, path: string): Promise<T[]> {
   for (let page = 1; page <= 20; page++) {
     const sep = path.includes("?") ? "&" : "?";
     const res = await fetch(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
-    const body = (await res.json()) as { success: boolean; result: T[]; errors?: { message: string }[]; result_info?: { total_pages?: number } };
+    const body = (await res.json()) as { success: boolean; result: T[]; errors?: { message: string }[]; result_info?: { total_pages?: number; total_count?: number } };
     if (!body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
     out.push(...body.result);
-    if (!body.result_info?.total_pages || page >= body.result_info.total_pages) break;
+    const info = body.result_info ?? {};
+    const pages = info.total_pages ?? (info.total_count !== undefined ? Math.ceil(info.total_count / 50) : undefined);
+    if (body.result.length < 50 || (pages !== undefined && page >= pages)) break;
   }
   return out;
 }
@@ -139,23 +141,33 @@ export async function collectSummary(accountId: string, token: string, now = new
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const summary: Summary = { generatedAt: end, windowHours: 24, usage: [], d1: [], zones: [], errors: [] };
 
-  const usage = (async () => {
-    const q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
-      w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{requests}}
-      d: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead}}}}}`;
-    const data = await gql<{ viewer: { accounts: { w: { sum: { requests: number } }[]; d: { sum: { rowsRead: number } }[] }[] } }>(token, q, { a: accountId, s: monthStart, e: end });
-    const acc = data.viewer.accounts[0];
-    const reqs = (acc?.w ?? []).reduce((n, g) => n + g.sum.requests, 0);
-    const rows = (acc?.d ?? []).reduce((n, g) => n + g.sum.rowsRead, 0);
-    summary.usage = [
-      { id: "workers.requests_monthly", name: "Workers requests", used: reqs, limit: WORKERS_REQUESTS_MONTHLY, ...monthPacing(reqs, WORKERS_REQUESTS_MONTHLY, now) },
-      { id: "d1.rows_read_monthly", name: "D1 rows read", used: rows, limit: D1_ROWS_READ_MONTHLY, ...monthPacing(rows, D1_ROWS_READ_MONTHLY, now) },
-    ];
-  })().catch((e: Error) => summary.errors.push(`usage: ${e.message}`));
+  // Two independent queries: a D1 failure (missing scope, dataset error)
+  // must not hide Workers pacing — D1 is additive, as in the CLI (D15).
+  const monthVars = { a: accountId, s: monthStart, e: end };
+  const workersUsage = gql<{ viewer: { accounts: { w: { sum: { requests: number } }[] }[] } }>(token,
+    `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{requests}}}}}`, monthVars)
+    .then((data) => {
+      const reqs = (data.viewer.accounts[0]?.w ?? []).reduce((n, g) => n + g.sum.requests, 0);
+      return { id: "workers.requests_monthly", name: "Workers requests", used: reqs, limit: WORKERS_REQUESTS_MONTHLY, ...monthPacing(reqs, WORKERS_REQUESTS_MONTHLY, now) } as UsageRow;
+    })
+    .catch((e: Error) => { summary.errors.push(`usage (workers): ${e.message}`); return null; });
+  const d1Usage = gql<{ viewer: { accounts: { d: { sum: { rowsRead: number } }[] }[] } }>(token,
+    `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){d: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead}}}}}`, monthVars)
+    .then((data) => {
+      const rows = (data.viewer.accounts[0]?.d ?? []).reduce((n, g) => n + g.sum.rowsRead, 0);
+      return { id: "d1.rows_read_monthly", name: "D1 rows read", used: rows, limit: D1_ROWS_READ_MONTHLY, ...monthPacing(rows, D1_ROWS_READ_MONTHLY, now) } as UsageRow;
+    })
+    .catch((e: Error) => { summary.errors.push(`usage (d1): ${e.message}`); return null; });
+  const usage = Promise.all([workersUsage, d1Usage]).then((rows) => {
+    summary.usage = rows.filter((r): r is UsageRow => r !== null);
+  });
 
   const d1 = (async () => {
     const [dbs, data] = await Promise.all([
-      rest<{ uuid: string; name: string }>(token, `/accounts/${accountId}/d1/database`).catch(() => [] as { uuid: string; name: string }[]),
+      rest<{ uuid: string; name: string }>(token, `/accounts/${accountId}/d1/database`).catch((e: Error) => {
+        summary.errors.push(`d1 names (showing IDs): ${e.message}`);
+        return [] as { uuid: string; name: string }[];
+      }),
       gql<{ viewer: { accounts: { g: { sum: { rowsRead: number; readQueries: number }; dimensions: { databaseId: string } }[] }[] } }>(
         token,
         `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead readQueries} dimensions{databaseId}}}}}`,

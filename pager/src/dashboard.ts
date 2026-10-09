@@ -44,7 +44,9 @@ export async function renderDashboard(root: HTMLElement, refresh = false): Promi
   root.replaceChildren(el("p", "cf-empty", "Loading…"));
   let data: Summary;
   try {
-    const res = await fetch(`/api/summary${refresh ? "?refresh" : ""}`, { credentials: "same-origin" });
+    const res = await fetch(`/api/summary${refresh ? "?refresh" : ""}`, { credentials: "same-origin", redirect: "manual" });
+    // An expired Access session answers with a redirect to the login page.
+    if (res.type === "opaqueredirect" || res.status === 403) throw new Error("your login expired — close and reopen the app to sign in again");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     data = (await res.json()) as Summary;
   } catch (err) {
