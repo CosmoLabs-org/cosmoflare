@@ -1,9 +1,9 @@
 version: "1.0"
-next_id: 15
-last_updated: "2026-10-09T03:09:59.41509+04:00"
+next_id: 20
+last_updated: "2026-10-10T02:38:02.090648+04:00"
 stats:
-    total: 14
-    pending: 0
+    total: 18
+    pending: 3
     implemented: 2
     rejected: 0
     converted: 8
@@ -68,6 +68,21 @@ entries:
       status: converted
       from_project: Churches-app
       created: "2026-10-09T01:08:23.767206+04:00"
+    - id: FB-16
+      title: 'Detection matrix: the D1/Cloudflare problem classes systematic vetting catches (evidence-backed from Churches-app 2026-10-08)'
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-09T01:08:23.767206+04:00"
+    - id: FB-18
+      title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-09T23:36:36.419298+04:00"
+    - id: FB-19
+      title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
+      status: pending
+      from_project: Churches-app
+      created: "2026-10-09T23:37:03.784062+04:00"
     - id: ""
       title: Makefile tree-path gate misses colons — proxy.golang.org zip poisoning class
       status: ""
@@ -78,3 +93,8 @@ entries:
       status: duplicate
       from_project: Churches-app
       created: "2026-10-08T20:43:50.147246+04:00"
+    - id: ""
+      title: 'handle.shop: scanner probes (secrets.json/.env/.aws/debugbar) reach the Worker — WAF block + cache /'
+      status: ""
+      from_project: ""
+      created: "2026-10-09T23:25:27.502773+04:00"

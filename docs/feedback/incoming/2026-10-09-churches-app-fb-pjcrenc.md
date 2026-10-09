@@ -1,5 +1,6 @@
 ---
 ulid: 01M4ENH22QRRJQHHZ4AYJCRENC
+id: FB-16
 title: 'Detection matrix: the D1/Cloudflare problem classes systematic vetting catches (evidence-backed from Churches-app 2026-10-08)'
 type: feature
 status: pending

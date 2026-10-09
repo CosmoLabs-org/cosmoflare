@@ -1,5 +1,6 @@
 ---
 ulid: 01M4H2PHH81T4FG6F96BHT5JDH
+id: FB-19
 title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
 type: feature
 status: pending

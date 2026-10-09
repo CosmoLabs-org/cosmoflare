@@ -1,5 +1,6 @@
 ---
 ulid: 01M4H2NPT3GQ83HMNNQK4FVJYM
+id: FB-18
 title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
 type: feature
 status: pending

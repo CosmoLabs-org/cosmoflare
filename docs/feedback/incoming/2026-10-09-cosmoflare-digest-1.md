@@ -1,6 +1,7 @@
 ---
 kind: digest
 ulid: 01M4H219JFGM1P7N5A1DZ2G4GP
+id: FB-17
 from: cosmoflare
 to_project: handleshop
 created: "2026-10-09T23:25:27.502773+04:00"
