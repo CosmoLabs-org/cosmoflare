@@ -92,7 +92,7 @@ async function fetchSubscriptionPeriod(accountId: string, token: string, calls: 
       if (start && end) {
         const s = new Date(start);
         const e = new Date(end);
-        if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && s < now && now < e) return makePeriod(s, e, "subscription");
+        if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && s < now && now < e) return makePeriod(s, e, "subscription", now);
       }
     }
   } catch {
@@ -188,12 +188,6 @@ async function rest<T>(token: string, path: string, calls: { n: number }): Promi
 // R2 datasets document a max query range of 31 days and KV storage 31 days
 // (docs, read 2026-10-09); a range rejection falls back to per-day windows.
 
-interface Dims {
-  s: string; // period start (ISO)
-  e: string; // period end (ISO)
-  d: string; // today (YYYY-MM-DD) for storage snapshots
-}
-
 const WORKERS_Q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
 w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests errors} quantiles{cpuTimeP50 cpuTimeP99}}}}}`;
 
@@ -246,9 +240,19 @@ export function overageUsd(projected: number, included: number, unitPriceUsd: nu
   return Math.max(0, projected - included) / priceUnit * unitPriceUsd;
 }
 
+// Synthetic consumer bucketing all D1 databases for the storage snapshot —
+// per-database storage is not exposed by d1StorageAdaptiveGroups (verified
+// 2026-10-09), so it cannot be attributed to a project.
+export const SYNTHETIC_CONSUMER_PREFIX = "all databases";
+
 export function topConsumers(accs: Map<string, ConsumerAcc>, pmap: Record<string, string>, total: number): ProductConsumer[] {
   return [...accs.values()]
-    .map((c) => ({ name: c.name, project: projectFor(c.name, pmap), used: c.used, share: total > 0 ? c.used / total : 0 }))
+    .map((c) => ({
+      name: c.name,
+      project: c.name.startsWith(SYNTHETIC_CONSUMER_PREFIX) ? "shared" : projectFor(c.name, pmap),
+      used: c.used,
+      share: total > 0 ? c.used / total : 0,
+    }))
     .sort((a, b) => b.used - a.used || a.name.localeCompare(b.name));
 }
 
@@ -259,13 +263,16 @@ export async function collectBilling(accountId: string, token: string, now = new
   const calls = { n: 0 };
   const errors: string[] = [];
   const period = await resolvePeriod(accountId, token, now, opts, calls);
-  const fraction = (now.getTime() - Date.parse(period.start)) / (Date.parse(period.end) - Date.parse(period.start));
+  // Projection fraction: elapsed share of the period as day/days — on day 1
+  // of 31 the whole first day already happened, on the last day fraction = 1.
+  const fraction = period.day / period.days;
   const pmap = opts.projectMap ?? {};
   const vars = { a: accountId, s: period.start, e: now.toISOString() };
   const today = now.toISOString().slice(0, 10);
 
   type Row = { dimensions: Record<string, string>; sum?: Record<string, number>; max?: Record<string, number> };
-  type Resp = Record<string, Row[]>;
+  type Acc = Record<string, Row[]>;
+  type Resp = { viewer: { accounts: Acc[] } };
 
   // Merge every flow dataset into ONE aliased GraphQL call (the operator's
   // explicit priority: fewer upstream calls). The storage snapshot uses a
@@ -280,10 +287,12 @@ export async function collectBilling(accountId: string, token: string, now = new
   const flowQuery = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){${flowBody}}}}`;
   const snapQuery = D1_STORAGE_Q;
 
-  const flow = await gql<Resp>(token, flowQuery, vars, calls).catch((err: Error) => null);
-  let flowData = flow;
+  const acc: Acc = {};
+  const flow = await gql<Resp>(token, flowQuery, vars, calls).catch(() => null);
   const singles: Promise<void>[] = [];
-  if (!flowData) {
+  if (flow) {
+    Object.assign(acc, flow.viewer.accounts[0]);
+  } else {
     for (const [key, q, vs] of [
       ["w", WORKERS_Q, vars],
       ["d", D1_Q, vars],
@@ -294,20 +303,24 @@ export async function collectBilling(accountId: string, token: string, now = new
       singles.push(
         gql<Resp>(token, q, vs, calls)
           .then((d) => {
-            flowData = { ...(flowData ?? {}), ...d.viewer.accounts[0] };
+            Object.assign(acc, d.viewer.accounts[0]);
           })
-          .catch((e: Error) => errors.push(`${key}: ${e.message}`)),
+          .catch((e: Error) => {
+            errors.push(`${key}: ${e.message}`);
+          }),
       );
     }
   }
 
-  let d1Storage: Row[] = [];
+  const d1Storage: Row[] = [];
   singles.push(
     gql<Resp>(token, snapQuery, { a: accountId, d: today }, calls)
       .then((d) => {
-        d1Storage = d.viewer.accounts[0].s;
+        d1Storage.push(...(d.viewer.accounts[0].s ?? []));
       })
-      .catch((e: Error) => errors.push(`d1.storage: ${e.message}`)),
+      .catch((e: Error) => {
+        errors.push(`d1.storage: ${e.message}`);
+      }),
   );
 
   // Name lists — one paginated REST call each; failure shows raw IDs.
@@ -317,14 +330,18 @@ export async function collectBilling(accountId: string, token: string, now = new
       .then((dbs) => {
         names.d1 = Object.fromEntries(dbs.map((x) => [x.uuid, x.name]));
       })
-      .catch((e: Error) => errors.push(`d1 names (showing IDs): ${e.message}`)),
+      .catch((e: Error) => {
+        errors.push(`d1 names (showing IDs): ${e.message}`);
+      }),
   );
   singles.push(
     rest<{ id: string; title: string }>(token, `/accounts/${accountId}/storage/kv/namespaces`, calls)
       .then((ns) => {
         names.kv = Object.fromEntries(ns.map((x) => [x.id, x.title]));
       })
-      .catch((e: Error) => errors.push(`kv names (showing IDs): ${e.message}`)),
+      .catch((e: Error) => {
+        errors.push(`kv names (showing IDs): ${e.message}`);
+      }),
   );
 
   await Promise.all(singles);
@@ -339,7 +356,7 @@ export async function collectBilling(accountId: string, token: string, now = new
     accs.set(id, m);
   };
 
-  const rows = (k: string): Row[] => flowData?.viewer.accounts[0]?.[k] ?? [];
+  const rows = (k: string): Row[] => acc[k] ?? [];
   for (const g of rows("w")) bump("workers.requests", g.dimensions.scriptName, g.sum?.requests ?? 0);
   for (const g of rows("d")) {
     bump("d1.rows_read", names.d1[g.dimensions.databaseId] ?? g.dimensions.databaseId, g.sum?.rowsRead ?? 0);
@@ -358,13 +375,12 @@ export async function collectBilling(accountId: string, token: string, now = new
   if (d1StorageBytes > 0) bump("d1.storage", `all databases (${d1Storage.length})`, d1StorageBytes);
 
   // Unavailable metrics — verified live 2026-10-09; recorded as gaps, not
-  // fabricated numbers.
-  if (!errors.some((e) => e.includes("w:"))) {
-    if (rows("w").length >= 0 && !flowData?.viewer.accounts[0]?.w) errors.push("workers.cpu_ms: no sum-level cpuTime in workersInvocationsAdaptive (quantiles only, microseconds) — not projected");
-  }
-  if (!flowData?.viewer.accounts[0]?.r && !errors.some((e) => e.startsWith("r:"))) errors.push("r2.storage: r2StorageAdaptiveGroups exposes object counts only (no byte totals) — not projected");
-  if (!flowData?.viewer.accounts[0]?.k && !errors.some((e) => e.startsWith("k:"))) errors.push("kv.storage: kvStorageAdaptiveGroups exposes keyCount only (no byte totals) — not projected");
-  errors.push("workers.cpu_ms / do.duration: GraphQL exposes cpu/wall-time quantiles only (no totals; quantiles are microseconds) — not projected");
+  // fabricated numbers. Notes are per-metric entries; a dataset whose
+  // fetch itself failed already has its own error entry.
+  if (acc.w) errors.push("workers.cpu_ms: GraphQL exposes CPU-time quantiles only (microseconds), no totals — not projected");
+  if (acc.o) errors.push("do.duration: GraphQL exposes wall-time quantiles only, no totals — not projected");
+  if (!errors.some((e) => e.startsWith("r:"))) errors.push("r2.storage: r2StorageAdaptiveGroups exposes object counts only (no byte totals) — not projected");
+  if (!errors.some((e) => e.startsWith("k:"))) errors.push("kv.storage: kvStorageAdaptiveGroups exposes keyCount only (no byte totals) — not projected");
 
   const products: ProductUsage[] = [];
   for (const price of PRICES) {
@@ -430,6 +446,8 @@ export async function collectBilling(accountId: string, token: string, now = new
   // Consumers with zero overage still show up in the project list.
   for (const m of accs.values()) {
     for (const c of m.values()) {
+      if (c.name.startsWith(SYNTHETIC_CONSUMER_PREFIX)) continue; // storage is shared, not a project
+      if (c.name.trim() === "") continue; // unnamed upstream resources create no project row
       const project = projectFor(c.name, pmap);
       if (!byProject.has(project)) byProject.set(project, { over: 0, drivers: new Set() });
     }
