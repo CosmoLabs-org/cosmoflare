@@ -1,8 +1,8 @@
 // Cosmoflare Ops billing collector (FEAT-052): month-to-date usage over the
 // billing period, per-product included vs used vs projected, projected USD
 // beyond the Workers Paid allowance, and the CosmoLabs project that drives
-// it. Every GraphQL dataset and field below was verified live against the
-// account on 2026-10-09 (see the per-dataset comments). Independent datasets
+// it. Every GraphQL dataset and field below was introspected from the live
+// schema on 2026-10-09 (see the per-dataset comments). Independent datasets
 // run in parallel; a failure becomes an entry in `errors` and drops only
 // that product. Prices come from pricing.ts (docs-verified).
 
@@ -167,35 +167,45 @@ async function rest<T>(token: string, path: string, calls: { n: number }): Promi
 }
 
 // ---------------------------------------------------------------------------
-// Dataset queries — fields verified live 2026-10-09 by probing the account:
-// - workersInvocationsAdaptive: dims scriptName; sum{requests errors
-//   subrequests}; quantiles{cpuTimeP50 cpuTimeP99} in MICROSECONDS. No
-//   sum-level cpuTime exists, so total CPU ms cannot be summed (errors note).
+// Dataset queries — fields introspected from the live GraphQL schema on
+// 2026-10-09 (orchestrator pass; replaces the earlier "not exposed" notes):
+// - workersInvocationsAdaptive: dims scriptName; sum{requests errors cpuTimeUs}
+//   ("Sum of cpu time in us") → converted to ms.
+// - durableObjectsInvocationsAdaptiveGroups: dims scriptName; sum{requests}.
+// - durableObjectsPeriodicGroups: sum{duration} ("Sum of Duration - GB*s");
+//   groups by date only (introspected live 2026-10-09 — scriptName is NOT a
+//   dimension), so duration is an account total under one synthetic
+//   "all scripts" consumer.
 // - d1AnalyticsAdaptiveGroups: dims databaseId; sum{rowsRead rowsWritten
 //   readQueries writeQueries}; datetime filter, ISO times.
-// - d1StorageAdaptiveGroups: dims databaseId; max{databaseSizeBytes};
+// - d1StorageAdaptiveGroups: dims databaseId; max{databaseSizeBytes} → GB;
 //   Date filter (YYYY-MM-DD) only.
 // - r2OperationsAdaptiveGroups: dims bucketName actionType; sum{requests}.
-// - r2StorageAdaptiveGroups: dims bucketName; max{objectCount} only — no
-//   byte totals exposed (errors note for r2.storage).
+// - r2StorageAdaptiveGroups: dims bucketName; max{payloadSize metadataSize}
+//   → GB (payload + metadata).
 // - kvOperationsAdaptiveGroups: dims namespaceId actionType ("read"/"write"
 //   seen live; delete is free, list prices like a write); sum{requests}.
-// - kvStorageAdaptiveGroups: dims namespaceId; max{keyCount} only — no byte
-//   totals exposed (errors note for kv.storage).
-// - durableObjectsInvocationsAdaptiveGroups: dims datetimeHour scriptName
-//   namespaceId; sum{requests errors}; quantiles only for cpu/wall time — no
-//   total wall time, so do.duration cannot be summed (errors note).
-// R2 datasets document a max query range of 31 days and KV storage 31 days
-// (docs, read 2026-10-09); a range rejection falls back to per-day windows.
+// - kvStorageAdaptiveGroups: dims namespaceId; max{byteCount} → GB.
+// R2 and KV datasets document a max query range of 31 days (docs, read
+// 2026-10-09); the storage window stays inside that bound.
 
 const WORKERS_Q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
-w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests errors} quantiles{cpuTimeP50 cpuTimeP99}}}}}`;
+w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests errors cpuTimeUs}}}}}`;
 
 const D1_Q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
 d: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{databaseId} sum{rowsRead rowsWritten readQueries writeQueries}}}}}`;
 
-const D1_STORAGE_Q = `query($a:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){
-s: d1StorageAdaptiveGroups(limit:10000,filter:{date_geq:$d,date_leq:$d}){dimensions{databaseId} max{databaseSizeBytes}}}}}`;
+// Storage snapshot datasets — Date-typed filters over a 2-day window ending
+// today (the latest day may not be sampled yet); the aggregation takes the
+// max sample per resource, so the window does not double-count.
+const D1_STORAGE_Q = `query($a:String!,$s:Date!,$e:Date!){viewer{accounts(filter:{accountTag:$a}){
+s: d1StorageAdaptiveGroups(limit:10000,filter:{date_geq:$s,date_leq:$e}){dimensions{databaseId} max{databaseSizeBytes}}}}}`;
+
+const R2_STORAGE_Q = `query($a:String!,$s:Date!,$e:Date!){viewer{accounts(filter:{accountTag:$a}){
+rs: r2StorageAdaptiveGroups(limit:10000,filter:{date_geq:$s,date_leq:$e}){dimensions{bucketName} max{payloadSize metadataSize}}}}}`;
+
+const KV_STORAGE_Q = `query($a:String!,$s:Date!,$e:Date!){viewer{accounts(filter:{accountTag:$a}){
+ks: kvStorageAdaptiveGroups(limit:10000,filter:{date_geq:$s,date_leq:$e}){dimensions{namespaceId} max{byteCount}}}}}`;
 
 const R2_OPS_Q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
 r: r2OperationsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{bucketName actionType} sum{requests}}}}}`;
@@ -205,6 +215,12 @@ k: kvOperationsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$
 
 const DO_Q = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){
 o: durableObjectsInvocationsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests}}}}}`;
+
+// DO duration — the periodic dataset is Date-filtered and groups by date, not
+// scriptName (introspected live 2026-10-09), so it needs its own Date
+// variables ($ds/$de) alongside the flow datasets' Time variables.
+const DO_PERIODIC_Q = `query($a:String!,$ds:Date!,$de:Date!){viewer{accounts(filter:{accountTag:$a}){
+p: durableObjectsPeriodicGroups(limit:10000,filter:{date_geq:$ds,date_leq:$de}){dimensions{date} sum{duration}}}}}`;
 
 // R2 Class A / B classification — the operation lists from the R2 pricing
 // page (read 2026-10-09). Delete operations are free. Unrecognized action
@@ -240,16 +256,21 @@ export function overageUsd(projected: number, included: number, unitPriceUsd: nu
   return Math.max(0, projected - included) / priceUnit * unitPriceUsd;
 }
 
-// Synthetic consumer bucketing all D1 databases for the storage snapshot —
-// per-database storage is not exposed by d1StorageAdaptiveGroups (verified
-// 2026-10-09), so it cannot be attributed to a project.
-export const SYNTHETIC_CONSUMER_PREFIX = "all databases";
+// Synthetic consumers hold account-wide totals that cannot be attributed to
+// one project. d1.storage is per-database (databaseId dimension, introspected
+// 2026-10-09) so it no longer needs one; DO duration uses one because its
+// periodic dataset groups by date only, not scriptName.
+const SYNTHETIC_PREFIXES = ["all databases", "all scripts"];
+
+export function isSyntheticConsumer(name: string): boolean {
+  return SYNTHETIC_PREFIXES.some((p) => name.startsWith(p));
+}
 
 export function topConsumers(accs: Map<string, ConsumerAcc>, pmap: Record<string, string>, total: number): ProductConsumer[] {
   return [...accs.values()]
     .map((c) => ({
       name: c.name,
-      project: c.name.startsWith(SYNTHETIC_CONSUMER_PREFIX) ? "shared" : projectFor(c.name, pmap),
+      project: isSyntheticConsumer(c.name) ? "shared" : projectFor(c.name, pmap),
       used: c.used,
       share: total > 0 ? c.used / total : 0,
     }))
@@ -267,61 +288,69 @@ export async function collectBilling(accountId: string, token: string, now = new
   // of 31 the whole first day already happened, on the last day fraction = 1.
   const fraction = period.day / period.days;
   const pmap = opts.projectMap ?? {};
-  const vars = { a: accountId, s: period.start, e: now.toISOString() };
   const today = now.toISOString().slice(0, 10);
+  const from = new Date(now.getTime() - MS_DAY).toISOString().slice(0, 10);
+  const vars = { a: accountId, s: period.start, e: now.toISOString(), ds: period.start.slice(0, 10), de: today };
 
   type Row = { dimensions: Record<string, string>; sum?: Record<string, number>; max?: Record<string, number> };
   type Acc = Record<string, Row[]>;
   type Resp = { viewer: { accounts: Acc[] } };
 
   // Merge every flow dataset into ONE aliased GraphQL call (the operator's
-  // explicit priority: fewer upstream calls). The storage snapshot uses a
-  // second call (Date-typed variable). If a merged call fails, each dataset
+  // explicit priority: fewer upstream calls). The storage snapshot is a second
+  // merged call (Date-typed variables). If a merged call fails, each dataset
   // is retried alone so one bad dataset cannot drop the rest — each retry
   // appends only its own error.
   const strip = (q: string) =>
     q
       .replace(/query\([^)]*\)\{viewer\{accounts\(filter:\{accountTag:\$a\}\)\{/, "")
       .replace(/\}\}\}$/, "");
-  const flowBody = [WORKERS_Q, D1_Q, R2_OPS_Q, KV_OPS_Q, DO_Q].map(strip).join("");
-  const flowQuery = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){${flowBody}}}}`;
-  const snapQuery = D1_STORAGE_Q;
+  const flowBody = [WORKERS_Q, D1_Q, R2_OPS_Q, KV_OPS_Q, DO_Q, DO_PERIODIC_Q].map(strip).join("");
+  const flowQuery = `query($a:String!,$s:Time!,$e:Time!,$ds:Date!,$de:Date!){viewer{accounts(filter:{accountTag:$a}){${flowBody}}}}`;
+  const snapBody = [D1_STORAGE_Q, R2_STORAGE_Q, KV_STORAGE_Q].map(strip).join("");
+  const snapQuery = `query($a:String!,$s:Date!,$e:Date!){viewer{accounts(filter:{accountTag:$a}){${snapBody}}}}`;
 
   const acc: Acc = {};
-  const flow = await gql<Resp>(token, flowQuery, vars, calls).catch(() => null);
   const singles: Promise<void>[] = [];
+  const mergeInto = (d: Resp) => {
+    Object.assign(acc, d.viewer.accounts[0]);
+  };
+  const single = (key: string, q: string, vs: Record<string, unknown>) =>
+    gql<Resp>(token, q, vs, calls)
+      .then(mergeInto)
+      .catch((e: Error) => {
+        errors.push(`${key}: ${e.message}`);
+      });
+
+  const flow = await gql<Resp>(token, flowQuery, vars, calls).catch(() => null);
   if (flow) {
-    Object.assign(acc, flow.viewer.accounts[0]);
+    mergeInto(flow);
   } else {
-    for (const [key, q, vs] of [
-      ["w", WORKERS_Q, vars],
-      ["d", D1_Q, vars],
-      ["r", R2_OPS_Q, vars],
-      ["k", KV_OPS_Q, vars],
-      ["o", DO_Q, vars],
+    for (const [key, q] of [
+      ["w", WORKERS_Q],
+      ["d", D1_Q],
+      ["r", R2_OPS_Q],
+      ["k", KV_OPS_Q],
+      ["o", DO_Q],
+      ["p", DO_PERIODIC_Q],
     ] as const) {
-      singles.push(
-        gql<Resp>(token, q, vs, calls)
-          .then((d) => {
-            Object.assign(acc, d.viewer.accounts[0]);
-          })
-          .catch((e: Error) => {
-            errors.push(`${key}: ${e.message}`);
-          }),
-      );
+      singles.push(single(key, q, vars));
     }
   }
 
-  const d1Storage: Row[] = [];
-  singles.push(
-    gql<Resp>(token, snapQuery, { a: accountId, d: today }, calls)
-      .then((d) => {
-        d1Storage.push(...(d.viewer.accounts[0].s ?? []));
-      })
-      .catch((e: Error) => {
-        errors.push(`d1.storage: ${e.message}`);
-      }),
-  );
+  const snapVars = { a: accountId, s: from, e: today };
+  const snap = await gql<Resp>(token, snapQuery, snapVars, calls).catch(() => null);
+  if (snap) {
+    mergeInto(snap);
+  } else {
+    for (const [key, q] of [
+      ["d1.storage", D1_STORAGE_Q],
+      ["r2.storage", R2_STORAGE_Q],
+      ["kv.storage", KV_STORAGE_Q],
+    ] as const) {
+      singles.push(single(key, q, snapVars));
+    }
+  }
 
   // Name lists — one paginated REST call each; failure shows raw IDs.
   const names = { d1: {} as Record<string, string>, kv: {} as Record<string, string> };
@@ -357,7 +386,10 @@ export async function collectBilling(accountId: string, token: string, now = new
   };
 
   const rows = (k: string): Row[] => acc[k] ?? [];
-  for (const g of rows("w")) bump("workers.requests", g.dimensions.scriptName, g.sum?.requests ?? 0);
+  for (const g of rows("w")) {
+    bump("workers.requests", g.dimensions.scriptName, g.sum?.requests ?? 0);
+    bump("workers.cpu_ms", g.dimensions.scriptName, g.sum?.cpuTimeUs ?? 0);
+  }
   for (const g of rows("d")) {
     bump("d1.rows_read", names.d1[g.dimensions.databaseId] ?? g.dimensions.databaseId, g.sum?.rowsRead ?? 0);
     bump("d1.rows_written", names.d1[g.dimensions.databaseId] ?? g.dimensions.databaseId, g.sum?.rowsWritten ?? 0);
@@ -371,40 +403,34 @@ export async function collectBilling(accountId: string, token: string, now = new
     if (g.dimensions.actionType === "write" || g.dimensions.actionType === "list") bump("kv.writes", names.kv[g.dimensions.namespaceId] ?? g.dimensions.namespaceId, g.sum?.requests ?? 0);
   }
   for (const g of rows("o")) bump("do.requests", g.dimensions.scriptName, g.sum?.requests ?? 0);
-  const d1StorageBytes = d1Storage.reduce((n, g) => n + (g.max?.databaseSizeBytes ?? 0), 0);
-  if (d1StorageBytes > 0) bump("d1.storage", `all databases (${d1Storage.length})`, d1StorageBytes);
+  for (const g of rows("p")) bump("do.duration", "all scripts", g.sum?.duration ?? 0); // account total (per-day GB-s)
 
-  // Unavailable metrics — verified live 2026-10-09; recorded as gaps, not
-  // fabricated numbers. Notes are per-metric entries; a dataset whose
-  // fetch itself failed already has its own error entry.
-  if (acc.w) errors.push("workers.cpu_ms: GraphQL exposes CPU-time quantiles only (microseconds), no totals — not projected");
-  if (acc.o) errors.push("do.duration: GraphQL exposes wall-time quantiles only, no totals — not projected");
-  if (!errors.some((e) => e.startsWith("r:"))) errors.push("r2.storage: r2StorageAdaptiveGroups exposes object counts only (no byte totals) — not projected");
-  if (!errors.some((e) => e.startsWith("k:"))) errors.push("kv.storage: kvStorageAdaptiveGroups exposes keyCount only (no byte totals) — not projected");
+  // Storage snapshots: keep the max sample per resource across the window
+  // (a resource appears once per sampled day — never sum across days).
+  const maxBy = (key: string, nameOf: (d: Row["dimensions"]) => string, valueOf: (g: Row) => number) => {
+    const best = new Map<string, ConsumerAcc>();
+    for (const g of rows(key)) {
+      const name = nameOf(g.dimensions);
+      const v = valueOf(g);
+      const cur = best.get(name);
+      if (!cur || v > cur.used) best.set(name, { name, used: v });
+    }
+    return best;
+  };
+  const d1Store = maxBy("s", (d) => names.d1[d.databaseId] ?? d.databaseId, (g) => g.max?.databaseSizeBytes ?? 0);
+  const r2Store = maxBy("rs", (d) => d.bucketName, (g) => (g.max?.payloadSize ?? 0) + (g.max?.metadataSize ?? 0));
+  const kvStore = maxBy("ks", (d) => names.kv[d.namespaceId] ?? d.namespaceId, (g) => g.max?.byteCount ?? 0);
+  if (d1Store.size) accs.set("d1.storage", d1Store);
+  if (r2Store.size) accs.set("r2.storage", r2Store);
+  if (kvStore.size) accs.set("kv.storage", kvStore);
 
   const products: ProductUsage[] = [];
   for (const price of PRICES) {
-    if (price.id === "workers.cpu_ms" || price.id === "do.duration" || price.id === "r2.storage" || price.id === "kv.storage") {
-      // No verified usage source — keep the row visible at zero usage.
-      products.push({
-        id: price.id,
-        product: price.product,
-        metric: price.metric,
-        unit: price.unit,
-        included: price.included,
-        used: 0,
-        projected: 0,
-        unitPriceUsd: price.unitPriceUsd,
-        priceUnit: price.priceUnit,
-        projectedOverageUsd: 0,
-        topConsumers: [],
-      });
-      continue;
-    }
     const m = accs.get(price.id);
     const total = m ? [...m.values()].reduce((n, c) => n + c.used, 0) : 0;
-    const isStorage = price.id === "d1.storage";
-    const used = isStorage ? total / 1_000_000_000 : total; // bytes → GB
+    const isStorage = price.id === "r2.storage" || price.id === "kv.storage" || price.id === "d1.storage";
+    const toUnit = isStorage ? 1_000_000_000 : price.id === "workers.cpu_ms" ? 1_000 : 1; // bytes → GB, µs → ms
+    const used = total / toUnit;
     const projected = project(used, fraction, isStorage);
     products.push({
       id: price.id,
@@ -417,7 +443,7 @@ export async function collectBilling(accountId: string, token: string, now = new
       unitPriceUsd: price.unitPriceUsd,
       priceUnit: price.priceUnit,
       projectedOverageUsd: overageUsd(projected, price.included, price.unitPriceUsd, price.priceUnit),
-      topConsumers: m ? topConsumers(m, pmap, total).slice(0, 5) : [],
+      topConsumers: m ? topConsumers(m, pmap, total).slice(0, 5).map((c) => ({ ...c, used: c.used / toUnit })) : [],
     });
   }
 
@@ -446,7 +472,7 @@ export async function collectBilling(accountId: string, token: string, now = new
   // Consumers with zero overage still show up in the project list.
   for (const m of accs.values()) {
     for (const c of m.values()) {
-      if (c.name.startsWith(SYNTHETIC_CONSUMER_PREFIX)) continue; // storage is shared, not a project
+      if (isSyntheticConsumer(c.name)) continue; // account-wide totals are not a project
       if (c.name.trim() === "") continue; // unnamed upstream resources create no project row
       const project = projectFor(c.name, pmap);
       if (!byProject.has(project)) byProject.set(project, { over: 0, drivers: new Set() });

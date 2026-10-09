@@ -23,17 +23,19 @@ const SUB_OK = () =>
 
 type GqlRow = { dimensions: Record<string, string>; sum?: Record<string, number>; max?: Record<string, number> };
 
-// Full happy-path dataset: every flow dataset returns one row; the storage
-// snapshot returns D1 bytes; REST name lists resolve the ids.
+// Full happy-path dataset: every flow dataset returns one row (including the
+// DO periodic dataset); the storage snapshot returns D1, R2, and KV bytes;
+// REST name lists resolve the ids.
 const DATASETS: Record<string, GqlRow[]> = {
-  w: [{ dimensions: { scriptName: "churches-api" }, sum: { requests: 6_000_000, errors: 100 } }],
+  w: [{ dimensions: { scriptName: "churches-api" }, sum: { requests: 6_000_000, errors: 100, cpuTimeUs: 1_600_000_000 } }],
   d: [{ dimensions: { databaseId: "db1" }, sum: { rowsRead: 6_900_000_000, rowsWritten: 60_000_000, readQueries: 100, writeQueries: 10 } }],
   r: [
     { dimensions: { bucketName: "churches-bucket", actionType: "GetObject" }, sum: { requests: 12_000_000 } },
     { dimensions: { bucketName: "churches-bucket", actionType: "PutObject" }, sum: { requests: 500_000 } },
   ],
   k: [{ dimensions: { namespaceId: "ns1", actionType: "read" }, sum: { requests: 2_000_000 } }],
-  o: [],
+  o: [{ dimensions: { scriptName: "churches-api" }, sum: { requests: 1_000 } }],
+  p: [{ dimensions: { date: "2026-10-07" }, sum: { duration: 40_000 } }],
 };
 
 function billingGql(aliases: Record<string, GqlRow[] | undefined>): Response {
@@ -63,26 +65,45 @@ const isFlowBody = (body: string): boolean =>
   body.includes("workersInvocationsAdaptive") && body.includes("d1AnalyticsAdaptiveGroups");
 
 // Route a happy-path mock: subscription 403 → calendar period, merged flow
-// call succeeds, snapshot + name lists resolve.
+// call succeeds, merged storage snapshot + name lists resolve.
 function billingHappyHandler(options: {
   flowOk?: boolean;
   failWorkersSingle?: boolean;
+  failSnapMerged?: boolean;
+  failKvStorageSingle?: boolean;
   d1Names?: { uuid: string; name: string }[];
   kvNames?: { id: string; title: string }[];
   snap?: GqlRow[];
+  r2Snap?: GqlRow[];
+  kvSnap?: GqlRow[];
 } = {}) {
-  const { flowOk = true, failWorkersSingle = false, d1Names = [{ uuid: "db1", name: "mycarguide-db" }], kvNames = [{ id: "ns1", title: "cosmoflare-kv" }], snap = [{ dimensions: { databaseId: "db1" }, max: { databaseSizeBytes: 2_000_000_000 } }] } = options;
+  const {
+    flowOk = true,
+    failWorkersSingle = false,
+    failSnapMerged = false,
+    failKvStorageSingle = false,
+    d1Names = [{ uuid: "db1", name: "mycarguide-db" }],
+    kvNames = [{ id: "ns1", title: "cosmoflare-kv" }],
+    snap = [{ dimensions: { databaseId: "db1" }, max: { databaseSizeBytes: 2_000_000_000 } }],
+    r2Snap = [{ dimensions: { bucketName: "churches-bucket" }, max: { payloadSize: 3_000_000_000, metadataSize: 100_000_000 } }],
+    kvSnap = [{ dimensions: { namespaceId: "ns1" }, max: { byteCount: 500_000_000 } }],
+  } = options;
   return (url: string, body: string): Response => {
     if (url.includes("/subscriptions")) return SUB_403();
     if (url.includes("/graphql")) {
       const isFlow = isFlowBody(body);
       if (isFlow) return flowOk ? billingGql(DATASETS) : new Response(JSON.stringify({ errors: [{ message: "merged query rejected" }] }));
+      const isSnapMerged = body.includes("d1StorageAdaptiveGroups") && body.includes("r2StorageAdaptiveGroups");
+      if (isSnapMerged) return failSnapMerged ? gqlError("storage snapshot rejected") : billingGql({ s: snap, rs: r2Snap, ks: kvSnap });
       if (body.includes("workersInvocationsAdaptive")) return failWorkersSingle ? gqlError("workers dataset down") : billingGql({ w: DATASETS.w });
       if (body.includes("d1AnalyticsAdaptiveGroups")) return billingGql({ d: DATASETS.d });
       if (body.includes("r2OperationsAdaptiveGroups")) return billingGql({ r: DATASETS.r });
       if (body.includes("kvOperationsAdaptiveGroups")) return billingGql({ k: DATASETS.k });
       if (body.includes("durableObjectsInvocationsAdaptiveGroups")) return billingGql({ o: DATASETS.o });
+      if (body.includes("durableObjectsPeriodicGroups")) return billingGql({ p: DATASETS.p });
       if (body.includes("d1StorageAdaptiveGroups")) return billingGql({ s: snap });
+      if (body.includes("r2StorageAdaptiveGroups")) return billingGql({ rs: r2Snap });
+      if (body.includes("kvStorageAdaptiveGroups")) return failKvStorageSingle ? gqlError("kv storage down") : billingGql({ ks: kvSnap });
       return new Response(JSON.stringify({ errors: [{ message: "unexpected query" }] }), { status: 500 });
     }
     if (url.includes("/d1/database")) return new Response(JSON.stringify({ success: true, result: d1Names, result_info: { total_pages: 1 } }));
@@ -194,12 +215,13 @@ describe("collectBilling", () => {
       const classB = b.products.find((p) => p.id === "r2.class_b")!;
       expect(classB.projectedOverageUsd).toBeCloseTo(13.14, 6);
       expect(b.totalProjectedOverageUsd).toBeCloseTo(205.57125, 4);
-      // Storage converts bytes → GB and holds (no projection)
+      // Storage converts bytes → GB and holds (no projection); per-database
+      // consumers resolve through the D1 name list.
       const storage = b.products.find((p) => p.id === "d1.storage")!;
       expect(storage.used).toBe(2); // 2e9 bytes
       expect(storage.projected).toBe(2);
-      expect(storage.topConsumers[0].name).toBe("all databases (1)");
-      expect(storage.topConsumers[0].project).toBe("shared");
+      expect(storage.topConsumers[0].name).toBe("mycarguide-db");
+      expect(storage.topConsumers[0].project).toBe("mycarguide");
       expect(b.projects.map((p) => p.project)).toEqual(["mycarguide", "churches", "cosmoflare"]);
       expect(b.projects[0].projectedOverageUsd).toBeCloseTo(184.2375, 4); // 182.5 + 1.7375, share 1
       expect(b.projects[0].drivers).toContain("d1.rows_written");
@@ -244,13 +266,40 @@ describe("collectBilling", () => {
     );
   });
 
-  it("records the verified-unavailable metrics as gap notes, not fabricated numbers", async () => {
+  it("reads CPU, DO duration, and R2/KV/D1 storage from the introspected fields, with errors empty on full success", async () => {
     await billingWithFetch(billingHappyHandler(), async () => {
       const b = await collectBilling("acct", "tok", OCT8);
-      for (const id of ["workers.cpu_ms", "do.duration", "r2.storage", "kv.storage"]) {
-        expect(b.errors.some((e) => e.startsWith(`${id}:`)), id).toBe(true);
-        expect(b.products.find((p) => p.id === id)!.used).toBe(0);
-      }
+      expect(b.errors).toEqual([]);
+      const cpu = b.products.find((p) => p.id === "workers.cpu_ms")!;
+      expect(cpu.used).toBe(1_600_000); // 1.6e9 µs → ms
+      expect(cpu.projected).toBeCloseTo(6_200_000, 4); // × 31/8
+      const dur = b.products.find((p) => p.id === "do.duration")!;
+      expect(dur.used).toBe(40_000); // GB-s as-is
+      expect(dur.projected).toBeCloseTo(155_000, 4);
+      expect(dur.topConsumers[0]).toMatchObject({ name: "all scripts", project: "shared" }); // account total
+      expect(b.projects.map((p) => p.project)).not.toContain("shared"); // synthetic consumers create no project row
+      const r2 = b.products.find((p) => p.id === "r2.storage")!;
+      expect(r2.used).toBeCloseTo(3.1, 9); // payload + metadata bytes → GB
+      expect(r2.projected).toBe(3.1);
+      expect(r2.topConsumers[0]).toMatchObject({ name: "churches-bucket", project: "churches", used: 3.1 });
+      const kv = b.products.find((p) => p.id === "kv.storage")!;
+      expect(kv.used).toBe(0.5); // byteCount → GB
+      expect(kv.topConsumers[0].name).toBe("cosmoflare-kv");
+      const d1 = b.products.find((p) => p.id === "d1.storage")!;
+      expect(d1.used).toBe(2);
+      expect(d1.topConsumers[0]).toMatchObject({ name: "mycarguide-db", project: "mycarguide" });
+      expect(b.products.find((p) => p.id === "do.requests")!.used).toBe(1_000);
+    });
+  });
+
+  it("keeps the other storage snapshots alive when one snapshot dataset fails", async () => {
+    await billingWithFetch(billingHappyHandler({ failSnapMerged: true, failKvStorageSingle: true }), async () => {
+      const b = await collectBilling("acct", "tok", OCT8);
+      expect(b.errors.some((e) => e.startsWith("kv.storage:"))).toBe(true);
+      expect(b.products.find((p) => p.id === "kv.storage")!.used).toBe(0);
+      expect(b.products.find((p) => p.id === "r2.storage")!.used).toBeCloseTo(3.1, 9);
+      expect(b.products.find((p) => p.id === "d1.storage")!.used).toBe(2);
+      expect(b.errors.some((e) => e.startsWith("d1.storage:"))).toBe(false);
     });
   });
 
