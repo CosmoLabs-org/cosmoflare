@@ -4,6 +4,69 @@ Cosmoflare is a CLI tool for managing the full Cloudflare developer platform: R2
 
 > **Binary names:** `cosmoflare` is the primary binary name. `r2go2` remains available as a backward-compatible alias.
 
+## Table of Contents
+
+- [Setup](#setup)
+- [Global Flags](#global-flags)
+- [Environment Profiles (`--env`)](#environment-profiles---env)
+- [Dev Server](#dev-server)
+- [Desktop Daemon (`serve`)](#desktop-daemon-serve)
+- [Dashboard](#dashboard)
+- [Bucket Commands](#bucket-commands)
+- [Object Commands](#object-commands)
+- [Worker Commands](#worker-commands)
+- [KV Commands](#kv-commands)
+- [DNS Commands](#dns-commands)
+- [Zone Commands](#zone-commands)
+- [SSL/TLS Commands](#ssltls-commands)
+- [Cache Commands](#cache-commands)
+- [Pages Commands](#pages-commands)
+- [Queue Commands](#queue-commands)
+- [D1 Commands](#d1-commands)
+- [Durable Objects Commands](#durable-objects-commands)
+- [Email Routing Commands](#email-routing-commands)
+- [Firewall Commands](#firewall-commands)
+- [WAF Commands](#waf-commands)
+- [Vectorize Commands](#vectorize-commands)
+- [CORS Commands](#cors-commands)
+- [Page Rules Commands](#page-rules-commands)
+- [Domains Command](#domains-command)
+- [Knowledge Layer](#knowledge-layer)
+- [Rate Limiting Command](#rate-limiting-command)
+- [Redirects Commands](#redirects-commands)
+- [Doctor Command](#doctor-command)
+- [Status Command](#status-command)
+- [Auth Commands](#auth-commands)
+- [Setup Command](#setup-command)
+- [Backup Command](#backup-command)
+- [Copy Command](#copy-command)
+- [Completion Command](#completion-command)
+- [Init Command](#init-command)
+- [Images Commands](#images-commands)
+- [Stream Commands](#stream-commands)
+- [Hyperdrive Management](#hyperdrive-management)
+- [Diff Commands](#diff-commands)
+- [Cost Estimation](#cost-estimation)
+- [Watch Command](#watch-command)
+- [Export / Import Commands](#export--import-commands)
+- [S3 to R2 Migration](#s3-to-r2-migration)
+- [Workers AI & AI Gateway](#workers-ai--ai-gateway)
+- [Plugin Commands](#plugin-commands)
+- [MCP Server (Model Context Protocol)](#mcp-server-model-context-protocol)
+- [Wrangler Compatibility](#wrangler-compatibility)
+- [Account Management](#account-management)
+- [Alerts](#alerts)
+- [Cosmoflare Ops (web/phone dashboard)](#cosmoflare-ops-webphone-dashboard)
+- [cosmoflare limits](#cosmoflare-limits)
+- [cosmoflare usage](#cosmoflare-usage)
+- [Library Usage (Workers and KV)](#library-usage-workers-and-kv)
+- [Library Usage (R2 Storage)](#library-usage-r2-storage)
+- [Pre-signed URLs (CLI)](#pre-signed-urls-cli)
+- [Pipe and Stdin Support](#pipe-and-stdin-support)
+- [Bucket Comparison](#bucket-comparison)
+- [Analytics](#analytics)
+- [Config Profile Commands](#config-profile-commands)
+
 ## Setup
 
 Set environment variables:
@@ -2925,6 +2988,51 @@ cosmoflare alerts history --json
 ### Live API smoke test
 
 `make test-live` runs `TestLiveAnalyticsQueries` against the real Cloudflare API using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. It is never part of the default test suite.
+
+## Cosmoflare Ops (web/phone dashboard)
+
+Cosmoflare Ops (FEAT-052) is the private, phone-installable dashboard and push-alert pager for one Cloudflare account, served at **https://ops.cosmolabs.org** (custom domain only — `workers.dev` and preview URLs are off). A small Worker serves the `pager/` PWA as static assets and a small private API. See `apps/ops/README.md` for the authoritative reference.
+
+**Lockdown:** Cloudflare Access restricts the site to the account owner; every `/api/*` request is additionally verified in-Worker against the Cloudflare Access JWT (RS256; audience, issuer and expiry checked). The Worker refuses every API request when `ACCESS_TEAM_DOMAIN` or `ACCESS_AUD` is unset, so the API stays closed even if the Access app is later removed.
+
+### API endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/summary` | 24h Workers requests/errors/CPU, D1 rows per database, zone cache health — live from the GraphQL Analytics API. |
+| `GET /api/billing` | Month-to-date billing: period resolution (subscription → anchor day → calendar), per-product allowance / usage / projection / projected overage, top consumers, project attribution, verified prices. `?refresh` forces a reload behind the 60 s refresh-storm guard. |
+| `GET /api/subscribe` | Count of registered push devices. |
+| `POST /api/subscribe` | Register a Web Push subscription (`{ endpoint, keys: { p256dh, auth } }`, max 10; same endpoint replaces). |
+| `DELETE /api/subscribe` | Remove a subscription (`{ endpoint }`). |
+| `POST /api/test-fire` | Fire a real push at every subscribed device (`{ sent, pruned, issues }`). Other methods: 405. |
+| `GET /api/vapid-public-key` | The key the pager needs to subscribe to push. |
+
+Every API response carries `Cache-Control: private, no-store`.
+
+### Alert cron (every 5 minutes)
+
+A `*/5 * * * *` cron trigger evaluates the FEAT-049 alert rules against live telemetry and pages every subscribed device via Web Push (aes128gcm). Rules, cooldown state and subscriptions live in `OPS_KV` (`rules`, `fire-state`, `subs`); dead endpoints (404/410) are pruned after each run; each run logs one `{ cron: "alerts", ... }` result line.
+
+### Cache TTLs
+
+`cached()` is the single upstream-cache layer: L1 module memo, L2 KV when `OPS_KV` is bound, else the Cache API. Stale-while-revalidate with single-flight dedup; `?refresh` forces a reload at most once per 60 s per key. The Cache API is unavailable behind Cloudflare Access, so this Access-fronted hostname uses **KV as the shared cache** — bind `OPS_KV` for the cache, the cron rules and the subscriptions to work.
+
+| Dataset | Fresh TTL | Stale window |
+|---------|-----------|--------------|
+| 24h analytics (summary) | 5 min | 1 h |
+| Zone / D1 lists | 1 h | 24 h |
+| MTD billing usage | 15 min | 6 h |
+| Billing subscription (period) | 12 h | 7 d |
+
+### Deploy and required secrets
+
+Deploy from `apps/ops/`: `bun install && bun run deploy` (builds `pager/`, then `wrangler deploy`). Required secrets (names only — set values with `wrangler secret put`): `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`. Bind a KV namespace as `OPS_KV` (`wrangler kv namespace create OPS_KV`, fill the id into `wrangler.jsonc`). Optional var `BILLING_ANCHOR_DAY` ("1"–"31"): day of month the billing period restarts, used when the subscriptions endpoint is not readable with the account token; without it the period falls back to the calendar month.
+
+### Pairing the phone
+
+1. Open the site, **Add to Home Screen** (iOS 16.4+).
+2. Open it from the Home Screen, go to **Pairing → Enable notifications** — the VAPID key is fetched before the tap (Apple requires `subscribe()` to follow the user gesture directly) and the subscription registers with the Worker automatically; the device then receives cron alerts.
+3. **Copy subscription** stays as the secondary, CLI-driven path (`cosmoflare alerts push add '<json>'`); **Send test alert** fires a real push so the whole pipeline can be checked from the phone.
 
 ## cosmoflare limits
 
