@@ -8,6 +8,7 @@ import { collectBilling } from "./billing";
 import { cached } from "./cache";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
+import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
 
 // Env is the OpsEnv shape (OPS_KV required, VAPID keypair + contact, Access
@@ -85,6 +86,8 @@ export default {
         return billingResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/subscribe": // POST add / DELETE remove / GET count — auth already checked above
         return handleSubscribe(request, env);
+      case "/api/rules": // GET read / PUT replace — auth already checked above
+        return handleRules(request, env);
       case "/api/test-fire": // POST only: fire a real push at every subscribed device
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
         return json(await testFire(env));

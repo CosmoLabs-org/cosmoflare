@@ -185,6 +185,11 @@ describe("api routes behind the Access gate", () => {
     const res = await worker.fetch(new Request("https://ops.example/api/test-fire", { method: "POST" }), env as never, ctx);
     expect(res.status).toBe(403);
   });
+  it("rejects /api/rules without a valid Access JWT (defense in depth)", async () => {
+    const { ctx } = fakeCtx();
+    const res = await worker.fetch(new Request("https://ops.example/api/rules", { method: "PUT", body: JSON.stringify({ rules: [] }) }), env as never, ctx);
+    expect(res.status).toBe(403);
+  });
   it("returns 404 for an unknown /api path", async () => {
     authBypass.value = true;
     try {
