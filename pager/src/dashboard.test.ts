@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, levelForD1, levelForMiss, levelForUncached, levelForUsage } from "./dashboard";
+import {
+  formatCount,
+  levelForD1,
+  levelForMiss,
+  levelForUncached,
+  levelForUsage,
+  pacingLabel,
+  periodEndsLabel,
+} from "./dashboard";
+import type { ProductUsage } from "./api";
 
 describe("dashboard formatting", () => {
   it("formats counts like the CLI (2.9B / 52.3M / 3.3k / 522)", () => {
@@ -19,5 +28,29 @@ describe("dashboard formatting", () => {
     expect(levelForUsage(120)).toBe("critical");
     expect(levelForUsage(85)).toBe("warning");
     expect(levelForUsage(10)).toBe("ok");
+  });
+});
+
+describe("pacingLabel", () => {
+  it("states the metric, that it is a projection, and the allowance", () => {
+    const d1: ProductUsage = {
+      id: "d1.rows_read", product: "D1", metric: "Rows read", unit: "rows",
+      included: 25e9, used: 640e6, projected: 27e9, unitPriceUsd: 0.001,
+      priceUnit: 1e6, projectedOverageUsd: 2, topConsumers: [],
+    };
+    expect(pacingLabel(d1)).toBe("D1 rows read · projected % of 25.0B rows");
+  });
+});
+
+describe("periodEndsLabel", () => {
+  it("marks a calendar-sourced period as an assumption", () => {
+    const label = periodEndsLabel("2026-11-01T00:00:00Z", "calendar");
+    expect(label).toMatch(/Nov 1/);
+    expect(label).toContain("(calendar month)");
+  });
+  it("leaves subscription-sourced periods unmarked", () => {
+    const label = periodEndsLabel("2026-11-01T00:00:00Z", "subscription");
+    expect(label).toMatch(/Nov 1/);
+    expect(label).not.toContain("(calendar month)");
   });
 });

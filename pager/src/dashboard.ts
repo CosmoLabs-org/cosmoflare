@@ -5,9 +5,9 @@
 // screen and the pager agree on what is "red".
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
-import { api, LoginExpiredError, type Billing, type ProductUsage, type Summary } from "./api";
-import { collectAttention } from "./attention";
+import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+import { api, LoginExpiredError, type Billing, type BillingPeriod, type ProductUsage, type Summary } from "./api";
+import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
 import { hrefFor } from "./routes";
 
 export type Level = "ok" | "warning" | "critical";
@@ -27,6 +27,18 @@ export { formatCount } from "./format";
 // period end; 184% = will use the allowance plus most of an extra one).
 export function pacingPct(p: ProductUsage): number {
   return p.included > 0 ? (p.projected / p.included) * 100 : 0;
+}
+
+// pacingLabel states the projection honestly: what metric, that the number
+// is a projection, and which allowance it is a percentage OF.
+export function pacingLabel(p: ProductUsage): string {
+  return `${p.product} ${p.metric.toLowerCase()} · projected % of ${formatCount(p.included)} ${p.unit}`;
+}
+
+// periodEndsLabel marks a calendar-sourced period as an assumption — the
+// operator should know "(calendar month)" is not the invoice's own date.
+export function periodEndsLabel(end: string, source: BillingPeriod["source"]): string {
+  return `period ends ${formatDateShort(end)}${source === "calendar" ? " (calendar month)" : ""}`;
 }
 
 function kpiTile(value: string, label: string, level: Level = "ok"): HTMLElement {
@@ -71,7 +83,7 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
     // the orphan full-width bar that used to sit under the grid is gone.
     const d1Prod = findProduct(billing, "d1.rows_read");
     const wProd = findProduct(billing, "workers.requests");
-    const periodTile = kpiTile(`day ${billing.period.day} of ${billing.period.days}`, `period ends ${formatDateShort(billing.period.end)}`);
+    const periodTile = kpiTile(`day ${billing.period.day} of ${billing.period.days}`, periodEndsLabel(billing.period.end, billing.period.source));
     const prog = el("div", "cf-progress");
     prog.setAttribute("aria-label", `Billing period: day ${billing.period.day} of ${billing.period.days}`);
     const fill = el("div", "cf-progress-fill");
@@ -82,19 +94,20 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
       kpiTile(formatUsd(billing.totalProjectedOverageUsd), "projected overage",
         billing.totalProjectedOverageUsd >= 0.01 ? (billing.totalProjectedOverageUsd >= 50 ? "critical" : "warning") : "ok"),
       periodTile,
-      kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok"),
-      kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok"),
+      kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", d1Prod ? pacingLabel(d1Prod) : "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok"),
+      kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", wProd ? pacingLabel(wProd) : "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok"),
       kpiTile(String(attention.length), attention.length === 1 ? "item needs attention" : "items need attention",
         attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"),
     );
 
-    // Needs attention list
+    // Needs attention list — the worst rows up to the cap, then "Show all N".
     const attentionCard = el("section", "cf-card");
     attentionCard.append(el("h2", undefined, "Needs attention"));
     if (attention.length === 0) {
       attentionCard.append(el("p", "cf-empty cf-empty-quiet", "All clear — nothing above threshold."));
     } else {
-      for (const item of attention) {
+      const { shown, extra } = capAttention(attention, ATTENTION_CAP);
+      for (const item of shown) {
         const link = el("a", `cf-attention cf-level-${item.level}`);
         link.href = hrefFor(item.route);
         link.append(
@@ -104,6 +117,12 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
           el("span", "cf-attention-chevron", "→"),
         );
         attentionCard.append(link);
+      }
+      if (extra > 0) {
+        const more = el("a", "cf-attention cf-attention-more");
+        more.href = hrefFor("billing");
+        more.append(el("span", "cf-attention-body", `Show all ${attention.length}`));
+        attentionCard.append(more);
       }
     }
     root.replaceChildren(statusBar(sumRes, billRes, root), grid, attentionCard);
