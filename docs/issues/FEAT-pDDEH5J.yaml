@@ -1,0 +1,14 @@
+id: FEAT-pDDEH5J
+type: feature
+created_at: 2026-10-10T00:33:27.635444+04:00
+updated_at: 2026-10-10T00:33:28.155366+04:00
+source: local
+ulid: 01M4H5XTJVDR67F64BMKDDEH5J
+provisional: true
+status: open
+title: Verify and adopt billing usage-v2 REST endpoint in Ops collector
+description: 'cf exposes billing/usage REST v2 commands (clone ref: packages/cli/src/commands/_generated/billing/usage/get-account-usage-v2.ts, get-account-billable-metrics.ts). Live-verify GET /accounts/{id}/billing/usage-v2 response shape with the account token; if it returns per-product MTD usage in one call, apps/ops/src/billing.ts drops its per-product fan-out for that data. Expected: several upstream calls collapse to 1. From gap analysis adopt #4.'
+acceptance_criteria:
+    - criterion: endpoint verified live (shape documented); billing.ts uses it where it wins; tests green
+      met: false
+roadmap_ref: ROAD-102
