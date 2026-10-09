@@ -45,6 +45,9 @@ entries:
         - description: 'Ops pager gauge nits: one status per billing card, solid legend swatches, storage rings show the size once (IMP-002)'
           source: manual
           date: 2026-10-10T00:29:31.97379+04:00
+        - description: 'Ops pager: background revalidation no longer resets table sort/filter or wipes unsaved rule edits; storage rings show the allowance once (combined-review findings)'
+          source: manual
+          date: 2026-10-10T01:52:59.081808+04:00
     changed:
         - description: 'Ops pager styles pass: token-driven sections (spacing/type/motion), Space Grotesk display face, amber-tinted neutrals, deduplicated stylesheet (G-11)'
           source: manual
