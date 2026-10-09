@@ -1,7 +1,7 @@
 id: FEAT-052
 type: feature
 created_at: 2026-10-09T15:35:36.537715+04:00
-updated_at: 2026-10-09T21:13:49.018084+04:00
+updated_at: 2026-10-09T21:51:02.383981+04:00
 source: local
 ulid: 01M4G74ZQZM09NMCC8XSS1DTRF
 status: open
@@ -12,6 +12,6 @@ description: 'Operator idea 2026-10-09: instead of waiting for the native iOS ap
 resolution:
     notes: '2026-10-09 later: billing view, responsive UI, upstream cache, icon set and Worker cron push merged and deployed (version 9f012605). Access app now covers ops.cosmolabs.org only. Remaining: VAPID_PRIVATE_KEY/VAPID_SUBJECT secrets, phone pairing, test push. Roadmap ROAD-pJ25XG5.'
 delegation:
-    delegated_to: "0359"
-    delegated_at: 2026-10-09T21:13:49.016905+04:00
+    delegated_to: "0362"
+    delegated_at: 2026-10-09T21:51:02.382289+04:00
     delegated_engine: glm-agent

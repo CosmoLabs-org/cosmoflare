@@ -4,7 +4,7 @@ created: 2026-10-09
 status: PENDING
 branch: master
 goals_total: 8
-goals_completed: 2
+goals_completed: 1
 supersedes: "docs/prompts/2026-10-08-session-2032-continuation.md"
 plan_ref: docs/planning-mode/2026-10-09-feat049-wave3a-cache-d1-telemetry.md
 requires_reading:
@@ -31,7 +31,7 @@ cosmoflare alerts watch and alerts check page on zone cache misses (zone-cache-m
 
 **How to run this session (operator instruction 2026-10-09):** Opus is the orchestrator only — it plans, writes task briefs, reviews diffs, runs the merge gate and talks to the operator. Implementation goes to subagents via the Agent tool: Sonnet (`model: sonnet`) for bounded-with-discovery work (UI, API integration, pricing/billing endpoints), Haiku (`model: haiku`) for spec-exact tasks (copy edits, icon wiring, test fixtures, docs). Web reading stays in subagents. Every subagent diff goes through Opus review + tests before merge.
 
-### [ ] 1. Finish Cosmoflare Ops (FEAT-052): phone pairing + starter rules now, then push from Cloudflare (no Mac)
+### [x] 1. Finish Cosmoflare Ops (FEAT-052): phone pairing + starter rules now, then push from Cloudflare (no Mac)
 Phase 1 is DONE and live (2026-10-09, merge bdebb56): https://ops.cosmolabs.org (custom domain; workers.dev disabled) — dashboard (month-to-date pacing, D1 rows read per database, zone cache health) behind Cloudflare Access. Do not rebuild it.
 Acceptance, step A (operator present): (a) operator installs the app to the iPhone home screen, opens Pairing → Enable notifications → Copy subscription and pastes the JSON; (b) `cosmoflare alerts push add '<json>'` registers it (VAPID keys already in ~/.cosmoflare/push.json; the Worker's VAPID_PUBLIC_KEY secret is that public key); (c) starter rules exist — zone-uncached-requests 10000, zone-cache-miss-pct 50, d1-rows-read 1e9 (ask the operator for excludes; decide with them which directory holds .cosmoflare-alerts.yaml for the watch); (d) `cosmoflare alerts watch --test-fire` buzzes the phone. If the push is rejected, read the push service status code (Apple: BadJwtToken / BadVapidPublicKey / VapidPkHashMismatch).
 Acceptance, step C: a Cron Trigger on the Ops Worker evaluates the zone/d1/usage rules (port the FEAT-049 logic to TS: thresholds, 100-request floor, hourly per-scope cooldown with 2x escalation, gap pages; cooldown state in KV) and sends Web Push with @block65/webcrypto-web-push ^2.0.0 (aes128gcm; v1.x uses legacy aesgcm which Apple rejects); subscriptions stored in KV via a new /api/subscribe (Access-verified) so pairing no longer needs the CLI; VAPID private key as a Worker secret; a test fire reaches the phone with the Mac off. Deploying the Ops Worker is allowed (operator go 2026-10-09); git push/release still needs a fresh go.
