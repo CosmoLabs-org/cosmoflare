@@ -755,6 +755,28 @@ body.cf-nav-open { overflow: hidden; }
 .cf-project-overage { font-variant-numeric: tabular-nums; }
 .cf-project .cf-chips { margin-top: var(--space-2); }
 
+/* ---- Domains view: ownership rows with renewal attention ---- */
+.cf-domain-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+.cf-domain-row + .cf-domain-row { border-top: 1px solid var(--border); }
+.cf-domain-name { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.cf-domain-name strong { font-family: var(--font-display); font-size: 15px; overflow-wrap: anywhere; }
+.cf-domain-badges { display: inline-flex; gap: var(--space-1); }
+.cf-badge {
+  font-size: var(--text-xs, 11px);
+  padding: 1px var(--space-2);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--muted);
+}
+.cf-domain-expiry { font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--muted); }
+
 /* ---- Billing: product cards ---- */
 
 .cf-product-head {

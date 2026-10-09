@@ -6,6 +6,7 @@
 import { verifyAccessJwt } from "./access";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
+import { collectDomains } from "./domains";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
 import { handleRules } from "./rules-api";
@@ -55,6 +56,16 @@ export async function summaryResponse(ctx: ExecutionContext, env: Env, refresh: 
   return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
 }
 
+// GET /api/domains — the account's full zone list (every status, registrar
+// expiry kept), through the same cached() contract as the other views:
+// 1h fresh / 24h stale, ?refresh behind the 60s storm guard.
+export async function domainsResponse(ctx: ExecutionContext, env: Env, refresh: boolean): Promise<Response> {
+  const result = await cached(ctx, env, "domains", { ...LIST_TTL, force: refresh }, () =>
+    collectDomains(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date()),
+  );
+  return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+}
+
 // GET /api/billing — same contract as /api/summary: served through cached()
 // (15 min fresh / 6 h stale), ?refresh forces a reload behind the 60 s
 // refresh-storm guard, and the response carries `cache: { ageSec, stale }`.
@@ -82,6 +93,8 @@ export default {
         return json({ key: env.VAPID_PUBLIC_KEY ?? "" });
       case "/api/summary":
         return summaryResponse(ctx, env, url.searchParams.has("refresh"));
+      case "/api/domains":
+        return domainsResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/billing":
         return billingResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/subscribe": // POST add / DELETE remove / GET count — auth already checked above

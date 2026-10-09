@@ -1,7 +1,7 @@
 // Hash route parser for the Ops shell (FEAT-052). Pure — tests hit it
 // directly.
 
-export const ROUTES = ["overview", "billing", "projects", "workers", "d1", "zones", "alerts", "rules", "pairing"] as const;
+export const ROUTES = ["overview", "billing", "projects", "domains", "workers", "d1", "zones", "alerts", "rules", "pairing"] as const;
 
 export type RouteId = (typeof ROUTES)[number];
 

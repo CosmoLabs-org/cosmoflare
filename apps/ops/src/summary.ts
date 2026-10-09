@@ -159,7 +159,7 @@ async function gql<T>(token: string, query: string, variables: Record<string, un
   return body.data as T;
 }
 
-async function rest<T>(token: string, path: string): Promise<T[]> {
+export async function rest<T>(token: string, path: string): Promise<T[]> {
   const out: T[] = [];
   for (let page = 1; page <= 20; page++) {
     const sep = path.includes("?") ? "&" : "?";
