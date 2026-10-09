@@ -1,6 +1,6 @@
 // Cosmoflare Ops entry point (FEAT-045, FEAT-052): registers the push
 // service worker and mounts the app shell — hash router
-// (#/overview #/billing #/workers #/d1 #/zones #/alerts #/pairing), a
+// (#/overview #/billing #/workers #/d1 #/zones #/alerts #/rules #/pairing), a
 // persistent sidebar at ≥1024px, and below that a hamburger drawer with a
 // backdrop, focus trap and scroll lock. Views render into per-route hosts
 // that persist across route changes, so a background revalidation only ever
@@ -12,6 +12,7 @@ import { renderOverview } from "./dashboard";
 import { renderBilling } from "./billing";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
+import { renderRules } from "./rules";
 import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
 
 /** Nav labels per route. */
@@ -22,6 +23,7 @@ const NAV: Record<RouteId, { label: string }> = {
   d1: { label: "D1" },
   zones: { label: "Zones" },
   alerts: { label: "Alerts" },
+  rules: { label: "Rules" },
   pairing: { label: "Pairing" },
 };
 
@@ -36,6 +38,8 @@ const ICONS: Record<RouteId, string> = {
   zones: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"/></svg>`,
   alerts: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>`,
   pairing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="7" cy="18" r="2" fill="var(--surface)"/></svg>`,
+  // Sliders — the Rules view edits rule rows (name, condition, threshold).
+  rules: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>`,
 };
 
 async function registerServiceWorker(): Promise<void> {
@@ -203,6 +207,7 @@ function mount(): void {
     d1: (h, o) => void renderD1(h, o ?? {}),
     zones: (h, o) => void renderZones(h, o ?? {}),
     alerts: (h) => renderAlertList(h),
+    rules: (h) => void renderRules(h),
     pairing: (h) => void renderPairing(h),
   };
 

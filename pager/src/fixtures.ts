@@ -4,13 +4,14 @@
 // same rendering code runs against live data and fixtures.
 
 import type { Billing, ProductUsage, Summary } from "./api";
+import type { RulesPayload } from "./rules";
 
 // makeFixtures builds a coherent demo dataset around `now`: the billing
 // period spans the current calendar month, pacing follows the elapsed share
 // of the month, and the overage story reads like a real account (R2 storage
 // running hot, D1 reads slightly ahead, everything else inside its
 // allowance).
-export function makeFixtures(now: Date): { summary: Summary; billing: Billing } {
+export function makeFixtures(now: Date): { summary: Summary; billing: Billing; rules: RulesPayload } {
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth();
   const start = new Date(Date.UTC(year, month, 1));
@@ -108,7 +109,37 @@ export function makeFixtures(now: Date): { summary: Summary; billing: Billing } 
     },
     errors: ["d1 storage: Cloudflare GraphQL timed out — usage is from the last successful pull"],
   };
-  return { summary, billing };
+
+  // Rules demo set: one rule per shape the view edits — a D1 rows-read rule
+  // (threshold formats as "1.0B" in the hint), a Worker error-rate rule with
+  // excludes, and a disabled rule. starter: false shows the customised path.
+  const rules: RulesPayload = {
+    conditions: ["d1-rows-read", "worker-error-pct", "r2-storage-gb", "kv-reads", "zone-miss-pct"],
+    starter: false,
+    rules: [
+      {
+        name: "D1 reads runaway",
+        condition: "d1-rows-read",
+        threshold: 1e9,
+        exclude: ["cosmokit-registry"],
+        enabled: true,
+      },
+      {
+        name: "API gateway errors",
+        condition: "worker-error-pct",
+        threshold: 1,
+        exclude: ["cdn", "ccs-state"],
+        enabled: true,
+      },
+      {
+        name: "Zone cache misses",
+        condition: "zone-miss-pct",
+        threshold: 15,
+        enabled: false,
+      },
+    ],
+  };
+  return { summary, billing, rules };
 }
 
 // buildProjects aggregates product overages into per-project rows: a project

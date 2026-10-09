@@ -636,3 +636,120 @@ body.cf-nav-open { overflow: hidden; }
   .cf-skeleton { animation: none; }
   .cf-btn, .cf-btn:active { transition: none; transform: none; }
 }
+
+/* ---- Rules view (FEAT-052 agent I): editable rule cards ---- */
+
+/* Shared text control: phone-first 44px target, never wider than the card. */
+.cf-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.cf-input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+
+.cf-field { margin-top: 12px; }
+.cf-field-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cf-field-row { display: flex; align-items: center; gap: 8px; }
+.cf-field-row .cf-input { flex: 1 1 auto; }
+
+.cf-rule { display: block; }
+.cf-rule-head { display: flex; gap: 8px; align-items: center; }
+.cf-rule-head .cf-rule-name { flex: 1 1 auto; }
+
+/* Enabled toggle: On/Off button with aria-pressed. */
+.cf-toggle {
+  flex: 0 0 auto;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.cf-toggle[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--sev-ok);
+  border-color: var(--sev-ok);
+}
+.cf-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Formatted threshold hint ("1.0B" for 1e9 on d1-rows-read). */
+.cf-rule-hint { flex: 0 0 auto; font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+/* Exclude chips: removable pills. */
+.cf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.cf-chips:empty { display: none; }
+.cf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 10px;
+  font-size: 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.cf-chip-remove {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.cf-chip-remove:focus-visible { outline: 2px solid var(--focus); }
+.cf-chip-add { flex: 1 1 12em; }
+
+/* Disabled rule card reads muted. */
+.cf-rule-off .cf-input, .cf-rule-off .cf-chip { opacity: 0.55; }
+.cf-rule-off .cf-toggle { color: var(--muted); background: none; border-color: var(--border); }
+
+/* Server/client rejection highlight on the offending card. */
+.cf-rule-invalid { border-color: var(--sev-critical); }
+
+/* Delete sits apart from the card fields. */
+.cf-btn-danger { color: var(--sev-critical); }
+.cf-btn-danger:focus-visible { outline-color: var(--sev-critical); }
+
+/* Starter note, action bar, save feedback. */
+.cf-rule-note {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.cf-rule-note[hidden] { display: none; }
+.cf-rules-actions {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+.cf-rules-actions .cf-btn { flex: 1 1 0; }
+.cf-rules-actions .cf-btn-primary { flex-grow: 2; }
+.cf-save-status { margin: 8px 0 0; font-size: 14px; color: var(--sev-ok); }
+.cf-save-error { margin: 8px 0 0; font-size: 14px; }
+.cf-save-status[hidden], .cf-save-error[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-toggle, .cf-chip-remove { transition: none; }
+}
