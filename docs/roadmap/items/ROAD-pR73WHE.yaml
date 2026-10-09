@@ -1,0 +1,15 @@
+id: ROAD-pR73WHE
+created_at: 2026-10-09T20:34:32.419492+04:00
+updated_at: 2026-10-09T20:34:33.638161+04:00
+title: Ops billing view — period progress, per-product overage projection, project attribution
+description: '/api/billing: Workers requests/CPU, D1 rows read/written/storage, R2 class A/B/storage, KV reads/writes/storage, DO requests/duration; prices verified on CF pricing pages 2026-10-09; consumers mapped to CosmoLabs projects. First live finding: mycarguide KV storage 3.9 GB vs 1 GB included.'
+status: completed
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR8AV6WC9N2QD0K2R73WHE
+provisional: true
