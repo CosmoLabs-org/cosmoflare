@@ -6,6 +6,7 @@
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
 import { api, LoginExpiredError, type Billing, type FetchResult, type ProductUsage } from "./api";
+import { refreshButton } from "./refresh";
 
 // meterPct computes the meter geometry for one product row: solid used
 // width, hatched projected extension, and the allowance marker position —
@@ -108,8 +109,7 @@ function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
   if (serverAge !== null) {
     line.textContent = `Updated ${formatAge(serverAge)}${b.cache?.stale ? " · cached" : ""}`;
   }
-  const refresh = el("button", "cf-btn", "Refresh");
-  refresh.addEventListener("click", () => void renderBilling(root, { refresh: true }));
+  const refresh = refreshButton(() => renderBilling(root, { refresh: true }));
   bar.append(line, refresh);
 
   // Period progress

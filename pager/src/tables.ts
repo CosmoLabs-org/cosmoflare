@@ -9,6 +9,7 @@ import { api, LoginExpiredError, type FetchResult, type Summary } from "./api";
 import { cmpRows, cmpText, type SortDir } from "./sort";
 import { zoneAttentionLevel } from "./attention";
 import { levelForErrorPct, levelForD1 } from "./dashboard";
+import { fadeSwap, refreshButton } from "./refresh";
 
 export interface Column<T> {
   key: string;
@@ -236,8 +237,7 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
     const serverAge = res.data.cache ? res.data.cache.ageSec : null;
     const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
-    const refresh = el("button", "cf-btn", "Refresh");
-    refresh.addEventListener("click", () => renderWorkers(host, { refresh: true }));
+    const refresh = refreshButton(async () => renderWorkers(host, { refresh: true }));
     bar.append(line, refresh);
 
     const card = el("section", "cf-card");
@@ -262,7 +262,10 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
         },
       });
     }
-    host.replaceChildren(bar, card);
+    // Repaint through fadeSwap so refreshed content fades in without a jump.
+    const view = el("div");
+    view.append(bar, card);
+    fadeSwap(host, view);
   });
 }
 
@@ -274,8 +277,7 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): v
     const serverAge = res.data.cache ? res.data.cache.ageSec : null;
     const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
-    const refresh = el("button", "cf-btn", "Refresh");
-    refresh.addEventListener("click", () => renderD1(host, { refresh: true }));
+    const refresh = refreshButton(async () => renderD1(host, { refresh: true }));
     bar.append(line, refresh);
 
     const card = el("section", "cf-card");
@@ -299,7 +301,10 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): v
         },
       });
     }
-    host.replaceChildren(bar, card);
+    // Repaint through fadeSwap so refreshed content fades in without a jump.
+    const view = el("div");
+    view.append(bar, card);
+    fadeSwap(host, view);
   });
 }
 
@@ -362,8 +367,7 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
     const serverAge = res.data.cache ? res.data.cache.ageSec : null;
     const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
-    const refresh = el("button", "cf-btn", "Refresh");
-    refresh.addEventListener("click", () => renderZones(host, { refresh: true }));
+    const refresh = refreshButton(async () => renderZones(host, { refresh: true }));
     bar.append(line, refresh);
 
     const card = el("section", "cf-card");
@@ -403,6 +407,9 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
         },
       });
     }
-    host.replaceChildren(bar, card);
+    // Repaint through fadeSwap so refreshed content fades in without a jump.
+    const view = el("div");
+    view.append(bar, card);
+    fadeSwap(host, view);
   });
 }

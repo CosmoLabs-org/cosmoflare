@@ -795,3 +795,36 @@ body.cf-nav-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .cf-toggle, .cf-chip-remove { transition: none; }
 }
+
+/* refresh (IMP-pPFDXJA): icon-only Refresh button, busy spin, success check,
+   failure shake, fadeSwap cross-fade. */
+.cf-refresh-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.cf-refresh-icon { display: inline-flex; transform-origin: center; }
+.cf-refresh-busy .cf-refresh-icon { animation: cf-refresh-spin 900ms linear infinite; }
+.cf-refresh-shake .cf-refresh-icon { animation: cf-refresh-shake 240ms ease-in-out; }
+@keyframes cf-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cf-refresh-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+}
+/* fadeSwap: 150ms ease-out fade of swapped-in content. */
+.cf-fade-swap { transition: opacity 150ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .cf-refresh-busy .cf-refresh-icon,
+  .cf-refresh-shake .cf-refresh-icon,
+  .cf-fade-swap { animation: none; transition: none; }
+}
