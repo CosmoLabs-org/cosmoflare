@@ -30,7 +30,7 @@ Acceptance: grok limits results + grok/gemini perms results land; the limits cor
 
 ## Carry-Over
 
-v0.33.0 release: held by the operator's local-only rule — next action is the operator's go. feat048-wave2 worktree kill: not created this session, so it needs the operator's OK (merge already landed). CF_API_TOKEN rotation (57+ days overdue): operator action via ccs credentials rotate CF_API_TOKEN. Cloudflare MCP re-auth: operator OAuth flow. ccs memory scan: low priority, one out-of-repo ClaudeCodeSetup-worktree memory file. Carried goals 5-8 (deploy, launch posts, phone smoke, research pastes) are operator-driven. Deferred refactors and gaps listed in NEXT_SESSION_CONTEXT are candidates for a cleanup task, not blockers.
+v0.33.0 release: held by the operator's local-only rule — next action is the operator's go. Cloudflare MCP re-auth: operator OAuth flow. ccs memory scan: low priority, one out-of-repo ClaudeCodeSetup-worktree memory file. Carried goals 5-8 (deploy, launch posts, phone smoke, research pastes) are operator-driven. Deferred refactors and gaps listed in NEXT_SESSION_CONTEXT are candidates for a cleanup task, not blockers.
 
 ## Next Session Context
 
