@@ -1,0 +1,15 @@
+id: ROAD-pMA5QCQ
+created_at: 2026-10-09T20:34:29.902038+04:00
+updated_at: 2026-10-09T20:34:30.909049+04:00
+title: Ops phase 1 — live dashboard, Access lockdown, custom domain only
+description: Worker cosmoflare-ops serves pager/dist + /api/summary on ops.cosmolabs.org; Cloudflare Access owner-email policy plus in-Worker JWT check; workers.dev and preview URLs disabled; 2026-10-09 the stale workers.dev destination was removed from the Access app.
+status: completed
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR88CF8FVF1K1M42MA5QCQ
+provisional: true
