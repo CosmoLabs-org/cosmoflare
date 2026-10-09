@@ -23,6 +23,12 @@ entries:
         - description: 'Desktop app redesign on Tailwind v4 + shadcn/ui: Ops design tokens, logo mark, icon sidebar with unread badge, Dashboard and Notifications rebuilt on shadcn primitives, light/dark theme with dark default (FEAT-055)'
           source: manual
           date: 2026-10-10T00:48:09.113041+04:00
+        - description: 'CLI: cosmoflare search — fuzzy command discovery with --json envelope (FEAT-pEKR6K6)'
+          source: manual
+          date: 2026-10-10T03:10:43.043936+04:00
+        - description: 'CLI: stable error_code field in --json error output, wave 1 mechanism + envelope (FEAT-p8KYM5K)'
+          source: manual
+          date: 2026-10-10T03:10:43.087603+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual

@@ -88,3 +88,12 @@ Continue from master at 47267f8a364c83bfbe23ef4d4bbc0e864d3f0cec
 - 783e457 Merge branch '_glm-agent-0366-brief-g15'
 - ebd1dda fix(ops): BUG-058 cron KV key collision and scheduled rejection catch
 
+
+## Post-close addendum (2026-10-10, quota-exhausted session tail)
+
+Landed after the session-end run: BUG-057/IMP-002 review fixes (d010c48, 4845ed9, deployed 5c729c3b), FEAT-pEKR6K6 cosmoflare search (c46eed2), FEAT-p8KYM5K wave 1 error codes (cbd6ea2). GLM pool hit billing exhaustion (HTTP 529) — remaining work finishes under Opus 5.5:
+
+1. G-06 + G-10 (operator): Billing Read on the token unblocks BOTH the subscription period AND FEAT-pDDEH5J usage-v2 (endpoint returns 10000 without it).
+2. FEAT-p8KYM5K wave 2: CodedError wraps at r2/kv/dns/d1/workers failure sites + USAGE.md codes table (mechanism is on master).
+3. FEAT-pN68ZRM: agent-context detection + agent help preamble (brief pattern: cf's agent-context.ts).
+4. Desktop Tauri build to see the FEAT-055 redesign natively.
