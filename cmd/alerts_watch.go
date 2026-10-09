@@ -61,10 +61,9 @@ var collectWatchMetricsFn = func(ctx context.Context, rules []*cosmoflare.AlertR
 	webhook.CollectUsageMetrics(&m, cachedUsageSnapshot(ctx))
 	// Zone cache + D1 rows-read telemetry is additive (FEAT-049 D15):
 	// failures become telemetry-gap pages, never a skipped cycle.
-	wantZones, wantD1 := webhook.RulesUseScope(rules, "zone"), webhook.RulesUseScope(rules, "d1")
-	if wantZones || wantD1 {
-		webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, cachedTelemetryRefs(ctx, wantZones, wantD1), w, &m)
-	}
+	webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1 bool) webhook.TelemetryRefs {
+		return cachedTelemetryRefs(ctx, wantZones, wantD1)
+	}, w, &m)
 	return m, nil
 }
 
@@ -75,7 +74,7 @@ var collectWatchMetricsFn = func(ctx context.Context, rules []*cosmoflare.AlertR
 // cycle, the watch's long-standing policy.
 var (
 	watchFireState      = webhook.NewFireState()
-	watchScopeCooldowns = map[string]time.Duration{"zone": time.Hour, "d1": time.Hour}
+	watchScopeCooldowns = map[string]time.Duration{cosmoflare.ScopeZone: time.Hour, cosmoflare.ScopeD1: time.Hour}
 )
 
 // Zone/D1 name-list cache + seams. The lists change on a days timescale, so

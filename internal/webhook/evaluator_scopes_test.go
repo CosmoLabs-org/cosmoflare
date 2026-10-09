@@ -102,17 +102,6 @@ func TestEvaluateD1HumanReadable(t *testing.T) {
 	}
 }
 
-func TestHumanCount(t *testing.T) {
-	t.Parallel()
-	for v, want := range map[float64]string{
-		2945546702: "2.9B", 52332502: "52.3M", 3289: "3.3k", 522: "522", 0: "0",
-	} {
-		if got := humanCount(v); got != want {
-			t.Errorf("humanCount(%v) = %q, want %q", v, got, want)
-		}
-	}
-}
-
 // TestEvaluateScopeCooldownPersists: the watch builds a fresh evaluator per
 // cycle; a shared FireState plus the watch policy (default 0, zone/d1 1h)
 // keeps zone pages hourly while script rules still page every cycle.
@@ -237,10 +226,10 @@ func TestUsageMaxSkipsD1(t *testing.T) {
 	t.Parallel()
 	dims := []cosmoflare.UsageDimension{
 		{ID: "workers.requests_monthly", Limit: 100, Pct: 40, ProjectedPct: 60},
-		{ID: "d1.rows_read_monthly", Limit: 25e9, Pct: 350, ProjectedPct: 900},
+		{ID: "d1.rows_read_monthly", Limit: 25e9, Pct: 350, ProjectedPct: 900, PacingAlertsExempt: true},
 	}
 	if got := usageMax(dims, false); got != 40 {
-		t.Errorf("usageMax = %v, want 40 (d1 excluded)", got)
+		t.Errorf("usageMax = %v, want 40 (pacing-exempt dimension excluded)", got)
 	}
 	if got := usageMax(dims, true); got != 60 {
 		t.Errorf("usageMax projected = %v, want 60 (d1 excluded)", got)
@@ -304,5 +293,17 @@ func TestPercentOneDecimal(t *testing.T) {
 	}
 	if p.Value < 22.65 || p.Value > 22.66 {
 		t.Errorf("payload value = %v, want full precision 22.65625", p.Value)
+	}
+}
+
+// TestFormatValueNoExponent: plain counts never print in exponent form on a
+// phone (simplify review: 1200000 requests printed as 1.2e+06).
+func TestFormatValueNoExponent(t *testing.T) {
+	t.Parallel()
+	if got := formatValue(1200000, "requests"); got != "1200000" {
+		t.Errorf("formatValue(1200000, requests) = %q, want 1200000", got)
+	}
+	if got := formatValue(910.5, "ms"); got != "910.5" {
+		t.Errorf("formatValue(910.5, ms) = %q, want 910.5", got)
 	}
 }

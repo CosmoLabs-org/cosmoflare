@@ -48,18 +48,6 @@ func (z ZoneCacheSummary) MissPct(floor uint64) (float64, bool) {
 	return 100 * float64(z.total(cacheMissStatuses)) / float64(eligible), true
 }
 
-// UncachedPct returns (dynamic+bypass) ÷ known-status requests × 100, where
-// known = eligible + dynamic + bypass. ok is false when known is zero or
-// below floor (D4, D6).
-func (z ZoneCacheSummary) UncachedPct(floor uint64) (float64, bool) {
-	uncached := z.total(cacheUncachedStatuses)
-	known := z.total(cacheEligibleStatuses) + uncached
-	if known == 0 || known < floor {
-		return 0, false
-	}
-	return 100 * float64(uncached) / float64(known), true
-}
-
 // UncachedRequests returns eyeball requests that never reached the cache
 // (dynamic + bypass). Every one is a billed Worker invocation or origin hit.
 // This volume, not the uncached share, is what wave 3a alerts on: Workers-

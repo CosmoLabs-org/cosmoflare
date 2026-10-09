@@ -21,7 +21,7 @@ func serveZoneD1Warning(rules []*cosmoflare.AlertRule) string {
 		if r == nil || !r.Enabled {
 			continue
 		}
-		if d, ok := cosmoflare.LookupAlertCondition(r.Condition); ok && (d.Scope == "zone" || d.Scope == "d1") {
+		if d, ok := cosmoflare.LookupAlertCondition(r.Condition); ok && (d.Scope == cosmoflare.ScopeZone || d.Scope == cosmoflare.ScopeD1) {
 			names = append(names, r.Name)
 		}
 	}

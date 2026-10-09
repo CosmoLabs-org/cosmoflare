@@ -69,3 +69,14 @@ func CollectTelemetryMetrics(ctx context.Context, analytics *cosmoflare.Analytic
 		m.D1 = rows
 	}
 }
+
+// CollectRuleTelemetry is the shared watch/check entry point: it derives
+// which scopes the enabled rules need, asks refsFor for just those name
+// lists, and collects. With no zone/d1 rule enabled nothing is fetched.
+func CollectRuleTelemetry(ctx context.Context, analytics *cosmoflare.AnalyticsService, rules []*cosmoflare.AlertRule, refsFor func(wantZones, wantD1 bool) TelemetryRefs, w cosmoflare.AnalyticsWindow, m *EvalMetrics) {
+	wantZones, wantD1 := RulesUseScope(rules, cosmoflare.ScopeZone), RulesUseScope(rules, cosmoflare.ScopeD1)
+	if !wantZones && !wantD1 {
+		return
+	}
+	CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, refsFor(wantZones, wantD1), w, m)
+}

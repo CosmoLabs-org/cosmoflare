@@ -218,6 +218,12 @@ func TestCollectUsageD1Dimension(t *testing.T) {
 	d := usageDim(snap, "d1.rows_read_monthly")
 	approx(t, d.Used, 1.5e9, "d1 rows read used")
 	approx(t, d.Limit, 2.5e10, "d1 rows read limit")
+	if !d.PacingAlertsExempt {
+		t.Error("d1.rows_read_monthly must be PacingAlertsExempt (O16)")
+	}
+	if usageDim(snap, "workers.requests_monthly").PacingAlertsExempt {
+		t.Error("workers.requests_monthly must drive usage-pct")
+	}
 }
 
 // TestCollectUsageD1FailureIsAdditive pins design D15: a D1 analytics failure

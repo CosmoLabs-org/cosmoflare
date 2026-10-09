@@ -130,19 +130,15 @@ func usageStatus(d cosmoflare.UsageDimension) string {
 	return "ok"
 }
 
-// formatUsageValue renders large counts compactly (8.0M, 400.0k) and
-// byte-ish units as plain floats.
+// formatUsageValue renders large counts compactly (2.9B, 8.0M, 400.0k) via
+// the shared cosmoflare.HumanCount tiers, and byte-ish units as plain floats.
 func formatUsageValue(v float64, unit string) string {
 	switch unit {
 	case "gb_month_per_month", "gb_seconds_per_month":
 		return fmt.Sprintf("%.1f", v)
 	}
-	switch {
-	case v >= 1e6:
-		return fmt.Sprintf("%.1fM", v/1e6)
-	case v >= 1e3:
-		return fmt.Sprintf("%.1fk", v/1e3)
-	default:
-		return fmt.Sprintf("%.0f", v)
+	if v >= 1e3 {
+		return cosmoflare.HumanCount(v)
 	}
+	return fmt.Sprintf("%.0f", v)
 }

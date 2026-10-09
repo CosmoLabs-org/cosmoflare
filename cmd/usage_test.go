@@ -94,3 +94,14 @@ func TestUsageCommandTable(t *testing.T) {
 		t.Error("table must never render NaN")
 	}
 }
+
+// TestFormatUsageValueBillions: D1 rows read reach billions; the usage view
+// must print 2.9B, not 2900.0M (simplify review).
+func TestFormatUsageValueBillions(t *testing.T) {
+	if got := formatUsageValue(2.9e9, "rows_per_month"); got != "2.9B" {
+		t.Errorf("formatUsageValue(2.9e9) = %q, want 2.9B", got)
+	}
+	if got := formatUsageValue(8e6, "requests_per_month"); got != "8.0M" {
+		t.Errorf("formatUsageValue(8e6) = %q, want 8.0M (unchanged)", got)
+	}
+}

@@ -78,7 +78,7 @@ var alertsCreateCmd = &cobra.Command{
 	Long: `Create a new alert rule for monitoring Cloudflare services.
 
 Required flags:
-  --service     Service to monitor (r2, workers, kv, dns, zone, d1)
+  --service     Service to monitor (` + cosmoflare.AlertServiceList() + `)
   --condition   Alert condition (` + cosmoflare.AlertConditionList() + `)
   --threshold   Numeric threshold value that triggers the alert
   --action      Notification action (webhook, email, log)
@@ -203,7 +203,7 @@ func init() {
 	alertsCmd.AddCommand(alertsCheckCmd)
 
 	// Create flags
-	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns, zone, d1)")
+	alertsCreateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor ("+cosmoflare.AlertServiceList()+")")
 	alertsCreateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition ("+cosmoflare.AlertConditionList()+")")
 	alertsCreateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsCreateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
@@ -217,7 +217,7 @@ func init() {
 	_ = alertsCreateCmd.MarkFlagRequired("target")
 
 	// Update flags (same as create but not required)
-	alertsUpdateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor (r2, workers, kv, dns, zone, d1)")
+	alertsUpdateCmd.Flags().StringVar(&alertService, "service", "", "Service to monitor ("+cosmoflare.AlertServiceList()+")")
 	alertsUpdateCmd.Flags().StringVar(&alertCondition, "condition", "", "Alert condition ("+cosmoflare.AlertConditionList()+")")
 	alertsUpdateCmd.Flags().Float64Var(&alertThreshold, "threshold", 0, "Numeric threshold value")
 	alertsUpdateCmd.Flags().StringVar(&alertAction, "action", "", "Notification action (webhook, email, log)")
@@ -277,14 +277,13 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 		}
 		// Zone cache + D1 rows-read telemetry, only when a rule needs it
 		// (FEAT-049). One-shot run: refs are fetched fresh, never cached.
-		wantZones, wantD1 := webhook.RulesUseScope(rules, "zone"), webhook.RulesUseScope(rules, "d1")
-		if wantZones || wantD1 {
+		webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1 bool) webhook.TelemetryRefs {
 			refs := telemetryRefsFn(ctx, wantZones, wantD1)
 			if refs.DBNamesErr != nil {
 				printWarning("D1 list unavailable, d1 alerts name databases by ID: %v", refs.DBNamesErr)
 			}
-			webhook.CollectTelemetryMetrics(ctx, analytics, wantZones, wantD1, refs, w, &metrics)
-		}
+			return refs
+		}, w, &metrics)
 	}
 
 	mgr := webhook.NewManager(nil, "")
