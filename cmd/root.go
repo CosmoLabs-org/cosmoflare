@@ -153,7 +153,23 @@ Examples:
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() error {
+	wrapHelpForAgents(rootCmd)
 	return rootCmd.Execute()
+}
+
+// wrapHelpForAgents prepends the agent guidance block to --help output when
+// the CLI runs inside an AI agent harness (FEAT-pN68ZRM); human terminals
+// see the unchanged help. Cobra resolves HelpFunc up the command tree, so
+// one wrapper on the root covers every subcommand.
+func wrapHelpForAgents(root *cobra.Command) {
+	if !cli.IsAgentEnvironment() {
+		return
+	}
+	base := root.HelpFunc()
+	root.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		cmd.OutOrStdout().Write([]byte(cli.AgentHelpPreamble))
+		base(cmd, args)
+	})
 }
 
 func init() {
