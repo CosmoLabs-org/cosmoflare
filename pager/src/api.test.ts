@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiClient, totalAgeSec, type CacheInfo, type RulesPayload } from "./api";
+import { ApiClient, totalAgeSec, type CacheInfo } from "./api";
+import type { RulesPayload } from "./rules";
 
 // Node-environment tests (no DOM, no sessionStorage): every client gets an
 // injected fetch mock and an in-memory storage stand-in, matching the
