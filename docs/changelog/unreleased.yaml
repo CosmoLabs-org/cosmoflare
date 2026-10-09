@@ -39,6 +39,9 @@ entries:
         - description: 'Ops Worker: cron KV keys renamed cron:d1-list/cron:zones with 24h TTL and scheduled-handler rejection audit line (BUG-058)'
           source: manual
           date: 2026-10-10T00:12:38.178108+04:00
+        - description: 'Ops pager gauge nits: one status per billing card, solid legend swatches, storage rings show the size once (IMP-002)'
+          source: manual
+          date: 2026-10-10T00:29:31.97379+04:00
     changed: []
     deprecated: []
     removed: []

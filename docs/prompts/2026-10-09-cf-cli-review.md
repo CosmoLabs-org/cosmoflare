@@ -10,7 +10,7 @@ covers_plan_deliverables:
     - P-07
 created: "2026-10-09T20:36:13+04:00"
 date: "2026-10-09T20:36:13+04:00"
-goals_completed: 9
+goals_completed: 10
 goals_total: 16
 id: P-2026-10-09-cf-cli-review
 plan_ref: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
@@ -118,7 +118,7 @@ Steps: (1) identify the tool and its repo URL live (Cloudflare blog/changelog/Gi
 **Model:** `sonnet` (= glm-5.3-flash) in 2-3 parallel bounded briefs, Opus reviews screenshots. **Files:** `pager/src/styles.css` (now ~1,000 lines, three agent-appended blocks: shell, `/* gauges */`, `/* refresh */`), `pager/src/*.ts` markup only where needed.
 Steps: (1) consolidate styles.css into ordered sections (tokens → base → shell → components → views → gauges → motion → reduced-motion) and dedupe the appended blocks; one spacing scale (4/8/12/16/24/32) and one type scale as tokens; (2) typography: pick a characterful display face for numbers/headings with a system fallback (Google Fonts allowed), tabular-nums everywhere numeric; (3) surfaces: tint neutrals toward the amber accent, consistent radius and elevation, no colored outlines, no left borders; (4) motion: one easing/duration token set, ease-out enters, reduced-motion respected; (5) touch: all controls ≥ 44px, focus-visible rings consistent. Gate: `bunx impeccable detect src/` exit 0, tsc + tests + build green, Playwright screenshots at 375x812 and 1280x800 of every route on LIVE data (scratchpad api-server technique), Opus reads every screenshot before merge.
 
-### [ ] G-12 Gauge nits (IMP-002)
+### [x] G-12 Gauge nits (IMP-002)
 **Model:** `glm-turbo` | **Files:** `pager/src/billing.ts`, `pager/src/gauges.ts`, gauges block in `styles.css`. (1) one status per billing card — "within allowance" (green) must not sit next to "Near limit" (red): show the level badge only, and the overage USD only when > 0; (2) legend swatches for used/projected render like broken images — solid swatches matching the bar fills; (3) storage rings repeat the same number (389% and "389% used so far") — for storage show the % once plus the size ("3.9 GB of 1 GB"). Acceptance: tsc/tests/build green, detector 0, screenshots read.
 
 ### [ ] G-13 FIRST: independently verify this session's Ops work before building on it (operator request)

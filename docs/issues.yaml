@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T00:11:58.707442+04:00
+last_updated: 2026-10-10T00:33:32.556064+04:00
 next_bug_id: 58
-next_feat_id: 56
+next_feat_id: 57
 next_task_id: 17
 next_imp_id: 3
 issues:
@@ -661,12 +661,37 @@ issues:
       priority: 70
       area: ux
       created_at: 2026-10-09T21:14:26.739424+04:00
+    - id: FEAT-p8KYM5K
+      type: feature
+      status: open
+      title: Stable error codes in --json error output
+      created_at: 2026-10-10T00:33:01.434889+04:00
+    - id: FEAT-pC4N3QP
+      type: feature
+      status: open
+      title: Bounded retry + exponential backoff in pkg/cosmoflare client
+      created_at: 2026-10-10T00:33:30.258298+04:00
+    - id: FEAT-pDDEH5J
+      type: feature
+      status: open
+      title: Verify and adopt billing usage-v2 REST endpoint in Ops collector
+      created_at: 2026-10-10T00:33:27.635444+04:00
     - id: FEAT-pDRP0BD
       type: feature
       status: open
       title: Desktop app redesign — Tailwind + shadcn/ui + icon set, no AI slop, impeccable-gated
       area: ux
       created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: FEAT-pEKR6K6
+      type: feature
+      status: open
+      title: Fuzzy command discovery (cf cli search pattern)
+      created_at: 2026-10-10T00:32:54.603077+04:00
+    - id: FEAT-pN68ZRM
+      type: feature
+      status: open
+      title: Agent-context detection + agent help preamble
+      created_at: 2026-10-10T00:32:57.232638+04:00
     - id: IMP-001
       type: improvement
       status: open
@@ -676,7 +701,7 @@ issues:
       created_at: 2026-10-09T21:14:19.897673+04:00
     - id: IMP-002
       type: improvement
-      status: open
+      status: fixed
       title: 'Ops gauge nits: one status per billing card, solid legend swatches, no duplicate % on storage rings'
       priority: 30
       area: ux

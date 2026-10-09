@@ -1,13 +1,13 @@
 id: IMP-002
 type: improvement
 created_at: 2026-10-09T22:04:05.293515+04:00
-updated_at: 2026-10-09T22:04:07.090242+04:00
+updated_at: 2026-10-10T00:29:31.787201+04:00
 source: local
 ulid: 01M4GXCA9S3MYWXQCCDJJZ1JYP
 aliases:
     - IMP-pJZ1JYP
 priority: 30
-status: open
+status: fixed
 area: ux
 origin:
     roadmap_items:
@@ -18,3 +18,10 @@ description: 'Screenshot review 2026-10-09 after the gauge polish: (1) a billing
 current_behavior: Conflicting status labels, odd swatches, duplicate storage numbers
 desired_behavior: One status per card, solid swatches matching the bar fills, storage rings show used % once plus the size
 roadmap_ref: ROAD-107
+resolution:
+    notes: 'Fixed on master 0060b74: single card status (badge only, overage USD when >0), solid projected legend swatch matching bar fill, storage rings show size once. Gate: 143 tests, build, detector 0, live-data screenshot verified'
+    resolved_at: 2026-10-10T00:29:31.78622+04:00
+revisions:
+    - date: "2026-10-10T00:29:31.786218+04:00"
+      action: closed
+      context: 'Fixed on master 0060b74: single card status (badge only, overage USD when >0), solid projected legend swatch matching bar fill, storage rings show size once. Gate: 143 tests, build, detector 0, live-data screenshot verified'
