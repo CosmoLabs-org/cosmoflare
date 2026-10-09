@@ -1,0 +1,14 @@
+id: FEAT-pEKR6K6
+type: feature
+created_at: 2026-10-10T00:32:54.603077+04:00
+updated_at: 2026-10-10T00:32:55.129853+04:00
+source: local
+ulid: 01M4H5WTASM9GVRJSNNAEKR6K6
+provisional: true
+status: open
+title: Fuzzy command discovery (cf cli search pattern)
+description: 'Adopt cf''s discovery pattern (clone ref: packages/cli/src/commands/cli/search.ts over _meta/commands.json): cosmoflare gains ''cosmoflare search <query>'' — MiniSearch-style fuzzy match over the command tree, top-5 results as JSON. Agents stop reading full --help trees to find one command. From docs/research/2026-10-10-cf-agent-cli-gap-analysis.md adopt #1.'
+acceptance_criteria:
+    - criterion: cosmoflare search 'upload file' returns r2 upload/sync commands; --json output; tests
+      met: false
+roadmap_ref: ROAD-102
