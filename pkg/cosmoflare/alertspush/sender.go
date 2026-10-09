@@ -16,9 +16,12 @@ type Sender interface {
 	Send(ctx context.Context, sub Subscription, envelope []byte) (status int, err error)
 }
 
-// vapidSubscriber is the contact URI presented in the VAPID JWT sub claim.
+// vapidSubscriber is the contact presented in the VAPID JWT sub claim.
 // Push services require a mailto: or https: contact for abuse reports.
-const vapidSubscriber = "mailto:alerts@cosmolabs.org"
+// webpush-go adds the "mailto:" prefix itself to anything that is not an
+// https: URL, so this is the bare address — "mailto:..." here produced
+// sub="mailto:mailto:...", which Apple rejects (FEAT-052).
+const vapidSubscriber = "alerts@cosmolabs.org"
 
 // pushTTL is how long push services may keep an undelivered alert (1 hour).
 // Alerts are time-sensitive; there is little value in a stale wake-up.

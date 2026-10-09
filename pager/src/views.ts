@@ -3,6 +3,7 @@
 // mirror desktop/src/styles.css verbatim (dark-first, severity ramp).
 
 import { acknowledge, listAlerts, snooze, type AlertRecord } from "./store";
+import { fetchVapidPublicKey, urlBase64ToUint8Array } from "./vapid";
 
 /** The exact command shown next to the copied subscription blob. */
 export const PAIRING_COMMAND = "cosmoflare alerts push add";
@@ -87,6 +88,10 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
   const panel = el("section", "cf-pairing");
   panel.append(el("h2", undefined, "Pair this device"));
 
+  // Load the VAPID key before any tap: Apple asks for subscribe() to follow
+  // the user gesture directly, with no network round-trip in between.
+  const keyPromise = fetchVapidPublicKey();
+  keyPromise.catch(() => undefined); // surfaced on click
   const status = el("p", "cf-pairing-status", "Notifications are not enabled yet.");
   const enable = document.createElement("button");
   enable.className = "cf-btn cf-btn-primary";
@@ -104,7 +109,13 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
         return;
       }
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
+      // Safari and Chrome require the VAPID application server key; the
+      // key must match the one the sender signs with (FEAT-052 fix).
+      const key = await keyPromise;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key),
+      });
       copy.disabled = false;
       status.textContent = "Notifications enabled. Copy the subscription below.";
       copy.addEventListener("click", async () => {

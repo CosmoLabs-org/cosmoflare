@@ -1,0 +1,19 @@
+// Cosmoflare Ops (FEAT-052): private dashboard + push-alert pager.
+// Lock-down: a Cloudflare Access application covers the workers.dev
+// hostname (owner email only) and the Worker verifies its JWT
+// (ACCESS_TEAM_DOMAIN + ACCESS_AUD secrets). Preview URLs stay off — the Access app does
+// not cover them. Account ID, API token and VAPID public key are Worker
+// secrets (wrangler secret put …), never committed: this repo is public.
+{
+  "name": "cosmoflare-ops",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../../pager/dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true }
+}

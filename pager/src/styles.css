@@ -116,3 +116,17 @@ body { margin: 0; min-height: 100vh; }
   font-size: 13px;
   color: var(--text);
 }
+
+/* Dashboard (FEAT-052): cards of rows; level color mirrors the severity ramp. */
+.cf-dash-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cf-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px; }
+.cf-card h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; letter-spacing: 0.02em; }
+.cf-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); border-left: 3px solid transparent; padding-left: 8px; }
+.cf-card h2 + .cf-row { border-top: none; }
+.cf-row-label { min-width: 0; overflow-wrap: anywhere; }
+.cf-row-detail { color: var(--muted); font-size: 13px; }
+.cf-row-value { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.cf-level-warning { border-left-color: var(--sev-warning); }
+.cf-level-critical { border-left-color: var(--sev-critical); }
+.cf-level-critical .cf-row-value { color: var(--sev-critical); }
+.cf-level-warning .cf-row-value { color: var(--sev-warning); }
