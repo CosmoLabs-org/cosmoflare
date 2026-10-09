@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:40.473349+04:00
+last_updated: 2026-10-09T20:34:41.82809+04:00
 next_id: 111
 items:
-    - id: ROAD-110
+    - id: ROAD-pCC8KKR
       title: Review Cloudflare's new agent-friendly CLI — full-repo gap analysis vs cosmoflare
       status: planned
       category: core

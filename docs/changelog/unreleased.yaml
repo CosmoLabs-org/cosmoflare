@@ -17,7 +17,7 @@ entries:
         - description: 'zone cache + D1 rows-read alerts (FEAT-049 wave 3a): zone-cache-miss-pct, zone-uncached-requests, d1-rows-read — name the zone or database, page at most hourly per offender unless it doubles, page a telemetry gap when data cannot be collected; per-rule --exclude; D1 monthly rows-read in cosmoflare usage; opt-in live API smoke test'
           source: manual
           date: 2026-10-09T05:12:48.585325+04:00
-        - description: 'Cosmoflare Ops (FEAT-052): private phone dashboard behind Cloudflare Access — month-to-date usage pacing, D1 rows read per database, zone cache health — served by a small Worker (apps/ops) with the pager PWA'
+        - description: 'Cosmoflare Ops (FEAT-052): private dashboard and pager at ops.cosmolabs.org, behind Cloudflare Access (owner email only, custom domain only) — month-to-date usage pacing, billing-period cost view with per-product overage projection and per-project attribution, per-Worker/D1/zone detail with a responsive hamburger-drawer UI and new icon set, a KV-backed upstream cache, and a 5-minute Worker cron that sends Web Push alerts'
           source: manual
           date: 2026-10-09T16:01:18.687985+04:00
     fixed:
