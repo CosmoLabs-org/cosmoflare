@@ -1,10 +1,10 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T03:10:42.769482+04:00
+last_updated: 2026-10-10T03:26:36.972236+04:00
 next_bug_id: 59
-next_feat_id: 56
+next_feat_id: 57
 next_task_id: 17
-next_imp_id: 3
+next_imp_id: 4
 issues:
     - id: BUG-001
       type: bug
@@ -653,11 +653,26 @@ issues:
       priority: 70
       area: ux
       created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: FEAT-p0QKZT0
+      type: feature
+      status: open
+      title: Ops projects view — per-project consumption across Cloudflare
+      created_at: 2026-10-10T03:26:18.236927+04:00
     - id: FEAT-p8KYM5K
       type: feature
       status: open
       title: Stable error codes in --json error output
       created_at: 2026-10-10T00:33:01.434889+04:00
+    - id: FEAT-p9B11X1
+      type: feature
+      status: open
+      title: Ops email metrics — emails sent per zone
+      created_at: 2026-10-10T03:26:15.61962+04:00
+    - id: FEAT-p9GD588
+      type: feature
+      status: open
+      title: Ops domains view — full domain list with expiry and status
+      created_at: 2026-10-10T03:26:13.000596+04:00
     - id: FEAT-pC4N3QP
       type: feature
       status: open
@@ -678,6 +693,11 @@ issues:
       status: open
       title: Agent-context detection + agent help preamble
       created_at: 2026-10-10T00:32:57.232638+04:00
+    - id: FEAT-pRC6EDA
+      type: feature
+      status: open
+      title: 'Ops tables: standard sort controls top-right, largest-first default, saved preference'
+      created_at: 2026-10-10T03:26:33.104172+04:00
     - id: IMP-001
       type: improvement
       status: open
@@ -692,6 +712,11 @@ issues:
       priority: 30
       area: ux
       created_at: 2026-10-09T22:04:05.293515+04:00
+    - id: IMP-pEY98JH
+      type: improvement
+      status: open
+      title: 'Ops UI: reusable components + progress-bar and micro-animation polish'
+      created_at: 2026-10-10T03:26:35.343956+04:00
     - id: TASK-001
       type: task
       status: closed

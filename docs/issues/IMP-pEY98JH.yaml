@@ -1,11 +1,15 @@
 id: IMP-pEY98JH
 type: improvement
 created_at: 2026-10-10T03:26:35.343956+04:00
-updated_at: 2026-10-10T03:26:35.833636+04:00
+updated_at: 2026-10-10T03:26:36.986888+04:00
 source: local
 ulid: 01M4HFTTSS48TF3NPRQQEY98JH
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 71
 title: 'Ops UI: reusable components + progress-bar and micro-animation polish'
 description: 'Componentize the pager''s repeated UI: one progress-bar element (period tile bar, gauge fills share the animation), one section-heading treatment (eyebrow + display font, consistent across views), one search/filter bar style. Improve micro-animations: unify on the motion tokens from the styles pass (ease-out enters, one duration scale), add hover/press states to rows and buttons, respect reduced-motion. Operator ask 2026-10-10: better progress bars, micro animations, reusable components, section headings, search bars.'
 roadmap_ref: ROAD-107

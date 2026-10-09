@@ -1,11 +1,15 @@
 id: FEAT-pRC6EDA
 type: feature
 created_at: 2026-10-10T03:26:33.104172+04:00
-updated_at: 2026-10-10T03:26:33.493605+04:00
+updated_at: 2026-10-10T03:26:34.685289+04:00
 source: local
 ulid: 01M4HFTRGN4XQ3GM0AY0RC6EDA
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 71
 title: 'Ops tables: standard sort controls top-right, largest-first default, saved preference'
 description: 'Replace the per-table header-tap sort with standard controls at the top-right of each list view (Workers/D1/zones): a compact sort-by select + direction toggle, keyboard accessible. Default = largest numbers first (numeric desc) per operator preference 2026-10-10. Persist the user''s default per table in localStorage (survives reloads; the existing WeakMap state already survives repaints). Keep the mobile sort select.'
 acceptance_criteria:
