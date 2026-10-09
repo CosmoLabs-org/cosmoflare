@@ -1020,9 +1020,10 @@ body.cf-nav-open { overflow: hidden; }
   flex: 0 0 auto;
 }
 .cf-legend-used { background: var(--accent); }
+/* IMP-002: solid swatch matching the bar's projected fill — the hatched
+   pattern read as a broken image at 12px. */
 .cf-legend-projected {
   background: color-mix(in srgb, var(--accent) 35%, transparent);
-  background-image: repeating-linear-gradient(45deg, rgb(255 255 255 / 0.28) 0 3px, transparent 3px 6px);
 }
 .cf-legend-allowance {
   width: 2px;

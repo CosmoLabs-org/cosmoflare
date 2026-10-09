@@ -68,6 +68,18 @@ describe("ringPropsFor", () => {
     const empty: ProductUsage = { ...d1, included: 0 };
     expect(ringPropsFor(empty, period).usedPct).toBe(0);
   });
+  it("storage rings carry the size as the second line, not a repeated % (IMP-002)", () => {
+    const kv: ProductUsage = {
+      id: "kv.storage", product: "KV", metric: "Storage", unit: "GB",
+      included: 1, used: 3.888, projected: 3.888, unitPriceUsd: 0.15,
+      priceUnit: 1e6, projectedOverageUsd: 0.43, topConsumers: [],
+    };
+    const props = ringPropsFor(kv, period);
+    expect(props.usedLineText).toBe("3.9 GB of 1.0 GB");
+  });
+  it("non-storage rings keep the default used-% line", () => {
+    expect(ringPropsFor(d1, period).usedLineText).toBeUndefined();
+  });
 });
 
 describe("periodEndsLabel", () => {

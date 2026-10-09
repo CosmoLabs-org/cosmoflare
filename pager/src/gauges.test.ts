@@ -12,6 +12,7 @@ import {
   productLabel,
   ringCenterValue,
   ringUsedLine,
+  ringSecondLine,
   scaleFitPct,
   sortByProjectedDesc,
   todayDotPos,
@@ -96,6 +97,16 @@ describe("fmtGaugePct", () => {
     expect(fmtGaugePct(7.25)).toBe("7.3");
     expect(fmtGaugePct(184.56)).toBe("185");
     expect(fmtGaugePct(99.96)).toBe("100");
+  });
+});
+
+describe("ringSecondLine (IMP-002)", () => {
+  it("defaults to the used-% line", () => {
+    expect(ringSecondLine(30.7)).toBe("30.7% used so far");
+  });
+  it("shows the size text when given — storage must not repeat the center %", () => {
+    expect(ringSecondLine(389, "3.9 GB of 1.0 GB")).toBe("3.9 GB of 1.0 GB");
+    expect(ringSecondLine(389, "3.9 GB of 1.0 GB")).not.toContain("%");
   });
 });
 

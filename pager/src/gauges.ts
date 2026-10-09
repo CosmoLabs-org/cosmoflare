@@ -155,6 +155,15 @@ export function ringUsedLine(usedPct: number): string {
 }
 
 /**
+ * The ring's muted second line (IMP-002): storage metrics pass their size
+ * ("3.9 GB of 1 GB") because projected === used — the % would just repeat
+ * the big center number; every other metric keeps the used-% line.
+ */
+export function ringSecondLine(usedPct: number, sizeText?: string): string {
+  return sizeText ?? ringUsedLine(usedPct);
+}
+
+/**
  * Ring labels never truncate: split on word boundaries into at most two
  * balanced lines (the shorter of the two wins), so "Durable Objects
  * duration" renders on two centered rows inside the label band.
@@ -213,6 +222,9 @@ export interface RingGaugeProps {
   label: string;
   /** "10M requests" — under the center value and inside the aria-label. */
   sublabel?: string;
+  /** Overrides the "N% used so far" line with the size for storage metrics
+   *  (IMP-002: projected === used, so the % would repeat the center value). */
+  usedLineText?: string;
   /** Square ring size in px; default 120. */
   size?: number;
   /** Expected-to-date position 0..100 (period.day/period.days) — 3px dot on the ring. */
@@ -334,7 +346,7 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
   usedLine.setAttribute("text-anchor", "middle");
   usedLine.setAttribute("dominant-baseline", "central");
   usedLine.classList.add("cf-ring-usedpct");
-  usedLine.textContent = ringUsedLine(props.usedPct);
+  usedLine.textContent = ringSecondLine(props.usedPct, props.usedLineText);
   svg.append(usedLine);
 
   if (props.sublabel) {

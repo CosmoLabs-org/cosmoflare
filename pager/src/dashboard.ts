@@ -5,7 +5,7 @@
 // screen and the pager agree on what is "red".
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatCount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
+import { formatAmount, formatCount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 
 import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage, type Summary } from "./api";
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
@@ -57,6 +57,11 @@ export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeP
     expectedPct: periodProgress(period.day, period.days).elapsedPct,
     label: productLabel(p.id, p.product, p.metric),
     sublabel: `${formatCount(p.included)} ${p.unit}`,
+    // IMP-002: storage projection === usage, so the second line carries the
+    // size instead of repeating the center percentage.
+    usedLineText: p.id.endsWith(".storage")
+      ? `${formatAmount(p.used, p.unit)} of ${formatAmount(p.included, p.unit)}`
+      : undefined,
   };
 }
 
