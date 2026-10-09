@@ -2,7 +2,7 @@
 branch: master
 created: "2026-10-08T23:13:05+04:00"
 date: "2026-10-08T23:13:05+04:00"
-goals_completed: 0
+goals_completed: 2
 goals_total: 8
 priority: medium
 related_prompts: []
@@ -87,7 +87,7 @@ When goals involve dispatching subagents:
 
 ## Goals
 
-### [ ] 1. Triage the FB inbox — two high-priority Churches-app items
+### [x] 1. Triage the FB inbox — two high-priority Churches-app items
 **Model:** `sonnet` | **Files:** `docs/feedback/incoming/` (2 digest files), `docs/issues/`, `docs/roadmap/`
 Operator flagged this FIRST. Read both files fully: (a)
 `2026-10-08-churches-app-cf-efficiency-audit-dimension--caching-d.md` —
@@ -111,7 +111,7 @@ readiness state and ask. **Acceptance:** either v0.33.0 tagged and
 published with the three entries, or an explicit operator deferral
 recorded in the session notes.
 
-### [ ] 3. Wave 3 — cache-miss warning (promote from ROAD-101)
+### [x] 3. Wave 3 — cache-miss warning (promote from ROAD-101)
 **Model:** `sonnet` for design, then `glm-turbo` per-task | **Files:** `pkg/cosmoflare/analytics.go`, `pkg/cosmoflare/alerts.go`, `internal/webhook/evaluator.go`
 Promote via `ccs issues create feature` from ROAD-101's wave-3 line. Design
 AFTER goal 1's caching feedback lands (it defines the real requirements —
