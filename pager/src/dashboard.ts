@@ -5,9 +5,9 @@
 // screen and the pager agree on what is "red".
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+import { formatCount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 
-import { api, LoginExpiredError, type Billing, type BillingPeriod, type ProductUsage, type Summary } from "./api";
+import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage, type Summary } from "./api";
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
 import { capTopRings, gaugeLevel, productLabel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
 import { hrefFor } from "./routes";
@@ -95,11 +95,36 @@ const findProduct = (b: Billing | null, id: string): ProductUsage | null => b?.p
 
 export async function renderOverview(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
   if (!opts.refresh) root.replaceChildren(skeleton());
+  // A background revalidation repaints the view with the fresh data
+  // (BUG-057 defect 2). The repaint fetches both endpoints again — both are
+  // then fresh in the client cache, so it is instant — and keeps the old
+  // DOM when it fails.
+  const repaint = (): void => {
+    void Promise.all([
+      api.fetchJson<Summary>("api/summary"),
+      api.fetchJson<Billing>("api/billing"),
+    ]).then(([s, b]) => paintOverview(root, s, b), () => undefined);
+  };
   try {
     const [sumRes, billRes] = await Promise.all([
-      api.fetchJson<Summary>("api/summary", { refresh: opts.refresh }),
-      api.fetchJson<Billing>("api/billing", { refresh: opts.refresh }),
+      api.fetchJson<Summary>("api/summary", { refresh: opts.refresh, onRevalidate: repaint }),
+      api.fetchJson<Billing>("api/billing", { refresh: opts.refresh, onRevalidate: repaint }),
     ]);
+    paintOverview(root, sumRes, billRes);
+  } catch (err) {
+    // A failed refresh rethrows so the clicked Refresh button keeps its node
+    // and surfaces the error itself; good data is never replaced by an error
+    // card (BUG-057 defect 3). Only a first (skeleton) load shows the error.
+    if (opts.refresh) throw err;
+    errorState(root, err);
+  }
+}
+
+// paintOverview renders one (summary, billing) pair into the view host —
+// the try-body of renderOverview, split out so background revalidations can
+// repaint without touching the skeleton/error flow.
+function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>): void {
+  {
     const summary = sumRes.data;
     const billing = billRes.data;
     const grid = el("div", "cf-kpis");
@@ -187,8 +212,6 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
       ringsCard.append(rings);
     }
     root.replaceChildren(statusBar(sumRes, billRes, root), grid, ringsCard, attentionCard);
-  } catch (err) {
-    errorState(root, err);
   }
 }
 
@@ -199,15 +222,15 @@ export function usageLevelFromPct(pct: number): Level {
 }
 
 // statusBar builds the "Updated … / cached / demo" line plus the Refresh
-// button. Ages come from the responses' server cache field when present,
-// else the client-side copy age.
-function statusBar(sumRes: { data: Summary; demo: boolean; ageSec: number }, billRes: { data: Billing; demo: boolean; ageSec: number }, root: HTMLElement): HTMLElement {
+// button. The age is honest (BUG-057 defect 2): client copy age + server
+// cache age, for both endpoints.
+function statusBar(sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>, root: HTMLElement): HTMLElement {
   const bar = el("div", "cf-dash-bar");
-  const ages = [sumRes, billRes];
-  const maxAge = Math.max(...ages.map((r) => r.ageSec));
-  const serverAge = sumRes.data.cache ? sumRes.data.cache.ageSec : null;
+  const maxAge = Math.max(
+    totalAgeSec(sumRes.ageSec, sumRes.data.cache),
+    totalAgeSec(billRes.ageSec, billRes.data.cache),
+  );
   const line = statusLine(maxAge, { cached: Boolean(sumRes.data.cache?.stale || billRes.data.cache?.stale), demo: sumRes.demo || billRes.demo });
-  if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${sumRes.data.cache?.stale ? " · cached" : ""}`;
   const refresh = refreshButton(() => renderOverview(root, { refresh: true }));
   bar.append(line, refresh);
   return bar;

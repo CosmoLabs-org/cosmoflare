@@ -206,6 +206,17 @@ export class ApiClient {
     }
   }
 
+  /**
+   * Update the cached copy for `endpoint` after a client-side mutation
+   * (BUG-057 defect 1: PUT /api/rules must refresh the cache so the view
+   * renders the saved rules immediately and a later Save cannot PUT the
+   * stale pre-save rules back). Writes through memory + sessionStorage like
+   * a network response would.
+   */
+  updateCache<T>(endpoint: string, data: T): void {
+    this.store(keyOf(endpoint), data);
+  }
+
   // lookup finds the last good copy: memory first, then sessionStorage.
   // sessionStorage keeps a reload's render instant; memory covers route
   // switches within the session.
@@ -243,6 +254,17 @@ export class LoginExpiredError extends Error {
     super("your login expired — close and reopen the app to sign in again");
     this.name = "LoginExpiredError";
   }
+}
+
+/**
+ * Honest "Updated X ago" age (BUG-057 defect 2): the client-side copy age
+ * (res.ageSec — time since this client fetched/stored it) plus the server
+ * cache age (cache.ageSec — how long the Ops Worker had cached the
+ * response). Without the server half, hours-old sessionStorage data reads
+ * as fresh.
+ */
+export function totalAgeSec(ageSec: number, cache?: CacheInfo): number {
+  return ageSec + (cache?.ageSec ?? 0);
 }
 
 /** "api/summary?refresh" — the refresh form of an endpoint. */

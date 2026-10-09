@@ -4,8 +4,8 @@
 // via the shared ApiClient.
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatCount, formatPct, formatAge } from "./format";
-import { api, LoginExpiredError, type FetchResult, type Summary } from "./api";
+import { formatCount, formatPct } from "./format";
+import { api, LoginExpiredError, totalAgeSec, type FetchResult, type Summary } from "./api";
 import { cmpRows, cmpText, type SortDir } from "./sort";
 import { zoneAttentionLevel } from "./attention";
 import { levelForErrorPct, levelForD1 } from "./dashboard";
@@ -203,14 +203,21 @@ function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row
 
 // fetchSummaryView drives one summary-backed section: skeleton, fetch (with
 // refresh), error/login-expired state with retry, then the paint callback.
+// A background revalidation repaints with the fresh data (BUG-057 defect 2);
+// a failed refresh rethrows (defect 3) so the old DOM — good data and the
+// clicked Refresh button node — stays and the button surfaces the error.
 async function fetchSummaryView(root: HTMLElement, label: string, opts: { refresh?: boolean },
   paint: (root: HTMLElement, data: FetchResult<Summary>) => void,
   refetch?: (root: HTMLElement) => void): Promise<void> {
   if (!opts.refresh) root.replaceChildren(skeleton());
   try {
-    const res = await api.fetchJson<Summary>("api/summary", { refresh: opts.refresh });
+    const res = await api.fetchJson<Summary>("api/summary", {
+      refresh: opts.refresh,
+      onRevalidate: (fresh) => paint(root, { data: fresh, source: "network", ageSec: 0, demo: false }),
+    });
     paint(root, res);
   } catch (err) {
+    if (opts.refresh) throw err;
     let box: HTMLElement;
     if (err instanceof LoginExpiredError) {
       box = el("section", "cf-card");
@@ -231,12 +238,10 @@ async function fetchSummaryView(root: HTMLElement, label: string, opts: { refres
 
 // ---- Workers ----
 
-export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {}): void {
-  void fetchSummaryView(root, "the Workers list", opts, (host, res) => {
+export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
+  return fetchSummaryView(root, "the Workers list", opts, (host, res) => {
     const bar = el("div", "cf-dash-bar");
-    const serverAge = res.data.cache ? res.data.cache.ageSec : null;
-    const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
+    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     const refresh = refreshButton(async () => renderWorkers(host, { refresh: true }));
     bar.append(line, refresh);
 
@@ -271,12 +276,10 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
 
 // ---- D1 ----
 
-export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): void {
-  void fetchSummaryView(root, "the D1 list", opts, (host, res) => {
+export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
+  return fetchSummaryView(root, "the D1 list", opts, (host, res) => {
     const bar = el("div", "cf-dash-bar");
-    const serverAge = res.data.cache ? res.data.cache.ageSec : null;
-    const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
+    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     const refresh = refreshButton(async () => renderD1(host, { refresh: true }));
     bar.append(line, refresh);
 
@@ -361,12 +364,10 @@ export function byStatusLegend(byStatus: Record<string, number>): HTMLElement {
   return legend;
 }
 
-export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {}): void {
-  void fetchSummaryView(root, "the zones list", opts, (host, res) => {
+export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
+  return fetchSummaryView(root, "the zones list", opts, (host, res) => {
     const bar = el("div", "cf-dash-bar");
-    const serverAge = res.data.cache ? res.data.cache.ageSec : null;
-    const line = statusLine(res.ageSec, { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    if (serverAge !== null) line.textContent = `Updated ${formatAge(serverAge)}${res.data.cache?.stale ? " · cached" : ""}`;
+    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
     const refresh = refreshButton(async () => renderZones(host, { refresh: true }));
     bar.append(line, refresh);
 

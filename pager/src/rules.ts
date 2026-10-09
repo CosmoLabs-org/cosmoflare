@@ -6,7 +6,7 @@
 
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount } from "./format";
-import { api, LoginExpiredError, type FetchResult } from "./api";
+import { api, LoginExpiredError, totalAgeSec, type CacheInfo, type FetchResult } from "./api";
 import { refreshButton } from "./refresh";
 
 // ---- /api/rules contract (built by agent B; consumed here) ----
@@ -26,6 +26,8 @@ export interface RulesPayload {
   conditions: string[];
   /** True when the account still runs the uncustomised starter set. */
   starter: boolean;
+  /** Server-side cache metadata when the Ops Worker served a cached copy. */
+  cache?: CacheInfo;
 }
 
 /** The D1 rows-read condition — its thresholds are formatted as counts. */
@@ -88,13 +90,23 @@ function errorState(root: HTMLElement, err: unknown): void {
   root.replaceChildren(box);
 }
 
-/** Render the Rules view into `root`: skeleton while loading, cards after. */
-export async function renderRules(root: HTMLElement): Promise<void> {
-  root.replaceChildren(skeleton());
+/**
+ * Render the Rules view into `root`: skeleton while loading, cards after.
+ * A refresh failure rethrows (BUG-057 defect 3) so the old DOM — good data
+ * and the Refresh button node — stays until the button surfaces the error.
+ */
+export async function renderRules(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
+  if (!opts.refresh) root.replaceChildren(skeleton());
   try {
-    const res = await api.fetchJson<RulesPayload>("api/rules");
+    const res = await api.fetchJson<RulesPayload>("api/rules", {
+      refresh: opts.refresh,
+      // A background revalidation repaints the view with the fresh copy
+      // (BUG-057 defect 2) instead of leaving hours-old data on screen.
+      onRevalidate: (fresh) => renderRulesInto(root, { data: fresh, source: "network", ageSec: 0, demo: false }),
+    });
     renderRulesInto(root, res);
   } catch (err) {
+    if (opts.refresh) throw err;
     errorState(root, err);
   }
 }
@@ -262,8 +274,8 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
   // ---- Action bar, starter note, save feedback ----
 
   const bar = el("div", "cf-dash-bar");
-  const line = statusLine(res.ageSec, { demo: res.demo });
-  const refresh = refreshButton(() => renderRules(root));
+  const line = statusLine(totalAgeSec(res.ageSec, payload.cache), { demo: res.demo });
+  const refresh = refreshButton(() => renderRules(root, { refresh: true }));
   bar.append(line, refresh);
 
   const note = payload.starter
@@ -329,6 +341,13 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
           exclude: r.exclude ? [...r.exclude] : undefined,
         })));
         payload.starter = false;
+        // Write the saved rules into the ApiClient cache (BUG-057 defect 1):
+        // the immediate repaint, the <60s route re-entry and the post-reload
+        // render all read the saved set, and a second Save cannot PUT the
+        // stale pre-save rules back. The saved set is customised, so the
+        // starter note is cleared in the cached copy too; the server's
+        // condition list is preserved for the <select> options.
+        api.updateCache("api/rules", { rules: echo.rules, conditions: payload.conditions, starter: false });
         highlightIndex = -1;
         flashStatus();
         paintList();
@@ -336,9 +355,7 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
       .catch((err: unknown) => {
         if (err instanceof RulesHttpError) {
           highlightIndex = err.index ?? -1;
-          saveError.textContent = err.index === undefined
-            ? err.message
-            : `Rule ${err.index + 1}: ${err.message}`;
+          saveError.textContent = saveErrorLabel(err.message, err.index);
         } else {
           highlightIndex = -1;
           saveError.textContent = err instanceof Error ? err.message : String(err);
@@ -356,6 +373,16 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
 }
 
 // ---- PUT /api/rules ----
+
+/**
+ * saveErrorLabel formats a save error for the action bar: rule-scoped
+ * ("Rule 3: …") when the server named a rule index, request-level (the bare
+ * message) otherwise. BUG-057 defect 5: an index below 0 must not render as
+ * "Rule 0".
+ */
+export function saveErrorLabel(message: string, index?: number): string {
+  return index === undefined || index < 0 ? message : `Rule ${index + 1}: ${message}`;
+}
 
 /** Thrown when the server answers 400 — carries the offending rule index. */
 export class RulesHttpError extends Error {

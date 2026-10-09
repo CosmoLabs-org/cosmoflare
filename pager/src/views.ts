@@ -146,9 +146,24 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
   test.addEventListener("click", async () => {
     test.disabled = true;
     try {
-      const res = await fetch("/api/test-fire", { method: "POST", credentials: "same-origin" });
-      const body = (await res.json()) as { sent?: number };
-      status.textContent = res.ok ? `Test push: sent ${body.sent ?? 0}` : `Test failed (HTTP ${res.status})`;
+      // redirect:"manual" (BUG-057 defect 7): an expired Access session
+      // answers with a redirect; without this the browser would follow it
+      // and the JSON parse would fail with a confusing CORS/network error.
+      const res = await fetch("/api/test-fire", { method: "POST", credentials: "same-origin", redirect: "manual" });
+      // An opaque redirect or 403 means Access re-auth is needed.
+      if (res.type === "opaqueredirect" || res.status === 403) {
+        status.textContent = "Your login expired — close and reopen the app to sign in again.";
+        return;
+      }
+      const body = (await res.json().catch(() => undefined)) as { sent?: number; issues?: string[] } | undefined;
+      if (!res.ok) {
+        status.textContent = `Test failed (HTTP ${res.status})`;
+        return;
+      }
+      // Surface the Worker's per-delivery issues when it reports any.
+      status.textContent = body?.issues?.length
+        ? `Test push: sent ${body.sent ?? 0} — ${body.issues.join(" ")}`
+        : `Test push: sent ${body?.sent ?? 0}`;
     } catch (err) {
       status.textContent = `Test failed: ${err instanceof Error ? err.message : String(err)}`;
     } finally {

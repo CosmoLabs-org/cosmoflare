@@ -5,8 +5,8 @@
 // via the shared ApiClient.
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatAmount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
-import { api, LoginExpiredError, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
+import { formatAmount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
+import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
 import { barGauge, productLabel, scaleFitPct } from "./gauges";
 import { refreshButton } from "./refresh";
 
@@ -86,9 +86,18 @@ function productRow(p: ProductUsage, period: BillingPeriod): HTMLElement {
 export async function renderBilling(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
   if (!opts.refresh) root.replaceChildren(skeleton());
   try {
-    const res = await api.fetchJson<Billing>("api/billing", { refresh: opts.refresh });
+    const res = await api.fetchJson<Billing>("api/billing", {
+      refresh: opts.refresh,
+      // A background revalidation repaints the view with the fresh copy
+      // (BUG-057 defect 2) instead of leaving hours-old data on screen.
+      onRevalidate: (fresh) => renderBillingInto(root, { data: fresh, source: "network", ageSec: 0, demo: false }),
+    });
     renderBillingInto(root, res);
   } catch (err) {
+    // A failed refresh rethrows so the clicked Refresh button keeps its node
+    // and surfaces the error itself; good data is never replaced by an error
+    // card (BUG-057 defect 3). Only a first (skeleton) load shows the error.
+    if (opts.refresh) throw err;
     errorState(root, err);
   }
 }
@@ -118,13 +127,10 @@ export function billingLegend(): HTMLElement {
 function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
   const b = res.data;
 
-  // Status bar + refresh
+  // Status bar + refresh. The age is honest (BUG-057 defect 2): client copy
+  // age + server cache age.
   const bar = el("div", "cf-dash-bar");
-  const serverAge = b.cache ? b.cache.ageSec : null;
-  const line = statusLine(res.ageSec, { cached: Boolean(b.cache?.stale), demo: res.demo });
-  if (serverAge !== null) {
-    line.textContent = `Updated ${formatAge(serverAge)}${b.cache?.stale ? " · cached" : ""}`;
-  }
+  const line = statusLine(totalAgeSec(res.ageSec, b.cache), { cached: Boolean(b.cache?.stale), demo: res.demo });
   const refresh = refreshButton(() => renderBilling(root, { refresh: true }));
   bar.append(line, refresh);
 

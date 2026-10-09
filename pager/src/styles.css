@@ -404,20 +404,9 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--muted);
   margin-top: 6px;
 }
-.cf-legend-swatch::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  margin-inline-end: 6px;
-  background: var(--surface-raised);
-  vertical-align: -1px;
-}
-.cf-swatch-used::before { background: var(--accent); }
-.cf-swatch-projected::before {
-  background: repeating-linear-gradient(45deg, var(--accent) 0 3px, transparent 3px 6px);
-}
+/* BUG-057 defect 4: the legacy ::before swatch painted a raised square over
+   the billing legend swatches, greying them out. The modern .cf-legend-swatch
+   (below) is a solid swatch itself — no ::before, matching the bar fills. */
 
 /* Allowance marker legend swatch: a line, not a block. */
 .cf-swatch-allowance::before {
@@ -436,6 +425,9 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-product-overage { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
 .cf-level-critical-text { color: var(--sev-critical); }
+/* BUG-057 defect 6: gauge badges use this class at warning level; it had no
+   rule, so the badge rendered unstyled. */
+.cf-level-warning-text { color: var(--sev-warning); }
 .cf-ok-text { color: var(--sev-ok); }
 
 /* Tables. */
@@ -1039,7 +1031,11 @@ body.cf-nav-open { overflow: hidden; }
   opacity: 0.9;
   flex: 0 0 auto;
 }
-.cf-legend-dot {
+/* BUG-057 defect 4: scoped under .cf-legend so this small grey "today" dot
+   stays inside the billing legend and no longer overrides the zone status
+   dots (.cf-legend-dot.cf-seg-* in .cf-stack-legend, which keep the generic
+   8px dot + their own segment color above). */
+.cf-legend .cf-legend-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
