@@ -10,8 +10,8 @@ covers_plan_deliverables:
     - P-07
 created: "2026-10-09T20:36:13+04:00"
 date: "2026-10-09T20:36:13+04:00"
-goals_completed: 5
-goals_total: 10
+goals_completed: 7
+goals_total: 12
 id: P-2026-10-09-cf-cli-review
 plan_ref: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md
 priority: medium
@@ -54,9 +54,13 @@ files_created:
 
 ## Context
 
-Cosmoflare Ops is live and private: https://ops.cosmolabs.org (custom domain only; workers.dev and preview URLs off; the Access app "[cosmoflare-ops] Owner only" covers ops.cosmolabs.org only since 2026-10-09 — the stale workers.dev destination was removed; one policy, operator email). Deployed version 9f012605 (2026-10-09): billing-period cost view with per-product overage projection and per-project attribution, a responsive redesign (hamburger drawer < 768px, sidebar ≥ 1024px, Overview/Billing/Workers/D1/Zones/Alerts/Pairing), a KV-backed upstream cache (OPS_KV = cosmoflare-ops-kv; the Cache API is unavailable behind Access per CF docs), a new icon set, and a 5-minute cron that evaluates the FEAT-049 zone/D1 rules and sends Web Push. Push cannot deliver yet: the VAPID_PRIVATE_KEY and VAPID_SUBJECT Worker secrets are not set (the permission classifier blocks Claude from secret writes — the operator runs them), and no phone is paired.
+Cosmoflare Ops ("CosmoLabs Ops · Cosmoflare") is live and private: https://ops.cosmolabs.org (custom domain only; workers.dev and preview URLs off; the Access app "[cosmoflare-ops] Owner only" covers ops.cosmolabs.org only — the stale workers.dev destination was removed 2026-10-09; one policy, operator email). Last deploy: version 14dcd3ab (2026-10-09). The operator likes the current look ("looks great") but wants the CSS and styles improved further — that is G-11.
 
-Live billing findings (2026-10-09, day 9 of 31, calendar fallback): total projected overage ≈ $1.56 — mycarguide KV storage 3.9 GB vs 1 GB included (≈ $1.44) and D1 rows read projected ≈ 24.99B vs 25B (mycarguide 97%). Billing uses 5 upstream calls per refresh (aliased GraphQL).
+What is live: Overview (KPI tiles, "Workers Paid allowances" usage rings — projected % first, top 8 + "Show all", red with a flowing stripe and pulsing glow near/over the limit, reduced-motion safe), Billing (bars with used/projected/allowance/today legend, per-project attribution, top consumers), Workers/D1/Zones (sortable, stacked rows on phones, cache-status legend), Alerts, Rules (edit alert rules from the phone, /api/rules), Pairing; refresh icon button; new logo mark (amber "C" + blue caret, pager/src/logo.ts); KV-backed upstream cache (OPS_KV = cosmoflare-ops-kv; the Cache API is unavailable behind Access per CF docs); 5-minute cron that skips all Cloudflare calls while no device is paired. `bunx impeccable detect src/` = 0 anti-patterns; operator rule: no left-border accents, no AI slop.
+
+Billing cycle: renews on the 23rd (operator's Cloudflare dashboard shows Sep 23 - Oct 23); wrangler var BILLING_ANCHOR_DAY=23 (BUG-056). The API cannot confirm it — /accounts/{id}/subscriptions, /user/subscriptions and /billing/profile all return 10000 for the token (no Billing Read). Live 2026-10-09 (day 17 of 30): KV storage 3.9 GB vs 1 GB (389%, ≈ $1.44, mycarguide); D1 rows read projected ≈ 99% of 25B (mycarguide 97%); everything else < 35%.
+
+Bug found and fixed this session: the pager stored the global `fetch` as `this.fetchFn` and called it as a method → "Illegal invocation" in browsers, so no view loaded live data (ee547e2). Localhost fell back to fixtures and hid it — always verify against live data (scratchpad technique: a bun server that imports summaryResponse/billingResponse with a Map-backed KV and serves pager/dist, plus Playwright).
 
 Next session's main job (operator 2026-10-09): review Cloudflare's newest agent-friendly CLI end to end and find what cosmoflare is missing — features and, above all, better strategies to pull the information we need.
 
@@ -72,7 +76,9 @@ Next session's main job (operator 2026-10-09): review Cloudflare's newest agent-
 
 - Plan with shared JSON contracts: docs/planning-mode/2026-10-09-ops-billing-ui-caching.md (ff53903).
 - Cache + summary v2 (a43bb75, 7bd6492), icons (9e5280e), cron engine + fixes (d3a9ab9, f2fc377), billing collector + live-schema fixes + KV ID normalisation (34b98dd, 825f083, 7479c84), UI + polish + legend (9004e0a, c5eba99 and the C/C2 commits), integration routes + cron wiring (c7b8590), OPS_KV binding (445514f). Tests: apps/ops 101, pager 54, all green; deployed.
-- Roadmap: Ops tier ROAD-pJ25XG5 with phases ROAD-pMA5QCQ/pG66HHM/pR73WHE/pHVTJDK (done), ROAD-pMBBH62 (cron push, in progress), ROAD-p0WZ2JP (billing period), ROAD-pKHNBPX (rules editor); CLI review ROAD-pCC8KKR under ROAD-102. Changelog FEAT-052 entry updated. Nothing pushed (pre-push guard; local master ahead of origin).
+- Roadmap: Ops tier ROAD-107 with phases ROAD-109/105/111/106 (done), ROAD-110 (cron push, in progress), ROAD-103 (billing period), ROAD-108 (rules editor, now built); CLI review ROAD-104 under ROAD-102. Issues: FEAT-053 usage gauges (built), BUG-056 billing period (anchored), IMP-001 refresh button (built), FEAT-054 closed duplicate, IMP-pJZ1JYP gauge nits (open). Changelog FEAT-052 entry updated.
+- Later the same day: fetch "Illegal invocation" fix (ee547e2); cron crash without VAPID secrets fixed + cron skips telemetry with no paired device; /api/rules + Rules view; USAGE.md Ops section; slop removal (no left borders/tile outlines, single desktop brand); new logo; overview single-source numbers; usage rings/bars with over-limit flow animation; refresh icon; gauge polish. 74 commits pushed via `ALLOW_PUSH=1 ccs sync` after a credential scan; later commits pushed at session end.
+- The operator approves deploys by asking in-session ("deploy it", "apply your improvements"); git push only via `ALLOW_PUSH=1 ccs sync` when they ask for a sync. Secret writes stay with the operator.
 
 ## Goals
 
@@ -94,18 +100,25 @@ Covers P-05. Done: 9e5280e.
 ### [ ] G-06 Cron push from the Worker — finish delivery to the iPhone
 Covers P-06. **Model:** operator + opus. Code is live (d3a9ab9, f2fc377, c7b8590). Remaining, in order: (1) operator runs, in apps/ops: `python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/.cosmoflare/push.json')))['vapid_private_key'],end='')" | npx wrangler secret put VAPID_PRIVATE_KEY` and `printf 'mailto:alerts@cosmolabs.org' | npx wrangler secret put VAPID_SUBJECT`; (2) operator opens https://ops.cosmolabs.org on the iPhone, Add to Home Screen, opens it from the Home Screen, Pairing → Enable notifications (POSTs to /api/subscribe), then "Send test alert"; (3) acceptance: the test push lands; `wrangler tail` (or Workers observability) shows a `{"cron":"alerts",...}` line with sent ≥ 1 on the next breach. If Apple rejects, read the issue text in the /api/test-fire response (BadJwtToken / BadVapidPublicKey / VapidPkHashMismatch).
 
-### [ ] G-07 Integration docs — Ops section in docs/USAGE.md
+### [x] G-07 Integration docs — Ops section in docs/USAGE.md
 Covers P-07. **Model:** `glm-turbo` | **Files:** `docs/USAGE.md`. Integration and deploy are done (c7b8590, 445514f, 9f012605); apps/ops/README.md is current. Add a "Cosmoflare Ops (web/phone)" section to docs/USAGE.md that summarises apps/ops/README.md: URL, Access lockdown, endpoints (/api/summary, /api/billing, /api/subscribe, /api/test-fire), cron cadence, cache TTL table, secrets list, deploy command. Acceptance: `grep -c "/api/billing" docs/USAGE.md` ≥ 1.
 
-### [ ] G-08 Full-repo review of Cloudflare's newest agent-friendly CLI vs cosmoflare (ROAD-pCC8KKR)
+### [ ] G-08 Full-repo review of Cloudflare's newest agent-friendly CLI vs cosmoflare (ROAD-104)
 **Model:** `opus` orchestrates; parallel read-only flash scouts per area. **Files:** `docs/research/2026-10-10-cf-agent-cli-gap-analysis.md` (new).
 Steps: (1) identify the tool and its repo URL live (Cloudflare blog/changelog/GitHub via web subagents — do not guess the name); (2) `ccs analyze-clone <github-url>` (out-of-tree clone); (3) map its command surface, output formats (JSON/agent modes), auth model, MCP/agent integration, config, error/exit-code conventions; (4) map HOW it pulls account data — which REST/GraphQL endpoints and datasets, batching, pagination, caching, rate-limit handling — and compare against pkg/cosmoflare/ and apps/ops (summary.ts, billing.ts, cache.ts); (5) write a gap matrix: feature | them | cosmoflare CLI | Ops | adopt? | effort, plus a "data-pull strategies to adopt" list with expected upstream-call savings; (6) file roadmap/issue items for the top gaps (`/feature`, `ccs roadmap add --parent ROAD-102`). Acceptance: the research doc exists with the matrix and ≥ 5 concrete adopt/skip decisions, each citing a file in their repo.
 
-### [ ] G-09 Ops rules editor (ROAD-pKHNBPX)
+### [x] G-09 Ops rules editor (ROAD-108)
 **Model:** `sonnet` (split into two bounded briefs) | **Files:** `apps/ops/src/rules-api.ts` (new: GET/PUT /api/rules over KV key "rules", validated against rules.ts CONDITIONS), `apps/ops/src/index.ts` (route, behind the Access check), `pager/src/rules.ts` (new Rules view: list, enable toggle, threshold, exclude list), `pager/src/routes.ts`/`main.ts` (#/rules). Also: `runScheduled` returns early with zero upstream calls when KV "subs" is empty. Acceptance: tsc + tests green in both packages; PUT with an unknown condition → 400.
 
-### [ ] G-10 Billing period from the real subscription (ROAD-p0WZ2JP)
-**Model:** operator decision. GET /accounts/{id}/subscriptions returns 403 for the ops token (billing falls back to the UTC calendar month). Either the operator adds Billing Read to the token (then `wrangler secret put CF_API_TOKEN`), or sets a `BILLING_ANCHOR_DAY` var. Acceptance: /api/billing `period.source` is "subscription" or "anchor".
+### [ ] G-10 Billing period from the real subscription (ROAD-103, BUG-056)
+**Model:** operator decision. Interim fix is live: wrangler var `BILLING_ANCHOR_DAY=23` (period.source = "anchor", Sep 23 - Oct 23). To make it certain, the operator adds Billing Read to the API token (then `wrangler secret put CF_API_TOKEN`); then confirm GET /accounts/{id}/subscriptions returns current_period_start/end and period.source becomes "subscription". Also ask the operator to compare the Billing view's numbers with the Cloudflare dashboard (D1 rows read ≈ 14B used on Oct 9).
+
+### [ ] G-11 CSS and styles improvement pass (operator: "keep improving the CSS and styles")
+**Model:** `sonnet` (= glm-5.3-flash) in 2-3 parallel bounded briefs, Opus reviews screenshots. **Files:** `pager/src/styles.css` (now ~1,000 lines, three agent-appended blocks: shell, `/* gauges */`, `/* refresh */`), `pager/src/*.ts` markup only where needed.
+Steps: (1) consolidate styles.css into ordered sections (tokens → base → shell → components → views → gauges → motion → reduced-motion) and dedupe the appended blocks; one spacing scale (4/8/12/16/24/32) and one type scale as tokens; (2) typography: pick a characterful display face for numbers/headings with a system fallback (Google Fonts allowed), tabular-nums everywhere numeric; (3) surfaces: tint neutrals toward the amber accent, consistent radius and elevation, no colored outlines, no left borders; (4) motion: one easing/duration token set, ease-out enters, reduced-motion respected; (5) touch: all controls ≥ 44px, focus-visible rings consistent. Gate: `bunx impeccable detect src/` exit 0, tsc + tests + build green, Playwright screenshots at 375x812 and 1280x800 of every route on LIVE data (scratchpad api-server technique), Opus reads every screenshot before merge.
+
+### [ ] G-12 Gauge nits (IMP-pJZ1JYP)
+**Model:** `glm-turbo` | **Files:** `pager/src/billing.ts`, `pager/src/gauges.ts`, gauges block in `styles.css`. (1) one status per billing card — "within allowance" (green) must not sit next to "Near limit" (red): show the level badge only, and the overage USD only when > 0; (2) legend swatches for used/projected render like broken images — solid swatches matching the bar fills; (3) storage rings repeat the same number (389% and "389% used so far") — for storage show the % once plus the size ("3.9 GB of 1 GB"). Acceptance: tsc/tests/build green, detector 0, screenshots read.
 
 ## Carry-Overs
 
@@ -114,13 +127,13 @@ Steps: (1) identify the tool and its repo URL live (Cloudflare blog/changelog/Gi
 
 ## Where We're Headed
 
-Cosmoflare's governance pillar (ROAD-102) now has a working phone tier. The CLI review decides the next big moves: which agent-UX conventions to adopt, and how to pull richer data with fewer calls — useful for both the CLI and Ops. After that: FEAT-050 (pre-launch verdict command), the rules editor, and the v0.33.0 release once the operator gives the go.
+Cosmoflare's governance pillar (ROAD-102) now has a working phone tier the operator is happy with. The CLI review decides the next big moves: which agent-UX conventions to adopt, and how to pull richer data with fewer calls — useful for both the CLI and Ops. The operator keeps giving UI feedback live: file every request immediately (`ccs issues create ... --roadmap ROAD-107`) so nothing is lost. After that: FEAT-050 (pre-launch verdict command) and the v0.33.0 release once the operator gives the go.
 
 ## Priority Order
 1. G-06 (operator: two secret commands + phone pairing) — unblocks paging, minutes of work.
 2. G-08 CLI review — the session's main goal.
-3. G-07 docs, G-09 rules editor (parallel flash agents while G-08 runs).
-4. G-10 billing period (operator decision), carry-overs.
+3. G-11 styles pass + G-12 gauge nits (parallel flash agents while G-08 runs).
+4. G-10 billing period (operator: Billing Read on the token), carry-overs.
 
 ## Related
 
