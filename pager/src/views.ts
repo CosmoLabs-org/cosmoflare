@@ -100,6 +100,9 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
   copy.className = "cf-btn";
   copy.textContent = "Copy subscription";
   copy.disabled = true;
+  const test = document.createElement("button");
+  test.className = "cf-btn";
+  test.textContent = "Send test alert";
 
   enable.addEventListener("click", async () => {
     try {
@@ -116,8 +119,20 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key),
       });
+      // Register the device with the Worker so the cron can page it; the
+      // CLI "Copy subscription" path below stays as the secondary option.
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription.toJSON()),
+      });
+      if (res.ok) {
+        status.textContent = "This device will receive alerts from the Worker.";
+      } else {
+        status.textContent = `The Worker rejected the subscription (HTTP ${res.status}). Use "Copy subscription" instead.`;
+      }
       copy.disabled = false;
-      status.textContent = "Notifications enabled. Copy the subscription below.";
       copy.addEventListener("click", async () => {
         await navigator.clipboard.writeText(JSON.stringify(subscription.toJSON()));
         status.textContent = "Copied. On your machine, run:";
@@ -128,6 +143,19 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
     }
   });
 
-  panel.append(status, enable, copy);
+  test.addEventListener("click", async () => {
+    test.disabled = true;
+    try {
+      const res = await fetch("/api/test-fire", { method: "POST", credentials: "same-origin" });
+      const body = (await res.json()) as { sent?: number };
+      status.textContent = res.ok ? `Test push: sent ${body.sent ?? 0}` : `Test failed (HTTP ${res.status})`;
+    } catch (err) {
+      status.textContent = `Test failed: ${err instanceof Error ? err.message : String(err)}`;
+    } finally {
+      test.disabled = false;
+    }
+  });
+
+  panel.append(status, enable, copy, test);
   root.append(panel);
 }
