@@ -3,7 +3,7 @@
 // no DOM — so the merge is unit-testable.
 
 import { levelForD1, levelForMiss, levelForUncached, levelForUsage, levelForErrorPct } from "./dashboard";
-import { formatCount } from "./format";
+import { formatAmount, formatCount, formatPct, formatUsd } from "./format";
 import type { RouteId } from "./routes";
 import type { Billing, Summary } from "./api";
 
@@ -13,51 +13,73 @@ export interface AttentionItem {
   title: string;
   detail: string;
   route: RouteId;
+  /** Projected overage USD — secondary sort key, descending. */
+  overageUsd: number;
+  /** Usage magnitude (ratio, percent, or raw count) — final sort key, descending. */
+  magnitude: number;
 }
 
-// Overage attention levels: any projected overage is worth surfacing; $50+
-// is where a human should actually act today. Deliberately simple.
+// Overage attention: any projected overage is worth surfacing as a warning.
+// Severity is usage-based — consuming the included allowance is critical —
+// so the level comes from used-vs-included, not the dollar amount.
 const OVERAGE_WARN_USD = 0.01;
-const OVERAGE_CRIT_USD = 50;
+
+// capAttention: the Overview shows the worst rows; the rest collapse behind
+// a "Show all N" link to Billing. The full list still lives in the array.
+export const ATTENTION_CAP = 8;
+
+export function capAttention(
+  items: AttentionItem[],
+  cap: number = ATTENTION_CAP,
+): { shown: AttentionItem[]; extra: number } {
+  return { shown: items.slice(0, cap), extra: Math.max(0, items.length - cap) };
+}
 
 export function collectAttention(summary: Summary | null, billing: Billing | null): AttentionItem[] {
   const items: AttentionItem[] = [];
   if (billing) {
+    // ONE row per product: usage-vs-allowance and the projected overage are
+    // two facts about the same product, so they share a row — the old
+    // "past allowance" + "overage" duplicate pair is gone. Critical when the
+    // included allowance is already consumed; warning for projected overage.
     for (const p of billing.products) {
-      if (p.projectedOverageUsd >= OVERAGE_WARN_USD) {
-        const critical = p.projectedOverageUsd >= OVERAGE_CRIT_USD;
-        items.push({
-          level: critical ? "critical" : "warning",
-          title: `${p.product} ${p.metric.toLowerCase()} overage`,
-          detail: `projected $${p.projectedOverageUsd.toFixed(2)} beyond the ${formatCount(p.included)} ${p.unit} allowance`,
-          route: "billing",
-        });
-      }
-      if (p.used >= p.included) {
-        items.push({
-          level: "critical",
-          title: `${p.product} ${p.metric.toLowerCase()} past allowance`,
-          detail: `${formatCount(p.used)} ${p.unit} used of ${formatCount(p.included)} ${p.unit} included`,
-          route: "billing",
-        });
-      }
+      const over = p.projectedOverageUsd >= OVERAGE_WARN_USD;
+      const past = p.used >= p.included;
+      if (!over && !past) continue;
+      let detail = `${formatAmount(p.used, p.unit)} of ${formatAmount(p.included, p.unit)} included`;
+      if (over) detail += ` · +${formatUsd(p.projectedOverageUsd)} projected`;
+      items.push({
+        level: past ? "critical" : "warning",
+        title: `${p.product} ${p.metric.toLowerCase()}`,
+        detail,
+        route: "billing",
+        overageUsd: p.projectedOverageUsd,
+        magnitude: p.included > 0 ? p.used / p.included : Number.POSITIVE_INFINITY,
+      });
     }
     for (const e of billing.errors) {
-      items.push({ level: "warning", title: "Telemetry gap", detail: e, route: "billing" });
+      items.push({ level: "warning", title: "Telemetry gap", detail: e, route: "billing", overageUsd: 0, magnitude: 0 });
       break; // one row for the notice; the billing view lists the rest
     }
   }
 
   if (summary) {
-    for (const u of summary.usage) {
-      const level = levelForUsage(u.projectedPct);
-      if (level !== "ok") {
-        items.push({
-          level,
-          title: `${u.name} pacing`,
-          detail: `${u.pct.toFixed(0)}% of the period limit${u.projectedPct !== null ? `, projected ${u.projectedPct.toFixed(0)}%` : ""}`,
-          route: "billing",
-        });
+    // Pacing rows come from /api/billing when it loaded — the Overview must
+    // show one number per metric, never the summary's guess next to billing's
+    // projection. Summary usage is the fallback for when billing failed.
+    if (!billing) {
+      for (const u of summary.usage) {
+        const level = levelForUsage(u.projectedPct);
+        if (level !== "ok") {
+          items.push({
+            level,
+            title: `${u.name} pacing`,
+            detail: `${u.pct.toFixed(0)}% of the period limit${u.projectedPct !== null ? `, projected ${u.projectedPct.toFixed(0)}%` : ""}`,
+            route: "billing",
+            overageUsd: 0,
+            magnitude: u.projectedPct ?? u.pct,
+          });
+        }
       }
     }
     for (const w of summary.workers) {
@@ -66,8 +88,10 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level,
           title: `${w.script} errors`,
-          detail: `${w.errorPct.toFixed(2)}% of ${formatCount(w.requests)} requests`,
+          detail: `${formatPct(w.errorPct)} of ${formatCount(w.requests)} requests`,
           route: "workers",
+          overageUsd: 0,
+          magnitude: w.errorPct,
         });
       }
     }
@@ -79,6 +103,8 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
           title: `${d.name} rows read`,
           detail: `${formatCount(d.rowsRead)} rows in 24h`,
           route: "d1",
+          overageUsd: 0,
+          magnitude: d.rowsRead,
         });
       }
     }
@@ -88,13 +114,20 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level,
           title: `${z.zone} cache misses`,
-          detail: `${formatCount(z.uncached)} uncached${z.missPct !== null ? ` · ${z.missPct.toFixed(1)}% miss` : ""}`,
+          detail: `${formatCount(z.uncached)} uncached${z.missPct !== null ? ` · ${formatPct(z.missPct)} miss` : ""}`,
           route: "zones",
+          overageUsd: 0,
+          magnitude: z.uncached,
         });
       }
     }
   }
-  return items.sort((a, b) => (a.level === b.level ? 0 : a.level === "critical" ? -1 : 1));
+  // critical first, then by projected USD desc, then by magnitude desc.
+  const rank = (l: "warning" | "critical"): 0 | 1 => (l === "critical" ? 0 : 1);
+  return items.sort((a, b) =>
+    rank(a.level) - rank(b.level) ||
+    b.overageUsd - a.overageUsd ||
+    b.magnitude - a.magnitude);
 }
 
 // Worst of the uncached-count and miss-rate levels for a zone — the same

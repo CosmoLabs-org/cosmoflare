@@ -3,6 +3,7 @@ import {
   formatCount,
   formatUsd,
   formatPct,
+  formatAmount,
   formatAge,
   formatDateShort,
   periodProgress,
@@ -32,6 +33,18 @@ describe("formatPct", () => {
     expect(formatPct(74.24, 0)).toBe("74%");
     expect(formatPct(74.24)).toBe("74.2%");
     expect(formatPct(8.875, 2)).toBe("8.88%");
+  });
+});
+
+describe("formatAmount", () => {
+  it("keeps one decimal on GB-style units (3.9 GB, never 4 GB)", () => {
+    expect(formatAmount(3.9, "GB")).toBe("3.9 GB");
+    expect(formatAmount(214, "GB")).toBe("214.0 GB");
+  });
+  it("formats counts through formatCount with the unit appended", () => {
+    expect(formatAmount(412_000, "ops")).toBe("412.0k ops");
+    expect(formatAmount(25e9, "rows")).toBe("25.0B rows");
+    expect(formatAmount(214, "requests")).toBe("214 requests");
   });
 });
 

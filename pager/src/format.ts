@@ -14,6 +14,12 @@ export function formatUsd(v: number): string {
   return `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** "3.9 GB" / "412k ops" — GB-style units keep one decimal, counts formatCount. */
+export function formatAmount(v: number, unit: string): string {
+  if (/^GB/i.test(unit)) return `${v.toFixed(1)} ${unit}`;
+  return `${formatCount(v)} ${unit}`;
+}
+
 /** "74.2%" — one decimal by default. */
 export function formatPct(v: number, digits = 1): string {
   return `${v.toFixed(digits)}%`;
