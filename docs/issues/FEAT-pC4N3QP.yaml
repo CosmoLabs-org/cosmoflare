@@ -1,11 +1,15 @@
 id: FEAT-pC4N3QP
 type: feature
 created_at: 2026-10-10T00:33:30.258298+04:00
-updated_at: 2026-10-10T00:33:30.790309+04:00
+updated_at: 2026-10-10T00:33:32.565628+04:00
 source: local
 ulid: 01M4H5XX56PFBSY9QEYRC4N3QP
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-102
+    session: 71
 title: Bounded retry + exponential backoff in pkg/cosmoflare client
 description: 'cf disables SDK retries (maxRetries:0 — clone ref: packages/cli/src/lib/raw-fetch.ts wiring). Counter-adopt: the shared pkg/cosmoflare HTTP client gains bounded retry (2 attempts, exponential backoff, jitter) on 429/5xx only; apps/ops cache.ts load path inherits it. From gap analysis adopt #5.'
 acceptance_criteria:

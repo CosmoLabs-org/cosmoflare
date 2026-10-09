@@ -1,11 +1,15 @@
 id: FEAT-pN68ZRM
 type: feature
 created_at: 2026-10-10T00:32:57.232638+04:00
-updated_at: 2026-10-10T00:32:57.749693+04:00
+updated_at: 2026-10-10T00:33:00.649345+04:00
 source: local
 ulid: 01M4H5WWWNHJW50P6X5FN68ZRM
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-102
+    session: 71
 title: Agent-context detection + agent help preamble
 description: 'Adopt cf''s agent-context pattern (clone ref: packages/cli/src/lib/agent-context.ts, src/index.ts:143-158): detect agent harness env vars (CLAUDECODE and peers); when detected, prepend an agent guidance block to every --help (compact examples, JSON-first pointers). From gap analysis adopt #2.'
 acceptance_criteria:

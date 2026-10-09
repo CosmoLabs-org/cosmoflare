@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T23:22:19.17592+04:00
+last_updated: 2026-10-10T00:33:32.564656+04:00
 next_id: 112
 items:
     - id: BASE-001
@@ -889,6 +889,11 @@ items:
         - FEAT-050
         - FEAT-049
         - FEAT-051
+        - FEAT-pEKR6K6
+        - FEAT-pN68ZRM
+        - FEAT-p8KYM5K
+        - FEAT-pDDEH5J
+        - FEAT-pC4N3QP
       created_at: 2026-10-08T23:21:41.903776+04:00
     - id: ROAD-103
       title: Ops billing period from the real subscription (token needs Billing Read)
