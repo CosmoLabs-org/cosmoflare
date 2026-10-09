@@ -1,0 +1,20 @@
+id: FEAT-pTS4SNG
+type: feature
+created_at: 2026-10-09T21:14:26.739424+04:00
+updated_at: 2026-10-09T21:14:27.239681+04:00
+source: local
+ulid: 01M4GTHDH7SBS10R9NDZTS4SNG
+provisional: true
+priority: 70
+status: open
+area: ux
+title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
+description: 'Operator 2026-10-09: bring the Cloudflare dashboard''s usage visuals into Ops and make them clearer. For every Workers Paid allowance show used vs included and projected-to-period-end as a progress ring (overview) and progress bar (billing), warning at 75% and critical at 90% of the allowance.'
+acceptance_criteria:
+    - criterion: Ring per product on Overview
+      met: false
+    - criterion: Bar with used+projected+allowance marker on Billing
+      met: false
+    - criterion: Thresholds 75/90 with text label
+      met: false
+roadmap_ref: ROAD-pJ25XG5
