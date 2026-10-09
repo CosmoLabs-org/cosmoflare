@@ -1,10 +1,11 @@
-id: FEAT-pTS4SNG
+id: FEAT-054
 type: feature
 created_at: 2026-10-09T21:14:26.739424+04:00
 updated_at: 2026-10-09T21:14:50.996423+04:00
 source: local
 ulid: 01M4GTHDH7SBS10R9NDZTS4SNG
-provisional: true
+aliases:
+    - FEAT-pTS4SNG
 priority: 70
 status: closed
 area: ux

@@ -1,10 +1,11 @@
-id: IMP-pPFDXJA
+id: IMP-001
 type: improvement
 created_at: 2026-10-09T21:14:19.897673+04:00
 updated_at: 2026-10-09T21:14:21.673883+04:00
 source: local
 ulid: 01M4GTH6W7X4RTJ33HT9PFDXJA
-provisional: true
+aliases:
+    - IMP-pPFDXJA
 priority: 50
 status: open
 area: ux

@@ -1,6 +1,6 @@
 version: "1.0"
-project: .
-last_updated: 2026-10-09T21:51:22.587971+04:00
+project: cosmoflare
+last_updated: 2026-10-09T22:04:07.089101+04:00
 next_id: 112
 items:
     - id: BASE-001
@@ -929,6 +929,7 @@ items:
         - IMP-pPFDXJA
         - FEAT-pTS4SNG
         - BUG-pNXAHPD
+        - IMP-pJZ1JYP
       created_at: 2026-10-09T20:34:02.099499+04:00
     - id: ROAD-108
       title: Ops rules editor — view and edit alert rules and excludes from the phone
