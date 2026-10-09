@@ -214,7 +214,7 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
         },
       });
     }
-    host.append(bar, card);
+    host.replaceChildren(bar, card);
   });
 }
 
@@ -251,7 +251,7 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): v
         },
       });
     }
-    host.append(bar, card);
+    host.replaceChildren(bar, card);
   });
 }
 
@@ -340,6 +340,6 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
         },
       });
     }
-    host.append(bar, card);
+    host.replaceChildren(bar, card);
   });
 }

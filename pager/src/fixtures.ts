@@ -18,7 +18,6 @@ export function makeFixtures(now: Date): { summary: Summary; billing: Billing } 
   const days = Math.round((end.getTime() - start.getTime()) / 86_400_000);
   const day = now.getUTCDate();
   const share = day / days;
-  const monthLabel = start.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 
   const summary: Summary = {
     generatedAt: now.toISOString(),

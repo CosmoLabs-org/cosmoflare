@@ -4,14 +4,15 @@
 
 import { levelForD1, levelForMiss, levelForUncached, levelForUsage, levelForErrorPct } from "./dashboard";
 import { formatCount } from "./format";
+import type { RouteId } from "./routes";
 import type { Billing, Summary } from "./api";
 
-/** One merged "needs attention" row; `route` is a RouteId string. */
+/** One merged "needs attention" row; `route` is the section route to open. */
 export interface AttentionItem {
   level: "warning" | "critical";
   title: string;
   detail: string;
-  route: string;
+  route: RouteId;
 }
 
 // Overage attention levels: any projected overage is worth surfacing; $50+

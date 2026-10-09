@@ -136,6 +136,10 @@ function mount(): void {
     backdrop.classList.remove("is-open");
     burger.setAttribute("aria-expanded", "false");
     document.body.classList.remove("cf-nav-open");
+    // Return focus to the element that opened the drawer (the hamburger),
+    // so keyboard and screen-reader users are not left on a hidden element.
+    const focusTarget = lastFocused ?? burger;
+    focusTarget.focus();
     window.setTimeout(() => {
       if (!drawerOpen) {
         drawer.hidden = true;

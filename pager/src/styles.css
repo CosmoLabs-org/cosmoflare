@@ -396,6 +396,15 @@ body.cf-nav-open { overflow: hidden; }
    header tappable too (both work). */
 @media (max-width: 600px) {
   .cf-sort-select { display: block; }
+
+  /* Wide tables scroll inside their card instead of stretching the page —
+     header and body stay in sync because the whole table is one scroller. */
+  .cf-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cf-table th, .cf-table td { padding: 6px; }
 }
 
 /* Sort buttons inside headers. */

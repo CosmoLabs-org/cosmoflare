@@ -5,7 +5,7 @@
 // screen and the pager agree on what is "red".
 
 import { el, skeleton, statusLine } from "./dom";
-import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
+import { formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
 import { api, LoginExpiredError, type Billing, type ProductUsage, type Summary } from "./api";
 import { collectAttention } from "./attention";
 import { hrefFor } from "./routes";

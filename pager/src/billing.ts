@@ -6,7 +6,6 @@
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount, formatPct, formatUsd, formatDateShort, formatAge, periodProgress } from "./format";
 import { api, LoginExpiredError, type Billing, type FetchResult, type ProductUsage } from "./api";
-import { hrefFor } from "./routes";
 
 // meterPct computes the meter geometry for one product row: solid used
 // width, hatched projected extension, and the allowance marker position —
