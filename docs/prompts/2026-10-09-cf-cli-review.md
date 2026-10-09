@@ -23,6 +23,7 @@ status: PENDING
 tags: []
 title: CF agent CLI review + Ops push completion
 type: prompt
+supersedes: "docs/prompts/2026-10-09-session-2033-continuation.md"
 ---
 
 # CF agent CLI review + Ops push completion
