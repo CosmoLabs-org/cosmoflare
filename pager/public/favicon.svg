@@ -1,17 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- CosmoLabs Ops · Cosmoflare mark: a monitoring pulse crossing an orbit
-       ring — operations on Cloudflare's edge. Dark-first (bg #1a1a1a),
-       amber primary (#f59e0b), one cool secondary (#7dd3fc) satellite tick
-       on the ring. No text, no cloud, no bolt. -->
-  <rect width="512" height="512" fill="#1a1a1a"/>
-  <!-- Orbit ring -->
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#f59e0b" stroke-width="54"/>
-  <!-- Pulse line: dark halo cuts the ring where the pulse crosses it -->
-  <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442"
-        fill="none" stroke="#1a1a1a" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442"
-        fill="none" stroke="#f59e0b" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Satellite tick: secondary #7dd3fc, set into the ring with a dark gap -->
-  <circle cx="150" cy="150" r="38" fill="#1a1a1a"/>
-  <circle cx="150" cy="150" r="21" fill="#7dd3fc"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- CosmoLabs Ops · Cosmoflare mark: a bold "C" (CosmoLabs) whose open end
+       holds an upward pulse caret — the ops signal the C monitors. The dark
+       rounded backdrop keeps amber + sky legible on white browser tabs;
+       icon-master.svg carries the same mark on a full #1a1a1a canvas.
+       Geometry mirrors pager/src/logo.ts on the 32x32 grid. -->
+  <rect width="32" height="32" rx="6" fill="#1a1a1a"/>
+  <path d="M 23.07 9.07 A 10 10 0 1 0 23.07 23.07" fill="none" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M 20.5 18.5 L 23.5 14.5 L 26.5 18.5" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
