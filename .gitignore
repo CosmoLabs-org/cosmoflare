@@ -226,3 +226,8 @@ GOrchestra/
 
 # Claude Code local session state (harness bookkeeping, not source)
 .claude/
+
+# Internal feedback sent to other CosmoLabs projects (query texts, traffic,
+# cost numbers) — kept local; this repo is public (2026-10-09).
+docs/feedback/queue/
+docs/feedback/outgoing/
