@@ -1,0 +1,14 @@
+id: FEAT-p9GD588
+type: feature
+created_at: 2026-10-10T03:26:13.000596+04:00
+updated_at: 2026-10-10T03:26:13.52068+04:00
+source: local
+ulid: 01M4HFT50GR0J7Q0FMYD9GD588
+provisional: true
+status: open
+title: Ops domains view — full domain list with expiry and status
+description: 'New #/domains view: every domain on the account with name, status (active/pending/paused), expiry date, and days-to-expiry attention coloring. Data source verified live 2026-10-10: GET /zones returns name+status and expires_at for Cloudflare-registered domains (null for external registrar); GET /accounts/{id}/reg/domains needs Registrar Read on the token (errors 7003 today). Wave 1: zones-based list cached 1h (LIST_TTL). Wave 2 (token-gated): registrar detail (auto-renew, locked, prices).'
+acceptance_criteria:
+    - criterion: domains view lists all zones with status + expiry; expiring-in-30d rows flagged; tests; detector 0
+      met: false
+roadmap_ref: ROAD-107
