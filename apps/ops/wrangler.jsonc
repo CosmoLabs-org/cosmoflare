@@ -8,7 +8,10 @@
   "name": "cosmoflare-ops",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
-  "workers_dev": true,
+  // Served on a Workers Custom Domain attached via the API (kept out of this
+  // public config); the workers.dev route stays off so the custom domain is
+  // the only entry point. Verify after each deploy that the domain remains.
+  "workers_dev": false,
   "preview_urls": false,
   "assets": {
     "directory": "../../pager/dist",

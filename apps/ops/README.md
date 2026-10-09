@@ -15,6 +15,9 @@ account. A small Worker serves the `pager/` PWA as static assets and exposes:
    policy that includes only your email. Note its **audience (AUD) tag** and
    your team domain (`<team>.cloudflareaccess.com`).
 2. Keep `preview_urls` off — the Access app covers the main hostname only.
+3. Optional custom domain: attach it as a Workers Custom Domain (dashboard or
+   `PUT /accounts/{id}/workers/domains`), add the hostname to the same Access
+   app (same audience tag), and keep `workers_dev: false`.
 
 The Worker verifies the Access JWT on every `/api/*` request (RS256 against
 the team keys; audience, issuer and expiry checked) and refuses everything
