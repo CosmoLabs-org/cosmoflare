@@ -60,6 +60,14 @@ func (z ZoneCacheSummary) UncachedPct(floor uint64) (float64, bool) {
 	return 100 * float64(uncached) / float64(known), true
 }
 
+// UncachedRequests returns eyeball requests that never reached the cache
+// (dynamic + bypass). Every one is a billed Worker invocation or origin hit.
+// This volume, not the uncached share, is what wave 3a alerts on: Workers-
+// served zones are ~97-100% dynamic by design (2026-10-09 dry run).
+func (z ZoneCacheSummary) UncachedRequests() uint64 {
+	return z.total(cacheUncachedStatuses)
+}
+
 // ZoneCache returns per-zone eyeball request counts grouped by cacheStatus
 // over the window. Zones are queried in batches of 10 with zoneTag_in — one
 // request per batch, never one per zone. A zone with no traffic comes back

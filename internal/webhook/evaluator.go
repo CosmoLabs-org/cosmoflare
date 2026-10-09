@@ -302,8 +302,8 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 			switch condition {
 			case "zone-cache-miss-pct":
 				v, ok = z.MissPct(ZoneCacheFloor)
-			case "zone-uncached-pct":
-				v, ok = z.UncachedPct(ZoneCacheFloor)
+			case "zone-uncached-requests":
+				v, ok = float64(z.UncachedRequests()), true // absolute volume: no floor
 			default:
 				return nil // registered-but-unimplemented: the coverage test guards
 			}
@@ -505,10 +505,14 @@ func RulesUseScope(rules []*cosmoflare.AlertRule, scope string) bool {
 }
 
 // formatValue renders an observed value or threshold for a page. Row counts
-// read as 2.9B / 52.3M / 3.3k on a phone (design D14); other units keep %g.
+// read as 2.9B / 52.3M / 3.3k on a phone (design D14); percents print one
+// decimal (operator choice 2026-10-09); other units keep %g.
 func formatValue(v float64, unit string) string {
 	if unit == "rows" {
 		return humanCount(v)
+	}
+	if unit == "%" {
+		return strconv.FormatFloat(v, 'f', 1, 64) // one decimal on a phone; payload keeps full precision
 	}
 	return strconv.FormatFloat(v, 'g', -1, 64)
 }

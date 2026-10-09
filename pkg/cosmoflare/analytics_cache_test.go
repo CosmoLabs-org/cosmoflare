@@ -127,3 +127,17 @@ func TestAnalyticsZoneCacheValidation(t *testing.T) {
 		t.Errorf("no zones = %v, %v; want empty, nil (no request)", got, err)
 	}
 }
+
+// TestZoneCacheSummaryUncachedRequests: absolute eyeball requests that never
+// reach the cache (dynamic+bypass) — the volume signal that replaced the
+// uncached percentage after the 2026-10-09 dry run (Workers sites are ~97-100%
+// dynamic by design, so the ratio flagged nearly every zone).
+func TestZoneCacheSummaryUncachedRequests(t *testing.T) {
+	t.Parallel()
+	if got := churchesLive().UncachedRequests(); got != 960 {
+		t.Errorf("UncachedRequests = %d, want 960 (dynamic 939 + bypass 21; none excluded)", got)
+	}
+	if got := (ZoneCacheSummary{}).UncachedRequests(); got != 0 {
+		t.Errorf("empty summary = %d, want 0", got)
+	}
+}
