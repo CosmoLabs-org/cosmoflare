@@ -14,15 +14,28 @@ import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
 import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
 
-/** Nav labels; the icons are emoji-free glyphs so the drawer reads fast. */
-const NAV: Record<RouteId, { label: string; glyph: string }> = {
-  overview: { label: "Overview", glyph: "◈" },
-  billing: { label: "Billing", glyph: "◆" },
-  workers: { label: "Workers", glyph: "≡" },
-  d1: { label: "D1", glyph: "▤" },
-  zones: { label: "Zones", glyph: "◍" },
-  alerts: { label: "Alerts", glyph: "◆" },
-  pairing: { label: "Pairing", glyph: "⚙" },
+/** Nav labels per route. */
+const NAV: Record<RouteId, { label: string }> = {
+  overview: { label: "Overview" },
+  billing: { label: "Billing" },
+  workers: { label: "Workers" },
+  d1: { label: "D1" },
+  zones: { label: "Zones" },
+  alerts: { label: "Alerts" },
+  pairing: { label: "Pairing" },
+};
+
+// One distinct stroke icon per route (18px, currentColor, decorative). Both
+// the sidebar and the drawer use them — replaces the unicode glyphs that
+// repeated the same diamond for Billing and Alerts.
+const ICONS: Record<RouteId, string> = {
+  overview: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  billing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/></svg>`,
+  workers: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 4.5 13.5H11L9.5 22 19 10.5h-6.5z"/></svg>`,
+  d1: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
+  zones: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"/></svg>`,
+  alerts: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>`,
+  pairing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="7" cy="18" r="2" fill="var(--surface)"/></svg>`,
 };
 
 async function registerServiceWorker(): Promise<void> {
@@ -62,7 +75,8 @@ function mount(): void {
   sidebar.className = "cf-sidebar";
   sidebar.setAttribute("aria-label", "Sections");
 
-  // Drawer (below 1024px).
+  // Drawer (below 1024px). The header carries the brand and the close
+  // button so the drawer is a complete, closable surface on phones.
   const backdrop = el("div", "cf-backdrop");
   backdrop.hidden = true;
   const drawer = document.createElement("nav");
@@ -70,6 +84,12 @@ function mount(): void {
   drawer.className = "cf-drawer";
   drawer.setAttribute("aria-label", "Sections");
   drawer.hidden = true;
+  const drawerHead = el("div", "cf-drawer-head");
+  const drawerClose = el("button", "cf-drawer-close", "×");
+  drawerClose.setAttribute("aria-label", "Close menu");
+  drawerClose.addEventListener("click", () => closeDrawer());
+  drawerHead.append(el("span", "cf-drawer-brand", "Cosmoflare Ops"), drawerClose);
+  drawer.append(drawerHead);
 
   // Same links in both navs; route change updates aria-current on both.
   const linkTargets: { a: HTMLAnchorElement; route: RouteId }[] = [];
@@ -78,8 +98,10 @@ function mount(): void {
       const a = document.createElement("a");
       a.href = hrefFor(route);
       a.className = "cf-navlink";
+      const glyph = el("span", "cf-navglyph");
+      glyph.innerHTML = ICONS[route];
       a.append(
-        el("span", "cf-navglyph", NAV[route].glyph),
+        glyph,
         el("span", "cf-navlabel", NAV[route].label),
       );
       a.dataset.route = route;

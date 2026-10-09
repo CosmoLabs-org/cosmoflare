@@ -139,6 +139,34 @@ body { margin: 0; min-height: 100vh; }
 
 body.cf-nav-open { overflow: hidden; }
 
+/* Drawer header: brand + close button, clear of the notch. */
+.cf-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -12px -8px 8px; /* pull flush to the drawer top/side padding */
+  padding: 12px 8px 12px 16px; /* drawer's padding-top already carries env(safe-area-inset-top) */
+  border-bottom: 1px solid var(--border);
+}
+.cf-drawer-brand { font-size: 16px; font-weight: 600; letter-spacing: 0.01em; }
+.cf-drawer-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 26px;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius);
+  margin-inline-end: -4px;
+}
+.cf-drawer-close:hover { color: var(--text); background: var(--surface-raised); }
+.cf-drawer-close:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
 .cf-navlink {
   display: flex;
   align-items: center;
@@ -156,7 +184,8 @@ body.cf-nav-open { overflow: hidden; }
   font-weight: 600;
 }
 .cf-navlink[aria-current="page"] .cf-navglyph { color: var(--accent); }
-.cf-navglyph { width: 20px; text-align: center; opacity: 0.9; }
+.cf-navglyph { width: 20px; display: inline-flex; opacity: 0.9; }
+.cf-navglyph svg { display: block; }
 .cf-navlink:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 
 /* ---- Main column and cards ---- */
@@ -221,7 +250,8 @@ body.cf-nav-open { overflow: hidden; }
 .cf-kpi.cf-level-warning { border-color: color-mix(in srgb, var(--sev-warning) 60%, var(--border)); }
 .cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
 
-/* Progress bar (billing period). */
+/* Progress bar (billing period). Inside a KPI tile it runs thin and flush
+   with the tile bottom; standalone (billing view) it stays 8px. */
 .cf-progress {
   height: 8px;
   background: var(--surface-raised);
@@ -233,6 +263,13 @@ body.cf-nav-open { overflow: hidden; }
   background: var(--accent);
   border-radius: 999px;
 }
+.cf-kpi .cf-progress {
+  height: 4px;
+  /* Span the tile edge-to-edge: cancel the tile's padding. */
+  margin: 8px -14px -12px;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.cf-kpi .cf-progress .cf-progress-fill { border-radius: 0; }
 
 /* Needs-attention rows are links — never color-only, the "!" and "•" marks
    repeat the severity in text form. */
@@ -392,19 +429,53 @@ body.cf-nav-open { overflow: hidden; }
   padding: 8px 10px;
   max-width: 44%;
 }
+/* Stacked rows: line 1 name + primary metric, line 2 status bar, line 3
+   secondary metrics. Level borders repeat the table's row coloring. Hidden
+   by default; the ≤600px query below swaps it in for the table. */
+.cf-mobile-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cf-mobile-list li {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0 8px 10px;
+  border-top: 1px solid var(--border);
+  border-left: 3px solid transparent;
+}
+.cf-mobile-list li:first-child { border-top: none; }
+.cf-mobile-list li.cf-showall-row {
+  display: flex;
+  justify-content: center;
+  border-left: none;
+  padding-block: 6px;
+}
+.cf-mrow-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.cf-mrow-name { overflow-wrap: anywhere; }
+.cf-mrow-primary { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.cf-mrow-status { min-width: 0; }
+.cf-mrow-status .cf-zonestack { min-width: 0; }
+/* Line 2 is the bar only — the legend's colored chips don't fit compact rows. */
+.cf-mrow-status .cf-stack-legend { display: none; }
+.cf-mrow-meta { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+
 /* On phones the header buttons are cramped: show the sort select, keep the
    header tappable too (both work). */
-@media (max-width: 600px) {
+@media (max-width: 599.98px) {
   .cf-sort-select { display: block; }
 
-  /* Wide tables scroll inside their card instead of stretching the page —
-     header and body stay in sync because the whole table is one scroller. */
-  .cf-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .cf-table th, .cf-table td { padding: 6px; }
+  /* Below 600px the table's columns clip behind a horizontal scroll, so the
+     same rows render as a stacked list instead; the table takes over at
+     600px. Both come from one sort/filter state. */
+  .cf-table { display: none; }
+  .cf-mobile-list { display: block; }
 }
 
 /* Sort buttons inside headers. */
@@ -534,6 +605,10 @@ body.cf-nav-open { overflow: hidden; }
 /* Pricing footnote links. */
 .cf-pricing-note { color: var(--muted); font-size: 12px; }
 .cf-link { color: var(--focus); }
+
+/* The hidden attribute must always win, even over component display rules
+   (the drawer's display:flex was defeating it). */
+[hidden] { display: none !important; }
 
 /* Motion discipline: reduced motion kills the drawer/backdrop animation
    and the shimmer. */

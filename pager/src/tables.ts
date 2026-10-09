@@ -45,6 +45,9 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   const thead = el("thead");
   const headerRow = el("tr");
   const buttons = new Map<string, HTMLButtonElement>();
+  // Stacked list companion for phones (<600px): same rows, same sort/filter
+  // state, rendered as compact list items instead of clipped table columns.
+  const list = el("ul", "cf-mobile-list");
   for (const col of opts.columns) {
     const th = el("th");
     const b = el("button", "cf-sort-btn", col.label);
@@ -119,6 +122,7 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
 
     // Body: apply the collapse rule to the filtered rows.
     tbody.replaceChildren();
+    list.replaceChildren();
     const visible = showAll ? rows : rows.slice(0, COLLAPSE_AFTER);
     for (const row of visible) {
       const tr = el("tr", opts.rowClass?.(row));
@@ -129,25 +133,64 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
         tr.append(td);
       }
       tbody.append(tr);
+      list.append(mobileRowItem(opts.columns, sortKey, opts.rowClass, row));
     }
-    // Show all N toggle — wrapped in a full-width row so the table stays valid.
+    // Show all N toggle — wrapped in a full-width row and a list item so
+    // both renderings can expand.
     if (!showAll && rows.length > COLLAPSE_AFTER) {
+      const more = () => {
+        showAll = true;
+        render();
+      };
       const wrap = el("tr", "cf-showall-row");
       const cell = el("td");
       cell.colSpan = opts.columns.length;
-      const more = el("button", "cf-btn cf-show-all", `Show all ${rows.length}`);
-      more.addEventListener("click", () => {
-        showAll = true;
-        render();
-      });
-      cell.append(more);
+      const moreBtn = el("button", "cf-btn cf-show-all", `Show all ${rows.length}`);
+      moreBtn.addEventListener("click", more);
+      cell.append(moreBtn);
       wrap.append(cell);
       tbody.append(wrap);
+      const li = el("li", "cf-showall-row");
+      const listBtn = el("button", "cf-btn cf-show-all", `Show all ${rows.length}`);
+      listBtn.addEventListener("click", more);
+      li.append(listBtn);
+      list.append(li);
     }
   }
   render();
 
-  host.append(filterBar, table);
+  host.append(filterBar, table, list);
+}
+
+// mobileRowItem renders one row as a compact stacked list item for phones
+// (<600px): line 1 name + the active sort metric (right, tabular-nums),
+// line 2 the byStatus bar when the table has one, line 3 the remaining
+// numeric metrics in muted text. Mirrors the table's sort/filter/collapse
+// state exactly.
+function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row: T) => string) | undefined, row: T): HTMLLIElement {
+  const nameCol = columns[0];
+  const active = columns.find((c) => c.key === sortKey) ?? columns[0];
+  const primaryCol = active.numeric ? active : columns.find((c) => c.numeric);
+  const li = el("li", rowClass?.(row));
+  const top = el("div", "cf-mrow-top");
+  top.append(
+    el("span", "cf-mrow-name", nameCol.text(row)),
+    el("span", "cf-mrow-primary", primaryCol ? primaryCol.text(row) : ""),
+  );
+  li.append(top);
+  const statusCol = columns.find((c) => c.key === "byStatus" && c.cell);
+  if (statusCol?.cell) {
+    const bar = el("div", "cf-mrow-status");
+    bar.append(statusCol.cell(row));
+    li.append(bar);
+  }
+  const shortLabel = (label: string): string => label.replace(/%\s*$/, "").trim().toLowerCase();
+  const meta = columns
+    .filter((c) => c.numeric && c !== primaryCol)
+    .map((c) => `${c.text(row)} ${shortLabel(c.label)}`)
+    .join(" · ");
+  if (meta) li.append(el("div", "cf-mrow-meta", meta));
+  return li;
 }
 
 // ---- Section plumbing ----

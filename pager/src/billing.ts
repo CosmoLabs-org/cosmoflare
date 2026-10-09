@@ -68,7 +68,7 @@ function productRow(p: ProductUsage): HTMLElement {
   );
 
   const detail = el("p", "cf-row-detail",
-    `${formatCount(p.used)} of ${formatCount(p.included)} ${p.unit} used · projected ${formatCount(p.projected)} (${formatPct(p.included > 0 ? (p.projected / p.included) * 100 : 0, 0)} of allowance)`);
+    `${formatCount(p.used)} ${p.unit} of ${formatCount(p.included)} ${p.unit} used · projected ${formatCount(p.projected)} (${formatPct(p.included > 0 ? (p.projected / p.included) * 100 : 0, 0)} of allowance)`);
   const consumers = el("details", "cf-consumers");
   const summary = el("summary", "cf-consumers-summary", `Top consumers (${p.topConsumers.length})`);
   const list = el("ul", "cf-consumers-list");

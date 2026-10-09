@@ -67,24 +67,26 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
     const grid = el("div", "cf-kpis");
     const attention = collectAttention(summary, billing);
 
-    // KPI tiles
+    // KPI tiles. The billing-period tile embeds its own thin progress bar —
+    // the orphan full-width bar that used to sit under the grid is gone.
     const d1Prod = findProduct(billing, "d1.rows_read");
     const wProd = findProduct(billing, "workers.requests");
+    const periodTile = kpiTile(`day ${billing.period.day} of ${billing.period.days}`, `period ends ${formatDateShort(billing.period.end)}`);
+    const prog = el("div", "cf-progress");
+    prog.setAttribute("aria-label", `Billing period: day ${billing.period.day} of ${billing.period.days}`);
+    const fill = el("div", "cf-progress-fill");
+    fill.style.width = `${periodProgress(billing.period.day, billing.period.days).elapsedPct}%`;
+    prog.append(fill);
+    periodTile.append(prog);
     grid.append(
       kpiTile(formatUsd(billing.totalProjectedOverageUsd), "projected overage",
         billing.totalProjectedOverageUsd >= 0.01 ? (billing.totalProjectedOverageUsd >= 50 ? "critical" : "warning") : "ok"),
-      kpiTile(`day ${billing.period.day} of ${billing.period.days}`, `period ends ${formatDateShort(billing.period.end)}`),
+      periodTile,
       kpiTile(d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—", "D1 rows-read pacing", d1Prod ? usageLevelFromPct(pacingPct(d1Prod)) : "ok"),
       kpiTile(wProd ? formatPct(pacingPct(wProd), 0) : "—", "Workers requests pacing", wProd ? usageLevelFromPct(pacingPct(wProd)) : "ok"),
       kpiTile(String(attention.length), attention.length === 1 ? "item needs attention" : "items need attention",
         attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"),
     );
-
-    // Period progress bar
-    const prog = el("div", "cf-progress");
-    const fill = el("div", "cf-progress-fill");
-    fill.style.width = `${periodProgress(billing.period.day, billing.period.days).elapsedPct}%`;
-    prog.append(fill);
 
     // Needs attention list
     const attentionCard = el("section", "cf-card");
@@ -104,7 +106,7 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
         attentionCard.append(link);
       }
     }
-    root.replaceChildren(statusBar(sumRes, billRes, root), grid, prog, attentionCard);
+    root.replaceChildren(statusBar(sumRes, billRes, root), grid, attentionCard);
   } catch (err) {
     errorState(root, err);
   }

@@ -78,6 +78,33 @@ describe("collectAttention", () => {
     expect(items.some((i) => i.level === "critical" && i.title.includes("past allowance"))).toBe(true);
   });
 
+  it("formats past-allowance details with the product unit", () => {
+    const p = product(0, 214, 10);
+    p.unit = "GB";
+    const items = collectAttention(emptySummary(), billingWith([p]));
+    const row = items.find((i) => i.title.includes("past allowance"));
+    expect(row?.detail).toBe("214 GB used of 10 GB included");
+  });
+
+  it("names the unit in the overage allowance detail", () => {
+    const p = product(1, 214, 10);
+    p.unit = "GB";
+    const items = collectAttention(emptySummary(), billingWith([p]));
+    const row = items.find((i) => i.title.includes("overage"));
+    expect(row?.detail).toBe("projected $1.00 beyond the 10 GB allowance");
+  });
+
+  it("formats raw counts compactly in summary rows", () => {
+    const summary = emptySummary();
+    summary.d1.push({ name: "big", rowsRead: 412_000_000, rowsWritten: 0, readQueries: 0, rowsPerQuery: 0 });
+    summary.workers.push({ script: "api", requests: 412_000_000, errors: 10_000, errorPct: 5, cpuP50Ms: null, cpuP99Ms: null });
+    summary.zones.push({ zone: "example.com", total: 412_000_000, uncached: 412_000, missPct: 8.8 });
+    const items = collectAttention(summary, billingWith([]));
+    expect(items.find((i) => i.title === "big rows read")?.detail).toBe("412.0M rows in 24h");
+    expect(items.find((i) => i.title === "api errors")?.detail).toBe("5.00% of 412.0M requests");
+    expect(items.find((i) => i.title === "example.com cache misses")?.detail).toBe("412.0k uncached · 8.8% miss");
+  });
+
   it("surfaces billing telemetry gaps once", () => {
     const items = collectAttention(emptySummary(), billingWith([], ["d1 storage: timeout"]));
     expect(items.filter((i) => i.title === "Telemetry gap")).toHaveLength(1);

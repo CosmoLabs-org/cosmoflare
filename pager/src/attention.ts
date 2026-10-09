@@ -29,7 +29,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level: critical ? "critical" : "warning",
           title: `${p.product} ${p.metric.toLowerCase()} overage`,
-          detail: `projected $${p.projectedOverageUsd.toFixed(2)} beyond the ${formatCount(p.included)} allowance`,
+          detail: `projected $${p.projectedOverageUsd.toFixed(2)} beyond the ${formatCount(p.included)} ${p.unit} allowance`,
           route: "billing",
         });
       }
@@ -37,7 +37,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level: "critical",
           title: `${p.product} ${p.metric.toLowerCase()} past allowance`,
-          detail: `${formatCount(p.used)} used of ${formatCount(p.included)} included`,
+          detail: `${formatCount(p.used)} ${p.unit} used of ${formatCount(p.included)} ${p.unit} included`,
           route: "billing",
         });
       }
@@ -66,7 +66,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level,
           title: `${w.script} errors`,
-          detail: `${w.errorPct.toFixed(2)}% of ${w.requests.toLocaleString("en-US")} requests`,
+          detail: `${w.errorPct.toFixed(2)}% of ${formatCount(w.requests)} requests`,
           route: "workers",
         });
       }
@@ -77,7 +77,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level,
           title: `${d.name} rows read`,
-          detail: `${d.rowsRead.toLocaleString("en-US")} rows in 24h`,
+          detail: `${formatCount(d.rowsRead)} rows in 24h`,
           route: "d1",
         });
       }
@@ -88,7 +88,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
         items.push({
           level,
           title: `${z.zone} cache misses`,
-          detail: `${z.uncached.toLocaleString("en-US")} uncached${z.missPct !== null ? ` · ${z.missPct.toFixed(1)}% miss` : ""}`,
+          detail: `${formatCount(z.uncached)} uncached${z.missPct !== null ? ` · ${z.missPct.toFixed(1)}% miss` : ""}`,
           route: "zones",
         });
       }
