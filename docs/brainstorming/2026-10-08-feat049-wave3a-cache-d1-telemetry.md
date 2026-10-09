@@ -109,3 +109,16 @@ These facts come from the current tree. The plan must cover each one.
 
 KV hit rate (D9); header sweep, repeat-probe, auth-route cache check, unused bindings (FEAT-050);
 model-B baselines; dashboard graphs; D1 cost projection in alerts (the usage view covers pacing).
+
+## Post-implementation change (2026-10-09, O18 dry run)
+
+D4 (uncached %) was replaced before release. A live dry run at the
+starter thresholds showed `zone-uncached-pct >= 80` paging 23 of 42 zones:
+Workers responses carry `cacheStatus = dynamic` by design, so every
+Workers-served site sits at 97-100% "uncached" and the ratio cannot tell
+an API that must never be cached from public pages that should be. The
+shipped condition is `zone-uncached-requests` — the absolute count of
+dynamic + bypass eyeball requests over the window, with no floor (each one
+is a billed Worker invocation or origin hit). At 10,000/24h it pages 2
+zones on the live account (cosmolearning.org, mycar.guide). The D6 floor
+still applies to `zone-cache-miss-pct`. Operator decision; commit cf8d0b7.
