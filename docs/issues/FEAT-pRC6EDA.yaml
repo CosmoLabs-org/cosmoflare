@@ -1,11 +1,11 @@
 id: FEAT-pRC6EDA
 type: feature
 created_at: 2026-10-10T03:26:33.104172+04:00
-updated_at: 2026-10-10T03:26:34.685289+04:00
+updated_at: 2026-10-10T03:57:53.049838+04:00
 source: local
 ulid: 01M4HFTRGN4XQ3GM0AY0RC6EDA
 provisional: true
-status: open
+status: implemented
 origin:
     roadmap_items:
         - ROAD-107
@@ -16,3 +16,10 @@ acceptance_criteria:
     - criterion: sort controls visible top-right on all three list views; numeric-desc default; preference persists across reloads; tests
       met: false
 roadmap_ref: ROAD-107
+resolution:
+    notes: 'Implemented and deployed 2026-10-10: sort-by select + direction toggle top-right on Workers/D1/zones, largest-first defaults, localStorage persistence. 153 tests, detector 0, live-verified.'
+    resolved_at: 2026-10-10T03:57:53.04874+04:00
+revisions:
+    - date: "2026-10-10T03:57:53.048735+04:00"
+      action: closed
+      context: 'Implemented and deployed 2026-10-10: sort-by select + direction toggle top-right on Workers/D1/zones, largest-first defaults, localStorage persistence. 153 tests, detector 0, live-verified.'

@@ -38,6 +38,9 @@ entries:
         - description: 'Ops domains view: full domain list with status, paused badges, and renewal attention coloring (FEAT-p9GD588)'
           source: manual
           date: 2026-10-10T03:55:33.290496+04:00
+        - description: 'Ops tables: top-right sort controls with direction toggle and saved preference, largest-first by default (FEAT-pRC6EDA)'
+          source: manual
+          date: 2026-10-10T03:57:53.254648+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
