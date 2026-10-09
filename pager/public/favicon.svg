@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Cosmoflare Ops favicon: same mark as icon-master.svg on a rounded tile
+       (tabs show the tile edge, so the square master reads unfinished there). -->
+  <rect width="512" height="512" rx="112" fill="#1a1a1a"/>
+  <path d="M 294.8 111.1 A 150 150 0 1 0 400.9 217.2" fill="none" stroke="#f59e0b" stroke-width="54" stroke-linecap="round"/>
+  <circle cx="362.1" cy="149.9" r="50" fill="#f59e0b"/>
+  <circle cx="126.1" cy="331" r="18" fill="#7dd3fc"/>
+</svg>

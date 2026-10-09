@@ -2,12 +2,16 @@
   "name": "Cosmoflare Ops",
   "short_name": "CF Ops",
   "description": "Cosmoflare Ops (FEAT-045, FEAT-052): private dashboard and push-alert pager. The phone holds no Cloudflare credentials.",
+  "id": "/",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#1a1a1a",
   "background_color": "#1a1a1a",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
