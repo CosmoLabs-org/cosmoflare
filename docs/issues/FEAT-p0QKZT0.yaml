@@ -1,11 +1,11 @@
 id: FEAT-p0QKZT0
 type: feature
 created_at: 2026-10-10T03:26:18.236927+04:00
-updated_at: 2026-10-10T03:26:20.037587+04:00
+updated_at: 2026-10-10T03:31:33.894623+04:00
 source: local
 ulid: 01M4HFTA4CS9QKBSZH2B0QKZT0
 provisional: true
-status: open
+status: implemented
 origin:
     roadmap_items:
         - ROAD-107
@@ -18,3 +18,10 @@ acceptance_criteria:
     - criterion: sorted by overage desc; drill-down shows drivers + consumers
       met: false
 roadmap_ref: ROAD-107
+resolution:
+    notes: 'Implemented and deployed 2026-10-10: #/projects view over the existing billing payload. 147 tests, detector 0, live-verified.'
+    resolved_at: 2026-10-10T03:31:33.893562+04:00
+revisions:
+    - date: "2026-10-10T03:31:33.893557+04:00"
+      action: closed
+      context: 'Implemented and deployed 2026-10-10: #/projects view over the existing billing payload. 147 tests, detector 0, live-verified.'

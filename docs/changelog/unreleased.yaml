@@ -29,6 +29,9 @@ entries:
         - description: 'CLI: stable error_code field in --json error output, wave 1 mechanism + envelope (FEAT-p8KYM5K)'
           source: manual
           date: 2026-10-10T03:10:43.087603+04:00
+        - description: 'Ops projects view: per-project consumption and overage across Cloudflare, zero new upstream calls (FEAT-p0QKZT0)'
+          source: manual
+          date: 2026-10-10T03:31:34.09129+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
