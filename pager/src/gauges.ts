@@ -245,8 +245,8 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
     : `cf-level-${level}${level === "critical" ? " cf-flow" : ""}`;
 
   const svg = document.createElementNS(SVG_NS, "svg");
-  // 26px band below the ring holds the (up to two-line) label text.
-  svg.setAttribute("viewBox", `0 0 ${size} ${size + 26}`);
+  // Band below the ring holds the label lines and (when present) the
+  // allowance; the viewBox height is finalized after the band renders.
   svg.classList.add("cf-ring-svg", ...levelClass.split(" "));
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", ariaLabelFor(props));
@@ -328,12 +328,13 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
     svg.append(notch);
   }
 
-  // Center: projected % (big, level-colored), "N% used so far" and the
-  // allowance ("of 25.0B rows") muted under it — the projection is the
-  // headline; the used share is context, the allowance is the reference.
+  // Center holds only the headline: the projected % big and level-colored,
+  // one muted line under it (used %, or the size for storage metrics). The
+  // allowance ("of 25.0B rows") moved below the ring with the label — three
+  // stacked lines inside the arc read as clutter at phone width.
   const value = document.createElementNS(SVG_NS, "text");
   value.setAttribute("x", String(cx));
-  value.setAttribute("y", String(cy - 12));
+  value.setAttribute("y", String(cy - 6));
   value.setAttribute("text-anchor", "middle");
   value.setAttribute("dominant-baseline", "central");
   value.classList.add("cf-ring-value");
@@ -342,31 +343,21 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
 
   const usedLine = document.createElementNS(SVG_NS, "text");
   usedLine.setAttribute("x", String(cx));
-  usedLine.setAttribute("y", String(cy + 4));
+  usedLine.setAttribute("y", String(cy + 12));
   usedLine.setAttribute("text-anchor", "middle");
   usedLine.setAttribute("dominant-baseline", "central");
   usedLine.classList.add("cf-ring-usedpct");
   usedLine.textContent = ringSecondLine(props.usedPct, props.usedLineText);
   svg.append(usedLine);
 
-  if (props.sublabel) {
-    const sub = document.createElementNS(SVG_NS, "text");
-    sub.setAttribute("x", String(cx));
-    sub.setAttribute("y", String(cy + 18));
-    sub.setAttribute("text-anchor", "middle");
-    sub.setAttribute("dominant-baseline", "central");
-    sub.classList.add("cf-ring-sub");
-    sub.textContent = `of ${props.sublabel}`;
-    svg.append(sub);
-  }
-
-  // Label below the ring — up to two centered lines, never truncated.
+  // Label band below the ring: the (up to two-line) product label, then the
+  // allowance as its own muted line. Band height grows with content.
   const lines = labelLines(props.label);
   const label = document.createElementNS(SVG_NS, "text");
   label.setAttribute("x", String(cx));
   label.setAttribute("text-anchor", "middle");
   label.classList.add("cf-ring-label");
-  const ys = lines.length === 1 ? [size + 13] : [size + 9, size + 21];
+  const ys = lines.length === 1 ? [size + 12] : [size + 8, size + 20];
   lines.forEach((line, i) => {
     const tspan = document.createElementNS(SVG_NS, "tspan");
     tspan.setAttribute("x", String(cx));
@@ -376,6 +367,17 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
   });
   svg.append(label);
 
+  if (props.sublabel) {
+    const sub = document.createElementNS(SVG_NS, "text");
+    sub.setAttribute("x", String(cx));
+    sub.setAttribute("text-anchor", "middle");
+    sub.classList.add("cf-ring-sub");
+    sub.textContent = `of ${props.sublabel}`;
+    sub.setAttribute("y", String((lines.length === 1 ? size + 12 : size + 20) + 12));
+    svg.append(sub);
+  }
+
+  svg.setAttribute("viewBox", `0 0 ${size} ${size + (props.sublabel ? 46 : 32)}`);
   return svg;
 }
 

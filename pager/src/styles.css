@@ -1039,18 +1039,23 @@ body.cf-nav-open { overflow: hidden; }
 .cf-ring-svg { display: block; width: 100%; max-width: 132px; height: auto; }
 
 /* Ring parts. Colors ride the level class on the svg root; the value and
-   label stay text-colored so severity is never color-only. */
-.cf-ring-track { fill: none; stroke: var(--surface-raised); }
+   label stay text-colored so severity is never color-only. Stroke widths
+   are viewBox units (120 viewBox → ~display px): the geometry computes the
+   radius against a 10-unit stroke, so the arcs must actually draw at 10 —
+   the SVG default of 1 rendered them as hairlines. */
+.cf-ring-track { fill: none; stroke: var(--surface-raised); stroke-width: 10; }
 .cf-ring-projected {
   fill: none;
   stroke: var(--muted);
-  opacity: 0.55;
+  opacity: 0.35;
+  stroke-width: 10;
   stroke-dashoffset: var(--proj-off, 0);
   stroke-linecap: round;
 }
 .cf-ring-used {
   fill: none;
   stroke: var(--accent);
+  stroke-width: 10;
   stroke-linecap: round;
 }
 .cf-level-warning .cf-ring-used { stroke: var(--sev-warning); }
@@ -1058,6 +1063,7 @@ body.cf-nav-open { overflow: hidden; }
 .cf-ring-glow {
   fill: none;
   stroke: var(--sev-critical);
+  stroke-width: 12;
   stroke-linecap: round;
   opacity: 0.6;
   animation: cf-pulse 1.6s ease-in-out infinite;
@@ -1065,14 +1071,14 @@ body.cf-nav-open { overflow: hidden; }
 .cf-ring-value {
   fill: var(--accent);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .cf-level-warning .cf-ring-value { fill: var(--sev-warning); }
 .cf-level-critical .cf-ring-value { fill: var(--sev-critical); }
-.cf-ring-usedpct { fill: var(--muted); font-size: 9px; }
-.cf-ring-sub { fill: var(--muted); font-size: 9px; }
+.cf-ring-usedpct { fill: var(--muted); font-size: 9.5px; }
+.cf-ring-sub { fill: var(--muted); font-size: 9.5px; }
 .cf-ring-label { fill: var(--muted); font-size: 10px; letter-spacing: 0.02em; }
 /* Today dot: a 3px point ON the track at the expected-to-date angle — not
    a line crossing the ring (the slanted tick read as a glitch). */
