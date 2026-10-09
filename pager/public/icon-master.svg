@@ -1,8 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Cosmoflare Ops mark: orbit ring with a flare pulse and a satellite tick.
-       Dark-first (bg #1a1a1a), amber accent (#f59e0b), sky-blue secondary (#7dd3fc). -->
+  <!-- CosmoLabs Ops · Cosmoflare mark: a monitoring pulse crossing an orbit
+       ring — operations on Cloudflare's edge. Dark-first (bg #1a1a1a),
+       amber primary (#f59e0b), one cool secondary (#7dd3fc) satellite tick
+       on the ring. No text, no cloud, no bolt. -->
   <rect width="512" height="512" fill="#1a1a1a"/>
-  <path d="M 294.8 111.1 A 150 150 0 1 0 400.9 217.2" fill="none" stroke="#f59e0b" stroke-width="54" stroke-linecap="round"/>
-  <circle cx="362.1" cy="149.9" r="50" fill="#f59e0b"/>
-  <circle cx="126.1" cy="331" r="18" fill="#7dd3fc"/>
+  <!-- Orbit ring -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#f59e0b" stroke-width="54"/>
+  <!-- Pulse line: dark halo cuts the ring where the pulse crosses it -->
+  <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442"
+        fill="none" stroke="#1a1a1a" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 70 256 H 190 l 26 -80 l 48 160 l 26 -80 H 442"
+        fill="none" stroke="#f59e0b" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Satellite tick: secondary #7dd3fc, set into the ring with a dark gap -->
+  <circle cx="150" cy="150" r="38" fill="#1a1a1a"/>
+  <circle cx="150" cy="150" r="21" fill="#7dd3fc"/>
 </svg>

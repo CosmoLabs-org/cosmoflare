@@ -149,7 +149,27 @@ body.cf-nav-open { overflow: hidden; }
   padding: 12px 8px 12px 16px; /* drawer's padding-top already carries env(safe-area-inset-top) */
   border-bottom: 1px solid var(--border);
 }
-.cf-drawer-brand { font-size: 16px; font-weight: 600; letter-spacing: 0.01em; }
+
+/* ---- Brand lockup: logo mark + two-line name. Shared by the top bar
+   (h1), the drawer header and the desktop sidebar. ---- */
+.cf-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.cf-brand-mark { display: inline-flex; flex: none; }
+.cf-brand-mark svg { display: block; }
+.cf-brand-text { display: grid; line-height: 1.15; }
+.cf-brand-name { font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
+.cf-brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+
+/* Sidebar lockup sits in its own band above the links. */
+.cf-sidebar-brand {
+  padding: 6px 8px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
 .cf-drawer-close {
   background: none;
   border: none;
