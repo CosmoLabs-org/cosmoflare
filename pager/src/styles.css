@@ -1,21 +1,28 @@
-/* Cosmoflare Pager design tokens — mirror desktop/src/styles.css verbatim
-   (FEAT-045): dark-first, severity ramp, 8px radius. */
+/* Cosmoflare Pager design tokens — dark-first, severity ramp. FEAT-045
+   tokens kept and extended for the Ops shell (FEAT-052): nav, KPI tiles,
+   meters, tables, skeletons. Motion: ease-out enter, ease-in exit, ~200ms,
+   transform/opacity only. */
 
 :root {
   color-scheme: dark;
-  --bg: #1a1a1a;
-  --surface: #242424;
-  --surface-raised: #2e2e2e;
-  --border: #3a3a3a;
-  --text: #e6e6e6;
-  --muted: #a8a8a8;
-  --accent: #f59e0b;
+  --bg: #16161a;
+  --surface: #1f1f24;
+  --surface-raised: #292930;
+  --border: #35353d;
+  --text: #ececf1;
+  --muted: #9b9ba6;
+  --accent: #f5a623;
   --focus: #7dd3fc;
   --sev-info: #7dd3fc;
-  --sev-warning: #f59e0b;
+  --sev-warning: #f5a623;
   --sev-critical: #f87171;
-  --radius: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sev-ok: #4ade80;
+  --radius: 10px;
+  --nav-w: 220px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --dur: 200ms;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text);
@@ -24,29 +31,436 @@
 
 body { margin: 0; min-height: 100vh; }
 
-/* App header with the two-tab switch. */
+/* ---- Shell layout: top bar, sidebar (≥1024px), main column ---- */
+
 .cf-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 10px 16px;
+  padding-top: calc(10px + env(safe-area-inset-top));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
-.cf-top h1 { font-size: 20px; margin: 0; }
-.cf-tabs button {
+.cf-top h1 { font-size: 18px; margin: 0; letter-spacing: 0.01em; }
+
+.cf-hamburger {
+  display: none;
   background: none;
   border: none;
-  color: var(--muted);
-  font: inherit;
-  padding: 6px 10px;
+  color: var(--text);
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius);
   cursor: pointer;
 }
-.cf-tabs button[aria-selected="true"] { color: var(--text); background: var(--surface-raised); }
+.cf-hamburger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-.cf-main { padding: 16px; max-width: 640px; margin: 0 auto; }
+.cf-skip-link {
+  position: absolute;
+  inset-inline-start: -999px;
+  top: 0;
+  background: var(--surface-raised);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 0 0 var(--radius) 0;
+  z-index: 50;
+}
+.cf-skip-link:focus { inset-inline-start: 0; }
 
-/* Alert cards: severity is encoded as the 3px left border (desktop parity). */
+/* Two-column shell at 1024px and above; single column below. */
+.cf-shell { display: block; }
+
+@media (min-width: 1024px) {
+  .cf-hamburger { display: none; }
+  .cf-shell {
+    display: grid;
+    grid-template-columns: var(--nav-w) minmax(0, 1fr);
+  }
+  .cf-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 8px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 57px;
+    height: calc(100vh - 57px);
+    overflow-y: auto;
+  }
+  .cf-drawer, .cf-backdrop { display: none !important; }
+}
+
+@media (max-width: 1023.98px) {
+  .cf-sidebar { display: none; }
+  .cf-hamburger { display: inline-flex; }
+}
+
+/* ---- Drawer ---- */
+
+.cf-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease-in);
+  z-index: 30;
+}
+.cf-backdrop.is-open { opacity: 1; transition-timing-function: var(--ease-out); }
+
+.cf-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: min(78vw, 300px);
+  padding: 12px 8px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+  transform: translateX(-100%);
+  transition: transform var(--dur) var(--ease-in);
+  z-index: 40;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cf-drawer.is-open { transform: translateX(0); transition-timing-function: var(--ease-out); }
+
+body.cf-nav-open { overflow: hidden; }
+
+.cf-navlink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 12px 12px;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+.cf-navlink:hover { color: var(--text); background: var(--surface-raised); }
+.cf-navlink[aria-current="page"] {
+  color: var(--text);
+  background: var(--surface-raised);
+  font-weight: 600;
+}
+.cf-navlink[aria-current="page"] .cf-navglyph { color: var(--accent); }
+.cf-navglyph { width: 20px; text-align: center; opacity: 0.9; }
+.cf-navlink:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* ---- Main column and cards ---- */
+
+.cf-main {
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 1024px) {
+  .cf-main { max-width: 1040px; }
+}
+
+.cf-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.cf-card h2 {
+  font-size: 13px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cf-card h2:not(:first-child) { margin-top: 14px; }
+
+/* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
+.cf-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cf-kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.cf-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.cf-kpi-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cf-kpi.cf-level-critical { border-color: var(--sev-critical); }
+.cf-kpi.cf-level-critical .cf-kpi-value { color: var(--sev-critical); }
+.cf-kpi.cf-level-warning { border-color: color-mix(in srgb, var(--sev-warning) 60%, var(--border)); }
+.cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
+
+/* Progress bar (billing period). */
+.cf-progress {
+  height: 8px;
+  background: var(--surface-raised);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cf-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+/* Needs-attention rows are links — never color-only, the "!" and "•" marks
+   repeat the severity in text form. */
+.cf-attention {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 2px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.cf-card h2 + .cf-attention { border-top: none; }
+.cf-attention:hover { background: var(--surface-raised); }
+.cf-attention-mark { width: 18px; text-align: center; font-weight: 700; }
+.cf-attention-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cf-attention-chevron { color: var(--muted); }
+.cf-attention.cf-level-critical .cf-attention-mark { color: var(--sev-critical); }
+.cf-attention.cf-level-warning .cf-attention-mark { color: var(--sev-warning); }
+
+/* Status line + dash bar (shared by every data view). */
+.cf-dash-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  min-height: 36px;
+}
+.cf-status { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* Skeleton loaders. */
+.cf-loading { display: grid; gap: 10px; }
+.cf-skeleton {
+  height: 64px;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--surface) 40%, var(--surface-raised) 50%, var(--surface) 60%);
+  background-size: 200% 100%;
+  animation: cf-shimmer 1.4s linear infinite;
+}
+@keyframes cf-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Meters (billing products). */
+.cf-meter { margin: 10px 0 4px; }
+.cf-meter-track {
+  position: relative;
+  height: 12px;
+  background: var(--surface-raised);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cf-meter-used {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: var(--accent);
+  border-radius: 999px 0 0 999px;
+}
+.cf-meter-projected {
+  position: absolute;
+  inset-block: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--accent) 45%, transparent) 0 6px,
+    transparent 6px 12px
+  );
+}
+.cf-meter-marker {
+  position: absolute;
+  inset-block: -3px;
+  width: 2px;
+  background: var(--text);
+  opacity: 0.9;
+}
+.cf-meter-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.cf-legend-swatch::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-inline-end: 6px;
+  background: var(--surface-raised);
+  vertical-align: -1px;
+}
+.cf-swatch-used::before { background: var(--accent); }
+.cf-swatch-projected::before {
+  background: repeating-linear-gradient(45deg, var(--accent) 0 3px, transparent 3px 6px);
+}
+
+/* Allowance marker legend swatch: a line, not a block. */
+.cf-swatch-allowance::before {
+  background: var(--text);
+  width: 2px;
+  border-radius: 1px;
+}
+
+/* Product cards. */
+.cf-product-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cf-product-overage { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
+.cf-level-critical-text { color: var(--sev-critical); }
+.cf-ok-text { color: var(--sev-ok); }
+
+/* Tables. */
+.cf-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cf-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.cf-table td { padding: 8px; border-top: 1px solid var(--border); }
+.cf-table tbody tr:hover { background: color-mix(in srgb, var(--surface-raised) 60%, transparent); }
+.cf-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cf-table th:nth-child(n + 2) { text-align: right; }
+.cf-table th:first-child { text-align: left; }
+
+/* Table toolbar: filter input + mobile sort select. */
+.cf-table-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cf-filter {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+.cf-filter:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cf-sort-select {
+  display: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  max-width: 44%;
+}
+/* On phones the header buttons are cramped: show the sort select, keep the
+   header tappable too (both work). */
+@media (max-width: 600px) {
+  .cf-sort-select { display: block; }
+}
+
+/* Sort buttons inside headers. */
+.cf-sort-btn {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.cf-sort-btn[aria-pressed="true"] { color: var(--text); }
+.cf-sort-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* Zone status stacked bar + legend. */
+.cf-zonestack { display: grid; gap: 4px; min-width: 180px; }
+.cf-stack {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+.cf-seg-hit { background: var(--sev-ok); }
+.cf-seg-miss { background: var(--sev-critical); }
+.cf-seg-dynamic { background: var(--sev-info); }
+.cf-seg-bypass { background: var(--sev-warning); }
+.cf-seg-other { background: var(--muted); }
+.cf-stack-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cf-stack-legend .cf-legend-swatch::before { width: 8px; height: 8px; }
+
+/* ---- Carried over from FEAT-045 (alerts + pairing views) ---- */
+
+.cf-btn {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out);
+}
+.cf-btn:active { transform: translateY(1px); }
+.cf-btn-primary { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+.cf-btn-ghost { background: none; }
+.cf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cf-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.cf-empty { color: var(--muted); text-align: center; padding: 48px 0; }
+.cf-empty-quiet { padding: 12px 0; }
+.cf-login-expired { color: var(--sev-warning); }
+
+/* Alert cards: severity encoded as the 3px left border (desktop parity). */
 .cf-alert {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -78,24 +492,7 @@ body { margin: 0; min-height: 100vh; }
   margin-top: 2px;
 }
 .cf-alert-detail { color: var(--muted); font-size: 13px; margin: 8px 0; }
-.cf-alert-actions { display: flex; gap: 8px; }
-
-.cf-btn {
-  font: inherit;
-  font-size: 13px;
-  color: var(--text);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.cf-btn-primary { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
-.cf-btn-ghost { background: none; }
-.cf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.cf-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-
-.cf-empty { color: var(--muted); text-align: center; padding: 48px 0; }
+.cf-alert-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .cf-pairing {
   background: var(--surface);
@@ -114,19 +511,25 @@ body { margin: 0; min-height: 100vh; }
   padding: 8px 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
-  color: var(--text);
 }
 
-/* Dashboard (FEAT-052): cards of rows; level color mirrors the severity ramp. */
-.cf-dash-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.cf-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px; }
-.cf-card h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; letter-spacing: 0.02em; }
+/* Summary rows (level-colored rows, overview + detail rows). */
 .cf-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); border-left: 3px solid transparent; padding-left: 8px; }
-.cf-card h2 + .cf-row { border-top: none; }
-.cf-row-label { min-width: 0; overflow-wrap: anywhere; }
 .cf-row-detail { color: var(--muted); font-size: 13px; }
 .cf-row-value { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
 .cf-level-warning { border-left-color: var(--sev-warning); }
 .cf-level-critical { border-left-color: var(--sev-critical); }
 .cf-level-critical .cf-row-value { color: var(--sev-critical); }
 .cf-level-warning .cf-row-value { color: var(--sev-warning); }
+
+/* Pricing footnote links. */
+.cf-pricing-note { color: var(--muted); font-size: 12px; }
+.cf-link { color: var(--focus); }
+
+/* Motion discipline: reduced motion kills the drawer/backdrop animation
+   and the shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .cf-drawer, .cf-backdrop { transition: none; }
+  .cf-skeleton { animation: none; }
+  .cf-btn, .cf-btn:active { transition: none; transform: none; }
+}
