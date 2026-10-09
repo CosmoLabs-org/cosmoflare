@@ -29,17 +29,33 @@ export interface ZoneRow {
   uncached: number;
   eligible: number;
   missPct: number | null; // null under the 100-eligible floor
+  byStatus: Record<string, number>; // every cacheStatus count, v2
 }
 export interface D1Group {
   databaseId: string;
   rowsRead: number;
   readQueries: number;
+  rowsWritten: number; // v2
 }
 export interface D1Row {
   name: string;
+  databaseId: string; // v2
   rowsRead: number;
   readQueries: number;
+  rowsWritten: number; // v2
   rowsPerQuery: number;
+}
+// 24h per-script row (v2). CPU quantiles are stored in ms: the GraphQL
+// quantiles are microseconds ("CPU time 99th percentile - microseconds",
+// live schema description 2026-10-09; Cloudflare's own exporter also treats
+// them as µs) and a real query on 2026-10-09 returned e.g. cpuTimeP50=1108.
+export interface WorkerRow {
+  script: string;
+  requests: number;
+  errors: number;
+  errorPct: number;
+  cpuP50Ms: number | null;
+  cpuP99Ms: number | null;
 }
 export interface UsageRow {
   id: string;
@@ -56,6 +72,8 @@ export interface Summary {
   d1: D1Row[];
   zones: ZoneRow[];
   errors: string[];
+  workers: WorkerRow[]; // v2, sorted by requests desc
+  cache?: { ageSec: number; stale: boolean }; // filled by the route from cached()
 }
 
 export function summarizeZones(data: ZoneGroups[], names: Record<string, string>): ZoneRow[] {
@@ -75,27 +93,50 @@ export function summarizeZones(data: ZoneGroups[], names: Record<string, string>
       if (MISSED.has(status)) missed += n;
     }
     const missPct = eligible >= ZONE_CACHE_FLOOR ? (100 * missed) / eligible : null;
-    return { zone, total, uncached, eligible, missPct };
+    const byStatus: Record<string, number> = {};
+    for (const [status, n] of m) byStatus[status] = n;
+    return { zone, total, uncached, eligible, missPct, byStatus };
   });
   return rows.sort((a, b) => b.uncached - a.uncached || a.zone.localeCompare(b.zone));
 }
 
 export function summarizeD1(groups: D1Group[], names: Record<string, string>): D1Row[] {
-  const byId = new Map<string, { rowsRead: number; readQueries: number }>();
+  const byId = new Map<string, { rowsRead: number; readQueries: number; rowsWritten: number }>();
   for (const g of groups) {
-    const acc = byId.get(g.databaseId) ?? { rowsRead: 0, readQueries: 0 };
+    const acc = byId.get(g.databaseId) ?? { rowsRead: 0, readQueries: 0, rowsWritten: 0 };
     acc.rowsRead += g.rowsRead;
     acc.readQueries += g.readQueries;
+    acc.rowsWritten += g.rowsWritten;
     byId.set(g.databaseId, acc);
   }
   return [...byId.entries()]
     .map(([id, a]) => ({
       name: names[id] || id,
+      databaseId: id,
       rowsRead: a.rowsRead,
       readQueries: a.readQueries,
+      rowsWritten: a.rowsWritten,
       rowsPerQuery: a.readQueries > 0 ? Math.round(a.rowsRead / a.readQueries) : 0,
     }))
     .sort((a, b) => b.rowsRead - a.rowsRead || a.name.localeCompare(b.name));
+}
+
+/** Per-script 24h rows: requests, errors, error % and CPU quantiles in ms.
+ *  Sorted by requests desc (v2 contract). CPU quantiles arrive as
+ *  microseconds (live schema description, 2026-10-09) — divided by 1000. */
+export function summarizeWorkers(
+  rows: { scriptName: string; requests: number; errors: number; cpuP50Us: number | null; cpuP99Us: number | null }[],
+): WorkerRow[] {
+  return rows
+    .map((r) => ({
+      script: r.scriptName,
+      requests: r.requests,
+      errors: r.errors,
+      errorPct: r.requests > 0 ? (100 * r.errors) / r.requests : 0,
+      cpuP50Ms: r.cpuP50Us === null ? null : r.cpuP50Us / 1000,
+      cpuP99Ms: r.cpuP99Us === null ? null : r.cpuP99Us / 1000,
+    }))
+    .sort((a, b) => b.requests - a.requests || a.script.localeCompare(b.script));
 }
 
 /** Percent used and linear projection to the end of the UTC calendar month. */
@@ -133,13 +174,31 @@ async function rest<T>(token: string, path: string): Promise<T[]> {
   return out;
 }
 
+// REST list loaders, exported so index.ts can wrap them in `cached` (the
+// 1 h / 24 h list TTLs) and pass them back through SummaryDeps.
+export async function fetchZonesList(token: string, accountId: string): Promise<{ id: string; name: string; status: string }[]> {
+  return rest(token, `/zones?account.id=${accountId}&status=active`);
+}
+
+export async function fetchD1List(token: string, accountId: string): Promise<{ uuid: string; name: string }[]> {
+  return rest(token, `/accounts/${accountId}/d1/database`);
+}
+
+// Optional list-loader overrides: the route passes cached() wrappers here.
+export interface SummaryDeps {
+  zonesList?: typeof fetchZonesList;
+  d1List?: typeof fetchD1List;
+}
+
 /** Collects the dashboard summary. Each section is independent: a failure
  *  becomes an entry in errors (the gap), never a failed page. */
-export async function collectSummary(accountId: string, token: string, now = new Date()): Promise<Summary> {
+export async function collectSummary(accountId: string, token: string, now = new Date(), deps: SummaryDeps = {}): Promise<Summary> {
   const end = now.toISOString();
   const start = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-  const summary: Summary = { generatedAt: end, windowHours: 24, usage: [], d1: [], zones: [], errors: [] };
+  const summary: Summary = { generatedAt: end, windowHours: 24, usage: [], d1: [], zones: [], errors: [], workers: [] };
+  const zonesList = deps.zonesList ?? ((tok: string, acct: string) => fetchZonesList(tok, acct));
+  const d1List = deps.d1List ?? ((tok: string, acct: string) => fetchD1List(tok, acct));
 
   // Two independent queries: a D1 failure (missing scope, dataset error)
   // must not hide Workers pacing — D1 is additive, as in the CLI (D15).
@@ -164,25 +223,47 @@ export async function collectSummary(accountId: string, token: string, now = new
 
   const d1 = (async () => {
     const [dbs, data] = await Promise.all([
-      rest<{ uuid: string; name: string }>(token, `/accounts/${accountId}/d1/database`).catch((e: Error) => {
+      d1List(token, accountId).catch((e: Error) => {
         summary.errors.push(`d1 names (showing IDs): ${e.message}`);
         return [] as { uuid: string; name: string }[];
       }),
-      gql<{ viewer: { accounts: { g: { sum: { rowsRead: number; readQueries: number }; dimensions: { databaseId: string } }[] }[] } }>(
+      gql<{ viewer: { accounts: { g: { sum: { rowsRead: number; readQueries: number; rowsWritten: number }; dimensions: { databaseId: string } }[] }[] } }>(
         token,
-        `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead readQueries} dimensions{databaseId}}}}}`,
+        `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: d1AnalyticsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{rowsRead readQueries rowsWritten} dimensions{databaseId}}}}}`,
         { a: accountId, s: start, e: end },
       ),
     ]);
     const names = Object.fromEntries(dbs.map((d) => [d.uuid, d.name]));
     summary.d1 = summarizeD1(
-      (data.viewer.accounts[0]?.g ?? []).map((g) => ({ databaseId: g.dimensions.databaseId, rowsRead: g.sum.rowsRead, readQueries: g.sum.readQueries })),
+      (data.viewer.accounts[0]?.g ?? []).map((g) => ({ databaseId: g.dimensions.databaseId, rowsRead: g.sum.rowsRead, readQueries: g.sum.readQueries, rowsWritten: g.sum.rowsWritten })),
       names,
     );
   })().catch((e: Error) => summary.errors.push(`d1: ${e.message}`));
 
+  // v2: per-script 24h rows. Fields verified live 2026-10-09 (a real query
+  // returned dimensions.scriptName, sum.{requests,errors},
+  // quantiles.{cpuTimeP50,cpuTimeP99} for 16 scripts). CPU quantiles are
+  // microseconds (live schema description "CPU time 99th percentile -
+  // microseconds") — converted to ms by summarizeWorkers.
+  const workers = (async () => {
+    const data = await gql<{ viewer: { accounts: { w: { dimensions: { scriptName: string }; sum: { requests: number; errors: number }; quantiles: { cpuTimeP50: number | null; cpuTimeP99: number | null } }[] }[] } }>(
+      token,
+      `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){w: workersInvocationsAdaptive(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests errors} quantiles{cpuTimeP50 cpuTimeP99}}}}}`,
+      { a: accountId, s: start, e: end },
+    );
+    summary.workers = summarizeWorkers(
+      (data.viewer.accounts[0]?.w ?? []).map((r) => ({
+        scriptName: r.dimensions.scriptName,
+        requests: r.sum.requests,
+        errors: r.sum.errors,
+        cpuP50Us: r.quantiles.cpuTimeP50,
+        cpuP99Us: r.quantiles.cpuTimeP99,
+      })),
+    );
+  })().catch((e: Error) => summary.errors.push(`workers: ${e.message}`));
+
   const zones = (async () => {
-    const list = await rest<{ id: string; name: string; status: string }>(token, `/zones?account.id=${accountId}&status=active`);
+    const list = await zonesList(token, accountId);
     const names = Object.fromEntries(list.map((z) => [z.id, z.name]));
     const ids = Object.keys(names);
     const q = `query($t:[String!],$s:Time!,$e:Time!){viewer{zones(filter:{zoneTag_in:$t}){zoneTag
@@ -198,6 +279,6 @@ export async function collectSummary(accountId: string, token: string, now = new
     summary.zones = summarizeZones((await Promise.all(batches)).flat(), names);
   })().catch((e: Error) => summary.errors.push(`zones: ${e.message}`));
 
-  await Promise.all([usage, d1, zones]);
+  await Promise.all([usage, d1, zones, workers]);
   return summary;
 }
