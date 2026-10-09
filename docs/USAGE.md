@@ -2815,7 +2815,7 @@ cosmoflare alerts create worker-failures \
 | `--threshold` | numeric | Value at which the alert fires |
 | `--action` | `webhook`, `email`, `log` | Notification method |
 | `--target` | URL or email | Where the notification goes |
-| `--exclude` | comma-separated zone or database names | Zone or database names a `zone`/`d1` rule skips (case-insensitive); `--exclude ""` on update clears the list |
+| `--exclude` | comma-separated zone or database names or IDs | Zones or databases a `zone`/`d1` rule skips (name or ID, case-insensitive); `--exclude ""` on update clears the list |
 
 ### Alert conditions
 
@@ -2856,7 +2856,7 @@ cosmoflare alerts create cache-misses --service zone --condition zone-cache-miss
 cosmoflare alerts create d1-scans --service d1 --condition d1-rows-read --threshold 1e9 --action log --target -
 ```
 
-`--exclude` takes comma-separated zone or database names, matched case-insensitively; `alerts update NAME --exclude ""` clears the list, and `alerts get` shows it.
+`--exclude` takes comma-separated zone or database names or IDs, matched case-insensitively (an ID still matches while the name list is unavailable and alerts fall back to IDs); `alerts update NAME --exclude ""` clears the list, and `alerts get` shows it.
 
 Known limitation: the watch window is a rolling 24h, while D1 Free-plan limits reset at 00:00 UTC — on Free accounts the d1 value and the daily limit do not line up exactly.
 
