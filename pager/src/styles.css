@@ -1,46 +1,106 @@
-/* Cosmoflare Pager design tokens — dark-first, severity ramp. FEAT-045
-   tokens kept and extended for the Ops shell (FEAT-052): nav, KPI tiles,
-   meters, tables, skeletons. Motion: ease-out enter, ease-in exit, ~200ms,
-   transform/opacity only. */
+/* Cosmoflare Pager — consolidated stylesheet (G-11 pass over FEAT-045/052,
+   Agent O gauges, IMP-pPFDXJA refresh). Dark-first, severity ramp.
+
+   Structure (ordered):
+     1. tokens      — color/surface, spacing, type, radius, motion, fonts
+     2. base        — element defaults, global overrides
+     3. shell       — top bar, burger, skip link, sidebar/drawer, brand, main
+     4. components  — card, buttons, inputs, progress, meters, tables,
+                      zonestack + legends, skeleton, refresh, shared rows
+     5. views       — dashboard (KPIs, attention), billing, alerts, pairing,
+                      rules, table views
+     6. gauges      — usage rings + bar gauges (FEAT-pDQ8JET)
+     7. motion      — all @keyframes
+     8. reduced-motion — single block that disables every animation/transition
+
+   Motion discipline: ease-out enters, ease-in exits, durations via
+   --dur-fast/--dur-med; transform/opacity only, ~200ms. */
+
+/* ============================================================
+   1. TOKENS
+   ============================================================ */
 
 :root {
   color-scheme: dark;
-  --bg: #16161a;
-  --surface: #1f1f24;
-  --surface-raised: #292930;
-  --border: #35353d;
-  --text: #ececf1;
-  --muted: #9b9ba6;
+
+  /* Surfaces: neutrals tinted toward the amber accent — no pure mid-greys. */
+  --bg: #1a1611;
+  --surface: #251f16;
+  --surface-raised: #2f2820;
+  --border: #3e362a;
+  --text: #f1ede4;
+  --muted: #a79e8f;
   --accent: #f5a623;
   --focus: #7dd3fc;
   --sev-info: #7dd3fc;
   --sev-warning: #f5a623;
   --sev-critical: #f87171;
   --sev-ok: #4ade80;
+
+  /* Radii: cards/controls use --radius, pills/tracks use --radius-pill. */
   --radius: 10px;
-  --nav-w: 220px;
+  --radius-pill: 999px;
+
+  /* Spacing scale: the ONLY spacing values — replace ad-hoc margins,
+     paddings and gaps with these where the computed value matches. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Type scale (sizes with companion line-heights). Off-scale sizes
+     (9/10/11/15/20px SVG text, nav, sub-labels) stay literal on purpose. */
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-lg: 1rem;       /* 16px */
+  --text-xl: 1.125rem;   /* 18px */
+  --text-2xl: 1.625rem;  /* 26px */
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-normal: 1.5;
+
+  /* Motion: ease-out enters, ease-in exits. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --dur: 200ms;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --dur-fast: 150ms;
+  --dur-med: 200ms;
+
+  --nav-w: 220px;
+
+  font-family: var(--font-body);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: var(--lh-normal);
   color: var(--text);
   background-color: var(--bg);
 }
 
+/* ============================================================
+   2. BASE
+   ============================================================ */
+
 body { margin: 0; min-height: 100vh; }
 
-/* ---- Shell layout: top bar, sidebar (≥1024px), main column ---- */
+/* The hidden attribute must always win, even over component display rules
+   (the drawer's display:flex was defeating it). */
+[hidden] { display: none !important; }
+
+/* ============================================================
+   3. SHELL — top bar, sidebar (≥1024px), drawer, main column
+   ============================================================ */
 
 .cf-top {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+  padding: 10px var(--space-4);
   padding-top: calc(10px + env(safe-area-inset-top));
-  padding-left: calc(16px + env(safe-area-inset-left));
-  padding-right: calc(16px + env(safe-area-inset-right));
+  padding-left: calc(var(--space-4) + env(safe-area-inset-left));
+  padding-right: calc(var(--space-4) + env(safe-area-inset-right));
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(8px);
@@ -48,7 +108,13 @@ body { margin: 0; min-height: 100vh; }
   top: 0;
   z-index: 20;
 }
-.cf-top h1 { font-size: 18px; margin: 0; letter-spacing: 0.01em; }
+.cf-top h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: var(--lh-tight);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
 
 .cf-hamburger {
   display: none;
@@ -74,7 +140,7 @@ body { margin: 0; min-height: 100vh; }
   height: 2px;
   border-radius: 1px;
   background: currentColor;
-  transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
+  transition: transform var(--dur-med) var(--ease-out), opacity var(--dur-med) var(--ease-out);
 }
 .cf-burger-bar:nth-child(1) { top: 4px; }
 .cf-burger-bar:nth-child(2) { top: 10px; width: 60%; }
@@ -89,7 +155,7 @@ body.cf-nav-open .cf-burger-bar:nth-child(3) { transform: translateY(-6px) rotat
   top: 0;
   background: var(--surface-raised);
   color: var(--text);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: 0 0 var(--radius) 0;
   z-index: 50;
 }
@@ -110,8 +176,8 @@ body.cf-nav-open .cf-burger-bar:nth-child(3) { transform: translateY(-6px) rotat
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 12px 8px;
-    padding-top: calc(12px + env(safe-area-inset-top));
+    padding: var(--space-3) var(--space-2);
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
     border-right: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -133,7 +199,7 @@ body.cf-nav-open .cf-burger-bar:nth-child(3) { transform: translateY(-6px) rotat
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   opacity: 0;
-  transition: opacity var(--dur) var(--ease-in);
+  transition: opacity var(--dur-med) var(--ease-in);
   z-index: 30;
 }
 .cf-backdrop.is-open { opacity: 1; transition-timing-function: var(--ease-out); }
@@ -143,13 +209,13 @@ body.cf-nav-open .cf-burger-bar:nth-child(3) { transform: translateY(-6px) rotat
   inset-block: 0;
   inset-inline-start: 0;
   width: min(78vw, 300px);
-  padding: 12px 8px;
-  padding-top: calc(12px + env(safe-area-inset-top));
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--space-2);
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
   background: var(--surface);
   border-inline-end: 1px solid var(--border);
   transform: translateX(-100%);
-  transition: transform var(--dur) var(--ease-in);
+  transition: transform var(--dur-med) var(--ease-in);
   z-index: 40;
   overflow-y: auto;
   display: flex;
@@ -165,9 +231,9 @@ body.cf-nav-open { overflow: hidden; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin: -12px -8px 8px; /* pull flush to the drawer top/side padding */
-  padding: 12px 8px 12px 16px; /* drawer's padding-top already carries env(safe-area-inset-top) */
+  gap: var(--space-2);
+  margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-2)) var(--space-2); /* pull flush to the drawer top/side padding */
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-4); /* drawer's padding-top already carries env(safe-area-inset-top) */
   border-bottom: 1px solid var(--border);
 }
 
@@ -182,14 +248,19 @@ body.cf-nav-open { overflow: hidden; }
 .cf-brand-mark { display: inline-flex; flex: none; }
 .cf-brand-mark svg { display: block; }
 .cf-brand-text { display: grid; line-height: 1.15; }
-.cf-brand-name { font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
+.cf-brand-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
 .cf-brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
 
 /* Sidebar lockup sits in its own band above the links. */
 .cf-sidebar-brand {
-  padding: 6px 8px 12px;
+  padding: 6px var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .cf-drawer-close {
   background: none;
@@ -214,7 +285,7 @@ body.cf-nav-open { overflow: hidden; }
   gap: 10px;
   color: var(--muted);
   text-decoration: none;
-  padding: 12px 12px;
+  padding: var(--space-3);
   border-radius: var(--radius);
   font-size: 15px;
 }
@@ -229,13 +300,13 @@ body.cf-nav-open { overflow: hidden; }
 .cf-navglyph svg { display: block; }
 .cf-navlink:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 
-/* ---- Main column and cards ---- */
+/* ---- Main column ---- */
 
 .cf-main {
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  padding-left: calc(16px + env(safe-area-inset-left));
-  padding-right: calc(16px + env(safe-area-inset-right));
+  padding: var(--space-4);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  padding-left: calc(var(--space-4) + env(safe-area-inset-left));
+  padding-right: calc(var(--space-4) + env(safe-area-inset-right));
   max-width: 880px;
   margin: 0 auto;
   width: 100%;
@@ -245,15 +316,20 @@ body.cf-nav-open { overflow: hidden; }
   .cf-main { max-width: 1040px; }
 }
 
+/* ============================================================
+   4. COMPONENTS
+   ============================================================ */
+
 .cf-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  padding: 14px var(--space-4);
+  margin-bottom: var(--space-3);
 }
 .cf-card h2 {
-  font-size: 13px;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
   margin: 0 0 10px;
   color: var(--muted);
   font-weight: 600;
@@ -262,116 +338,46 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-card h2:not(:first-child) { margin-top: 14px; }
 
-/* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
-.cf-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.cf-kpi {
-  background: var(--surface);
+/* Buttons. */
+.cf-btn {
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 6px var(--space-3);
+  min-height: 44px;
+  cursor: pointer;
+  transition: background var(--dur-med) var(--ease-out);
 }
-.cf-kpi-value {
-  font-size: 26px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-.cf-kpi-label {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.cf-kpi-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 1px;
-  opacity: 0.85;
-}
-/* Tile borders stay neutral — only the big value takes the severity color. */
-.cf-kpi.cf-level-critical .cf-kpi-value { color: var(--sev-critical); }
-.cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
+.cf-btn:active { transform: translateY(1px); }
+.cf-btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.cf-btn-ghost { background: none; }
+.cf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cf-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-/* Mobile: 5 tiles leave an orphan at auto-fit. Two columns with the first
-   tile (projected overage) spanning both fills 1 + 2 + 2 evenly. */
-@media (max-width: 599.98px) {
-  .cf-kpis { grid-template-columns: 1fr 1fr; }
-  .cf-kpi:first-child { grid-column: 1 / -1; }
-}
-
-/* Progress bar (billing period). Inside a KPI tile it runs thin and flush
+/* Billing period progress bar. Inside a KPI tile it runs thin and flush
    with the tile bottom; standalone (billing view) it stays 8px. */
 .cf-progress {
   height: 8px;
   background: var(--surface-raised);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 .cf-progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
-.cf-kpi .cf-progress {
-  height: 4px;
-  /* Span the tile edge-to-edge: cancel the tile's padding. */
-  margin: 8px -14px -12px;
-  border-radius: 0 0 var(--radius) var(--radius);
-}
-.cf-kpi .cf-progress .cf-progress-fill { border-radius: 0; }
-
-/* Needs-attention rows are links — never color-only, the "!" and "•" marks
-   repeat the severity in text form. */
-.cf-attention {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 10px 2px;
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  text-decoration: none;
-}
-.cf-card h2 + .cf-attention { border-top: none; }
-.cf-attention:hover { background: var(--surface-raised); }
-.cf-attention-mark { width: 18px; text-align: center; font-weight: 700; }
-.cf-attention-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.cf-attention-chevron { color: var(--muted); }
-.cf-attention.cf-level-critical .cf-attention-mark { color: var(--sev-critical); }
-.cf-attention.cf-level-warning .cf-attention-mark { color: var(--sev-warning); }
-
-/* Status line + dash bar (shared by every data view). */
-.cf-dash-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-  min-height: 36px;
-}
-.cf-status { margin: 0; color: var(--muted); font-size: 13px; }
-
-/* Skeleton loaders. */
-.cf-loading { display: grid; gap: 10px; }
-.cf-skeleton {
-  height: 64px;
-  border-radius: var(--radius);
-  background: linear-gradient(100deg, var(--surface) 40%, var(--surface-raised) 50%, var(--surface) 60%);
-  background-size: 200% 100%;
-  animation: cf-shimmer 1.4s linear infinite;
-}
-@keyframes cf-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 /* Meters (billing products). */
-.cf-meter { margin: 10px 0 4px; }
+.cf-meter { margin: 10px 0 var(--space-1); }
 .cf-meter-track {
   position: relative;
   height: 12px;
   background: var(--surface-raised);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 .cf-meter-used {
@@ -379,7 +385,7 @@ body.cf-nav-open { overflow: hidden; }
   inset-block: 0;
   inset-inline-start: 0;
   background: var(--accent);
-  border-radius: 999px 0 0 999px;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 }
 .cf-meter-projected {
   position: absolute;
@@ -400,7 +406,7 @@ body.cf-nav-open { overflow: hidden; }
 .cf-meter-legend {
   display: flex;
   gap: 14px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
   margin-top: 6px;
 }
@@ -415,63 +421,74 @@ body.cf-nav-open { overflow: hidden; }
   border-radius: 1px;
 }
 
-/* Product cards. */
-.cf-product-head {
+/* Status line + dash bar (shared by every data view). */
+.cf-dash-bar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  min-height: 36px;
 }
-.cf-product-overage { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
-.cf-level-critical-text { color: var(--sev-critical); }
-/* BUG-057 defect 6: gauge badges use this class at warning level; it had no
-   rule, so the badge rendered unstyled. */
-.cf-level-warning-text { color: var(--sev-warning); }
-.cf-ok-text { color: var(--sev-ok); }
+.cf-status { margin: 0; color: var(--muted); font-size: var(--text-xs); }
+
+/* Skeleton loaders. */
+.cf-loading { display: grid; gap: 10px; }
+.cf-skeleton {
+  height: 64px;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--surface) 40%, var(--surface-raised) 50%, var(--surface) 60%);
+  background-size: 200% 100%;
+  animation: cf-shimmer 1.4s linear infinite;
+}
 
 /* Tables. */
-.cf-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cf-table { width: 100%; border-collapse: collapse; font-size: var(--text-base); }
 .cf-table th {
   text-align: left;
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
-.cf-table td { padding: 8px; border-top: 1px solid var(--border); }
+.cf-table td { padding: var(--space-2); border-top: 1px solid var(--border); }
 .cf-table tbody tr:hover { background: color-mix(in srgb, var(--surface-raised) 60%, transparent); }
-.cf-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cf-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
 .cf-table th:nth-child(n + 2) { text-align: right; }
 .cf-table th:first-child { text-align: left; }
 
 /* Table toolbar: filter input + mobile sort select. */
 .cf-table-bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 .cf-filter {
   flex: 1;
   min-width: 0;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
 }
 .cf-filter:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .cf-sort-select {
   display: none;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: var(--space-2) 10px;
   max-width: 44%;
 }
 /* Stacked rows: line 1 name + primary metric, line 2 status bar, line 3
@@ -486,7 +503,7 @@ body.cf-nav-open { overflow: hidden; }
 .cf-mobile-list li {
   display: grid;
   gap: 6px;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   border-top: 1px solid var(--border);
 }
 .cf-mobile-list li:first-child { border-top: none; }
@@ -499,15 +516,20 @@ body.cf-nav-open { overflow: hidden; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .cf-mrow-name { overflow-wrap: anywhere; }
-.cf-mrow-primary { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.cf-mrow-primary {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  font-weight: 600;
+}
 .cf-mrow-status { min-width: 0; }
 .cf-mrow-status .cf-zonestack { min-width: 0; }
 /* Line 2 is the bar only — the legend's colored chips don't fit compact rows. */
 .cf-mrow-status .cf-stack-legend { display: none; }
-.cf-mrow-meta { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.cf-mrow-meta { color: var(--muted); font-size: var(--text-xs); overflow-wrap: anywhere; }
 
 /* On phones the header buttons are cramped: show the sort select, keep the
    header tappable too (both work). */
@@ -526,7 +548,7 @@ body.cf-nav-open { overflow: hidden; }
   background: none;
   border: none;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
   cursor: pointer;
   padding: 2px 4px;
@@ -537,11 +559,11 @@ body.cf-nav-open { overflow: hidden; }
 .cf-sort-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 
 /* Zone status stacked bar + legend. */
-.cf-zonestack { display: grid; gap: 4px; min-width: 180px; }
+.cf-zonestack { display: grid; gap: var(--space-1); min-width: 180px; }
 .cf-stack {
   display: flex;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   background: var(--surface-raised);
 }
@@ -553,8 +575,8 @@ body.cf-nav-open { overflow: hidden; }
 .cf-stack-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  font-size: 12px;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 .cf-legend-item {
@@ -578,103 +600,205 @@ body.cf-nav-open { overflow: hidden; }
   .cf-shared-legend { display: flex; }
 }
 
-/* ---- Carried over from FEAT-045 (alerts + pairing views) ---- */
+/* Shared empty / footnote states. */
+.cf-empty { color: var(--muted); text-align: center; padding: 48px 0; }
+.cf-empty-quiet { padding: var(--space-3) 0; }
+.cf-login-expired { color: var(--sev-warning); }
+.cf-pricing-note { color: var(--muted); font-size: var(--text-xs); }
+.cf-link { color: var(--focus); }
 
-.cf-btn {
-  font: inherit;
-  font-size: 13px;
-  color: var(--text);
-  background: var(--surface-raised);
+/* Icon-only Refresh button (IMP-pPFDXJA): busy spin, success check, failure
+   shake — keyframes live in the motion section. */
+.cf-refresh-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.cf-refresh-icon { display: inline-flex; transform-origin: center; }
+.cf-refresh-busy .cf-refresh-icon { animation: cf-refresh-spin 900ms linear infinite; }
+.cf-refresh-shake .cf-refresh-icon { animation: cf-refresh-shake 240ms ease-in-out; }
+
+/* fadeSwap: fast ease-out fade of swapped-in content (enter). */
+.cf-fade-swap { transition: opacity var(--dur-fast) var(--ease-out); }
+
+/* Summary rows (level-tinted values, overview + detail rows). Shared by the
+   billing views; the gauge detail line reuses .cf-row-detail. */
+.cf-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
+.cf-row-detail { color: var(--muted); font-size: var(--text-sm); }
+.cf-row-value {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.cf-level-critical .cf-row-value { color: var(--sev-critical); }
+.cf-level-warning .cf-row-value { color: var(--sev-warning); }
+.cf-level-critical-text { color: var(--sev-critical); }
+/* BUG-057 defect 6: gauge badges use this class at warning level; it had no
+   rule, so the badge rendered unstyled. */
+.cf-level-warning-text { color: var(--sev-warning); }
+.cf-ok-text { color: var(--sev-ok); }
+
+/* ============================================================
+   5. VIEWS
+   ============================================================ */
+
+/* ---- Overview / dashboard ---- */
+
+/* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
+.cf-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: var(--space-3);
+}
+.cf-kpi {
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 6px 12px;
-  min-height: 44px;
-  cursor: pointer;
-  transition: background var(--dur) var(--ease-out);
+  padding: var(--space-3) 14px;
 }
-.cf-btn:active { transform: translateY(1px); }
-.cf-btn-primary { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
-.cf-btn-ghost { background: none; }
-.cf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.cf-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cf-kpi-value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: var(--lh-tight);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.cf-kpi-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cf-kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+  opacity: 0.85;
+}
+/* Tile borders stay neutral — only the big value takes the severity color. */
+.cf-kpi.cf-level-critical .cf-kpi-value { color: var(--sev-critical); }
+.cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
 
-.cf-empty { color: var(--muted); text-align: center; padding: 48px 0; }
-.cf-empty-quiet { padding: 12px 0; }
-.cf-login-expired { color: var(--sev-warning); }
+/* Mobile: 5 tiles leave an orphan at auto-fit. Two columns with the first
+   tile (projected overage) spanning both fills 1 + 2 + 2 evenly. */
+@media (max-width: 599.98px) {
+  .cf-kpis { grid-template-columns: 1fr 1fr; }
+  .cf-kpi:first-child { grid-column: 1 / -1; }
+}
 
-/* Alert cards: neutral 1px border; severity is carried by the uppercase
-   severity word (text, never color-only) tinted by level. */
+/* In-tile progress runs thin, flush with the tile bottom. */
+.cf-kpi .cf-progress {
+  height: 4px;
+  /* Span the tile edge-to-edge: cancel the tile's padding. */
+  margin: var(--space-2) -14px calc(-1 * var(--space-3));
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.cf-kpi .cf-progress .cf-progress-fill { border-radius: 0; }
+
+/* Needs-attention rows are links — never color-only, the "!" and "•" marks
+   repeat the severity in text form. */
+.cf-attention {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 2px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.cf-card h2 + .cf-attention { border-top: none; }
+.cf-attention:hover { background: var(--surface-raised); }
+.cf-attention-mark { width: 18px; text-align: center; font-weight: 700; }
+.cf-attention-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cf-attention-chevron { color: var(--muted); }
+.cf-attention.cf-level-critical .cf-attention-mark { color: var(--sev-critical); }
+.cf-attention.cf-level-warning .cf-attention-mark { color: var(--sev-warning); }
+
+/* ---- Billing: product cards ---- */
+
+.cf-product-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cf-product-overage {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+/* ---- Alerts view: neutral 1px border; severity is carried by the
+   uppercase severity word (text, never color-only) tinted by level. ---- */
+
 .cf-alert {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: var(--space-3) 14px;
   margin-bottom: 10px;
 }
 .cf-alert[data-acked="true"] { opacity: 0.55; }
 .cf-alert[data-acked="true"] .cf-alert-title { text-decoration: line-through; }
 
-.cf-alert-header { display: flex; align-items: center; gap: 8px; }
+.cf-alert-header { display: flex; align-items: center; gap: var(--space-2); }
 .cf-severity-mark {
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--sev-info);
 }
 .cf-alert.is-warning .cf-severity-mark { color: var(--sev-warning); }
 .cf-alert.is-critical .cf-severity-mark { color: var(--sev-critical); }
-.cf-alert-title { font-size: 16px; }
+.cf-alert-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: var(--lh-snug);
+}
 .cf-alert-meta {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   margin-top: 2px;
 }
-.cf-alert-detail { color: var(--muted); font-size: 13px; margin: 8px 0; }
-.cf-alert-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.cf-alert-detail { color: var(--muted); font-size: var(--text-sm); margin: var(--space-2) 0; }
+.cf-alert-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ---- Pairing view ---- */
 
 .cf-pairing {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: var(--space-4);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   justify-items: start;
 }
-.cf-pairing h2 { margin: 0; font-size: 20px; }
+.cf-pairing h2 {
+  font-family: var(--font-display);
+  margin: 0;
+  font-size: 20px;
+  line-height: var(--lh-tight);
+}
 .cf-pairing-status { color: var(--muted); margin: 0; }
 .cf-pairing-cmd {
   background: var(--surface-raised);
   border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
-}
-
-/* Summary rows (level-tinted values, overview + detail rows). */
-.cf-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
-.cf-row-detail { color: var(--muted); font-size: 13px; }
-.cf-row-value { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
-.cf-level-critical .cf-row-value { color: var(--sev-critical); }
-.cf-level-warning .cf-row-value { color: var(--sev-warning); }
-
-/* Pricing footnote links. */
-.cf-pricing-note { color: var(--muted); font-size: 12px; }
-.cf-link { color: var(--focus); }
-
-/* The hidden attribute must always win, even over component display rules
-   (the drawer's display:flex was defeating it). */
-[hidden] { display: none !important; }
-
-/* Motion discipline: reduced motion kills the drawer/backdrop animation
-   and the shimmer. */
-@media (prefers-reduced-motion: reduce) {
-  .cf-drawer, .cf-backdrop { transition: none; }
-  .cf-skeleton { animation: none; }
-  .cf-btn, .cf-btn:active { transition: none; transform: none; }
-  .cf-burger-bar { transition: none; }
+  font-size: var(--text-sm);
 }
 
 /* ---- Rules view (FEAT-052 agent I): editable rule cards ---- */
@@ -686,7 +810,7 @@ body.cf-nav-open { overflow: hidden; }
   min-width: 0;
   max-width: 100%;
   min-height: 44px;
-  padding: 8px 10px;
+  padding: var(--space-2) 10px;
   font: inherit;
   color: var(--text);
   background: var(--surface-raised);
@@ -695,18 +819,18 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
 
-.cf-field { margin-top: 12px; }
+.cf-field { margin-top: var(--space-3); }
 .cf-field-label {
   display: block;
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
-.cf-field-row { display: flex; align-items: center; gap: 8px; }
+.cf-field-row { display: flex; align-items: center; gap: var(--space-2); }
 .cf-field-row .cf-input { flex: 1 1 auto; }
 
 .cf-rule { display: block; }
-.cf-rule-head { display: flex; gap: 8px; align-items: center; }
+.cf-rule-head { display: flex; gap: var(--space-2); align-items: center; }
 .cf-rule-head .cf-rule-name { flex: 1 1 auto; }
 
 /* Enabled toggle: On/Off button with aria-pressed. */
@@ -714,13 +838,13 @@ body.cf-nav-open { overflow: hidden; }
   flex: 0 0 auto;
   min-width: 56px;
   min-height: 44px;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   font: inherit;
   font-weight: 600;
   color: var(--muted);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 .cf-toggle[aria-pressed="true"] {
@@ -731,20 +855,20 @@ body.cf-nav-open { overflow: hidden; }
 .cf-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* Formatted threshold hint ("1.0B" for 1e9 on d1-rows-read). */
-.cf-rule-hint { flex: 0 0 auto; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.cf-rule-hint { flex: 0 0 auto; font-size: var(--text-sm); color: var(--muted); white-space: nowrap; }
 
 /* Exclude chips: removable pills. */
-.cf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.cf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-2); }
 .cf-chips:empty { display: none; }
 .cf-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 6px 4px 10px;
-  font-size: 14px;
+  gap: var(--space-1);
+  padding: var(--space-1) 6px var(--space-1) 10px;
+  font-size: var(--text-base);
   background: var(--surface-raised);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .cf-chip-remove {
   min-width: 28px;
@@ -775,34 +899,32 @@ body.cf-nav-open { overflow: hidden; }
 /* Starter note, action bar, save feedback. */
 .cf-rule-note {
   margin: 0 0 10px;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted);
 }
 .cf-rule-note[hidden] { display: none; }
 .cf-rules-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 14px 0 4px;
 }
 .cf-rules-actions .cf-btn { flex: 1 1 0; }
 .cf-rules-actions .cf-btn-primary { flex-grow: 2; }
-.cf-save-status { margin: 8px 0 0; font-size: 14px; color: var(--sev-ok); }
-.cf-save-error { margin: 8px 0 0; font-size: 14px; }
+.cf-save-status { margin: var(--space-2) 0 0; font-size: var(--text-base); color: var(--sev-ok); }
+.cf-save-error { margin: var(--space-2) 0 0; font-size: var(--text-base); }
 .cf-save-status[hidden], .cf-save-error[hidden] { display: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .cf-toggle, .cf-chip-remove { transition: none; }
-}
-
-/* ---- gauges (Agent O, FEAT-pDQ8JET): usage rings + bars for the Workers
-   Paid allowances. Appended block; existing rules above are untouched. ---- */
+/* ============================================================
+   6. GAUGES — usage rings + bars for the Workers Paid allowances
+      (Agent O, FEAT-pDQ8JET)
+   ============================================================ */
 
 /* Overview "Workers Paid allowances": 2 rings per row at phone width,
    4-6 per row at ≥1024px. */
 .cf-rings {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
+  gap: var(--space-1);
 }
 @media (min-width: 601px) {
   .cf-rings { grid-template-columns: repeat(3, 1fr); }
@@ -815,7 +937,7 @@ body.cf-nav-open { overflow: hidden; }
 .cf-ring {
   display: grid;
   justify-items: center;
-  padding: 8px 4px;
+  padding: var(--space-2) var(--space-1);
   border-radius: var(--radius);
   color: inherit;
   text-decoration: none;
@@ -851,6 +973,7 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-ring-value {
   fill: var(--accent);
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -873,18 +996,10 @@ body.cf-nav-open { overflow: hidden; }
 .cf-anim-projected {
   animation: cf-ring-in 600ms var(--ease-out);
 }
-@keyframes cf-ring-in {
-  from { stroke-dasharray: 0 var(--ring-c); }
-  to { stroke-dasharray: var(--arc-len) var(--ring-c); }
-}
-@keyframes cf-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.6; }
-}
 
 /* Bar gauges (billing view). Track scale fits max(used, projected, included);
    markers sit at the allowance and the expected-to-date position. */
-.cf-gauge { margin: 10px 0 4px; }
+.cf-gauge { margin: 10px 0 var(--space-1); }
 /* The bar wrapper does NOT clip: the today dot floats above the track,
    which keeps overflow:hidden for its own fills. */
 .cf-gauge-bar { position: relative; }
@@ -892,16 +1007,16 @@ body.cf-nav-open { overflow: hidden; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 6px;
 }
-.cf-gauge-name { font-weight: 600; font-size: 14px; }
-.cf-gauge-badge { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.cf-gauge-name { font-family: var(--font-display); font-weight: 600; font-size: var(--text-base); }
+.cf-gauge-badge { font-size: var(--text-xs); font-weight: 600; white-space: nowrap; }
 .cf-gauge-track {
   position: relative;
   height: 12px;
   background: var(--surface-raised);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 .cf-gauge-fill {
@@ -940,7 +1055,11 @@ body.cf-nav-open { overflow: hidden; }
   transform: translateX(-50%);
   pointer-events: none;
 }
-.cf-gauge-detail { margin: 6px 0 0; }
+.cf-gauge-detail {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
 /* Severity rides the fills: ok keeps the brand amber, warning the amber
    severity tone, critical red — the badge text repeats the level in words. */
 .cf-level-warning .cf-gauge-fill { background: var(--sev-warning); }
@@ -964,42 +1083,8 @@ body.cf-nav-open { overflow: hidden; }
 .cf-flow .cf-gauge-track {
   animation: cf-pulse-bar 1.6s ease-in-out infinite;
 }
-@keyframes cf-flow-x {
-  from { background-position: 0 0; }
-  to { background-position: 14.14px 0; }
-}
-@keyframes cf-pulse-bar {
-  0%, 100% { box-shadow: 0 0 4px 0 rgb(248 113 113 / 0.35); }
-  50% { box-shadow: 0 0 9px 1px rgb(248 113 113 / 0.6); }
-}
 .cf-flow .cf-ring-projected {
   animation: cf-proj-flow 1.2s linear infinite;
-}
-@keyframes cf-proj-flow {
-  from { stroke-dashoffset: var(--proj-off, 0); }
-  to { stroke-dashoffset: calc(var(--proj-off, 0) - 16); }
-}
-
-/* The cf-fill-x keyframes pair with the fills' transform-origin: the fill
-   grows from its own leading edge (used: track start; projected: used end). */
-@keyframes cf-fill-x {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-/* Reduced motion: no fill animation, no flow, no pulse — the solid red fill
-   stays. Same discipline as the shell's reduced-motion block above. */
-@media (prefers-reduced-motion: reduce) {
-  .cf-anim-used,
-  .cf-anim-projected,
-  .cf-gauge-fill,
-  .cf-gauge-projected,
-  .cf-flow .cf-gauge-fill,
-  .cf-flow .cf-gauge-track,
-  .cf-flow .cf-ring-projected,
-  .cf-ring-glow {
-    animation: none;
-  }
 }
 
 /* Billing legend — the one-line key under the period card. */
@@ -1007,12 +1092,11 @@ body.cf-nav-open { overflow: hidden; }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
-  margin: 8px 0 2px;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0 2px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
-.cf-legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .cf-legend-swatch {
   width: 12px;
   height: 12px;
@@ -1044,22 +1128,38 @@ body.cf-nav-open { overflow: hidden; }
   flex: 0 0 auto;
 }
 
-/* refresh (IMP-pPFDXJA): icon-only Refresh button, busy spin, success check,
-   failure shake, fadeSwap cross-fade. */
-.cf-refresh-btn {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
+/* ============================================================
+   7. MOTION — all @keyframes in one place
+   ============================================================ */
+
+@keyframes cf-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* The cf-fill-x keyframes pair with the fills' transform-origin: the fill
+   grows from its own leading edge (used: track start; projected: used end). */
+@keyframes cf-fill-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
-.cf-refresh-icon { display: inline-flex; transform-origin: center; }
-.cf-refresh-busy .cf-refresh-icon { animation: cf-refresh-spin 900ms linear infinite; }
-.cf-refresh-shake .cf-refresh-icon { animation: cf-refresh-shake 240ms ease-in-out; }
+@keyframes cf-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+@keyframes cf-ring-in {
+  from { stroke-dasharray: 0 var(--ring-c); }
+  to { stroke-dasharray: var(--arc-len) var(--ring-c); }
+}
+@keyframes cf-flow-x {
+  from { background-position: 0 0; }
+  to { background-position: 14.14px 0; }
+}
+@keyframes cf-pulse-bar {
+  0%, 100% { box-shadow: 0 0 4px 0 rgb(248 113 113 / 0.35); }
+  50% { box-shadow: 0 0 9px 1px rgb(248 113 113 / 0.6); }
+}
+@keyframes cf-proj-flow {
+  from { stroke-dashoffset: var(--proj-off, 0); }
+  to { stroke-dashoffset: calc(var(--proj-off, 0) - 16); }
+}
 @keyframes cf-refresh-spin {
   to { transform: rotate(360deg); }
 }
@@ -1069,10 +1169,36 @@ body.cf-nav-open { overflow: hidden; }
   50% { transform: translateX(2px); }
   75% { transform: translateX(-2px); }
 }
-/* fadeSwap: 150ms ease-out fade of swapped-in content. */
-.cf-fade-swap { transition: opacity 150ms ease-out; }
+
+/* ============================================================
+   8. REDUCED MOTION — every animation and transition in the file,
+      disabled in one block. Animation users: cf-shimmer (.cf-skeleton),
+      cf-ring-in (.cf-anim-used/.cf-anim-projected), cf-pulse
+      (.cf-ring-glow), cf-fill-x/cf-flow-x (.cf-gauge-fill,
+      .cf-gauge-projected, .cf-flow .cf-gauge-fill), cf-pulse-bar
+      (.cf-flow .cf-gauge-track), cf-proj-flow (.cf-flow
+      .cf-ring-projected), cf-refresh-spin/cf-refresh-shake
+      (.cf-refresh-busy/.cf-refresh-shake .cf-refresh-icon).
+      Transition users: drawer, backdrop, burger bars, buttons,
+      fade-swap, toggle/chip-remove.
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
+  .cf-drawer, .cf-backdrop, .cf-burger-bar, .cf-btn, .cf-btn:active,
+  .cf-toggle, .cf-chip-remove, .cf-fade-swap {
+    transition: none;
+  }
+  .cf-btn, .cf-btn:active { transform: none; }
+  .cf-skeleton,
+  .cf-anim-used,
+  .cf-anim-projected,
+  .cf-ring-glow,
+  .cf-gauge-fill,
+  .cf-gauge-projected,
+  .cf-flow .cf-gauge-fill,
+  .cf-flow .cf-gauge-track,
+  .cf-flow .cf-ring-projected,
   .cf-refresh-busy .cf-refresh-icon,
-  .cf-refresh-shake .cf-refresh-icon,
-  .cf-fade-swap { animation: none; transition: none; }
+  .cf-refresh-shake .cf-refresh-icon {
+    animation: none;
+  }
 }
