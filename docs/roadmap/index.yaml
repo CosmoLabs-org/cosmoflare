@@ -1,9 +1,16 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-09T20:34:32.419722+04:00
-next_id: 106
+last_updated: 2026-10-09T20:34:33.851229+04:00
+next_id: 107
 items:
-    - id: ROAD-105
+    - id: ROAD-106
+      title: Ops UI pass — responsive shell, hamburger drawer, sortable views, new icon set
+      status: completed
+      category: core
+      effort: medium
+      parent: ROAD-pJ25XG5
+      created_at: 2026-10-09T20:34:33.850944+04:00
+    - id: ROAD-pR73WHE
       title: Ops billing view — period progress, per-product overage projection, project attribution
       status: completed
       category: core

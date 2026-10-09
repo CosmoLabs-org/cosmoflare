@@ -1,0 +1,15 @@
+id: ROAD-pHVTJDK
+created_at: 2026-10-09T20:34:33.850944+04:00
+updated_at: 2026-10-09T20:34:34.938344+04:00
+title: Ops UI pass — responsive shell, hamburger drawer, sortable views, new icon set
+description: Hash-routed Overview/Billing/Workers/D1/Zones/Alerts/Pairing; drawer < 768px with focus trap, sidebar >= 1024px; stacked rows on phones; cache-status legend; cached client data layer; maskable + apple-touch icons. Deployed 2026-10-09 (version 9f012605).
+status: completed
+category: core
+effort: medium
+tags:
+    - area:ops
+parent: ROAD-pJ25XG5
+origin:
+    session: 70
+ulid: 01M4GR8C7X1X06A4VQTEHVTJDK
+provisional: true
