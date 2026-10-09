@@ -17,6 +17,9 @@ entries:
         - description: 'zone cache + D1 rows-read alerts (FEAT-049 wave 3a): zone-cache-miss-pct, zone-uncached-requests, d1-rows-read — name the zone or database, page at most hourly per offender unless it doubles, page a telemetry gap when data cannot be collected; per-rule --exclude; D1 monthly rows-read in cosmoflare usage; opt-in live API smoke test'
           source: manual
           date: 2026-10-09T05:12:48.585325+04:00
+        - description: 'Cosmoflare Ops (FEAT-052): private phone dashboard behind Cloudflare Access — month-to-date usage pacing, D1 rows read per database, zone cache health — served by a small Worker (apps/ops) with the pager PWA'
+          source: manual
+          date: 2026-10-09T16:01:18.687985+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
@@ -27,6 +30,9 @@ entries:
         - description: alert page text prints percent values with one decimal
           source: manual
           date: 2026-10-09T05:12:48.627847+04:00
+        - description: 'push alerts never reached iPhones: VAPID subject was mailto:mailto:, and the pager subscribed without the VAPID application server key'
+          source: manual
+          date: 2026-10-09T16:01:18.728105+04:00
     changed: []
     deprecated: []
     removed: []
