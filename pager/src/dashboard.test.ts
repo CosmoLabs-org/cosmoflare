@@ -76,6 +76,8 @@ describe("ringPropsFor", () => {
     };
     const props = ringPropsFor(kv, period);
     expect(props.usedLineText).toBe("3.9 GB of 1.0 GB");
+    // The sublabel would duplicate the allowance right under the size line.
+    expect(props.sublabel).toBeUndefined();
   });
   it("non-storage rings keep the default used-% line", () => {
     expect(ringPropsFor(d1, period).usedLineText).toBeUndefined();

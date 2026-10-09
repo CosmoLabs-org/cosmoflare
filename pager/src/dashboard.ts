@@ -56,9 +56,12 @@ export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeP
     projectedPct: pacingPct(p),
     expectedPct: periodProgress(period.day, period.days).elapsedPct,
     label: productLabel(p.id, p.product, p.metric),
-    sublabel: `${formatCount(p.included)} ${p.unit}`,
-    // IMP-002: storage projection === usage, so the second line carries the
-    // size instead of repeating the center percentage.
+    // IMP-002: storage projection === usage, so the size line under the
+    // center value carries BOTH numbers ("3.9 GB of 1.0 GB") — the sublabel
+    // would repeat the allowance 14px below it.
+    sublabel: p.id.endsWith(".storage")
+      ? undefined
+      : `${formatCount(p.included)} ${p.unit}`,
     usedLineText: p.id.endsWith(".storage")
       ? `${formatAmount(p.used, p.unit)} of ${formatAmount(p.included, p.unit)}`
       : undefined,
