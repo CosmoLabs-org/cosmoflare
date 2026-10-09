@@ -35,6 +35,9 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   initial: { key: string; dir: SortDir };
   rowKey?: (row: T) => string;
   rowClass?: (row: T) => string;
+  // One legend for the whole table (e.g. the zones byStatus colors), shown
+  // under the filter/sort controls on phones (<600px) only.
+  sharedLegend?: HTMLElement;
 }): void {
   let sortKey = opts.initial.key;
   let sortDir = opts.initial.dir;
@@ -159,7 +162,9 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   }
   render();
 
-  host.append(filterBar, table, list);
+  host.append(filterBar);
+  if (opts.sharedLegend) host.append(opts.sharedLegend);
+  host.append(table, list);
 }
 
 // mobileRowItem renders one row as a compact stacked list item for phones
@@ -336,11 +341,17 @@ export function byStatusStack(byStatus: Record<string, number>): HTMLElement {
   return stack;
 }
 
-/** Legend under the stacked bar: swatch + label + count per group. */
+/** Legend under the stacked bar: colored dot + muted label + count per group. */
 export function byStatusLegend(byStatus: Record<string, number>): HTMLElement {
   const legend = el("div", "cf-stack-legend");
   for (const g of zoneSums(byStatus)) {
-    legend.append(el("span", `cf-legend-swatch ${g.cls}`, `${g.label} ${formatCount(g.sum)}`));
+    // The color goes on the dot element only — never on the label span.
+    const item = el("span", "cf-legend-item");
+    item.append(
+      el("span", `cf-legend-dot ${g.cls}`),
+      document.createTextNode(`${g.label} ${formatCount(g.sum)}`),
+    );
+    legend.append(item);
   }
   return legend;
 }
@@ -361,6 +372,14 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
     if (rows.length === 0) {
       card.append(el("p", "cf-empty cf-empty-quiet", "No zone traffic in the window."));
     } else {
+      // One shared byStatus legend for phones: per-row legends are hidden in
+      // compact rows, so aggregate every zone's statuses into one line.
+      const agg: Record<string, number> = {};
+      for (const z of res.data.zones) {
+        for (const [k, v] of Object.entries(z.byStatus ?? {})) agg[k] = (agg[k] ?? 0) + v;
+      }
+      const sharedLegend = byStatusLegend(agg);
+      sharedLegend.classList.add("cf-shared-legend");
       renderSortableTable(card, {
         columns: [
           { key: "zone", label: "Zone", text: (z) => z.zone },
@@ -376,6 +395,7 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
             } },
         ],
         rows,
+        sharedLegend,
         initial: { key: "uncached", dir: "desc" },
         rowClass: (z) => {
           const lv = zoneAttentionLevel(z.uncached, z.missPct);

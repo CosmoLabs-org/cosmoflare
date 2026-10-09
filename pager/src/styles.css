@@ -514,7 +514,26 @@ body.cf-nav-open { overflow: hidden; }
   font-size: 12px;
   color: var(--muted);
 }
-.cf-stack-legend .cf-legend-swatch::before { width: 8px; height: 8px; }
+.cf-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Legend dot: carries the status color only; the label stays muted text on
+   the card background (≥4.5:1), never color-only. */
+.cf-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* Phones: per-row legends are hidden in compact rows — one shared legend
+   under the filter/sort controls explains the bar colors instead. */
+.cf-shared-legend { display: none; }
+@media (max-width: 599.98px) {
+  .cf-shared-legend { display: flex; }
+}
 
 /* ---- Carried over from FEAT-045 (alerts + pairing views) ---- */
 
