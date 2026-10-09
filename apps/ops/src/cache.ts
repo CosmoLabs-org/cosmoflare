@@ -144,8 +144,9 @@ async function loadEntry<T>(
  * background via ctx.waitUntil (stale-while-revalidate). Concurrent misses
  * for the same key share one in-flight load (single-flight). A failed
  * background refresh keeps the stale value; a failed load with no value at
- * all rejects. L1 = module memory, L2 = Cache API (caches.default) or KV
- * when bound.
+ * all rejects. A forced reload that fails falls back to the existing L1 (or
+ * L2) value marked stale. L1 = module memory, L2 = Cache API (caches.default)
+ * or KV when bound.
  */
 export async function cached<T>(
   ctx: ExecutionContext,
@@ -166,8 +167,19 @@ export async function cached<T>(
   if (force) lastForce.set(key, t);
 
   if (force) {
-    const entry = await refresh();
-    return { value: entry.value as T, ageSec: (now() - entry.storedAt) / 1000, stale: false };
+    try {
+      const entry = await refresh();
+      return { value: entry.value as T, ageSec: ageSec(entry, now), stale: false };
+    } catch (err) {
+      // A failed forced reload must not wipe a value we already have: fall
+      // back to L1, then L2, marked stale. Only reject with no value at all.
+      const fallback = mem.get(key) ?? (await l2Get(env, key));
+      if (fallback) {
+        mem.set(key, fallback);
+        return { value: fallback.value as T, ageSec: ageSec(fallback, now), stale: true };
+      }
+      throw err;
+    }
   }
 
   // L1 hit.
@@ -188,7 +200,7 @@ export async function cached<T>(
   // (loadEntry directly, NOT refresh(): the factory runs before singleFlight
   // registers it, so a nested singleFlight for the same key would see no
   // in-flight promise and chain the promise onto itself.)
-  const entry = await singleFlight(key, async () => {
+  let entry = await singleFlight(key, async () => {
     const fromL2 = await l2Get(env, key);
     if (fromL2) {
       mem.set(key, fromL2);
@@ -196,7 +208,20 @@ export async function cached<T>(
     }
     return loadEntry(env, key, opts.staleSec, now, load);
   });
-  return { value: entry.value as T, ageSec: ageSec(entry, now), stale: false };
+  // An L2 hit still honours the entry's age (a cold-start isolate may find a
+  // KV entry KV itself has not expired yet): fresh → serve; stale window →
+  // serve stale and revalidate in the background; past the stale window →
+  // discard and await a real load.
+  const age = ageSec(entry, now);
+  if (age >= opts.staleSec) {
+    entry = await singleFlight(key, () => loadEntry(env, key, opts.staleSec, now, load));
+    return { value: entry.value as T, ageSec: ageSec(entry, now), stale: false };
+  }
+  if (age >= opts.ttlSec) {
+    ctx.waitUntil(refresh().then(() => undefined, () => undefined));
+    return { value: entry.value as T, ageSec: age, stale: true };
+  }
+  return { value: entry.value as T, ageSec: age, stale: false };
 }
 
 // Age in seconds of an entry relative to the injectable clock.

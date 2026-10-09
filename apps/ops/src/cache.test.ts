@@ -162,4 +162,70 @@ describe("cached", () => {
     expect(hit.value).toBe("from-kv");
     expect(loads).toBe(1); // L2 hit: no upstream load
   });
+
+  it("cold start: L2 entry past ttl but inside stale serves stale:true and revalidates in the background", async () => {
+    const { ctx, waits } = fakeCtx();
+    const { kv, store } = mapKV();
+    const t0 = 6_000_000;
+    let loads = 0;
+    const opts = { ttlSec: 60, staleSec: 300, now: () => t0 };
+    // Cold L1: entry only in KV, aged 120 s (past the 60 s fresh TTL,
+    // inside the 300 s stale window).
+    store.set("l2-stale", JSON.stringify({ storedAt: t0 - 120_000, value: "from-kv-old" }));
+    const res = await cached(ctx, { OPS_KV: kv }, "l2-stale", opts, async () => {
+      loads++;
+      return "from-load";
+    });
+    expect(res.value).toBe("from-kv-old"); // served immediately from L2
+    expect(res.stale).toBe(true);
+    await Promise.all(waits); // background revalidation completes
+    expect(loads).toBe(1); // exactly one background load; no awaited load
+    const after = await cached(ctx, { OPS_KV: kv }, "l2-stale", opts, async () => {
+      loads++;
+      return "unused";
+    });
+    expect(after.value).toBe("from-load"); // background reload replaced it
+    expect(after.stale).toBe(false);
+  });
+
+  it("cold start: L2 entry older than the stale window is discarded and a real load is awaited", async () => {
+    const { ctx } = fakeCtx();
+    const { kv, store } = mapKV();
+    const t0 = 7_000_000;
+    let loads = 0;
+    const opts = { ttlSec: 60, staleSec: 300, now: () => t0 };
+    // Aged 400 s: past the 300 s stale window even though KV kept it.
+    store.set("l2-expired", JSON.stringify({ storedAt: t0 - 400_000, value: "ancient" }));
+    const res = await cached(ctx, { OPS_KV: kv }, "l2-expired", opts, async () => {
+      loads++;
+      return "from-load";
+    });
+    expect(res.value).toBe("from-load"); // awaited load, not the ancient value
+    expect(res.stale).toBe(false);
+    expect(loads).toBe(1);
+  });
+
+  it("a forced reload that fails falls back to the existing value marked stale", async () => {
+    const { ctx } = fakeCtx();
+    const t0 = 8_000_000;
+    let clock = t0;
+    const opts = { ttlSec: 60, staleSec: 300, now: () => clock };
+    await cached(ctx, {}, "force-fallback", opts, async () => "v1");
+    clock += 1_000;
+    const forced = await cached(ctx, {}, "force-fallback", { ...opts, force: true }, async () => {
+      throw new Error("upstream down");
+    });
+    expect(forced.value).toBe("v1"); // old value kept, not lost
+    expect(forced.stale).toBe(true);
+  });
+
+  it("a forced reload that fails with no value at all rejects", async () => {
+    const { ctx } = fakeCtx();
+    const opts = { ttlSec: 60, staleSec: 300, now: () => 9_000_000 };
+    await expect(
+      cached(ctx, {}, "force-no-fallback", { ...opts, force: true }, async () => {
+        throw new Error("upstream down");
+      }),
+    ).rejects.toThrow("upstream down");
+  });
 });
