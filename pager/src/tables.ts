@@ -5,7 +5,7 @@
 
 import { el, skeleton, statusLine } from "./dom";
 import { formatCount, formatPct } from "./format";
-import { api, LoginExpiredError, totalAgeSec, type FetchResult, type Summary } from "./api";
+import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, type Summary } from "./api";
 import { cmpRows, cmpText, type SortDir } from "./sort";
 import { zoneAttentionLevel } from "./attention";
 import { levelForErrorPct, levelForD1 } from "./dashboard";
@@ -82,6 +82,10 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   // Stable per-table id ("workers"/"d1"/"zones") — persists the chosen sort
   // across reloads via localStorage (FEAT-pRC6EDA).
   sortPrefId?: string;
+  // Per-row graded usage bar (operator ask 2026-10-10): the row's share of
+  // the product allowance, colored by the shared level thresholds. Null
+  // hides the bar for that row.
+  usageBar?: (row: T) => { pctOfAllowance: number } | null;
 }): void {
   const stored = opts.sortPrefId ? readSortPref(opts.sortPrefId) : undefined;
   const saved = opts.persistKey ? tableState.get(opts.persistKey) : undefined;
@@ -204,14 +208,18 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
     const visible = showAll ? rows : rows.slice(0, COLLAPSE_AFTER);
     for (const row of visible) {
       const tr = el("tr", opts.rowClass?.(row));
+      const barInfo = opts.usageBar?.(row) ?? null;
       for (const col of opts.columns) {
         const td = el("td");
         if (col.numeric) td.className = "cf-num";
         td.append(col.cell ? col.cell(row) : document.createTextNode(col.text(row)));
+        // Graded usage bar sits under the FIRST column's content: the row's
+        // share of the product allowance at a glance.
+        if (barInfo && col === opts.columns[0]) td.append(miniUsageBar(barInfo.pctOfAllowance));
         tr.append(td);
       }
       tbody.append(tr);
-      list.append(mobileRowItem(opts.columns, sortKey, opts.rowClass, row));
+      list.append(mobileRowItem(opts.columns, sortKey, opts.rowClass, row, barInfo?.pctOfAllowance));
     }
     // Show all N toggle — wrapped in a full-width row and a list item so
     // both renderings can expand.
@@ -248,7 +256,7 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
 // line 2 the byStatus bar when the table has one, line 3 the remaining
 // numeric metrics in muted text. Mirrors the table's sort/filter/collapse
 // state exactly.
-function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row: T) => string) | undefined, row: T): HTMLLIElement {
+function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row: T) => string) | undefined, row: T, usagePct?: number): HTMLLIElement {
   const nameCol = columns[0];
   const active = columns.find((c) => c.key === sortKey) ?? columns[0];
   const primaryCol = active.numeric ? active : columns.find((c) => c.numeric);
@@ -259,6 +267,7 @@ function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row
     el("span", "cf-mrow-primary", primaryCol ? primaryCol.text(row) : ""),
   );
   li.append(top);
+  if (usagePct !== undefined) li.append(miniUsageBar(usagePct));
   const statusCol = columns.find((c) => c.key === "byStatus" && c.cell);
   if (statusCol?.cell) {
     const bar = el("div", "cf-mrow-status");
@@ -272,6 +281,33 @@ function mobileRowItem<T>(columns: Column<T>[], sortKey: string, rowClass: ((row
     .join(" · ");
   if (meta) li.append(el("div", "cf-mrow-meta", meta));
   return li;
+}
+
+/** Share of an allowance as a percentage; 0 when the allowance is unknown. */
+export function usageSharePct(used: number, included: number): number {
+  return included > 0 ? (used / included) * 100 : 0;
+}
+
+/** miniUsageBar: a 4px graded bar — this row's share of the product
+ *  allowance. Color follows the shared thresholds (ok → warning → critical
+ *  via the level classes); width caps at 100% visually, the title carries
+ *  the true number past it. */
+export function miniUsageBar(pctOfAllowance: number): HTMLElement {
+  const level = levelForUsageBar(pctOfAllowance);
+  const wrap = el("div", `cf-mini-bar cf-level-${level}`);
+  const fill = el("div", "cf-mini-fill");
+  fill.style.width = `${Math.min(100, Math.max(0, pctOfAllowance))}%`;
+  fill.title = `${pctOfAllowance.toFixed(pctOfAllowance >= 100 ? 0 : 1)}% of the allowance`;
+  wrap.append(fill);
+  wrap.setAttribute("role", "img");
+  wrap.setAttribute("aria-label", fill.title);
+  return wrap;
+}
+
+function levelForUsageBar(pct: number): "ok" | "warning" | "critical" {
+  if (pct >= 80) return "critical";
+  if (pct >= 50) return "warning";
+  return "ok";
 }
 
 // ---- Section plumbing ----
@@ -315,39 +351,51 @@ async function fetchSummaryView(root: HTMLElement, label: string, opts: { refres
 
 export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
   return fetchSummaryView(root, "the Workers list", opts, (host, res) => {
-    const bar = el("div", "cf-dash-bar");
-    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    const refresh = refreshButton(async () => renderWorkers(host, { refresh: true }));
-    bar.append(line, refresh);
+    void (async () => {
+      // Allowance for the graded bars: Workers Paid request allowance from
+      // the billing cache — one cached fetch, absent bars on failure.
+      let included = 0;
+      try {
+        const b = await api.fetchJson<Billing>("api/billing");
+        included = b.data.products.find((p) => p.id === "workers.requests")?.included ?? 0;
+      } catch {
+        included = 0;
+      }
+      const bar = el("div", "cf-dash-bar");
+      const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
+      const refresh = refreshButton(async () => renderWorkers(host, { refresh: true }));
+      bar.append(line, refresh);
 
-    const card = el("section", "cf-card");
-    card.append(el("h2", undefined, "Workers (24h)"));
-    if (res.data.workers.length === 0) {
-      card.append(el("p", "cf-empty cf-empty-quiet", "No Worker traffic in the window."));
-    } else {
-      renderSortableTable(card, {
-        persistKey: host,
-        columns: [
-          { key: "script", label: "Script", text: (w) => w.script },
-          { key: "requests", label: "Requests", numeric: true, text: (w) => formatCount(w.requests), num: (w) => w.requests },
-          { key: "errors", label: "Errors", numeric: true, text: (w) => formatCount(w.errors), num: (w) => w.errors },
-          { key: "errorPct", label: "Error %", numeric: true, text: (w) => formatPct(w.errorPct, 2), num: (w) => w.errorPct },
-          { key: "cpuP50", label: "CPU p50", numeric: true, text: (w) => (w.cpuP50Ms === null ? "—" : `${w.cpuP50Ms.toFixed(1)}ms`), num: (w) => w.cpuP50Ms },
-          { key: "cpuP99", label: "CPU p99", numeric: true, text: (w) => (w.cpuP99Ms === null ? "—" : `${w.cpuP99Ms.toFixed(1)}ms`), num: (w) => w.cpuP99Ms },
-        ],
-        rows: res.data.workers,
-        sortPrefId: "workers",
-        initial: { key: "requests", dir: "desc" },
-        rowClass: (w) => {
-          const lv = levelForErrorPct(w.errorPct);
-          return lv === "critical" ? "cf-level-critical" : lv === "warning" ? "cf-level-warning" : "";
-        },
-      });
-    }
-    // Repaint through fadeSwap so refreshed content fades in without a jump.
-    const view = el("div");
-    view.append(bar, card);
-    fadeSwap(host, view);
+      const card = el("section", "cf-card");
+      card.append(el("h2", undefined, "Workers (24h)"));
+      if (res.data.workers.length === 0) {
+        card.append(el("p", "cf-empty cf-empty-quiet", "No Worker traffic in the window."));
+      } else {
+        renderSortableTable(card, {
+          persistKey: host,
+          columns: [
+            { key: "script", label: "Script", text: (w) => w.script },
+            { key: "requests", label: "Requests", numeric: true, text: (w) => formatCount(w.requests), num: (w) => w.requests },
+            { key: "errors", label: "Errors", numeric: true, text: (w) => formatCount(w.errors), num: (w) => w.errors },
+            { key: "errorPct", label: "Error %", numeric: true, text: (w) => formatPct(w.errorPct, 2), num: (w) => w.errorPct },
+            { key: "cpuP50", label: "CPU p50", numeric: true, text: (w) => (w.cpuP50Ms === null ? "—" : `${w.cpuP50Ms.toFixed(1)}ms`), num: (w) => w.cpuP50Ms },
+            { key: "cpuP99", label: "CPU p99", numeric: true, text: (w) => (w.cpuP99Ms === null ? "—" : `${w.cpuP99Ms.toFixed(1)}ms`), num: (w) => w.cpuP99Ms },
+          ],
+          rows: res.data.workers,
+          sortPrefId: "workers",
+          initial: { key: "requests", dir: "desc" },
+          usageBar: included > 0 ? (w) => ({ pctOfAllowance: usageSharePct(w.requests, included) }) : undefined,
+          rowClass: (w) => {
+            const lv = levelForErrorPct(w.errorPct);
+            return lv === "critical" ? "cf-level-critical" : lv === "warning" ? "cf-level-warning" : "";
+          },
+        });
+      }
+      // Repaint through fadeSwap so refreshed content fades in without a jump.
+      const view = el("div");
+      view.append(bar, card);
+      fadeSwap(host, view);
+    })();
   });
 }
 
@@ -355,38 +403,50 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
 
 export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
   return fetchSummaryView(root, "the D1 list", opts, (host, res) => {
-    const bar = el("div", "cf-dash-bar");
-    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    const refresh = refreshButton(async () => renderD1(host, { refresh: true }));
-    bar.append(line, refresh);
+    void (async () => {
+      // Allowance for the graded bars: the D1 rows-read allowance from the
+      // billing cache — one cached fetch, absent bars on failure.
+      let included = 0;
+      try {
+        const b = await api.fetchJson<Billing>("api/billing");
+        included = b.data.products.find((p) => p.id === "d1.rows_read")?.included ?? 0;
+      } catch {
+        included = 0;
+      }
+      const bar = el("div", "cf-dash-bar");
+      const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
+      const refresh = refreshButton(async () => renderD1(host, { refresh: true }));
+      bar.append(line, refresh);
 
-    const card = el("section", "cf-card");
-    card.append(el("h2", undefined, "D1 databases (24h)"));
-    if (res.data.d1.length === 0) {
-      card.append(el("p", "cf-empty cf-empty-quiet", "No D1 activity in the window."));
-    } else {
-      renderSortableTable(card, {
-        persistKey: host,
-        columns: [
-          { key: "name", label: "Database", text: (d) => d.name },
-          { key: "rowsRead", label: "Rows read", numeric: true, text: (d) => formatCount(d.rowsRead), num: (d) => d.rowsRead },
-          { key: "rowsWritten", label: "Rows written", numeric: true, text: (w) => formatCount(w.rowsWritten), num: (w) => w.rowsWritten },
-          { key: "queries", label: "Queries", numeric: true, text: (d) => formatCount(d.readQueries), num: (d) => d.readQueries },
-          { key: "rowsPerQuery", label: "Rows/query", numeric: true, text: (d) => formatCount(d.rowsPerQuery), num: (d) => d.rowsPerQuery },
-        ],
-        rows: res.data.d1,
-        sortPrefId: "d1",
-        initial: { key: "rowsRead", dir: "desc" },
-        rowClass: (d) => {
-          const lv = levelForD1(d.rowsRead);
-          return lv === "critical" ? "cf-level-critical" : lv === "warning" ? "cf-level-warning" : "";
-        },
-      });
-    }
-    // Repaint through fadeSwap so refreshed content fades in without a jump.
-    const view = el("div");
-    view.append(bar, card);
-    fadeSwap(host, view);
+      const card = el("section", "cf-card");
+      card.append(el("h2", undefined, "D1 databases (24h)"));
+      if (res.data.d1.length === 0) {
+        card.append(el("p", "cf-empty cf-empty-quiet", "No D1 activity in the window."));
+      } else {
+        renderSortableTable(card, {
+          persistKey: host,
+          columns: [
+            { key: "name", label: "Database", text: (d) => d.name },
+            { key: "rowsRead", label: "Rows read", numeric: true, text: (d) => formatCount(d.rowsRead), num: (d) => d.rowsRead },
+            { key: "rowsWritten", label: "Rows written", numeric: true, text: (w) => formatCount(w.rowsWritten), num: (w) => w.rowsWritten },
+            { key: "queries", label: "Queries", numeric: true, text: (d) => formatCount(d.readQueries), num: (d) => d.readQueries },
+            { key: "rowsPerQuery", label: "Rows/query", numeric: true, text: (d) => formatCount(d.rowsPerQuery), num: (d) => d.rowsPerQuery },
+          ],
+          rows: res.data.d1,
+          sortPrefId: "d1",
+          initial: { key: "rowsRead", dir: "desc" },
+          usageBar: included > 0 ? (d) => ({ pctOfAllowance: usageSharePct(d.rowsRead, included) }) : undefined,
+          rowClass: (d) => {
+            const lv = levelForD1(d.rowsRead);
+            return lv === "critical" ? "cf-level-critical" : lv === "warning" ? "cf-level-warning" : "";
+          },
+        });
+      }
+      // Repaint through fadeSwap so refreshed content fades in without a jump.
+      const view = el("div");
+      view.append(bar, card);
+      fadeSwap(host, view);
+    })();
   });
 }
 

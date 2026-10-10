@@ -775,6 +775,26 @@ body.cf-nav-open { overflow: hidden; }
   line-height: 1;
 }
 
+/* Graded per-row usage bars (operator ask 2026-10-10): this row's share of
+   the product allowance, 4px, level-colored, capped visually at 100%. */
+.cf-mini-bar {
+  margin-top: var(--space-1);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  overflow: hidden;
+  max-width: 220px;
+}
+.cf-mini-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.cf-level-ok .cf-mini-fill { background: var(--accent); }
+.cf-level-warning .cf-mini-fill { background: var(--sev-warning); }
+.cf-level-critical .cf-mini-fill { background: var(--sev-critical); }
+.cf-mrow-top + .cf-mini-bar { margin-top: var(--space-1); }
+
 /* ---- Domains view: tappable rows with smooth-expanding detail sheet ---- */
 .cf-domain-item + .cf-domain-item { border-top: 1px solid var(--border); }
 .cf-domain-row {
