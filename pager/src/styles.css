@@ -1,3 +1,10 @@
+/* Tailwind v4 (React rebuild P-02/P-03, docs/planning-mode/2026-10-10-pager-react-rebuild.md).
+   Preflight and utilities arrive in cascade LAYERS; every rule below is
+   UNLAYERED, and unlayered CSS wins over layers — the existing design system
+   stays authoritative, preflight only fills gaps nothing styled. The @theme
+   block maps the :root tokens 1:1 so utility classes cannot leave the system. */
+@import "tailwindcss";
+
 /* Cosmoflare Pager — consolidated stylesheet (G-11 pass over FEAT-045/052,
    Agent O gauges, IMP-pPFDXJA refresh). Dark-first, severity ramp.
 
@@ -87,6 +94,27 @@
   line-height: var(--lh-normal);
   color: var(--text);
   background-color: var(--bg);
+}
+
+/* Tailwind theme (P-02): the tokens as utility namespaces — bg-surface,
+   text-muted, border-border resolve to the :root values above. Only NEW
+   names map (a --font-x: var(--font-x) self-reference in the same emitted
+   scope would be circular and break); the text-size and radius var names
+   already coincide with their utility namespaces, so :root alone feeds
+   them. */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-focus: var(--focus);
+  --color-sev-info: var(--sev-info);
+  --color-sev-warning: var(--sev-warning);
+  --color-sev-critical: var(--sev-critical);
+  --color-sev-ok: var(--sev-ok);
 }
 
 /* ============================================================

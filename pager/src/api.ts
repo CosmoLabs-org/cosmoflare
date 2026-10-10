@@ -192,13 +192,19 @@ export class ApiClient {
       if (err instanceof LoginExpiredError) throw err;
       // Demo mode: localhost dev without the Ops Worker falls back to
       // fixtures so the UI is explorable; production surfaces the error.
+      // Only the endpoints with fixtures are answered — anything else
+      // throws, exactly like a failed network fetch, so views paint their
+      // own error states instead of decoding the wrong payload shape.
       if (this.allowFixtures) {
         const fixtures = makeFixtures(new Date(this.now()));
         const dataset = endpoint.startsWith("api/billing")
           ? fixtures.billing
           : endpoint.startsWith("api/rules")
             ? fixtures.rules
-            : fixtures.summary;
+            : endpoint.startsWith("api/summary")
+              ? fixtures.summary
+              : null;
+        if (dataset === null) throw err;
         const data = dataset as unknown as T;
         return { data, source: "fixture", ageSec: 0, demo: true };
       }
