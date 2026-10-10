@@ -1,0 +1,10 @@
+id: TASK-pD575FN
+type: task
+created_at: 2026-10-10T23:21:34.324088+04:00
+updated_at: 2026-10-10T23:21:34.922993+04:00
+source: local
+ulid: 01M4KM6XEAXC0Q20ZPA0D575FN
+provisional: true
+status: open
+title: add
+description: 'P-08 hygiene: the unimported render* functions in dashboard/billing/projects/domains/tables/durable_objects/worker_profile/rules/views are dead source (tree-shaken from the bundle); remove them and their DOM-test suites without touching the imported pure helpers.'
