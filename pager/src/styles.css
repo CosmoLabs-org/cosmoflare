@@ -53,6 +53,12 @@
   /* Type scale (sizes with companion line-heights). Off-scale sizes
      (9/10/11/15/20px SVG text, nav, sub-labels) stay literal on purpose. */
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Type system (operator 2026-10-10, "less squared, still sans, more
+     diversity"): the indicator face is a soft mono for all-caps instrument
+     labels; the data face is a softer grotesk for figures. Space Grotesk
+     (squarer) remains the display/fallback role. */
+  --font-indicator: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-data: "Schibsted Grotesk", "Space Grotesk", var(--font-body);
   --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   /* Brand + navigation face (operator 2026-10-10: "clean sans serif and
      round") — Nunito for the lockup and nav links; numbers stay Space
@@ -717,7 +723,7 @@ body.cf-nav-open { overflow: hidden; }
   text-align: center;
 }
 .cf-kpi-value {
-  font-family: var(--font-display);
+  font-family: var(--font-data);
   /* One step down from 26px (UI-2: "It's a little too big") — 24px, the
      size already in use by .cf-profile-title. */
   font-size: 24px;
@@ -1088,9 +1094,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   gap: 10px;
 }
 .cf-product-grade {
-  font-size: var(--text-sm);
+  /* All-caps instrument role (type system 2026-10-10). */
+  font-family: var(--font-indicator);
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 .cf-product-overage {
   font-variant-numeric: tabular-nums;
@@ -1377,7 +1385,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 /* Overage dollars under a costing ring (item-6): tabular, small, critical
    tint — same size on every ring that carries one. */
 .cf-ring-overage {
-  font-family: var(--font-display);
+  font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -1394,19 +1402,24 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    radius against a 10-unit stroke, so the arcs must actually draw at 10 —
    the SVG default of 1 rendered them as hairlines. */
 .cf-ring-track { fill: none; stroke: var(--surface-raised); stroke-width: 10; }
+/* Arc endpoints (operator 2026-10-10): butt caps everywhere. Round caps
+   extended every dash half a stroke width past its true end — the dashed
+   projection (3-on/5-off) collapsed into lumps, the used/projected junction
+   double-capped, and a 0% used arc still painted a start dot. Butt caps
+   make every begin/end point mathematically exact. */
 .cf-ring-projected {
   fill: none;
   stroke: var(--muted);
   opacity: 0.35;
   stroke-width: 10;
   stroke-dashoffset: var(--proj-off, 0);
-  stroke-linecap: round;
+  stroke-linecap: butt;
 }
 .cf-ring-used {
   fill: none;
   stroke: var(--accent);
   stroke-width: 10;
-  stroke-linecap: round;
+  stroke-linecap: butt;
 }
 .cf-level-warning .cf-ring-used { stroke: var(--sev-warning); }
 .cf-level-critical .cf-ring-used { stroke: var(--sev-critical); }
@@ -1414,22 +1427,41 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   fill: none;
   stroke: var(--sev-critical);
   stroke-width: 12;
-  stroke-linecap: round;
+  stroke-linecap: butt;
   opacity: 0.6;
   animation: cf-pulse 1.6s ease-in-out infinite;
 }
 .cf-ring-value {
   fill: var(--accent);
-  font-family: var(--font-display);
+  font-family: var(--font-data);
   font-size: 20px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .cf-level-warning .cf-ring-value { fill: var(--sev-warning); }
 .cf-level-critical .cf-ring-value { fill: var(--sev-critical); }
-.cf-ring-usedpct { fill: var(--muted); font-size: 9.5px; }
-.cf-ring-sub { fill: var(--muted); font-size: 9.5px; }
-.cf-ring-label { fill: var(--muted); font-size: 10px; letter-spacing: 0.02em; }
+/* Ring band text: the all-caps instrument role — soft mono, tracked. */
+.cf-ring-usedpct {
+  fill: var(--muted);
+  font-family: var(--font-indicator);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cf-ring-sub {
+  fill: var(--muted);
+  font-family: var(--font-indicator);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cf-ring-label {
+  fill: var(--muted);
+  font-family: var(--font-indicator);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 /* Today dot: a 3px point ON the track at the expected-to-date angle — not
    a line crossing the ring (the slanted tick read as a glitch). */
 .cf-ring-today { fill: var(--muted); stroke: none; }
@@ -1691,4 +1723,31 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-quicknav {
     display: none;
   }
+}
+
+/* ---- Bottom status strip (UI-1): "Updated Xm ago · Day N of 30" pinned to
+   the viewport bottom, one global live region fed by the views. Was missing
+   from the UI-1 merge (the agent died before styling it) — the footer
+   rendered as unstyled inline text at the page end. Instrument readout role:
+   soft mono, tracked caps. ---- */
+.cf-statusbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-indicator);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.cf-statusbar .cf-status-period {
+  color: var(--text);
 }
