@@ -11,11 +11,45 @@ import { el } from "./dom";
 import { renderOverview } from "./dashboard";
 import { renderBilling } from "./billing";
 import { renderProjects } from "./projects";
-import { renderDomains } from "./domains";
+import { renderDomains, type DomainsPayload } from "./domains";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
-import { renderRules } from "./rules";
+import { renderRules, type RulesPayload } from "./rules";
 import { logoMark } from "./logo";
+import { api, type Billing, type Summary } from "./api";
+
+/** Nav counters (operator ask 2026-10-10): right-aligned per-section counts
+ *  in the sidebar and drawer — "Domains 43", "Workers 17". Data comes from
+ *  the same cached endpoints the views use; a failed fetch leaves that
+ *  counter hidden rather than showing a wrong number. */
+function setNavCount(route: string, n: number | null): void {
+  for (const slot of document.querySelectorAll<HTMLElement>(`.cf-navcount[data-count-for="${route}"]`)) {
+    if (n === null || !Number.isFinite(n) || n < 0) {
+      slot.hidden = true;
+      slot.textContent = "";
+    } else {
+      slot.hidden = false;
+      slot.textContent = String(n);
+    }
+  }
+}
+
+async function loadNavCounts(): Promise<void> {
+  const [summary, domains, billing, rules] = await Promise.allSettled([
+    api.fetchJson<Summary>("api/summary"),
+    api.fetchJson<DomainsPayload>("api/domains"),
+    api.fetchJson<Billing>("api/billing"),
+    api.fetchJson<RulesPayload>("api/rules"),
+  ]);
+  if (summary.status === "fulfilled") {
+    setNavCount("workers", summary.value.data.workers.length);
+    setNavCount("d1", summary.value.data.d1.length);
+    setNavCount("zones", summary.value.data.zones.length);
+  }
+  if (domains.status === "fulfilled") setNavCount("domains", domains.value.data.domains.length);
+  if (billing.status === "fulfilled") setNavCount("projects", billing.value.data.projects.length);
+  if (rules.status === "fulfilled") setNavCount("rules", rules.value.data.rules.length);
+}
 import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
 
 /** Nav labels per route. */
@@ -124,6 +158,8 @@ function mount(): void {
   drawer.append(drawerHead);
 
   // Same links in both navs; route change updates aria-current on both.
+  // Each link also carries a right-aligned count slot (populated by
+  // loadNavCounts below): the sidebar answers "how many do I have?".
   const linkTargets: { a: HTMLAnchorElement; route: RouteId }[] = [];
   for (const route of ROUTES) {
     for (const nav of [sidebar, drawer]) {
@@ -132,10 +168,10 @@ function mount(): void {
       a.className = "cf-navlink";
       const glyph = el("span", "cf-navglyph");
       glyph.innerHTML = ICONS[route];
-      a.append(
-        glyph,
-        el("span", "cf-navlabel", NAV[route].label),
-      );
+      const count = el("span", "cf-navcount");
+      count.dataset.countFor = route;
+      count.hidden = true;
+      a.append(glyph, el("span", "cf-navlabel", NAV[route].label), count);
       a.dataset.route = route;
       a.addEventListener("click", () => closeDrawer());
       nav.append(a);
@@ -262,6 +298,8 @@ function mount(): void {
   }
   window.addEventListener("hashchange", onHashChange);
   showRoute(initialRoute);
+  void loadNavCounts();
+  window.setInterval(() => void loadNavCounts(), 5 * 60 * 1000);
   burger.addEventListener("click", () => (drawerOpen ? closeDrawer() : openDrawer()));
 }
 
