@@ -1043,6 +1043,19 @@ body.cf-nav-open { overflow: hidden; }
   gap: 10px;
   flex-wrap: wrap;
 }
+/* Grade + overage pair (operator 2026-10-10): always both halves, same size,
+   right-aligned as one unit — overage no longer appears only on some cards. */
+.cf-product-status {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.cf-product-grade {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
 .cf-product-overage {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);

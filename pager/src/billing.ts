@@ -7,7 +7,7 @@
 import { el, skeleton } from "./dom";
 import { formatAmount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
-import { barGauge, productLabel, scaleFitPct } from "./gauges";
+import { barGauge, gaugeLevel, productLabel, scaleFitPct, type Level } from "./gauges";
 import { updateStatusStrip } from "./statusstrip";
 
 // meterPct computes the meter geometry for one product row: solid used
@@ -39,24 +39,49 @@ function errorState(root: HTMLElement, err: unknown): void {
 }
 
 /**
- * IMP-002: ONE status per billing card — the gauge's level badge is that
- * status. The head carries only the projected cost beyond the allowance,
- * and only when there is one; a zero-overage card says nothing here (the
- * badge already reads ok/near/over).
+ * The overage half of the card-head pair (operator 2026-10-10, Workers Paid
+ * section): the projected cost beyond the allowance when there is one, and
+ * "no overage" when there is not — the pair (grade + overage) stays complete
+ * and same-size on every card instead of overage appearing only on some.
  */
-export function overageHeadText(p: ProductUsage): string | null {
-  return p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)} overage` : null;
+export function overageHeadText(p: ProductUsage): string {
+  return p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)} overage` : "no overage";
 }
 
-// productRow renders one product's bar-gauge card: name + overage USD head,
-// the gauge (solid used fill, projected fill, allowance + today markers,
-// level badge, text row), then the expandable top consumers.
+/**
+ * The grade half of the pair: the same decision gaugeLevel makes for the
+ * bar's badge, worded — OK / NEAR LIMIT / OVER LIMIT — so the chip in the
+ * head and the badge on the gauge can never disagree.
+ */
+export function gradeLabel(usedPct: number, projectedPct: number): { text: string; level: Level } {
+  const { level } = gaugeLevel(usedPct, projectedPct);
+  const text = level === "warning" ? "NEAR LIMIT" : level === "critical" ? "OVER LIMIT" : "OK";
+  return { text, level };
+}
+
+// productRow renders one product's bar-gauge card: name + the grade/overage
+// status pair in the head, the gauge (solid used fill, projected fill,
+// allowance + today markers, level badge, text row), then the expandable
+// top consumers.
 function productRow(p: ProductUsage, period: BillingPeriod): HTMLElement {
   const card = el("section", `cf-card cf-product ${p.projectedOverageUsd > 0 ? "cf-over" : ""}`);
   const head = el("div", "cf-product-head");
   head.append(el("strong", "cf-product-name", productLabel(p.id, p.product, p.metric)));
-  const overage = overageHeadText(p);
-  if (overage) head.append(el("span", "cf-product-overage cf-level-critical-text", overage));
+
+  // Grade + overage, always both, same size (operator 2026-10-10).
+  const usedPct = p.included > 0 ? (p.used / p.included) * 100 : 0;
+  const projectedPct = p.included > 0 ? (p.projected / p.included) * 100 : 0;
+  const grade = gradeLabel(usedPct, projectedPct);
+  const pair = el("span", "cf-product-status");
+  pair.append(el("span", `cf-product-grade cf-level-${grade.level}-text`, grade.text));
+  pair.append(
+    el(
+      "span",
+      `cf-product-overage ${p.projectedOverageUsd > 0 ? "cf-level-critical-text" : "cf-ok-text"}`,
+      overageHeadText(p),
+    ),
+  );
+  head.append(pair);
 
   // Bar percentages are of the fitted track scale (max of used/projected/
   // included) so an over-allowance projection stays on the track; the level
