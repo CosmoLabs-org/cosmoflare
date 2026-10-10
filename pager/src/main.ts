@@ -18,6 +18,8 @@ import { renderAlertList, renderPairing } from "./views";
 import { renderRules, type RulesPayload } from "./rules";
 import { logoMark } from "./logo";
 import { api, type Billing, type Summary } from "./api";
+import { refreshButton } from "./refresh";
+import { startStatusStripClock } from "./statusstrip";
 
 /** Nav counters (operator ask 2026-10-10): right-aligned per-section counts
  *  in the sidebar and drawer — "Domains 43", "Workers 17". Data comes from
@@ -133,7 +135,12 @@ function mount(): void {
   burger.setAttribute("aria-controls", "cf-drawer");
   burger.innerHTML = burgerBars;
   const brand = brandLockup("h1", "top");
-  top.append(burger, brand);
+  // Global Refresh (UI-1, operator request 2026-10-10): the refresh button
+  // lives in the top bar on every route — always available in the heading —
+  // instead of a per-view status bar.
+  const topActions = el("div", "cf-top-actions");
+  topActions.append(refreshButton(() => refreshCurrentRoute()));
+  top.append(burger, brand, topActions);
 
   // Skip link for keyboard users.
   const skip = el("a", "cf-skip-link", "Skip to content");
@@ -203,7 +210,22 @@ function mount(): void {
 
   const shell = el("div", "cf-shell");
   shell.append(sidebar, main);
-  root.append(skip, top, shell, backdrop, drawer);
+
+  // Bottom status strip (UI-1): "updated X ago" + billing-period day, one
+  // global live region fed by the views as they paint.
+  const statusbar = document.createElement("footer");
+  statusbar.className = "cf-statusbar";
+  statusbar.setAttribute("role", "status");
+  statusbar.setAttribute("aria-live", "polite");
+  const statusAge = el("span", "cf-status-age");
+  statusAge.id = "cf-status-age";
+  const statusPeriod = el("span", "cf-status-period");
+  statusPeriod.id = "cf-status-period";
+  statusPeriod.hidden = true;
+  statusbar.append(statusAge, statusPeriod);
+
+  root.append(skip, top, shell, backdrop, drawer, statusbar);
+  startStatusStripClock();
 
   // ---- Drawer behavior ----
   let drawerOpen = false;
@@ -292,6 +314,18 @@ function mount(): void {
     }
     RENDER[route](hosts[route]);
     window.scrollTo(0, 0);
+  }
+
+  // refreshCurrentRoute re-renders the active route the way the top-bar
+  // Refresh button expects: a Promise (void renderers resolve via
+  // Promise.resolve), refresh:true so data views revalidate and rethrow on
+  // failure — the button keeps its node, shakes and surfaces the error.
+  function refreshCurrentRoute(): Promise<void> {
+    if (current === "alerts") {
+      renderAlertList(hosts.alerts);
+      return Promise.resolve();
+    }
+    return Promise.resolve(RENDER[current](hosts[current], { refresh: true }));
   }
 
   let current: RouteId = initialRoute;

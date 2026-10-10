@@ -120,6 +120,11 @@ body { margin: 0; min-height: 100vh; }
   letter-spacing: 0.01em;
 }
 
+/* Right-aligned action slot in the top bar (UI-1): carries the global
+   Refresh button so it is available in the heading on every route. */
+.cf-top-actions { margin-inline-start: auto; display: inline-flex; align-items: center; }
+.cf-top-actions .cf-refresh-btn { flex: 0 0 auto; }
+
 .cf-hamburger {
   display: none;
   background: none;
@@ -330,7 +335,9 @@ body.cf-nav-open { overflow: hidden; }
 
 .cf-main {
   padding: var(--space-4);
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  /* Bottom padding carries the fixed status strip's height (UI-1, +48px)
+     so content is never hidden behind it. */
+  padding-bottom: calc(var(--space-4) + 48px + env(safe-area-inset-bottom));
   padding-left: calc(var(--space-4) + env(safe-area-inset-left));
   padding-right: calc(var(--space-4) + env(safe-area-inset-right));
   max-width: 880px;

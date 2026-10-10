@@ -4,7 +4,7 @@
 // shared ApiClient. Levels mirror the starter alert thresholds (O10) so the
 // screen and the pager agree on what is "red".
 
-import { el, skeleton, statusLine } from "./dom";
+import { el, skeleton } from "./dom";
 import { isRollingStorage } from "./billing";
 import { formatAmount, formatCount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 
@@ -12,7 +12,7 @@ import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, 
 import { ATTENTION_CAP, capAttention, collectAttention } from "./attention";
 import { capTopRings, gaugeLevel, productLabel, ringGauge, sortByProjectedDesc, type RingGaugeProps } from "./gauges";
 import { hrefFor } from "./routes";
-import { refreshButton } from "./refresh";
+import { updateStatusStrip } from "./statusstrip";
 
 export type Level = "ok" | "warning" | "critical";
 
@@ -238,7 +238,18 @@ function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes:
     } else {
       ringsCard.append(rings);
     }
-    root.replaceChildren(statusBar(sumRes, billRes, root), planLine(billing), grid, ringsCard, attentionCard);
+    // Bottom status strip (UI-1): the worst age across both endpoints (the
+    // honest client copy age + server cache age) plus the billing-period
+    // day — "day eighteen out of thirty" pinned at the bottom.
+    updateStatusStrip({
+      ageSec: Math.max(
+        totalAgeSec(sumRes.ageSec, sumRes.data.cache),
+        totalAgeSec(billRes.ageSec, billRes.data.cache),
+      ),
+      day: billing.period.day,
+      days: billing.period.days,
+    });
+    root.replaceChildren(planLine(billing), grid, ringsCard, attentionCard);
   }
 }
 
@@ -246,19 +257,4 @@ function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes:
 // levelForUsage (the projected % of limit from the summary rows).
 export function usageLevelFromPct(pct: number): Level {
   return levelForUsage(pct);
-}
-
-// statusBar builds the "Updated … / cached / demo" line plus the Refresh
-// button. The age is honest (BUG-057 defect 2): client copy age + server
-// cache age, for both endpoints.
-function statusBar(sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>, root: HTMLElement): HTMLElement {
-  const bar = el("div", "cf-dash-bar");
-  const maxAge = Math.max(
-    totalAgeSec(sumRes.ageSec, sumRes.data.cache),
-    totalAgeSec(billRes.ageSec, billRes.data.cache),
-  );
-  const line = statusLine(maxAge, { cached: Boolean(sumRes.data.cache?.stale || billRes.data.cache?.stale), demo: sumRes.demo || billRes.demo });
-  const refresh = refreshButton(() => renderOverview(root, { refresh: true }));
-  bar.append(line, refresh);
-  return bar;
 }

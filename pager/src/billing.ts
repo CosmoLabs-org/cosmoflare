@@ -4,11 +4,11 @@
 // projected cost, pricing footnote, telemetry gaps notice. Data: /api/billing
 // via the shared ApiClient.
 
-import { el, skeleton, statusLine } from "./dom";
+import { el, skeleton } from "./dom";
 import { formatAmount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "./api";
 import { barGauge, productLabel, scaleFitPct } from "./gauges";
-import { refreshButton } from "./refresh";
+import { updateStatusStrip } from "./statusstrip";
 
 // meterPct computes the meter geometry for one product row: solid used
 // width, hatched projected extension, and the allowance marker position —
@@ -151,12 +151,13 @@ export function billingLegend(): HTMLElement {
 function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
   const b = res.data;
 
-  // Status bar + refresh. The age is honest (BUG-057 defect 2): client copy
-  // age + server cache age.
-  const bar = el("div", "cf-dash-bar");
-  const line = statusLine(totalAgeSec(res.ageSec, b.cache), { cached: Boolean(b.cache?.stale), demo: res.demo });
-  const refresh = refreshButton(() => renderBilling(root, { refresh: true }));
-  bar.append(line, refresh);
+  // Bottom status strip (UI-1): honest age (BUG-057 defect 2 — client copy
+  // age + server cache age) plus the billing-period day.
+  updateStatusStrip({
+    ageSec: totalAgeSec(res.ageSec, b.cache),
+    day: b.period.day,
+    days: b.period.days,
+  });
 
   // Period progress
   const period = el("section", "cf-card");
@@ -215,7 +216,7 @@ function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
   });
 
   // Telemetry gaps notice
-  root.replaceChildren(bar, period, billingLegend(), products);
+  root.replaceChildren(period, billingLegend(), products);
   if (b.errors.length) {
     const gaps = el("section", "cf-card cf-level-warning");
     gaps.append(el("h2", undefined, "Telemetry gaps"));

@@ -3,13 +3,13 @@
 // after 10 rows), plus the three section renderers. Data: /api/summary v2
 // via the shared ApiClient.
 
-import { el, skeleton, statusLine } from "./dom";
+import { el, skeleton } from "./dom";
 import { formatCount, formatPct } from "./format";
-import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, type Summary } from "./api";
+import { api, LoginExpiredError, type Billing, type FetchResult, type Summary } from "./api";
 import { cmpRows, cmpText, type SortDir } from "./sort";
 import { zoneAttentionLevel } from "./attention";
 import { levelForErrorPct, levelForD1 } from "./dashboard";
-import { fadeSwap, refreshButton } from "./refresh";
+import { fadeSwap } from "./refresh";
 
 export interface Column<T> {
   key: string;
@@ -361,11 +361,6 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
       } catch {
         included = 0;
       }
-      const bar = el("div", "cf-dash-bar");
-      const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-      const refresh = refreshButton(async () => renderWorkers(host, { refresh: true }));
-      bar.append(line, refresh);
-
       const card = el("section", "cf-card");
       card.append(el("h2", undefined, "Workers (24h)"));
       if (res.data.workers.length === 0) {
@@ -393,7 +388,7 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
       }
       // Repaint through fadeSwap so refreshed content fades in without a jump.
       const view = el("div");
-      view.append(bar, card);
+      view.append(card);
       fadeSwap(host, view);
     })();
   });
@@ -413,11 +408,6 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): P
       } catch {
         included = 0;
       }
-      const bar = el("div", "cf-dash-bar");
-      const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-      const refresh = refreshButton(async () => renderD1(host, { refresh: true }));
-      bar.append(line, refresh);
-
       const card = el("section", "cf-card");
       card.append(el("h2", undefined, "D1 databases (24h)"));
       if (res.data.d1.length === 0) {
@@ -444,7 +434,7 @@ export function renderD1(root: HTMLElement, opts: { refresh?: boolean } = {}): P
       }
       // Repaint through fadeSwap so refreshed content fades in without a jump.
       const view = el("div");
-      view.append(bar, card);
+      view.append(card);
       fadeSwap(host, view);
     })();
   });
@@ -505,11 +495,6 @@ export function byStatusLegend(byStatus: Record<string, number>): HTMLElement {
 
 export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
   return fetchSummaryView(root, "the zones list", opts, (host, res) => {
-    const bar = el("div", "cf-dash-bar");
-    const line = statusLine(totalAgeSec(res.ageSec, res.data.cache), { cached: Boolean(res.data.cache?.stale), demo: res.demo });
-    const refresh = refreshButton(async () => renderZones(host, { refresh: true }));
-    bar.append(line, refresh);
-
     const card = el("section", "cf-card");
     card.append(el("h2", undefined, "Zones (24h)"));
     const rows = res.data.zones.filter((z) => z.total > 0);
@@ -551,7 +536,7 @@ export function renderZones(root: HTMLElement, opts: { refresh?: boolean } = {})
     }
     // Repaint through fadeSwap so refreshed content fades in without a jump.
     const view = el("div");
-    view.append(bar, card);
+    view.append(card);
     fadeSwap(host, view);
   });
 }

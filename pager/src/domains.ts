@@ -3,10 +3,9 @@
 // Wave 2 (registrar detail: auto-renew, lock, prices) waits on Registrar
 // Read for the token.
 
-import { el, skeleton, statusLine } from "./dom";
-import { api, LoginExpiredError, totalAgeSec, type FetchResult, type Summary } from "./api";
+import { el, skeleton } from "./dom";
+import { api, LoginExpiredError, type FetchResult, type Summary } from "./api";
 import { formatCount } from "./format";
-import { refreshButton } from "./refresh";
 
 export interface DomainRecord {
   id: string;
@@ -230,11 +229,6 @@ function renderDomainsInto(root: HTMLElement, res: FetchResult<DomainsPayload>):
     }
     activeDomainId = null;
   }
-  const bar = el("div", "cf-dash-bar");
-  const line = statusLine(totalAgeSec(res.ageSec, d.cache), { cached: Boolean(d.cache?.stale), demo: res.demo });
-  const refresh = refreshButton(() => renderDomains(root, { refresh: true }));
-  bar.append(line, refresh);
-
   const heading = el("h2", undefined, "Domains");
   const nowMs = Date.now();
   const sorted = sortDomains(d.domains);
@@ -258,5 +252,5 @@ function renderDomainsInto(root: HTMLElement, res: FetchResult<DomainsPayload>):
       domainProfile(root, d, x);
     }));
   }
-  root.replaceChildren(bar, heading, sub, card);
+  root.replaceChildren(heading, sub, card);
 }

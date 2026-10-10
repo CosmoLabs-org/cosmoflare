@@ -4,10 +4,9 @@
 // helpers (validation, exclude-chip math, threshold hint) are exported for
 // tests; rendering needs a DOM.
 
-import { el, skeleton, statusLine } from "./dom";
+import { el, skeleton } from "./dom";
 import { formatCount } from "./format";
-import { api, LoginExpiredError, totalAgeSec, type CacheInfo, type FetchResult } from "./api";
-import { refreshButton } from "./refresh";
+import { api, LoginExpiredError, type CacheInfo, type FetchResult } from "./api";
 
 // ---- /api/rules contract (built by agent B; consumed here) ----
 
@@ -290,11 +289,6 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
 
   // ---- Action bar, starter note, save feedback ----
 
-  const bar = el("div", "cf-dash-bar");
-  const line = statusLine(totalAgeSec(res.ageSec, payload.cache), { demo: res.demo });
-  const refresh = refreshButton(() => renderRules(root, { refresh: true }));
-  bar.append(line, refresh);
-
   const note = payload.starter
     ? el("p", "cf-rule-note", "Using starter rules — save to customise")
     : el("p", "cf-rule-note");
@@ -387,7 +381,7 @@ function renderRulesInto(root: HTMLElement, res: FetchResult<RulesPayload>): voi
   });
 
   paintList();
-  root.replaceChildren(bar, note, list, saveError, saveStatus, actions);
+  root.replaceChildren(note, list, saveError, saveStatus, actions);
 }
 
 // ---- PUT /api/rules ----

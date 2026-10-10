@@ -4,11 +4,10 @@
 // overage and driver product ids; the products' topConsumers carry the
 // per-project attribution detail. Zero new upstream calls.
 
-import { el, skeleton, statusLine } from "./dom";
+import { el, skeleton } from "./dom";
 import { formatUsd } from "./format";
-import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult } from "./api";
+import { api, LoginExpiredError, type Billing, type FetchResult } from "./api";
 import { productLabel } from "./gauges";
-import { refreshButton } from "./refresh";
 
 /** Worst payer first: overage desc, then name for a stable order. */
 export function sortProjectsByOverage<T extends { project: string; projectedOverageUsd: number }>(projects: T[]): T[] {
@@ -111,11 +110,6 @@ export async function renderProjects(root: HTMLElement, opts: { refresh?: boolea
 
 function renderProjectsInto(root: HTMLElement, res: FetchResult<Billing>): void {
   const b = res.data;
-  const bar = el("div", "cf-dash-bar");
-  const line = statusLine(totalAgeSec(res.ageSec, b.cache), { cached: Boolean(b.cache?.stale), demo: res.demo });
-  const refresh = refreshButton(() => renderProjects(root, { refresh: true }));
-  bar.append(line, refresh);
-
   const heading = el("h2", undefined, "Projects");
   const sub = el("p", "cf-row-detail", "Projected cost beyond allowances, by project, across Cloudflare products.");
 
@@ -126,5 +120,5 @@ function renderProjectsInto(root: HTMLElement, res: FetchResult<Billing>): void 
   } else {
     for (const p of projects) list.append(projectCard(b, p));
   }
-  root.replaceChildren(bar, heading, sub, list);
+  root.replaceChildren(heading, sub, list);
 }

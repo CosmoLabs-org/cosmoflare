@@ -7,8 +7,7 @@ import { formatCount, formatPct } from "./format";
 import { api, LoginExpiredError, type Billing, type FetchResult } from "./api";
 import { renderSortableTable, usageSharePct, type Column } from "./tables";
 import { levelForErrorPct } from "./dashboard";
-import { dashBar, sectionCard } from "./components";
-
+import { sectionCard } from "./components";
 export interface DORow {
   namespaceId: string;
   script: string;
@@ -65,7 +64,6 @@ function renderInto(root: HTMLElement, res: FetchResult<DOPayload>): void {
     }
 
     root.replaceChildren(
-      dashBar(res, d.cache, () => renderDurableObjects(root, { refresh: true })),
       sectionCard("Durable Objects (24h)",
         d.errors.length > 0
           ? `Partial load — ${d.errors[0]}`
