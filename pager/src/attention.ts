@@ -43,6 +43,7 @@ export function collectAttention(summary: Summary | null, billing: Billing | nul
     // "past allowance" + "overage" duplicate pair is gone. Critical when the
     // included allowance is already consumed; warning for projected overage.
     for (const p of billing.products) {
+      if (p.id === "kv.storage") continue; // rolling bytes: never an attention item
       const over = p.projectedOverageUsd >= OVERAGE_WARN_USD;
       const past = p.used >= p.included;
       if (!over && !past) continue;

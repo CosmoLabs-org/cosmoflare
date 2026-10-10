@@ -5,6 +5,7 @@
 // screen and the pager agree on what is "red".
 
 import { el, skeleton, statusLine } from "./dom";
+import { isRollingStorage } from "./billing";
 import { formatAmount, formatCount, formatPct, formatUsd, formatDateShort, periodProgress } from "./format";
 
 import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage, type Summary } from "./api";
@@ -208,7 +209,7 @@ function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes:
     // toggle. Each ring taps through to the billing view.
     const ringsCard = el("section", "cf-card");
     ringsCard.append(el("h2", undefined, "Workers Paid allowances"));
-    const sorted = sortByProjectedDesc(billing.products);
+    const sorted = sortByProjectedDesc(billing.products.filter((p) => !isRollingStorage(p.id)));
     const { shown, hiddenCount } = capTopRings(sorted);
     const rings = el("div", "cf-rings");
     const ringFor = (p: (typeof sorted)[number]): HTMLElement => {

@@ -113,6 +113,14 @@ export async function renderBilling(root: HTMLElement, opts: { refresh?: boolean
 // billingLegend is the one-line key under the period card: solid = used,
 // hatched = projected, line = allowance, dot = today. The bar gauges repeat
 // these encodings; the legend spells them out once.
+/** Rolling-bytes metrics (BUG-pFAKDN3): kv.storage's number is a rolling
+ *  cumulative, not live size — it must never drive allowance visuals
+ *  (rings, over-limit cards, attention) even though the payload carries it
+ *  for awareness. */
+export function isRollingStorage(id: string): boolean {
+  return id === "kv.storage";
+}
+
 export function billingLegend(): HTMLElement {
   const row = el("div", "cf-legend");
   row.setAttribute("role", "list");
@@ -154,7 +162,12 @@ function renderBillingInto(root: HTMLElement, res: FetchResult<Billing>): void {
 
   // Products (sorted by projected overage desc — the server sends them so)
   const products = el("div", "cf-products");
-  for (const p of b.products) products.append(productRow(p, b.period));
+  for (const p of b.products) {
+    if (isRollingStorage(p.id)) continue; // rolling bytes: no allowance card
+    products.append(productRow(p, b.period));
+  }
+  products.append(el("p", "cf-empty cf-empty-quiet",
+    "KV storage hidden: Cloudflare's dataset reports rolling bytes, not live size (BUG-pFAKDN3) — no overage is priced on it."));
 
   // Projects table — "who to optimize"
   const projectsCard = el("section", "cf-card");
