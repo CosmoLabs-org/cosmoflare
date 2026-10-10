@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T23:21:36.161885+04:00
+last_updated: 2026-10-11T01:32:06.899684+04:00
 next_bug_id: 60
 next_feat_id: 73
 next_task_id: 18
@@ -873,6 +873,6 @@ issues:
       created_at: 2026-09-20T02:18:26.823559+04:00
     - id: TASK-pD575FN
       type: task
-      status: open
+      status: closed
       title: add
       created_at: 2026-10-10T23:21:34.324088+04:00
