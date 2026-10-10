@@ -73,3 +73,58 @@ export async function collectDomains(accountId: string, token: string, now = new
     return { generatedAt: now.toISOString(), domains: [], errors: [err instanceof Error ? err.message : String(err)] };
   }
 }
+
+export interface DomainDetail {
+  zone: DomainRecord & {
+    originalNameServers: string[];
+    activatedOn: string | null;
+    ownerType: string;
+    dnssecStatus: string | null;
+    sslMode: string | null;
+  };
+  errors: string[];
+}
+
+/** Per-domain profile data (operator ask 2026-10-10): the zone detail plus
+ *  DNSSEC and SSL status — three GETs, each soft-failed into errors so one
+ *  permission gap never blanks the profile. */
+export async function collectDomainDetail(token: string, zoneId: string): Promise<DomainDetail> {
+  const errors: string[] = [];
+  const get = async <T>(path: string): Promise<T | null> => {
+    try {
+      const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, { headers: { Authorization: `Bearer ${token}` } });
+      const body = (await res.json()) as { success: boolean; result: T; errors?: { message: string }[] };
+      if (!body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
+      return body.result;
+    } catch (err) {
+      errors.push(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  };
+  const [zone, dnssec, ssl] = await Promise.all([
+    get<{ id: string; name: string; status: string; paused: boolean; expires_at: string | null; type: string; plan?: { name?: string }; development_mode?: number | boolean; created_on: string; modified_on: string; name_servers?: string[]; original_name_servers?: string[] | null; activated_on?: string | null; owner?: { type?: string } }>(`/zones/${zoneId}`),
+    get<{ status: string }>(`/zones/${zoneId}/dnssec`),
+    get<{ value: string }>(`/zones/${zoneId}/settings/ssl`),
+  ]);
+  return {
+    zone: {
+      id: zone?.id ?? zoneId,
+      name: zone?.name ?? "",
+      status: zone?.status ?? "",
+      paused: Boolean(zone?.paused),
+      expiresAt: zone?.expires_at ?? null,
+      type: zone?.type ?? "",
+      plan: zone?.plan?.name ?? "",
+      developmentMode: Boolean(zone?.development_mode),
+      createdOn: zone?.created_on ?? "",
+      modifiedOn: zone?.modified_on ?? "",
+      nameServers: zone?.name_servers ?? [],
+      originalNameServers: zone?.original_name_servers ?? [],
+      activatedOn: zone?.activated_on ?? null,
+      ownerType: zone?.owner?.type ?? "",
+      dnssecStatus: dnssec?.status ?? null,
+      sslMode: ssl?.value ?? null,
+    },
+    errors,
+  };
+}

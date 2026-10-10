@@ -4,7 +4,8 @@
 // Read for the token.
 
 import { el, skeleton, statusLine } from "./dom";
-import { api, LoginExpiredError, totalAgeSec, type FetchResult } from "./api";
+import { api, LoginExpiredError, totalAgeSec, type FetchResult, type Summary } from "./api";
+import { formatCount } from "./format";
 import { refreshButton } from "./refresh";
 
 export interface DomainRecord {
@@ -26,6 +27,18 @@ export interface DomainsPayload {
   domains: DomainRecord[];
   errors: string[];
   cache?: { ageSec: number; stale: boolean };
+}
+
+/** /api/domains/detail?id= — the enriched profile payload. */
+export interface DomainDetailPayload {
+  zone: DomainRecord & {
+    originalNameServers?: string[];
+    activatedOn?: string | null;
+    ownerType?: string;
+    dnssecStatus?: string | null;
+    sslMode?: string | null;
+  };
+  errors: string[];
 }
 
 /** Whole days from `now` to an ISO date (negative once past). */
@@ -101,8 +114,9 @@ function domainRow(d: DomainRecord, nowMs: number, onOpen: (d: DomainRecord) => 
   return row;
 }
 
-/** The domain profile: full-page detail with a back control — registration,
- *  nameservers, setup, dates; everything the zones list already carries. */
+/** The domain profile: full-page detail with a back control. Paints from
+ *  the list data immediately, then enriches from /api/domains/detail
+ *  (original nameservers, DNSSEC, SSL mode, activation) when it lands. */
 function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainRecord): void {
   const back = el("button", "cf-btn cf-btn-ghost cf-profile-back", "‹ Domains");
   back.type = "button";
@@ -111,9 +125,10 @@ function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainReco
     renderDomainsInto(root, { data: payload, source: "memory", ageSec: 0, demo: false });
   });
 
-  const title = el("h2", "cf-profile-title", d.name);
   const days = d.expiresAt !== null ? daysUntil(d.expiresAt) : null;
   const level = expiryLevel(days);
+  const title = el("h2", "cf-profile-title", d.name);
+  const eyebrow = el("p", "cf-profile-eyebrow", "Domain profile");
 
   const statusCard = el("section", `cf-card cf-profile-status ${level ? `cf-level-${level}` : ""}`);
   statusCard.append(el("p", "cf-profile-line", d.paused ? "Paused — Cloudflare is bypassed for this zone" : "Active — DNS resolves through Cloudflare"));
@@ -124,27 +139,71 @@ function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainReco
     statusCard.append(el("p", "cf-profile-line", "Registered at an external registrar — renewal happens there"));
   }
 
+  // Sectioned fields: Registration / DNS / Security. The detail fetch adds
+  // its rows into the same grid when it resolves.
   const field = (label: string, value: string): HTMLElement => {
     const f = el("div", "cf-domain-field");
     f.append(el("span", "cf-domain-field-label", label), el("span", "cf-domain-field-value", value));
     return f;
   };
-  const infoCard = el("section", "cf-card");
-  const info = el("div", "cf-profile-fields");
-  info.append(
+  const section = (heading: string, ...rows: (HTMLElement | null)[]): HTMLElement => {
+    const card = el("section", "cf-card cf-profile-section");
+    card.append(el("h3", "cf-profile-section-title", heading));
+    const grid = el("div", "cf-profile-fields");
+    grid.append(...rows.filter((r): r is HTMLElement => r !== null));
+    card.append(grid);
+    return card;
+  };
+
+  const regCard = section("Registration",
     field("Plan", d.plan || "—"),
     field("Setup", d.type === "partial" ? "Partial (CNAME)" : "Full (DNS on Cloudflare)"),
-    field("Nameservers", d.nameServers && d.nameServers.length > 0 ? d.nameServers.join("\n") : "—"),
+    d.createdOn ? field("Added to Cloudflare", formatDate(d.createdOn)) : null,
   );
-  if (d.createdOn) info.append(field("Added to Cloudflare", formatDate(d.createdOn)));
-  if (d.modifiedOn) info.append(field("Last change", formatDate(d.modifiedOn)));
-  if (d.developmentMode) info.append(field("Development mode", "on"));
-  infoCard.append(info);
+  const dnsCard = section("DNS",
+    field("Nameservers", d.nameServers && d.nameServers.length > 0 ? d.nameServers.join("\n") : "—"),
+    d.modifiedOn ? field("Last change", formatDate(d.modifiedOn)) : null,
+  );
+  const secCard = section("Security", d.developmentMode ? field("Development mode", "on") : null);
+
+  // Renewal & traffic: expiration, days away, and the zone's 24h request
+  // total joined from the cached summary by zone name (soft: absent when
+  // the summary has not loaded).
+  const renewCard = section("Renewal",
+    field("Expiration", d.expiresAt !== null ? formatDate(d.expiresAt) : "External registrar"),
+    days !== null
+      ? field("Days away", days < 0 ? `${-days} days ago` : days === 0 ? "today" : `${days} days`)
+      : null,
+  );
+  void api.fetchJson<Summary>("api/summary")
+    .then((res) => {
+      const z = res.data.zones.find((x) => x.zone === d.name);
+      if (z) renewCard.querySelector<HTMLElement>(".cf-profile-fields")?.append(field("Traffic (24h)", formatCount(z.total)));
+    })
+    .catch(() => undefined);
 
   const view = el("div", "cf-profile");
-  view.append(back, title, statusCard, infoCard);
+  view.append(back, eyebrow, title, statusCard, renewCard, regCard, dnsCard, secCard);
   root.replaceChildren(view);
   root.scrollIntoView({ block: "start" });
+
+  // Enrichment: original NS, activation, DNSSEC, SSL — from the cached
+  // per-zone endpoint; failures leave the base profile untouched.
+  void api.fetchJson<DomainDetailPayload>(`api/domains/detail?id=${encodeURIComponent(d.id)}`)
+    .then((res) => {
+      const z = res.data.zone;
+      const dnsFields = dnsCard.querySelector<HTMLElement>(".cf-profile-fields");
+      const regFields = regCard.querySelector<HTMLElement>(".cf-profile-fields");
+      const secFields = secCard.querySelector<HTMLElement>(".cf-profile-fields");
+      if (z.originalNameServers && z.originalNameServers.length > 0 && dnsFields) {
+        dnsFields.append(field("Pointed from", z.originalNameServers.join("\n")));
+      }
+      if (z.activatedOn && regFields) regFields.append(field("Activated", formatDate(z.activatedOn)));
+      if (z.ownerType && regFields) regFields.append(field("Owner", z.ownerType));
+      if (z.dnssecStatus && secFields) secFields.append(field("DNSSEC", z.dnssecStatus));
+      if (z.sslMode && secFields) secFields.append(field("SSL mode", z.sslMode));
+    })
+    .catch(() => undefined);
 }
 
 export async function renderDomains(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {

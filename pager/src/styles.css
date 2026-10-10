@@ -843,14 +843,29 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--muted);
 }
 
-/* Domain profile page. */
+/* Domain profile page: eyebrow + display title + sectioned cards. */
 .cf-profile { display: grid; gap: var(--space-3); }
 .cf-profile-back { justify-self: start; min-height: 44px; }
+.cf-profile-eyebrow {
+  margin: 0;
+  font-size: var(--text-xs, 11px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .cf-profile-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 24px;
   margin: 0;
   overflow-wrap: anywhere;
+}
+.cf-profile-section-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 var(--space-2);
 }
 .cf-profile-line { margin: 0 0 var(--space-1); }
 .cf-profile-line:last-child { margin-bottom: 0; }

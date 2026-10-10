@@ -6,7 +6,7 @@
 import { verifyAccessJwt } from "./access";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
-import { collectDomains } from "./domains";
+import { collectDomainDetail, collectDomains } from "./domains";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
 import { handleRules } from "./rules-api";
@@ -95,6 +95,16 @@ export default {
         return summaryResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/domains":
         return domainsResponse(ctx, env, url.searchParams.has("refresh"));
+      case "/api/domains/detail": {
+        // /api/domains/detail?id=<zoneId> — the per-domain profile (zone
+        // detail + DNSSEC + SSL), cached 1h per zone.
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "missing id" }, 400);
+        const result = await cached(ctx, env, `domain:${id}`, LIST_TTL, () =>
+          collectDomainDetail(env.CF_API_TOKEN, id),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
       case "/api/billing":
         return billingResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/subscribe": // POST add / DELETE remove / GET count — auth already checked above
