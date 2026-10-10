@@ -1,12 +1,14 @@
 id: BUG-p3Y31ZQ
 type: bug
 created_at: 2026-10-10T12:12:43.548156+04:00
-updated_at: 2026-10-10T12:12:44.075752+04:00
+updated_at: 2026-10-10T12:12:45.305061+04:00
 source: local
 ulid: 01M4JDY75B7ACMK60HS73Y31ZQ
 provisional: true
 severity: critical
 status: open
+origin:
+    session: 71
 title: 'R2 S3 data plane broken for token-only users: fallback AccessKeyID ''r2-token'' is 8 chars (R2 requires 32)'
 description: 'Root cause found 2026-10-10 while closing session 2035: pkg/cosmoflare/client.go initS3 (~line 199) falls back to static credentials {AccessKeyID: ''r2-token'', SecretAccessKey: apiToken} when config/env carry no explicit access_key/secret_key. ''r2-token'' is 8 characters; the R2 S3 gateway rejects access keys not 32 chars (''api error InvalidArgument: Credential access key has length 8, should be 32'' — live repro on this machine, cosmoflare analytics --bucket=mycarguide). Every token-only user (the common case; MyCarGuide included) gets a broken S3 data plane: ListObjects/GetObject/uploads all fail. This was the real failure beneath FB 01M4HJJQYMZZAA0D98T2R22EFG''s opaque error — not a permission gap.'
 fix_direction: 'Derive real R2 S3 credentials from the API token per Cloudflare''s documented token-based S3 auth (research the current scheme live — do not guess; candidates: token-derived access keys via the R2 credentials endpoint, or the documented S3-auth-via-token header). Add a fast-fail validation: if the resolved AccessKeyID is not 32 chars, return a clear coded error naming the missing AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY requirement instead of letting the gateway reject it. Regression test both paths.'

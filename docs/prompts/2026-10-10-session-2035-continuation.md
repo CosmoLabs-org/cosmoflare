@@ -53,6 +53,10 @@ Fresh-eyes pass over the continuation-tail work (2026-10-10): 13 deploys — ver
 
 Standing rules: real numbers only (memory cosmoflare-real-numbers-only); deploys need in-session operator request; releases need explicit go. Scratchpad live-data harness: see the 2026-10-09 prompt's scratchpad technique section (rebuild in /tmp if cleared).
 
+### Operator charter for this session (2026-10-10, verbatim intent)
+
+Run under Opus orchestration with Sonnet/Haiku workers. Keep improving Ops — analyze ALL items in the feedback inbox (docs/feedback/incoming/) and work through them; improve the design and capabilities (IMP-p31NPAN overhaul). Get notifications working (G-01: the operator will run the two VAPID commands — verify, then pair). Build out the planned features. **NEW critical bug found at close: BUG-p3Y31ZQ — R2 S3 data plane broken for token-only users (fallback AccessKeyID "r2-token" is 8 chars; R2 requires 32). Fix early: research Cloudflare's documented token-based S3 auth live, add the 32-char fast-fail.**
+
 ## Carry-Over
 
 - Session 2032 prompt (v0.33.0 release on operator go, FEAT-050 design).

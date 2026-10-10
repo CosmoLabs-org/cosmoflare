@@ -1,7 +1,7 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T11:13:22.482411+04:00
-next_bug_id: 59
+last_updated: 2026-10-10T12:12:45.303252+04:00
+next_bug_id: 60
 next_feat_id: 56
 next_task_id: 17
 next_imp_id: 5
@@ -365,6 +365,12 @@ issues:
       priority: 70
       area: reliability
       created_at: 2026-10-09T23:22:17.158916+04:00
+    - id: BUG-p3Y31ZQ
+      type: bug
+      status: open
+      title: 'R2 S3 data plane broken for token-only users: fallback AccessKeyID ''r2-token'' is 8 chars (R2 requires 32)'
+      severity: critical
+      created_at: 2026-10-10T12:12:43.548156+04:00
     - id: BUG-pFAKDN3
       type: bug
       status: fixed
