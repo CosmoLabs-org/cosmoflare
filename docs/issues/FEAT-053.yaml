@@ -1,13 +1,13 @@
 id: FEAT-053
 type: feature
 created_at: 2026-10-09T21:14:17.006648+04:00
-updated_at: 2026-10-09T21:20:09.414731+04:00
+updated_at: 2026-10-10T04:40:23.358299+04:00
 source: local
 ulid: 01M4GTH45VWY8SKZSN14DQ8JET
 aliases:
     - FEAT-pDQ8JET
 priority: 70
-status: open
+status: implemented
 area: ux
 origin:
     roadmap_items:
@@ -28,4 +28,9 @@ acceptance_criteria:
       met: false
 roadmap_ref: ROAD-pJ25XG5
 resolution:
-    notes: 'Operator 2026-10-09: over-limit and critical bars/rings render red with a continuous flowing stripe and soft pulsing glow; ok/warning bars only animate on first fill; reduced-motion disables all motion.'
+    notes: 'Verified live 2026-10-10 by orchestrator during session 2034: Ops PWA fully functional (all views, caching, push plumbing, Access lockdown) — shipped across versions through 85ba9f2b.'
+    resolved_at: 2026-10-10T04:40:23.356848+04:00
+revisions:
+    - date: "2026-10-10T04:40:23.356847+04:00"
+      action: closed
+      context: 'Verified live 2026-10-10 by orchestrator during session 2034: Ops PWA fully functional (all views, caching, push plumbing, Access lockdown) — shipped across versions through 85ba9f2b.'
