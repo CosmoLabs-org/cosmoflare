@@ -710,10 +710,17 @@ body.cf-nav-open { overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-3) 14px;
+  /* UI-2 (operator request 2026-10-10: "organize and center it") — tile
+     contents center: value, label, sublabel and the billing-period tile's
+     label; its thin progress bar spans edge-to-edge, symmetric about the
+     tile's center line. */
+  text-align: center;
 }
 .cf-kpi-value {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  /* One step down from 26px (UI-2: "It's a little too big") — 24px, the
+     size already in use by .cf-profile-title. */
+  font-size: 24px;
   line-height: var(--lh-tight);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -750,24 +757,53 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-kpi .cf-progress .cf-progress-fill { border-radius: 0; }
 
-/* Needs-attention rows are links — never color-only, the "!" and "•" marks
-   repeat the severity in text form. */
+/* Needs-attention rows: tappable disclosures (UI-2, operator request
+   2026-10-10 — "we click it and it show us in text it will say what's
+   wrong"). The first line is a button (mark + title + chevron); the full
+   detail text and a secondary "Open section →" link expand below it. Never
+   color-only — the "!" and "•" marks repeat the severity in text form. */
 .cf-attention {
+  border-top: 1px solid var(--border);
+  padding: 10px 2px;
+  color: var(--text);
+}
+.cf-card h2 + .cf-attention { border-top: none; }
+.cf-attention-toggle {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 10px 2px;
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  text-decoration: none;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.cf-card h2 + .cf-attention { border-top: none; }
-.cf-attention:hover { background: var(--surface-raised); }
+.cf-attention-toggle:hover { background: var(--surface-raised); }
 .cf-attention-mark { width: 18px; text-align: center; font-weight: 700; }
-.cf-attention-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.cf-attention-chevron { color: var(--muted); }
+.cf-attention-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cf-attention-chevron {
+  color: var(--muted);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+/* Expanded: the chevron points down at the revealed detail. */
+.cf-attention-toggle[aria-expanded="true"] .cf-attention-chevron { transform: rotate(90deg); }
 .cf-attention.cf-level-critical .cf-attention-mark { color: var(--sev-critical); }
 .cf-attention.cf-level-warning .cf-attention-mark { color: var(--sev-warning); }
+/* The expandable block: full detail paragraph + secondary section link,
+   indented under the mark (18px mark + 10px gap). */
+.cf-attention-detail { padding: var(--space-2) 0 0 28px; }
+.cf-attention-text {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.cf-attention-open { font-size: var(--text-xs); color: var(--accent); }
+/* "Show all N" footer keeps the row look without a disclosure toggle. */
+a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--muted); }
 
 /* ---- Projects view: consumption grouped by project ---- */
 .cf-projects-list {
@@ -1587,7 +1623,8 @@ body.cf-nav-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .cf-drawer, .cf-backdrop, .cf-burger-bar, .cf-btn, .cf-btn:active,
   .cf-toggle, .cf-chip-remove, .cf-fade-swap,
-  .cf-domain-chevron, .cf-domain-detail {
+  .cf-domain-chevron, .cf-domain-detail,
+  .cf-attention-chevron {
     transition: none;
   }
   .cf-btn, .cf-btn:active { transform: none; }

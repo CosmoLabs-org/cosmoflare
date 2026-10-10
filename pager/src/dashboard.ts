@@ -131,7 +131,8 @@ export async function renderOverview(root: HTMLElement, opts: { refresh?: boolea
 
 // paintOverview renders one (summary, billing) pair into the view host —
 // the try-body of renderOverview, split out so background revalidations can
-// repaint without touching the skeleton/error flow.
+// repaint without touching the skeleton/error flow. Exported for the
+// attention-row disclosure tests (UI-2).
 // The plan this account runs on and its base price — neutral grey — plus
 // the month's projected overage in its severity color (operator request
 // 2026-10-10: "$5.00 in neutral grey then + whatever overage").
@@ -150,7 +151,7 @@ function planLine(billing: Billing): HTMLElement {
   return line;
 }
 
-function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>): void {
+export function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes: FetchResult<Billing>): void {
   {
     const summary = sumRes.data;
     const billing = billRes.data;
@@ -186,15 +187,34 @@ function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, billRes:
     } else {
       const { shown, extra } = capAttention(attention, ATTENTION_CAP);
       for (const item of shown) {
-        const link = el("a", `cf-attention cf-level-${item.level}`);
-        link.href = hrefFor(item.route);
-        link.append(
+        // UI-2 (operator request 2026-10-10: "we click it and it show us in
+        // text it will say what's wrong"): each row is a tappable disclosure —
+        // mark + title on the first line, the FULL detail text and an
+        // "Open section →" link behind the tap. Independent toggles (no
+        // accordion state to coordinate); the old navigation stays available
+        // as the secondary action.
+        const row = el("div", `cf-attention cf-level-${item.level}`);
+        const toggle = el("button", "cf-attention-toggle");
+        toggle.type = "button";
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.append(
           el("span", "cf-attention-mark", item.level === "critical" ? "!" : "•"),
-          el("span", "cf-attention-body",
-            `${item.title} — ${item.detail}`),
+          el("span", "cf-attention-title", item.title),
           el("span", "cf-attention-chevron", "→"),
         );
-        attentionCard.append(link);
+        const detail = el("div", "cf-attention-detail");
+        detail.hidden = true;
+        detail.append(el("p", "cf-attention-text", item.detail));
+        const open = el("a", "cf-attention-open", "Open section →");
+        open.href = hrefFor(item.route);
+        detail.append(open);
+        toggle.addEventListener("click", () => {
+          const expanded = toggle.getAttribute("aria-expanded") === "true";
+          toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+          detail.hidden = expanded;
+        });
+        row.append(toggle, detail);
+        attentionCard.append(row);
       }
       if (extra > 0) {
         const more = el("a", "cf-attention cf-attention-more");
