@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T20:03:59.606057+04:00
+last_updated: 2026-10-10T22:29:27.180111+04:00
 next_bug_id: 60
 next_feat_id: 73
 next_task_id: 17
@@ -673,7 +673,7 @@ issues:
       created_at: 2026-10-09T23:20:49.518874+04:00
     - id: FEAT-066
       type: feature
-      status: open
+      status: closed
       title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
       priority: 70
       created_at: 2026-10-10T19:36:55.054273+04:00

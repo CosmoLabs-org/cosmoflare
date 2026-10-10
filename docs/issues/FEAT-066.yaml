@@ -2,9 +2,9 @@
 id: FEAT-066
 type: feature
 created: "2026-10-10"
-updated: "2026-10-10T20:03:36.747838+04:00"
+updated: "2026-10-10T22:29:27.444273+04:00"
 priority: 70
-status: open
+status: closed
 origin:
     feedback_id: FB-29
     from_project: MyCarGuide
@@ -13,6 +13,9 @@ origin:
 title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
 resolution:
     notes: 'kv-writes shipped on the worker 2026-10-10 (2793247): registry+evaluator+scheduled collector+pager hint; d1-rows-read and cache-hit-rate verified pre-existing. Go-registry parity remains open here.'
+revisions:
+    - date: "2026-10-10T22:29:27.173847+04:00"
+      action: closed
 
 ---
 
