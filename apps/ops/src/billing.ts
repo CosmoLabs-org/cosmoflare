@@ -435,17 +435,24 @@ export async function collectBilling(accountId: string, token: string, now = new
     const toUnit = isStorage ? 1_000_000_000 : price.id === "workers.cpu_ms" ? 1_000 : 1; // bytes → GB, µs → ms
     const used = total / toUnit;
     const projected = project(used, fraction, isStorage);
+    // kv.storage is UNPRICEABLE (BUG-pFAKDN3, verified live 2026-10-10):
+    // kvStorageAdaptiveGroups' byteCount is a rolling cumulative — it
+    // reported 3.886 GB for a namespace whose same-day REST measurement is
+    // 46 MB (86x), the series decreases day-over-day, and the value matches
+    // writes/day × avg size × 30d. Pricing overage off it produced a
+    // phantom $1.44/mo. Shown for awareness, excluded from overage.
+    const unpriceable = price.id === "kv.storage";
     products.push({
       id: price.id,
       product: price.product,
-      metric: price.metric,
+      metric: unpriceable ? "Storage (rolling bytes — not live size)" : price.metric,
       unit: price.unit,
       included: price.included,
       used,
       projected,
-      unitPriceUsd: price.unitPriceUsd,
+      unitPriceUsd: unpriceable ? 0 : price.unitPriceUsd,
       priceUnit: price.priceUnit,
-      projectedOverageUsd: overageUsd(projected, price.included, price.unitPriceUsd, price.priceUnit),
+      projectedOverageUsd: unpriceable ? 0 : overageUsd(projected, price.included, price.unitPriceUsd, price.priceUnit),
       topConsumers: m ? topConsumers(m, pmap, total).slice(0, 5).map((c) => ({ ...c, used: c.used / toUnit })) : [],
     });
   }

@@ -246,6 +246,23 @@ describe("collectBilling", () => {
     });
   });
 
+  // BUG-pFAKDN3 regression: kvStorageAdaptiveGroups' byteCount is a rolling
+  // cumulative (live evidence 2026-10-10: 3.886 GB reported for a 46 MB
+  // namespace), so kv.storage must never contribute to overage — however
+  // far past the allowance the dataset claims it is.
+  it("kv.storage is reported but never priced — a 50GB rolling figure adds zero overage", async () => {
+    await billingWithFetch(billingHappyHandler({ kvSnap: [{ dimensions: { namespaceId: KV_DASHED }, max: { byteCount: 50_000_000_000 } }] }), async () => {
+      const b = await collectBilling("acct", "tok", OCT8);
+      const kv = b.products.find((p) => p.id === "kv.storage")!;
+      expect(kv.used).toBeCloseTo(50, 6);
+      expect(kv.projectedOverageUsd).toBe(0);
+      expect(kv.unitPriceUsd).toBe(0);
+      expect(kv.metric).toContain("rolling");
+      // The total is exactly the pre-change number: no phantom dollars.
+      expect(b.totalProjectedOverageUsd).toBeCloseTo(205.57125, 4);
+    });
+  });
+
   it("honors the projectMap override for attribution", async () => {
     await billingWithFetch(billingHappyHandler(), async () => {
       const b = await collectBilling("acct", "tok", OCT8, { projectMap: { "mycarguide-db": "acme" } });
