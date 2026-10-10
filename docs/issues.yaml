@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-11T02:56:09.230748+04:00
+last_updated: 2026-10-11T03:59:47.771484+04:00
 next_bug_id: 62
 next_feat_id: 74
 next_task_id: 18
@@ -343,7 +343,7 @@ issues:
       created_at: 2026-10-08T23:32:04.221818+04:00
     - id: BUG-056
       type: bug
-      status: open
+      status: closed
       title: Ops billing period assumed calendar month (ends Nov 1); the real cycle runs from the 23rd (Sep 23 - Oct 23)
       severity: high
       priority: 70

@@ -1,14 +1,14 @@
 id: BUG-056
 type: bug
 created_at: 2026-10-09T21:14:51.881034+04:00
-updated_at: 2026-10-09T21:14:53.682593+04:00
+updated_at: 2026-10-11T03:59:47.766538+04:00
 source: local
 ulid: 01M4GTJ63QP9FFC73WA5NXAHPD
 aliases:
     - BUG-pNXAHPD
 severity: high
 priority: 70
-status: open
+status: closed
 area: reliability
 origin:
     roadmap_items:
@@ -21,3 +21,6 @@ affected_files:
     - apps/ops/src/billing.ts
     - apps/ops/wrangler.jsonc
 roadmap_ref: ROAD-pJ25XG5
+revisions:
+    - date: "2026-10-11T03:59:47.764443+04:00"
+      action: closed
