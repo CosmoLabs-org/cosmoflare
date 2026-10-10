@@ -4,6 +4,7 @@
 // stays closed even if the Access app is removed.
 
 import { verifyAccessJwt } from "./access";
+import { collectAIGateways } from "./ai_gateway";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
 import { collectDomainDetail, collectDomains } from "./domains";
@@ -106,6 +107,14 @@ export default {
         return summaryResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/durable-objects":
         return doResponse(ctx, env, url.searchParams.has("refresh"));
+      case "/api/ai": {
+        // BR-02 (ROAD-112 phase 1): per-gateway model usage with the
+        // KV-cached field probe, at the summary cadence (5 min / 1 h).
+        const result = await cached(ctx, env, "ai", { ttlSec: 5 * 60, staleSec: 60 * 60, force: url.searchParams.has("refresh") }, () =>
+          collectAIGateways(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date(), env.OPS_KV),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
       case "/api/domains":
         return domainsResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/domains/detail": {
