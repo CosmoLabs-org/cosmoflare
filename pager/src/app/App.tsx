@@ -85,7 +85,6 @@ type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: stri
  *  — the imperative bridge to the vanilla modules is retired. */
 interface ViewEntry {
   id: string;
-  render?: (host: HTMLElement, opts: { refresh?: boolean }) => void | Promise<void>;
   Component?: React.ComponentType<{ refreshSeq?: number }>;
 }
 
@@ -296,11 +295,7 @@ function ViewHost({ entry, onReady }: { entry: ViewEntry; onReady: (fn: () => vo
       window.scrollTo(0, 0);
       return () => root.unmount();
     }
-    const render = entry.render;
-    if (!render) return;
-    void Promise.resolve(render(host, {})).catch(() => undefined);
-    onReady(() => void Promise.resolve(render(host, { refresh: true })).catch(() => undefined));
-    window.scrollTo(0, 0);
+    return;
   }, [entry, onReady]);
   return <div ref={ref} className="cf-view" />;
 }
