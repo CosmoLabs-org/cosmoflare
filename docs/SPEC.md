@@ -1,6 +1,6 @@
 # SPEC.md — Cosmoflare
 
-> Last updated: 2026-10-10T01:30:00+04:00
+> Last updated: 2026-10-10T21:05:00+04:00
 
 ## Overview
 
@@ -21,8 +21,8 @@ Cosmoflare is CosmoLabs' open-source (MIT) Go library and CLI managing the full 
 ## Architecture Decisions
 
 - **Real numbers only** (2026-10-10): every displayed metric must be API-authoritative; derived values carry explicit labels; datasets that misrepresent reality (KV rolling bytes) are excluded from allowance visuals, never priced.
-- **shadcn/ui + framer motion land in the DESKTOP tier** (React). The pager stays vanilla TS — a React rebuild is an open ADR to decide at the design overhaul; until then the pager's component layer is `pager/src/components.ts` (dashBar/sectionCard/fieldRow) with the shared token system.
-- **Design system**: dark-first, amber accent, no left borders, no tile outlines, 4/8/12/16/24/32 spacing, ease-out enters, reduced-motion respected. `/impeccable` is the enforcement gate.
+- **shadcn/ui + Tailwind + framer motion land in the DESKTOP tier** (React). The pager stays vanilla TS — **ADR decided 2026-10-10 at the design overhaul: no React rebuild** (operator decision; phone install-size and perf win). The pager's component layer is `pager/src/components.ts` (sectionCard/fieldRow) plus the shared builders in `gauges.ts`/`tables.ts`, on the shared token system.
+- **Design system**: dark-first, amber accent, no left borders, no tile outlines, 4/8/12/16/24/32 spacing, ease-out enters, reduced-motion respected. Type roles (2026-10-10): `--font-indicator` (Spline Sans Mono — all-caps instrument labels: ring bands, grade chips, status readouts), `--font-data` (Schibsted Grotesk — figures, tabular), `--font-brand` (Nunito — brand/nav), `--font-display` (Space Grotesk — display fallback); body stays system sans. Ring arcs use butt caps so dash endpoints are exact. `/impeccable` is the enforcement gate.
 - **Three-layer caching**: Worker KV (per-dataset TTL), client memory, sessionStorage — counts and views cost nothing after first paint.
 - **Agent-CLI contract**: JSON default-able, deterministic exits, honest errors carrying HTTP status + API cause.
 
