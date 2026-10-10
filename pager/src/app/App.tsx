@@ -20,6 +20,7 @@ import {
   Globe,
   LayoutDashboard,
   SlidersHorizontal,
+  Sparkles,
   Tag,
   Zap,
   type LucideIcon,
@@ -40,6 +41,7 @@ import WorkerProfileView from "./views/WorkerProfileView";
 import D1View from "./views/D1View";
 import ZonesView from "./views/ZonesView";
 import DurableObjectsView from "./views/DurableObjectsView";
+import AIView from "./views/AIView";
 import AlertsView from "./views/AlertsView";
 import RulesView from "./views/RulesView";
 import PairingView from "./views/PairingView";
@@ -51,6 +53,7 @@ import PairingView from "./views/PairingView";
 const NAV_ICON: Record<RouteId, LucideIcon> = {
   overview: LayoutDashboard,
   billing: CreditCard,
+  ai: Sparkles,
   projects: FolderOpen,
   domains: Tag,
   workers: Zap,
@@ -65,6 +68,7 @@ const NAV_ICON: Record<RouteId, LucideIcon> = {
 const NAV_LABEL: Record<RouteId, string> = {
   overview: "Overview",
   billing: "Billing",
+  ai: "AI",
   projects: "Projects",
   domains: "Domains",
   workers: "Workers",
@@ -100,6 +104,7 @@ function viewEntry(v: ViewKind): ViewEntry {
   const map: Record<RouteId, ViewEntry> = {
     overview: { id: "overview", Component: OverviewView },
     billing: { id: "billing", Component: BillingView },
+    ai: { id: "ai", Component: AIView },
     projects: { id: "projects", Component: ProjectsView },
     domains: { id: "domains", Component: DomainsView },
     workers: { id: "workers", Component: WorkersView },
