@@ -56,6 +56,9 @@ entries:
         - description: 'Ops Durable Objects section: namespaces with per-script 24h usage; first shared view components; Nunito brand/link face (FEAT-p3KJAC2)'
           source: manual
           date: 2026-10-10T04:49:19.314542+04:00
+        - description: 'missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
+          source: FEAT-066
+          date: 2026-10-10T22:29:27.360241+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
