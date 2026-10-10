@@ -443,8 +443,20 @@ export default function App(): React.JSX.Element {
       </AnimatePresence>
 
       <footer className="cf-statusbar" role="status" aria-live="polite">
-        <span id="cf-status-age" />
-        <span id="cf-status-period" className="cf-status-period" hidden />
+        {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
+            group carries the billing-period day count with a thin progress
+            bar. Both are fed imperatively by statusstrip.ts. */}
+        <span id="cf-status-age" className="cf-statusbar-age" />
+        <span className="cf-statusbar-right" id="cf-status-right" hidden>
+          <span
+            className="cf-statusbar-progress"
+            role="progressbar"
+            aria-label="Billing period progress"
+          >
+            <span className="cf-statusbar-fill" id="cf-status-bar" />
+          </span>
+          <span id="cf-status-period" className="cf-status-period" />
+        </span>
       </footer>
     </>
   );

@@ -1842,7 +1842,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   bottom: 0;
   z-index: 40;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--surface) 88%, transparent);
@@ -1854,8 +1855,43 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   letter-spacing: 0.05em;
   color: var(--muted);
 }
+/* Updated-ago sits small on the left (operator 2026-10-11); the right group
+   carries the period day count with a thin gradient progress bar. */
+.cf-statusbar-age {
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.cf-statusbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.cf-statusbar-progress {
+  display: inline-block;
+  width: 88px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+/* Fill scales from the left (transform, not width — no layout thrash). */
+.cf-statusbar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-image: linear-gradient(90deg, rgba(245, 166, 35, 0.7), var(--accent));
+  box-shadow: 0 0 6px rgba(245, 166, 35, 0.4);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform var(--dur-med) var(--ease-out);
+}
 .cf-statusbar .cf-status-period {
   color: var(--text);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ---- Stat indicators + sort/filter polish + ranked-row separation

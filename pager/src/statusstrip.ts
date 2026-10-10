@@ -26,19 +26,29 @@ export function periodText(day?: number, days?: number): string | null {
 let lastAgeSec: number | null = null;
 let lastSetAtMs = 0;
 
-/** updateStatusStrip paints one update into the strip: the age line
- *  (#cf-status-age, empty when ageSec is null — no data, no claim) and the
- *  period span (#cf-status-period, hidden when the period is unknown). */
+/** updateStatusStrip paints one update into the strip: the age line small on
+ *  the left (#cf-status-age, empty when ageSec is null — no data, no claim)
+ *  and the right group (#cf-status-right) with the billing-period progress
+ *  bar (#cf-status-bar width = day/days) and the day count — hidden when the
+ *  period is unknown. */
 export function updateStatusStrip(info: { ageSec: number | null; day?: number; days?: number }): void {
   lastAgeSec = info.ageSec;
   lastSetAtMs = Date.now();
   const age = document.getElementById("cf-status-age");
   if (age) age.textContent = info.ageSec === null ? "" : `Updated ${formatAgeText(info.ageSec)}`;
+  const right = document.getElementById("cf-status-right");
   const period = document.getElementById("cf-status-period");
+  const bar = document.getElementById("cf-status-bar");
+  const text = periodText(info.day, info.days);
   if (period) {
-    const text = periodText(info.day, info.days);
     period.textContent = text ?? "";
     period.hidden = text === null;
+  }
+  if (right) right.hidden = text === null;
+  if (bar && info.days !== undefined && info.days > 0) {
+    (bar as HTMLElement).style.transform = `scaleX(${Math.min(1, Math.max(0, (info.day ?? 0) / info.days))})`;
+  } else if (bar) {
+    (bar as HTMLElement).style.transform = "scaleX(0)";
   }
 }
 
