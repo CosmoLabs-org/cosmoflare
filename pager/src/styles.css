@@ -404,6 +404,17 @@ body.cf-nav-open { overflow: hidden; }
   text-transform: uppercase;
 }
 .cf-card h2:not(:first-child) { margin-top: 14px; }
+/* Card titles must not be h2 (views own no page headings since the shell
+   masthead took them); .cf-card-title carries the same style as h2. */
+.cf-card h3.cf-card-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
 /* Buttons. */
 .cf-btn {
@@ -1233,7 +1244,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   100% { opacity: 0.25; }
 }
 
-.cf-pairing h2 {
+.cf-pairing .cf-pairing-title {
   font-family: var(--font-display);
   margin: 0;
   font-size: 20px;

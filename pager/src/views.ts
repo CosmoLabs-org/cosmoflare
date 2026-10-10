@@ -226,7 +226,7 @@ export async function renderPairing(root: HTMLElement): Promise<void> {
 }
 
 /** The pairing status line's level classes (existing severity text colors). */
-const PAIRING_STATUS_LEVEL: Record<string, string> = {
+export const PAIRING_STATUS_LEVEL: Record<string, string> = {
   info: "",
   ok: "cf-ok-text",
   warn: "cf-level-warning-text",
@@ -236,5 +236,5 @@ const PAIRING_STATUS_LEVEL: Record<string, string> = {
 /** The pairing hero mark: a phone emitting a broadcast — the signal arcs
  *  carry .cf-wave and breathe in a staggered loop (see styles; frozen under
  *  prefers-reduced-motion). */
-const PAIRING_GLYPH =
+export const PAIRING_GLYPH =
   '<svg width="44" height="44" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="2.5" width="10" height="19" rx="2.6" stroke-width="1.7"/><path d="M7.6 18.6h2.8" stroke-width="1.7"/><path class="cf-wave" d="M16.2 8.6a4.6 4.6 0 0 1 0 6.8" stroke-width="1.7"/><path class="cf-wave" d="M19.3 5.6a8.8 8.8 0 0 1 0 12.8" stroke-width="1.7"/><path class="cf-wave" d="M22.4 2.7a12.9 12.9 0 0 1 0 18.6" stroke-width="1.7"/></svg>';
