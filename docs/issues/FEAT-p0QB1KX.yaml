@@ -1,11 +1,14 @@
 id: FEAT-p0QB1KX
 type: feature
 created_at: 2026-10-10T18:22:08.661264+04:00
-updated_at: 2026-10-10T18:22:09.192562+04:00
+updated_at: 2026-10-10T18:22:10.84196+04:00
 source: local
 ulid: 01M4K32MS8XGQZK8K9BE0QB1KX
 provisional: true
 status: open
+origin:
+    idea_slug: 2026-10-08-baseline-anomaly-detection-for-workers-do-usage-model-b
+    session: 67
 title: Baseline anomaly detection for Workers/DO usage (model B)
 description: |-
     # Baseline anomaly detection for Workers/DO usage (model B)

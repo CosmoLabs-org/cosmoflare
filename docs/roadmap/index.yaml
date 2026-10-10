@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T19:12:34.158782+04:00
+last_updated: 2026-10-10T19:12:36.098747+04:00
 next_id: 118
 items:
-    - id: ROAD-117
+    - id: ROAD-pGXTT2M
       title: AI gateway monitoring phase 5 — AI alert rules + recent-requests drawer
       status: captured
       parent: ROAD-p1D6G3P
