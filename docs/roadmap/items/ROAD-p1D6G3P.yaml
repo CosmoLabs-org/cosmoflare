@@ -1,0 +1,10 @@
+id: ROAD-p1D6G3P
+created_at: 2026-10-10T19:10:04.02358+04:00
+updated_at: 2026-10-10T19:10:05.843959+04:00
+title: AI Gateway monitoring (Ops)
+description: 'Per-project x per-model consumption monitoring for Cloudflare AI Gateway traffic (all proxied providers) in the Ops pager. Design: docs/brainstorming/2026-10-10-ai-gateway-monitoring.md (approved 2026-10-10). One gateway per project; GraphQL-first collector with live field probe; cost always labeled gateway-estimate per the real-numbers rule.'
+status: captured
+origin:
+    session: 74
+ulid: 01M4K5TC8D99X0SHM90T1D6G3P
+provisional: true

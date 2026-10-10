@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T11:13:22.520978+04:00
-next_id: 112
+last_updated: 2026-10-10T19:10:04.039833+04:00
+next_id: 113
 items:
+    - id: ROAD-112
+      title: AI Gateway monitoring (Ops)
+      status: captured
+      created_at: 2026-10-10T19:10:04.02358+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
