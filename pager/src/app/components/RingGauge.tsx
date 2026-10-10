@@ -21,7 +21,10 @@ import {
 } from "../../gauges";
 
 export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
-  const size = props.size ?? 120;
+  // Ring sizing (operator 2026-10-10): 132 default — the 120 ring let the
+  // center percentage crowd the circumference; the bigger radius plus the
+  // wider center-text spacing below keeps the numbers clear of the arcs.
+  const size = props.size ?? 132;
   const stroke = Math.max(6, Math.round(size / 12));
   const cx = size / 2;
   const cy = size / 2;
@@ -119,11 +122,12 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
       ) : null}
 
       {/* Center: the projected % big and level-colored, one muted line under
-          it (used %, or the size for storage metrics). */}
-      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" className="cf-ring-value">
+          it (used %, or the size for storage metrics) — spaced so neither
+          line touches the arcs (operator 2026-10-10 overlap fix). */}
+      <text x={cx} y={cy - 9} textAnchor="middle" dominantBaseline="central" className="cf-ring-value">
         {ringCenterValue(props.projectedPct)}
       </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" className="cf-ring-usedpct">
+      <text x={cx} y={cy + 16} textAnchor="middle" dominantBaseline="central" className="cf-ring-usedpct">
         {ringSecondLine(props.usedPct, props.usedLineText)}
       </text>
 

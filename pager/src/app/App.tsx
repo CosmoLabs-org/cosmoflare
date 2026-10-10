@@ -8,6 +8,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  Bell,
+  Boxes,
+  CreditCard,
+  Database,
+  FolderOpen,
+  Globe,
+  LayoutDashboard,
+  SlidersHorizontal,
+  Tag,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { hrefFor, parseHash, parseWorkerHash, ROUTES, type RouteId } from "../routes";
 import { logoMark } from "../logo";
 import { api, type Billing, type Summary } from "../api";
@@ -26,6 +39,23 @@ import OverviewView from "./views/OverviewView";
 import BillingView from "./views/BillingView";
 
 /** Nav labels per route (mirror of the old main.ts NAV). */
+/** Section icons (operator 2026-10-10: icons left of every nav title, above
+ *  the quick-nav labels, and pronounced in the section masthead) — lucide,
+ *  one distinct glyph per route. Worker profiles borrow the Workers bolt. */
+const NAV_ICON: Record<RouteId, LucideIcon> = {
+  overview: LayoutDashboard,
+  billing: CreditCard,
+  projects: FolderOpen,
+  domains: Tag,
+  workers: Zap,
+  d1: Database,
+  "durable-objects": Boxes,
+  zones: Globe,
+  alerts: Bell,
+  rules: SlidersHorizontal,
+  pairing: Bell,
+};
+
 const NAV_LABEL: Record<RouteId, string> = {
   overview: "Overview",
   billing: "Billing",
@@ -204,21 +234,26 @@ function NavLinks({
 }): React.JSX.Element {
   return (
     <>
-      {ROUTES.filter((r) => variant !== "quick" || r !== "pairing").map((r) => (
-        <a
-          key={`${variant}-${r}`}
-          href={hrefFor(r)}
-          className={variant === "quick" ? "cf-quicknav-link" : "cf-navlink"}
-          aria-current={active === r ? "page" : undefined}
-          onClick={onNavigate}
-        >
-          {variant === "quick" ? null : <span className="cf-navglyph" aria-hidden="true" />}
-          <span className={variant === "quick" ? "cf-quicknav-label" : "cf-navlabel"}>{NAV_LABEL[r]}</span>
-          <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
-            {counts[r] ?? ""}
-          </span>
-        </a>
-      ))}
+      {ROUTES.filter((r) => variant !== "quick" || r !== "pairing").map((r) => {
+        const Icon = NAV_ICON[r];
+        return (
+          <a
+            key={`${variant}-${r}`}
+            href={hrefFor(r)}
+            className={variant === "quick" ? "cf-quicknav-link" : "cf-navlink"}
+            aria-current={active === r ? "page" : undefined}
+            onClick={onNavigate}
+          >
+            <span className={variant === "quick" ? "cf-quicknav-icon" : "cf-navglyph"} aria-hidden="true">
+              <Icon size={variant === "quick" ? 17 : 18} strokeWidth={1.8} />
+            </span>
+            <span className={variant === "quick" ? "cf-quicknav-label" : "cf-navlabel"}>{NAV_LABEL[r]}</span>
+            <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
+              {counts[r] ?? ""}
+            </span>
+          </a>
+        );
+      })}
     </>
   );
 }
@@ -316,6 +351,24 @@ export default function App(): React.JSX.Element {
           <NavLinks variant="sidebar" active={view.kind === "route" ? view.route : null} counts={counts} />
         </nav>
         <main id="main" className="cf-main">
+          {/* Section masthead (operator 2026-10-10): large heading with the
+              section's icon pronounced at its left — one place, every view. */}
+          <div className="cf-sectionhead">
+            <span className="cf-sectionhead-icon" aria-hidden="true">
+              {view.kind === "route"
+                ? (() => {
+                    const Icon = NAV_ICON[view.route];
+                    return <Icon size={22} strokeWidth={1.9} />;
+                  })()
+                : (() => {
+                    const Icon = NAV_ICON.workers;
+                    return <Icon size={22} strokeWidth={1.9} />;
+                  })()}
+            </span>
+            <h2 className="cf-sectionhead-title">
+              {view.kind === "route" ? NAV_LABEL[view.route] : view.name}
+            </h2>
+          </div>
           <ViewHost key={activeKey} entry={entry} onReady={onReady} />
         </main>
       </div>
