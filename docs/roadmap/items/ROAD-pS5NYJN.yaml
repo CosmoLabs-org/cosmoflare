@@ -1,0 +1,11 @@
+id: ROAD-pS5NYJN
+created_at: 2026-10-10T19:12:28.803025+04:00
+updated_at: 2026-10-10T19:12:33.618395+04:00
+title: AI gateway monitoring phase 4 — verified model pricing + custom_cost
+description: 'BR-05. Awaits operator Grok research: current per-token pricing for the planned model list (input/output, sourced + dated). Lands as pricing.ts-style rows feeding custom_cost overrides; only then can the estimate label be revisited.'
+status: captured
+parent: ROAD-p1D6G3P
+origin:
+    session: 74
+ulid: 01M4K5YSM4EZ68AT1AAGS5NYJN
+provisional: true
