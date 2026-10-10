@@ -1,11 +1,15 @@
 id: FEAT-p3KJAC2
 type: feature
 created_at: 2026-10-10T04:17:33.32696+04:00
-updated_at: 2026-10-10T04:17:33.751254+04:00
+updated_at: 2026-10-10T04:17:35.033482+04:00
 source: local
 ulid: 01M4HJR51QQPKNFPMZ993KJAC2
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 71
 title: Ops durable objects section — DO list and usage
 description: 'New #/durable-objects view + nav counter: Durable Object namespaces with their usage (requests, duration, storage). Billing already tracks durable_objects.requests/duration product-level; the per-DO breakdown needs the GraphQL analytics dataset (verify dataset name live — durableObjectsInvocationsAdaptive or similar) or /accounts/{id}/workers/durable_objects/namespaces REST list + metrics. Operator ask 2026-10-10.'
 acceptance_criteria:
