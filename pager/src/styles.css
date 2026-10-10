@@ -1942,3 +1942,96 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-navlink[aria-current="page"] .cf-navglyph {
   color: var(--accent);
 }
+
+/* ---- P-07: gradient hierarchy + microanimations (operator 2026-10-10)
+       Depth without noise: one soft accent glow anchors the page, surfaces
+       gain the faintest vertical gradient, severity fills graduate within
+       their own hue. Every animation is transform/opacity only, gated by
+       prefers-reduced-motion. ---- */
+
+/* Page depth: a faint amber glow behind the top of the main column — the
+   dashboard reads as lit from above rather than flat. */
+.cf-main {
+  background:
+    radial-gradient(120% 32% at 50% 0%, rgba(245, 166, 35, 0.045), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+/* Cards: the faintest vertical surface graduation + a gradient hairline
+   along the top edge — hierarchy without borders on the sides. */
+.cf-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0) 48px);
+  position: relative;
+}
+.cf-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: var(--space-3);
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.25), transparent);
+  pointer-events: none;
+}
+.cf-card > * {
+  position: relative;
+}
+
+/* Masthead icon tile: accent gradient glass. */
+.cf-sectionhead-icon {
+  background: linear-gradient(145deg, rgba(245, 166, 35, 0.16), rgba(245, 166, 35, 0.04)),
+    var(--surface-raised);
+}
+
+/* Severity fills graduate within their hue (fills only — text stays flat
+   for contrast). */
+.cf-progress-fill {
+  background-image: linear-gradient(90deg, rgba(245, 166, 35, 0.85), var(--accent));
+}
+.cf-level-critical .cf-progress-fill,
+.cf-kpi.cf-level-critical .cf-progress-fill {
+  background-image: linear-gradient(90deg, rgba(248, 113, 113, 0.85), var(--sev-critical));
+}
+.cf-consumer-sharefill {
+  background-image: linear-gradient(90deg, rgba(245, 166, 35, 0.6), rgba(245, 166, 35, 0.95));
+}
+
+/* Card enter: soft rise, barely staggered — alive, never bouncy. */
+.cf-main .cf-card {
+  animation: cf-card-enter var(--dur-med) var(--ease-out) both;
+}
+.cf-main .cf-card:nth-child(2) { animation-delay: 24ms; }
+.cf-main .cf-card:nth-child(3) { animation-delay: 48ms; }
+.cf-main .cf-card:nth-child(n + 4) { animation-delay: 64ms; }
+@keyframes cf-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Masthead icon settles in with a hair of scale. */
+.cf-sectionhead-icon {
+  animation: cf-icon-settle 260ms var(--ease-out) both;
+  transform-origin: 50% 50%;
+}
+@keyframes cf-icon-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-main .cf-card,
+  .cf-sectionhead-icon {
+    animation: none;
+  }
+}
