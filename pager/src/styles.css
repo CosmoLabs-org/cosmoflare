@@ -1652,3 +1652,43 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     animation: none;
   }
 }
+
+/* ---- Quick section nav (IMP-003): horizontal chip row under the top bar,
+   phone and tablet widths only — the sidebar covers ≥1024px. Chips scroll
+   horizontally with no visible scrollbar; the current section carries
+   aria-current and the active tint. ---- */
+.cf-quicknav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px var(--space-3);
+  padding-left: calc(var(--space-3) + env(safe-area-inset-left));
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+.cf-quicknav::-webkit-scrollbar {
+  display: none;
+}
+.cf-quicknav-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cf-quicknav-link[aria-current="page"] {
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 600;
+}
+@media (min-width: 1024px) {
+  .cf-quicknav {
+    display: none;
+  }
+}

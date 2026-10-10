@@ -76,16 +76,24 @@ function projectCard(b: Billing, p: Billing["projects"][number]): HTMLElement {
   if (consumers.length > 0) {
     const details = el("details", "cf-consumers");
     details.append(el("summary", "cf-consumers-summary", `Top consumers (${consumers.length})`));
-    const list = el("ul", "cf-consumers-list");
-    for (const c of consumers) {
+    // Ranked rows (operator 2026-10-10, "ranked rows everywhere"): rank
+    // number, who + product, share bar and % right — the same markup the
+    // billing view's top-consumers use, so both read identically.
+    const list = el("ol", "cf-consumers-list cf-consumers-ranked");
+    consumers.forEach((c, i) => {
       const li = el("li", "cf-consumer");
-      li.append(
-        el("span", "cf-consumer-name", c.name),
-        el("span", "cf-consumer-project", c.productName),
-        el("span", "cf-consumer-share", `${Math.round(c.share * 100)}%`),
-      );
+      li.append(el("span", "cf-consumer-rank", String(i + 1)));
+      const who = el("span", "cf-consumer-who");
+      who.append(el("span", "cf-consumer-name", c.name), el("span", "cf-consumer-project", c.productName));
+      const share = el("span", "cf-consumer-sharewrap");
+      const bar = el("span", "cf-consumer-sharebar");
+      const fill = el("span", "cf-consumer-sharefill");
+      fill.style.width = `${Math.min(100, Math.max(0, c.share * 100))}%`;
+      bar.append(fill);
+      share.append(bar, el("span", "cf-consumer-share", `${Math.round(c.share * 100)}%`));
+      li.append(who, share);
       list.append(li);
-    }
+    });
     details.append(list);
     card.append(details);
   }

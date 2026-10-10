@@ -219,6 +219,30 @@ function mount(): void {
   workerHost.hidden = true;
   main.append(workerHost);
 
+  // Quick section nav (IMP-003, operator 2026-10-10): a horizontal chip row
+  // under the top bar for phone-width section jumps — hidden at ≥1024px where
+  // the sidebar already covers navigation. Its links join linkTargets so
+  // aria-current stays in sync, and its count slots share the cf-navcount
+  // data-count-for wiring, so the counters populate here for free.
+  const quicknav = document.createElement("nav");
+  quicknav.className = "cf-quicknav";
+  quicknav.setAttribute("aria-label", "Sections");
+  for (const route of ROUTES) {
+    if (route === "pairing") continue; // rare-action page; the drawer keeps it
+    const a = document.createElement("a");
+    a.href = hrefFor(route);
+    a.className = "cf-quicknav-link";
+    a.dataset.route = route;
+    const label = el("span", "cf-quicknav-label", NAV[route].label);
+    const count = el("span", "cf-navcount");
+    count.dataset.countFor = route;
+    count.hidden = true;
+    a.append(label, count);
+    a.addEventListener("click", () => closeDrawer());
+    quicknav.append(a);
+    linkTargets.push({ a, route });
+  }
+
   const shell = el("div", "cf-shell");
   shell.append(sidebar, main);
 
@@ -235,7 +259,7 @@ function mount(): void {
   statusPeriod.hidden = true;
   statusbar.append(statusAge, statusPeriod);
 
-  root.append(skip, top, shell, backdrop, drawer, statusbar);
+  root.append(skip, top, quicknav, shell, backdrop, drawer, statusbar);
   startStatusStripClock();
 
   // ---- Drawer behavior ----
