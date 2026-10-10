@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T04:28:42.817189+04:00
+last_updated: 2026-10-10T04:39:44.505918+04:00
 next_bug_id: 60
 next_feat_id: 57
 next_task_id: 17
@@ -373,7 +373,7 @@ issues:
       created_at: 2026-10-10T04:25:57.194318+04:00
     - id: BUG-pPF2BCF
       type: bug
-      status: open
+      status: fixed
       title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
       severity: high
       created_at: 2026-10-10T04:26:20.692641+04:00

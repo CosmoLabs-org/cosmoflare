@@ -1,12 +1,12 @@
 id: BUG-pPF2BCF
 type: bug
 created_at: 2026-10-10T04:26:20.692641+04:00
-updated_at: 2026-10-10T04:26:22.160019+04:00
+updated_at: 2026-10-10T04:39:44.501226+04:00
 source: local
 ulid: 01M4HK880WFR4SBQVBGAPF2BCF
 provisional: true
 severity: high
-status: open
+status: fixed
 origin:
     session: 71
 title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
@@ -16,3 +16,10 @@ affected_files:
     - cmd/analytics.go
     - cmd/root.go
     - cmd/auth.go
+resolution:
+    notes: 'Fixed on master 2026-10-10: R2Error carries cause+status (all services), --json stdout pure (silence usage/errors in JSON mode), auth reads real token scopes via verify+detail with honest fallback. Full cmd+pkg suites green; live repro verified with jq-parsable stdout. Ships with the next release build.'
+    resolved_at: 2026-10-10T04:39:44.499785+04:00
+revisions:
+    - date: "2026-10-10T04:39:44.499778+04:00"
+      action: closed
+      context: 'Fixed on master 2026-10-10: R2Error carries cause+status (all services), --json stdout pure (silence usage/errors in JSON mode), auth reads real token scopes via verify+detail with honest fallback. Full cmd+pkg suites green; live repro verified with jq-parsable stdout. Ships with the next release build.'

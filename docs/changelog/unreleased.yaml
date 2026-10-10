@@ -81,6 +81,9 @@ entries:
         - description: 'Ops overview rings: fixed hairline arcs (stroke-width was unset), softer projected halo, allowance moved below the ring'
           source: manual
           date: 2026-10-10T03:35:44.452518+04:00
+        - description: 'CLI: errors carry HTTP status + API cause; --json stdout is pure envelope; auth status shows real token scopes (BUG-pPF2BCF)'
+          source: manual
+          date: 2026-10-10T04:39:44.755989+04:00
     changed:
         - description: 'Ops pager styles pass: token-driven sections (spacing/type/motion), Space Grotesk display face, amber-tinted neutrals, deduplicated stylesheet (G-11)'
           source: manual
