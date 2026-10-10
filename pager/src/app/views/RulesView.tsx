@@ -12,7 +12,7 @@
 // masthead owns the page title.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, LoginExpiredError, type FetchResult } from "../../api";
+import { api, LoginExpiredError } from "../../api";
 import {
   addExclude,
   removeExclude,

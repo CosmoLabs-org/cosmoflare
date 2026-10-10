@@ -27,9 +27,9 @@ function rule(partial: Partial<AlertRule>): AlertRule {
 }
 
 /** Fetcher answering only api/rules with the given payload. */
-function rulesFetcher(data: RulesPayload): Parameters<typeof RulesView>[0]["fetcher"] {
+function rulesFetcher(data: RulesPayload, starter = false): Parameters<typeof RulesView>[0]["fetcher"] {
   return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
-    if (endpoint === "api/rules") return { data: data as unknown as T, source: "network", ageSec: 0, demo: false };
+    if (endpoint === "api/rules") return { data: { ...data, starter } as unknown as T, source: "network", ageSec: 0, demo: false };
     throw new Error("HTTP 404");
   };
 }
@@ -181,8 +181,8 @@ describe("RulesView (P-06)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-rule")).toBeTruthy();
     });
-    const hint = document.querySelector(".cf-rule-hint")!;
-    expect(hint.hidden).toBe(false);
-    expect(hint.textContent).toBe("1.0B");
+    const hint = document.querySelector(".cf-rule-hint") as HTMLElement | null;
+    expect(hint?.hidden).toBe(false);
+    expect(hint?.textContent).toBe("1.0B");
   });
 });
