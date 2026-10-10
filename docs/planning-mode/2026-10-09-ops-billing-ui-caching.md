@@ -1,8 +1,6 @@
 ---
-title: Cosmoflare Ops — billing view, UI/responsive pass, upstream caching, cron push
+completed: "2026-10-10T04:40:23+04:00"
 created: "2026-10-09T14:00:00+04:00"
-issue: FEAT-052
-status: IN_PROGRESS
 deliverables:
     - P-01: Upstream caching layer for the Ops Worker (per-dataset TTL, stale-while-revalidate, single-flight)
     - P-02: Summary v2 — per-Worker 24h rows, zone status breakdown, cache metadata
@@ -11,6 +9,15 @@ deliverables:
     - P-05: App icon set (home-screen, maskable, favicon)
     - P-06: Cron push from the Worker (TS port of FEAT-049 rules, Web Push aes128gcm, /api/subscribe)
     - P-07: Integration (routes, wrangler bindings, KV namespace, deploy) + docs
+goals_completed: 0
+goals_total: 0
+issue: FEAT-052
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags: []
+title: Cosmoflare Ops — billing view, UI/responsive pass, upstream caching, cron push
 ---
 
 # Goal
