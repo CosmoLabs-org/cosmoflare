@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-11T01:32:06.899684+04:00
-next_bug_id: 60
-next_feat_id: 73
+last_updated: 2026-10-11T02:56:09.230748+04:00
+next_bug_id: 62
+next_feat_id: 74
 next_task_id: 18
 next_imp_id: 5
 issues:
@@ -365,19 +365,19 @@ issues:
       priority: 70
       area: reliability
       created_at: 2026-10-09T23:22:17.158916+04:00
-    - id: BUG-p3Y31ZQ
+    - id: BUG-059
       type: bug
       status: closed
       title: 'R2 S3 data plane broken for token-only users: fallback AccessKeyID ''r2-token'' is 8 chars (R2 requires 32)'
       severity: critical
       created_at: 2026-10-10T12:12:43.548156+04:00
-    - id: BUG-pFAKDN3
+    - id: BUG-060
       type: bug
       status: fixed
       title: 'Ops KV storage 86x inflated: Cloudflare kvStorageAdaptiveGroups byteCount is rolling bytes, not current storage'
       severity: high
       created_at: 2026-10-10T04:25:57.194318+04:00
-    - id: BUG-pPF2BCF
+    - id: BUG-061
       type: bug
       status: fixed
       title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
@@ -671,102 +671,96 @@ issues:
       priority: 70
       area: ux
       created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: FEAT-056
+      type: feature
+      status: implemented
+      title: Ops projects view — per-project consumption across Cloudflare
+      created_at: 2026-10-10T03:26:18.236927+04:00
+    - id: FEAT-057
+      type: feature
+      status: implemented
+      title: Ops durable objects section — DO list and usage
+      created_at: 2026-10-10T04:17:33.32696+04:00
+    - id: FEAT-058
+      type: feature
+      status: open
+      title: Stable error codes in --json error output
+      created_at: 2026-10-10T00:33:01.434889+04:00
+    - id: FEAT-059
+      type: feature
+      status: open
+      title: Ops email metrics — emails sent per zone
+      created_at: 2026-10-10T03:26:15.61962+04:00
+    - id: FEAT-060
+      type: feature
+      status: open
+      title: Ops domains view — full domain list with expiry and status
+      created_at: 2026-10-10T03:26:13.000596+04:00
     - id: FEAT-061
       type: feature
       status: closed
       title: Bounded retry + exponential backoff in pkg/cosmoflare client
       created_at: 2026-10-10T00:33:30.258298+04:00
+    - id: FEAT-062
+      type: feature
+      status: open
+      title: Verify and adopt billing usage-v2 REST endpoint in Ops collector
+      created_at: 2026-10-10T00:33:27.635444+04:00
+    - id: FEAT-063
+      type: feature
+      status: implemented
+      title: Fuzzy command discovery (cf cli search pattern)
+      created_at: 2026-10-10T00:32:54.603077+04:00
+    - id: FEAT-064
+      type: feature
+      status: implemented
+      title: Agent-context detection + agent help preamble
+      created_at: 2026-10-10T00:32:57.232638+04:00
+    - id: FEAT-065
+      type: feature
+      status: implemented
+      title: 'Ops tables: standard sort controls top-right, largest-first default, saved preference'
+      created_at: 2026-10-10T03:26:33.104172+04:00
     - id: FEAT-066
       type: feature
       status: closed
       title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
       priority: 70
-      created_at: 2026-10-10T19:36:55.054273+04:00
     - id: FEAT-067
       type: feature
       status: open
       title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
-      created_at: 2026-10-10T20:03:59.373527+04:00
+      priority: 70
     - id: FEAT-068
       type: feature
       status: open
       title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
-      created_at: 2026-10-10T20:03:59.419565+04:00
+      priority: 70
     - id: FEAT-069
       type: feature
       status: open
       title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
-      created_at: 2026-10-10T20:03:59.466373+04:00
+      priority: 70
     - id: FEAT-070
       type: feature
       status: open
       title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
-      created_at: 2026-10-10T20:03:59.511493+04:00
+      priority: 70
     - id: FEAT-071
       type: feature
       status: open
       title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
-      created_at: 2026-10-10T20:03:59.556906+04:00
+      priority: 50
     - id: FEAT-072
       type: feature
       status: open
       title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
-      created_at: 2026-10-10T20:03:59.602251+04:00
-    - id: FEAT-p0QB1KX
+      priority: 50
+    - id: FEAT-073
       type: feature
       status: open
       title: Baseline anomaly detection for Workers/DO usage (model B)
       created_at: 2026-10-10T18:22:08.661264+04:00
-    - id: FEAT-p0QKZT0
-      type: feature
-      status: implemented
-      title: Ops projects view — per-project consumption across Cloudflare
-      created_at: 2026-10-10T03:26:18.236927+04:00
-    - id: FEAT-p3KJAC2
-      type: feature
-      status: implemented
-      title: Ops durable objects section — DO list and usage
-      created_at: 2026-10-10T04:17:33.32696+04:00
-    - id: FEAT-p8KYM5K
-      type: feature
-      status: open
-      title: Stable error codes in --json error output
-      created_at: 2026-10-10T00:33:01.434889+04:00
-    - id: FEAT-p9B11X1
-      type: feature
-      status: open
-      title: Ops email metrics — emails sent per zone
-      created_at: 2026-10-10T03:26:15.61962+04:00
-    - id: FEAT-p9GD588
-      type: feature
-      status: open
-      title: Ops domains view — full domain list with expiry and status
-      created_at: 2026-10-10T03:26:13.000596+04:00
-    - id: FEAT-pC4N3QP
-      type: feature
-      status: open
-      title: Bounded retry + exponential backoff in pkg/cosmoflare client
-      created_at: 2026-10-10T00:33:30.258298+04:00
-    - id: FEAT-pDDEH5J
-      type: feature
-      status: open
-      title: Verify and adopt billing usage-v2 REST endpoint in Ops collector
-      created_at: 2026-10-10T00:33:27.635444+04:00
-    - id: FEAT-pEKR6K6
-      type: feature
-      status: implemented
-      title: Fuzzy command discovery (cf cli search pattern)
-      created_at: 2026-10-10T00:32:54.603077+04:00
-    - id: FEAT-pN68ZRM
-      type: feature
-      status: implemented
-      title: Agent-context detection + agent help preamble
-      created_at: 2026-10-10T00:32:57.232638+04:00
-    - id: FEAT-pRC6EDA
-      type: feature
-      status: implemented
-      title: 'Ops tables: standard sort controls top-right, largest-first default, saved preference'
-      created_at: 2026-10-10T03:26:33.104172+04:00
     - id: IMP-001
       type: improvement
       status: open
@@ -781,12 +775,12 @@ issues:
       priority: 30
       area: ux
       created_at: 2026-10-09T22:04:05.293515+04:00
-    - id: IMP-p31NPAN
+    - id: IMP-003
       type: improvement
       status: open
       title: Ops design overhaul — /impeccable pass app-wide, ranked visuals, fast section nav; pager React ADR
       created_at: 2026-10-10T11:13:20.446732+04:00
-    - id: IMP-pEY98JH
+    - id: IMP-004
       type: improvement
       status: open
       title: 'Ops UI: reusable components + progress-bar and micro-animation polish'
@@ -871,6 +865,11 @@ issues:
       status: closed
       title: 'Wizard EOF contract: honor ReadLine errors instead of discarding'
       created_at: 2026-09-20T02:18:26.823559+04:00
+    - id: TASK-017
+      type: task
+      status: open
+      title: add
+      created_at: 2026-10-10T23:21:34.324088+04:00
     - id: TASK-pD575FN
       type: task
       status: closed
