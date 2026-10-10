@@ -54,6 +54,10 @@
      (9/10/11/15/20px SVG text, nav, sub-labels) stay literal on purpose. */
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Brand + navigation face (operator 2026-10-10: "clean sans serif and
+     round") — Nunito for the lockup and nav links; numbers stay Space
+     Grotesk tabular. */
+  --font-brand: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --text-xs: 0.75rem;    /* 12px */
   --text-sm: 0.8125rem;  /* 13px */
   --text-base: 0.875rem; /* 14px */
@@ -253,8 +257,13 @@ body.cf-nav-open { overflow: hidden; }
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.01em;
+  font-family: var(--font-brand);
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
-.cf-brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+.cf-brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em;   font-family: var(--font-brand);
+  font-weight: 600;
+}
 
 /* Sidebar lockup sits in its own band above the links. */
 .cf-sidebar-brand {
@@ -287,7 +296,10 @@ body.cf-nav-open { overflow: hidden; }
   text-decoration: none;
   padding: var(--space-3);
   border-radius: var(--radius);
+  font-family: var(--font-brand);
   font-size: 15px;
+  font-weight: 600;
+  transition: color 200ms var(--ease-out), background-color 200ms var(--ease-out);
 }
 .cf-navlink:hover { color: var(--text); background: var(--surface-raised); }
 /* Right-aligned section counters (operator ask 2026-10-10). */

@@ -12,6 +12,7 @@ import { renderOverview } from "./dashboard";
 import { renderBilling } from "./billing";
 import { renderProjects } from "./projects";
 import { renderDomains, type DomainsPayload } from "./domains";
+import { renderDurableObjects, type DOPayload } from "./durable_objects";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
 import { renderRules, type RulesPayload } from "./rules";
@@ -47,6 +48,8 @@ async function loadNavCounts(): Promise<void> {
     setNavCount("zones", summary.value.data.zones.length);
   }
   if (domains.status === "fulfilled") setNavCount("domains", domains.value.data.domains.length);
+  const doRes = await Promise.allSettled([api.fetchJson<DOPayload>("api/durable-objects")]);
+  if (doRes[0].status === "fulfilled") setNavCount("durable-objects", doRes[0].value.data.namespaces);
   if (billing.status === "fulfilled") setNavCount("projects", billing.value.data.projects.length);
   if (rules.status === "fulfilled") setNavCount("rules", rules.value.data.rules.length);
 }
@@ -60,6 +63,7 @@ const NAV: Record<RouteId, { label: string }> = {
   domains: { label: "Domains" },
   workers: { label: "Workers" },
   d1: { label: "D1" },
+  "durable-objects": { label: "Durable Objects" },
   zones: { label: "Zones" },
   alerts: { label: "Alerts" },
   rules: { label: "Rules" },
@@ -78,6 +82,8 @@ const ICONS: Record<RouteId, string> = {
   domains: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.6 13.4 12 22l-8-8 8.6-8.6a2 2 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v4.8a2 2 0 0 1-.4 1.8z"/><circle cx="16" cy="8" r="1.4"/></svg>`,
   workers: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 4.5 13.5H11L9.5 22 19 10.5h-6.5z"/></svg>`,
   d1: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
+  // Hexagon pair — Durable Objects: stateful singletons living in cells.
+  "durable-objects": `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8.5 2.5h-4l-2 3.5 2 3.5h4l2-3.5z"/><path d="M19.5 14.5h-4l-2 3.5 2 3.5h4l2-3.5z"/><path d="M9.5 5.8h6.5M12 15.5c0-3.5 2-6 5-7.2"/></svg>`,
   zones: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"/></svg>`,
   alerts: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>`,
   pairing: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M16.5 7a4.5 4.5 0 0 1 2.6 4.1M19.8 4.2a8 8 0 0 1 1.6 4.9"/></svg>`,
@@ -272,6 +278,7 @@ function mount(): void {
     workers: (h, o) => void renderWorkers(h, o ?? {}),
     d1: (h, o) => void renderD1(h, o ?? {}),
     zones: (h, o) => void renderZones(h, o ?? {}),
+    "durable-objects": (h, o) => void renderDurableObjects(h, o ?? {}),
     alerts: (h) => renderAlertList(h),
     rules: (h) => void renderRules(h),
     pairing: (h) => void renderPairing(h),

@@ -7,6 +7,7 @@ import { verifyAccessJwt } from "./access";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
 import { collectDomainDetail, collectDomains } from "./domains";
+import { collectDurableObjects } from "./durable_objects";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
 import { handleRules } from "./rules-api";
@@ -66,6 +67,16 @@ export async function domainsResponse(ctx: ExecutionContext, env: Env, refresh: 
   return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
 }
 
+// GET /api/durable-objects — namespaces (REST, slow-changing) + per-script
+// 24h usage (analytics), through cached() at the summary cadence: 5 min
+// fresh / 1 h stale.
+export async function doResponse(ctx: ExecutionContext, env: Env, refresh: boolean): Promise<Response> {
+  const result = await cached(ctx, env, "durable-objects", { ...SUMMARY_TTL, force: refresh }, () =>
+    collectDurableObjects(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date()),
+  );
+  return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+}
+
 // GET /api/billing — same contract as /api/summary: served through cached()
 // (15 min fresh / 6 h stale), ?refresh forces a reload behind the 60 s
 // refresh-storm guard, and the response carries `cache: { ageSec, stale }`.
@@ -93,6 +104,8 @@ export default {
         return json({ key: env.VAPID_PUBLIC_KEY ?? "" });
       case "/api/summary":
         return summaryResponse(ctx, env, url.searchParams.has("refresh"));
+      case "/api/durable-objects":
+        return doResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/domains":
         return domainsResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/domains/detail": {
