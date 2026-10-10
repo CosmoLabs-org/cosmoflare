@@ -75,61 +75,76 @@ function errorState(root: HTMLElement, err: unknown): void {
   root.replaceChildren(box);
 }
 
-function domainRow(d: DomainRecord, nowMs: number): HTMLElement {
-  // One item: the tappable summary row plus the smooth-expanding detail
-  // sheet beneath it. All fields come from the zones list itself — no
-  // per-domain upstream call.
-  const item = el("div", "cf-domain-item");
+// The tapped domain, for the master-detail drill-down: set by a row tap,
+// cleared by the profile's back control.
+let activeDomainId: string | null = null;
 
+function domainRow(d: DomainRecord, nowMs: number, onOpen: (d: DomainRecord) => void): HTMLElement {
   const row = el("button", "cf-domain-row") as HTMLButtonElement;
   row.type = "button";
-  row.setAttribute("aria-expanded", "false");
-  const name = el("div", "cf-domain-name");
-  name.append(el("strong", undefined, d.name));
-  const badges = el("span", "cf-domain-badges");
-  if (d.paused) badges.append(el("span", "cf-badge is-muted", "paused"));
-  if (d.status !== "active") badges.append(el("span", "cf-badge is-muted", d.status));
-  name.append(badges);
-
+  const name = el("span", "cf-domain-name", d.name);
   const days = d.expiresAt !== null ? daysUntil(d.expiresAt, nowMs) : null;
   const level = expiryLevel(days);
   const expiry = el("span", `cf-domain-expiry ${level ? `cf-level-${level}-text` : ""}`);
   if (days === null) {
-    expiry.textContent = "external registrar";
+    expiry.textContent = "external";
   } else if (days < 0) {
     expiry.textContent = `expired ${formatDate(d.expiresAt!)}`;
   } else {
-    expiry.textContent = `${formatDate(d.expiresAt!)} · ${days === 0 ? "today" : `${days}d`}`;
+    expiry.textContent = `${days}d · ${formatDate(d.expiresAt!)}`;
   }
-  const chevron = el("span", "cf-domain-chevron", "›");
-  row.append(name, expiry, chevron);
-  row.addEventListener("click", () => {
-    const open = item.classList.toggle("is-open");
-    row.setAttribute("aria-expanded", String(open));
+  const badges = el("span", "cf-domain-badges");
+  if (d.paused) badges.append(el("span", "cf-badge is-muted", "paused"));
+  if (d.status !== "active") badges.append(el("span", "cf-badge is-muted", d.status));
+  row.append(name, expiry, badges);
+  row.addEventListener("click", () => onOpen(d));
+  return row;
+}
+
+/** The domain profile: full-page detail with a back control — registration,
+ *  nameservers, setup, dates; everything the zones list already carries. */
+function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainRecord): void {
+  const back = el("button", "cf-btn cf-btn-ghost cf-profile-back", "‹ Domains");
+  back.type = "button";
+  back.addEventListener("click", () => {
+    activeDomainId = null;
+    renderDomainsInto(root, { data: payload, source: "memory", ageSec: 0, demo: false });
   });
 
-  // Detail sheet: grid-rows 0fr→1fr transition (see styles) for the smooth
-  // expand; the inner wrapper carries the overflow clip.
-  const detail = el("div", "cf-domain-detail");
-  const inner = el("div", "cf-domain-detail-inner");
+  const title = el("h2", "cf-profile-title", d.name);
+  const days = d.expiresAt !== null ? daysUntil(d.expiresAt) : null;
+  const level = expiryLevel(days);
+
+  const statusCard = el("section", `cf-card cf-profile-status ${level ? `cf-level-${level}` : ""}`);
+  statusCard.append(el("p", "cf-profile-line", d.paused ? "Paused — Cloudflare is bypassed for this zone" : "Active — DNS resolves through Cloudflare"));
+  if (days !== null) {
+    statusCard.append(el("p", `cf-profile-line ${level ? `cf-level-${level}-text` : ""}`,
+      days < 0 ? `Expired ${formatDate(d.expiresAt!)}` : `Renews ${formatDate(d.expiresAt!)} — ${days}d`));
+  } else {
+    statusCard.append(el("p", "cf-profile-line", "Registered at an external registrar — renewal happens there"));
+  }
+
   const field = (label: string, value: string): HTMLElement => {
     const f = el("div", "cf-domain-field");
     f.append(el("span", "cf-domain-field-label", label), el("span", "cf-domain-field-value", value));
     return f;
   };
-  inner.append(
-    field("Registration", days === null ? "External registrar — renewal happens there" : `Cloudflare Registrar · renews ${formatDate(d.expiresAt!)}`),
+  const infoCard = el("section", "cf-card");
+  const info = el("div", "cf-profile-fields");
+  info.append(
     field("Plan", d.plan || "—"),
-    field("Setup", d.type === "partial" ? "Partial (CNAME setup)" : "Full (DNS on Cloudflare)"),
+    field("Setup", d.type === "partial" ? "Partial (CNAME)" : "Full (DNS on Cloudflare)"),
+    field("Nameservers", d.nameServers && d.nameServers.length > 0 ? d.nameServers.join("\n") : "—"),
   );
-  if (d.nameServers && d.nameServers.length > 0) inner.append(field("Nameservers", d.nameServers.join(", ")));
-  if (d.developmentMode) inner.append(field("Development mode", "on"));
-  if (d.createdOn) inner.append(field("Added", formatDate(d.createdOn)));
-  if (d.modifiedOn) inner.append(field("Last change", formatDate(d.modifiedOn)));
-  detail.append(inner);
+  if (d.createdOn) info.append(field("Added to Cloudflare", formatDate(d.createdOn)));
+  if (d.modifiedOn) info.append(field("Last change", formatDate(d.modifiedOn)));
+  if (d.developmentMode) info.append(field("Development mode", "on"));
+  infoCard.append(info);
 
-  item.append(row, detail);
-  return item;
+  const view = el("div", "cf-profile");
+  view.append(back, title, statusCard, infoCard);
+  root.replaceChildren(view);
+  root.scrollIntoView({ block: "start" });
 }
 
 export async function renderDomains(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {
@@ -148,6 +163,14 @@ export async function renderDomains(root: HTMLElement, opts: { refresh?: boolean
 
 function renderDomainsInto(root: HTMLElement, res: FetchResult<DomainsPayload>): void {
   const d = res.data;
+  if (activeDomainId !== null) {
+    const active = d.domains.find((x) => x.id === activeDomainId);
+    if (active) {
+      domainProfile(root, d, active);
+      return;
+    }
+    activeDomainId = null;
+  }
   const bar = el("div", "cf-dash-bar");
   const line = statusLine(totalAgeSec(res.ageSec, d.cache), { cached: Boolean(d.cache?.stale), demo: res.demo });
   const refresh = refreshButton(() => renderDomains(root, { refresh: true }));
@@ -165,13 +188,16 @@ function renderDomainsInto(root: HTMLElement, res: FetchResult<DomainsPayload>):
       ? `Partial load — ${d.errors[0]}`
       : expiring > 0
         ? `${sorted.length} domains · ${expiring} expiring within 30 days`
-        : `${sorted.length} domains · none expiring within 30 days`);
+        : `${sorted.length} domains`);
 
   const card = el("section", "cf-card");
   if (sorted.length === 0) {
     card.append(el("p", "cf-empty cf-empty-quiet", "No domains found on this account."));
   } else {
-    for (const dom of sorted) card.append(domainRow(dom, nowMs));
+    for (const dom of sorted) card.append(domainRow(dom, nowMs, (x) => {
+      activeDomainId = x.id;
+      domainProfile(root, d, x);
+    }));
   }
   root.replaceChildren(bar, heading, sub, card);
 }
