@@ -97,3 +97,17 @@ Landed after the session-end run: BUG-057/IMP-002 review fixes (d010c48, 4845ed9
 2. FEAT-p8KYM5K wave 2: CodedError wraps at r2/kv/dns/d1/workers failure sites + USAGE.md codes table (mechanism is on master).
 3. FEAT-pN68ZRM: agent-context detection + agent help preamble (brief pattern: cf's agent-context.ts).
 4. Desktop Tauri build to see the FEAT-055 redesign natively.
+
+## Continuation-tail addendum (2026-10-10, late)
+
+Shipped after the first addendum, all deployed: pairing page redesign + animated glyph + plan line (85ba9f2b), ring hairline fix (61b65ecf), projects view (98e587af), domains view + tap-through profiles enriched from /api/domains/detail (46b87758…d518f2d7), table sort controls + saved prefs (40a8845e), graded usage bars on D1/Workers, nav section counters (34aab00a/b46b2345), Durable Objects section + first reusable components (components.ts: dashBar/sectionCard/fieldRow) + Nunito brand/nav face (71fe6b93).
+
+Bugs from MyCarGuide feedback, both fixed: BUG-pFAKDN3 KV storage 86x inflation (Cloudflare kvStorageAdaptiveGroups byteCount = rolling cumulative, verified live; kv.storage now unpriceable + relabeled; deployed a501e752) and BUG-pPF2BCF CLI analytics (errors carry cause+status, --json stdout pure, real token scopes; on master, ships with next release — operator go needed).
+
+NEXT SESSION, in order:
+1. DO pricing: a web-research agent was dispatched at wrap (brief /tmp/brief-do-pricing.md, worktree _glm-agent-*-brief-do-pricing, report in .glm-agent/report.md) — land the verified durable_objects.requests/duration rows in pricing.ts, wire the DO view's graded bars, deploy.
+2. Token edit unlocks: Billing Read (BUG-056 certainty + usage-v2 FEAT-pDDEH5J), Email Routing Read (FEAT-p9B11X1), Registrar Read (domain profile expiry/auto-renew).
+3. IMP-pEY98JH componentization wave 2 (migrate remaining views onto components.ts), error-code wraps wave 2, retry/backoff (FEAT-pC4N3QP).
+4. First session-end's unrun remainder: feedback flush ran; ingest blocked by held-local push (75+ commits ahead — sync only on operator go).
+
+Standing rules burned in tonight: real numbers only (memory: cosmoflare-real-numbers-only); KV rolling-bytes lesson in billing.ts comments.
