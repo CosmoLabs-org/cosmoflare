@@ -10,6 +10,7 @@ import { cmpRows, cmpText, type SortDir } from "./sort";
 import { zoneAttentionLevel } from "./attention";
 import { levelForErrorPct, levelForD1 } from "./dashboard";
 import { fadeSwap } from "./refresh";
+import { workerHref } from "./routes";
 
 export interface Column<T> {
   key: string;
@@ -369,7 +370,13 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
         renderSortableTable(card, {
           persistKey: host,
           columns: [
-            { key: "script", label: "Script", text: (w) => w.script },
+            // UI-3: the script cell taps through to the worker's profile page.
+            { key: "script", label: "Script", text: (w) => w.script,
+              cell: (w) => {
+                const a = el("a", "cf-link", w.script);
+                a.href = workerHref(w.script);
+                return a;
+              } },
             { key: "requests", label: "Requests", numeric: true, text: (w) => formatCount(w.requests), num: (w) => w.requests },
             { key: "errors", label: "Errors", numeric: true, text: (w) => formatCount(w.errors), num: (w) => w.errors },
             { key: "errorPct", label: "Error %", numeric: true, text: (w) => formatPct(w.errorPct, 2), num: (w) => w.errorPct },

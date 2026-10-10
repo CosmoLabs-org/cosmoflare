@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseHash, hrefFor, ROUTES } from "./routes";
+import { parseHash, hrefFor, workerHref, parseWorkerHash, ROUTES } from "./routes";
 
 describe("parseHash", () => {
   it("accepts every declared route", () => {
@@ -31,5 +31,29 @@ describe("hrefFor", () => {
   it("builds the drawer and sidebar hrefs", () => {
     expect(hrefFor("overview")).toBe("#/overview");
     expect(hrefFor("billing")).toBe("#/billing");
+  });
+});
+
+describe("workerHref / parseWorkerHash (UI-3)", () => {
+  it("round-trips a plain name", () => {
+    expect(workerHref("api-gateway")).toBe("#/worker/api-gateway");
+    expect(parseWorkerHash(workerHref("api-gateway"))).toBe("api-gateway");
+  });
+
+  it("round-trips a name needing encoding (UI-3)", () => {
+    const name = "my worker (prod)";
+    expect(workerHref(name)).toBe("#/worker/my%20worker%20(prod)");
+    expect(parseWorkerHash(workerHref(name))).toBe(name);
+  });
+
+  it("returns null for non-profile hashes", () => {
+    expect(parseWorkerHash("#/workers")).toBeNull();
+    expect(parseWorkerHash("#/worker/y")).toBe("y");
+    expect(parseWorkerHash("#/overview")).toBeNull();
+    expect(parseWorkerHash("")).toBeNull();
+  });
+
+  it("rejects an empty name", () => {
+    expect(parseWorkerHash("#/worker/")).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ import { renderDurableObjects, type DOPayload } from "./durable_objects";
 import { renderWorkers, renderD1, renderZones } from "./tables";
 import { renderAlertList, renderPairing } from "./views";
 import { renderRules, type RulesPayload } from "./rules";
+import { renderWorkerProfile } from "./worker_profile";
 import { logoMark } from "./logo";
 import { api, type Billing, type Summary } from "./api";
 import { refreshButton } from "./refresh";
@@ -55,7 +56,7 @@ async function loadNavCounts(): Promise<void> {
   if (billing.status === "fulfilled") setNavCount("projects", billing.value.data.projects.length);
   if (rules.status === "fulfilled") setNavCount("rules", rules.value.data.rules.length);
 }
-import { parseHash, hrefFor, ROUTES, type RouteId } from "./routes";
+import { parseHash, parseWorkerHash, hrefFor, ROUTES, type RouteId } from "./routes";
 
 /** Nav labels per route. */
 const NAV: Record<RouteId, { label: string }> = {
@@ -208,6 +209,16 @@ function mount(): void {
     main.append(host);
   }
 
+  // Worker profile host (UI-3): one persistent view for "#/worker/<name>".
+  // Like the route hosts it survives navigation, so a refresh only repaints
+  // the profile; the global [hidden] CSS rule keeps it out of the layout
+  // while a section view is showing.
+  const workerHost = document.createElement("div");
+  workerHost.className = "cf-view";
+  workerHost.id = "cf-view-worker";
+  workerHost.hidden = true;
+  main.append(workerHost);
+
   const shell = el("div", "cf-shell");
   shell.append(sidebar, main);
 
@@ -308,6 +319,8 @@ function mount(): void {
 
   function showRoute(route: RouteId): void {
     for (const r of ROUTES) hosts[r].hidden = r !== route;
+    // UI-3: the worker profile host only ever shows for a worker hash.
+    workerHost.hidden = true;
     for (const { a, route: r } of linkTargets) {
       if (r === route) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
@@ -316,11 +329,24 @@ function mount(): void {
     window.scrollTo(0, 0);
   }
 
+  // showWorker renders one worker's profile into the worker host (UI-3).
+  // No nav link is current on a profile page — the worker is not a section.
+  function showWorker(name: string): void {
+    for (const r of ROUTES) hosts[r].hidden = true;
+    workerHost.hidden = false;
+    for (const { a } of linkTargets) a.removeAttribute("aria-current");
+    void renderWorkerProfile(workerHost, name);
+    window.scrollTo(0, 0);
+  }
+
   // refreshCurrentRoute re-renders the active route the way the top-bar
   // Refresh button expects: a Promise (void renderers resolve via
   // Promise.resolve), refresh:true so data views revalidate and rethrow on
   // failure — the button keeps its node, shakes and surfaces the error.
   function refreshCurrentRoute(): Promise<void> {
+    if (currentKey.startsWith("worker/")) {
+      return renderWorkerProfile(workerHost, currentWorkerName() ?? "", { refresh: true });
+    }
     if (current === "alerts") {
       renderAlertList(hosts.alerts);
       return Promise.resolve();
@@ -328,17 +354,33 @@ function mount(): void {
     return Promise.resolve(RENDER[current](hosts[current], { refresh: true }));
   }
 
+  // The router's current target: a route id, or "worker/<name>" for a
+  // profile page (UI-3). Tracking the raw worker name means navigating
+  // worker→worker (a different name) re-renders the profile.
+  const currentWorkerName = (): string | null => parseWorkerHash(window.location.hash);
+  const targetKey = (): string => {
+    const worker = currentWorkerName();
+    return worker !== null ? `worker/${worker}` : parseHash(window.location.hash);
+  };
+
   let current: RouteId = initialRoute;
+  let currentKey: string = targetKey();
   function onHashChange(): void {
-    const next = parseHash(window.location.hash);
-    if (next !== current) {
-      closeDrawer();
-      current = next;
-      showRoute(next);
+    const key = targetKey();
+    if (key === currentKey) return;
+    closeDrawer();
+    currentKey = key;
+    const worker = currentWorkerName();
+    if (worker !== null) {
+      showWorker(worker);
+      return;
     }
+    current = parseHash(window.location.hash);
+    showRoute(current);
   }
   window.addEventListener("hashchange", onHashChange);
-  showRoute(initialRoute);
+  if (currentKey.startsWith("worker/")) showWorker(currentWorkerName() ?? "");
+  else showRoute(initialRoute);
   void loadNavCounts();
   window.setInterval(() => void loadNavCounts(), 5 * 60 * 1000);
   burger.addEventListener("click", () => (drawerOpen ? closeDrawer() : openDrawer()));
