@@ -1,7 +1,7 @@
 id: FEAT-p9GD588
 type: feature
 created_at: 2026-10-10T03:26:13.000596+04:00
-updated_at: 2026-10-10T03:55:33.247522+04:00
+updated_at: 2026-10-10T04:03:02.052629+04:00
 source: local
 ulid: 01M4HFT50GR0J7Q0FMYD9GD588
 provisional: true
@@ -17,4 +17,4 @@ acceptance_criteria:
       met: false
 roadmap_ref: ROAD-107
 resolution:
-    notes: 'Wave 1 implemented and deployed 2026-10-10: /api/domains + #/domains view. Account finding: all 43 zones are external-registrar (expires_at null) — expiry column activates when domains are CF-registered; wave 2 registrar detail still token-gated. Wave-1 status: implemented.'
+    notes: 'CORRECTION 2026-10-10: the account''s domains ARE largely on Cloudflare Registrar — the earlier ''all external'' read came from a wrong-path probe (/reg/domains → 7003) and null zone expires_at. The correct endpoint /accounts/{id}/registrar/domains returns 10000: needs Registrar Read on the token. Wave 2 = switch the collector to the registrar endpoint (expiry, auto-renew, status) once the token allows; zones list stays as the fallback.'
