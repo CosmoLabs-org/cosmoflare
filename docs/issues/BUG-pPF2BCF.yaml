@@ -1,12 +1,14 @@
 id: BUG-pPF2BCF
 type: bug
 created_at: 2026-10-10T04:26:20.692641+04:00
-updated_at: 2026-10-10T04:26:21.084765+04:00
+updated_at: 2026-10-10T04:26:22.160019+04:00
 source: local
 ulid: 01M4HK880WFR4SBQVBGAPF2BCF
 provisional: true
 severity: high
 status: open
+origin:
+    session: 71
 title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
 description: 'FB 01M4HJJQYMZZAA0D98T2R22EFG (MyCarGuide, repro 2026-10-10): (1) cosmoflare analytics --bucket=X fails with ''Error: failed to list objects: cosmoflare: ListObjects: failed to list objects'' — same string double-wrapped, no HTTP status, no endpoint, no CF error code, despite cosmoflare having a decode command for exactly this; likely R2 ListObjects permission gap invisible in output. (2) --json mode prints valid JSON then Error: + full usage dump on STDOUT — breaks jq and every scripted consumer; JSON contract requires stdout = JSON only, diagnostics to stderr. (3) auth status prints ''Token permissions: R2 management (assumed)'' — assumed instead of reading real scopes via GET /user/tokens/verify.'
 fix_direction: Unwrap and surface the underlying cause (HTTP status + CF error code + endpoint) in ListObjects failures, route through the decode table, suggest the missing scope; enforce strict JSON-only stdout in --json mode (cobra SilenceUsage/SilenceErrors + error envelope, usage to stderr); replace assumed permissions with real token verification output.
