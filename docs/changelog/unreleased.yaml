@@ -53,6 +53,9 @@ entries:
         - description: 'Ops domain profiles: enriched sections (renewal, registration, DNS with original nameservers, DNSSEC, SSL, 24h traffic) + sidebar section counters'
           source: manual
           date: 2026-10-10T04:20:49.567252+04:00
+        - description: 'Ops Durable Objects section: namespaces with per-script 24h usage; first shared view components; Nunito brand/link face (FEAT-p3KJAC2)'
+          source: manual
+          date: 2026-10-10T04:49:19.314542+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual

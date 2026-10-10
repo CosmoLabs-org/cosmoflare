@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T04:39:44.505918+04:00
+last_updated: 2026-10-10T04:49:19.113979+04:00
 next_bug_id: 60
 next_feat_id: 57
 next_task_id: 17
@@ -641,12 +641,13 @@ issues:
       area: reliability
     - id: FEAT-052
       type: feature
-      status: open
+      status: implemented
       title: CosmoLabs Ops PWA — private Cloudflare-hosted monitoring dashboard + push alerts for iPhone
+      delegated_to: "0364"
       created_at: 2026-10-09T15:35:36.537715+04:00
     - id: FEAT-053
       type: feature
-      status: open
+      status: implemented
       title: 'Ops usage gauges: progress rings and bars for every Workers Paid allowance before overage'
       priority: 70
       area: ux
@@ -672,7 +673,7 @@ issues:
       created_at: 2026-10-10T03:26:18.236927+04:00
     - id: FEAT-p3KJAC2
       type: feature
-      status: open
+      status: implemented
       title: Ops durable objects section — DO list and usage
       created_at: 2026-10-10T04:17:33.32696+04:00
     - id: FEAT-p8KYM5K

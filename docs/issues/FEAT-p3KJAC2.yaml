@@ -1,11 +1,11 @@
 id: FEAT-p3KJAC2
 type: feature
 created_at: 2026-10-10T04:17:33.32696+04:00
-updated_at: 2026-10-10T04:17:35.033482+04:00
+updated_at: 2026-10-10T04:49:19.109652+04:00
 source: local
 ulid: 01M4HJR51QQPKNFPMZ993KJAC2
 provisional: true
-status: open
+status: implemented
 origin:
     roadmap_items:
         - ROAD-107
@@ -16,3 +16,10 @@ acceptance_criteria:
     - criterion: DO view lists namespaces with usage metrics; nav counter added; tests; detector 0
       met: false
 roadmap_ref: ROAD-107
+resolution:
+    notes: 'Wave 1 implemented and deployed 2026-10-10: #/durable-objects view (namespaces + per-script 24h requests/errors/error%), nav counter, /api/durable-objects cached 5min. Wave 2: graded allowance bars need a verified durable_objects.requests pricing row (pricing verification pass); per-DO storage has no authoritative dataset.'
+    resolved_at: 2026-10-10T04:49:19.10844+04:00
+revisions:
+    - date: "2026-10-10T04:49:19.108434+04:00"
+      action: closed
+      context: 'Wave 1 implemented and deployed 2026-10-10: #/durable-objects view (namespaces + per-script 24h requests/errors/error%), nav counter, /api/durable-objects cached 5min. Wave 2: graded allowance bars need a verified durable_objects.requests pricing row (pricing verification pass); per-DO storage has no authoritative dataset.'
