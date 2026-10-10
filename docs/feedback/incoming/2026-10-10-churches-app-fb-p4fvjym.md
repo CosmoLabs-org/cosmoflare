@@ -1,0 +1,57 @@
+---
+ulid: 01M4H2NPT3GQ83HMNNQK4FVJYM
+title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
+type: feature
+status: duplicate
+priority: high
+complexity: ""
+from_project: Churches-app
+from_path: /Users/gabstudio/PROJECTS/Churches-app
+to_project: cosmoflare
+to_target: project
+created: "2026-10-09T23:36:36.419298+04:00"
+updated: "2026-10-09T23:36:36.419298+04:00"
+suggested_conversion: feature
+converted_to: null
+related_issues: []
+brainstorm_ref: null
+session: 47
+suggested_workflow: []
+response:
+  acknowledged: null
+  acknowledged_by: null
+  started: null
+  implemented: null
+  rejected: null
+  rejection_reason: null
+  notes: ""
+duplicate_of: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-09-churches-app-patterns--auto-remediation-what-two-da.md
+---
+
+# FB-p4FVJYM: Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)
+
+What happened: Churches-app completed the CF efficiency standard end to end over 2026-10-08..09 (IMP-017 + follow-up commits 155d1d3e, 73c700ac). Public API caching went 4 -> 18 of 21 GET routes; the worst endpoint dropped from ~1.08M D1 rows read per request to a daily snapshot + 1 KV read; Cache-Control now emitted on all cacheable responses; the landing page dropped 27% weight (mobile Lighthouse 75 -> 81); everything verified by live X-Cache MISS->HIT probes. Full record: docs/optimization/2026-10-08-cf-efficiency-audit.md in Churches-app. This feedback distills the PATTERNS that emerged and proposes how cosmoflare checks them automatically AND offers the fix directly.
+
+THE PATTERNS (what a successful CF infra caches, learned the hard way):
+P1. KV-cache every public GET whose handler scans a table — with a QUERY-AWARE key. Our live failure mode: path-only keys would have collapsed cities?country_code=IT and =PL onto one entry. The key must include every query param the handler reads, derived by reading the handler source.
+P2. Opt-in middleware, never blanket: caching attaches per-route; auth/user-scoped routes never get the middleware, making cross-user cache leaks impossible BY CONSTRUCTION rather than by discipline.
+P3. Materialize expensive aggregates by cron: any endpoint whose query scans >10k rows per call should serve a scheduled snapshot with a compute-once-and-store fallback. Cost: ~1.08M rows/request -> 1 KV read.
+P4. Emit Cache-Control: public, max-age=300 on cacheable responses. A KV HIT still costs a Worker invocation + KV read; the header lets the browser/edge absorb repeats for free — the layer most CF projects forget entirely (we had zero headers on 21 routes).
+P5. Only 200s cache; 404s and errors bypass. Degenerate inputs (sub-2-char searches) bypass too — a null keyFn is the escape hatch.
+P6. Heavy media gates by context: 511KB autoplay video served only to desktop; mobile/save-data gets the poster (page weight -27%, Lighthouse 75->81).
+P7. Static-first: prerender everything renderable (Pages) so page loads cost zero API/D1 calls; the API exists for dynamic consumers only.
+P8. Deferred caching is deliberate: cardinality bombs (per-coordinate nearby) and time-dependent routes (mass/next) stay uncached with a DOCUMENTED trigger (geohash cells, time buckets) until real traffic shapes the keys. Caching those wrong serves wrong answers — worse than uncached.
+P9. Verify per deploy: repeat-probe X-Cache MISS->HIT + watch D1 rows-read in the dashboard. An uncached regression is invisible until the bill.
+
+HOW COSMOFLARE COULD CHECK THESE AUTOMATICALLY AND OFFER SOLUTIONS DIRECTLY:
+1. `cosmoflare audit caching` (already specced) maps each finding to the violated pattern number + the reference diff in Churches-app 155d1d3e/73c700ac.
+2. NEW — `cosmoflare suggest` (or audit --fix): static-analyze each Worker route (handler query-param usage + SQL shape) and EMIT a ready-to-apply patch: the kvCache({ keyFn }) middleware line with the key derived from the params the handler actually reads, a proposed TTL from the query's table-scan cost, and the Cache-Control note. The keyFn derivation is mechanical from handler source — we wrote ours by hand; cosmoflare can generate it.
+3. Materialization detector: any handler with scalar aggregates over whole tables (COUNT/GROUP BY without WHERE on a big table) -> propose the cron + KV snapshot scaffold (jobs/stats-materialize.ts is the 40-line reference).
+4. Header sweep with fix suggestions: cacheable-looking public GETs missing Cache-Control -> patch adds it via the middleware; user-scoped routes carrying cache headers -> CRITICAL severity (leak class).
+5. Media gate detector: pageweight analysis (Lighthouse-class) flagging autoplay media over ~200KB on mobile paths -> suggest the context-gate pattern (P6).
+6. `cosmoflare audit --watch`: scheduled re-audit with drift alerts, so post-deploy regressions of any pattern page the owner.
+
+Why it matters: every pattern above was implemented by hand after manual discovery; the same checks are mechanically derivable from route source + CF analytics, and the fixes are templatable. That converts the charter from aspiration into a self-service gate: run cosmoflare, get findings each with a pattern citation and an applicable patch.
+
+Priority: high — complements the charter, audit-caching spec, and detection matrix already in this inbox; this adds the remediation layer.
+

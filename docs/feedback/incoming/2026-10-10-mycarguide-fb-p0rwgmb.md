@@ -1,9 +1,9 @@
 ---
 ulid: 01M4HJJ3TNC4FY16J0WD0RWGMB
-id: FB-24
+id: FB-28
 title: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.
 type: bug
-status: duplicate
+status: pending
 priority: medium
 complexity: ""
 from_project: MyCarGuide
@@ -26,7 +26,6 @@ response:
   rejected: null
   rejection_reason: null
   notes: ""
-duplicate_of: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-10-mycarguide-fb-p0rwgmb.md
 ---
 
 # FB-p0RWGMB: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.
@@ -43,3 +42,9 @@ duplicate_of: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-1
 
 **Priority:** high — wrong cost signal, fleet-wide.
 
+
+## Recurrence (ingest duplicate)
+
+- twin ulid: 01M4HJJ3TNC4FY16J0WD0RWGMB
+- twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-10-mycarguide-opscosmolabsorg-shows-mycarguide-kv-st.md
+- folded: 2026-10-10T19:35:21+04:00

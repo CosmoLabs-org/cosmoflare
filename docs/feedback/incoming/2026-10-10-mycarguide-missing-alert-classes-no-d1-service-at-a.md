@@ -1,5 +1,6 @@
 ---
 ulid: 01M4HK9Q8M18GWHZ2FS1ZS896R
+id: FB-29
 title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
 type: feature
 status: pending
