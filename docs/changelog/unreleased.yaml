@@ -47,6 +47,9 @@ entries:
         - description: 'Ops domains: tap-through profile page per domain — status, renewal, plan, nameservers, dates'
           source: manual
           date: 2026-10-10T04:12:41.334782+04:00
+        - description: 'Ops sidebar/drawer: per-section counters (domains, workers, D1, zones, projects, rules)'
+          source: manual
+          date: 2026-10-10T04:16:11.135982+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
