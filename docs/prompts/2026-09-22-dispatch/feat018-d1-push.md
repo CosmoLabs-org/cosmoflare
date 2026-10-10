@@ -1,3 +1,17 @@
+---
+created: "2026-09-22T16:53:19+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'FEAT-018 P0 — `cosmoflare d1 push-sql`: batched remote SQL push'
+---
+
 # FEAT-018 P0 — `cosmoflare d1 push-sql`: batched remote SQL push
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Production evidence: MyCarGuide pushed an 84,437-statement seed by hand — the batch-push pattern was re-implemented per-project twice. wrangler cannot handle it.

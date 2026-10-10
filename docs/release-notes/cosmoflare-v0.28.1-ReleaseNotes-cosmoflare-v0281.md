@@ -1,3 +1,13 @@
+---
+project: cosmoflare
+version: 0.28.1
+date: unknown
+slug: cosmoflare-v0281
+title: "cosmoflare-v0281 Release"
+type: release
+source: .version-registry.json
+---
+
 # Cosmoflare v0.28.1
 
 Patch release: fixed release packaging, a 21-agent code-quality wave, and a

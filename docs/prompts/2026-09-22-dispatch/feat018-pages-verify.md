@@ -1,3 +1,17 @@
+---
+created: "2026-09-22T16:53:19+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'FEAT-018 P0 — `cosmoflare pages deploy --verify`: deploy + poll + verify in one command'
+---
+
 # FEAT-018 P0 — `cosmoflare pages deploy --verify`: deploy + poll + verify in one command
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Evidence: the deploy+verify loop ran 3× in one day by hand (build stamp → wrangler pages deploy → 6+ manual curls).

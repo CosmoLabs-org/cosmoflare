@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T23:57:31+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-037 wave 3b — CLI wiring for three landed services
+---
+
 # FEAT-037 wave 3b — CLI wiring for three landed services
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. The SERVICES for Page Shield, Turnstile, and Web Analytics are merged in pkg/cosmoflare (pageshield.go, turnstile.go, webanalytics.go — READ all three first for their exact method signatures and options). Their CLI command files were never written. This lane wires them.

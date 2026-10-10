@@ -1,3 +1,17 @@
+---
+created: "2026-09-22T16:53:19+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-018 P1 — `cosmoflare d1 parity` + `cosmoflare waf ratelimit`
+---
+
 # FEAT-018 P1 — `cosmoflare d1 parity` + `cosmoflare waf ratelimit`
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Two P1 items from the MyCarGuide friction report, both fully specified by the issue. Work them SEQUENTIALLY in this one dispatch.

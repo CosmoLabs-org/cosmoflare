@@ -1,3 +1,17 @@
+---
+created: "2026-10-06T22:15:05+04:00"
+goals_completed: 0
+goals_total: 5
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-044 — Wire knowledge.Transport into the shared CF client factory
+---
+
 # FEAT-044 — Wire knowledge.Transport into the shared CF client factory
 
 Spec (approved design — follow EXACTLY): docs/brainstorming/2026-10-06-feat044-knowledge-transport-wiring.md

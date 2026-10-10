@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T23:31:26+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-037 wave 3 — Page Shield + Turnstile
+---
+
 # FEAT-037 wave 3 — Page Shield + Turnstile
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. NO registry edits — a follow-up pass owns internal/cmdmanifest/data.go and cmd/manifest_tree_test.go (do NOT touch them; unregistered this round is expected).

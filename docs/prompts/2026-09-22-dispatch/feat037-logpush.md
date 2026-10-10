@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T19:59:12+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-037 wave 1 — Logpush job management
+---
+
 # FEAT-037 wave 1 — Logpush job management
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Research verdict: REST-only, no CLI coverage anywhere. Logpush first per the issue's wave order (feeds observability). A CONCURRENT lane will add loadbalancer AFTER this merges — you own the registry NOW.

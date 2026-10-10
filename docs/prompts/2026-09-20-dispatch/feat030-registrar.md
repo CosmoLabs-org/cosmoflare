@@ -1,3 +1,17 @@
+---
+created: "2026-09-21T03:22:31+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'FEAT-030 — Registrar operations depth: register, transfer, renew, lock/unlock, contacts, DNSSEC'
+---
+
 # FEAT-030 — Registrar operations depth: register, transfer, renew, lock/unlock, contacts, DNSSEC
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. This is the registrar piece of FEAT-006 Domain Center's remaining waves. RegistrarService currently ships ONLY List (`pkg/cosmoflare/registrar.go`) — FEAT-006 Wave A was list-only.

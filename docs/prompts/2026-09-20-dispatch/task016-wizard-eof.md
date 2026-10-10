@@ -1,3 +1,17 @@
+---
+created: "2026-09-21T03:22:31+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'TASK-016 — Wizard EOF contract: honor ReadLine errors instead of discarding'
+---
+
 # TASK-016 — Wizard EOF contract: honor ReadLine errors instead of discarding
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare.

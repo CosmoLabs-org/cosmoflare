@@ -1,3 +1,17 @@
+---
+created: "2026-10-06T22:58:04+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: Repository gofmt alignment pass — 84 files, whitespace-only
+---
+
 # Repository gofmt alignment pass — 84 files, whitespace-only
 
 ## Task

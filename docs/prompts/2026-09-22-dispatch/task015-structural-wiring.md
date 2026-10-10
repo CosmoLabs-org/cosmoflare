@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T21:20:57+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'TASK-015 — Structural dry-run/audit wiring: derive paths from cobra, wrap destructive RunEs once'
+---
+
 # TASK-015 — Structural dry-run/audit wiring: derive paths from cobra, wrap destructive RunEs once
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Follow-up to TASK-011: dry-run/audit wiring is still opt-in per RunE body with hand-typed path literals (`[]string{"r2","bucket","delete"}` etc.). This dispatch makes coverage structural.

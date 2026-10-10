@@ -1,3 +1,17 @@
+---
+created: "2026-09-22T16:53:19+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-041 / ROAD-100 — Notification severity system + light theme (desktop)
+---
+
 # FEAT-041 / ROAD-100 — Notification severity system + light theme (desktop)
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare, desktop tier (Tauri + React) under `desktop/src/`. Audit evidence: docs/audit/2026-09-13-cosmoflare/agent-17-design-taste.md — every notification uses the same amber border (no severity encoding, styles.css:327) and the app is dark-only; weak for a paid tier.

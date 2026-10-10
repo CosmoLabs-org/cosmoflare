@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T20:21:51+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-037 wave 2 — Load Balancer pools + monitors
+---
+
 # FEAT-037 wave 2 — Load Balancer pools + monitors
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Logpush (wave 1) is merged — the registry is yours now.

@@ -1,3 +1,17 @@
+---
+created: "2026-09-21T03:22:31+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'TASK-014 — Shared test-global guard: consolidate per-file snapshot helpers'
+---
+
 # TASK-014 — Shared test-global guard: consolidate per-file snapshot helpers
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare, package cmd.

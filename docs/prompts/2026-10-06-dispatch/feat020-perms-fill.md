@@ -1,3 +1,17 @@
+---
+created: "2026-10-06T19:19:33+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-020 completion — fill the last sparse permission rows in cmdmanifest
+---
+
 # FEAT-020 completion — fill the last sparse permission rows in cmdmanifest
 
 ## Context

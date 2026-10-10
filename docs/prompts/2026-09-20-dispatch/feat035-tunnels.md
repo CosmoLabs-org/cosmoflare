@@ -1,3 +1,17 @@
+---
+created: "2026-09-20T17:02:59+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-035 — Cloudflare Tunnels management CLI
+---
+
 # FEAT-035 — Cloudflare Tunnels management CLI
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare (Go). Research verdict: wrangler has NO tunnel management commands — this is differentiation surface.

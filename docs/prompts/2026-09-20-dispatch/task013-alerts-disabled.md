@@ -1,3 +1,17 @@
+---
+created: "2026-09-20T17:02:59+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: TASK-013 — AlertService cannot produce a disabled rule through its API
+---
+
 # TASK-013 — AlertService cannot produce a disabled rule through its API
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare (Go, module github.com/CosmoLabs-org/cosmoflare)

@@ -1,3 +1,17 @@
+---
+created: "2026-10-07T23:08:19+04:00"
+goals_completed: 0
+goals_total: 4
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'BR-03 — LimitsService v2: embedded catalog, hardcoded maps deleted'
+---
+
 # BR-03 — LimitsService v2: embedded catalog, hardcoded maps deleted
 
 Spec (authoritative): docs/brainstorming/2026-09-10-cf-limits-awareness-layer.md — sections D1 (catalog SSOT), D2 (per-service plan resolution), D3 (freshness). Corpus findings section (bottom of that doc) names two resources the catalog does NOT carry — read it.

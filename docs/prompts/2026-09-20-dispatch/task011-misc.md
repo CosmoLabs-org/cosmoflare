@@ -1,3 +1,17 @@
+---
+created: "2026-09-22T16:24:26+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: 'TASK-011 wave 2 — prefixedResourceArgs conversion: misc group'
+---
+
 # TASK-011 wave 2 — prefixedResourceArgs conversion: misc group
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. The mechanism already exists (TASK-011 pilot, merged): read `cmd/prefixed_args.go` first, and `cmd/dns.go` for a converted reference group.

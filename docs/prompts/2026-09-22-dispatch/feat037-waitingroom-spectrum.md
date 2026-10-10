@@ -1,3 +1,17 @@
+---
+created: "2026-09-23T23:31:26+04:00"
+goals_completed: 0
+goals_total: 0
+origin: migrated by ccs prompts migrate
+priority: medium
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: PENDING
+tags: []
+title: FEAT-037 wave 3 — Waiting Room + Spectrum
+---
+
 # FEAT-037 wave 3 — Waiting Room + Spectrum
 
 Repo: /Users/gabstudio/PROJECTS/cosmoflare. Zone long-tail services, per-service services + commands. NO registry edits — a follow-up pass owns internal/cmdmanifest/data.go and cmd/manifest_tree_test.go (do NOT touch them; your new groups stay unregistered this round, that is expected).
