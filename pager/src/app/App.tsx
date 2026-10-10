@@ -2,11 +2,11 @@
 // the app frame — top bar with the global Refresh, quick nav, drawer,
 // persistent per-route view hosts, bottom status strip. Since P-04 the
 // Overview and Billing views, since P-05a the table family (Workers,
-// worker profiles, D1, Zones, Durable Objects), and since P-05b Projects
-// and Domains are real React components
-// mounted into their host divs; alerts/rules/pairing still
-// render through the imperative bridge to the vanilla modules until their
-// tier lands (P-06).
+// worker profiles, D1, Zones, Durable Objects), since P-05b Projects and
+// Domains, and since P-06 Rules, Alerts and Pairing are real React
+// components mounted into their host divs — the imperative bridge to the
+// vanilla modules is retired; ViewHost renders every view through a
+// React root.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -30,8 +30,6 @@ import { api, type Billing, type Summary } from "../api";
 import type { DomainsPayload } from "../domains";
 import type { RulesPayload } from "../rules";
 import type { DOPayload } from "../durable_objects";
-import { renderAlertList, renderPairing } from "../views";
-import { renderRules } from "../rules";
 import { startStatusStripClock } from "../statusstrip";
 import OverviewView from "./views/OverviewView";
 import BillingView from "./views/BillingView";
@@ -42,6 +40,9 @@ import WorkerProfileView from "./views/WorkerProfileView";
 import D1View from "./views/D1View";
 import ZonesView from "./views/ZonesView";
 import DurableObjectsView from "./views/DurableObjectsView";
+import AlertsView from "./views/AlertsView";
+import RulesView from "./views/RulesView";
+import PairingView from "./views/PairingView";
 
 /** Nav labels per route (mirror of the old main.ts NAV). */
 /** Section icons (operator 2026-10-10: icons left of every nav title, above
@@ -77,11 +78,11 @@ const NAV_LABEL: Record<RouteId, string> = {
 
 type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: string };
 
-/** One entry per renderable target: either a real React view component
- *  (P-04 tier 1: Overview + Billing; P-05a tier 2a: the table family and
- *  worker profiles; P-05b tier 2b: Projects + Domains) or the vanilla
- *  module's render fn — alerts/rules/pairing bridge until their tier lands
- *  (P-06). */
+/** One entry per renderable target: a real React view component (P-04
+ *  tier 1: Overview + Billing; P-05a tier 2a: the table family and worker
+ *  profiles; P-05b tier 2b: Projects + Domains; P-06 tier 3: Rules,
+ *  Alerts + Pairing). Since P-06 every view renders through a React root
+ *  — the imperative bridge to the vanilla modules is retired. */
 interface ViewEntry {
   id: string;
   render?: (host: HTMLElement, opts: { refresh?: boolean }) => void | Promise<void>;
@@ -106,9 +107,9 @@ function viewEntry(v: ViewKind): ViewEntry {
     d1: { id: "d1", Component: D1View },
     zones: { id: "zones", Component: ZonesView },
     "durable-objects": { id: "durable-objects", Component: DurableObjectsView },
-    alerts: { id: "alerts", render: (h) => renderAlertList(h) },
-    rules: { id: "rules", render: (h) => void renderRules(h) },
-    pairing: { id: "pairing", render: (h) => void renderPairing(h) },
+    alerts: { id: "alerts", Component: AlertsView },
+    rules: { id: "rules", Component: RulesView },
+    pairing: { id: "pairing", Component: PairingView },
   };
   return map[v.route];
 }
