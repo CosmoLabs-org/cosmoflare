@@ -1,11 +1,12 @@
 // React shell (P-03, docs/planning-mode/2026-10-10-pager-react-rebuild.md):
 // the app frame — top bar with the global Refresh, quick nav, drawer,
 // persistent per-route view hosts, bottom status strip. Since P-04 the
-// Overview and Billing views, and since P-05a the table family (Workers,
-// worker profiles, D1, Zones, Durable Objects), are real React components
-// mounted into their host divs; alerts/rules/pairing/projects/domains still
+// Overview and Billing views, since P-05a the table family (Workers,
+// worker profiles, D1, Zones, Durable Objects), and since P-05b Projects
+// and Domains are real React components
+// mounted into their host divs; alerts/rules/pairing still
 // render through the imperative bridge to the vanilla modules until their
-// tier lands (P-05..P-06).
+// tier lands (P-06).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -29,13 +30,13 @@ import { api, type Billing, type Summary } from "../api";
 import type { DomainsPayload } from "../domains";
 import type { RulesPayload } from "../rules";
 import type { DOPayload } from "../durable_objects";
-import { renderProjects } from "../projects";
-import { renderDomains } from "../domains";
 import { renderAlertList, renderPairing } from "../views";
 import { renderRules } from "../rules";
 import { startStatusStripClock } from "../statusstrip";
 import OverviewView from "./views/OverviewView";
 import BillingView from "./views/BillingView";
+import ProjectsView from "./views/ProjectsView";
+import DomainsView from "./views/DomainsView";
 import WorkersView from "./views/WorkersView";
 import WorkerProfileView from "./views/WorkerProfileView";
 import D1View from "./views/D1View";
@@ -78,8 +79,9 @@ type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: stri
 
 /** One entry per renderable target: either a real React view component
  *  (P-04 tier 1: Overview + Billing; P-05a tier 2a: the table family and
- *  worker profiles) or the vanilla module's render fn — alerts/rules/
- *  pairing/projects/domains bridge until their tier lands (P-05..P-06). */
+ *  worker profiles; P-05b tier 2b: Projects + Domains) or the vanilla
+ *  module's render fn — alerts/rules/pairing bridge until their tier lands
+ *  (P-06). */
 interface ViewEntry {
   id: string;
   render?: (host: HTMLElement, opts: { refresh?: boolean }) => void | Promise<void>;
@@ -98,8 +100,8 @@ function viewEntry(v: ViewKind): ViewEntry {
   const map: Record<RouteId, ViewEntry> = {
     overview: { id: "overview", Component: OverviewView },
     billing: { id: "billing", Component: BillingView },
-    projects: { id: "projects", render: (h, o) => renderProjects(h, o) },
-    domains: { id: "domains", render: (h, o) => renderDomains(h, o) },
+    projects: { id: "projects", Component: ProjectsView },
+    domains: { id: "domains", Component: DomainsView },
     workers: { id: "workers", Component: WorkersView },
     d1: { id: "d1", Component: D1View },
     zones: { id: "zones", Component: ZonesView },
