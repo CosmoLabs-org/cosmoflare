@@ -1,7 +1,7 @@
 id: BUG-pFAKDN3
 type: bug
 created_at: 2026-10-10T04:25:57.194318+04:00
-updated_at: 2026-10-10T04:28:42.812085+04:00
+updated_at: 2026-10-10T05:05:30.464009+04:00
 source: local
 ulid: 01M4HK7H2XJ4R4C73HXZFAKDN3
 provisional: true
@@ -17,7 +17,7 @@ affected_files:
     - pager/src/billing.ts
     - pager/src/dashboard.ts
 resolution:
-    notes: 'Fixed and deployed 2026-10-10: kv.storage excluded from overage pricing (unitPrice 0, relabeled ''rolling bytes''), regression test pins it. Root cause verified live: Cloudflare dataset semantics, not our aggregation.'
+    notes: 'Follow-up 2026-10-10: rolling KV also removed from rings/cards/attention (the red 389% alarm was still up after the pricing fix). Deployed.'
     resolved_at: 2026-10-10T04:28:42.81075+04:00
 revisions:
     - date: "2026-10-10T04:28:42.810744+04:00"
