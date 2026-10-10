@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T22:29:27.180111+04:00
+last_updated: 2026-10-10T23:02:59.224311+04:00
 next_bug_id: 60
 next_feat_id: 73
 next_task_id: 17
@@ -671,6 +671,11 @@ issues:
       priority: 70
       area: ux
       created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: FEAT-061
+      type: feature
+      status: closed
+      title: Bounded retry + exponential backoff in pkg/cosmoflare client
+      created_at: 2026-10-10T00:33:30.258298+04:00
     - id: FEAT-066
       type: feature
       status: closed

@@ -1,12 +1,12 @@
 id: FEAT-061
 type: feature
 created_at: 2026-10-10T00:33:30.258298+04:00
-updated_at: 2026-10-10T00:33:32.565628+04:00
+updated_at: 2026-10-10T23:02:59.219271+04:00
 source: local
 ulid: 01M4H5XX56PFBSY9QEYRC4N3QP
 aliases:
     - FEAT-pC4N3QP
-status: open
+status: closed
 origin:
     roadmap_items:
         - ROAD-102
@@ -17,3 +17,6 @@ acceptance_criteria:
     - criterion: 429 in tests triggers retry then succeeds; no retry on 4xx; tests
       met: false
 roadmap_ref: ROAD-102
+revisions:
+    - date: "2026-10-10T23:02:59.218065+04:00"
+      action: closed
