@@ -429,3 +429,29 @@ func TestR2Error_ImplementsHTTPStatusCarrier(t *testing.T) {
 		t.Error("status-less R2Error wrapping a 502 carrier should stay retryable")
 	}
 }
+
+// BUG-pPF2BCF: the underlying cause (and HTTP status) must surface in the
+// error string — "failed to list objects" used to wrap the same words
+// twice while the SDK error carried the real 403/AccessDenied.
+func TestR2Error_ErrorCarriesCauseAndStatus(t *testing.T) {
+	cause := errors.New("operation error S3: ListObjectsV2, https response error StatusCode: 403, APIError: AccessDenied")
+	e := newError("ListObjects", "failed to list objects", cause)
+	msg := e.Error()
+	if !strings.Contains(msg, "failed to list objects") {
+		t.Errorf("message lost: %q", msg)
+	}
+	if !strings.Contains(msg, "AccessDenied") || !strings.Contains(msg, "403") {
+		t.Errorf("cause not surfaced: %q", msg)
+	}
+
+	withStatus := newStatusError("ListObjects", "failed to list objects", 403, cause)
+	if !strings.Contains(withStatus.Error(), "(HTTP 403)") {
+		t.Errorf("status not surfaced: %q", withStatus.Error())
+	}
+
+	// No cause, no status: the string stays exactly the legacy shape.
+	bare := newError("op", "msg", nil)
+	if bare.Error() != "cosmoflare: op: msg" {
+		t.Errorf("bare error changed shape: %q", bare.Error())
+	}
+}

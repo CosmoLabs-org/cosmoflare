@@ -94,6 +94,16 @@ Examples:
   cosmoflare worker deploy my-worker -s w.js  # Deploy a Worker`,
 	Version: AppVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// JSON-mode stdout contract (BUG-pPF2BCF): stdout carries the JSON
+		// envelope and NOTHING else. Errors are already emitted as the
+		// envelope (printErrorJSONCode); silencing cobra keeps its "Error:"
+		// line and usage dump off the output streams entirely in --json
+		// mode (main.go still logs to stderr, which the contract allows).
+		if JSONOutput {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+		}
+
 		// Skip API validation for commands that don't need R2 access.
 		// Parent commands in this list cause all subcommands to skip too.
 		if !commandRequiresCredentials(cmd) {

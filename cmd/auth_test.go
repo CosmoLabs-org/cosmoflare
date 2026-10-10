@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"bytes"
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -732,5 +736,48 @@ func TestRunAuthRotate_RevokeOldRevokesOldTokenNotNew(t *testing.T) {
 	}
 	if (*revoked)[0] != "OLD-TOKEN" {
 		t.Errorf("revokeOldToken received %q — the NEW token was revoked (BUG-044); must revoke the pre-rotation token %q", (*revoked)[0], "OLD-TOKEN")
+	}
+}
+
+// BUG-pPF2BCF: auth status must show the token's REAL permission groups,
+// never "(assumed)" — the scope read goes verify → token detail.
+func TestFetchTokenScopes(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/user/tokens/verify"):
+			fmt.Fprint(w, `{"success":true,"result":{"id":"tok123","status":"active"}}`)
+		case strings.Contains(r.URL.Path, "/user/tokens/tok123"):
+			fmt.Fprint(w, `{"success":true,"result":{"policies":[{"permission_groups":[{"name":"Workers Scripts Read"},{"name":"R2 Storage Edit"}]},{"permission_groups":[{"name":"R2 Storage Edit"}]}]}}`)
+		default:
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+	old := cfAPIBase
+	cfAPIBase = srv.URL
+	t.Cleanup(func() { cfAPIBase = old })
+
+	groups, err := fetchTokenScopes(context.Background(), "tok")
+	if err != nil {
+		t.Fatalf("fetchTokenScopes: %v", err)
+	}
+	// Deduped and sorted.
+	if strings.Join(groups, ",") != "R2 Storage Edit,Workers Scripts Read" {
+		t.Errorf("groups = %v", groups)
+	}
+}
+
+func TestFetchTokenScopes_VerifyFailure(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"success":false,"errors":[{"message":"authentication error"}]}`)
+	}))
+	defer srv.Close()
+	old := cfAPIBase
+	cfAPIBase = srv.URL
+	t.Cleanup(func() { cfAPIBase = old })
+
+	if _, err := fetchTokenScopes(context.Background(), "bad"); err == nil || !strings.Contains(err.Error(), "authentication error") {
+		t.Errorf("want surfaced verify error, got %v", err)
 	}
 }

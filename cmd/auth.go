@@ -10,8 +10,12 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -323,13 +327,114 @@ func runAuthStatus(cmd *cobra.Command, args []string) error {
 	printSuccess("✅ Connection successful!")
 	printInfo("Account details available")
 
-	// Show token scope if available
-	if envToken != "" || (configMgr != nil) {
-		printInfo("Token permissions: R2 management (assumed)")
-		printInfo("Note: Use Cloudflare dashboard to view exact token permissions")
+	// Show the token's REAL scopes (BUG-pPF2BCF): /user/tokens/verify gives
+	// the token's id, /user/tokens/{id} lists its permission groups. The
+	// detail read needs User API Tokens Read on the token; any failure
+	// degrades to an honest "could not read" — never "(assumed)", which hid
+	// a missing R2 scope behind a green connection check.
+	tok := APIToken
+	if tok == "" {
+		tok = envToken
+	}
+	if tok != "" {
+		groups, err := fetchTokenScopes(context.Background(), tok)
+		switch {
+		case err == nil && len(groups) > 0:
+			printInfo("Token permissions: %s", strings.Join(groups, ", "))
+		case err == nil:
+			printInfo("Token permissions: none reported by the API")
+		default:
+			printInfo("Token permissions: could not read — %v", err)
+			printInfo("Note: exact scopes need 'User API Tokens Read' on the token")
+		}
 	}
 
 	return nil
+}
+
+// cfAPIBase is the Cloudflare API root fetchTokenScopes reads; a var so
+// tests can point it at an httptest server.
+var cfAPIBase = "https://api.cloudflare.com/client/v4"
+
+// tokenVerifyShape and tokenDetailShape mirror the two CF API responses
+// fetchTokenScopes consumes; extracted so parsing stays unit-testable.
+type tokenVerifyShape struct {
+	Result struct {
+		ID     string `json:"id"`
+		Status string `json:"status"`
+	} `json:"result"`
+	Success bool `json:"success"`
+	Errors  []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}
+
+type tokenDetailShape struct {
+	Result struct {
+		Policies []struct {
+			PermissionGroups []struct {
+				Name string `json:"name"`
+			} `json:"permission_groups"`
+		} `json:"policies"`
+	} `json:"result"`
+	Success bool `json:"success"`
+	Errors  []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}
+
+// fetchTokenScopes reads the token's actual permission-group names via
+// GET /user/tokens/verify → GET /user/tokens/{id}.
+func fetchTokenScopes(ctx context.Context, token string) ([]string, error) {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, cfAPIBase+"/user/tokens/verify", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	var verify tokenVerifyShape
+	if err := json.NewDecoder(res.Body).Decode(&verify); err != nil {
+		return nil, err
+	}
+	if !verify.Success || verify.Result.ID == "" {
+		msg := "verification failed"
+		if len(verify.Errors) > 0 {
+			msg = verify.Errors[0].Message
+		}
+		return nil, errors.New(msg)
+	}
+
+	req, _ = http.NewRequestWithContext(ctx, http.MethodGet, cfAPIBase+"/user/tokens/"+verify.Result.ID, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res2, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res2.Body.Close()
+	var detail tokenDetailShape
+	if err := json.NewDecoder(res2.Body).Decode(&detail); err != nil {
+		return nil, err
+	}
+	if !detail.Success {
+		msg := "token detail unavailable"
+		if len(detail.Errors) > 0 {
+			msg = detail.Errors[0].Message
+		}
+		return nil, errors.New(msg)
+	}
+	seen := map[string]bool{}
+	var groups []string
+	for _, p := range detail.Result.Policies {
+		for _, g := range p.PermissionGroups {
+			if g.Name != "" && !seen[g.Name] {
+				seen[g.Name] = true
+				groups = append(groups, g.Name)
+			}
+		}
+	}
+	sort.Strings(groups)
+	return groups, nil
 }
 
 func runAuthLogout(cmd *cobra.Command, args []string) error {

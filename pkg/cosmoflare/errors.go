@@ -22,13 +22,25 @@ type R2Error struct {
 }
 
 func (e *R2Error) Error() string {
+	var b strings.Builder
 	if e.Bucket != "" && e.Key != "" {
-		return fmt.Sprintf("cosmoflare: %s: bucket=%s key=%s: %s", e.Op, e.Bucket, e.Key, e.Message)
+		fmt.Fprintf(&b, "cosmoflare: %s: bucket=%s key=%s: %s", e.Op, e.Bucket, e.Key, e.Message)
+	} else if e.Bucket != "" {
+		fmt.Fprintf(&b, "cosmoflare: %s: bucket=%s: %s", e.Op, e.Bucket, e.Message)
+	} else {
+		fmt.Fprintf(&b, "cosmoflare: %s: %s", e.Op, e.Message)
 	}
-	if e.Bucket != "" {
-		return fmt.Sprintf("cosmoflare: %s: bucket=%s: %s", e.Op, e.Bucket, e.Message)
+	// BUG-pPF2BCF: the underlying cause (HTTP status, API error code,
+	// endpoint) used to be swallowed here — "failed to list objects"
+	// wrapped the same words twice while the SDK error carried the real
+	// 403/AccessDenied. Errors now carry their cause and status.
+	if e.Status != 0 {
+		fmt.Fprintf(&b, " (HTTP %d)", e.Status)
 	}
-	return fmt.Sprintf("cosmoflare: %s: %s", e.Op, e.Message)
+	if e.Err != nil {
+		fmt.Fprintf(&b, ": %s", e.Err.Error())
+	}
+	return b.String()
 }
 
 func (e *R2Error) Unwrap() error { return e.Err }
