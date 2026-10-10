@@ -1332,7 +1332,7 @@ func TestNewClientWithCredentials(t *testing.T) {
 
 	client, err := NewClient(
 		WithEndpoint("https://test.r2.cloudflarestorage.com"),
-		WithCredentials("test-ak", "test-sk"),
+		WithCredentials("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "test-sk"),
 		WithRegion("auto"),
 		WithCacheControl(false),
 		WithHTTPClient(&http.Client{Timeout: 5 * time.Second}),

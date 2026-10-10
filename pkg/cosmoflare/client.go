@@ -172,6 +172,23 @@ func (c *client) initS3() error {
 	accessKey := c.cfg.accessKey
 	secretKey := c.cfg.secretKey
 
+	// BUG-p3Y31ZQ: R2's S3 gateway only accepts 32-char Access Key IDs from
+	// R2 API tokens; a Cloudflare API token cannot sign S3 requests. The old
+	// fallback fabricated an 8-char AccessKeyID, so every token-only user's
+	// data-plane call died in "Credential access key has length 8, should
+	// be 32".
+	const r2AccessKeyLen = 32
+	switch {
+	case accessKey != "" && secretKey != "":
+		if len(accessKey) != r2AccessKeyLen {
+			return validationError("NewClient",
+				fmt.Sprintf("R2 access_key must be %d characters (got %d) — use the Access Key ID from an R2 API token (Cloudflare dashboard → R2 → Manage R2 API Tokens)", r2AccessKeyLen, len(accessKey)))
+		}
+	case accessKey != "" || secretKey != "":
+		return validationError("NewClient",
+			"R2 S3 credentials are incomplete: set both access_key and secret_key, or neither (control-plane-only use needs no S3 keys)")
+	}
+
 	// BUG-042: the S3 data plane must not carry the control-plane's
 	// whole-request timeout (default 30s) — large transfers die mid-body.
 	// Transfer limits come from context deadlines; retries come from the SDK.
@@ -188,17 +205,17 @@ func (c *client) initS3() error {
 		awsconfig.WithRegion(c.cfg.region),
 		awsconfig.WithHTTPClient(dataPlaneClient),
 		awsconfig.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
-			if accessKey != "" && secretKey != "" {
-				return aws.Credentials{
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-				}, nil
+			if accessKey == "" {
+				// Token-only config: the control plane works, but the S3 data
+				// plane cannot — a Cloudflare API token cannot sign SigV4
+				// requests. Fail the first object operation with how to fix
+				// instead of the gateway's opaque InvalidArgument.
+				return aws.Credentials{}, validationError("S3",
+					"R2 object operations need an R2 API token's Access Key ID (32 chars) and Secret Access Key — a Cloudflare API token cannot sign S3 requests. Create an R2 API token (Cloudflare dashboard → R2 → Manage R2 API Tokens → Create API token, Object Read & Write), then set access_key/secret_key in ~/.r2go2/config.yaml or export AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
 			}
-			// Use static credentials from the API token
 			return aws.Credentials{
-				AccessKeyID:     "r2-token",
-				SecretAccessKey: c.apiToken,
-				Source:          "Cloudflare-R2-API",
+				AccessKeyID:     accessKey,
+				SecretAccessKey: secretKey,
 			}, nil
 		})),
 	)

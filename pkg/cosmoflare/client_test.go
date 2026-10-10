@@ -338,6 +338,93 @@ func TestNewClientProfileResolution(t *testing.T) {
 	})
 }
 
+// --- BUG-p3Y31ZQ: R2 S3 data plane must not fabricate credentials ---
+
+// tokenOnlyTestClient builds a token-only client (no S3 keys anywhere) with
+// AWS env vars cleared, so the S3 credential path under test is deterministic.
+func tokenOnlyTestClient(t *testing.T) *client {
+	t.Helper()
+	t.Setenv("AWS_ACCESS_KEY_ID", "")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "")
+	return newTestClient(t)
+}
+
+// A token-only config (the common case) must keep the control plane working
+// but refuse S3 data-plane use with guidance instead of fabricating an
+// 8-char AccessKeyID the gateway rejects with an opaque InvalidArgument.
+func TestS3CredentialsTokenOnlyFailsWithGuidance(t *testing.T) {
+	c := tokenOnlyTestClient(t)
+
+	creds, err := c.s3.Options().Credentials.Retrieve(context.Background())
+	if err == nil {
+		t.Fatalf("token-only S3 credential resolve must fail, got creds for AccessKeyID %q (fabricated)", creds.AccessKeyID)
+	}
+	msg := err.Error()
+	for _, want := range []string{"R2 API token", "32", "AWS_ACCESS_KEY_ID"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("error must mention %q to be actionable, got: %v", want, err)
+		}
+	}
+}
+
+// An access key that is not 32 chars can never pass the R2 gateway — fail at
+// NewClient with the exact requirement instead of the API's InvalidArgument.
+func TestNewClientRejectsNon32CharAccessKey(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "")
+	_, err := NewClient(
+		WithAccountID("test-account"),
+		WithAPIToken("test-token-12345"),
+		WithCredentials("short", "secret"),
+	)
+	if err == nil {
+		t.Fatal("NewClient must reject an access key that is not 32 chars")
+	}
+	if !strings.Contains(err.Error(), "32") {
+		t.Errorf("error must state the 32-char requirement, got: %v", err)
+	}
+}
+
+// Exactly one of access key / secret set is a config mistake the old code
+// silently discarded (the fabrication branch ignored the provided key).
+func TestNewClientRejectsHalfConfiguredS3Credentials(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "")
+	_, err := NewClient(
+		WithAccountID("test-account"),
+		WithAPIToken("test-token-12345"),
+		WithCredentials(strings.Repeat("a", 32), ""),
+	)
+	if err == nil {
+		t.Fatal("NewClient must reject access key without secret")
+	}
+	if !strings.Contains(err.Error(), "both") {
+		t.Errorf("error must say both keys are needed, got: %v", err)
+	}
+}
+
+// A real 32-char R2 Access Key ID with its secret resolves statically.
+func TestS3CredentialsValid32CharKeyResolves(t *testing.T) {
+	t.Setenv("AWS_ACCESS_KEY_ID", "")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "")
+	c, err := NewClient(
+		WithAccountID("test-account"),
+		WithAPIToken("test-token-12345"),
+		WithCredentials(strings.Repeat("a", 32), "the-secret"),
+	)
+	if err != nil {
+		t.Fatalf("NewClient with a 32-char key must succeed: %v", err)
+	}
+	cc := c.(*client)
+	creds, err := cc.s3.Options().Credentials.Retrieve(context.Background())
+	if err != nil {
+		t.Fatalf("credential resolve failed: %v", err)
+	}
+	if creds.AccessKeyID != strings.Repeat("a", 32) || creds.SecretAccessKey != "the-secret" {
+		t.Errorf("unexpected resolved credentials: %+v", creds)
+	}
+}
+
 // TestClientConfigDeadFieldsRemoved pins the removal of the silent no-op
 // config fields (BUG-029). WithBucket/WithAuditLog/WithDryRun were deleted
 // together with these fields; their absence is enforced at compile time.
