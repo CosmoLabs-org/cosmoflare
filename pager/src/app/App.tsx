@@ -260,9 +260,11 @@ function NavLinks({
               <Icon size={variant === "quick" ? 17 : 18} strokeWidth={1.8} />
             </span>
             <span className={variant === "quick" ? "cf-quicknav-label" : "cf-navlabel"}>{NAV_LABEL[r]}</span>
-            <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
-              {counts[r] ?? ""}
-            </span>
+            {variant === "quick" ? null : (
+              <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
+                {counts[r] ?? ""}
+              </span>
+            )}
           </a>
         );
       })}
