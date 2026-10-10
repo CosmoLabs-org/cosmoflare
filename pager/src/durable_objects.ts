@@ -59,7 +59,7 @@ function renderInto(root: HTMLElement, res: FetchResult<DOPayload>): void {
     let included = 0;
     try {
       const b = await api.fetchJson<Billing>("api/billing");
-      included = b.data.products.find((p) => p.id === "durable_objects.requests")?.included ?? 0;
+      included = b.data.products.find((p) => p.id === "do.requests")?.included ?? 0;
     } catch {
       included = 0;
     }
