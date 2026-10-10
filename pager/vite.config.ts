@@ -16,5 +16,8 @@ export default defineConfig({
     // parsePayload is pure data validation; no DOM needed (Task 7's IndexedDB
     // store tests will switch to fake-indexeddb).
     environment: "node",
+    // Unit suite lives in src/ — e2e/ is Playwright's territory (spec files
+    // there would otherwise match vitest's default include).
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
 });
