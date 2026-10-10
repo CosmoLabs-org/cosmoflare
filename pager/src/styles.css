@@ -775,16 +775,24 @@ body.cf-nav-open { overflow: hidden; }
   line-height: 1;
 }
 
-/* ---- Domains view: ownership rows with renewal attention ---- */
+/* ---- Domains view: tappable rows with smooth-expanding detail sheet ---- */
+.cf-domain-item + .cf-domain-item { border-top: 1px solid var(--border); }
 .cf-domain-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--space-2);
+  width: 100%;
   padding: var(--space-2) 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
 }
-.cf-domain-row + .cf-domain-row { border-top: 1px solid var(--border); }
+.cf-domain-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: var(--radius); }
 .cf-domain-name { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
 .cf-domain-name strong { font-family: var(--font-display); font-size: 15px; overflow-wrap: anywhere; }
 .cf-domain-badges { display: inline-flex; gap: var(--space-1); }
@@ -796,6 +804,37 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--muted);
 }
 .cf-domain-expiry { font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--muted); }
+.cf-domain-chevron {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 240ms var(--ease-out);
+}
+.cf-domain-item.is-open .cf-domain-chevron { transform: rotate(90deg); }
+/* Smooth expand: the outer grid animates 0fr→1fr; the inner clips. */
+.cf-domain-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 260ms var(--ease-out);
+}
+.cf-domain-item.is-open .cf-domain-detail { grid-template-rows: 1fr; }
+.cf-domain-detail-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  gap: var(--space-1);
+  padding: 0 0 var(--space-3);
+}
+.cf-domain-item.is-open .cf-domain-detail-inner { padding-bottom: var(--space-3); }
+.cf-domain-field {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+.cf-domain-field-label { color: var(--muted); }
+.cf-domain-field-value { text-align: end; overflow-wrap: anywhere; }
 
 /* ---- Billing: product cards ---- */
 
@@ -875,6 +914,19 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--accent);
   display: inline-flex;
 }
+
+/* Pairing glyph: the signal waves breathe in a slow broadcast loop. */
+.cf-pairing-glyph .cf-wave {
+  animation: cf-signal 2.4s var(--ease-out) infinite;
+}
+.cf-pairing-glyph .cf-wave:nth-child(2) { animation-delay: 0.4s; }
+.cf-pairing-glyph .cf-wave:nth-child(3) { animation-delay: 0.8s; }
+@keyframes cf-signal {
+  0% { opacity: 0.25; }
+  35% { opacity: 1; }
+  100% { opacity: 0.25; }
+}
+
 .cf-pairing h2 {
   font-family: var(--font-display);
   margin: 0;
@@ -1323,11 +1375,13 @@ body.cf-nav-open { overflow: hidden; }
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .cf-drawer, .cf-backdrop, .cf-burger-bar, .cf-btn, .cf-btn:active,
-  .cf-toggle, .cf-chip-remove, .cf-fade-swap {
+  .cf-toggle, .cf-chip-remove, .cf-fade-swap,
+  .cf-domain-chevron, .cf-domain-detail {
     transition: none;
   }
   .cf-btn, .cf-btn:active { transform: none; }
   .cf-skeleton,
+  .cf-pairing-glyph .cf-wave,
   .cf-anim-used,
   .cf-anim-projected,
   .cf-ring-glow,

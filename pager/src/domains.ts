@@ -13,6 +13,12 @@ export interface DomainRecord {
   status: string;
   paused: boolean;
   expiresAt: string | null;
+  type?: string;
+  plan?: string;
+  developmentMode?: boolean;
+  createdOn?: string;
+  modifiedOn?: string;
+  nameServers?: string[];
 }
 
 export interface DomainsPayload {
@@ -70,7 +76,14 @@ function errorState(root: HTMLElement, err: unknown): void {
 }
 
 function domainRow(d: DomainRecord, nowMs: number): HTMLElement {
-  const row = el("div", "cf-domain-row");
+  // One item: the tappable summary row plus the smooth-expanding detail
+  // sheet beneath it. All fields come from the zones list itself — no
+  // per-domain upstream call.
+  const item = el("div", "cf-domain-item");
+
+  const row = el("button", "cf-domain-row") as HTMLButtonElement;
+  row.type = "button";
+  row.setAttribute("aria-expanded", "false");
   const name = el("div", "cf-domain-name");
   name.append(el("strong", undefined, d.name));
   const badges = el("span", "cf-domain-badges");
@@ -88,8 +101,35 @@ function domainRow(d: DomainRecord, nowMs: number): HTMLElement {
   } else {
     expiry.textContent = `${formatDate(d.expiresAt!)} · ${days === 0 ? "today" : `${days}d`}`;
   }
-  row.append(name, expiry);
-  return row;
+  const chevron = el("span", "cf-domain-chevron", "›");
+  row.append(name, expiry, chevron);
+  row.addEventListener("click", () => {
+    const open = item.classList.toggle("is-open");
+    row.setAttribute("aria-expanded", String(open));
+  });
+
+  // Detail sheet: grid-rows 0fr→1fr transition (see styles) for the smooth
+  // expand; the inner wrapper carries the overflow clip.
+  const detail = el("div", "cf-domain-detail");
+  const inner = el("div", "cf-domain-detail-inner");
+  const field = (label: string, value: string): HTMLElement => {
+    const f = el("div", "cf-domain-field");
+    f.append(el("span", "cf-domain-field-label", label), el("span", "cf-domain-field-value", value));
+    return f;
+  };
+  inner.append(
+    field("Registration", days === null ? "External registrar — renewal happens there" : `Cloudflare Registrar · renews ${formatDate(d.expiresAt!)}`),
+    field("Plan", d.plan || "—"),
+    field("Setup", d.type === "partial" ? "Partial (CNAME setup)" : "Full (DNS on Cloudflare)"),
+  );
+  if (d.nameServers && d.nameServers.length > 0) inner.append(field("Nameservers", d.nameServers.join(", ")));
+  if (d.developmentMode) inner.append(field("Development mode", "on"));
+  if (d.createdOn) inner.append(field("Added", formatDate(d.createdOn)));
+  if (d.modifiedOn) inner.append(field("Last change", formatDate(d.modifiedOn)));
+  detail.append(inner);
+
+  item.append(row, detail);
+  return item;
 }
 
 export async function renderDomains(root: HTMLElement, opts: { refresh?: boolean } = {}): Promise<void> {

@@ -14,6 +14,15 @@ export interface DomainRecord {
    *  when the zone's DNS is managed here but the domain lives at another
    *  registrar. */
   expiresAt: string | null;
+  /** Zone setup type: "full" (DNS here) or "partial" (CNAME setup). */
+  type: string;
+  /** Plan display name, e.g. "Free Website". */
+  plan: string;
+  developmentMode: boolean;
+  createdOn: string;
+  modifiedOn: string;
+  /** Assigned Cloudflare nameservers. */
+  nameServers: string[];
 }
 
 export interface Domains {
@@ -23,14 +32,35 @@ export interface Domains {
 }
 
 /** Fetch every zone on the account (all statuses, pagination handled by
- *  rest) and keep the registrar-managed expires_at the summary's
- *  active-only list drops. */
+ *  rest) with the detail fields the tap-to-expand sheet shows — the list
+ *  response already carries them, so no per-zone calls. */
 export async function fetchDomainsList(token: string, accountId: string): Promise<DomainRecord[]> {
-  const zones = await rest<{ id: string; name: string; status: string; paused: boolean; expires_at: string | null }>(
-    token,
-    `/zones?account.id=${accountId}`,
-  );
-  return zones.map((z) => ({ id: z.id, name: z.name, status: z.status, paused: Boolean(z.paused), expiresAt: z.expires_at ?? null }));
+  const zones = await rest<{
+    id: string;
+    name: string;
+    status: string;
+    paused: boolean;
+    expires_at: string | null;
+    type: string;
+    plan?: { name?: string };
+    development_mode?: number | boolean;
+    created_on: string;
+    modified_on: string;
+    name_servers?: string[];
+  }>(token, `/zones?account.id=${accountId}`);
+  return zones.map((z) => ({
+    id: z.id,
+    name: z.name,
+    status: z.status,
+    paused: Boolean(z.paused),
+    expiresAt: z.expires_at ?? null,
+    type: z.type,
+    plan: z.plan?.name ?? "",
+    developmentMode: Boolean(z.development_mode),
+    createdOn: z.created_on,
+    modifiedOn: z.modified_on,
+    nameServers: z.name_servers ?? [],
+  }));
 }
 
 /** Collect the domains payload; a list failure becomes an errors entry,

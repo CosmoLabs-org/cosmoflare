@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { collectDomains, fetchDomainsList, type DomainRecord } from "./domains";
 
 const ZONES = [
-  { id: "z1", name: "cosmolabs.org", status: "active", paused: false, expires_at: "2027-01-15" },
-  { id: "z2", name: "external.example", status: "active", paused: false, expires_at: null },
-  { id: "z3", name: "paused.example", status: "active", paused: true, expires_at: "2026-11-02" },
+  { id: "z1", name: "cosmolabs.org", status: "active", paused: false, expires_at: "2027-01-15", type: "full", plan: { name: "Pro" }, development_mode: 0, created_on: "2026-05-15T00:00:00Z", modified_on: "2026-06-19T00:00:00Z", name_servers: ["sage.ns.cloudflare.com", "samara.ns.cloudflare.com"] },
+  { id: "z2", name: "external.example", status: "active", paused: false, expires_at: null, type: "partial", development_mode: 1, created_on: "2026-01-01T00:00:00Z", modified_on: "2026-02-01T00:00:00Z" },
+  { id: "z3", name: "paused.example", status: "active", paused: true, expires_at: "2026-11-02", type: "full", created_on: "2026-03-01T00:00:00Z", modified_on: "2026-03-01T00:00:00Z", name_servers: [] },
 ];
 
 vi.mock("./summary", () => ({
@@ -12,13 +12,18 @@ vi.mock("./summary", () => ({
 }));
 
 describe("fetchDomainsList", () => {
-  it("keeps every status, paused flag, and the registrar expiry", async () => {
+  it("keeps status, expiry, and the detail-sheet fields", async () => {
     const got = await fetchDomainsList("tok", "acct");
-    expect(got).toEqual<DomainRecord[]>([
-      { id: "z1", name: "cosmolabs.org", status: "active", paused: false, expiresAt: "2027-01-15" },
-      { id: "z2", name: "external.example", status: "active", paused: false, expiresAt: null },
-      { id: "z3", name: "paused.example", status: "active", paused: true, expiresAt: "2026-11-02" },
-    ]);
+    expect(got[0]).toEqual<DomainRecord>({
+      id: "z1", name: "cosmolabs.org", status: "active", paused: false, expiresAt: "2027-01-15",
+      type: "full", plan: "Pro", developmentMode: false,
+      createdOn: "2026-05-15T00:00:00Z", modifiedOn: "2026-06-19T00:00:00Z",
+      nameServers: ["sage.ns.cloudflare.com", "samara.ns.cloudflare.com"],
+    });
+    expect(got[1]?.type).toBe("partial");
+    expect(got[1]?.developmentMode).toBe(true);
+    expect(got[1]?.nameServers).toEqual([]);
+    expect(got[2]?.plan).toBe("");
   });
 });
 
