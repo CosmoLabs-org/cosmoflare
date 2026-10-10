@@ -123,7 +123,8 @@ describe("renderWorkerProfile", () => {
     expect(findByText(root, "52.3M")).toBeDefined(); // Requests
     expect(findByText(root, "1.2k")).toBeDefined(); // Errors
     const rate = findByText(root, "5.50%"); // Error rate, 2 decimals
-    expect(rate.classList.contains("cf-level-critical")).toBe(true); // 5.5% ≥ 5
+    expect(rate.classList.contains("cf-stat-value")).toBe(true); // stat indicator row
+    expect(rate.classList.contains("cf-level-critical-text")).toBe(true); // 5.5% ≥ 5
     expect(findByText(root, "3.4ms")).toBeDefined(); // CPU p50
     expect(findByText(root, "—")).toBeDefined(); // CPU p99 (null)
     expect(findByText(root, "24h window · from Workers Analytics")).toBeDefined();

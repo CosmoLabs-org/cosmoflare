@@ -1802,3 +1802,84 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-statusbar .cf-status-period {
   color: var(--text);
 }
+
+/* ---- Stat indicators + sort/filter polish + ranked-row separation
+       (operator asks 2026-10-10) ---- */
+
+/* Profile stat values: data face, larger, tabular, tappable hierarchy. */
+.cf-stat-value {
+  font-family: var(--font-data);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sort header buttons: label + fixed icon slot so every column aligns
+   symmetrically whether active or not. */
+.cf-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cf-sort-icon {
+  display: inline-flex;
+  width: 14px;
+  color: var(--muted);
+  opacity: 0.45;
+}
+.cf-sort-icon.is-active {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* Whole-row tap-through: the row is a bigger target than the name link. */
+.cf-row-link {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.cf-row-link:hover,
+.cf-row-link:focus-visible {
+  background: var(--surface-raised);
+}
+
+/* Ranked consumers: the rank number separates from the content — its own
+   boxed slot in the indicator face, breathing room between rows, and a
+   soft enter so re-ranked lists feel alive without moving anything. */
+.cf-consumers-list.cf-consumers-ranked {
+  display: grid;
+  gap: var(--space-2);
+}
+.cf-consumer-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding-inline: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  font-family: var(--font-indicator);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.cf-consumer {
+  animation: cf-consumer-enter var(--dur-med) var(--ease-out) both;
+}
+.cf-consumer:nth-child(n + 9) {
+  animation-delay: 30ms;
+}
+@keyframes cf-consumer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-consumer {
+    animation: none;
+  }
+}

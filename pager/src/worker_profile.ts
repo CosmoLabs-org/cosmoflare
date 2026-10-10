@@ -33,11 +33,11 @@ function dashboardLink(name: string): HTMLElement {
 function paintProfile(name: string, w: WorkerRow | undefined): HTMLElement {
   const stats = w
     ? sectionCard(name, "24h window · from Workers Analytics",
-      fieldRow("Requests", formatCount(w.requests)),
-      fieldRow("Errors", formatCount(w.errors)),
-      errorRateRow(w),
-      fieldRow("CPU p50", cpuMs(w.cpuP50Ms)),
-      fieldRow("CPU p99", cpuMs(w.cpuP99Ms)),
+      statRow("Requests", formatCount(w.requests), ""),
+      statRow("Errors", formatCount(w.errors), w.errors === 0 ? "cf-ok-text" : "cf-level-critical-text"),
+      statRow("Error rate", formatPct(w.errorPct, 2), `cf-level-${levelForErrorPct(w.errorPct)}-text`),
+      statRow("CPU p50", cpuMs(w.cpuP50Ms), ""),
+      statRow("CPU p99", cpuMs(w.cpuP99Ms), ""),
     )
     : sectionCard("Worker not found", undefined,
       el("p", "cf-empty cf-empty-quiet", `No 24h analytics row for ${name}.`),
@@ -47,18 +47,22 @@ function paintProfile(name: string, w: WorkerRow | undefined): HTMLElement {
     el("p", "cf-empty cf-empty-quiet", "Profiles currently surface the 24h analytics row — the same numbers the Workers table shows."),
     dashboardLink(name),
   );
-  const view = el("div");
-  view.append(stats, about);
+  const back = el("a", "cf-btn cf-btn-ghost cf-profile-back", "All workers");
+  back.href = "#/workers";
+  const view = el("div", "cf-profile");
+  view.append(back, stats, about);
   return view;
 }
 
-// errorRateRow is a fieldRow whose value carries the shared error-rate level
-// color (ok / warning / critical — the same thresholds the Workers table
-// colors its rows with).
-function errorRateRow(w: WorkerRow): HTMLElement {
-  const row = fieldRow("Error rate", formatPct(w.errorPct, 2));
-  const value = row.children[row.children.length - 1] as HTMLElement;
-  value.classList.add(`cf-level-${levelForErrorPct(w.errorPct)}`);
+// statRow is the profile's visual indicator row (operator 2026-10-10: better
+// indicators for the numbers): the value renders in the data face, larger and
+// tabular, with an optional level tint — zero errors reads green ("clean"),
+// the error rate carries its threshold color, counts stay neutral.
+function statRow(label: string, value: string, valueClass: string): HTMLElement {
+  const row = fieldRow(label, value);
+  const v = row.children[row.children.length - 1] as HTMLElement;
+  v.classList.add("cf-stat-value");
+  if (valueClass) v.classList.add(valueClass);
   return row;
 }
 

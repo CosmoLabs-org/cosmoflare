@@ -65,6 +65,16 @@ export function writeSortPref(id: string, key: string, dir: SortDir, storage: St
   }
 }
 
+// Sort-direction glyphs (operator 2026-10-10: proper icons, no text arrows,
+// no emojis): module-scoped static SVG constants — same pattern as the nav
+// icons; never any dynamic content.
+const SORT_NEUTRAL_SVG =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>';
+const ARROW_UP_SVG =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const ARROW_DOWN_SVG =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>';
+
 // renderSortableTable renders `rows` under one local sort/filter/collapse
 // state. State changes rebuild the tbody only — header buttons and the
 // filter box keep their value and focus across re-renders.
@@ -87,6 +97,9 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
   // the product allowance, colored by the shared level thresholds. Null
   // hides the bar for that row.
   usageBar?: (row: T) => { pctOfAllowance: number } | null;
+  // Whole-row tap-through (operator 2026-10-10): the row navigates like its
+  // primary link — a bigger tap target than the name cell alone.
+  onRowClick?: (row: T) => void;
 }): void {
   const stored = opts.sortPrefId ? readSortPref(opts.sortPrefId) : undefined;
   const saved = opts.persistKey ? tableState.get(opts.persistKey) : undefined;
@@ -199,7 +212,17 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
     });
     for (const [key, b] of buttons) {
       const colDef = opts.columns.find((c) => c.key === key)!;
-      b.textContent = colDef.label + (key === sortKey ? (sortDir === "asc" ? " ↑" : " ↓") : "");
+      // Symmetric sort buttons (operator 2026-10-10): label + a fixed icon
+      // slot — an up/down glyph when active, a muted neutral glyph when not.
+      // Inline SVGs (no React here yet, no emojis ever).
+      b.replaceChildren(
+        document.createTextNode(colDef.label),
+        el("span", `cf-sort-icon${key === sortKey ? " is-active" : ""}`),
+      );
+      const icon = b.querySelector(".cf-sort-icon") as HTMLElement;
+      icon.innerHTML = key === sortKey
+        ? (sortDir === "asc" ? ARROW_UP_SVG : ARROW_DOWN_SVG)
+        : SORT_NEUTRAL_SVG;
       b.setAttribute("aria-pressed", String(key === sortKey));
     }
 
@@ -209,6 +232,10 @@ export function renderSortableTable<T>(host: HTMLElement, opts: {
     const visible = showAll ? rows : rows.slice(0, COLLAPSE_AFTER);
     for (const row of visible) {
       const tr = el("tr", opts.rowClass?.(row));
+      if (opts.onRowClick) {
+        tr.classList.add("cf-row-link");
+        tr.addEventListener("click", () => opts.onRowClick?.(row));
+      }
       const barInfo = opts.usageBar?.(row) ?? null;
       for (const col of opts.columns) {
         const td = el("td");
@@ -387,6 +414,9 @@ export function renderWorkers(root: HTMLElement, opts: { refresh?: boolean } = {
           sortPrefId: "workers",
           initial: { key: "requests", dir: "desc" },
           usageBar: included > 0 ? (w) => ({ pctOfAllowance: usageSharePct(w.requests, included) }) : undefined,
+          onRowClick: (w) => {
+            window.location.hash = workerHref(w.script).slice(1);
+          },
           rowClass: (w) => {
             const lv = levelForErrorPct(w.errorPct);
             return lv === "critical" ? "cf-level-critical" : lv === "warning" ? "cf-level-warning" : "";
