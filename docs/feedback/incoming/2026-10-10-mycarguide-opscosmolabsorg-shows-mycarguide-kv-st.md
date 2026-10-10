@@ -1,5 +1,6 @@
 ---
 ulid: 01M4HJJ3TNC4FY16J0WD0RWGMB
+id: FB-24
 title: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.
 type: bug
 status: pending

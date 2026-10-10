@@ -1,5 +1,6 @@
 ---
 ulid: 01M4HDD75JXETW8RPKKJNZS2WN
+id: FB-22
 title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
 type: feature
 status: pending

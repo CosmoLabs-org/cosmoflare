@@ -1,9 +1,9 @@
 version: "1.0"
-next_id: 20
-last_updated: "2026-10-10T02:38:07.041439+04:00"
+next_id: 26
+last_updated: "2026-10-10T04:25:13.248351+04:00"
 stats:
-    total: 18
-    pending: 3
+    total: 22
+    pending: 7
     implemented: 2
     rejected: 0
     converted: 8
@@ -83,6 +83,26 @@ entries:
       status: pending
       from_project: Churches-app
       created: "2026-10-09T23:37:03.784062+04:00"
+    - id: FB-22
+      title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
+      status: pending
+      from_project: MyCarGuide
+      created: "2026-10-10T02:44:21.747532+04:00"
+    - id: FB-23
+      title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+      status: pending
+      from_project: MyCarGuide
+      created: "2026-10-10T04:01:33.900871+04:00"
+    - id: FB-24
+      title: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.
+      status: pending
+      from_project: MyCarGuide
+      created: "2026-10-10T04:14:15.893498+04:00"
+    - id: FB-25
+      title: '`cosmoflare analytics` fails opaquely + --json mode dumps usage text after the JSON. Investigate and fix.'
+      status: pending
+      from_project: MyCarGuide
+      created: "2026-10-10T04:14:36.50006+04:00"
     - id: ""
       title: Makefile tree-path gate misses colons — proxy.golang.org zip poisoning class
       status: ""

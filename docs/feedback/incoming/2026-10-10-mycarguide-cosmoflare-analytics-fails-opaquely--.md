@@ -1,5 +1,6 @@
 ---
 ulid: 01M4HJJQYMZZAA0D98T2R22EFG
+id: FB-25
 title: '`cosmoflare analytics` fails opaquely + --json mode dumps usage text after the JSON. Investigate and fix.'
 type: bug
 status: pending
