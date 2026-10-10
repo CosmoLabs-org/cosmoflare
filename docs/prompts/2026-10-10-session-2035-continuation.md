@@ -6,9 +6,23 @@ branch: master
 goals_total: 3
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-10-session-2034-continuation.md"
+plan_ref: docs/planning-mode/USAGE.md
+requires_reading:
+    - docs/planning-mode/USAGE.md
+    - docs/SPEC.md
+schema_version: 1
 ---
 
 ## Context
+
+## BEFORE Starting — Required Reading
+
+**You MUST read these files in full before writing any code. `ccs prompts load-context` enforces this.**
+
+Read in order:
+
+1. **`docs/planning-mode/USAGE.md`** — the implementation plan.
+
 
 - docs(spec): SPEC.md — stack pinned, design system, real-numbers rule, pager React ADR open; overhaul issue filed
 - chore(issues): create IMP-p31NPAN (provisional)
