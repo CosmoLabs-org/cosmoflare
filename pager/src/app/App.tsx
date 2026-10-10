@@ -249,27 +249,49 @@ function NavLinks({
   counts: Partial<Record<RouteId, number>>;
   onNavigate?: () => void;
 }): React.JSX.Element {
+  if (variant === "quick") {
+    return (
+      <ul className="cf-quicknav-list">
+        {ROUTES.filter((r) => r !== "pairing").map((r) => {
+          const Icon = NAV_ICON[r];
+          return (
+            <li key={`quick-${r}`}>
+              <a
+                href={hrefFor(r)}
+                className="cf-quicknav-link"
+                aria-current={active === r ? "page" : undefined}
+                onClick={onNavigate}
+              >
+                <span className="cf-quicknav-icon" aria-hidden="true">
+                  <Icon size={20} strokeWidth={1.8} />
+                </span>
+                <span className="cf-quicknav-label">{NAV_LABEL[r]}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
   return (
     <>
-      {ROUTES.filter((r) => variant !== "quick" || r !== "pairing").map((r) => {
+      {ROUTES.map((r) => {
         const Icon = NAV_ICON[r];
         return (
           <a
             key={`${variant}-${r}`}
             href={hrefFor(r)}
-            className={variant === "quick" ? "cf-quicknav-link" : "cf-navlink"}
+            className="cf-navlink"
             aria-current={active === r ? "page" : undefined}
             onClick={onNavigate}
           >
-            <span className={variant === "quick" ? "cf-quicknav-icon" : "cf-navglyph"} aria-hidden="true">
-              <Icon size={variant === "quick" ? 17 : 18} strokeWidth={1.8} />
+            <span className="cf-navglyph" aria-hidden="true">
+              <Icon size={18} strokeWidth={1.8} />
             </span>
-            <span className={variant === "quick" ? "cf-quicknav-label" : "cf-navlabel"}>{NAV_LABEL[r]}</span>
-            {variant === "quick" ? null : (
-              <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
-                {counts[r] ?? ""}
-              </span>
-            )}
+            <span className="cf-navlabel">{NAV_LABEL[r]}</span>
+            <span className="cf-navcount" hidden={!Number.isFinite(counts[r] ?? NaN)}>
+              {counts[r] ?? ""}
+            </span>
           </a>
         );
       })}

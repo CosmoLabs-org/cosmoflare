@@ -1764,21 +1764,60 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-quicknav::-webkit-scrollbar {
   display: none;
 }
-.cf-quicknav-link {
-  /* Operator 2026-10-11: rectangular segments with rounded corners — a real
-     navigation bar, not pills — separated by the flex gap and a hairline. */
-  flex: 0 0 auto;
-  display: inline-flex;
+/* Items are real list semantics (operator 2026-10-11): <li> segments,
+   smooth borderless buttons of one uniform size, side by side. */
+.cf-quicknav-list {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cf-quicknav-list li {
+  display: block;
+  flex: 0 0 auto;
+}
+.cf-quicknav-link {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 76px;
+  padding: 6px 10px 8px;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
   font-size: var(--text-sm);
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+/* The glow underline (operator 2026-10-11): a gradient line under the item
+   that starts as a point at the CENTER and expands outward to both edges —
+   scaleX from center, amber with a soft shadow. Hover warms it to a hint;
+   the active item opens it fully. */
+.cf-quicknav-link::after {
+  content: \\;
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 2px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 8px rgba(245, 166, 35, 0.55);
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform var(--dur-med) var(--ease-out);
+  pointer-events: none;
+}
+.cf-quicknav-link:hover::after {
+  transform: scaleX(0.4);
+}
+.cf-quicknav-link[aria-current="page"]::after {
+  transform: scaleX(1);
 }
 .cf-quicknav-link[aria-current="page"] {
   background: var(--surface-raised);
@@ -1932,22 +1971,27 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   overflow-wrap: anywhere;
 }
 
-/* Quick nav: icon above the label, column chips, stronger active state. */
-.cf-quicknav-link {
-  flex-direction: column;
-  gap: 3px;
-  padding: 6px 12px;
-}
+/* Quick nav icon + label roles (operator 2026-10-11): bigger icon (20px),
+   label beneath in the all-caps indicator face, active carries the accent. */
 .cf-quicknav-icon {
   display: inline-flex;
   color: var(--muted);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.cf-quicknav-link:hover .cf-quicknav-icon {
+  color: var(--text);
 }
 .cf-quicknav-link[aria-current="page"] .cf-quicknav-icon {
   color: var(--accent);
 }
+.cf-quicknav-label {
+  font-family: var(--font-indicator);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
 .cf-quicknav-link[aria-current="page"] {
-  background: var(--surface-raised);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  color: var(--text);
 }
 
 /* Sidebar/drawer glyphs size to the lucide icons. */
@@ -2049,5 +2093,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-main .cf-card,
   .cf-sectionhead-icon {
     animation: none;
+  }
+  .cf-quicknav-link::after {
+    transition: none;
   }
 }
