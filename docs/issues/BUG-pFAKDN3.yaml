@@ -1,0 +1,16 @@
+id: BUG-pFAKDN3
+type: bug
+created_at: 2026-10-10T04:25:57.194318+04:00
+updated_at: 2026-10-10T04:25:57.597352+04:00
+source: local
+ulid: 01M4HK7H2XJ4R4C73HXZFAKDN3
+provisional: true
+severity: high
+status: open
+title: 'Ops KV storage 86x inflated: Cloudflare kvStorageAdaptiveGroups byteCount is rolling bytes, not current storage'
+description: 'FB 01M4HJJ3TNC4FY16J0WD0RWGMB (MyCarGuide). ops.cosmolabs.org shows mycarguide-cache KV storage as 3.89GB; authoritative REST measurement: 878 keys x ~54KB avg = 46MB (86x off). VERIFIED LIVE 2026-10-10 by orchestrator: (1) kvStorageAdaptiveGroups reports byteCount 3,886,349,888 for namespace c3175636-4bab-468d-bc0e-08d5df6927ea while same-day REST says 46MB; (2) the series DECREASES day-over-day (Oct 5: 3.952GB -> Oct 9: 3.886GB) and rows only exist from ~Oct 3 — a rolling cumulative, not a snapshot; (3) the feedback''s math matches: 2,541 writes/day x 54KB x 30d = 4.1GB. Our collector takes a correct max-snapshot over 2 days (billing.ts KV_STORAGE_Q) — the DATASET semantics are the culprit. Consequence: phantom 389%-of-allowance and ~$1.44/mo phantom overage on the live dashboard; the operator nearly scoped a KV-reduction project off it.'
+fix_direction: 'Stop pricing kv.storage overage off this dataset: exclude kv.storage from projectedOverageUsd, relabel the metric honestly (rolling bytes, not live size), show key counts where cheap, document the evidence in code, add a regression test that kv.storage never contributes to overage. Re-verify against REST on a known namespace. Consider key-count via REST namespace list as the sanity metric.'
+affected_files:
+    - apps/ops/src/billing.ts
+    - pager/src/billing.ts
+    - pager/src/dashboard.ts
