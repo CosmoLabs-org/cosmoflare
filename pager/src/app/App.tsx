@@ -15,7 +15,6 @@ import type { DomainsPayload } from "../domains";
 import type { RulesPayload } from "../rules";
 import type { DOPayload } from "../durable_objects";
 import { renderProjects } from "../projects";
-import { renderProjects } from "../projects";
 import { renderDomains } from "../domains";
 import { renderWorkers, renderD1, renderZones } from "../tables";
 import { renderDurableObjects } from "../durable_objects";

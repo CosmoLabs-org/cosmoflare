@@ -209,7 +209,7 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
   // KPI tiles. The billing-period tile embeds its own thin progress bar.
   const d1Prod = findProduct(billing, "d1.rows_read");
   const wProd = findProduct(billing, "workers.requests");
-  const overage = billing.totalProjectedOverageUsd;
+  const over = billing.totalProjectedOverageUsd;
   const periodElapsed = periodProgress(billing.period.day, billing.period.days).elapsedPct;
 
   // Workers Paid allowances — the 8 rings closest to their limit, worst-first
