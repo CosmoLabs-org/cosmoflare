@@ -13,8 +13,10 @@ import { levelForErrorPct } from "./dashboard";
  *  pass a stub instead of the shared ApiClient singleton. */
 export type SummaryFetcher = (endpoint: string, opts?: { refresh?: boolean }) => Promise<FetchResult<Summary>>;
 
-/** "12.5ms" from a CPU percentile, "—" when the analytics row has no data. */
-function cpuMs(v: number | null): string {
+/** "12.5ms" from a CPU percentile, "—" when the analytics row has no data.
+ *  Exported (P-05a) so the React WorkersView/WorkerProfileView format CPU
+ *  percentiles identically — never re-implemented. */
+export function cpuMs(v: number | null): string {
   return v === null ? "—" : `${v.toFixed(1)}ms`;
 }
 

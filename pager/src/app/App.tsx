@@ -1,9 +1,11 @@
 // React shell (P-03, docs/planning-mode/2026-10-10-pager-react-rebuild.md):
 // the app frame — top bar with the global Refresh, quick nav, drawer,
 // persistent per-route view hosts, bottom status strip. Since P-04 the
-// Overview and Billing views are real React components mounted into their
-// host divs; the other views still render through the imperative bridge to
-// the vanilla modules until their tier lands (P-05..P-06).
+// Overview and Billing views, and since P-05a the table family (Workers,
+// worker profiles, D1, Zones, Durable Objects), are real React components
+// mounted into their host divs; alerts/rules/pairing/projects/domains still
+// render through the imperative bridge to the vanilla modules until their
+// tier lands (P-05..P-06).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -29,14 +31,16 @@ import type { RulesPayload } from "../rules";
 import type { DOPayload } from "../durable_objects";
 import { renderProjects } from "../projects";
 import { renderDomains } from "../domains";
-import { renderWorkers, renderD1, renderZones } from "../tables";
-import { renderDurableObjects } from "../durable_objects";
-import { renderWorkerProfile } from "../worker_profile";
 import { renderAlertList, renderPairing } from "../views";
 import { renderRules } from "../rules";
 import { startStatusStripClock } from "../statusstrip";
 import OverviewView from "./views/OverviewView";
 import BillingView from "./views/BillingView";
+import WorkersView from "./views/WorkersView";
+import WorkerProfileView from "./views/WorkerProfileView";
+import D1View from "./views/D1View";
+import ZonesView from "./views/ZonesView";
+import DurableObjectsView from "./views/DurableObjectsView";
 
 /** Nav labels per route (mirror of the old main.ts NAV). */
 /** Section icons (operator 2026-10-10: icons left of every nav title, above
@@ -73,8 +77,9 @@ const NAV_LABEL: Record<RouteId, string> = {
 type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: string };
 
 /** One entry per renderable target: either a real React view component
- *  (P-04 tier 1: Overview + Billing) or the vanilla module's render fn —
- *  the remaining tiers bridge until ported (P-05..P-06). */
+ *  (P-04 tier 1: Overview + Billing; P-05a tier 2a: the table family and
+ *  worker profiles) or the vanilla module's render fn — alerts/rules/
+ *  pairing/projects/domains bridge until their tier lands (P-05..P-06). */
 interface ViewEntry {
   id: string;
   render?: (host: HTMLElement, opts: { refresh?: boolean }) => void | Promise<void>;
@@ -83,17 +88,22 @@ interface ViewEntry {
 
 function viewEntry(v: ViewKind): ViewEntry {
   if (v.kind === "worker") {
-    return { id: `worker/${v.name}`, render: (h, o) => renderWorkerProfile(h, v.name, o) };
+    return {
+      id: `worker/${v.name}`,
+      Component: ({ refreshSeq }: { refreshSeq?: number }) => (
+        <WorkerProfileView name={v.name} refreshSeq={refreshSeq} />
+      ),
+    };
   }
   const map: Record<RouteId, ViewEntry> = {
     overview: { id: "overview", Component: OverviewView },
     billing: { id: "billing", Component: BillingView },
     projects: { id: "projects", render: (h, o) => renderProjects(h, o) },
     domains: { id: "domains", render: (h, o) => renderDomains(h, o) },
-    workers: { id: "workers", render: (h, o) => renderWorkers(h, o) },
-    d1: { id: "d1", render: (h, o) => renderD1(h, o) },
-    zones: { id: "zones", render: (h, o) => renderZones(h, o) },
-    "durable-objects": { id: "durable-objects", render: (h, o) => renderDurableObjects(h, o) },
+    workers: { id: "workers", Component: WorkersView },
+    d1: { id: "d1", Component: D1View },
+    zones: { id: "zones", Component: ZonesView },
+    "durable-objects": { id: "durable-objects", Component: DurableObjectsView },
     alerts: { id: "alerts", render: (h) => renderAlertList(h) },
     rules: { id: "rules", render: (h) => void renderRules(h) },
     pairing: { id: "pairing", render: (h) => void renderPairing(h) },

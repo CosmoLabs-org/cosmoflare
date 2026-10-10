@@ -68,11 +68,13 @@ export function writeSortPref(id: string, key: string, dir: SortDir, storage: St
 // Sort-direction glyphs (operator 2026-10-10: proper icons, no text arrows,
 // no emojis): module-scoped static SVG constants — same pattern as the nav
 // icons; never any dynamic content.
-const SORT_NEUTRAL_SVG =
+// Exported (P-05a) so the React DataTable renders the exact same glyphs —
+// the vanilla renderers below keep using them unchanged.
+export const SORT_NEUTRAL_SVG =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>';
-const ARROW_UP_SVG =
+export const ARROW_UP_SVG =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
-const ARROW_DOWN_SVG =
+export const ARROW_DOWN_SVG =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>';
 
 // renderSortableTable renders `rows` under one local sort/filter/collapse
@@ -332,7 +334,9 @@ export function miniUsageBar(pctOfAllowance: number): HTMLElement {
   return wrap;
 }
 
-function levelForUsageBar(pct: number): "ok" | "warning" | "critical" {
+// Exported (P-05a) for the React DataTable's mini usage bars — the vanilla
+// miniUsageBar below keeps the same thresholds.
+export function levelForUsageBar(pct: number): "ok" | "warning" | "critical" {
   if (pct >= 80) return "critical";
   if (pct >= 50) return "warning";
   return "ok";
