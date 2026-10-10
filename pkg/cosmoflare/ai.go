@@ -75,18 +75,31 @@ type AIGatewayRateLimit struct {
 }
 
 // AIGatewayLog represents a single log entry from an AI Gateway.
+// AIGatewayLog is one AI Gateway request log, matching the live REST schema
+// (verified 2026-10-10, BR-01): the token counts are the API's tokens_in /
+// tokens_out pair — the old single tokens_used field never existed server-side.
+// Cost is the gateway's own estimate unless CustomCost is set (a per-request
+// override); Metadata carries up to five cf-aig-metadata entries.
 type AIGatewayLog struct {
-	ID         string  `json:"id"`
-	Model      string  `json:"model,omitempty"`
-	Provider   string  `json:"provider,omitempty"`
-	Path       string  `json:"path,omitempty"`
-	Duration   int     `json:"duration,omitempty"`
-	StatusCode int     `json:"status_code,omitempty"`
-	Cost       float64 `json:"cost,omitempty"`
-	Cached     bool    `json:"cached"`
-	Tokens     int     `json:"tokens_used,omitempty"`
-	CreatedAt  string  `json:"created_at,omitempty"`
-	Success    bool    `json:"success"`
+	ID                  string         `json:"id"`
+	Model               string         `json:"model,omitempty"`
+	Provider            string         `json:"provider,omitempty"`
+	Path                string         `json:"path,omitempty"`
+	Duration            int            `json:"duration,omitempty"`
+	StatusCode          int            `json:"status_code,omitempty"`
+	Cost                float64        `json:"cost,omitempty"`
+	CustomCost          bool           `json:"custom_cost,omitempty"`
+	Cached              bool           `json:"cached"`
+	TokensIn            int            `json:"tokens_in,omitempty"`
+	TokensOut           int            `json:"tokens_out,omitempty"`
+	ModelType           string         `json:"model_type,omitempty"`
+	Metadata            map[string]any `json:"metadata,omitempty"`
+	RequestType         string         `json:"request_type,omitempty"`
+	RequestContentType  string         `json:"request_content_type,omitempty"`
+	ResponseContentType string         `json:"response_content_type,omitempty"`
+	Step                string         `json:"step,omitempty"`
+	CreatedAt           string         `json:"created_at,omitempty"`
+	Success             bool           `json:"success"`
 }
 
 // AIGatewayCreateParams holds parameters for creating an AI Gateway.

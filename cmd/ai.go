@@ -483,7 +483,7 @@ func runAIGatewayLogs(cmd *cobra.Command, args []string) error {
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "ID\tMODEL\tSTATUS\tCACHED\tTOKENS\tCOST")
+		fmt.Fprintln(w, "ID\tMODEL\tSTATUS\tCACHED\tTOKENS IN\tTOKENS OUT\tCOST")
 		for _, l := range logs {
 			model := l.Model
 			if len(model) > 40 {
@@ -497,8 +497,8 @@ func runAIGatewayLogs(cmd *cobra.Command, args []string) error {
 			if l.Cached {
 				cached = "yes"
 			}
-			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%d\t$%.4f\n",
-				l.ID, model, l.StatusCode, cached, l.Tokens, l.Cost)
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%d\t%d\t$%.4f\n",
+				l.ID, model, l.StatusCode, cached, l.TokensIn, l.TokensOut, l.Cost)
 		}
 		w.Flush()
 	})

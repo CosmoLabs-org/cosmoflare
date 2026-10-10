@@ -3,6 +3,7 @@ package cosmoflare
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -564,7 +565,8 @@ func TestAIGatewayLogJSONRoundtrip(t *testing.T) {
 		StatusCode: 200,
 		Cost:       0.0001,
 		Cached:     true,
-		Tokens:     150,
+		TokensIn:   120,
+		TokensOut:  30,
 		Success:    true,
 	}
 	data, err := json.Marshal(log)
@@ -581,8 +583,8 @@ func TestAIGatewayLogJSONRoundtrip(t *testing.T) {
 	if !decoded.Cached {
 		t.Error("expected Cached=true")
 	}
-	if decoded.Tokens != 150 {
-		t.Errorf("expected 150 tokens, got %d", decoded.Tokens)
+	if decoded.TokensIn != 120 || decoded.TokensOut != 30 {
+		t.Errorf("expected tokens 120/30, got %d/%d", decoded.TokensIn, decoded.TokensOut)
 	}
 }
 
@@ -878,7 +880,8 @@ func TestAIGetGatewayLogFields(t *testing.T) {
 					"status_code": 200,
 					"cost":        0.0005,
 					"cached":      false,
-					"tokens_used": 512,
+					"tokens_in":   400,
+					"tokens_out":  112,
 					"created_at":  "2026-06-01T12:00:00Z",
 					"success":     true,
 				},
@@ -916,8 +919,8 @@ func TestAIGetGatewayLogFields(t *testing.T) {
 	if log.Cached {
 		t.Error("expected Cached=false")
 	}
-	if log.Tokens != 512 {
-		t.Errorf("expected 512 tokens, got %d", log.Tokens)
+	if log.TokensIn != 400 || log.TokensOut != 112 {
+		t.Errorf("expected tokens 400/112, got %d/%d", log.TokensIn, log.TokensOut)
 	}
 	if !log.Success {
 		t.Error("expected Success=true")
@@ -1197,5 +1200,72 @@ func TestAIModelPropertiesRoundtrip(t *testing.T) {
 	}
 	if decoded.Properties[1].Value != "4096" {
 		t.Errorf("expected Value '4096', got %s", decoded.Properties[1].Value)
+	}
+}
+
+// TestAIGatewayLogsSchema (BR-01, docs/brainstorming/2026-10-10-ai-gateway-monitoring.md):
+// the log struct must match the live REST schema — tokens_in/tokens_out split
+// (not the old single tokens_used), metadata, model_type, custom_cost, the
+// content types and step. Field list verified against the API docs 2026-10-10.
+func TestAIGatewayLogsSchema(t *testing.T) {
+	s, server := aiMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/ai-gateway/gateways/gw-1/logs") {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"success":true,"result":[
+			{
+				"id": "log-1",
+				"cached": true,
+				"created_at": "2026-10-10T12:00:00Z",
+				"duration": 812,
+				"model": "@cf/meta/llama-3.1-8b-instruct",
+				"path": "/v1/chat/completions",
+				"provider": "workers-ai",
+				"success": true,
+				"tokens_in": 1204,
+				"tokens_out": 356,
+				"cost": 0.0021,
+				"custom_cost": false,
+				"metadata": {"project": "mycarguide"},
+				"model_type": "chat",
+				"request_content_type": "application/json",
+				"request_type": "chat",
+				"response_content_type": "application/json",
+				"status_code": 200,
+				"step": "single"
+			}
+		]}`)
+	})
+	defer server.Close()
+
+	logs, err := s.GetGatewayLogs(context.Background(), "gw-1", 10)
+	if err != nil {
+		t.Fatalf("GetGatewayLogs failed: %v", err)
+	}
+	if len(logs) != 1 {
+		t.Fatalf("expected 1 log, got %d", len(logs))
+	}
+	l := logs[0]
+	if l.TokensIn != 1204 || l.TokensOut != 356 {
+		t.Errorf("tokens split not decoded: in=%d out=%d", l.TokensIn, l.TokensOut)
+	}
+	if l.ModelType != "chat" || l.RequestType != "chat" {
+		t.Errorf("model/request type not decoded: %q %q", l.ModelType, l.RequestType)
+	}
+	if l.CustomCost {
+		t.Errorf("custom_cost flag not decoded as false: %+v", l)
+	}
+	if l.Metadata == nil || l.Metadata["project"] != "mycarguide" {
+		t.Errorf("metadata not decoded: %+v", l.Metadata)
+	}
+	if l.RequestContentType != "application/json" || l.ResponseContentType != "application/json" {
+		t.Errorf("content types not decoded: %q %q", l.RequestContentType, l.ResponseContentType)
+	}
+	if l.Step != "single" {
+		t.Errorf("step not decoded: %q", l.Step)
+	}
+	if l.Cost != 0.0021 || l.StatusCode != 200 || !l.Cached || !l.Success {
+		t.Errorf("base fields regressed: %+v", l)
 	}
 }
