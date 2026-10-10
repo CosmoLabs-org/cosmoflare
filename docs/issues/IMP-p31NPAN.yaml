@@ -1,11 +1,15 @@
 id: IMP-p31NPAN
 type: improvement
 created_at: 2026-10-10T11:13:20.446732+04:00
-updated_at: 2026-10-10T11:13:21.260112+04:00
+updated_at: 2026-10-10T11:13:22.523197+04:00
 source: local
 ulid: 01M4JAHFVCK0QT326DVN31NPAN
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 71
 title: Ops design overhaul — /impeccable pass app-wide, ranked visuals, fast section nav; pager React ADR
 description: 'Operator directive 2026-10-10: apply /impeccable across the whole Ops app and fix what it finds; upgrade repeated list patterns to ranked rows with right-side percentage indicators (shipped for top-consumers 07a5daed — extend to attention list, projects); faster section navigation (command-palette/quick-switcher pattern); shadcn + framer motion usage per SPEC.md (desktop tier; pager React rebuild is the open ADR this issue decides). Design system: docs/SPEC.md.'
 roadmap_ref: ROAD-107
