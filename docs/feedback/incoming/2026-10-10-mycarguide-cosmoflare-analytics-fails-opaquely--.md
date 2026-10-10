@@ -41,3 +41,9 @@ response:
 
 **Priority:** high — feature completely broken with misleading health signal.
 
+
+## Recurrence (ingest duplicate)
+
+- twin ulid: 01M4HJJQYMZZAA0D98T2R22EFG
+- twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-10-mycarguide-fb-pr22efg.md
+- folded: 2026-10-10T19:35:21+04:00

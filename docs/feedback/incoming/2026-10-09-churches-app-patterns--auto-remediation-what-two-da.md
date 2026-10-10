@@ -55,3 +55,9 @@ Why it matters: every pattern above was implemented by hand after manual discove
 
 Priority: high — complements the charter, audit-caching spec, and detection matrix already in this inbox; this adds the remediation layer.
 
+
+## Recurrence (ingest duplicate)
+
+- twin ulid: 01M4H2NPT3GQ83HMNNQK4FVJYM
+- twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-10-churches-app-fb-p4fvjym.md
+- folded: 2026-10-10T19:35:21+04:00

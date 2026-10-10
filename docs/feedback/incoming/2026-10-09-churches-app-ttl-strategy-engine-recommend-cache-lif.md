@@ -48,3 +48,9 @@ Reference implementation for calibration: Churches-app workers/src/middleware/ca
 
 Priority: high — direct owner request; pairs with the patterns + auto-remediation feedback (FB-p4FVJYM) in this inbox.
 
+
+## Recurrence (ingest duplicate)
+
+- twin ulid: 01M4H2PHH81T4FG6F96BHT5JDH
+- twin path: /Users/gabstudio/PROJECTS/cosmoflare/docs/feedback/incoming/2026-10-10-churches-app-fb-pht5jdh.md
+- folded: 2026-10-10T19:35:21+04:00
