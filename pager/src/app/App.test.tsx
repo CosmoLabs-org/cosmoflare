@@ -10,9 +10,9 @@ import App from "./App";
 afterEach(cleanup);
 
 describe("App shell (P-03)", () => {
-  it("mounts the chrome: brand lockup, quick nav sections, status strip", () => {
+  it("mounts the chrome: brand lockup (with live section name), quick nav, status strip", () => {
     render(<App />);
-    expect(screen.getAllByText("CosmoLabs Ops").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/CosmoLabs Ops/).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Cosmoflare").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("navigation", { name: "Sections" }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("button", { name: "Refresh data" })).toBeTruthy();

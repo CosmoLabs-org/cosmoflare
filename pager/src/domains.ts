@@ -117,7 +117,7 @@ function domainRow(d: DomainRecord, nowMs: number, onOpen: (d: DomainRecord) => 
  *  the list data immediately, then enriches from /api/domains/detail
  *  (original nameservers, DNSSEC, SSL mode, activation) when it lands. */
 function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainRecord): void {
-  const back = el("button", "cf-btn cf-btn-ghost cf-profile-back", "‹ Domains");
+  const back = el("button", "cf-btn cf-btn-ghost cf-profile-back", "All domains");
   back.type = "button";
   back.addEventListener("click", () => {
     activeDomainId = null;

@@ -171,14 +171,16 @@ function RefreshControl({ onRefresh }: { onRefresh: () => Promise<void> }): Reac
   );
 }
 
-/** Brand lockup (main.ts parity): mark + CosmoLabs Ops / Cosmoflare. */
-function Brand({ tag }: { tag: "h1" | "div" }): React.JSX.Element {
+/** Brand lockup (operator 2026-10-10): "CosmoLabs Ops: Section" — the
+ *  current section names itself in the top bar — with the bigger mark and
+ *  the larger Cosmoflare subline. The sidebar/drawer lockups stay bare. */
+function Brand({ tag, section }: { tag: "h1" | "div"; section?: string }): React.JSX.Element {
   const Tag = tag;
   return (
     <Tag className="cf-brand">
       <span className="cf-brand-mark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: logoMark("react") }} />
       <span className="cf-brand-text">
-        <span className="cf-brand-name">CosmoLabs Ops</span>
+        <span className="cf-brand-name">CosmoLabs Ops{section ? `: ${section}` : ""}</span>
         <span className="cf-brand-sub">Cosmoflare</span>
       </span>
     </Tag>
@@ -276,7 +278,7 @@ export default function App(): React.JSX.Element {
             <span className="cf-burger-bar" />
           </span>
         </button>
-        <Brand tag="h1" />
+        <Brand tag="h1" section={view.kind === "route" ? NAV_LABEL[view.route] : view.name} />
         <div className="cf-top-actions">
           <RefreshControl onRefresh={onRefresh} />
         </div>
