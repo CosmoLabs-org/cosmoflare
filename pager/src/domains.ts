@@ -195,7 +195,10 @@ function domainProfile(root: HTMLElement, payload: DomainsPayload, d: DomainReco
       const regFields = regCard.querySelector<HTMLElement>(".cf-profile-fields");
       const secFields = secCard.querySelector<HTMLElement>(".cf-profile-fields");
       if (z.originalNameServers && z.originalNameServers.length > 0 && dnsFields) {
-        dnsFields.append(field("Pointed from", z.originalNameServers.join("\n")));
+        // Historical: where DNS lived BEFORE the move to Cloudflare (live
+        // check 2026-10-10: all 43 zones' current NS are *.ns.cloudflare.com;
+        // 19 came from DreamHost). Worded so it never reads as current.
+        dnsFields.append(field("Previous nameservers (before Cloudflare)", z.originalNameServers.join("\n")));
       }
       if (z.activatedOn && regFields) regFields.append(field("Activated", formatDate(z.activatedOn)));
       if (z.ownerType && regFields) regFields.append(field("Owner", z.ownerType));
