@@ -1,9 +1,9 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T23:02:59.224311+04:00
+last_updated: 2026-10-10T23:21:36.161885+04:00
 next_bug_id: 60
 next_feat_id: 73
-next_task_id: 17
+next_task_id: 18
 next_imp_id: 5
 issues:
     - id: BUG-001
@@ -871,3 +871,8 @@ issues:
       status: closed
       title: 'Wizard EOF contract: honor ReadLine errors instead of discarding'
       created_at: 2026-09-20T02:18:26.823559+04:00
+    - id: TASK-pD575FN
+      type: task
+      status: open
+      title: add
+      created_at: 2026-10-10T23:21:34.324088+04:00
