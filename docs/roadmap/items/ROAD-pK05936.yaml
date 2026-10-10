@@ -1,0 +1,11 @@
+id: ROAD-pK05936
+created_at: 2026-10-10T19:10:38.065049+04:00
+updated_at: 2026-10-10T19:10:39.328078+04:00
+title: AI gateway monitoring phase 1 — collector + /api/ai + library log-schema fix
+description: BR-01 + BR-02. GraphQL-first collector (gateway x model x provider, 24h + MTD) with live field probe; AIGatewayLog struct brought to the real REST schema.
+status: captured
+parent: ROAD-p1D6G3P
+origin:
+    session: 74
+ulid: 01M4K5VDFJPTQATCP4R8K05936
+provisional: true
