@@ -100,6 +100,10 @@ describe("thresholdHint", () => {
     expect(thresholdHint(D1_ROWS_READ, 1e9)).toBe("1.0B");
   });
 
+  it("formats a kv-writes threshold as a count (FB-29)", () => {
+    expect(thresholdHint("kv-writes", 250_000)).toBe("250.0k");
+  });
+
   it("returns null for other conditions", () => {
     expect(thresholdHint("worker-error-pct", 1)).toBeNull();
   });

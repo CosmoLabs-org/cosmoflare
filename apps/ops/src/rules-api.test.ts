@@ -40,7 +40,7 @@ describe("GET /api/rules", () => {
     const body = (await res.json()) as { rules: Rule[]; conditions: string[]; starter: boolean };
     expect(body.rules).toEqual(starterRules());
     expect(body.starter).toBe(true);
-    expect(body.conditions).toEqual(["zone-uncached-requests", "zone-cache-miss-pct", "d1-rows-read"]);
+    expect(body.conditions).toEqual(["zone-uncached-requests", "zone-cache-miss-pct", "d1-rows-read", "kv-writes"]);
   });
   it("returns the stored rules with starter=false when KV holds a set", async () => {
     const kv = fakeKV();

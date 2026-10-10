@@ -71,7 +71,7 @@ interface OpsEnvLike {
 
 // routeFetch builds a fetch stub that answers the Cloudflare REST lists, the
 // two GraphQL datasets, and push endpoints (201).
-function routeFetch(opts: { zoneGqlFail?: boolean; d1GqlFail?: boolean; pushStatus?: number } = {}): { calls: string[] } {
+function routeFetch(opts: { zoneGqlFail?: boolean; d1GqlFail?: boolean; kvGqlFail?: boolean; pushStatus?: number } = {}): { calls: string[] } {
   const calls: string[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
@@ -81,8 +81,25 @@ function routeFetch(opts: { zoneGqlFail?: boolean; d1GqlFail?: boolean; pushStat
     }
     if (url.includes("/graphql")) {
       const query = String((init?.body as string) ?? "");
-      const fail = query.includes("d1Analytics") ? opts.d1GqlFail : opts.zoneGqlFail;
+      const fail = query.includes("d1Analytics") ? opts.d1GqlFail : query.includes("kvOperations") ? opts.kvGqlFail : opts.zoneGqlFail;
       if (fail) return new Response(JSON.stringify({ errors: [{ message: "dataset down" }] }), { status: 200 });
+      if (query.includes("kvOperations")) {
+        const body = {
+          data: {
+            viewer: {
+              accounts: [
+                {
+                  g: [
+                    { sum: { requests: 150_000 }, dimensions: { namespaceId: "ns-1", actionType: "write" } },
+                    { sum: { requests: 900_000 }, dimensions: { namespaceId: "ns-1", actionType: "read" } },
+                  ],
+                },
+              ],
+            },
+          },
+        };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }
       if (query.includes("d1Analytics")) {
         const body = {
           data: {
@@ -125,6 +142,9 @@ function routeFetch(opts: { zoneGqlFail?: boolean; d1GqlFail?: boolean; pushStat
     if (url.includes("/d1/database")) {
       return new Response(JSON.stringify({ success: true, result: [{ uuid: "db-1", name: "big-db" }] }), { status: 200 });
     }
+    if (url.includes("/storage/kv/namespaces")) {
+      return new Response(JSON.stringify({ success: true, result: [{ id: "ns-1", title: "SESSIONS" }] }), { status: 200 });
+    }
     return new Response(JSON.stringify({ success: false, errors: [{ message: "unexpected " + url }] }), { status: 500 });
   }) as typeof fetch;
   return { calls };
@@ -165,6 +185,35 @@ describe("runScheduled", () => {
     expect(calls).toHaveLength(0); // no telemetry, no pushes
     expect(out).toEqual({ fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] });
     expect(kv.puts).not.toContain(STATE_KEY); // no state churn either
+  });
+  it("kv-writes rule: fetches only kv telemetry, counts writes only, fires naming the namespace title (FB-29)", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    const { calls } = routeFetch();
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(1);
+    expect(out.sent).toBe(1);
+    // namespace list REST + kv GraphQL = 2 upstream calls; zone/d1 untouched
+    expect(calls.filter((c) => c.includes("api.cloudflare.com")).length).toBe(2);
+    expect(calls.some((c) => c.includes("/storage/kv/namespaces"))).toBe(true);
+    expect(kv.puts).toContain("cron:kv-list");
+    const payload = parsePayload(JSON.parse(envelopes[0].data));
+    expect(payload).not.toBeNull();
+    expect(payload!.title).toBe("kvday");
+    expect(payload!.detail).toContain("SESSIONS");
+    // 900k read actions on the same namespace must not count toward writes
+    expect(payload!.detail).toContain("observed 150000");
+  });
+  it("a kv telemetry gap pages when the kv GraphQL fails and a kv rule is enabled", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch({ kvGqlFail: true });
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.gaps.some((g) => g.startsWith("kv:"))).toBe(true);
+    expect(out.fired).toBe(1); // the telemetry-gap fire
+    expect(out.sent).toBe(1);
   });
   it("uses starter rules when KV 'rules' is absent; threshold fire names the zone and validates against the pager schema", async () => {
     const kv = fakeKV();

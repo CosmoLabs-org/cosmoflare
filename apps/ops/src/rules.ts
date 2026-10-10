@@ -7,15 +7,18 @@
 // (pkg/cosmoflare/alerts.go); dataset names the upstream telemetry source the
 // condition depends on, for telemetry-gap paging.
 export interface ConditionDesc {
-  scope: "zone" | "d1";
+  scope: "zone" | "d1" | "kv";
   unit: string;
-  dataset: "zone" | "d1";
+  dataset: "zone" | "d1" | "kv";
 }
 
 export const CONDITIONS: Record<string, ConditionDesc> = {
   "zone-uncached-requests": { scope: "zone", unit: "requests", dataset: "zone" },
   "zone-cache-miss-pct": { scope: "zone", unit: "%", dataset: "zone" },
   "d1-rows-read": { scope: "d1", unit: "rows", dataset: "d1" },
+  // FB-29: KV writes/day — the one alert class neither the Go registry nor
+  // this port had. Per-namespace write volume over the 24h window.
+  "kv-writes": { scope: "kv", unit: "writes", dataset: "kv" },
 };
 
 // Rule is one stored alert rule (KV key "rules"). Excludes match
@@ -44,6 +47,13 @@ export interface D1Obs {
   name: string;
   id?: string;
   rowsRead: number;
+}
+
+/** KV namespace observation: writes over the window (kvOperationsAdaptiveGroups, actionType "write"). */
+export interface KVObs {
+  name: string;
+  id?: string;
+  writes: number;
 }
 
 // FireState is the cooldown memory persisted in KV key "fire-state"
@@ -111,8 +121,8 @@ export interface ScopedValue {
 }
 
 // conditionValues fans a condition out over the observations: one value per
-// zone or database. Empty = the condition cannot fire this cycle.
-export function conditionValues(condition: string, zones: ZoneObs[], d1: D1Obs[]): ScopedValue[] {
+// zone, database, or KV namespace. Empty = the condition cannot fire this cycle.
+export function conditionValues(condition: string, zones: ZoneObs[], d1: D1Obs[], kv: KVObs[] = []): ScopedValue[] {
   const desc = CONDITIONS[condition];
   if (!desc) return [];
   if (desc.scope === "zone") {
@@ -125,6 +135,13 @@ export function conditionValues(condition: string, zones: ZoneObs[], d1: D1Obs[]
         // zone-uncached-requests: absolute volume, no floor.
         out.push({ scopeName: z.zone, key: z.id || z.zone, value: z.uncached, unit: desc.unit });
       }
+    }
+    return out;
+  }
+  if (desc.scope === "kv") {
+    const out: ScopedValue[] = [];
+    for (const n of kv) {
+      out.push({ scopeName: n.name, key: n.id || n.name, value: n.writes, unit: desc.unit });
     }
     return out;
   }
@@ -150,7 +167,7 @@ export interface Fire {
   ruleName: string;
   scopeName: string; // "" for telemetry-gap fires
   message: string;
-  dataset: "zone" | "d1" | "";
+  dataset: "zone" | "d1" | "kv" | "";
 }
 
 // evaluate runs every enabled rule against the observations. Mutates state in
@@ -165,6 +182,7 @@ export function evaluate(
   gaps: Record<string, string>,
   state: FireState,
   now: number,
+  kv: KVObs[] = [],
 ): Fire[] {
   const fires: Fire[] = [];
   const enabled = rules.filter((r) => r.enabled);
@@ -172,7 +190,7 @@ export function evaluate(
   for (const rule of enabled) {
     const desc = CONDITIONS[rule.condition];
     if (!desc) continue; // unknown condition: skip, like Go's registered-but-unimplemented
-    for (const sv of conditionValues(rule.condition, zones, d1)) {
+    for (const sv of conditionValues(rule.condition, zones, d1, kv)) {
       if (sv.value < rule.threshold) continue;
       if (excludeMatches(rule, sv)) continue; // operator-excluded zone/database
       const alertId = `${rule.name}/${sv.key}`;

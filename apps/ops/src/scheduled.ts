@@ -7,7 +7,7 @@
 
 import type { ZoneGroups } from "./summary";
 import { summarizeD1, summarizeZones } from "./summary";
-import { CONDITIONS, evaluate, pruneState, type D1Obs, type FireState, type Rule, type ZoneObs } from "./rules";
+import { CONDITIONS, evaluate, pruneState, type D1Obs, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
 import { readSubs, removeSubscriptions } from "./subscriptions";
 import { sendPushes } from "./webpush";
 
@@ -24,6 +24,7 @@ export const RULES_KEY = "rules";
 export const STATE_KEY = "fire-state";
 const ZONES_CACHE_KEY = "cron:zones";
 const D1_CACHE_KEY = "cron:d1-list";
+const KV_CACHE_KEY = "cron:kv-list";
 // KV-side expiry matching the 1h LIST_TTL_MS check above (written as 24h so
 // the wall-time check inside kvCache stays the authority on freshness).
 const KV_LIST_TTL_SEC = 86400;
@@ -141,7 +142,8 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   const needZones = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "zone");
   const needD1 = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "d1");
-  if (!needZones && !needD1) return result; // rules exist but need no telemetry we collect
+  const needKV = enabled.some((r) => CONDITIONS[r.condition]?.dataset === "kv");
+  if (!needZones && !needD1 && !needKV) return result; // rules exist but need no telemetry we collect
 
   const state = await loadState(env);
   const stateBefore = JSON.stringify(state);
@@ -150,6 +152,7 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   const zones: ZoneObs[] = [];
   const d1: D1Obs[] = [];
+  const kv: KVObs[] = [];
   const gapMap: Record<string, string> = {};
 
   if (needZones) {
@@ -199,7 +202,39 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
     }
   }
 
-  const fires = evaluate(enabled, zones, d1, gapMap, state, now.getTime());
+  if (needKV) {
+    // KV writes/day (FB-29): namespace names KV-cached 1h like the other
+    // lists (a failed name list is NOT a gap — rows keep the namespace ID),
+    // then kvOperationsAdaptiveGroups over the 24h window; only actionType
+    // "write" rows count (the dataset also carries "read"/"delete" — deletes
+    // are unmetered upstream, reads belong to a future condition).
+    const nsList = await kvCache<{ id: string; title: string }[]>(env, KV_CACHE_KEY, () =>
+      restPages<{ id: string; title: string }>(env.CF_API_TOKEN, `/accounts/${env.CF_ACCOUNT_ID}/storage/kv/namespaces`),
+    ).catch((err: Error) => {
+      result.issues.push(`kv name list failed (showing IDs): ${err.message}`);
+      return [] as { id: string; title: string }[];
+    });
+    try {
+      const data = await gql<{ viewer: { accounts: { g: { sum: { requests: number }; dimensions: { namespaceId: string; actionType: string } }[] }[] } }>(
+        env.CF_API_TOKEN,
+        `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){g: kvOperationsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){sum{requests} dimensions{namespaceId actionType}}}}}`,
+        { a: env.CF_ACCOUNT_ID, s: start, e: end },
+      );
+      const names = Object.fromEntries(nsList.map((n) => [n.id, n.title]));
+      const writes = new Map<string, number>();
+      for (const row of data.viewer.accounts[0]?.g ?? []) {
+        if (row.dimensions.actionType !== "write") continue;
+        writes.set(row.dimensions.namespaceId, (writes.get(row.dimensions.namespaceId) ?? 0) + row.sum.requests);
+      }
+      for (const [id, count] of writes) {
+        kv.push({ name: names[id] ?? id, id, writes: count });
+      }
+    } catch (err) {
+      gapMap["kv"] = (err as Error).message;
+    }
+  }
+
+  const fires = evaluate(enabled, zones, d1, gapMap, state, now.getTime(), kv);
   result.gaps = Object.keys(gapMap).sort().map((ds) => `${ds}: ${gapMap[ds]}`);
 
   // Bounded fire-state: drop cooldown entries older than 24h before the

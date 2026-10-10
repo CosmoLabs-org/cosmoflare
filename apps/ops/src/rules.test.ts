@@ -68,6 +68,30 @@ describe("conditionValues thresholds", () => {
   it("an unknown condition is skipped silently (registered-but-unimplemented parity)", () => {
     expect(evaluate([ruleP({ condition: "error-rate", threshold: 1 })], [zoneObsP({ uncached: 5000 })], [], {}, stateP(), 1000)).toHaveLength(0);
   });
+  it("kv-writes fires per namespace, names it, and tags the kv dataset (FB-29)", () => {
+    const kv = [{ name: "SESSIONS", writes: 250_000 }];
+    const fires = evaluate([ruleP({ name: "kvday", condition: "kv-writes", threshold: 100_000 })], [], [], {}, stateP(), 1000, kv);
+    expect(fires).toHaveLength(1);
+    expect(fires[0].scopeName).toBe("SESSIONS");
+    expect(fires[0].alertId).toBe("kvday/SESSIONS");
+    expect(fires[0].message).toContain("observed 250000 meets threshold 100000 (writes)");
+    expect(fires[0].dataset).toBe("kv");
+  });
+  it("kv-writes excludes match namespace names case-insensitively", () => {
+    const kv = [{ name: "SESSIONS", writes: 250_000 }];
+    const fires = evaluate([ruleP({ name: "kvday", condition: "kv-writes", threshold: 1, exclude: ["sessions"] })], [], [], {}, stateP(), 1000, kv);
+    expect(fires).toHaveLength(0);
+  });
+  it("kv-writes under threshold stays silent", () => {
+    const kv = [{ name: "SESSIONS", writes: 99 }];
+    expect(evaluate([ruleP({ name: "kvday", condition: "kv-writes", threshold: 100 })], [], [], {}, stateP(), 1000, kv)).toHaveLength(0);
+  });
+  it("a kv telemetry gap pages only when an enabled rule depends on the kv dataset", () => {
+    const withKvRule = evaluate([ruleP({ name: "kvday", condition: "kv-writes", threshold: 1 })], [], [], { kv: "graphql down" }, stateP(), 1000);
+    expect(withKvRule.some((f) => f.ruleName === "telemetry-gap" && f.dataset === "kv")).toBe(true);
+    const withoutKvRule = evaluate([ruleP({ name: "z", condition: "zone-uncached-requests", threshold: 1 })], [], [], { kv: "graphql down" }, stateP(), 1000);
+    expect(withoutKvRule.some((f) => f.dataset === "kv")).toBe(false);
+  });
 });
 
 describe("excludes", () => {

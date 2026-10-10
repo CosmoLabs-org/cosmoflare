@@ -32,6 +32,12 @@ export interface RulesPayload {
 /** The D1 rows-read condition — its thresholds are formatted as counts. */
 export const D1_ROWS_READ = "d1-rows-read";
 
+/** The KV writes/day condition (FB-29) — thresholds are counts too. */
+export const KV_WRITES = "kv-writes";
+
+/** Count-valued conditions: their thresholds render with the count hint. */
+const COUNT_CONDITIONS: ReadonlySet<string> = new Set([D1_ROWS_READ, KV_WRITES]);
+
 /**
  * Validate one draft rule against the server's condition list. Returns the
  * error messages, empty when the draft is valid. The trimmed-name check
@@ -68,7 +74,7 @@ export function removeExclude(list: readonly string[], value: string): string[] 
  * one today: "1.0B" for 1e9, so the phone user does not count zeros.
  */
 export function thresholdHint(condition: string, threshold: number): string | null {
-  if (condition !== D1_ROWS_READ) return null;
+  if (!COUNT_CONDITIONS.has(condition)) return null;
   if (!Number.isFinite(threshold) || threshold <= 0) return null;
   return formatCount(threshold);
 }
