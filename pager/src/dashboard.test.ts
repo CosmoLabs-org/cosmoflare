@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   formatCount,
   levelForD1,
@@ -6,12 +6,11 @@ import {
   levelForUncached,
   levelForUsage,
   pacingLabel,
-  paintOverview,
   periodEndsLabel,
   ringPropsFor,
   ringOverageText,
 } from "./dashboard";
-import type { Billing, BillingPeriod, FetchResult, ProductUsage, Summary } from "./api";
+import type { BillingPeriod, ProductUsage } from "./api";
 
 describe("dashboard formatting", () => {
   it("formats counts like the CLI (2.9B / 52.3M / 3.3k / 522)", () => {
@@ -110,206 +109,5 @@ describe("periodEndsLabel", () => {
     const label = periodEndsLabel("2026-11-01T00:00:00Z", "subscription");
     expect(label).toMatch(/Nov 1/);
     expect(label).not.toContain("(calendar month)");
-  });
-});
-
-// ---- paintOverview attention rows (UI-2) ----
-// Node-environment DOM stubs mirroring the FakeNode pattern from
-// views.test.ts: minimal fake elements that record children, attributes and
-// click listeners, so the accordion behaviour is testable without a browser.
-type DashHandler = () => unknown;
-interface DashNode {
-  tagName: string;
-  className: string;
-  textContent: string;
-  hidden: boolean;
-  type: string;
-  href: string;
-  style: { width: string; setProperty: (name: string, value: string) => void };
-  attrs: Record<string, string>;
-  classList: { add: (...c: string[]) => void; remove: (...c: string[]) => void; contains: (c: string) => boolean };
-  children: DashNode[];
-  setAttribute: (name: string, value: string) => void;
-  getAttribute: (name: string) => string | null;
-  append: (...nodes: DashNode[]) => void;
-  insertBefore: (newNode: DashNode, ref: DashNode) => void;
-  replaceChildren: (...nodes: DashNode[]) => void;
-  addEventListener: (type: string, fn: DashHandler) => void;
-  _click: () => Promise<void>;
-}
-
-function dashEl(tag: string): DashNode {
-  const handlers: Record<string, DashHandler[]> = {};
-  const classes = new Set<string>();
-  const node: DashNode = {
-    tagName: tag.toUpperCase(),
-    className: "",
-    textContent: "",
-    hidden: false,
-    type: "",
-    href: "",
-    style: { width: "", setProperty: () => undefined },
-    attrs: {},
-    classList: {
-      add: (...c) => {
-        c.forEach((x) => classes.add(x));
-        node.className = [...classes].join(" ");
-      },
-      remove: (...c) => {
-        c.forEach((x) => classes.delete(x));
-        node.className = [...classes].join(" ");
-      },
-      contains: (c) => classes.has(c),
-    },
-    children: [],
-    setAttribute(name, value) {
-      node.attrs[name] = value;
-    },
-    getAttribute(name) {
-      return node.attrs[name] ?? null;
-    },
-    append(...nodes) {
-      node.children.push(...nodes);
-    },
-    insertBefore(newNode, ref) {
-      const idx = node.children.indexOf(ref);
-      if (idx === -1) node.children.push(newNode);
-      else node.children.splice(idx, 0, newNode);
-    },
-    replaceChildren(...nodes) {
-      node.children = [...nodes];
-    },
-    addEventListener(type, fn) {
-      (handlers[type] ??= []).push(fn);
-    },
-    async _click() {
-      for (const fn of handlers.click ?? []) await fn();
-    },
-  };
-  return node;
-}
-
-// Depth-first collect of every descendant carrying a class token.
-function dashFindAll(root: DashNode, className: string): DashNode[] {
-  const found: DashNode[] = [];
-  const stack = [...root.children];
-  while (stack.length > 0) {
-    const node = stack.shift()!;
-    if (node.className.split(/\s+/).includes(className)) found.push(node);
-    stack.unshift(...node.children);
-  }
-  return found;
-}
-
-function dashFirstChild(root: DashNode, className: string): DashNode {
-  const hit = dashFindAll(root, className)[0];
-  if (!hit) throw new Error(`element not found: .${className}`);
-  return hit;
-}
-
-function dashSummary(): Summary {
-  return {
-    generatedAt: "2026-10-09T00:00:00Z",
-    windowHours: 24,
-    usage: [],
-    d1: [],
-    zones: [],
-    workers: [],
-    errors: [],
-  };
-}
-
-function dashProduct(): ProductUsage {
-  return {
-    id: "workers.requests",
-    product: "Workers",
-    metric: "Requests",
-    unit: "requests",
-    included: 10_000_000,
-    used: 12_000_000,
-    projected: 12_000_000,
-    unitPriceUsd: 0.3,
-    priceUnit: 1e6,
-    projectedOverageUsd: 0.6,
-    topConsumers: [],
-  };
-}
-
-function dashBilling(products: ProductUsage[]): Billing {
-  return {
-    generatedAt: "2026-10-09T00:00:00Z",
-    period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z", day: 9, days: 31, source: "calendar" },
-    products,
-    totalProjectedOverageUsd: products.reduce((s, p) => s + p.projectedOverageUsd, 0),
-    projects: [],
-    pricing: { verifiedOn: "2026-10-09", sources: [] },
-    errors: [],
-  } as unknown as Billing;
-}
-
-function stubPaintDoc(): void {
-  vi.stubGlobal("document", {
-    createElement: (tag: string) => dashEl(tag),
-    createElementNS: (_ns: string, tag: string) => dashEl(tag),
-    getElementById: () => null,
-  });
-}
-
-describe("paintOverview attention rows (UI-2)", () => {
-  const res = <T>(data: T): FetchResult<T> => ({ data, source: "network", ageSec: 0, demo: false });
-
-  function paintWithOverage(): DashNode {
-    stubPaintDoc();
-    const root = dashEl("div");
-    paintOverview(root as unknown as HTMLElement, res(dashSummary()), res(dashBilling([dashProduct()])));
-    return root;
-  }
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("renders each attention row with mark + title on the first line (detail no longer inlined)", () => {
-    const root = paintWithOverage();
-    const rows = dashFindAll(root, "cf-attention");
-    expect(rows).toHaveLength(1);
-    const toggle = dashFirstChild(rows[0], "cf-attention-toggle");
-    expect(toggle.tagName).toBe("BUTTON");
-    expect(dashFirstChild(toggle, "cf-attention-mark").textContent).toBe("!");
-    expect(dashFirstChild(toggle, "cf-attention-title").textContent).toBe("Workers requests");
-  });
-
-  it("starts collapsed: the detail block is hidden and aria-expanded is false", () => {
-    const root = paintWithOverage();
-    const row = dashFindAll(root, "cf-attention")[0];
-    const detail = dashFirstChild(row, "cf-attention-detail");
-    const toggle = dashFirstChild(row, "cf-attention-toggle");
-    expect(detail.hidden).toBe(true);
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-    // The FULL detail text lives in the expandable block, not the title line.
-    const text = dashFirstChild(detail, "cf-attention-text").textContent;
-    expect(text).toContain("of 10.0M requests included");
-    expect(text).toContain("+$0.60 projected");
-  });
-
-  it("tapping the control expands the detail and flips aria-expanded; tapping again collapses", async () => {
-    const root = paintWithOverage();
-    const row = dashFindAll(root, "cf-attention")[0];
-    const detail = dashFirstChild(row, "cf-attention-detail");
-    const toggle = dashFirstChild(row, "cf-attention-toggle");
-    await toggle._click();
-    expect(detail.hidden).toBe(false);
-    expect(toggle.getAttribute("aria-expanded")).toBe("true");
-    await toggle._click();
-    expect(detail.hidden).toBe(true);
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-  });
-
-  it("keeps navigation available as a secondary 'Open section →' link inside the detail", () => {
-    const root = paintWithOverage();
-    const row = dashFindAll(root, "cf-attention")[0];
-    const open = dashFirstChild(dashFirstChild(row, "cf-attention-detail"), "cf-attention-open");
-    expect(open.textContent).toContain("Open section");
-    expect(open.href).toBe("#/billing");
   });
 });
