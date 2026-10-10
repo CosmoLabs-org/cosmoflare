@@ -1,6 +1,6 @@
-id: ROAD-pH8BK60
+id: ROAD-115
 created_at: 2026-10-10T19:11:08.255119+04:00
-updated_at: 2026-10-10T19:11:42.559336+04:00
+updated_at: 2026-10-11T00:14:35.893002+04:00
 title: AI gateway monitoring phase 2 — AI section view
 description: 'BR-03. New AI nav section in the pager: per-project (gateway) cards, per-model ranked rows, estimate-labeled cost, cache cadence like summary.'
 status: captured
@@ -8,4 +8,5 @@ parent: ROAD-p1D6G3P
 origin:
     session: 74
 ulid: 01M4K5WAZFWVEWD7JNDVH8BK60
-provisional: true
+aliases:
+    - ROAD-pH8BK60

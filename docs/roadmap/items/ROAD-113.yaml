@@ -1,6 +1,6 @@
-id: ROAD-p713JYR
+id: ROAD-113
 created_at: 2026-10-10T19:12:15.590795+04:00
-updated_at: 2026-10-10T19:12:28.405771+04:00
+updated_at: 2026-10-11T00:14:35.892332+04:00
 title: AI gateway monitoring phase 3 — attribution bootstrap on live traffic
 description: BR-04. Create per-project gateways via library CreateGateway, fix the naming convention + gateway-to-project map, route first real requests, verify the whole pipeline on live data (real numbers rule).
 status: captured
@@ -8,4 +8,5 @@ parent: ROAD-p1D6G3P
 origin:
     session: 74
 ulid: 01M4K5YCT56W7T6TJEVH713JYR
-provisional: true
+aliases:
+    - ROAD-p713JYR

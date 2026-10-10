@@ -1,6 +1,6 @@
-id: ROAD-pGXTT2M
+id: ROAD-114
 created_at: 2026-10-10T19:12:34.158526+04:00
-updated_at: 2026-10-10T19:12:35.602181+04:00
+updated_at: 2026-10-11T00:14:35.892693+04:00
 title: AI gateway monitoring phase 5 — AI alert rules + recent-requests drawer
 description: 'Later: alert conditions on AI spend/tokens through the existing rules engine; recent-requests drawer from the logs API (sampled, 50/page cap, labeled as such).'
 status: captured
@@ -8,4 +8,5 @@ parent: ROAD-p1D6G3P
 origin:
     session: 74
 ulid: 01M4K5YYVH6JYE021NMRGXTT2M
-provisional: true
+aliases:
+    - ROAD-pGXTT2M
