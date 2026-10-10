@@ -76,16 +76,24 @@ function productRow(p: ProductUsage, period: BillingPeriod): HTMLElement {
 
   const consumers = el("details", "cf-consumers");
   const summary = el("summary", "cf-consumers-summary", `Top consumers (${p.topConsumers.length})`);
-  const list = el("ul", "cf-consumers-list");
-  for (const c of p.topConsumers) {
+  const list = el("ol", "cf-consumers-list cf-consumers-ranked");
+  p.topConsumers.forEach((c, i) => {
+    // Ranking rows (operator 2026-10-10): rank number, name + project,
+    // share bar and percentage on the right — the share reads at a glance
+    // instead of a flat three-column list.
     const li = el("li", "cf-consumer");
-    li.append(
-      el("span", "cf-consumer-name", c.name),
-      el("span", "cf-consumer-project", c.project),
-      el("span", "cf-consumer-share", formatPct(c.share * 100, 0)),
-    );
+    li.append(el("span", "cf-consumer-rank", String(i + 1)));
+    const who = el("span", "cf-consumer-who");
+    who.append(el("span", "cf-consumer-name", c.name), el("span", "cf-consumer-project", c.project));
+    const share = el("span", "cf-consumer-sharewrap");
+    const bar = el("span", "cf-consumer-sharebar");
+    const fill = el("span", "cf-consumer-sharefill");
+    fill.style.width = `${Math.min(100, Math.max(0, c.share * 100))}%`;
+    bar.append(fill);
+    share.append(bar, el("span", "cf-consumer-share", formatPct(c.share * 100, 0)));
+    li.append(who, share);
     list.append(li);
-  }
+  });
   consumers.append(summary, list);
   card.append(head, gauge, consumers);
   return card;
