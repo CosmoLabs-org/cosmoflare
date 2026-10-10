@@ -50,6 +50,9 @@ entries:
         - description: 'Ops sidebar/drawer: per-section counters (domains, workers, D1, zones, projects, rules)'
           source: manual
           date: 2026-10-10T04:16:11.135982+04:00
+        - description: 'Ops domain profiles: enriched sections (renewal, registration, DNS with original nameservers, DNSSEC, SSL, 24h traffic) + sidebar section counters'
+          source: manual
+          date: 2026-10-10T04:20:49.567252+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual

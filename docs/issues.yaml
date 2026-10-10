@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T03:57:53.054325+04:00
+last_updated: 2026-10-10T04:17:35.000721+04:00
 next_bug_id: 59
 next_feat_id: 57
 next_task_id: 17
@@ -658,6 +658,11 @@ issues:
       status: implemented
       title: Ops projects view — per-project consumption across Cloudflare
       created_at: 2026-10-10T03:26:18.236927+04:00
+    - id: FEAT-p3KJAC2
+      type: feature
+      status: open
+      title: Ops durable objects section — DO list and usage
+      created_at: 2026-10-10T04:17:33.32696+04:00
     - id: FEAT-p8KYM5K
       type: feature
       status: open
