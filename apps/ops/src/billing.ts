@@ -8,6 +8,7 @@
 
 import { PRICES, PRICING_SOURCES } from "./pricing";
 import { projectFor } from "./projects";
+import { fetchRetry } from "./retry";
 
 const API = "https://api.cloudflare.com/client/v4";
 const GRAPHQL = `${API}/graphql`;
@@ -81,7 +82,7 @@ interface ConsumerAcc {
 async function fetchSubscriptionPeriod(accountId: string, token: string, calls: { n: number }, now: Date): Promise<BillingPeriod | null> {
   calls.n++;
   try {
-    const res = await fetch(`${API}/accounts/${accountId}/subscriptions`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchRetry(`${API}/accounts/${accountId}/subscriptions`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return null;
     const body = (await res.json()) as any;
     const rows: any[] = Array.isArray(body?.result) ? body.result : [];
@@ -140,7 +141,7 @@ export async function resolvePeriod(accountId: string, token: string, now: Date,
 
 async function gql<T>(token: string, query: string, variables: Record<string, unknown>, calls: { n: number }): Promise<T> {
   calls.n++;
-  const res = await fetch(GRAPHQL, {
+  const res = await fetchRetry(GRAPHQL, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
@@ -155,7 +156,7 @@ async function rest<T>(token: string, path: string, calls: { n: number }): Promi
   for (let page = 1; page <= 20; page++) {
     calls.n++;
     const sep = path.includes("?") ? "&" : "?";
-    const res = await fetch(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchRetry(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
     const body = (await res.json()) as { success: boolean; result: T[]; errors?: { message: string }[]; result_info?: { total_pages?: number; total_count?: number } };
     if (!body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
     out.push(...body.result);

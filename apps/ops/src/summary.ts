@@ -1,3 +1,4 @@
+import { fetchRetry } from "./retry";
 // Cosmoflare Ops summary (FEAT-052): the same telemetry the CLI's
 // FEAT-048/049 alerts read — zone cache status, D1 rows read, monthly
 // pacing — fetched live from the Cloudflare GraphQL Analytics API by the
@@ -149,7 +150,7 @@ export function monthPacing(used: number, limit: number, now: Date): { pct: numb
 }
 
 async function gql<T>(token: string, query: string, variables: Record<string, unknown>): Promise<T> {
-  const res = await fetch(GRAPHQL, {
+  const res = await fetchRetry(GRAPHQL, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
@@ -163,7 +164,7 @@ export async function rest<T>(token: string, path: string): Promise<T[]> {
   const out: T[] = [];
   for (let page = 1; page <= 20; page++) {
     const sep = path.includes("?") ? "&" : "?";
-    const res = await fetch(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchRetry(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
     const body = (await res.json()) as { success: boolean; result: T[]; errors?: { message: string }[]; result_info?: { total_pages?: number; total_count?: number } };
     if (!body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
     out.push(...body.result);

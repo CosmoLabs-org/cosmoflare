@@ -5,6 +5,7 @@
 // 2026-10-10), and the real-numbers rule forbids inventing one.
 
 import { rest } from "./summary";
+import { fetchRetry } from "./retry";
 
 export interface DORow {
   namespaceId: string;
@@ -68,7 +69,7 @@ export async function collectDurableObjects(accountId: string, token: string, no
   const query = `query($a:String!,$s:Time!,$e:Time!){viewer{accounts(filter:{accountTag:$a}){o: durableObjectsInvocationsAdaptiveGroups(limit:10000,filter:{datetime_geq:$s,datetime_leq:$e}){dimensions{scriptName} sum{requests errors}}}}}`;
   const usage: Record<string, { requests: number; errors: number }> = {};
   try {
-    const res = await fetch("https://api.cloudflare.com/client/v4/graphql", {
+    const res = await fetchRetry("https://api.cloudflare.com/client/v4/graphql", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables: { a: accountId, s: start, e: end } }),

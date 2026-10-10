@@ -4,6 +4,7 @@
 // paused/pending zones and the registrar-managed expires_at field.
 
 import { rest } from "./summary";
+import { fetchRetry } from "./retry";
 
 export interface DomainRecord {
   id: string;
@@ -92,7 +93,7 @@ export async function collectDomainDetail(token: string, zoneId: string): Promis
   const errors: string[] = [];
   const get = async <T>(path: string): Promise<T | null> => {
     try {
-      const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetchRetry(`https://api.cloudflare.com/client/v4${path}`, { headers: { Authorization: `Bearer ${token}` } });
       const body = (await res.json()) as { success: boolean; result: T; errors?: { message: string }[] };
       if (!body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
       return body.result;

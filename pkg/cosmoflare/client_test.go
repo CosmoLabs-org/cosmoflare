@@ -230,8 +230,12 @@ func TestNewClientPassesHTTPClientToCloudflareAPI(t *testing.T) {
 	if c.httpClient == hc {
 		t.Error("control-plane client must be a wrapped copy, not the caller-owned struct (FEAT-044 wrap-always)")
 	}
-	if kt, ok := c.httpClient.Transport.(*knowledge.Transport); !ok {
-		t.Errorf("control-plane transport = %T, want *knowledge.Transport wrapping the caller's transport", c.httpClient.Transport)
+	// FEAT-061: the chain gained a retry layer OUTSIDE knowledge —
+	// RetryTransport{Base: knowledge.Transport{Base: caller's transport}}.
+	if rtWrap, ok := c.httpClient.Transport.(*RetryTransport); !ok {
+		t.Errorf("control-plane transport = %T, want *RetryTransport (outermost, FEAT-061)", c.httpClient.Transport)
+	} else if kt, ok := rtWrap.Base.(*knowledge.Transport); !ok {
+		t.Errorf("RetryTransport.Base = %T, want *knowledge.Transport wrapping the caller's transport", rtWrap.Base)
 	} else if kt.Base != http.RoundTripper(rt) {
 		t.Errorf("knowledge.Transport.Base = %v, want the caller's recording transport", kt.Base)
 	}

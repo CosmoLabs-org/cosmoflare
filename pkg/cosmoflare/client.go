@@ -125,10 +125,10 @@ func NewClient(opts ...ClientOption) (R2Client, error) {
 	// stays reserved for the R2 data plane below.
 	httpClient := cfg.httpClient
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: cfg.timeout, Transport: &knowledge.Transport{}}
+		httpClient = &http.Client{Timeout: cfg.timeout, Transport: &RetryTransport{Base: &knowledge.Transport{}}}
 	} else {
 		wrapped := *httpClient
-		wrapped.Transport = &knowledge.Transport{Base: httpClient.Transport}
+		wrapped.Transport = &RetryTransport{Base: &knowledge.Transport{Base: httpClient.Transport}}
 		httpClient = &wrapped
 	}
 

@@ -10,6 +10,7 @@ import { summarizeD1, summarizeZones } from "./summary";
 import { CONDITIONS, evaluate, pruneState, type D1Obs, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
 import { readSubs, removeSubscriptions } from "./subscriptions";
 import { sendPushes } from "./webpush";
+import { fetchRetry } from "./retry";
 
 const GRAPHQL = "https://api.cloudflare.com/client/v4/graphql";
 const API = "https://api.cloudflare.com/client/v4";
@@ -93,7 +94,7 @@ async function restPages<T>(token: string, path: string): Promise<T[]> {
   const out: T[] = [];
   for (let page = 1; page <= 20; page++) {
     const sep = path.includes("?") ? "&" : "?";
-    const res = await fetch(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchRetry(`${API}${path}${sep}page=${page}&per_page=50`, { headers: { Authorization: `Bearer ${token}` } });
     const body = (await res.json()) as { success: boolean; result: T[]; errors?: { message: string }[]; result_info?: { total_pages?: number; total_count?: number } };
     if (!res.ok || !body.success) throw new Error(body.errors?.[0]?.message ?? `HTTP ${res.status}`);
     out.push(...body.result);
@@ -105,7 +106,7 @@ async function restPages<T>(token: string, path: string): Promise<T[]> {
 }
 
 async function gql<T>(token: string, query: string, variables: Record<string, unknown>): Promise<T> {
-  const res = await fetch(GRAPHQL, {
+  const res = await fetchRetry(GRAPHQL, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),

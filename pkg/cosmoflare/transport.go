@@ -45,10 +45,12 @@ const DefaultControlPlaneTimeout = 30 * time.Second
 
 // controlPlaneClient is the shared timeout-bearing client for Cloudflare
 // API calls. One instance, one policy — never http.DefaultClient (which
-// hangs forever). The knowledge.Transport registry rides on top of the
+// hangs forever). The knowledge.Transport registry rides under bounded
+// retry (RetryTransport, FEAT-061: 2 retries, exponential backoff +
+// jitter, 429 always / 5xx for idempotent requests) on top of the
 // whole-request timeout (FEAT-044).
 func controlPlaneClient() *http.Client {
-	return &http.Client{Timeout: DefaultControlPlaneTimeout, Transport: &knowledge.Transport{}}
+	return &http.Client{Timeout: DefaultControlPlaneTimeout, Transport: &RetryTransport{Base: &knowledge.Transport{}}}
 }
 
 // newCloudflareAPI is the ONLY sanctioned way to build a cloudflare-go

@@ -89,10 +89,15 @@ func TestKnowledgeTransportWrapAlways(t *testing.T) {
 	cl := c.(*client)
 
 	// The control-plane client wraps the caller's transport (wrap-always),
-	// preserving the chain via knowledge.Transport.Base.
-	kt, ok := cl.httpClient.Transport.(*knowledge.Transport)
+	// preserving the chain via knowledge.Transport.Base — under the retry
+	// layer (FEAT-061: RetryTransport outermost).
+	rtWrap, ok := cl.httpClient.Transport.(*RetryTransport)
 	if !ok {
-		t.Fatalf("control-plane transport = %T, want *knowledge.Transport", cl.httpClient.Transport)
+		t.Fatalf("control-plane transport = %T, want *RetryTransport (FEAT-061)", cl.httpClient.Transport)
+	}
+	kt, ok := rtWrap.Base.(*knowledge.Transport)
+	if !ok {
+		t.Fatalf("RetryTransport.Base = %T, want *knowledge.Transport", rtWrap.Base)
 	}
 	if kt.Base == nil || kt.Base != http.RoundTripper(marker) {
 		t.Errorf("knowledge.Transport.Base = %v, want the caller's marker RoundTripper", kt.Base)
