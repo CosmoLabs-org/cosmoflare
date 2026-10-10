@@ -29,6 +29,13 @@ export { formatCount } from "./format";
 // pacingPct is the KPI tile number: where a product's linear projection
 // lands relative to its included allowance (100% = exactly at allowance at
 // period end; 184% = will use the allowance plus most of an extra one).
+/** The overage dollars under a ring (item-6, operator 2026-10-10): "+$2.00"
+ * when the product projects past its allowance, null when it does not — a
+ * clean ring stays clean; a costing ring says so at a glance. */
+export function ringOverageText(p: ProductUsage): string | null {
+  return p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)}` : null;
+}
+
 export function pacingPct(p: ProductUsage): number {
   return p.included > 0 ? (p.projected / p.included) * 100 : 0;
 }
@@ -238,6 +245,11 @@ export function paintOverview(root: HTMLElement, sumRes: FetchResult<Summary>, b
       const link = el("a", `cf-ring cf-level-${level}${overLimit ? " cf-over" : ""}`);
       link.href = hrefFor("billing");
       link.append(ringGauge(props));
+      // Item-6 overview half (operator 2026-10-10): a ring that projects an
+      // overage carries the dollars under the gauge — grade and cost read
+      // together on both the overview and the billing cards.
+      const overage = ringOverageText(p);
+      if (overage !== null) link.append(el("span", "cf-ring-overage cf-level-critical-text", overage));
       return link;
     };
     for (const p of shown) rings.append(ringFor(p));

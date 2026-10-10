@@ -9,6 +9,7 @@ import {
   paintOverview,
   periodEndsLabel,
   ringPropsFor,
+  ringOverageText,
 } from "./dashboard";
 import type { Billing, BillingPeriod, FetchResult, ProductUsage, Summary } from "./api";
 
@@ -82,6 +83,20 @@ describe("ringPropsFor", () => {
   });
   it("non-storage rings keep the default used-% line", () => {
     expect(ringPropsFor(d1, period).usedLineText).toBeUndefined();
+  });
+});
+
+describe("ringOverageText (item-6: grade + overage together)", () => {
+  const d1: ProductUsage = {
+    id: "d1.rows_read", product: "D1", metric: "Rows read", unit: "rows",
+    included: 25e9, used: 640e6, projected: 27e9, unitPriceUsd: 0.001,
+    priceUnit: 1e6, projectedOverageUsd: 2, topConsumers: [],
+  };
+  it("states the projected overage dollars under a costing ring", () => {
+    expect(ringOverageText(d1)).toBe("+$2.00");
+  });
+  it("a clean ring carries no overage text", () => {
+    expect(ringOverageText({ ...d1, projectedOverageUsd: 0 })).toBeNull();
   });
 });
 
