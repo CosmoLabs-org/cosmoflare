@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-10T18:22:10.839441+04:00
+last_updated: 2026-10-10T20:03:59.606057+04:00
 next_bug_id: 60
-next_feat_id: 67
+next_feat_id: 73
 next_task_id: 17
 next_imp_id: 5
 issues:
@@ -671,6 +671,42 @@ issues:
       priority: 70
       area: ux
       created_at: 2026-10-09T23:20:49.518874+04:00
+    - id: FEAT-066
+      type: feature
+      status: open
+      title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
+      priority: 70
+      created_at: 2026-10-10T19:36:55.054273+04:00
+    - id: FEAT-067
+      type: feature
+      status: open
+      title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
+      created_at: 2026-10-10T20:03:59.373527+04:00
+    - id: FEAT-068
+      type: feature
+      status: open
+      title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
+      created_at: 2026-10-10T20:03:59.419565+04:00
+    - id: FEAT-069
+      type: feature
+      status: open
+      title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
+      created_at: 2026-10-10T20:03:59.466373+04:00
+    - id: FEAT-070
+      type: feature
+      status: open
+      title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+      created_at: 2026-10-10T20:03:59.511493+04:00
+    - id: FEAT-071
+      type: feature
+      status: open
+      title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
+      created_at: 2026-10-10T20:03:59.556906+04:00
+    - id: FEAT-072
+      type: feature
+      status: open
+      title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
+      created_at: 2026-10-10T20:03:59.602251+04:00
     - id: FEAT-p0QB1KX
       type: feature
       status: open

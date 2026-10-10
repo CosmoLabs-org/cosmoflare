@@ -3,7 +3,7 @@ ulid: 01M4HJJQYMZZAA0D98T2R22EFG
 id: FB-25
 title: '`cosmoflare analytics` fails opaquely + --json mode dumps usage text after the JSON. Investigate and fix.'
 type: bug
-status: pending
+status: implemented
 priority: medium
 complexity: ""
 from_project: MyCarGuide
@@ -11,7 +11,7 @@ from_path: /Users/gabstudio/PROJECTS/MyCarGuide
 to_project: cosmoflare
 to_target: project
 created: "2026-10-10T04:14:36.50006+04:00"
-updated: "2026-10-10T04:14:36.50006+04:00"
+updated: "2026-10-10T19:36:33.851724+04:00"
 suggested_conversion: bug
 converted_to: null
 related_issues: []
@@ -25,7 +25,7 @@ response:
   implemented: null
   rejected: null
   rejection_reason: null
-  notes: ""
+  notes: 'All three halves verified fixed 2026-10-10 against current build: R2 data-plane failure -> BUG-059/3fbc2bc (fail-fast with setup guidance, live-reproduced); --json stdout purity + error cause -> BUG-058-canonical/b2640bb (stdout parses as pure JSON, exit 1, structured error envelope); ''(assumed)'' perms language -> b2640bb (auth status shows real scope handling).'
 ---
 
 # FB-pR22EFG: `cosmoflare analytics` fails opaquely + --json mode dumps usage text after the JSON. Investigate and fix.

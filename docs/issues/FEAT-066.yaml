@@ -1,33 +1,26 @@
 ---
-ulid: 01M4HK9Q8M18GWHZ2FS1ZS896R
-id: FB-29
-title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
+id: FEAT-066
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-10-10T04:27:55.00704+04:00"
-updated: "2026-10-10T19:36:55.061711+04:00"
-suggested_conversion: ""
-converted_to: FEAT-066
-related_issues: []
-brainstorm_ref: null
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+created: "2026-10-10"
+updated: "2026-10-10T20:03:36.747838+04:00"
+priority: 70
+status: open
+origin:
+    feedback_id: FB-29
+    from_project: MyCarGuide
+    received: "2026-10-10"
+    converted: "2026-10-10"
+title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
+resolution:
+    notes: 'kv-writes shipped on the worker 2026-10-10 (2793247): registry+evaluator+scheduled collector+pager hint; d1-rows-read and cache-hit-rate verified pre-existing. Go-registry parity remains open here.'
+
 ---
 
-# FB-pZS896R: Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)
+# FEAT-066: Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)
+
+## Origin
+
+Converted from feedback **FB-29** (from MyCarGuide)
 
 # Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)
 
@@ -40,4 +33,3 @@ response:
 **Evidence:** companion FBs FB-p0RWGMB (storage metric 86x off), FB-pR22EFG (analytics CLI), corpus FB 01M4HHTVMZW101AQCCEJT3ZHNM; tripwire implementation at MyCarGuide `infra/scripts/cf-usage-snapshot.mjs`.
 
 **Priority:** high — the fleet's costliest resource has no guard.
-

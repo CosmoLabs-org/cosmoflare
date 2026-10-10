@@ -1,12 +1,12 @@
 version: "1.0"
 next_id: 32
-last_updated: "2026-10-10T19:36:06.296545+04:00"
+last_updated: "2026-10-10T20:03:59.608257+04:00"
 stats:
     total: 31
-    pending: 10
+    pending: 3
     implemented: 2
     rejected: 0
-    converted: 8
+    converted: 15
 entries:
     - id: FB-001
       title: GetNamespace does O(n) list scan
@@ -75,22 +75,22 @@ entries:
       created: "2026-10-09T01:08:23.767206+04:00"
     - id: FB-18
       title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
-      status: pending
+      status: converted
       from_project: Churches-app
       created: "2026-10-09T23:36:36.419298+04:00"
     - id: FB-19
       title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
-      status: pending
+      status: converted
       from_project: Churches-app
       created: "2026-10-09T23:37:03.784062+04:00"
     - id: FB-22
       title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-10-10T02:44:21.747532+04:00"
     - id: FB-23
       title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-10-10T04:01:33.900871+04:00"
     - id: FB-24
@@ -110,17 +110,17 @@ entries:
       created: "2026-10-10T04:14:15.893498+04:00"
     - id: FB-29
       title: 'Missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-10-10T04:27:55.00704+04:00"
     - id: FB-30
       title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-10-10T12:13:47.069933+04:00"
     - id: FB-31
       title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
-      status: pending
+      status: converted
       from_project: MyCarGuide
       created: "2026-10-10T12:14:39.144347+04:00"
     - id: ""

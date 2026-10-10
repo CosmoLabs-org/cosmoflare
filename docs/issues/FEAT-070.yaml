@@ -1,33 +1,23 @@
 ---
-ulid: 01M4HHTVMZW101AQCCEJT3ZHNM
-id: FB-23
-title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+id: FEAT-070
+title: 'Encode MyCarGuide''s CF best-practices corpus as cosmoflare audit classes (reading list attached)'
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-10-10T04:01:33.900871+04:00"
-updated: "2026-10-10T20:03:59.516548+04:00"
-suggested_conversion: ""
-converted_to: FEAT-070
-related_issues: []
-brainstorm_ref: null
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 70
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-23
+  from_project: MyCarGuide
+  received: 2026-10-10
+  converted: 2026-10-10
 ---
 
-# FB-pT3ZHNM: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+# FEAT-070: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+
+## Origin
+
+Converted from feedback **FB-23** (from MyCarGuide)
 
 # Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
 
@@ -45,4 +35,3 @@ response:
 **Proposed:** a `cosmoflare audit` reporting per-project compliance per rule + `cosmoflare usage snapshot/compare` built from the script pattern; alert classes already listed in the companion FB.
 
 **Priority:** high — the audit program turns one project's incident into every project's guardrail.
-

@@ -1,34 +1,23 @@
 ---
-ulid: 01M4JE1QH8JZX9M7BD2KBP82A7
-id: FB-31
-title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
+id: FEAT-071
+title: 'Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run'
 type: feature
-status: converted
-priority: medium
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-10-10T12:14:39.144347+04:00"
-updated: "2026-10-10T20:03:59.561629+04:00"
-suggested_conversion: feature
-converted_to: FEAT-071
-related_issues: []
-brainstorm_ref: null
-session: 19
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 50
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-31
+  from_project: MyCarGuide
+  received: 2026-10-10
+  converted: 2026-10-10
 ---
 
-# FB-pBP82A7: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
+# FEAT-071: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
+
+## Origin
+
+Converted from feedback **FB-31** (from MyCarGuide)
 
 **What happened:** MyCarGuide's `/api/subscribe` (email capture for the coming-soon list) lived in `functions/api/subscribe.ts`. The Astro Cloudflare adapter emits `dist/_worker.js`, and Cloudflare Pages IGNORES the functions/ directory entirely when _worker.js exists. Result: the endpoint NEVER executed in production — every POST fell through to the homepage HTML (HTTP 200, full page). This shipped unnoticed through multiple deploys; every submission since launch was silently lost. Found only by a manual live smoke test (curl -X POST returning HTML instead of JSON) on 2026-10-10.
 

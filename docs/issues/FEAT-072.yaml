@@ -1,34 +1,23 @@
 ---
-ulid: 01M4JE04NXMYBP29W9QH130P9K
-id: FB-30
-title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
+id: FEAT-072
+title: 'Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"'
 type: feature
-status: converted
-priority: medium
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-10-10T12:13:47.069933+04:00"
-updated: "2026-10-10T20:03:59.607994+04:00"
-suggested_conversion: feature
-converted_to: FEAT-072
-related_issues: []
-brainstorm_ref: null
-session: 19
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 50
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-30
+  from_project: MyCarGuide
+  received: 2026-10-10
+  converted: 2026-10-10
 ---
 
-# FB-p130P9K: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
+# FEAT-072: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
+
+## Origin
+
+Converted from feedback **FB-30** (from MyCarGuide)
 
 **What happened:** creating a zone Cache Rule via the Rulesets API returned `{"message":"request is not authorized"}` with zero indication of WHICH scope was missing. The same token happily serves KV REST, GraphQL Analytics, D1 insights, and Pages deploys — so the failure was invisible until the exact call failed. `cosmoflare auth status` prints "Token permissions: R2 management (assumed)" — it ASSUMES instead of reading actual scopes, so it could not have warned us. Both the Cache Rule and the WAF rule (BUG-011 follow-ups) are blocked on this blind spot until the token is edited by hand in the dashboard.
 

@@ -3,7 +3,7 @@ ulid: 01M4HJJ3TNC4FY16J0WD0RWGMB
 id: FB-28
 title: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.
 type: bug
-status: pending
+status: implemented
 priority: medium
 complexity: ""
 from_project: MyCarGuide
@@ -11,7 +11,7 @@ from_path: /Users/gabstudio/PROJECTS/MyCarGuide
 to_project: cosmoflare
 to_target: project
 created: "2026-10-10T04:14:15.893498+04:00"
-updated: "2026-10-10T04:14:15.893498+04:00"
+updated: "2026-10-10T19:36:33.897958+04:00"
 suggested_conversion: bug
 converted_to: null
 related_issues: []
@@ -25,7 +25,7 @@ response:
   implemented: null
   rejected: null
   rejection_reason: null
-  notes: ""
+  notes: 'Verified fixed: BUG-060 (pFAKDN3) — kv.storage is rolling bytes, excluded from all allowance visuals and never priced; pager card hidden with muted note (f093ea3); code+tests+live verified in session 2036.'
 ---
 
 # FB-p0RWGMB: ops.cosmolabs.org shows MyCarGuide KV storage as 4GB — the real figure is 46MB (86x off). HIGH.

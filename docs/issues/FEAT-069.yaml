@@ -1,33 +1,23 @@
 ---
-ulid: 01M4HDD75JXETW8RPKKJNZS2WN
-id: FB-22
+id: FEAT-069
 title: 'CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails'
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: MyCarGuide
-from_path: /Users/gabstudio/PROJECTS/MyCarGuide
-to_project: cosmoflare
-to_target: project
-created: "2026-10-10T02:44:21.747532+04:00"
-updated: "2026-10-10T20:03:59.47191+04:00"
-suggested_conversion: ""
-converted_to: FEAT-069
-related_issues: []
-brainstorm_ref: null
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 70
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-22
+  from_project: MyCarGuide
+  received: 2026-10-10
+  converted: 2026-10-10
 ---
 
-# FB-pNZS2WN: CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails
+# FEAT-069: CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails
+
+## Origin
+
+Converted from feedback **FB-22** (from MyCarGuide)
 
 # CF usage review gaps: KV analytics, D1 pagination, cache-coverage audit, cache-rule detection, planner guardrails
 
@@ -49,4 +39,3 @@ response:
 **Proposed:** KV metrics/cost verdicts, paginated D1 usage, per-route cache-coverage audit incl. the cache-rule detection, D1 planner guardrails, and the wider alert classes — plus a one-command spend-vs-allowance page (D1 rows, KV ops, R2, invocations vs plan) feeding a monthly review habit.
 
 **Priority:** high — direct cost lever with the evidence attached.
-

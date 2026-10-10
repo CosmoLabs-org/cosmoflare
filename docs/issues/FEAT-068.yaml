@@ -1,34 +1,23 @@
 ---
-ulid: 01M4H2PHH81T4FG6F96BHT5JDH
-id: FB-19
+id: FEAT-068
 title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: Churches-app
-from_path: /Users/gabstudio/PROJECTS/Churches-app
-to_project: cosmoflare
-to_target: project
-created: "2026-10-09T23:37:03.784062+04:00"
-updated: "2026-10-10T20:03:59.425143+04:00"
-suggested_conversion: feature
-converted_to: FEAT-068
-related_issues: []
-brainstorm_ref: null
-session: 47
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 70
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-19
+  from_project: Churches-app
+  received: 2026-10-09
+  converted: 2026-10-10
 ---
 
-# FB-pHT5JDH: TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)
+# FEAT-068: TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)
+
+## Origin
+
+Converted from feedback **FB-19** (from Churches-app)
 
 What happened: owner reviewed the Churches-app caching layer (18 GET routes, KV TTLs 10min-1h, Cache-Control 300s, daily materialization) and asked: is the cache time enough, given the information rarely changes? The owner explicitly notes NOT deep-knowing Cloudflare caching semantics — which is exactly the knowledge cosmoflare should carry for every CosmoLabs project. This feedback requests a TTL-strategy capability.
 

@@ -1,34 +1,23 @@
 ---
-ulid: 01M4H2NPT3GQ83HMNNQK4FVJYM
-id: FB-18
+id: FEAT-067
 title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
 type: feature
-status: converted
-priority: high
-complexity: ""
-from_project: Churches-app
-from_path: /Users/gabstudio/PROJECTS/Churches-app
-to_project: cosmoflare
-to_target: project
-created: "2026-10-09T23:36:36.419298+04:00"
-updated: "2026-10-10T20:03:59.379255+04:00"
-suggested_conversion: feature
-converted_to: FEAT-067
-related_issues: []
-brainstorm_ref: null
-session: 47
-suggested_workflow: []
-response:
-    acknowledged: null
-    acknowledged_by: null
-    started: null
-    implemented: null
-    rejected: null
-    rejection_reason: null
-    notes: ""
+status: open
+priority: 70
+created: 2026-10-10
+updated: 2026-10-10
+origin:
+  feedback_id: FB-18
+  from_project: Churches-app
+  received: 2026-10-09
+  converted: 2026-10-10
 ---
 
-# FB-p4FVJYM: Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)
+# FEAT-067: Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)
+
+## Origin
+
+Converted from feedback **FB-18** (from Churches-app)
 
 What happened: Churches-app completed the CF efficiency standard end to end over 2026-10-08..09 (IMP-017 + follow-up commits 155d1d3e, 73c700ac). Public API caching went 4 -> 18 of 21 GET routes; the worst endpoint dropped from ~1.08M D1 rows read per request to a daily snapshot + 1 KV read; Cache-Control now emitted on all cacheable responses; the landing page dropped 27% weight (mobile Lighthouse 75 -> 81); everything verified by live X-Cache MISS->HIT probes. Full record: docs/optimization/2026-10-08-cf-efficiency-audit.md in Churches-app. This feedback distills the PATTERNS that emerged and proposes how cosmoflare checks them automatically AND offers the fix directly.
 
