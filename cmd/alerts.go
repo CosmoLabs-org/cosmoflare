@@ -275,12 +275,16 @@ func runAlertsCheck(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return outErr("failed to collect metrics", err)
 		}
-		// Zone cache + D1 rows-read telemetry, only when a rule needs it
-		// (FEAT-049). One-shot run: refs are fetched fresh, never cached.
-		webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1 bool) webhook.TelemetryRefs {
-			refs := telemetryRefsFn(ctx, wantZones, wantD1)
+		// Zone cache + D1 rows-read + KV writes telemetry, only when a rule
+		// needs it (FEAT-049, FEAT-066). One-shot run: refs are fetched fresh,
+		// never cached.
+		webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
+			refs := telemetryRefsFn(ctx, wantZones, wantD1, wantKV)
 			if refs.DBNamesErr != nil {
 				printWarning("D1 list unavailable, d1 alerts name databases by ID: %v", refs.DBNamesErr)
+			}
+			if refs.KVNamesErr != nil {
+				printWarning("KV list unavailable, kv alerts name namespaces by ID: %v", refs.KVNamesErr)
 			}
 			return refs
 		}, w, &metrics)

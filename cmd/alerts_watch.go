@@ -61,8 +61,8 @@ var collectWatchMetricsFn = func(ctx context.Context, rules []*cosmoflare.AlertR
 	webhook.CollectUsageMetrics(&m, cachedUsageSnapshot(ctx))
 	// Zone cache + D1 rows-read telemetry is additive (FEAT-049 D15):
 	// failures become telemetry-gap pages, never a skipped cycle.
-	webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1 bool) webhook.TelemetryRefs {
-		return cachedTelemetryRefs(ctx, wantZones, wantD1)
+	webhook.CollectRuleTelemetry(ctx, analytics, rules, func(wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
+		return cachedTelemetryRefs(ctx, wantZones, wantD1, wantKV)
 	}, w, &m)
 	return m, nil
 }
@@ -74,7 +74,7 @@ var collectWatchMetricsFn = func(ctx context.Context, rules []*cosmoflare.AlertR
 // cycle, the watch's long-standing policy.
 var (
 	watchFireState      = webhook.NewFireState()
-	watchScopeCooldowns = map[string]time.Duration{cosmoflare.ScopeZone: time.Hour, cosmoflare.ScopeD1: time.Hour}
+	watchScopeCooldowns = map[string]time.Duration{cosmoflare.ScopeZone: time.Hour, cosmoflare.ScopeD1: time.Hour, cosmoflare.ScopeKV: time.Hour}
 )
 
 // Zone/D1 name-list cache + seams. The lists change on a days timescale, so
@@ -85,6 +85,7 @@ var (
 	telemetryRefsCache    webhook.TelemetryRefs
 	telemetryZonesAttempt time.Time // last zone-list fetch attempt
 	telemetryDBAttempt    time.Time // last D1-list fetch attempt
+	telemetryKVAttempt    time.Time // last KV-list fetch attempt (FEAT-066)
 	telemetryRefsTTL      = 15 * time.Minute
 	telemetryRefsRetry    = 5 * time.Minute
 	telemetryNowFn        = time.Now
@@ -93,7 +94,7 @@ var (
 
 // defaultTelemetryRefs lists active zones and D1 databases for the wanted
 // scopes. Each list's error is carried in the refs, never returned.
-func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
 	var refs webhook.TelemetryRefs
 	if wantZones {
 		zs, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
@@ -126,6 +127,22 @@ func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.T
 			}
 		}
 	}
+	if wantKV {
+		ks, err := cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+		var nss []*cosmoflare.KVNamespace
+		if err == nil {
+			nss, err = ks.ListNamespaces(ctx)
+		}
+		if err != nil {
+			refs.KVNamesErr = fmt.Errorf("kv list: %w", err)
+		}
+		refs.KVNames = make(map[string]string, len(nss))
+		for _, n := range nss {
+			if n != nil {
+				refs.KVNames[n.ID] = n.Title
+			}
+		}
+	}
 	return refs
 }
 
@@ -134,7 +151,7 @@ func defaultTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.T
 // interval ago. A failed refresh keeps the last good list for that scope;
 // with no last good list the error surfaces (a zone-list error becomes a gap
 // page in CollectTelemetryMetrics; a D1-list error names databases by ID).
-func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
 	now := telemetryNowFn()
 	due := func(attempt time.Time, err error) bool {
 		if attempt.IsZero() {
@@ -148,8 +165,9 @@ func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.Te
 	}
 	needZones := wantZones && due(telemetryZonesAttempt, telemetryRefsCache.ZonesErr)
 	needD1 := wantD1 && due(telemetryDBAttempt, telemetryRefsCache.DBNamesErr)
-	if needZones || needD1 {
-		fresh := telemetryRefsFn(ctx, needZones, needD1)
+	needKV := wantKV && due(telemetryKVAttempt, telemetryRefsCache.KVNamesErr)
+	if needZones || needD1 || needKV {
+		fresh := telemetryRefsFn(ctx, needZones, needD1, needKV)
 		if needZones {
 			telemetryZonesAttempt = now
 			if fresh.ZonesErr != nil && len(telemetryRefsCache.Zones) > 0 {
@@ -172,6 +190,19 @@ func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.Te
 				telemetryRefsCache.DBNames, telemetryRefsCache.DBNamesErr = fresh.DBNames, nil
 			}
 		}
+		if needKV {
+			telemetryKVAttempt = now
+			switch {
+			case fresh.KVNamesErr != nil && len(telemetryRefsCache.KVNames) > 0:
+				printWarning("KV list refresh failed, using last known namespace names: %v", fresh.KVNamesErr)
+				telemetryRefsCache.KVNamesErr = nil
+			case fresh.KVNamesErr != nil:
+				printWarning("KV list unavailable, kv alerts name namespaces by ID (retry in %s): %v", telemetryRefsRetry, fresh.KVNamesErr)
+				telemetryRefsCache.KVNames, telemetryRefsCache.KVNamesErr = fresh.KVNames, fresh.KVNamesErr
+			default:
+				telemetryRefsCache.KVNames, telemetryRefsCache.KVNamesErr = fresh.KVNames, nil
+			}
+		}
 	}
 	out := telemetryRefsCache
 	if !wantZones {
@@ -179,6 +210,9 @@ func cachedTelemetryRefs(ctx context.Context, wantZones, wantD1 bool) webhook.Te
 	}
 	if !wantD1 {
 		out.DBNames, out.DBNamesErr = nil, nil
+	}
+	if !wantKV {
+		out.KVNames, out.KVNamesErr = nil, nil
 	}
 	return out
 }

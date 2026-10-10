@@ -122,6 +122,7 @@ const (
 	ScopeDO      = "do"
 	ScopeZone    = "zone"
 	ScopeD1      = "d1"
+	ScopeKV      = "kv"
 )
 
 // AlertConditionDescriptor describes one alertable condition — the single
@@ -163,6 +164,7 @@ var alertConditionRegistry = []AlertConditionDescriptor{
 	{Name: "zone-cache-miss-pct", Scope: "zone", Unit: "%", Help: "per-zone share of cache-eligible eyeball requests that missed (miss+expired); zones under 100 eligible requests skip", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].MissPct", Service: "zone"},
 	{Name: "zone-uncached-requests", Scope: "zone", Unit: "requests", Help: "per-zone eyeball requests that never reach the cache (dynamic+bypass) over the window; each is a billed Worker or origin hit", FedBy: "zone HTTP analytics grouped by cacheStatus (watch/check only)", DataKey: "Zones[].UncachedRequests", Service: "zone"},
 	{Name: "d1-rows-read", Scope: "d1", Unit: "rows", Help: "per-database D1 rows read (scanned, the billed unit) over the window", FedBy: "D1 analytics per-database rows (watch/check only)", DataKey: "D1[].RowsRead", Service: "d1"},
+	{Name: "kv-writes", Scope: "kv", Unit: "writes", Help: "per-namespace KV write volume over the window (reads are a separate signal; deletes are unmetered upstream)", FedBy: "KV operations analytics per-namespace rows, actionType write only (watch/check only)", DataKey: "KV[].Writes", Service: "kv"},
 }
 
 // AlertConditions returns the condition registry in registration order.

@@ -48,7 +48,7 @@ func TestCollectTelemetryMetricsHappyPath(t *testing.T) {
 	srv := telemetryServer(t, d1OK, &zoneCalls)
 	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
 	var m EvalMetrics
-	CollectTelemetryMetrics(context.Background(), a, true, true, TelemetryRefs{
+	CollectTelemetryMetrics(context.Background(), a, true, true, false, TelemetryRefs{
 		Zones:   []cosmoflare.ZoneRef{{ID: "z1", Name: "churches.app"}},
 		DBNames: map[string]string{"db-big": "mycarguide-db"},
 	}, telemetryWindow(), &m)
@@ -71,7 +71,7 @@ func TestCollectTelemetryRefsFailureIsAGap(t *testing.T) {
 	srv := telemetryServer(t, d1OK, &zoneCalls)
 	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
 	var m EvalMetrics
-	CollectTelemetryMetrics(context.Background(), a, true, true, TelemetryRefs{
+	CollectTelemetryMetrics(context.Background(), a, true, true, false, TelemetryRefs{
 		ZonesErr:   errors.New("zones list: 403 missing Zone Read"),
 		DBNamesErr: errors.New("d1 list: 403"),
 	}, telemetryWindow(), &m)
@@ -95,7 +95,7 @@ func TestCollectTelemetryAnalyticsFailureIsAGap(t *testing.T) {
 	srv := telemetryServer(t, `{"errors":[{"message":"d1 dataset unavailable"}]}`, &zoneCalls)
 	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
 	var m EvalMetrics
-	CollectTelemetryMetrics(context.Background(), a, true, true, TelemetryRefs{
+	CollectTelemetryMetrics(context.Background(), a, true, true, false, TelemetryRefs{
 		Zones: []cosmoflare.ZoneRef{{ID: "z1", Name: "churches.app"}},
 	}, telemetryWindow(), &m)
 	if !strings.Contains(m.Gaps["d1"], "d1 dataset unavailable") {
@@ -112,7 +112,7 @@ func TestCollectTelemetryWantFlagsOff(t *testing.T) {
 	srv := telemetryServer(t, d1OK, &zoneCalls)
 	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
 	var m EvalMetrics
-	CollectTelemetryMetrics(context.Background(), a, false, false, TelemetryRefs{
+	CollectTelemetryMetrics(context.Background(), a, false, false, false, TelemetryRefs{
 		Zones:    []cosmoflare.ZoneRef{{ID: "z1", Name: "churches.app"}},
 		ZonesErr: errors.New("ignored when not wanted"),
 	}, telemetryWindow(), &m)
@@ -129,7 +129,7 @@ func TestCollectRuleTelemetryGating(t *testing.T) {
 	srv := telemetryServer(t, d1OK, &zoneCalls)
 	a := cosmoflare.NewAnalyticsService("acct", "tok", cosmoflare.WithAnalyticsBaseURL(srv.URL))
 	asked := 0
-	refsFor := func(wantZones, wantD1 bool) TelemetryRefs {
+	refsFor := func(wantZones, wantD1, wantKV bool) TelemetryRefs {
 		asked++
 		if wantZones || !wantD1 {
 			t.Errorf("refsFor(%v, %v), want (false, true) for a d1-only rule set", wantZones, wantD1)

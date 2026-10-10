@@ -35,6 +35,7 @@ type EvalMetrics struct {
 
 	Zones []cosmoflare.ZoneCacheSummary  // per-zone cacheStatus counts for zone-scoped conditions (FEAT-049)
 	D1    []cosmoflare.D1RowsReadSummary // per-database rows read for d1-scoped conditions (FEAT-049)
+	KV    []cosmoflare.KVWritesSummary   // per-namespace write volume for kv-scoped conditions (FEAT-066)
 	Gaps  map[string]string              // scope → error text for telemetry that failed this cycle (FEAT-049); pages once an hour
 
 	WorkersScriptCount uint64  // live script count (LimitsService)
@@ -331,6 +332,23 @@ func conditionValues(condition string, m EvalMetrics) []scopedValue {
 				name = d.DatabaseID
 			}
 			out = append(out, scopedValue{ScopeID: name, Key: d.DatabaseID, Value: v, Unit: desc.Unit})
+		}
+		return out
+	case cosmoflare.ScopeKV:
+		out := make([]scopedValue, 0, len(m.KV))
+		for _, n := range m.KV {
+			var v float64
+			switch condition {
+			case "kv-writes":
+				v = float64(n.Writes)
+			default:
+				return nil // registered-but-unimplemented: the coverage test guards
+			}
+			name := n.Name
+			if name == "" {
+				name = n.NamespaceID
+			}
+			out = append(out, scopedValue{ScopeID: name, Key: n.NamespaceID, Value: v, Unit: desc.Unit})
 		}
 		return out
 	default: // account scope

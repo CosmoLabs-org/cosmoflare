@@ -485,6 +485,7 @@ func TestConditionValueCoversRegistry(t *testing.T) {
 		},
 		Zones: []cosmoflare.ZoneCacheSummary{churchesZone()},
 		D1:    []cosmoflare.D1RowsReadSummary{{DatabaseID: "db1", Name: "mycarguide-db", RowsRead: 2945546702}},
+		KV:    []cosmoflare.KVWritesSummary{{NamespaceID: "ns1", Name: "SESSIONS", Writes: 250000}},
 	}
 	for _, c := range cosmoflare.AlertConditions() {
 		values := conditionValues(c.Name, populated)

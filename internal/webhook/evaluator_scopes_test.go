@@ -307,3 +307,23 @@ func TestFormatValueNoExponent(t *testing.T) {
 		t.Errorf("formatValue(910.5, ms) = %q, want 910.5", got)
 	}
 }
+
+// TestEvaluateKVWrites (FEAT-066, parity with the worker's kv-writes):
+// per-namespace write volume fans out per namespace, names it, honors
+// excludes case-insensitively, and prints plain write counts.
+func TestEvaluateKVWrites(t *testing.T) {
+	t.Parallel()
+	eval, rec := newEvalEvaluator(t, time.Minute, scopedRule("kvday", "kv", "kv-writes", 100000, "sessions"))
+	eval.Evaluate(EvalMetrics{KV: []cosmoflare.KVWritesSummary{
+		{NamespaceID: "ns1", Name: "SESSIONS", Writes: 250000},
+		{NamespaceID: "ns2", Name: "CACHE", Writes: 90000},
+		{NamespaceID: "ns3", Writes: 500000}, // name list down: names by ID
+	}})
+	if ids := recordedIDs(rec); len(ids) != 1 || ids[0] != "kvday/ns3" {
+		t.Fatalf("alert IDs = %v, want [kvday/ns3] only (SESSIONS excluded case-insensitively, CACHE under threshold)", ids)
+	}
+	p := rec.first()
+	if !strings.Contains(p.Message, "500000") || !strings.Contains(p.Message, "ns3") {
+		t.Errorf("kv message must name the namespace and the write count: %q", p.Message)
+	}
+}

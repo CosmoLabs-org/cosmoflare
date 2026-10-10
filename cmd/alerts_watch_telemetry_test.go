@@ -132,7 +132,7 @@ func TestCachedTelemetryRefs(t *testing.T) {
 	telemetryNowFn = func() time.Time { return now }
 	calls := 0
 	failNext := false
-	telemetryRefsFn = func(_ context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+	telemetryRefsFn = func(_ context.Context, wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
 		calls++
 		if failNext {
 			return webhook.TelemetryRefs{ZonesErr: errors.New("zones list: 503"), DBNamesErr: errors.New("d1 list: 503")}
@@ -143,11 +143,11 @@ func TestCachedTelemetryRefs(t *testing.T) {
 		}
 	}
 
-	refs := cachedTelemetryRefs(context.Background(), true, true)
+	refs := cachedTelemetryRefs(context.Background(), true, true, false)
 	if calls != 1 || len(refs.Zones) != 1 {
 		t.Fatalf("first fetch: calls=%d refs=%+v", calls, refs)
 	}
-	cachedTelemetryRefs(context.Background(), true, true)
+	cachedTelemetryRefs(context.Background(), true, true, false)
 	if calls != 1 {
 		t.Errorf("within TTL: calls=%d, want 1 (cached)", calls)
 	}
@@ -155,7 +155,7 @@ func TestCachedTelemetryRefs(t *testing.T) {
 	// Past the TTL a failing fetch keeps the last good lists (no gap).
 	now = now.Add(16 * time.Minute)
 	failNext = true
-	refs = cachedTelemetryRefs(context.Background(), true, true)
+	refs = cachedTelemetryRefs(context.Background(), true, true, false)
 	if calls != 2 || refs.ZonesErr != nil || len(refs.Zones) != 1 || refs.DBNames["db1"] != "mycarguide-db" {
 		t.Fatalf("keep-last-good: calls=%d refs=%+v", calls, refs)
 	}
@@ -165,11 +165,11 @@ func TestCachedTelemetryRefs(t *testing.T) {
 	telemetryNowFn = func() time.Time { return now }
 	calls = 0
 	failNext = true
-	telemetryRefsFn = func(_ context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+	telemetryRefsFn = func(_ context.Context, wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
 		calls++
 		return webhook.TelemetryRefs{ZonesErr: errors.New("zones list: 403")}
 	}
-	refs = cachedTelemetryRefs(context.Background(), true, false)
+	refs = cachedTelemetryRefs(context.Background(), true, false, false)
 	if refs.ZonesErr == nil {
 		t.Fatalf("no last-good zones: the error must surface (becomes a gap), got %+v", refs)
 	}
@@ -215,7 +215,7 @@ func TestCachedTelemetryRefsBackoff(t *testing.T) {
 	now := time.Date(2026, 10, 9, 10, 0, 0, 0, time.UTC)
 	telemetryNowFn = func() time.Time { return now }
 	var calls [][2]bool
-	telemetryRefsFn = func(_ context.Context, wantZones, wantD1 bool) webhook.TelemetryRefs {
+	telemetryRefsFn = func(_ context.Context, wantZones, wantD1, wantKV bool) webhook.TelemetryRefs {
 		calls = append(calls, [2]bool{wantZones, wantD1})
 		refs := webhook.TelemetryRefs{DBNamesErr: errors.New("d1 list: 403")}
 		if wantZones {
@@ -224,12 +224,12 @@ func TestCachedTelemetryRefsBackoff(t *testing.T) {
 		return refs
 	}
 
-	refs := cachedTelemetryRefs(context.Background(), true, true)
+	refs := cachedTelemetryRefs(context.Background(), true, true, false)
 	if len(calls) != 1 || refs.DBNamesErr == nil || len(refs.Zones) != 1 {
 		t.Fatalf("first: calls=%v refs=%+v", calls, refs)
 	}
 	now = now.Add(time.Minute)
-	refs = cachedTelemetryRefs(context.Background(), true, true)
+	refs = cachedTelemetryRefs(context.Background(), true, true, false)
 	if len(calls) != 1 {
 		t.Fatalf("1 min later: calls=%v, want no refetch (failed list backs off 5 min)", calls)
 	}
@@ -237,7 +237,7 @@ func TestCachedTelemetryRefsBackoff(t *testing.T) {
 		t.Error("the cached D1 list error must still be reported while backing off")
 	}
 	now = now.Add(5 * time.Minute)
-	cachedTelemetryRefs(context.Background(), true, true)
+	cachedTelemetryRefs(context.Background(), true, true, false)
 	if len(calls) != 2 || calls[1] != [2]bool{false, true} {
 		t.Fatalf("6 min later: calls=%v, want one retry of the D1 list only (zones still fresh)", calls)
 	}
