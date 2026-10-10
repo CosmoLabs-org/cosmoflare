@@ -2904,6 +2904,7 @@ cosmoflare alerts create worker-failures \
 | `zone-cache-miss-pct` | zone | % | per-zone share of cache-eligible eyeball requests that missed (miss+expired); zones under 100 eligible requests skip |
 | `zone-uncached-requests` | zone | requests | per-zone eyeball requests that never reach the cache (dynamic+bypass) over the window; each is a billed Worker or origin hit |
 | `d1-rows-read` | d1 | rows | per-database D1 rows read (scanned, the billed unit) over the window |
+| `kv-writes` | kv | writes | per-namespace KV write volume over the window (reads are a separate signal; deletes are unmetered upstream) |
 
 #### Zone cache and D1 rows-read conditions (FEAT-049)
 
@@ -2917,7 +2918,12 @@ Starter thresholds (suggestions, not defaults): `zone-uncached-requests` at 1000
 cosmoflare alerts create uncached-zones --service zone --condition zone-uncached-requests --threshold 10000 --action log --target - --exclude api.example.com
 cosmoflare alerts create cache-misses --service zone --condition zone-cache-miss-pct --threshold 50 --action log --target -
 cosmoflare alerts create d1-scans --service d1 --condition d1-rows-read --threshold 1e9 --action log --target -
+cosmoflare alerts create kv-day --service kv --condition kv-writes --threshold 100000 --action log --target -
 ```
+
+#### KV writes/day (FEAT-066)
+
+`kv-writes` fans out per KV namespace from `kvOperationsAdaptiveGroups`, counting only `actionType: "write"` rows (a 500k-read namespace with 250k writes reports 250k). Namespace titles come from the cached KV list — a failed list falls back to IDs, never a gap; a failed analytics query pages a `kv` telemetry gap once per hour. Available in `alerts watch`/`alerts check` and the Ops Worker's rules engine (the pager's Rules view lists it alongside the other conditions).
 
 `--exclude` takes comma-separated zone or database names or IDs, matched case-insensitively (an ID still matches while the name list is unavailable and alerts fall back to IDs); `alerts update NAME --exclude ""` clears the list, and `alerts get` shows it.
 

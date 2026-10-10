@@ -56,9 +56,15 @@ entries:
         - description: 'Ops Durable Objects section: namespaces with per-script 24h usage; first shared view components; Nunito brand/link face (FEAT-p3KJAC2)'
           source: manual
           date: 2026-10-10T04:49:19.314542+04:00
-        - description: 'missing alert classes: no D1 service at all in alerts (d1-rows-read regression, KV writes/day, cache-hit-rate)'
+        - description: kv-writes alert condition on both engines — per-namespace KV write volume over 24h; the Ops Worker pages from kvOperationsAdaptiveGroups (write rows only) and the Go watch/check evaluates the same condition with cached titles, ID fallback and telemetry-gap paging (FEAT-066)
           source: FEAT-066
-          date: 2026-10-10T22:29:27.360241+04:00
+          date: 2026-10-10T23:07:43.584257+04:00
+        - description: bounded retry on the control plane and worker loads — RetryTransport wraps the knowledge registry at both chokepoints (2 retries, 250ms exponential backoff with jitter, 429 always with body rewind, 5xx idempotent-only); the worker's nine upstream fetch sites adopt the mirrored fetchRetry (FEAT-061)
+          source: manual
+          date: 2026-10-10T23:07:43.622604+04:00
+        - description: Ops mobile app rebuilt on React + Tailwind v4 + shadcn/ui + Framer Motion — React shell with quick nav, drawer, section mastheads and a type system (Spline Sans Mono instrument labels, Schibsted Grotesk figures); every view ported behind a bridge that kept the app green; exact 132px ring endpoints, grade+overage pairs, ranked rows, worker and domain profiles, gradient hierarchy with reduced-motion respected
+          source: manual
+          date: 2026-10-10T23:07:43.663364+04:00
     fixed:
         - description: alert fan-out conditions now page every offending script/DO, not only the first one per cycle (BUG-054)
           source: manual
