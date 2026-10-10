@@ -1,10 +1,11 @@
-id: TASK-pD575FN
+id: TASK-017
 type: task
 created_at: 2026-10-10T23:21:34.324088+04:00
 updated_at: 2026-10-10T23:21:36.164851+04:00
 source: local
 ulid: 01M4KM6XEAXC0Q20ZPA0D575FN
-provisional: true
+aliases:
+    - TASK-pD575FN
 status: open
 origin:
     session: 74
