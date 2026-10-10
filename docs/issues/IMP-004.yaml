@@ -1,10 +1,11 @@
-id: IMP-pEY98JH
+id: IMP-004
 type: improvement
 created_at: 2026-10-10T03:26:35.343956+04:00
 updated_at: 2026-10-10T03:26:36.986888+04:00
 source: local
 ulid: 01M4HFTTSS48TF3NPRQQEY98JH
-provisional: true
+aliases:
+    - IMP-pEY98JH
 status: open
 origin:
     roadmap_items:

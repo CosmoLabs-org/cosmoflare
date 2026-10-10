@@ -1,10 +1,11 @@
-id: FEAT-pDDEH5J
+id: FEAT-062
 type: feature
 created_at: 2026-10-10T00:33:27.635444+04:00
 updated_at: 2026-10-10T00:33:29.569605+04:00
 source: local
 ulid: 01M4H5XTJVDR67F64BMKDDEH5J
-provisional: true
+aliases:
+    - FEAT-pDDEH5J
 status: open
 origin:
     roadmap_items:

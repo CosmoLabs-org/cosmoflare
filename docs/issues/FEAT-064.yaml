@@ -1,10 +1,11 @@
-id: FEAT-pN68ZRM
+id: FEAT-064
 type: feature
 created_at: 2026-10-10T00:32:57.232638+04:00
 updated_at: 2026-10-10T03:33:49.495877+04:00
 source: local
 ulid: 01M4H5WWWNHJW50P6X5FN68ZRM
-provisional: true
+aliases:
+    - FEAT-pN68ZRM
 status: implemented
 origin:
     roadmap_items:

@@ -1,10 +1,11 @@
-id: BUG-pFAKDN3
+id: BUG-060
 type: bug
 created_at: 2026-10-10T04:25:57.194318+04:00
 updated_at: 2026-10-10T05:05:30.464009+04:00
 source: local
 ulid: 01M4HK7H2XJ4R4C73HXZFAKDN3
-provisional: true
+aliases:
+    - BUG-pFAKDN3
 severity: high
 status: fixed
 origin:

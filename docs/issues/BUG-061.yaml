@@ -1,10 +1,11 @@
-id: BUG-pPF2BCF
+id: BUG-061
 type: bug
 created_at: 2026-10-10T04:26:20.692641+04:00
 updated_at: 2026-10-10T04:39:44.501226+04:00
 source: local
 ulid: 01M4HK880WFR4SBQVBGAPF2BCF
-provisional: true
+aliases:
+    - BUG-pPF2BCF
 severity: high
 status: fixed
 origin:

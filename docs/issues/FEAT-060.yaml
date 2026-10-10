@@ -1,10 +1,11 @@
-id: FEAT-p9GD588
+id: FEAT-060
 type: feature
 created_at: 2026-10-10T03:26:13.000596+04:00
 updated_at: 2026-10-10T04:03:02.052629+04:00
 source: local
 ulid: 01M4HFT50GR0J7Q0FMYD9GD588
-provisional: true
+aliases:
+    - FEAT-p9GD588
 status: open
 origin:
     roadmap_items:

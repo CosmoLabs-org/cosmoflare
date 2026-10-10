@@ -1,10 +1,11 @@
-id: FEAT-pRC6EDA
+id: FEAT-065
 type: feature
 created_at: 2026-10-10T03:26:33.104172+04:00
 updated_at: 2026-10-10T03:57:53.049838+04:00
 source: local
 ulid: 01M4HFTRGN4XQ3GM0AY0RC6EDA
-provisional: true
+aliases:
+    - FEAT-pRC6EDA
 status: implemented
 origin:
     roadmap_items:

@@ -1,10 +1,11 @@
-id: FEAT-pC4N3QP
+id: FEAT-061
 type: feature
 created_at: 2026-10-10T00:33:30.258298+04:00
 updated_at: 2026-10-10T00:33:32.565628+04:00
 source: local
 ulid: 01M4H5XX56PFBSY9QEYRC4N3QP
-provisional: true
+aliases:
+    - FEAT-pC4N3QP
 status: open
 origin:
     roadmap_items:
