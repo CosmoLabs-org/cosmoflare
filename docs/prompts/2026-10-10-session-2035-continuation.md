@@ -38,11 +38,26 @@ _(none)_
 
 
 ### [ ] G-01 Cron push from the Worker — finish delivery to the iPhone (carried from P-2026-10-09-cf-cli-review G-06)
-### [ ] G-02 Billing period from the real subscription (ROAD-103, BUG-056) (carried from P-2026-10-09-cf-cli-review G-10)
-### [ ] G-03 FIRST: independently verify this session's Ops work before building on it (operator request) (carried from P-2026-10-09-cf-cli-review G-13)
+**Operator-gated.** Two wrangler secret commands (VAPID_PRIVATE_KEY from ~/.cosmoflare/push.json, VAPID_SUBJECT mailto:alerts@cosmolabs.org) in apps/ops, then pair from the Home Screen app (iOS push requires installed PWA). Acceptance: test push lands; wrangler tail shows {"cron":"alerts",sent>=1}.
+
+### [ ] G-02 Billing period from the real subscription (ROAD-103, BUG-056)
+**Operator-gated.** Add Billing Read (+ Email Routing Read, + Registrar Read — one token edit unblocks four features: subscription period, usage-v2 FEAT-pDDEH5J, email metrics FEAT-p9B11X1, registrar domain data). Then `npx wrangler secret put CF_API_TOKEN` and verify period.source becomes "subscription".
+
+### [ ] G-03 FIRST: independently verify this session's Ops work before building on it (operator request)
+Fresh-eyes pass over the continuation-tail work (2026-10-10): 13 deploys — verify from tree + live site, not prose: gates on master (worker 132 / pager 153 / detector 0), ops.cosmolabs.org renders (billing shows NO KV card + muted rolling note; projects 62; domains profiles; DO 2; counters; Nunito), lockdown intact, cron tail clean. Then the ordered queue:
+
+1. **DO pricing** — agent 0380's verified-price report sits at `/Users/gabstudio/PROJECTS/cosmoflare-worktrees/_glm-agent-0380-brief-do-pricing/.glm-agent/report.md` (read + re-verify one number live): land durable_objects.requests/duration rows in apps/ops/src/pricing.ts, wire the DO view's graded bars, deploy.
+2. **IMP-p31NPAN design overhaul** — /impeccable app-wide, ranked rows everywhere (attention list, projects), quick section nav, pager React ADR per docs/SPEC.md.
+3. Error-code wave 2 wraps + USAGE.md table; retry/backoff (FEAT-pC4N3QP); componentization wave 2 (migrate views onto pager/src/components.ts).
+4. Held-local sync (75+ commits) — ONLY on explicit operator go (`ALLOW_PUSH=1 ccs sync`); then `ccs feedback ingest` canonicalizes the provisional IDs (aliases keep old refs resolving).
+
+Standing rules: real numbers only (memory cosmoflare-real-numbers-only); deploys need in-session operator request; releases need explicit go. Scratchpad live-data harness: see the 2026-10-09 prompt's scratchpad technique section (rebuild in /tmp if cleared).
+
 ## Carry-Over
 
-_(none)_
+- Session 2032 prompt (v0.33.0 release on operator go, FEAT-050 design).
+- CF limits corpus ingestion prompt.
+- Smoke "Docker build" fails only because the Docker daemon is off.
 
 
 ## Next Session Context
