@@ -12,7 +12,7 @@ import { collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
 import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
-import { runScheduled, testFire, type OpsEnv } from "./scheduled";
+import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
@@ -186,6 +186,9 @@ export default {
       case "/api/test-fire": // POST only: fire a real push at every subscribed device
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
         return json(await testFire(env));
+      case "/api/alerts/feed": // GET the fired-alert history, newest first — the pager's Notifications center reads this
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        return json({ feed: (await env.OPS_KV.get<AlertFeedEntry[]>(ALERT_FEED_KEY, "json")) ?? [] });
       default:
         return json({ error: "not found" }, 404);
     }
