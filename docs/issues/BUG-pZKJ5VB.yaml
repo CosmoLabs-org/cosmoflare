@@ -1,0 +1,22 @@
+id: BUG-pZKJ5VB
+type: bug
+created_at: 2026-10-11T19:36:59.640409+04:00
+updated_at: 2026-10-11T19:37:00.143723+04:00
+source: local
+ulid: 01M4NSRDFFGZ7VNSSR6RZKJ5VB
+provisional: true
+severity: critical
+status: open
+title: Ops pager infinite fetch loop sticks iOS on skeleton (unstable fetcher dep)
+description: 'Every React view builds its fetcher inline (fetcher ?? closure) and lists it in the load-effect deps. The closure is recreated each render, so every setState re-fires the effect: fetch -> new result object -> render -> new closure -> refetch, endlessly (~50 req/s, instant because the ApiClient 60s cache answers). Desktop Chrome tolerates it; iOS WebKit''s per-host connection cap saturates and the page''s primary fetch queues forever -> stuck skeleton (operator report 2026-10-11 ''cant load the page its stuck in skeleton''). The steady stream of 200s in wrangler tail was this loop. Tests never caught it because they inject a stable fetcher prop — the production path passes no prop (same class as the fixtures-hid-it lesson: the untested path is the shipped one).'
+fix_direction: Hoist a module-level defaultFetchJson in each view and use fetcher ?? defaultFetchJson so the dep is stable; add a no-prop spy test that asserts call count stays flat over time (red before, green after).
+affected_files:
+    - pager/src/app/views/AIView.tsx
+    - pager/src/app/views/D1View.tsx
+    - pager/src/app/views/DurableObjectsView.tsx
+    - pager/src/app/views/DomainsView.tsx
+    - pager/src/app/views/ProjectsView.tsx
+    - pager/src/app/views/WorkerProfileView.tsx
+    - pager/src/app/views/RulesView.tsx
+    - pager/src/app/views/ZonesView.tsx
+    - pager/src/app/views/WorkersView.tsx
