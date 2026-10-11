@@ -16,7 +16,7 @@ import AlertsView from "./AlertsView";
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
-  window.localStorage.clear();
+  localStorageStore.clear();
 });
 
 vi.mock("../../store", () => ({
@@ -25,10 +25,26 @@ vi.mock("../../store", () => ({
   snooze: async () => undefined,
 }));
 
+// This jsdom build exposes no window.localStorage (Node flags its own global
+// as unavailable), so the unread-dot persistence gets the stub the brief
+// asked for: a Map-backed localStorage installed before the view renders.
+const localStorageStore = new Map<string, string>();
+Object.defineProperty(window, "localStorage", {
+  configurable: true,
+  writable: true,
+  value: {
+    getItem: (key: string) => (localStorageStore.has(key) ? localStorageStore.get(key)! : null),
+    setItem: (key: string, value: string) => void localStorageStore.set(key, value),
+    removeItem: (key: string) => void localStorageStore.delete(key),
+    clear: () => localStorageStore.clear(),
+  },
+});
+
 const NOW = Date.parse("2026-10-12T12:00:00Z");
 // The view computes relative times against Date.now(); pin the clock so the
-// assertions are deterministic.
-vi.spyOn(Date, "now").mockImplementation(() => NOW + 14 * 60 * 1000);
+// assertions are deterministic. NOW+19m against the default entry at NOW+5m
+// reads as "14m ago".
+vi.spyOn(Date, "now").mockImplementation(() => NOW + 19 * 60 * 1000);
 
 function entry(partial: Partial<AlertFeedEntry>): AlertFeedEntry {
   return {
