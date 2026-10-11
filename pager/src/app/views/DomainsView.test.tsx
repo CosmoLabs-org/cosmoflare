@@ -8,7 +8,7 @@
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, type FetchResult } from "../../api";
-import type { DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
+import type { AttachmentsPayload, DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
 import DomainsView from "./DomainsView";
 
 afterEach(cleanup);
@@ -53,12 +53,32 @@ const DETAIL: DomainDetailPayload = {
   errors: [],
 };
 
+const ATTACHMENTS: AttachmentsPayload = {
+  generatedAt: "2026-10-10T00:00:00Z",
+  pages: [
+    {
+      project: "noble-web",
+      domains: [
+        { hostname: "staging.noble.coffee", status: "active", ssl: "active", verification: "active" },
+        { hostname: "noble.coffee", status: "pending", ssl: null, verification: null },
+      ],
+    },
+  ],
+  workers: [{ hostname: "api.noble.coffee", service: "noble-api", environment: "production" }],
+  zones: [],
+  errors: [],
+};
+
 /** Stub fetcher: answers api/domains and the detail/summary endpoints; the
  *  summary deliberately fails to prove enrichment is soft. */
-function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
+function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error; attachments?: AttachmentsPayload } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
   return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
     if (opts.failFirstLoad) throw opts.failFirstLoad;
     if (endpoint === "api/domains") return { data: DOMAINS as unknown as T, source: "network", ageSec: 0, demo: false };
+    if (endpoint === "api/attachments") {
+      if (opts.attachments) return { data: opts.attachments as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 503");
+    }
     if (endpoint.startsWith("api/domains/detail")) {
       if (opts.detail) return { data: opts.detail as unknown as T, source: "network", ageSec: 0, demo: false };
       throw new Error("HTTP 503");
@@ -202,5 +222,36 @@ describe("DomainsView (P-05b)", () => {
     const callCount = spy.mock.calls.length;
     await new Promise((r) => setTimeout(r, 300));
     expect(spy.mock.calls.length).toBeLessThanOrEqual(callCount + 1);
+  });
+
+  // Attachment inventory (FEAT-pEWA6N6 phase 1): the section under the zones
+  // card, fed by its own api/attachments fetch.
+  it("renders the attachments section from the stubbed api/attachments payload", async () => {
+    render(<DomainsView fetcher={domainsFetcher({ attachments: ATTACHMENTS })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-row")).toBeTruthy();
+    });
+    // The zone card still renders above it.
+    expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    // Subtitle, verbatim.
+    expect(document.querySelector(".cf-attachments .cf-row-detail")?.textContent).toBe("Custom domains by project");
+    // One group per Pages project, then the Workers group.
+    expect(text(".cf-product-name")).toEqual(["noble-web", "Workers"]);
+    expect(text(".cf-attachment-hostname")).toEqual(["staging.noble.coffee", "noble.coffee", "api.noble.coffee"]);
+    // Muted status badges; the SSL state only when present; Workers rows
+    // read service / environment.
+    const badges = text(".cf-attachment-row .cf-badge");
+    expect(badges).toEqual(["active", "ssl: active", "pending", "noble-api / production"]);
+  });
+
+  it("hides the attachments section when api/attachments fails — domains rows unaffected", async () => {
+    render(<DomainsView fetcher={domainsFetcher()} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    });
+    // Let the failed attachments fetch settle.
+    await new Promise((r) => setTimeout(r, 20));
+    expect(document.querySelector(".cf-attachments")).toBeNull();
+    expect(text(".cf-domain-name")).toEqual(["soon.dev", "warn.net", "later.org", "outside.example"]);
   });
 });

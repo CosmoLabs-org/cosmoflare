@@ -38,6 +38,42 @@ export interface DomainDetailPayload {
   errors: string[];
 }
 
+// Attachment inventory (FEAT-pEWA6N6 phase 1): mirrors the ops worker's
+// attachments.ts payload — read-only, no mutations.
+export interface PageDomainAttachment {
+  hostname: string;
+  status: string;
+  ssl?: string | null;
+  verification?: string | null;
+}
+
+export interface PagesProjectAttachments {
+  project: string;
+  domains: PageDomainAttachment[];
+}
+
+export interface WorkerDomainAttachment {
+  hostname: string;
+  service: string;
+  environment: string;
+}
+
+export interface ZoneAttachment {
+  id: string;
+  name: string;
+  status: string;
+  recordCount: number | null;
+}
+
+export interface AttachmentsPayload {
+  generatedAt: string;
+  pages: PagesProjectAttachments[];
+  workers: WorkerDomainAttachment[];
+  zones: ZoneAttachment[];
+  errors: string[];
+  cache?: { ageSec: number; stale: boolean };
+}
+
 /** Whole days from `now` to an ISO date (negative once past). */
 export function daysUntil(iso: string, nowMs: number = Date.now()): number {
   return Math.floor((Date.parse(iso) - nowMs) / 86_400_000);

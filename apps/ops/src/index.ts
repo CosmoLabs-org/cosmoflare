@@ -4,6 +4,7 @@
 // stays closed even if the Access app is removed.
 
 import { verifyAccessJwt } from "./access";
+import { collectAttachments } from "./attachments";
 import { collectAIGateways } from "./ai_gateway";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
@@ -79,6 +80,17 @@ export async function doResponse(ctx: ExecutionContext, env: Env, refresh: boole
   return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
 }
 
+// GET /api/attachments — the read-only custom-domain inventory (FEAT-pEWA6N6
+// phase 1: Pages per-project domains, Workers custom domains, per-zone DNS
+// record counts), through the same cached() contract as /api/domains:
+// 1 h fresh / 24 h stale, ?refresh behind the 60 s storm guard.
+export async function attachmentsResponse(ctx: ExecutionContext, env: Env, refresh: boolean): Promise<Response> {
+  const result = await cached(ctx, env, "attachments", { ...LIST_TTL, force: refresh }, () =>
+    collectAttachments(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date()),
+  );
+  return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+}
+
 // GET /api/billing — same contract as /api/summary: served through cached()
 // (15 min fresh / 6 h stale), ?refresh forces a reload behind the 60 s
 // refresh-storm guard, and the response carries `cache: { ageSec, stale }`.
@@ -127,6 +139,8 @@ export default {
       }
       case "/api/domains":
         return domainsResponse(ctx, env, url.searchParams.has("refresh"));
+      case "/api/attachments":
+        return attachmentsResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/domains/detail": {
         // /api/domains/detail?id=<zoneId> — the per-domain profile (zone
         // detail + DNSSEC + SSL), cached 1h per zone.
