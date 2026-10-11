@@ -1,10 +1,12 @@
 id: FEAT-pRXPMMY
 type: feature
 created_at: 2026-10-11T11:58:41.630836+04:00
-updated_at: 2026-10-11T11:58:42.095584+04:00
+updated_at: 2026-10-11T11:58:43.328039+04:00
 source: local
 ulid: 01M4MZH7XF3YGQAM2VRYRXPMMY
 provisional: true
 status: open
+origin:
+    session: 75
 title: 'PWA offline app-shell: native-feel launches without network'
 description: 'Phase 3 of ROAD-p2FSZR0 (mobile via PWA): today sw.js has NO fetch handler — every launch needs the network and shows Safari''s offline error, which breaks the ''native app'' feel. Add an app-shell cache strategy to the service worker: precache the hashed vite bundle + icons on install, serve shell cache-first with background revalidate, keep /api/* always network (real-numbers-only rule: cached API data only via the existing ApiClient sessionStorage layer with its age labels). Result: the home-screen app opens instantly and works offline for the last-viewed data, like an installed app. Respect the refresh-storm guard and never serve stale data without its age badge.'

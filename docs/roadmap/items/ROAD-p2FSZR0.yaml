@@ -1,9 +1,18 @@
 id: ROAD-p2FSZR0
 created_at: 2026-10-11T11:57:59.685894+04:00
-updated_at: 2026-10-11T11:58:00.791026+04:00
+updated_at: 2026-10-11T11:58:50.889926+04:00
 title: 'Mobile tier via PWA: installable Ops app with push alerts'
-status: captured
+status: exploring
 category: core
+refs:
+    - type: doc
+      path: docs/ideas/2026-10-11-pwa-install-guidance-install-banner-native-prompt-pairing.md
+    - type: issue
+      path: docs/issues/
+    - type: issue
+      path: docs/issues/FEAT-pXNQ5GW.yaml
+    - type: issue
+      path: docs/issues/FEAT-pRXPMMY.yaml
 origin:
     session: 75
 ulid: 01M4MZFYG7W0DEJEXZ8B2FSZR0

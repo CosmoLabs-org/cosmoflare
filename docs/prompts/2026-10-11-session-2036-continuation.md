@@ -6,6 +6,9 @@ branch: master
 goals_total: 3
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-10-session-2035-continuation.md"
+requires_reading:
+    - docs/prompts/2026-10-10-session-2035-continuation.md
+schema_version: 1
 ---
 
 ## Context

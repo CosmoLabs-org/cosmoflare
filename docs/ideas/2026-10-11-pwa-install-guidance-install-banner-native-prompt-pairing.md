@@ -2,11 +2,14 @@
 ulid: 01M4M6QQT5P5KYGPMHM3QNFTQW
 title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
 created: "2026-10-11T04:45:20.58184+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 75
+promoted_to: FEAT-pXNQ5GW
 ---
+
+# PWA install guidance: install banner, native prompt, pairing-as-funnel
 
 # PWA install guidance: install banner, native prompt, pairing-as-funnel
 
