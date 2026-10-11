@@ -119,6 +119,8 @@ export default function DurableObjectsView({ refreshSeq = 0, fetcher }: { refres
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Requests, errors and duration per namespace. Graded bars show allowance headroom.</p>
+
       <section className="cf-card">
         <p className="cf-row-detail">
           {d.errors.length > 0

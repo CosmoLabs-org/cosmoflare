@@ -122,6 +122,8 @@ export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
 
       <a className="cf-btn cf-btn-ghost cf-profile-back" href="#/workers">All workers</a>
 
+      <p className="cf-row-detail">One script's last 24h. Use the browser back or Workers to return.</p>
+
       {found && worker !== null ? (
         <section className="cf-card">
           <p className="cf-row-detail">24h window · from Workers Analytics</p>

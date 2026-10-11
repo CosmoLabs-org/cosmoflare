@@ -160,7 +160,7 @@ export default function ProjectsView({ refreshSeq = 0, fetcher }: { refreshSeq?:
       ) : null}
 
       {/* Card subtitle stays; the section masthead owns the page title. */}
-      <p className="cf-row-detail">Projected cost beyond allowances, by project, across Cloudflare products.</p>
+      <p className="cf-row-detail">Projected overage beyond allowances, by project. Open the Cloudflare dashboard to change project resources.</p>
       <div className="cf-projects-list">
         {projects.length === 0 ? (
           <p className="cf-empty cf-empty-quiet">No projects found on this account.</p>

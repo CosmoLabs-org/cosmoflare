@@ -96,10 +96,11 @@ describe("ProjectsView (P-05b)", () => {
     expect(cards[0].querySelector(".cf-project-overage")?.classList.contains("cf-level-critical-text")).toBe(true);
     expect(cards[0].classList.contains("cf-over")).toBe(true);
     expect(cards[1].querySelector(".cf-project-name")?.textContent).toBe("web");
-    // No page heading — the masthead owns titles; the card subtitle stays.
+    // No page heading — the masthead owns titles; the card subtitle stays
+    // (merged with the operator action-hint line, 2026-10-12).
     expect(document.querySelector(".cf-projects-list h2")).toBeNull();
     expect(document.querySelector(".cf-row-detail")?.textContent).toBe(
-      "Projected cost beyond allowances, by project, across Cloudflare products.",
+      "Projected overage beyond allowances, by project. Open the Cloudflare dashboard to change project resources.",
     );
   });
 

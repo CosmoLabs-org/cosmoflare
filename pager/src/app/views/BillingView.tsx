@@ -179,6 +179,8 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Real usage against your plan allowances. Projections assume current pace to the period end.</p>
+
       {/* Period progress */}
       <section className="cf-card">
         <h2>{`Billing period — day ${b.period.day} of ${b.period.days}`}</h2>
