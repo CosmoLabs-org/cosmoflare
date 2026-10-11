@@ -6,8 +6,8 @@
 // (before Cloudflare)" label) — with every fetch injected
 // (the worker_profile.test.ts pattern).
 import { cleanup, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
-import type { FetchResult } from "../../api";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { api, type FetchResult } from "../../api";
 import type { DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
 import DomainsView from "./DomainsView";
 
@@ -187,5 +187,20 @@ describe("DomainsView (P-05b)", () => {
       expect(document.querySelector(".cf-empty-quiet")).toBeTruthy();
     });
     expect(document.querySelector(".cf-empty-quiet")?.textContent).toBe("No domains found on this account.");
+  });
+
+  it("does not loop fetches when no fetcher prop is injected (production path)", async () => {
+    // A fresh FetchResult per call, as production returns — a stable reference
+    // would let React bail out of the re-render and mask the loop.
+    const spy = vi.spyOn(api, "fetchJson").mockImplementation(async () =>
+      ({ data: DOMAINS, source: "network", ageSec: 0, demo: false }) as unknown as Awaited<ReturnType<typeof api.fetchJson>>,
+    );
+    render(<DomainsView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card, .cf-empty, .cf-loading")).toBeTruthy();
+    });
+    const callCount = spy.mock.calls.length;
+    await new Promise((r) => setTimeout(r, 300));
+    expect(spy.mock.calls.length).toBeLessThanOrEqual(callCount + 1);
   });
 });

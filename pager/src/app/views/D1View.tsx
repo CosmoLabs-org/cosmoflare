@@ -21,8 +21,10 @@ const D1_COLUMNS: DataTableColumn<D1Row>[] = [
   { key: "rowsPerQuery", label: "Rows/query", numeric: true, text: (d) => formatCount(d.rowsPerQuery), num: (d) => d.rowsPerQuery },
 ];
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function D1View({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [summary, setSummary] = useState<FetchResult<Summary> | null>(null);
   // Allowance for the graded bars: the D1 rows-read allowance from the
   // billing cache — one cached fetch, absent bars on failure.

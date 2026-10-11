@@ -25,8 +25,10 @@ const DO_COLUMNS: DataTableColumn<DORow>[] = [
   { key: "errorPct", label: "Error %", numeric: true, text: (r) => formatPct(r.errorPct, 2), num: (r) => r.errorPct },
 ];
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function DurableObjectsView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [data, setData] = useState<FetchResult<DOPayload> | null>(null);
   // Graded bars: each script's requests as a share of the DO request
   // allowance from the cached billing payload; bars drop out on failure.

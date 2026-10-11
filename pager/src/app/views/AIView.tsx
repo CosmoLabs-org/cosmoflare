@@ -69,8 +69,10 @@ function GatewayCard({ gw }: { gw: AIGatewayRow }): React.JSX.Element {
   );
 }
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function AIView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [data, setData] = useState<FetchResult<AIGatewaysPayload> | null>(null);
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);

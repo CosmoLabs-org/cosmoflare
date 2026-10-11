@@ -177,10 +177,12 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
   );
 }
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [payload, setPayload] = useState<RulesPayload | null>(null);
   const [drafts, setDrafts] = useState<AlertRule[]>([]);
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
