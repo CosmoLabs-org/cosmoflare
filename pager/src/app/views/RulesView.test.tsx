@@ -34,6 +34,35 @@ function rulesFetcher(data: RulesPayload, starter = false): Parameters<typeof Ru
   };
 }
 
+/** Skeleton probe: the api/rules fetch hangs until go() releases it. */
+function gatedRulesFetcher(data: RulesPayload): { fetcher: Parameters<typeof RulesView>[0]["fetcher"]; go: () => void } {
+  let release!: (r: FetchResult<RulesPayload>) => void;
+  const gate = new Promise<FetchResult<RulesPayload>>((res) => {
+    release = res;
+  });
+  const fetcher: Parameters<typeof RulesView>[0]["fetcher"] = async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+    if (endpoint !== "api/rules") throw new Error("HTTP 404");
+    return gate as unknown as Promise<FetchResult<T>>;
+  };
+  return {
+    fetcher,
+    go: () => release({ data: data, source: "network", ageSec: 0, demo: false }),
+  };
+}
+
+/** Fails every api/rules call while armed; after setFail(false) it answers with the payload. */
+function recoveringRulesFetcher(data: RulesPayload): { fetcher: Parameters<typeof RulesView>[0]["fetcher"]; setFail: (fail: boolean) => void } {
+  let fail = true;
+  const fetcher: Parameters<typeof RulesView>[0]["fetcher"] = async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+    if (endpoint !== "api/rules") throw new Error("HTTP 404");
+    if (fail) throw new Error("HTTP 503");
+    return { data: data as unknown as T, source: "network", ageSec: 0, demo: false };
+  };
+  return { fetcher, setFail: (next) => {
+    fail = next;
+  } };
+}
+
 /** PUT stub: records the last body; replies with the echo (or a 400). A
  *  plain response lookalike — jsdom has no Response constructor. */
 function stubPut(opts: { status?: number; body?: unknown } = {}): { lastBody: () => unknown } {
@@ -184,5 +213,43 @@ describe("RulesView (P-06)", () => {
     const hint = document.querySelector(".cf-rule-hint") as HTMLElement | null;
     expect(hint?.hidden).toBe(false);
     expect(hint?.textContent).toBe("1.0B");
+  });
+
+  it("renders the skeleton while the first fetch is in flight", async () => {
+    const gated = gatedRulesFetcher(payload([rule({ name: "kv blast" })]));
+    render(<RulesView fetcher={gated.fetcher} />);
+    expect(document.querySelector(".cf-loading")).toBeTruthy();
+    expect(document.querySelectorAll(".cf-skeleton").length).toBe(4);
+    expect(document.querySelector(".cf-rules-list")).toBeNull();
+    gated.go();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-rule")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-loading")).toBeNull();
+  });
+
+  it("paints the quiet empty state when the account has no rules", async () => {
+    render(<RulesView fetcher={rulesFetcher(payload([]))} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-empty-quiet")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-empty-quiet")?.textContent).toBe("No rules. Add one to start alerting.");
+    expect(document.querySelector(".cf-rule")).toBeNull();
+  });
+
+  it("shows the Retry card on a failed first load and Retry recovers", async () => {
+    const recovering = recoveringRulesFetcher(payload([rule({ name: "kv blast" })]));
+    render(<RulesView fetcher={recovering.fetcher} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card.cf-level-warning")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-card-title")?.textContent).toBe("Could not load rules");
+    expect(document.querySelector(".cf-card .cf-btn")?.textContent).toBe("Retry");
+    recovering.setFail(false);
+    document.querySelector<HTMLButtonElement>(".cf-card .cf-btn")!.click();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-rule")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-card.cf-level-warning")).toBeNull();
   });
 });

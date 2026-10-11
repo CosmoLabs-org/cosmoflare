@@ -74,7 +74,7 @@ export default function AlertsView({ refreshSeq = 0 }: { refreshSeq?: number }):
   }
 
   if (records.length === 0) {
-    return <p className="cf-empty">No alerts. Your daemon will page you here.</p>;
+    return <p className="cf-empty cf-empty-quiet">No alerts. Your daemon will page you here.</p>;
   }
 
   return (

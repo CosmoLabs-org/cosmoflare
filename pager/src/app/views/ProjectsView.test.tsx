@@ -56,6 +56,32 @@ function billingFetcher(billing: Billing, opts: { throwErr?: Error } = {}): Para
   };
 }
 
+/** Skeleton probe: the fetch hangs until go() releases it. */
+function gatedBillingFetcher(billing: Billing): { fetcher: Parameters<typeof ProjectsView>[0]["fetcher"]; go: () => void } {
+  let release!: (r: FetchResult<Billing>) => void;
+  const gate = new Promise<FetchResult<Billing>>((res) => {
+    release = res;
+  });
+  const fetcher: Parameters<typeof ProjectsView>[0]["fetcher"] = async <T,>(): Promise<FetchResult<T>> =>
+    gate as unknown as Promise<FetchResult<T>>;
+  return {
+    fetcher,
+    go: () => release({ data: billing, source: "network", ageSec: 0, demo: false }),
+  };
+}
+
+/** Fails every call while armed; after setFail(false) it answers with the billing payload. */
+function recoveringBillingFetcher(billing: Billing): { fetcher: Parameters<typeof ProjectsView>[0]["fetcher"]; setFail: (fail: boolean) => void } {
+  let fail = true;
+  const fetcher: Parameters<typeof ProjectsView>[0]["fetcher"] = async <T,>(): Promise<FetchResult<T>> => {
+    if (fail) throw new Error("HTTP 503");
+    return { data: billing as unknown as T, source: "network", ageSec: 0, demo: false };
+  };
+  return { fetcher, setFail: (next) => {
+    fail = next;
+  } };
+}
+
 describe("ProjectsView (P-05b)", () => {
   it("renders one card per project, worst payer first, with the name + overage pair head", async () => {
     render(<ProjectsView fetcher={billingFetcher(BILLING)} />);
@@ -133,5 +159,32 @@ describe("ProjectsView (P-05b)", () => {
     });
     expect(document.querySelector(".cf-card h2")?.textContent).toBe("Could not load projects");
     expect(document.querySelector(".cf-card .cf-btn")?.textContent).toBe("Retry");
+  });
+
+  it("renders the skeleton while the first fetch is in flight", async () => {
+    const gated = gatedBillingFetcher(BILLING);
+    render(<ProjectsView fetcher={gated.fetcher} />);
+    expect(document.querySelector(".cf-loading")).toBeTruthy();
+    expect(document.querySelectorAll(".cf-skeleton").length).toBe(4);
+    expect(document.querySelector(".cf-projects-list")).toBeNull();
+    gated.go();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-projects-list")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-loading")).toBeNull();
+  });
+
+  it("Retry recovers onto the data after a failed first load", async () => {
+    const recovering = recoveringBillingFetcher(BILLING);
+    render(<ProjectsView fetcher={recovering.fetcher} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card.cf-level-warning")).toBeTruthy();
+    });
+    recovering.setFail(false);
+    document.querySelector<HTMLButtonElement>(".cf-card .cf-btn")!.click();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-project")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-card.cf-level-warning")).toBeNull();
   });
 });

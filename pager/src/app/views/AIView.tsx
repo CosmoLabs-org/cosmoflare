@@ -157,7 +157,7 @@ export default function AIView({ refreshSeq = 0, fetcher }: { refreshSeq?: numbe
       {d.gateways.length === 0 ? (
         <section className="cf-card">
           <p className="cf-empty cf-empty-quiet">
-            No AI Gateways on this account yet — create one per project (R2 → Manage R2 API Tokens flow is the analog: AI Gateway → Create Gateway).
+            No AI Gateways on this account yet — create one in the Cloudflare dashboard.
           </p>
         </section>
       ) : (
