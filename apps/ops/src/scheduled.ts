@@ -7,7 +7,7 @@
 
 import type { ZoneGroups } from "./summary";
 import { summarizeD1, summarizeZones } from "./summary";
-import { CONDITIONS, evaluate, pruneState, type D1Obs, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
+import { CONDITIONS, evaluate, pruneState, type D1Obs, type Fire, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
 import { readSubs, removeSubscriptions } from "./subscriptions";
 import { sendPushes } from "./webpush";
 import { fetchRetry } from "./retry";
@@ -23,6 +23,11 @@ const API = "https://api.cloudflare.com/client/v4";
 // → NaN age → served fresh forever.
 export const RULES_KEY = "rules";
 export const STATE_KEY = "fire-state";
+// ALERT_FEED_KEY holds the fired-alert history the pager's Notifications
+// center reads through /api/alerts/feed: newest-first AlertFeedEntry[], kept
+// capped at MAX_FEED so the KV blob cannot grow without bound.
+export const ALERT_FEED_KEY = "alert-feed";
+export const MAX_FEED = 100;
 const ZONES_CACHE_KEY = "cron:zones";
 const D1_CACHE_KEY = "cron:d1-list";
 const KV_CACHE_KEY = "cron:kv-list";
@@ -54,6 +59,51 @@ export interface RunResult {
   gaps: string[];
   /** Non-prune delivery problems (status + push-service reason, transport errors). */
   issues: string[];
+}
+
+// AlertFeedEntry is one fired-alert record in the KV "alert-feed" history and
+// the wire shape of /api/alerts/feed — the pager's Notifications center
+// renders these verbatim (pager/src/alerts.ts mirrors the type).
+export interface AlertFeedEntry {
+  ts: string; // fire time, ISO
+  ruleId: string; // stable alert ID ("rule/scope" or "telemetry-gap/dataset")
+  condition: string; // rules.ts condition id, or "telemetry-gap"
+  title: string; // rule name
+  value: number; // observed value at fire time
+  threshold: number; // rule threshold
+  unit: string; // "%" | "requests" | "rows" | "writes" ("" for gaps)
+  message: string; // the page detail line
+  sent: boolean; // whether the push reached at least one device
+}
+
+// toFeedEntry projects one fire into the feed shape; sent starts false and is
+// flipped after a delivery that reached at least one device.
+function toFeedEntry(fire: Fire, ts: string, sent: boolean): AlertFeedEntry {
+  return {
+    ts,
+    ruleId: fire.alertId,
+    condition: fire.condition,
+    title: fire.ruleName,
+    value: fire.value,
+    threshold: fire.threshold,
+    unit: fire.unit,
+    message: fire.message,
+    sent,
+  };
+}
+
+// appendFeed prepends the new entries to KV "alert-feed" (newest first) and
+// caps the list at MAX_FEED. Best effort: a feed failure becomes an issue,
+// never a cron crash.
+async function appendFeed(env: OpsEnv, entries: AlertFeedEntry[], issues: string[]): Promise<void> {
+  if (entries.length === 0) return;
+  try {
+    const existing = (await env.OPS_KV.get<AlertFeedEntry[]>(ALERT_FEED_KEY, "json")) ?? [];
+    const feed = [...entries, ...existing].slice(0, MAX_FEED);
+    await env.OPS_KV.put(ALERT_FEED_KEY, JSON.stringify(feed));
+  } catch (err) {
+    issues.push(`alert-feed write failed: ${(err as Error).message}`);
+  }
 }
 
 // Starter rules when KV key "rules" is absent (operator decision O10): the
@@ -244,12 +294,18 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   const prunedEndpoints: string[] = [];
   if (fires.length > 0) {
+    // Every fire lands in the alert-feed history, delivered or not: entries
+    // start sent:false and flip once their push reached at least one device;
+    // a delivery crash below leaves the remaining entries honestly marked
+    // "not delivered" instead of dropping them from the history.
+    const feedEntries = fires.map((fire) => toFeedEntry(fire, end, false));
     // Delivery problems must never throw out of runScheduled (the cron
     // crashed here when VAPID vars were unset, skipping the fire-state write
     // below and re-evaluating the same fires every run): a push error becomes
     // an issue and the state write still happens.
     try {
-      for (const fire of fires) {
+      for (let i = 0; i < fires.length; i++) {
+        const fire = fires[i];
         const payload = {
           id: fire.alertId,
           severity: "info",
@@ -263,12 +319,14 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
         result.pruned += outcome.pruned;
         prunedEndpoints.push(...outcome.prunedEndpoints);
         result.issues.push(...outcome.issues);
+        feedEntries[i].sent = outcome.sent > 0;
       }
       // Dead devices leave in ONE read-modify-write for the whole run.
       await removeSubscriptions(env, prunedEndpoints);
     } catch (err) {
       result.issues.push(`push delivery failed: ${(err as Error).message}`);
     }
+    await appendFeed(env, feedEntries, result.issues);
   }
 
   if (JSON.stringify(state) !== stateBefore) {

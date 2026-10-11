@@ -162,12 +162,20 @@ export function excludeMatches(rule: Rule, sv: ScopedValue): boolean {
 
 // Fire is one page-worthy event: enough to build the pager payload
 // (id = alertId, title = rule name, detail = message) and to key state.
+// condition/value/threshold/unit carry the same numbers into the alert-feed
+// entry (KV "alert-feed", served by /api/alerts/feed) so the pager can show
+// what fired without re-parsing the message; telemetry-gap fires carry the
+// condition "telemetry-gap" and zeros (there is no observed metric).
 export interface Fire {
   alertId: string;
   ruleName: string;
   scopeName: string; // "" for telemetry-gap fires
   message: string;
   dataset: "zone" | "d1" | "kv" | "";
+  condition: string;
+  value: number;
+  threshold: number;
+  unit: string;
 }
 
 // evaluate runs every enabled rule against the observations. Mutates state in
@@ -208,7 +216,7 @@ export function evaluate(
       const threshold = formatValue(rule.threshold, desc.unit);
       let message = `${rule.condition} ${sv.scopeName} [${rule.name}]: observed ${observed} meets threshold ${threshold} (${desc.unit})`;
       if (escalated) message = ESCALATION_PREFIX + message;
-      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset });
+      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset, condition: rule.condition, value: sv.value, threshold: rule.threshold, unit: desc.unit });
     }
   }
 
@@ -223,7 +231,7 @@ export function evaluate(
     state.lastFired[alertId] = now;
     state.fires[alertId] = (state.fires[alertId] ?? 0) + 1;
     const message = `telemetry gap: ${dataset} analytics unavailable, ${dataset} rules cannot fire: ${gaps[dataset]}`;
-    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"] });
+    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"], condition: "telemetry-gap", value: 0, threshold: 0, unit: "" });
   }
   return fires;
 }

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parsePayload } from "../../../pager/src/payload";
 import { handleSubscribe, SUBS_KEY } from "./subscriptions";
-import { runScheduled, starterRules, testFire, RULES_KEY, STATE_KEY } from "./scheduled";
+import { runScheduled, starterRules, testFire, RULES_KEY, STATE_KEY, ALERT_FEED_KEY } from "./scheduled";
 
 // Mock the push library at the module boundary and capture every envelope.
 const { envelopes } = vi.hoisted(() => ({ envelopes: [] as { url: string; data: string }[] }));
@@ -372,6 +372,64 @@ describe("runScheduled", () => {
     const kept = (await kv.get(SUBS_KEY, "json")) as { endpoint: string }[];
     expect(kept.map((s) => s.endpoint)).toEqual(["https://push.example/1"]);
     expect(kv.puts.filter((k) => k === SUBS_KEY).length).toBe(subsWritesBefore + 1);
+  });
+  it("a fired rule appends a delivered alert-feed entry (Notifications center)", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch();
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(1);
+    expect(out.sent).toBe(1);
+    const feed = (await kv.get(ALERT_FEED_KEY, "json")) as Array<{
+      ts: string; ruleId: string; condition: string; title: string;
+      value: number; threshold: number; unit: string; message: string; sent: boolean;
+    }>;
+    expect(feed).toHaveLength(1);
+    const entry = feed[0];
+    expect(entry.ts).toBe(NOW.toISOString());
+    expect(entry.ruleId.startsWith("kvday/")).toBe(true);
+    expect(entry.condition).toBe("kv-writes");
+    expect(entry.title).toBe("kvday");
+    expect(entry.value).toBe(150_000);
+    expect(entry.threshold).toBe(100_000);
+    expect(entry.unit).toBe("writes");
+    expect(entry.message).toContain("SESSIONS");
+    expect(entry.sent).toBe(true);
+  });
+  it("caps the alert-feed at 100 entries, newest first", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch();
+    const stale = Array.from({ length: 100 }, (_, i) => ({
+      ts: new Date(NOW.getTime() - (i + 1) * 60_000).toISOString(),
+      ruleId: `old/${i}`, condition: "kv-writes", title: "old", value: 1, threshold: 1,
+      unit: "writes", message: "stale", sent: true,
+    }));
+    await kv.put(ALERT_FEED_KEY, JSON.stringify(stale));
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(1);
+    const feed = (await kv.get(ALERT_FEED_KEY, "json")) as { ruleId: string; ts: string }[];
+    expect(feed).toHaveLength(100); // 101 total → capped at MAX_FEED
+    expect(feed[0].ruleId.startsWith("kvday/")).toBe(true); // newest first
+    expect(feed[0].ts).toBe(NOW.toISOString());
+    expect(feed[1].ruleId).toBe("old/0"); // the previous newest follows
+  });
+  it("records sent:false in the alert-feed when push delivery fails", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch({ pushStatus: 500 });
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(1);
+    expect(out.sent).toBe(0);
+    expect(out.issues.length).toBeGreaterThan(0); // the delivery problem is surfaced
+    // the fire still lands in the history, honestly marked not delivered
+    const feed = (await kv.get(ALERT_FEED_KEY, "json")) as { ruleId: string; sent: boolean }[];
+    expect(feed).toHaveLength(1);
+    expect(feed[0].ruleId.startsWith("kvday/")).toBe(true);
+    expect(feed[0].sent).toBe(false);
   });
 });
 
