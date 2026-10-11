@@ -10,15 +10,17 @@ export interface ConditionDesc {
   scope: "zone" | "d1" | "kv";
   unit: string;
   dataset: "zone" | "d1" | "kv";
+  /** Human label for push titles (operator 2026-10-12: rule names are slugs). */
+  label: string;
 }
 
 export const CONDITIONS: Record<string, ConditionDesc> = {
-  "zone-uncached-requests": { scope: "zone", unit: "requests", dataset: "zone" },
-  "zone-cache-miss-pct": { scope: "zone", unit: "%", dataset: "zone" },
-  "d1-rows-read": { scope: "d1", unit: "rows", dataset: "d1" },
+  "zone-uncached-requests": { scope: "zone", unit: "requests", dataset: "zone", label: "Uncached requests" },
+  "zone-cache-miss-pct": { scope: "zone", unit: "%", dataset: "zone", label: "Cache miss rate" },
+  "d1-rows-read": { scope: "d1", unit: "rows", dataset: "d1", label: "D1 rows read" },
   // FB-29: KV writes/day — the one alert class neither the Go registry nor
   // this port had. Per-namespace write volume over the 24h window.
-  "kv-writes": { scope: "kv", unit: "writes", dataset: "kv" },
+  "kv-writes": { scope: "kv", unit: "writes", dataset: "kv", label: "KV writes" },
 };
 
 // Rule is one stored alert rule (KV key "rules"). Excludes match
@@ -66,7 +68,7 @@ export interface FireState {
 }
 
 // STATE_TTL_MS bounds the cooldown memory: entries whose lastFired is older
-// than 24h can no longer affect a run (cooldowns are 1h) and are pruned so
+// than 24h can no longer affect a run (cooldowns are 6h) and are pruned so
 // the KV blob does not grow forever with retired alert IDs.
 export const STATE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -82,9 +84,11 @@ export function pruneState(state: FireState, now: number): void {
   }
 }
 
-// Cooldown is per rule/scope, 1h (operator decision O5, watch parity). While
-// cooling, a value at least 2× the last paged value escalates: pages again.
-export const COOLDOWN_MS = 60 * 60 * 1000;
+// Cooldown is per rule/scope, 6h (operator 2026-10-12: the 1h watch parity
+// re-paged standing breaches hourly — a 24h-window metric that stays breached
+// paged ~22×/day as if each hour were a new event). While cooling, a value at
+// least 2× the last paged value escalates: pages again immediately.
+export const COOLDOWN_MS = 6 * 60 * 60 * 1000;
 
 // ZONE_CACHE_FLOOR is the minimum eligible requests a zone needs in the
 // window before its miss ratio is judged (design D6): a zone with 3 requests
@@ -166,6 +170,10 @@ export function excludeMatches(rule: Rule, sv: ScopedValue): boolean {
 // entry (KV "alert-feed", served by /api/alerts/feed) so the pager can show
 // what fired without re-parsing the message; telemetry-gap fires carry the
 // condition "telemetry-gap" and zeros (there is no observed metric).
+// title is the phone-facing headline ("Uncached requests · hot.example") —
+// rule names are operator-chosen slugs, so the condition label names the
+// metric (operator 2026-10-12). severity escalates to "warning" on a ≥2×
+// re-page so the phone can treat it accordingly.
 export interface Fire {
   alertId: string;
   ruleName: string;
@@ -176,6 +184,8 @@ export interface Fire {
   value: number;
   threshold: number;
   unit: string;
+  title: string;
+  severity: "info" | "warning";
 }
 
 // evaluate runs every enabled rule against the observations. Mutates state in
@@ -216,7 +226,8 @@ export function evaluate(
       const threshold = formatValue(rule.threshold, desc.unit);
       let message = `${rule.condition} ${sv.scopeName} [${rule.name}]: observed ${observed} meets threshold ${threshold} (${desc.unit})`;
       if (escalated) message = ESCALATION_PREFIX + message;
-      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset, condition: rule.condition, value: sv.value, threshold: rule.threshold, unit: desc.unit });
+      const title = sv.scopeName ? `${desc.label} · ${sv.scopeName}` : desc.label;
+      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset, condition: rule.condition, value: sv.value, threshold: rule.threshold, unit: desc.unit, title, severity: escalated ? "warning" : "info" });
     }
   }
 
@@ -231,7 +242,7 @@ export function evaluate(
     state.lastFired[alertId] = now;
     state.fires[alertId] = (state.fires[alertId] ?? 0) + 1;
     const message = `telemetry gap: ${dataset} analytics unavailable, ${dataset} rules cannot fire: ${gaps[dataset]}`;
-    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"], condition: "telemetry-gap", value: 0, threshold: 0, unit: "" });
+    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"], condition: "telemetry-gap", value: 0, threshold: 0, unit: "", title: `Telemetry gap (${dataset})`, severity: "info" });
   }
   return fires;
 }

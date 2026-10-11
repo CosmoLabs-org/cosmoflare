@@ -186,7 +186,7 @@ describe("runScheduled", () => {
     expect(out).toEqual({ fired: 0, sent: 0, pruned: 0, gaps: [], issues: [] });
     expect(kv.puts).not.toContain(STATE_KEY); // no state churn either
   });
-  it("kv-writes rule: fetches only kv telemetry, counts writes only, fires naming the namespace title (FB-29)", async () => {
+  it("kv-writes rule: fetches only kv telemetry, counts writes only, pages under the condition headline (FB-29)", async () => {
     const kv = fakeKV();
     await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
     await seedSubs(kv);
@@ -200,10 +200,10 @@ describe("runScheduled", () => {
     expect(kv.puts).toContain("cron:kv-list");
     const payload = parsePayload(JSON.parse(envelopes[0].data));
     expect(payload).not.toBeNull();
-    expect(payload!.title).toBe("kvday");
-    expect(payload!.detail).toContain("SESSIONS");
-    // 900k read actions on the same namespace must not count toward writes
-    expect(payload!.detail).toContain("observed 150000");
+    // headline names the condition and the namespace, not the raw rule slug
+    expect(payload!.title).toBe("KV writes · SESSIONS");
+    // human body with the numbers: 150k writes counted, 900k reads excluded
+    expect(payload!.detail).toBe("150000 writes in 24h — threshold 100000");
   });
   it("a kv telemetry gap pages when the kv GraphQL fails and a kv rule is enabled", async () => {
     const kv = fakeKV();
@@ -215,7 +215,7 @@ describe("runScheduled", () => {
     expect(out.fired).toBe(1); // the telemetry-gap fire
     expect(out.sent).toBe(1);
   });
-  it("uses starter rules when KV 'rules' is absent; threshold fire names the zone and validates against the pager schema", async () => {
+  it("starter rules, two fires: ONE digest push listing both, validating against the pager schema", async () => {
     const kv = fakeKV();
     await seedSubs(kv);
     const { calls } = routeFetch();
@@ -223,20 +223,19 @@ describe("runScheduled", () => {
     // starters: uncached 10000 (12k dynamic fires), miss-pct 50 (0% missed of
     // 500 eligible → no fire), d1 1e9 (2B fires)
     expect(out.fired).toBe(2);
-    expect(out.sent).toBe(2); // one subscription, two fires
-    // zone list REST + 1 zone GraphQL batch + d1 list REST + 1 d1 GraphQL + 2 pushes
+    expect(out.sent).toBe(1); // ONE push per run reaches the one device
+    // zone list REST + 1 zone GraphQL batch + d1 list REST + 1 d1 GraphQL + 1 push
     expect(calls.filter((c) => c.includes("api.cloudflare.com")).length).toBe(4);
-    // all envelopes pass the pager wire validation
-    for (const e of envelopes) {
-      const payload = parsePayload(JSON.parse(e.data));
-      expect(payload).not.toBeNull();
-      expect(payload!.severity).toBe("info");
-      expect(payload!.service).toBe("cloudflare");
-    }
-    // the uncached fire names the zone in the detail
-    const uncached = envelopes.map((e) => JSON.parse(e.data)).find((p) => p.title === "uncached requests");
-    expect(uncached.detail).toContain("hot.example");
-    expect(uncached.id).toBe("uncached requests/hot.example");
+    // one envelope: the digest
+    expect(envelopes).toHaveLength(1);
+    const payload = parsePayload(JSON.parse(envelopes[0].data));
+    expect(payload).not.toBeNull();
+    expect(payload!.severity).toBe("info");
+    expect(payload!.service).toBe("cloudflare");
+    expect(payload!.title).toBe("2 alerts fired");
+    // each fire is one digest line: condition headline · scope — numbers
+    expect(payload!.detail).toContain("Uncached requests · hot.example — 12000 requests in 24h — threshold 10000");
+    expect(payload!.detail).toContain("D1 rows read · big-db — 2.0B rows in 24h — threshold 1.0B");
     // fire-state persisted exactly once
     expect(kv.puts.filter((k) => k === STATE_KEY).length).toBe(1);
     // list caches written under the cron-prefixed keys (BUG-058: no collision
@@ -290,7 +289,32 @@ describe("runScheduled", () => {
     expect(envelopes).toHaveLength(0);
     expect(kv.puts.filter((k) => k === STATE_KEY).length).toBe(putsAfterFirst);
   });
-  it("pages a telemetry gap once per hour when the zone dataset fails, then stays quiet", async () => {
+  it("a ≥2× jump inside the cooldown still pages, at warning severity (escalation stays immediate)", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "kvday", condition: "kv-writes", threshold: 100_000, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch();
+    await runScheduled(envP(kv), NOW); // pages at 150k
+    envelopes.length = 0;
+    // same 24h window now reports ≥2× the last paged value
+    const inner = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/graphql") && String(init?.body ?? "").includes("kvOperations")) {
+        const body = { data: { viewer: { accounts: [{ g: [{ sum: { requests: 400_000 }, dimensions: { namespaceId: "ns-1", actionType: "write" } }] }] } } };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }
+      return inner(input as never, init);
+    }) as typeof fetch;
+    const out = await runScheduled(envP(kv), new Date(NOW.getTime() + 30 * 60 * 1000)); // 30min: inside the 6h cooldown
+    expect(out.fired).toBe(1); // the escalation fire
+    expect(out.sent).toBe(1);
+    const payload = parsePayload(JSON.parse(envelopes[0].data));
+    expect(payload!.severity).toBe("warning");
+    expect(payload!.title).toBe("KV writes · SESSIONS");
+    expect(payload!.detail).toContain("400000 writes in 24h");
+  });
+  it("pages a telemetry gap once per 6h cooldown when the zone dataset fails, then stays quiet", async () => {
     const kv = fakeKV();
     await seedSubs(kv);
     routeFetch({ zoneGqlFail: true });
@@ -298,17 +322,22 @@ describe("runScheduled", () => {
     // the d1 rule still fires on real data (2B rows) alongside the zone gap page
     expect(first.fired).toBe(2);
     expect(first.gaps[0]).toContain("zone: dataset down");
-    expect(first.sent).toBe(2);
-    const gapPayload = envelopes.map((e) => JSON.parse(e.data)).find((p) => p.title === "telemetry-gap");
-    expect(gapPayload.id).toBe("telemetry-gap/zone");
-    // within the hour: quiet
+    expect(first.sent).toBe(1); // one digest push
+    const digest = JSON.parse(envelopes[0].data);
+    expect(digest.title).toBe("2 alerts fired");
+    expect(digest.detail).toContain("Telemetry gap (zone)");
+    // within the cooldown: quiet
     envelopes.length = 0;
     const second = await runScheduled(envP(kv), NOW);
     expect(second.fired).toBe(0);
     expect(second.sent).toBe(0);
     expect(envelopes).toHaveLength(0);
-    // after the hour: the gap re-pages and the d1 rule re-fires (cooldowns expired)
-    const later = new Date(NOW.getTime() + 61 * 60 * 1000);
+    // the old 1h cooldown re-paged standing breaches hourly (operator
+    // 2026-10-12): +61min must ALSO stay quiet under the 6h cooldown
+    const at61m = await runScheduled(envP(kv), new Date(NOW.getTime() + 61 * 60 * 1000));
+    expect(at61m.fired).toBe(0);
+    // after the 6h cooldown: the gap re-pages and the d1 rule re-fires
+    const later = new Date(NOW.getTime() + 6 * 60 * 60 * 1000 + 60 * 1000);
     const third = await runScheduled(envP(kv), later);
     expect(third.fired).toBe(2);
   });
@@ -326,9 +355,9 @@ describe("runScheduled", () => {
     const out = await runScheduled(envP(kv), NOW);
     expect(out.gaps).toEqual([]); // d1 GraphQL itself succeeded
     expect(out.issues.some((i) => i.includes("d1 name list failed"))).toBe(true);
-    // rows still evaluated under the database ID name
-    const d1Fire = envelopes.map((e) => JSON.parse(e.data)).find((p) => p.title === "d1 rows read");
-    expect(d1Fire.detail).toContain("db-1");
+    // rows still evaluated under the database ID name — the digest line names db-1
+    const digest = JSON.parse(envelopes[0].data);
+    expect(digest.detail).toContain("D1 rows read · db-1");
     expect(calls.length).toBeGreaterThan(0);
   });
   it("no paired device: zero upstream calls (the pre-pairing cron state), no throw", async () => {
@@ -366,8 +395,8 @@ describe("runScheduled", () => {
     }) as typeof fetch;
     const subsWritesBefore = kv.puts.filter((k) => k === SUBS_KEY).length;
     const out = await runScheduled(envP(kv), NOW);
-    expect(out.pruned).toBe(2); // two fires, both hit the dead endpoint
-    expect(out.sent).toBe(2);
+    expect(out.pruned).toBe(1); // ONE push per run hits the dead endpoint once
+    expect(out.sent).toBe(1); // the live device got the digest
     // one read-modify-write for the whole run removed only the dead endpoint
     const kept = (await kv.get(SUBS_KEY, "json")) as { endpoint: string }[];
     expect(kept.map((s) => s.endpoint)).toEqual(["https://push.example/1"]);

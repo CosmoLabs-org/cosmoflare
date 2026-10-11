@@ -207,7 +207,10 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
     return () => {
       cancelled = true;
     };
-  }, [fetchJson, retryTick]);
+    // refreshSeq re-runs the feed too: the shell's Refresh click and the
+    // service worker's alerts-updated message both bump it (operator
+    // 2026-10-12: fires appear while the app is open).
+  }, [fetchJson, retryTick, refreshSeq]);
 
   const entries = feed?.feed ?? [];
 

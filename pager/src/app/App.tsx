@@ -423,6 +423,18 @@ export default function App(): React.JSX.Element {
     refreshFn();
   }, [refreshFn]);
 
+  // Live alert appearance (operator 2026-10-12): when the service worker
+  // lands a push, it messages every open window — re-run the active view's
+  // refresh so a fire shows up while the app is open, not on next open.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent): void => {
+      if ((event.data as { type?: string } | null)?.type === "alerts-updated") refreshFn();
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [refreshFn]);
+
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   return (

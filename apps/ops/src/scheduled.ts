@@ -7,7 +7,7 @@
 
 import type { ZoneGroups } from "./summary";
 import { summarizeD1, summarizeZones } from "./summary";
-import { CONDITIONS, evaluate, pruneState, type D1Obs, type Fire, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
+import { CONDITIONS, evaluate, formatValue, pruneState, type D1Obs, type Fire, type FireState, type KVObs, type Rule, type ZoneObs } from "./rules";
 import { readSubs, removeSubscriptions } from "./subscriptions";
 import { sendPushes } from "./webpush";
 import { fetchRetry } from "./retry";
@@ -90,6 +90,33 @@ function toFeedEntry(fire: Fire, ts: string, sent: boolean): AlertFeedEntry {
     message: fire.message,
     sent,
   };
+}
+
+// pagePayload composes THE push for a run (operator 2026-10-12: one
+// notification per run, human strings). A single fire pages under its own
+// headline with a value/threshold body; multiple fires page as a digest —
+// title "N alerts fired", body listing up to DIGEST_LINES headlines with
+// their numbers, then a "+N more" tail. Severity escalates to warning when
+// any fire escalated (2× re-page) so the phone can weight it.
+const DIGEST_LINES = 3;
+
+function fireBody(fire: Fire): string {
+  if (fire.condition === "telemetry-gap") {
+    return `Cloudflare ${fire.dataset} analytics were unavailable this cycle, so ${fire.dataset} rules could not run.`;
+  }
+  return `${formatValue(fire.value, fire.unit)} ${fire.unit} in 24h — threshold ${formatValue(fire.threshold, fire.unit)}`;
+}
+
+function pagePayload(fires: Fire[], end: string): { id: string; severity: string; service: string; title: string; detail: string; fired_at: string } {
+  if (fires.length === 1) {
+    const fire = fires[0];
+    return { id: fire.alertId, severity: fire.severity, service: "cloudflare", title: fire.title, detail: fireBody(fire), fired_at: end };
+  }
+  const lines = fires.slice(0, DIGEST_LINES).map((fire) => `• ${fire.title} — ${fireBody(fire)}`);
+  const more = fires.length - DIGEST_LINES;
+  if (more > 0) lines.push(`+${more} more`);
+  const severity = fires.some((fire) => fire.severity === "warning") ? "warning" : "info";
+  return { id: `alerts/${end}`, severity, service: "cloudflare", title: `${fires.length} alerts fired`, detail: lines.join("\n"), fired_at: end };
 }
 
 // appendFeed prepends the new entries to KV "alert-feed" (newest first) and
@@ -296,7 +323,7 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
   if (fires.length > 0) {
     // Every fire lands in the alert-feed history, delivered or not: entries
     // start sent:false and flip once their push reached at least one device;
-    // a delivery crash below leaves the remaining entries honestly marked
+    // a delivery crash below leaves the entries honestly marked
     // "not delivered" instead of dropping them from the history.
     const feedEntries = fires.map((fire) => toFeedEntry(fire, end, false));
     // Delivery problems must never throw out of runScheduled (the cron
@@ -304,23 +331,19 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
     // below and re-evaluating the same fires every run): a push error becomes
     // an issue and the state write still happens.
     try {
-      for (let i = 0; i < fires.length; i++) {
-        const fire = fires[i];
-        const payload = {
-          id: fire.alertId,
-          severity: "info",
-          service: "cloudflare",
-          title: fire.ruleName,
-          detail: fire.message,
-          fired_at: end,
-        };
-        const outcome = await sendPushes(env, subs, payload);
-        result.sent += outcome.sent;
-        result.pruned += outcome.pruned;
-        prunedEndpoints.push(...outcome.prunedEndpoints);
-        result.issues.push(...outcome.issues);
-        feedEntries[i].sent = outcome.sent > 0;
-      }
+      // ONE push per run (operator 2026-10-12: N simultaneous fires arrived
+      // as N separate notifications): a single fire pages under its own
+      // headline; multiple fires page as one digest listing them. The feed
+      // above keeps per-fire granularity — the push is the poke, the feed is
+      // the history.
+      const payload = pagePayload(fires, end);
+      const outcome = await sendPushes(env, subs, payload);
+      result.sent += outcome.sent;
+      result.pruned += outcome.pruned;
+      prunedEndpoints.push(...outcome.prunedEndpoints);
+      result.issues.push(...outcome.issues);
+      const delivered = outcome.sent > 0;
+      for (const entry of feedEntries) entry.sent = delivered;
       // Dead devices leave in ONE read-modify-write for the whole run.
       await removeSubscriptions(env, prunedEndpoints);
     } catch (err) {

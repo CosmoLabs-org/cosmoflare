@@ -22,7 +22,7 @@ const SEVERITIES = ["info", "warning", "critical"];
 
 // Bump CACHE_NAME on every deploy: activate deletes any older cache, so a
 // new build's assets replace the old ones wholesale.
-const CACHE_NAME = "pager-shell-v1";
+const CACHE_NAME = "pager-shell-v2";
 
 // The un-hashed shell files precached at install. Hashed /assets/* files are
 // cached lazily on first fetch (cache-first), so this list stays short.
@@ -231,6 +231,16 @@ self.addEventListener("push", (event) => {
         console.error("pager: IndexedDB append failed", err);
       })
       .then(() => showPushNotification(payload))
+      // Live in-app appearance (operator 2026-10-12): tell every open window
+      // an alert landed so the mounted views re-fetch instead of waiting for
+      // the next manual refresh.
+      .then(() =>
+        self.clients
+          .matchAll({ type: "window", includeUncontrolled: true })
+          .then((windowClients) => {
+            for (const client of windowClients) client.postMessage({ type: "alerts-updated" });
+          })
+      )
   );
 });
 
