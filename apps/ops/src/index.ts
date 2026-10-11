@@ -11,6 +11,7 @@ import { collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
+import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
 
@@ -36,10 +37,10 @@ const SUMMARY_TTL = { ttlSec: 5 * 60, staleSec: 60 * 60 };
 const LIST_TTL = { ttlSec: 60 * 60, staleSec: 24 * 60 * 60 };
 const BILLING_TTL = { ttlSec: 15 * 60, staleSec: 6 * 60 * 60 };
 
-function json(body: unknown, status = 200): Response {
+function json(body: unknown, status = 200, extra: Record<string, string> = {}): Response {
   return new Response(typeof body === "string" ? body : JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store", ...extra },
   });
 }
 
@@ -96,6 +97,15 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+
+    // Hard cap first (operator directive 2026-10-11, BUG-pZKJ5VB): the
+    // per-isolate per-IP rate limit runs before the Access JWT check because
+    // it is cheaper than signature verification — a flooding client is
+    // rejected without any crypto work. Best-effort only (per-isolate state,
+    // see ratelimit.ts): the edge WAF rate-limiting rule remains the real
+    // global backstop.
+    const limit = rateLimited(request);
+    if (!limit.ok) return json({ error: "rate limited" }, 429, { "Retry-After": String(limit.retryAfterSec) });
 
     const auth = await verifyAccessJwt(request.headers.get("Cf-Access-Jwt-Assertion") ?? "", env.ACCESS_TEAM_DOMAIN, env.ACCESS_AUD);
     if (!auth.ok) return json({ error: "forbidden" }, 403);
