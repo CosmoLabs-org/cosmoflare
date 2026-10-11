@@ -114,6 +114,43 @@ describe("App section identity (2026-10-11 shell pass)", () => {
   });
 });
 
+describe("Bottom tab bar (operator 2026-10-12)", () => {
+  /** The five primary sections + More, in render order. */
+  const TAB_ROUTES = ["overview", "billing", "workers", "domains", "alerts"];
+
+  it("renders exactly the 5 primary tabs + More, each tagged with data-route", () => {
+    render(<App />);
+    const tabs = document.querySelectorAll(".cf-bottomtabs [data-route]");
+    expect(Array.from(tabs).map((el) => el.getAttribute("data-route"))).toEqual(TAB_ROUTES);
+    // More is a button (opens the drawer), not a route anchor — it carries a
+    // distinct marker-free identity as the only <button> in the bar.
+    const more = document.querySelector(".cf-bottomtabs button");
+    expect(more?.textContent).toContain("More");
+    expect(document.querySelector(".cf-bottomtabs")).toBeTruthy();
+  });
+
+  it("marks the active route with aria-current='page'", () => {
+    window.location.hash = "#/billing";
+    render(<App />);
+    const active = document.querySelector<HTMLAnchorElement>('.cf-bottomtab[data-route="billing"]');
+    expect(active?.getAttribute("aria-current")).toBe("page");
+    expect(document.querySelector('.cf-bottomtab[data-route="overview"]')?.getAttribute("aria-current")).toBeNull();
+    expect(document.querySelector('.cf-bottomtab[data-route="alerts"]')?.getAttribute("aria-current")).toBeNull();
+    window.location.hash = "";
+  });
+
+  it("the More button toggles the drawer with the FULL section list", () => {
+    render(<App />);
+    expect(document.getElementById("cf-drawer")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "More sections" }));
+    const drawer = document.getElementById("cf-drawer");
+    expect(drawer).toBeTruthy();
+    // The full list includes drawer-only routes the tabs don't carry.
+    expect(drawer?.textContent).toContain("Pairing");
+    expect(drawer?.textContent).toContain("Durable Objects");
+  });
+});
+
 describe("Install banner mount (FEAT-pXNQ5GW)", () => {
   /** jsdom has no matchMedia — stub it before render (per the component's
    *  own tests; the rest of this file doesn't need it). The stub carries
