@@ -24,10 +24,26 @@ describe("logoMark", () => {
     expect(svg).toContain('stroke="#7dd3fc"');
   });
 
-  it("renders 24px square, decorative", () => {
+  it("renders full-bleed (100% width/height, meet), decorative", () => {
     const svg = logoMark();
-    expect(svg).toContain('width="24"');
-    expect(svg).toContain('height="24"');
+    expect(svg).toContain('width="100%"');
+    expect(svg).toContain('height="100%"');
+    expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
     expect(svg).toContain('aria-hidden="true"');
+    expect(svg).not.toMatch(/width="\d+px"/);
+  });
+
+  it("strokes at v2 weights: 5-unit C, 2.75-unit pulse (>= 2.6 floor)", () => {
+    const svg = logoMark();
+    expect(svg).toContain('stroke-width="5"');
+    expect(svg).toContain('stroke-width="2.75"');
+  });
+
+  it("keeps the v2 geometry: wide-gap C arc and heartbeat pulse path", () => {
+    const svg = logoMark();
+    expect(svg).toContain('d="M 22.43 8.34 A 10 10 0 1 0 22.43 23.66"');
+    expect(svg).toContain(
+      'd="M 17.5 16 L 21.5 16 L 25 12.75 L 26 19.75 L 27.5 15.5 L 28 15.5"',
+    );
   });
 });
