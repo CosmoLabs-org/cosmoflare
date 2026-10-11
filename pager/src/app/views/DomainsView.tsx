@@ -292,8 +292,8 @@ export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
   const subtitle = payload.errors.length > 0
     ? `Partial load — ${payload.errors[0]}`
     : expiring > 0
-      ? `${sorted.length} domains · ${expiring} expiring within 30 days`
-      : `${sorted.length} domains`;
+      ? `${expiring} expiring within 30 days`
+      : null;
 
   return (
     <motion.div
@@ -305,7 +305,7 @@ export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail">{subtitle}</p>
+      {subtitle !== null && <p className="cf-row-detail">{subtitle}</p>}
       <section className="cf-card">
         {sorted.length === 0 ? (
           <p className="cf-empty cf-empty-quiet">No domains found on this account.</p>

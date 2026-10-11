@@ -88,9 +88,26 @@ describe("DomainsView (P-05b)", () => {
     expect(expiry[3].textContent).toBe("external");
     // The pending (non-active) zone carries its muted badge.
     expect(text(".cf-domain-badges .cf-badge")).toEqual(["pending"]);
-    // Subtitle counts the expiring domains; no page heading.
-    expect(document.querySelector(".cf-row-detail")?.textContent).toBe("4 domains · 2 expiring within 30 days");
+    // Subtitle carries the expiring count only; the domain total lives in the
+    // masthead heading.
+    expect(document.querySelector(".cf-row-detail")?.textContent).toBe("2 expiring within 30 days");
     expect(document.querySelector(".cf-card h2")).toBeNull();
+  });
+
+  it("renders no subtitle when no domains expire within 30 days", async () => {
+    const quiet: DomainsPayload = {
+      ...DOMAINS,
+      domains: DOMAINS.domains.map((d) => domain({ id: d.id, name: d.name, expiresAt: iso(90) })),
+    };
+    const fetcher: Parameters<typeof DomainsView>[0]["fetcher"] = async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+      if (endpoint === "api/domains") return { data: quiet as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 404");
+    };
+    render(<DomainsView fetcher={fetcher} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-row-detail")).toBeNull();
   });
 
   it("drills into the profile on row tap and returns on 'All domains'", async () => {

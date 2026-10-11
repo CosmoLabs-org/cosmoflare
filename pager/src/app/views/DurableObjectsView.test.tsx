@@ -98,9 +98,12 @@ describe("DurableObjectsView (P-05a)", () => {
     // Requests desc → edge-cache (900k) leads.
     expect(document.querySelector(".cf-table tbody tr td")?.textContent).toContain("edge-cache");
     expect(document.querySelectorAll(".cf-mini-bar").length).toBeGreaterThan(0);
-    // Subtitle carries the namespace count; no page h2.
+    // Subtitle carries the "(24h)" signal only; the namespace count lives in
+    // the masthead heading.
     expect(document.querySelector(".cf-card h2")).toBeNull();
-    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toContain("2 namespaces");
+    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toContain(
+      "(24h) · requests, errors and error rate per script",
+    );
   });
 
   it("drops the usage bars when the billing fetch fails", async () => {

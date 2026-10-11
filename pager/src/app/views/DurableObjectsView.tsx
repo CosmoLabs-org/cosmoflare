@@ -3,7 +3,8 @@
 // durable_objects.ts's renderDurableObjects — every namespace with its 24h
 // requests, errors and error rate, graded usage bars against the DO request
 // allowance (cached billing fetch, bars drop on failure). The masthead owns
-// the page title; the card keeps the "(24h)" subtitle.
+// the page title; the card keeps the "(24h)" subtitle (signal only — the
+// namespace count lives in the masthead heading).
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -120,7 +121,7 @@ export default function DurableObjectsView({ refreshSeq = 0, fetcher }: { refres
         <p className="cf-row-detail">
           {d.errors.length > 0
             ? `(24h) · Partial load — ${d.errors[0]}`
-            : `(24h) · ${d.namespaces} ${d.namespaces === 1 ? "namespace" : "namespaces"} · requests, errors and error rate per script`}
+            : `(24h) · requests, errors and error rate per script`}
         </p>
         {d.rows.length === 0 ? (
           <p className="cf-empty cf-empty-quiet">No namespaces or traffic found.</p>
