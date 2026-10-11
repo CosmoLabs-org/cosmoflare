@@ -3,7 +3,7 @@
 // quick nav, status strip), and the imperative bridge renders a view — on
 // jsdom's localhost the ApiClient falls back to fixtures, so the Overview
 // paints fixture data through the same path production uses.
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { api, type FetchResult } from "../api";
@@ -111,5 +111,67 @@ describe("App section identity (2026-10-11 shell pass)", () => {
       spy.mockRestore();
       window.location.hash = "";
     }
+  });
+});
+
+describe("Install banner mount (FEAT-pXNQ5GW)", () => {
+  /** jsdom has no matchMedia — stub it before render (per the component's
+   *  own tests; the rest of this file doesn't need it). The stub carries
+   *  the listener API framer-motion's useReducedMotion expects. */
+  function stubAppMatchMedia(matches: boolean): void {
+    (window as unknown as { matchMedia?: unknown }).matchMedia = vi.fn(
+      (query: string) => ({
+        matches,
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+      }),
+    );
+  }
+
+  /** jsdom exposes no localStorage — Map stand-in (ZonesView.test.tsx
+   *  pattern) so dismissal persistence is observable. */
+  const bannerStore: { map: Map<string, string>; clear(): void } = (() => {
+    const store = {
+      map: new Map<string, string>(),
+      clear(): void {
+        store.map.clear();
+      },
+      getItem(key: string): string | null {
+        return store.map.get(key) ?? null;
+      },
+      setItem(key: string, value: string): void {
+        store.map.set(key, value);
+      },
+      removeItem(key: string): void {
+        store.map.delete(key);
+      },
+    };
+    Object.defineProperty(window, "localStorage", { value: store, configurable: true, writable: true });
+    return store;
+  })();
+
+  it("does not render the banner when standalone", () => {
+    stubAppMatchMedia(true);
+    const { container } = render(<App />);
+    expect(container.querySelector("aside[aria-label='Install app']")).toBeNull();
+  });
+
+  it("renders the banner when not standalone, dismissible on click", async () => {
+    stubAppMatchMedia(false);
+    bannerStore.clear();
+    const { container } = render(<App />);
+    // jsdom is not iOS and fires no beforeinstallprompt, so the banner only
+    // appears once the (stubbed) event arrives.
+    expect(container.querySelector("aside[aria-label='Install app']")).toBeNull();
+    window.dispatchEvent(new Event("beforeinstallprompt"));
+    await waitFor(() =>
+      expect(container.querySelector("aside[aria-label='Install app']")).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(container.querySelector("aside[aria-label='Install app']")).toBeNull();
+    expect(window.localStorage.getItem("pager-install-hint-dismissed")).toBe("1");
   });
 });
