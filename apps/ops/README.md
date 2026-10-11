@@ -21,6 +21,10 @@ stays closed even if the Access app is later removed.
 - `DELETE /api/subscribe` — remove a subscription (`{ endpoint }`).
 - `POST /api/test-fire` — fire a real push at every subscribed device
   (`{ sent, pruned, issues }`). Other methods: 405.
+- `GET /api/alerts/feed` — fired-alert history, newest first (KV `alert-feed`,
+  capped at 100): `{ feed: [{ ts, ruleId, condition, title, value, threshold,
+  unit, message, sent }] }`. The pager's Notifications center reads this.
+  Other methods: 405.
 - `GET /api/vapid-public-key` — the key the pager needs to subscribe to push.
 
 Every API response carries `Cache-Control: private, no-store`.

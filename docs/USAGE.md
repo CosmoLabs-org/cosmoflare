@@ -3011,6 +3011,7 @@ Cosmoflare Ops (FEAT-052) is the private, phone-installable dashboard and push-a
 | `POST /api/subscribe` | Register a Web Push subscription (`{ endpoint, keys: { p256dh, auth } }`, max 10; same endpoint replaces). |
 | `DELETE /api/subscribe` | Remove a subscription (`{ endpoint }`). |
 | `POST /api/test-fire` | Fire a real push at every subscribed device (`{ sent, pruned, issues }`). Other methods: 405. |
+| `GET /api/alerts/feed` | Fired-alert history, newest first (`{ feed: [{ ts, ruleId, condition, title, value, threshold, unit, message, sent }] }`, capped at 100 in KV `alert-feed`). The pager's Notifications center reads this. Other methods: 405. |
 | `GET /api/vapid-public-key` | The key the pager needs to subscribe to push. |
 
 Every API response carries `Cache-Control: private, no-store`.

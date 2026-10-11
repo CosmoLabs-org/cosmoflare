@@ -6,6 +6,7 @@ branch: master
 goals_total: 1
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-11-session-2036-continuation.md"
+schema_version: 1
 ---
 
 ## Context
