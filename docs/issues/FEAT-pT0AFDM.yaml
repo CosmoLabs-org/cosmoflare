@@ -1,0 +1,13 @@
+id: FEAT-pT0AFDM
+type: feature
+created_at: 2026-10-11T20:45:23.485653+04:00
+updated_at: 2026-10-11T20:45:23.972922+04:00
+source: local
+ulid: 01M4NXNN44YACG2BYH8HT0AFDM
+provisional: true
+status: open
+title: 'ApiClient resilience: single-flight dedup, failure backoff, request-budget E2E'
+description: 'Prevention follow-up to BUG-pZKJ5VB (pager infinite fetch loop, fixed 2026-10-11, report docs/bug-fixes/2026-10-11-pager-infinite-fetch-loop.md). Three layers so no client defect can ever again translate into a request storm: (1) in-flight single-flight in pager/src/api.ts — concurrent fetches of the same endpoint share one promise, mirroring the worker''s cached() singleFlight; (2) failed fetches back off exponentially (e.g. 5s/15s/60s) with short-lived error caching so a failing endpoint cannot be re-requested in a tight loop — the loop bug''s fatal mode was precisely that failures never cached; (3) a request-budget Playwright test: load every route on the real bundle via the scratchpad harness and assert total /api/* requests over a fixed window stay under a small bound per route. This is the test class that caught the loop in 30 seconds after 234 unit tests passed.'
+affected_files:
+    - pager/src/api.ts
+    - pager/tests/e2e
