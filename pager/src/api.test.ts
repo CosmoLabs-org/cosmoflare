@@ -15,6 +15,16 @@ function memoryStorage(): Pick<Storage, "getItem" | "setItem" | "removeItem"> {
   };
 }
 
+// localStorage stand-in for the persisted last-good store (FEAT-pRXPMMY).
+function localMemoryStorage(): Pick<Storage, "getItem" | "setItem" | "removeItem"> {
+  const map = new Map<string, string>();
+  return {
+    getItem: (k) => map.get(k) ?? null,
+    setItem: (k, v) => void map.set(k, v),
+    removeItem: (k) => void map.delete(k),
+  };
+}
+
 const RULES: RulesPayload = {
   rules: [{ name: "D1 reads", condition: "d1-rows-read", threshold: 1e9, enabled: true }],
   conditions: ["d1-rows-read"],
@@ -143,6 +153,106 @@ describe("ApiClient.fetchJson onRevalidate (BUG-057 defect 2)", () => {
     expect(onRevalidate).not.toHaveBeenCalled();
     expect(res.ageSec).toBe(10);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ApiClient persisted last-good store (FEAT-pRXPMMY)", () => {
+  it("serves the persisted copy from a fresh launch with source 'local' and its real age, then revalidates in the background", async () => {
+    let clock = 1_000_000;
+    const fresh: RulesPayload = { rules: [{ name: "fresh", condition: "d1-rows-read", threshold: 1, enabled: true }], conditions: RULES.conditions, starter: false };
+    const fetchMock = vi.fn(async () => jsonResponse(clock === 1_000_000 ? RULES : fresh));
+    const localStore = localMemoryStorage();
+
+    // Last session: a successful fetch persists the copy to localStorage.
+    const previous = new ApiClient({ fetchFn: fetchMock, storage: memoryStorage(), localStore, now: () => clock });
+    await previous.fetchJson<RulesPayload>("api/rules");
+
+    // Fresh app launch: new client, empty memory AND empty sessionStorage,
+    // same persisted localStorage — the offline-instant-paint path.
+    clock += 3_600_000; // one hour later; the persisted copy is stale
+    const launched = new ApiClient({ fetchFn: fetchMock, storage: memoryStorage(), localStore, now: () => clock });
+    const onRevalidate = vi.fn();
+    const res = await launched.fetchJson<RulesPayload>("api/rules", { onRevalidate });
+
+    expect(res.source).toBe("local");
+    expect(res.ageSec).toBe(3600); // real persisted age, not a fake fresh 0
+    expect(res.data.rules[0]?.name).toBe("D1 reads"); // last session's data paints instantly
+
+    // The background revalidate settles and hands the view fresh data.
+    await vi.waitFor(() => expect(onRevalidate).toHaveBeenCalledTimes(1));
+    expect(onRevalidate).toHaveBeenCalledWith(fresh);
+    // 1 initial-session fetch + 1 stale-path background revalidate.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("prefers memory and sessionStorage over the persisted copy", async () => {
+    let clock = 1_000_000;
+    const fetchMock = vi.fn(async () => jsonResponse(RULES));
+    const session = memoryStorage();
+    const localStore = localMemoryStorage();
+
+    const first = new ApiClient({ fetchFn: fetchMock, storage: session, localStore, now: () => clock });
+    await first.fetchJson<RulesPayload>("api/rules"); // fills all three stores
+
+    // A reload-sharing client (same sessionStorage + localStore) hits the
+    // session tier, not the persisted one.
+    const reloaded = new ApiClient({ fetchFn: fetchMock, storage: session, localStore, now: () => clock });
+    const res = await reloaded.fetchJson<RulesPayload>("api/rules");
+    expect(res.source).toBe("session");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("localStorage quota failure is non-fatal: memory and session still hold the copy", async () => {
+    let clock = 1_000_000;
+    const fetchMock = vi.fn(async () => jsonResponse(RULES));
+    const fullLocalStore: Pick<Storage, "getItem" | "setItem" | "removeItem"> = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error("QuotaExceededError");
+      },
+      removeItem: () => undefined,
+    };
+    const client = new ApiClient({ fetchFn: fetchMock, storage: memoryStorage(), localStore: fullLocalStore, now: () => clock });
+
+    // The store() write-through must swallow the quota throw...
+    const res = await client.fetchJson<RulesPayload>("api/rules");
+    expect(res.source).toBe("network");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // ...and the copy is still served afterwards (memory/session survive).
+    clock += 10_000;
+    const again = await client.fetchJson<RulesPayload>("api/rules");
+    expect(again.source).toBe("memory");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("budget logic is intact: a stale persisted copy with a spent budget is served with no network call", async () => {
+    let clock = 1_000_000;
+    const fetchMock = vi.fn(async () => {
+      throw new Error("network down");
+    });
+    const localStore = localMemoryStorage();
+
+    // Last session persists the copy.
+    const good = new ApiClient({ fetchFn: async () => jsonResponse(RULES), storage: memoryStorage(), localStore, now: () => clock });
+    await good.fetchJson<RulesPayload>("api/rules");
+
+    // Fresh launch an hour later: the persisted copy is stale...
+    clock = 1_060_000;
+    const client = new ApiClient({ fetchFn: fetchMock, storage: memoryStorage(), localStore, now: () => clock });
+    // ...and 6 failed forced refreshes burn the whole budget.
+    for (let i = 0; i < 6; i++) {
+      await expect(client.fetchJson<RulesPayload>("api/rules", { refresh: true })).rejects.toThrow("network down");
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+
+    // Plain navigation now: the persisted copy renders at its real age with
+    // no 7th network attempt — the BUG-pZKJ5VB stale-fallback covers the
+    // persisted tier too.
+    const res = await client.fetchJson<RulesPayload>("api/rules");
+    expect(res.source).toBe("local");
+    expect(res.ageSec).toBe(60);
+    expect(fetchMock).toHaveBeenCalledTimes(6);
   });
 });
 

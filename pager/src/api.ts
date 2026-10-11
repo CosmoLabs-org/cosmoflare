@@ -109,7 +109,7 @@ export interface Billing {
 
 // ---- Fetch client ----
 
-export type DataSource = "network" | "memory" | "session" | "fixture";
+export type DataSource = "network" | "memory" | "session" | "local" | "fixture";
 
 export interface FetchResult<T> {
   data: T;
@@ -123,6 +123,8 @@ export interface FetchResult<T> {
 export interface ApiClientOptions {
   fetchFn?: typeof fetch;
   storage?: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null;
+  /** Persisted last-good store (localStorage in the browser); null disables it. */
+  localStore?: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null;
   now?: () => number;
   /** When true, a failed /api/* fetch falls back to fixtures (demo mode). */
   allowFixtures?: boolean;
@@ -143,9 +145,15 @@ const NETWORK_BUDGET_WINDOW_MS = 60_000;
 
 const ssKey = (endpoint: string): string => `pager-cache:${endpoint}`;
 
+// localStorage last-good copy (FEAT-pRXPMMY): a fresh app launch paints
+// instantly from the previous session's data with its real age. Distinct
+// prefix so the two stores never alias the same entry.
+const lsKey = (endpoint: string): string => `pager-local-cache:${endpoint}`;
+
 export class ApiClient {
   private readonly fetchFn: typeof fetch;
   private readonly storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null;
+  private readonly localStore: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null;
   private readonly now: () => number;
   private readonly allowFixtures: boolean;
   private readonly memory = new Map<string, { data: unknown; fetchedAt: number }>();
@@ -158,6 +166,7 @@ export class ApiClient {
     // request leaves (production showed "Could not load" on every view).
     this.fetchFn = opts.fetchFn ?? ((input, init) => fetch(input, init));
     this.storage = opts.storage === undefined ? defaultStorage() : opts.storage;
+    this.localStore = opts.localStore === undefined ? defaultLocalStore() : opts.localStore;
     this.now = opts.now ?? Date.now;
     this.allowFixtures = opts.allowFixtures ?? isLocalhost();
   }
@@ -248,18 +257,30 @@ export class ApiClient {
     this.store(keyOf(endpoint), data);
   }
 
-  // lookup finds the last good copy: memory first, then sessionStorage.
-  // sessionStorage keeps a reload's render instant; memory covers route
-  // switches within the session.
+  // lookup finds the last good copy: memory first, then sessionStorage, then
+  // the persisted localStorage copy (FEAT-pRXPMMY read-through). sessionStorage
+  // keeps a reload's render instant; memory covers route switches within the
+  // session; the persisted copy covers a whole new app launch (fresh page,
+  // empty session storage) so it paints last session's data at its real age
+  // while the network revalidates.
   private lookup(key: string): { data: unknown; fetchedAt: number; source: DataSource } | null {
     const hit = this.memory.get(key);
     if (hit) return { ...hit, source: "memory" };
-    if (!this.storage) return null;
+    const session = this.readStored(this.storage, ssKey(key));
+    if (session) return { ...session, source: "session" };
+    const persisted = this.readStored(this.localStore, lsKey(key));
+    if (persisted) return { ...persisted, source: "local" };
+    return null;
+  }
+
+  // readStored parses one persisted entry; any failure (missing storage,
+  // corrupt JSON) is a miss, never a throw.
+  private readStored(store: Pick<Storage, "getItem"> | null, key: string): { data: unknown; fetchedAt: number } | null {
+    if (!store) return null;
     try {
-      const raw = this.storage.getItem(ssKey(key));
+      const raw = store.getItem(key);
       if (raw === null) return null;
-      const parsed = JSON.parse(raw) as { data: unknown; fetchedAt: number };
-      return { ...parsed, source: "session" };
+      return JSON.parse(raw) as { data: unknown; fetchedAt: number };
     } catch {
       return null;
     }
@@ -281,14 +302,27 @@ export class ApiClient {
     return true;
   }
 
-  // store writes the fresh copy into memory and sessionStorage. A storage
+  // store writes the fresh copy into memory, sessionStorage, and the
+  // persisted localStorage store (FEAT-pRXPMMY write-through). A storage
   // failure (quota, privacy mode) is non-fatal — memory still holds it.
   private store(key: string, data: unknown): void {
     const fetchedAt = this.now();
     this.memory.set(key, { data, fetchedAt });
-    if (!this.storage) return;
+    this.writeStored(this.storage, ssKey(key), data, fetchedAt);
+    this.writeStored(this.localStore, lsKey(key), data, fetchedAt);
+  }
+
+  // writeStored best-effort persists one entry; quota or serialization
+  // failures are swallowed (memory copy remains).
+  private writeStored(
+    store: Pick<Storage, "setItem"> | null,
+    key: string,
+    data: unknown,
+    fetchedAt: number,
+  ): void {
+    if (!store) return;
     try {
-      this.storage.setItem(ssKey(key), JSON.stringify({ data, fetchedAt }));
+      store.setItem(key, JSON.stringify({ data, fetchedAt }));
     } catch {
       // quota or serialization failure: memory copy remains
     }
@@ -328,6 +362,17 @@ function keyOf(endpoint: string): string {
 function defaultStorage(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
   try {
     return typeof sessionStorage === "undefined" ? null : sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+// defaultLocalStore picks localStorage when reachable (same guards as
+// defaultStorage); this is the persisted last-good store behind the
+// offline-launch instant paint (FEAT-pRXPMMY).
+function defaultLocalStore(): Pick<Storage, "getItem" | "setItem" | "removeItem"> | null {
+  try {
+    return typeof localStorage === "undefined" ? null : localStorage;
   } catch {
     return null;
   }
