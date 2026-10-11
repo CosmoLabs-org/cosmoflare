@@ -237,6 +237,8 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
         </span>
       </p>
 
+      <p className="cf-row-detail">Live account health for the last 24h. Tap Workers, D1 or a zone for its profile.</p>
+
       <div className="cf-kpis">
         <KpiTile
           value={formatUsd(billing.totalProjectedOverageUsd)}

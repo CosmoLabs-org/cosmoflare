@@ -639,6 +639,7 @@ export default function DomainsView({ refreshSeq = 0, fetcher, mutator }: { refr
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Every domain with expiry. Tap a row for its profile; Take offline is reversible, Remove is not.</p>
       {subtitle !== null && <p className="cf-row-detail">{subtitle}</p>}
       <section className="cf-card">
         {sorted.length === 0 ? (

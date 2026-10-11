@@ -109,8 +109,11 @@ describe("DomainsView (P-05b)", () => {
     // The pending (non-active) zone carries its muted badge.
     expect(text(".cf-domain-badges .cf-badge")).toEqual(["pending"]);
     // Subtitle carries the expiring count only; the domain total lives in the
-    // masthead heading.
-    expect(document.querySelector(".cf-row-detail")?.textContent).toBe("2 expiring within 30 days");
+    // masthead heading. The always-on action-hint line comes first, so scan
+    // all muted lines for the subtitle text.
+    expect(
+      Array.from(document.querySelectorAll(".cf-row-detail")).some((p) => p.textContent === "2 expiring within 30 days"),
+    ).toBe(true);
     expect(document.querySelector(".cf-card h2")).toBeNull();
   });
 
@@ -127,7 +130,12 @@ describe("DomainsView (P-05b)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-domain-row")).toBeTruthy();
     });
-    expect(document.querySelector(".cf-row-detail")).toBeNull();
+    // The expiring subtitle is absent (the always-on action-hint line stays).
+    expect(
+      Array.from(document.querySelectorAll(".cf-row-detail")).some((p) =>
+        (p.textContent ?? "").includes("expiring within 30 days"),
+      ),
+    ).toBe(false);
   });
 
   it("drills into the profile on row tap and returns on 'All domains'", async () => {

@@ -138,6 +138,8 @@ export default function WorkersView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Requests, errors and CPU per script. Tap a worker for its profile; the top rows drive usage.</p>
+
       <section className="cf-card">
         <p className="cf-row-detail">(24h)</p>
         {summary.data.workers.length === 0 ? (

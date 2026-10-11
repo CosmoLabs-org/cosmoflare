@@ -79,6 +79,7 @@ export default function AlertsView({ refreshSeq = 0 }: { refreshSeq?: number }):
 
   return (
     <div className="cf-alert-list">
+      <p className="cf-row-detail">Your alert rules. Alerts page your paired devices — pair in the Pairing section.</p>
       {records.map((record) => (
         <AlertCard key={record.id} record={record} onChanged={load} />
       ))}

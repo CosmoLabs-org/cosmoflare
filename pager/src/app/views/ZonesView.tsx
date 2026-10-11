@@ -156,6 +156,8 @@ export default function ZonesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Requests by zone for 24h. Uncached share hints where caching would save the most.</p>
+
       <section className="cf-card">
         <p className="cf-row-detail">(24h)</p>
         {rows.length === 0 ? (

@@ -353,6 +353,8 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
+      <p className="cf-row-detail">Usage rules evaluated on the account. Toggle or edit a rule; changes PUT immediately.</p>
+
       {payload.starter ? <p className="cf-rule-note">Using starter rules — save to customise</p> : null}
 
       <div className="cf-rules-list">
