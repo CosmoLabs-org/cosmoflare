@@ -32,6 +32,7 @@ import type { DomainsPayload } from "../domains";
 import type { RulesPayload } from "../rules";
 import type { DOPayload } from "../durable_objects";
 import { startStatusStripClock } from "../statusstrip";
+import InstallBanner from "./InstallBanner";
 import OverviewView from "./views/OverviewView";
 import BillingView from "./views/BillingView";
 import ProjectsView from "./views/ProjectsView";
@@ -475,6 +476,10 @@ export default function App(): React.JSX.Element {
           </>
         ) : null}
       </AnimatePresence>
+
+      {/* Install guidance (FEAT-pXNQ5GW): self-gating — renders nothing in
+          standalone, dismissed or not-yet-eligible contexts. */}
+      <InstallBanner />
 
       <footer className="cf-statusbar" role="status" aria-live="polite">
         {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
