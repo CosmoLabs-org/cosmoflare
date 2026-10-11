@@ -18,6 +18,32 @@ function fetcherReturning(payload: AIGatewaysPayload, opts: { throwErr?: Error }
   };
 }
 
+/** Skeleton probe: the fetch hangs until go() releases it. */
+function gatedFetcher(payload: AIGatewaysPayload): { fetcher: Parameters<typeof AIView>[0]["fetcher"]; go: () => void } {
+  let release!: (r: FetchResult<AIGatewaysPayload>) => void;
+  const gate = new Promise<FetchResult<AIGatewaysPayload>>((res) => {
+    release = res;
+  });
+  const fetcher: Parameters<typeof AIView>[0]["fetcher"] = async <T,>(): Promise<FetchResult<T>> =>
+    gate as unknown as Promise<FetchResult<T>>;
+  return {
+    fetcher,
+    go: () => release({ data: payload, source: "network", ageSec: 0, demo: false }),
+  };
+}
+
+/** Fails every call while armed; after setFail(false) it answers with the payload. */
+function recoveringFetcher(payload: AIGatewaysPayload): { fetcher: Parameters<typeof AIView>[0]["fetcher"]; setFail: (fail: boolean) => void } {
+  let fail = true;
+  const fetcher: Parameters<typeof AIView>[0]["fetcher"] = async <T,>(): Promise<FetchResult<T>> => {
+    if (fail) throw new Error("HTTP 503");
+    return { data: payload as unknown as T, source: "network", ageSec: 0, demo: false };
+  };
+  return { fetcher, setFail: (next) => {
+    fail = next;
+  } };
+}
+
 const PAYLOAD: AIGatewaysPayload = {
   generatedAt: "2026-10-10T00:00:00Z",
   gateways: [
@@ -145,5 +171,32 @@ describe("AIView (BR-03)", () => {
       expect(document.querySelector(".cf-card.cf-level-warning")).toBeTruthy();
     });
     expect(document.querySelector(".cf-card .cf-btn")?.textContent).toBe("Retry");
+  });
+
+  it("renders the skeleton while the first fetch is in flight", async () => {
+    const gated = gatedFetcher(PAYLOAD);
+    render(<AIView fetcher={gated.fetcher} />);
+    expect(document.querySelector(".cf-loading")).toBeTruthy();
+    expect(document.querySelectorAll(".cf-skeleton").length).toBe(4);
+    expect(document.querySelector(".cf-card")).toBeNull();
+    gated.go();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-consumers-ranked")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-loading")).toBeNull();
+  });
+
+  it("Retry recovers onto the data after a failed first load", async () => {
+    const recovering = recoveringFetcher(PAYLOAD);
+    render(<AIView fetcher={recovering.fetcher} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card.cf-level-warning")).toBeTruthy();
+    });
+    recovering.setFail(false);
+    document.querySelector<HTMLButtonElement>(".cf-card .cf-btn")!.click();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-consumers-ranked")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-card.cf-level-warning")).toBeNull();
   });
 });

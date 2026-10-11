@@ -36,6 +36,20 @@ function fetcherReturning(summary: Summary, opts: { throwErr?: Error } = {}): Pa
   };
 }
 
+/** Skeleton probe: the fetch hangs until go() releases it. */
+function gatedSummaryFetcher(summary: Summary): { fetcher: Parameters<typeof WorkerProfileView>[0]["fetcher"]; go: () => void } {
+  let release!: (r: FetchResult<Summary>) => void;
+  const gate = new Promise<FetchResult<Summary>>((res) => {
+    release = res;
+  });
+  const fetcher: Parameters<typeof WorkerProfileView>[0]["fetcher"] = async <T,>(): Promise<FetchResult<T>> =>
+    gate as unknown as Promise<FetchResult<T>>;
+  return {
+    fetcher,
+    go: () => release({ data: summary, source: "network", ageSec: 0, demo: false }),
+  };
+}
+
 describe("WorkerProfileView (P-05a)", () => {
   it("renders the 24h stats with the statRow visual rules", async () => {
     render(<WorkerProfileView name="api-gateway" fetcher={fetcherReturning(SUMMARY([ROW]))} />);
@@ -107,5 +121,18 @@ describe("WorkerProfileView (P-05a)", () => {
     });
     expect(document.querySelector(".cf-row-detail")?.textContent).toBe("HTTP 503");
     expect(document.querySelector(".cf-card .cf-btn")?.textContent).toBe("Retry");
+  });
+
+  it("renders the skeleton while the first fetch is in flight", async () => {
+    const gated = gatedSummaryFetcher(SUMMARY([ROW]));
+    render(<WorkerProfileView name="api-gateway" fetcher={gated.fetcher} />);
+    expect(document.querySelector(".cf-loading")).toBeTruthy();
+    expect(document.querySelectorAll(".cf-skeleton").length).toBe(3);
+    expect(document.querySelector(".cf-profile")).toBeNull();
+    gated.go();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-loading")).toBeNull();
   });
 });

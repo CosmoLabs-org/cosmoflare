@@ -355,7 +355,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
 
       <div className="cf-rules-list">
         {drafts.length === 0 ? (
-          <p className="cf-empty">No rules. Add one to start alerting.</p>
+          <p className="cf-empty cf-empty-quiet">No rules. Add one to start alerting.</p>
         ) : (
           drafts.map((draft, i) => (
             <RuleCard

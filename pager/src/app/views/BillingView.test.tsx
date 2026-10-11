@@ -2,12 +2,24 @@
 // BillingView (P-04): the React view renders the grade+overage pair on
 // every product card, excludes kv.storage (rolling bytes) with the muted
 // note, and renders the ranked top consumers — against the localhost
-// fixture data through the same ApiClient path production uses.
-import { cleanup, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+// fixture data through the same ApiClient path production uses. The
+// first-load skeleton and the Retry/recover error state spy the same
+// api.fetchJson seam.
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { api, type Billing, type FetchResult } from "../../api";
+import { makeFixtures } from "../../fixtures";
 import BillingView from "./BillingView";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+/** The fixture billing payload, as fetchJson would hand it to the view. */
+function fixtureBilling(): Billing {
+  return makeFixtures(new Date()).billing;
+}
 
 describe("BillingView (P-04)", () => {
   it("renders a grade+overage pair head on every product card", async () => {
@@ -55,5 +67,46 @@ describe("BillingView (P-04)", () => {
     expect(document.querySelector(".cf-pricing-note")?.textContent).toContain("Prices verified");
     // Telemetry gaps card (fixture billing carries one error).
     expect(document.querySelector(".cf-card.cf-level-warning")?.textContent).toContain("Telemetry gaps");
+  });
+
+  it("renders the skeleton while the first fetch is in flight", async () => {
+    let release!: (r: FetchResult<Billing>) => void;
+    vi.spyOn(api, "fetchJson").mockImplementation(
+      () =>
+        new Promise<FetchResult<Billing>>((res) => {
+          release = res;
+        }),
+    );
+    render(<BillingView />);
+    expect(document.querySelector(".cf-loading")).toBeTruthy();
+    expect(document.querySelectorAll(".cf-skeleton").length).toBe(4);
+    expect(document.querySelector(".cf-product")).toBeNull();
+    release({ data: fixtureBilling(), source: "network", ageSec: 0, demo: false });
+    await waitFor(() => {
+      expect(document.querySelector(".cf-product")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-loading")).toBeNull();
+  });
+
+  it("shows the Retry card on a failed first load and Retry recovers", async () => {
+    let fail = true;
+    vi.spyOn(api, "fetchJson").mockImplementation(async <T,>(): Promise<FetchResult<T>> => {
+      if (fail) throw new Error("HTTP 503");
+      return { data: fixtureBilling() as unknown as T, source: "network", ageSec: 0, demo: false };
+    });
+    render(<BillingView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card.cf-level-warning")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-card h2")?.textContent).toBe("Could not load billing");
+    expect(document.querySelector(".cf-card .cf-btn")?.textContent).toBe("Retry");
+    fail = false;
+    document.querySelector<HTMLButtonElement>(".cf-card .cf-btn")!.click();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-product")).toBeTruthy();
+    });
+    // The error card is gone (any remaining cf-level-warning card is the
+    // fixture's telemetry-gaps notice, not the retry state).
+    expect(screen.queryByText("Could not load billing")).toBeNull();
   });
 });
