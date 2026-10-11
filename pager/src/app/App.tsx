@@ -19,6 +19,7 @@ import {
   FolderOpen,
   Globe,
   LayoutDashboard,
+  Menu,
   SlidersHorizontal,
   Sparkles,
   Tag,
@@ -80,6 +81,12 @@ const NAV_LABEL: Record<RouteId, string> = {
   rules: "Rules",
   pairing: "Pairing",
 };
+
+/** Bottom tab bar set (operator 2026-10-12): the five primary sections +
+ *  a More tab that opens the drawer for the full list. Phone widths only —
+ *  the gating is pure CSS (max-width: 640px), so the component renders
+ *  unconditionally and the media query decides visibility. */
+const BOTTOM_TABS: RouteId[] = ["overview", "billing", "workers", "domains", "alerts"];
 
 type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: string };
 
@@ -316,6 +323,55 @@ function NavLinks({
   );
 }
 
+/** Mobile bottom tab bar (operator 2026-10-12): the tab at the bottom that
+ *  shows the section we're in. Five primary tabs (NAV_ICON at 22px, 10px
+ *  labels) + a More tab that toggles the existing drawer for the FULL
+ *  section list. Pure CSS visibility gating (max-width: 640px). */
+function BottomTabs({
+  active,
+  moreOpen,
+  onMore,
+}: {
+  active: string | null;
+  moreOpen: boolean;
+  onMore: () => void;
+}): React.JSX.Element {
+  return (
+    <nav className="cf-bottomtabs" aria-label="Sections">
+      {BOTTOM_TABS.map((r) => {
+        const Icon = NAV_ICON[r];
+        return (
+          <a
+            key={`tab-${r}`}
+            href={hrefFor(r)}
+            className="cf-bottomtab"
+            data-route={r}
+            aria-current={active === r ? "page" : undefined}
+          >
+            <span className="cf-bottomtab-icon" aria-hidden="true">
+              <Icon size={22} strokeWidth={1.8} />
+            </span>
+            <span className="cf-bottomtab-label">{NAV_LABEL[r]}</span>
+          </a>
+        );
+      })}
+      <button
+        type="button"
+        className="cf-bottomtab"
+        aria-label="More sections"
+        aria-expanded={moreOpen}
+        aria-controls="cf-drawer"
+        onClick={onMore}
+      >
+        <span className="cf-bottomtab-icon" aria-hidden="true">
+          <Menu size={22} strokeWidth={1.8} />
+        </span>
+        <span className="cf-bottomtab-label">More</span>
+      </button>
+    </nav>
+  );
+}
+
 /** ViewHost: mounts a div and paints the active view into it. React views
  *  (tier 1: Overview + Billing) get their own small React root created in
  *  the effect and collapsed on unmount; the refresh callback re-renders
@@ -480,6 +536,15 @@ export default function App(): React.JSX.Element {
       {/* Install guidance (FEAT-pXNQ5GW): self-gating — renders nothing in
           standalone, dismissed or not-yet-eligible contexts. */}
       <InstallBanner />
+
+      {/* Mobile bottom tabs (operator 2026-10-12): stacked under the
+          statusbar at the viewport bottom — the CSS media query decides
+          whether it shows (phone widths only). */}
+      <BottomTabs
+        active={view.kind === "route" ? view.route : null}
+        moreOpen={drawerOpen}
+        onMore={() => setDrawerOpen(true)}
+      />
 
       <footer className="cf-statusbar" role="status" aria-live="polite">
         {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
