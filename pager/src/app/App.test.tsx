@@ -4,10 +4,23 @@
 // jsdom's localhost the ApiClient falls back to fixtures, so the Overview
 // paints fixture data through the same path production uses.
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { api, type FetchResult } from "../api";
+import { ROUTES } from "../routes";
+import type { DomainsPayload } from "../domains";
 
 afterEach(cleanup);
+
+const MOCK_DOMAINS: DomainsPayload = {
+  generatedAt: "2026-10-11T00:00:00.000Z",
+  domains: [
+    { id: "d1", name: "cosmolabs.org", status: "active", paused: false, expiresAt: "2027-01-01T00:00:00.000Z" },
+    { id: "d2", name: "cosmoflare.dev", status: "active", paused: false, expiresAt: "2027-02-01T00:00:00.000Z" },
+    { id: "d3", name: "example.test", status: "active", paused: false, expiresAt: null },
+  ],
+  errors: [],
+};
 
 describe("App shell (P-03)", () => {
   it("mounts the chrome: brand lockup (with live section name), quick nav, status strip", () => {
@@ -39,5 +52,64 @@ describe("App shell (P-03)", () => {
       },
       { timeout: 3000 },
     );
+  });
+});
+
+describe("App section identity (2026-10-11 shell pass)", () => {
+  it("nav anchors carry data-route attributes (quick nav drops pairing)", () => {
+    render(<App />);
+    const sidebarLinks = document.querySelectorAll<HTMLAnchorElement>(".cf-navlink[data-route]");
+    const quickLinks = document.querySelectorAll<HTMLAnchorElement>(".cf-quicknav-link[data-route]");
+    // Sidebar/drawer variant: one link per route, each tagged with its route.
+    expect(sidebarLinks.length).toBe(ROUTES.length);
+    for (const a of sidebarLinks) {
+      expect(ROUTES).toContain(a.getAttribute("data-route"));
+      expect(a.getAttribute("href")).toBe(`#/${a.getAttribute("data-route")}`);
+    }
+    // Quick variant: same tagging minus the drawer-only pairing route.
+    expect(quickLinks.length).toBe(ROUTES.length - 1);
+    expect(document.querySelector('.cf-quicknav-link[data-route="domains"]')).toBeTruthy();
+    expect(document.querySelector('.cf-quicknav-link[data-route="pairing"]')).toBeNull();
+  });
+
+  it("masthead renders the section label plus count when the counts fetch resolves", async () => {
+    // The counts hook fetches api/domains among others; fixtures do not
+    // answer that endpoint, so pin it with a spy and delegate the rest to
+    // the real client (fixture fallback), mirroring the shell's mock-free
+    // pattern elsewhere in this file.
+    const original = api.fetchJson.bind(api);
+    const spy = vi
+      .spyOn(api, "fetchJson")
+      .mockImplementation(((endpoint: string, opts?: { refresh?: boolean }) => {
+        if (endpoint.startsWith("api/domains")) {
+          return Promise.resolve<FetchResult<DomainsPayload>>({
+            data: MOCK_DOMAINS,
+            source: "fixture",
+            ageSec: 0,
+            demo: true,
+          });
+        }
+        return original(endpoint, opts) as Promise<FetchResult<never>>;
+      }) as typeof api.fetchJson);
+    try {
+      window.location.hash = "#/domains";
+      render(<App />);
+      const title = document.querySelector(".cf-sectionhead-title");
+      await waitFor(
+        () => {
+          expect(title?.textContent).toContain("Domains");
+          expect(document.querySelector(".cf-sectionhead-count")).toBeTruthy();
+        },
+        { timeout: 3000 },
+      );
+      // The masthead count mirrors the mocked domains payload length.
+      expect(document.querySelector(".cf-sectionhead-count")?.textContent).toBe(
+        ` (${MOCK_DOMAINS.domains.length})`,
+      );
+      expect(title?.textContent).toBe(`Domains (${MOCK_DOMAINS.domains.length})`);
+    } finally {
+      spy.mockRestore();
+      window.location.hash = "";
+    }
   });
 });
