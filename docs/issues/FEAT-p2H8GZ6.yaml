@@ -1,11 +1,15 @@
 id: FEAT-p2H8GZ6
 type: feature
 created_at: 2026-10-12T03:39:51.93768+04:00
-updated_at: 2026-10-12T03:39:52.390167+04:00
+updated_at: 2026-10-12T03:39:53.808587+04:00
 source: local
 ulid: 01M4PNCJP6DDTYYY43AS2H8GZ6
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 76
 title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
 description: 'Operator 2026-10-12: (1) too many notifications - standing breaches re-page hourly (COOLDOWN_MS=1h on a 24h rolling-window metric); (2) multiple fires in one cron run arrive as separate pushes - group into one per run; (3) push title is the raw rule name (''uncached requests'') with a machine string as body - make both human-readable; (4) pushes must appear live in the open PWA (SW postMessage -> view refresh), not only after reopening.'
 roadmap_ref: ROAD-107
