@@ -96,6 +96,9 @@ function friendlyEnableError(err: unknown): string {
   if (name === "NotAllowedError") {
     return "Notifications are blocked. Enable them for this app in iOS Settings, then tap Enable again.";
   }
+  if (name === "ReferenceError" || msg.includes("can't find variable: notification")) {
+    return "This browser can't receive notifications. Install the app first: Share → Add to Home Screen, then open it from the home screen (iOS 16.4+).";
+  }
   if (name === "AbortError" || msg.includes("inactiveregistration") || msg.includes("user aborted")) {
     return "The app just updated. Close it fully and reopen, then tap Enable again.";
   }
