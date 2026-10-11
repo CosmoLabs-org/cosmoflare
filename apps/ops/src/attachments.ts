@@ -25,6 +25,9 @@ export interface WorkerDomainRow {
   hostname: string;
   service: string;
   environment: string;
+  /** Immutable domain id — the Workers detach endpoint is BY ID, not by
+   *  hostname (FEAT-pEWA6N6 phase 2); undefined only if the API omitted it. */
+  id?: string;
 }
 
 export interface ZoneAttachment {
@@ -34,6 +37,9 @@ export interface ZoneAttachment {
   /** DNS record count (result_info.total_count); null when the count
    *  sub-fetch failed — the zone still shows, the count is the gap. */
   recordCount: number | null;
+  /** True when the zone name matches a PROTECTED_HOSTS entry (the lifecycle
+   *  write path hard-refuses removal without an operator override). */
+  protected?: boolean;
 }
 
 export interface AttachmentsPayload {
@@ -52,13 +58,20 @@ type PagesDomain = {
   validation_data?: { status?: string; ssl?: { status?: string } };
   ssl?: { status?: string };
 };
-type WorkerCustomDomain = { hostname: string; service: string; environment: string };
+type WorkerCustomDomain = { id?: string; hostname: string; service: string; environment: string };
 
 /** Collect the attachments inventory: (a) Pages projects then each
  *  project's custom domains, (b) account-level Workers custom domains,
  *  (c) one dns_records?per_page=1 probe per zone for result_info.total_count.
- *  Every sub-fetch soft-fails into errors; the payload never throws. */
-export async function collectAttachments(accountId: string, token: string, now = new Date()): Promise<AttachmentsPayload> {
+ *  Every sub-fetch soft-fails into errors; the payload never throws.
+ *  `opts.protectedHosts` (FEAT-pEWA6N6 phase 2) flags zones whose name is on
+ *  the operator's protected-hosts list so the UI can pre-flag removal. */
+export async function collectAttachments(
+  accountId: string,
+  token: string,
+  now = new Date(),
+  opts: { protectedHosts?: string[] } = {},
+): Promise<AttachmentsPayload> {
   const out: AttachmentsPayload = { generatedAt: now.toISOString(), pages: [], workers: [], zones: [], errors: [] };
 
   // One soft GET: parses the v4 envelope, failures land in out.errors.
@@ -96,17 +109,25 @@ export async function collectAttachments(accountId: string, token: string, now =
   // (b) Account-level Workers custom domains.
   try {
     const domains = await rest<WorkerCustomDomain>(token, `/accounts/${accountId}/workers/domains`);
-    out.workers = domains.map((d) => ({ hostname: d.hostname, service: d.service, environment: d.environment }));
+    out.workers = domains.map((d) => ({ hostname: d.hostname, service: d.service, environment: d.environment, ...(d.id ? { id: d.id } : {}) }));
   } catch (err) {
     out.errors.push(`workers domains: ${err instanceof Error ? err.message : String(err)}`);
   }
+
+  const protectedSet = new Set(opts.protectedHosts ?? []);
 
   // (c) Per-zone DNS record counts: per_page=1, total_count is the answer.
   try {
     const zones = await fetchZonesList(token, accountId);
     for (const z of zones) {
       const got = await getEnvelope<unknown[]>(`zone ${z.name}`, `/zones/${z.id}/dns_records?per_page=1`);
-      out.zones.push({ id: z.id, name: z.name, status: z.status, recordCount: got?.resultInfo?.totalCount ?? null });
+      out.zones.push({
+        id: z.id,
+        name: z.name,
+        status: z.status,
+        recordCount: got?.resultInfo?.totalCount ?? null,
+        ...(protectedSet.has(z.name) ? { protected: true } : {}),
+      });
     }
   } catch (err) {
     out.errors.push(`zones: ${err instanceof Error ? err.message : String(err)}`);

@@ -10,6 +10,7 @@ import { collectBilling } from "./billing";
 import { cached } from "./cache";
 import { collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
+import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
@@ -17,9 +18,16 @@ import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
 
 // Env is the OpsEnv shape (OPS_KV required, VAPID keypair + contact, Access
-// config, assets binding) plus the standalone billing anchor override.
+// config, assets binding) plus the standalone billing anchor override and the
+// lifecycle write-path knobs (FEAT-pEWA6N6 phases 2-3): CF_API_TOKEN_WRITE
+// (optional secret — every mutation 503s without it), PROTECTED_HOSTS (the
+// hard-refused zone names) and ZONE_REMOVE_OVERRIDE (the operator-override
+// gate for protected zones).
 export interface Env extends OpsEnv {
   BILLING_ANCHOR_DAY?: string; // "1"-"31"; unset → collectBilling's fallback chain
+  CF_API_TOKEN_WRITE?: string; // lifecycle mutations (Pages/Workers/Zone Write scopes)
+  PROTECTED_HOSTS?: string; // comma-separated; e.g. "cosmolabs.org,noble.coffee,cosmoflare.dev"
+  ZONE_REMOVE_OVERRIDE?: string; // "1" lets a request carry override:true past the protected-host refusal
 }
 
 // Upstream caching (FEAT-052): /api/summary and /api/billing plus the REST
@@ -86,7 +94,7 @@ export async function doResponse(ctx: ExecutionContext, env: Env, refresh: boole
 // 1 h fresh / 24 h stale, ?refresh behind the 60 s storm guard.
 export async function attachmentsResponse(ctx: ExecutionContext, env: Env, refresh: boolean): Promise<Response> {
   const result = await cached(ctx, env, "attachments", { ...LIST_TTL, force: refresh }, () =>
-    collectAttachments(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date()),
+    collectAttachments(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date(), { protectedHosts: parseProtectedHosts(env.PROTECTED_HOSTS) }),
   );
   return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
 }
@@ -121,6 +129,9 @@ export default {
 
     const auth = await verifyAccessJwt(request.headers.get("Cf-Access-Jwt-Assertion") ?? "", env.ACCESS_TEAM_DOMAIN, env.ACCESS_AUD);
     if (!auth.ok) return json({ error: "forbidden" }, 403);
+    // The verified identity email doubles as the lifecycle audit operator
+    // (FEAT-pEWA6N6 phase 2): every mutation attempt records who did it.
+    const operator = auth.email;
 
     switch (url.pathname) {
       case "/api/vapid-public-key":
@@ -141,6 +152,21 @@ export default {
         return domainsResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/attachments":
         return attachmentsResponse(ctx, env, url.searchParams.has("refresh"));
+      // Lifecycle mutations (FEAT-pEWA6N6 phases 2-3): the rate-limit guard
+      // and the Access check above run first for ALL of these, exactly as
+      // for the reads; the handlers add their own write-token gate + audit.
+      case "/api/domains/detach":
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handleDetach(request, env, ctx, operator);
+      case "/api/domains/attach":
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handleAttach(request, env, ctx, operator);
+      case "/api/zones/remove":
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handleZoneRemove(request, env, ctx, operator);
+      case "/api/audit": // GET the mutation audit log, newest first
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        return auditResponse(env);
       case "/api/domains/detail": {
         // /api/domains/detail?id=<zoneId> — the per-domain profile (zone
         // detail + DNSSEC + SSL), cached 1h per zone.

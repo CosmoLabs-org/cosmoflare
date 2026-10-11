@@ -18,9 +18,12 @@ import {
   expiryLevel,
   sortDomains,
   type AttachmentsPayload,
+  type AuditEntry,
+  type AuditPayload,
   type DomainDetailPayload,
   type DomainRecord,
   type DomainsPayload,
+  type ZoneAttachment,
 } from "../../domains";
 import type { ViewFetcher } from "./WorkersView";
 
@@ -193,46 +196,264 @@ function DomainRow({ d, nowMs, onOpen }: { d: DomainRecord; nowMs: number; onOpe
 
 const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
 
-/** The attachment inventory (FEAT-pEWA6N6 phase 1): one group per Pages
+// ---- Lifecycle mutations (FEAT-pEWA6N6 phases 2-3) ----
+
+/** Injectable mutation hook (the mutator mirrors the ViewFetcher injection
+ *  pattern so tests can stub the POSTs). */
+export type ViewMutator = (endpoint: string, body: unknown) => Promise<unknown>;
+
+// postLifecycle POSTs one lifecycle mutation. Contract (ops lifecycle.ts):
+// 200 echoes {ok:true}; ANY failure carries {error} and it surfaces VERBATIM
+// as a plain Error — no silent failures. An expired Access session answers
+// opaqueredirect, or a 403 with no JSON error body, and surfaces as
+// LoginExpiredError (a 403 WITH {error} is an API refusal, e.g. the
+// protected-host gate, and stays a verbatim message).
+async function postLifecycle(endpoint: string, body: unknown): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`/${endpoint}`, {
+      method: "POST",
+      credentials: "same-origin",
+      redirect: "manual",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    throw new Error(`Could not reach the Ops Worker: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  if (res.type === "opaqueredirect") throw new LoginExpiredError();
+  const data = (await res.json().catch(() => undefined)) as { error?: string } | undefined;
+  if (res.status === 403 && !data?.error) throw new LoginExpiredError();
+  if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
+}
+
+// Per-attachment-row UI state: attached → (Take offline) → confirm →
+// detached → (Put back) → attached, plus the in-flight flag and the last
+// verbatim error under the row.
+type RowMode = "attached" | "confirm" | "detached";
+interface RowUi {
+  mode: RowMode;
+  busy?: boolean;
+  error?: string;
+}
+
+/** One attached domain row with the Take offline / Confirm detach / Put
+ *  back lifecycle. Workers rows surface the Cloudflare note that removing
+ *  the custom domain does NOT delete its advanced certificate. */
+function AttachmentRow({ rowKey, hostname, badges, detached, ui, onDetach, onCancel, onAttach }: {
+  rowKey: string;
+  hostname: string;
+  badges: React.ReactNode;
+  detached?: React.ReactNode; // extra detached-state line (workers cert note)
+  ui: RowUi;
+  onDetach: () => void;
+  onCancel: () => void;
+  onAttach: () => void;
+}): React.JSX.Element {
+  return (
+    <div className="cf-attachment-row" data-row={rowKey}>
+      <span className="cf-attachment-hostname">{hostname}</span>
+      <span className="cf-attachment-badges">
+        {badges}
+        {ui.mode === "detached" ? <span className="cf-badge is-muted">detached</span> : null}
+      </span>
+      {ui.mode === "attached" ? (
+        <span className="cf-attachment-actions">
+          <button type="button" className="cf-btn cf-btn-ghost" disabled={ui.busy === true} onClick={onDetach}>Take offline</button>
+        </span>
+      ) : ui.mode === "confirm" ? (
+        <span className="cf-attachment-actions">
+          <button type="button" className="cf-btn" disabled={ui.busy === true} onClick={onDetach}>Confirm detach</button>
+          <button type="button" className="cf-btn cf-btn-ghost" disabled={ui.busy === true} onClick={onCancel}>Cancel</button>
+        </span>
+      ) : (
+        <span className="cf-attachment-actions">
+          <button type="button" className="cf-btn cf-btn-ghost" disabled={ui.busy === true} onClick={onAttach}>Put back</button>
+        </span>
+      )}
+      {ui.mode === "detached" && detached}
+      {ui.error ? <p className="cf-attachment-error cf-level-warning-text">{ui.error}</p> : null}
+    </div>
+  );
+}
+
+/** One zone row with the typed-confirmation Remove panel: the input must
+ *  equal the zone name EXACTLY, a "this cannot be undone" warning, and
+ *  protected zones show a lock line naming the protection with the submit
+ *  disabled (removal requires an operator override server-side). */
+function ZoneRemoveRow({ zone, mutate }: { zone: ZoneAttachment; mutate: ViewMutator }): React.JSX.Element {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [removed, setRemoved] = useState(false);
+  const isProtected = zone.protected === true;
+  const canSubmit = !isProtected && typed === zone.name && !busy;
+
+  const submit = (): void => {
+    setBusy(true);
+    setError(null);
+    void mutate("api/zones/remove", { zoneId: zone.id, typedName: typed, override: false }).then(
+      () => {
+        setRemoved(true);
+        setBusy(false);
+        setOpen(false);
+      },
+      (err: unknown) => {
+        setError(err instanceof Error ? err.message : String(err));
+        setBusy(false);
+      },
+    );
+  };
+
+  return (
+    <div className="cf-attachment-row cf-zone-row" data-row={`zone:${zone.id}`}>
+      <span className="cf-attachment-hostname">{zone.name}</span>
+      <span className="cf-attachment-badges">
+        {removed ? <span className="cf-badge is-muted">removed</span> : null}
+        {isProtected && !removed ? <span className="cf-badge is-muted">protected</span> : null}
+        {zone.status ? <span className="cf-badge is-muted">{zone.status}</span> : null}
+        {zone.recordCount !== null ? <span className="cf-badge is-muted">{`${zone.recordCount} records`}</span> : null}
+      </span>
+      {!removed ? (
+        open ? (
+          <div className="cf-zone-remove-panel">
+            <p className="cf-zone-warning cf-level-warning-text">This cannot be undone — the zone and its DNS records are deleted.</p>
+            {isProtected ? (
+              <p className="cf-zone-lock" role="note">{`🔒 ${zone.name} is a protected host — removal requires an operator override`}</p>
+            ) : (
+              <input
+                type="text"
+                className="cf-input"
+                value={typed}
+                placeholder={zone.name}
+                aria-label={`Type ${zone.name} to confirm removal`}
+                onChange={(e) => setTyped(e.target.value)}
+              />
+            )}
+            <span className="cf-attachment-actions">
+              <button type="button" className="cf-btn" disabled={!canSubmit} onClick={submit}>Confirm removal</button>
+              <button
+                type="button"
+                className="cf-btn cf-btn-ghost"
+                disabled={busy}
+                onClick={() => {
+                  setOpen(false);
+                  setTyped("");
+                  setError(null);
+                }}
+              >
+                Cancel
+              </button>
+            </span>
+          </div>
+        ) : (
+          <span className="cf-attachment-actions">
+            <button type="button" className="cf-btn cf-btn-ghost" onClick={() => setOpen(true)}>Remove</button>
+          </span>
+        )
+      ) : null}
+      {error ? <p className="cf-attachment-error cf-level-warning-text">{error}</p> : null}
+    </div>
+  );
+}
+
+/** The attachment inventory (FEAT-pEWA6N6 phases 1+2): one group per Pages
  *  project (project name row, one row per domain with muted status + the
- *  SSL state when present), then the Workers group (hostname →
- *  service/environment). Hidden entirely while the attachments fetch has
- *  not landed — its failure changes nothing in the domains error paths. */
-function AttachmentsSection({ payload }: { payload: AttachmentsPayload | null }): React.JSX.Element | null {
+ *  SSL state when present), then the Workers group, then the zone rows with
+ *  their gated Remove panels. The detach/attach flow is row-local: Take
+ *  offline → one inline confirm → the row flips to detached with Put back;
+ *  API errors render verbatim under the row. Hidden entirely while the
+ *  attachments fetch has not landed — its failure changes nothing in the
+ *  domains error paths. */
+function AttachmentsSection({ payload, mutate }: { payload: AttachmentsPayload | null; mutate: ViewMutator }): React.JSX.Element | null {
+  const [ui, setUi] = useState<Record<string, RowUi>>({});
   if (payload === null) return null;
+  // Defensive array guards: a payload of the wrong shape (never expected
+  // from the worker) must blank the section, not crash the view.
+  const pages = Array.isArray(payload.pages) ? payload.pages : [];
+  const workers = Array.isArray(payload.workers) ? payload.workers : [];
+  const zones = Array.isArray(payload.zones) ? payload.zones : [];
+  const errors = Array.isArray(payload.errors) ? payload.errors : [];
+  const rowOf = (key: string): RowUi => ui[key] ?? { mode: "attached" };
+  const patch = (key: string, p: Partial<RowUi>): void =>
+    setUi((prev) => ({ ...prev, [key]: { ...(prev[key] ?? { mode: "attached" as RowMode }), ...p } }));
+  const run = (key: string, endpoint: string, body: Record<string, unknown>, done: RowMode): void => {
+    patch(key, { busy: true, error: undefined });
+    void mutate(endpoint, body).then(
+      () => patch(key, { busy: false, mode: done }),
+      (err: unknown) => patch(key, { busy: false, error: err instanceof Error ? err.message : String(err) }),
+    );
+  };
+
   return (
     <section className="cf-card cf-attachments">
       <p className="cf-row-detail">
-        {payload.errors.length > 0 ? `Custom domains by project — partial load — ${payload.errors[0]}` : "Custom domains by project"}
+        {errors.length > 0 ? `Custom domains by project — partial load — ${errors[0]}` : "Custom domains by project"}
       </p>
-      {payload.pages.map((p) => (
+      {pages.map((p) => (
         <div className="cf-attachments-group" key={p.project}>
           <div className="cf-product-head">
             <strong className="cf-product-name">{p.project}</strong>
           </div>
-          {p.domains.map((d) => (
-            <div className="cf-attachment-row" key={d.hostname}>
-              <span className="cf-attachment-hostname">{d.hostname}</span>
-              <span className="cf-attachment-badges">
-                {d.status ? <span className="cf-badge is-muted">{d.status}</span> : null}
-                {d.ssl ? <span className="cf-badge is-muted">ssl: {d.ssl}</span> : null}
-              </span>
-            </div>
-          ))}
+          {p.domains.map((d) => {
+            const key = `pages:${p.project}/${d.hostname}`;
+            const uiRow = rowOf(key);
+            return (
+              <AttachmentRow
+                key={d.hostname}
+                rowKey={key}
+                hostname={d.hostname}
+                ui={uiRow}
+                badges={
+                  <>
+                    {d.status ? <span className="cf-badge is-muted">{d.status}</span> : null}
+                    {d.ssl ? <span className="cf-badge is-muted">{`ssl: ${d.ssl}`}</span> : null}
+                  </>
+                }
+                onDetach={() => (uiRow.mode === "confirm" ? run(key, "api/domains/detach", { kind: "pages", project: p.project, name: d.hostname }, "detached") : patch(key, { mode: "confirm" }))}
+                onCancel={() => patch(key, { mode: "attached" })}
+                onAttach={() => run(key, "api/domains/attach", { kind: "pages", project: p.project, name: d.hostname }, "attached")}
+              />
+            );
+          })}
         </div>
       ))}
-      {payload.workers.length > 0 ? (
+      {workers.length > 0 ? (
         <div className="cf-attachments-group">
           <div className="cf-product-head">
             <strong className="cf-product-name">Workers</strong>
           </div>
-          {payload.workers.map((w) => (
-            <div className="cf-attachment-row" key={`${w.hostname}/${w.service}/${w.environment}`}>
-              <span className="cf-attachment-hostname">{w.hostname}</span>
-              <span className="cf-attachment-badges">
-                <span className="cf-badge is-muted">{`${w.service} / ${w.environment}`}</span>
-              </span>
-            </div>
+          {workers.map((w) => {
+            const key = `workers:${w.id ?? w.hostname}`;
+            const uiRow = rowOf(key);
+            return (
+              <AttachmentRow
+                key={key}
+                rowKey={key}
+                hostname={w.hostname}
+                ui={uiRow}
+                badges={<span className="cf-badge is-muted">{`${w.service} / ${w.environment}`}</span>}
+                detached={
+                  // Cloudflare docs (verified 2026-10-12): deleting a Workers
+                  // custom domain does not auto-delete its advanced certificate.
+                  <p className="cf-attachment-note">Note: removing a Workers custom domain does not delete its advanced certificate.</p>
+                }
+                onDetach={() => (uiRow.mode === "confirm" ? run(key, "api/domains/detach", { kind: "workers", name: w.hostname, domainId: w.id }, "detached") : patch(key, { mode: "confirm" }))}
+                onCancel={() => patch(key, { mode: "attached" })}
+                onAttach={() => run(key, "api/domains/attach", { kind: "workers", name: w.hostname, service: w.service }, "attached")}
+              />
+            );
+          })}
+        </div>
+      ) : null}
+      {zones.length > 0 ? (
+        <div className="cf-attachments-group">
+          <div className="cf-product-head">
+            <strong className="cf-product-name">Zones</strong>
+          </div>
+          {zones.map((z) => (
+            <ZoneRemoveRow key={z.id} zone={z} mutate={mutate} />
           ))}
         </div>
       ) : null}
@@ -240,10 +461,62 @@ function AttachmentsSection({ payload }: { payload: AttachmentsPayload | null })
   );
 }
 
-export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
+/** The lifecycle audit trail (FEAT-pEWA6N6 phase 3): the newest-first audit
+ *  rows from /api/audit — ts, action, target, operator, ok/error — with the
+ *  same skeleton + verbatim-error patterns as the rest of the view. */
+function AuditCard({ fetchJson }: { fetchJson: ViewFetcher }): React.JSX.Element {
+  const [state, setState] = useState<{ status: "loading" } | { status: "ok"; entries: AuditEntry[] } | { status: "error"; message: string }>({ status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJson<AuditPayload>("api/audit").then(
+      (res) => {
+        if (!cancelled) setState({ status: "ok", entries: Array.isArray(res.data?.audit) ? res.data.audit : [] });
+      },
+      (err: unknown) => {
+        if (!cancelled) setState({ status: "error", message: err instanceof Error ? err.message : String(err) });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchJson]);
+  return (
+    <section className="cf-card cf-audit">
+      <h3 className="cf-audit-title">Audit</h3>
+      {state.status === "loading" ? (
+        <div className="cf-loading">
+          <div className="cf-skeleton" />
+          <div className="cf-skeleton" />
+        </div>
+      ) : state.status === "error" ? (
+        <p className="cf-empty cf-level-warning-text">{`Could not load the audit log — ${state.message}`}</p>
+      ) : state.entries.length === 0 ? (
+        <p className="cf-empty cf-empty-quiet">No lifecycle actions recorded yet.</p>
+      ) : (
+        state.entries.map((e, i) => (
+          <div className="cf-audit-row" key={`${e.ts}-${i}`}>
+            <span className="cf-audit-ts">{new Date(e.ts).toLocaleString()}</span>
+            <span className="cf-audit-action">{e.action}</span>
+            <span className="cf-audit-target">{e.target}</span>
+            <span className="cf-audit-operator">{e.operator || "—"}</span>
+            <span className={e.ok ? "cf-audit-ok" : "cf-audit-fail cf-level-warning-text"}>
+              {e.ok ? "ok" : `error${e.error ? ` — ${e.error}` : ""}`}
+            </span>
+          </div>
+        ))
+      )}
+    </section>
+  );
+}
+
+export default function DomainsView({ refreshSeq = 0, fetcher, mutator }: { refreshSeq?: number; fetcher?: ViewFetcher; mutator?: ViewMutator }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
   const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
+  // Lifecycle mutations (detach/attach/zone-remove) go through the same
+  // injection pattern: the injected mutator in tests, the shared POST
+  // helper in production.
+  const mutate: ViewMutator = mutator ?? postLifecycle;
   const [data, setData] = useState<FetchResult<DomainsPayload> | null>(null);
   // Attachment inventory (FEAT-pEWA6N6 phase 1): fetched independently of
   // api/domains — a failure here leaves the zones view and its error paths
@@ -375,7 +648,8 @@ export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
         )}
       </section>
 
-      <AttachmentsSection payload={attachments?.data ?? null} />
+      <AttachmentsSection payload={attachments?.data ?? null} mutate={mutate} />
+      <AuditCard fetchJson={fetchJson} />
     </motion.div>
   );
 }

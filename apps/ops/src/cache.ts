@@ -228,3 +228,31 @@ export async function cached<T>(
 function ageSec(entry: CacheEntry, now: () => number): number {
   return (now() - entry.storedAt) / 1000;
 }
+
+/**
+ * Drop a cached() entry from every tier: the L1 memo, the KV namespace when
+ * bound, and the Cache-API bucket (best-effort — see the header: an
+ * Access-fronted Worker has no functional Cache API, so a throw here just
+ * means the L2 copy was never there). Used by the lifecycle write path
+ * (FEAT-pEWA6N6 phases 2-3): after a successful mutation the affected keys
+ * are invalidated so the next read refetches instead of serving stale data.
+ */
+export async function invalidate(env: CacheEnv, key: string): Promise<void> {
+  mem.delete(key);
+  inflight.delete(key);
+  if (env.OPS_KV) {
+    try {
+      await env.OPS_KV.delete(key);
+    } catch {
+      // KV delete is best-effort: the L1 drop above already forces a refetch
+      // in this isolate, and the KV copy expires with its own stale TTL.
+    }
+  }
+  try {
+    const store = (caches as unknown as { default?: Cache }).default;
+    if (!store) return;
+    await store.delete(`https://ops-cache.internal/${key}`);
+  } catch {
+    // Access-fronted (docs 2026-10-09): Cache API unavailable - nothing to drop
+  }
+}

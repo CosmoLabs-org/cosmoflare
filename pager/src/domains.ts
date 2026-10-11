@@ -56,6 +56,9 @@ export interface WorkerDomainAttachment {
   hostname: string;
   service: string;
   environment: string;
+  /** Immutable domain id — the Workers detach endpoint is BY ID, not by
+   *  hostname (FEAT-pEWA6N6 phase 2); absent when the worker omitted it. */
+  id?: string;
 }
 
 export interface ZoneAttachment {
@@ -63,6 +66,24 @@ export interface ZoneAttachment {
   name: string;
   status: string;
   recordCount: number | null;
+  /** True when the zone name is on the operator's protected-hosts list —
+   *  removal hard-refuses without an operator override. */
+  protected?: boolean;
+}
+
+// Lifecycle audit log (FEAT-pEWA6N6 phase 3): GET /api/audit returns the
+// entries newest-first, capped at the 200 newest on the worker side.
+export interface AuditEntry {
+  ts: string;
+  action: string;
+  target: string;
+  operator: string;
+  ok: boolean;
+  error?: string;
+}
+
+export interface AuditPayload {
+  audit: AuditEntry[];
 }
 
 export interface AttachmentsPayload {
