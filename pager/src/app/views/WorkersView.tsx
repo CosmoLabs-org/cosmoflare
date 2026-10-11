@@ -35,10 +35,12 @@ const WORKER_COLUMNS: DataTableColumn<WorkerRow>[] = [
   { key: "cpuP99", label: "CPU p99", numeric: true, text: (w) => cpuMs(w.cpuP99Ms), num: (w) => w.cpuP99Ms },
 ];
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function WorkersView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [summary, setSummary] = useState<FetchResult<Summary> | null>(null);
   // Allowance for the graded bars: Workers Paid request allowance from the
   // billing cache — one cached fetch, absent bars on failure.

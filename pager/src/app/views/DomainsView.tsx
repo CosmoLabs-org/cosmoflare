@@ -190,10 +190,12 @@ function DomainRow({ d, nowMs, onOpen }: { d: DomainRecord; nowMs: number; onOpe
   );
 }
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [data, setData] = useState<FetchResult<DomainsPayload> | null>(null);
   // Master-detail drill-down INSIDE the component (the vanilla module's
   // activeDomainId, as React state — no route change).

@@ -68,10 +68,12 @@ function ProjectCard({ b, p }: { b: Billing; p: ProjectCost }): React.JSX.Elemen
   );
 }
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function ProjectsView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [data, setData] = useState<FetchResult<Billing> | null>(null);
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);

@@ -4,8 +4,8 @@
 // costs, the probe notes as quiet lines and the honest empty state — with
 // the fetch injected (the worker_profile.test.ts pattern).
 import { cleanup, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
-import { LoginExpiredError, type FetchResult } from "../../api";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { api, LoginExpiredError, type FetchResult } from "../../api";
 import type { AIGatewaysPayload } from "../../ai";
 import AIView from "./AIView";
 
@@ -198,5 +198,20 @@ describe("AIView (BR-03)", () => {
       expect(document.querySelector(".cf-consumers-ranked")).toBeTruthy();
     });
     expect(document.querySelector(".cf-card.cf-level-warning")).toBeNull();
+  });
+
+  it("does not loop fetches when no fetcher prop is injected (production path)", async () => {
+    // A fresh FetchResult per call, as production returns — a stable reference
+    // would let React bail out of the re-render and mask the loop.
+    const spy = vi.spyOn(api, "fetchJson").mockImplementation(async () =>
+      ({ data: PAYLOAD, source: "network", ageSec: 0, demo: false }) as unknown as Awaited<ReturnType<typeof api.fetchJson>>,
+    );
+    render(<AIView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-card, .cf-empty, .cf-loading")).toBeTruthy();
+    });
+    const callCount = spy.mock.calls.length;
+    await new Promise((r) => setTimeout(r, 300));
+    expect(spy.mock.calls.length).toBeLessThanOrEqual(callCount + 1);
   });
 });

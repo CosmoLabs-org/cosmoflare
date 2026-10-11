@@ -50,8 +50,10 @@ const ZONE_COLUMNS: DataTableColumn<ZoneRow>[] = [
   },
 ];
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function ZonesView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [summary, setSummary] = useState<FetchResult<Summary> | null>(null);
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);

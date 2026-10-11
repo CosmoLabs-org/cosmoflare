@@ -29,12 +29,14 @@ function StatRow({ label, value, valueClass }: { label: string; value: string; v
   );
 }
 
+const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+
 export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
   name: string;
   refreshSeq?: number;
   fetcher?: ViewFetcher;
 }): React.JSX.Element {
-  const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+  const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [worker, setWorker] = useState<WorkerRow | null>(null);
   const [found, setFound] = useState(false);
   const [loaded, setLoaded] = useState(false);
