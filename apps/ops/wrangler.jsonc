@@ -4,7 +4,10 @@
 // ACCESS_AUD secrets). Preview URLs stay off — the Access app does
 // not cover them. Secrets (wrangler secret put …), never committed — this
 // repo is public: CF_ACCOUNT_ID, CF_API_TOKEN, VAPID_PUBLIC_KEY,
-// VAPID_PRIVATE_KEY, VAPID_SUBJECT (e.g. "mailto:alerts@cosmolabs.org").
+// VAPID_PRIVATE_KEY, VAPID_SUBJECT (e.g. "mailto:alerts@cosmolabs.org"),
+// and (FEAT-pEWA6N6 phases 2-3) CF_API_TOKEN_WRITE — a second token with
+// Pages Write / Workers Scripts Write / Zone Write scopes; every lifecycle
+// mutation 503s while it is unset (reads keep using CF_API_TOKEN).
 // Optional var BILLING_ANCHOR_DAY ("1"-"31") is the billing-period fallback.
 // The cron trigger fires every 5 minutes to evaluate the alert rules; OPS_KV
 // holds rules, fire-state, subscriptions and the upstream cache (namespace
@@ -22,7 +25,11 @@
   // Billing cycle renews on the 23rd (operator's dashboard shows Workers usage
   // Sep 23 - Oct 23). The token lacks Billing Read, so the subscription API
   // cannot confirm it; this anchor is the source until it can (BUG-pNXAHPD).
-  "vars": { "BILLING_ANCHOR_DAY": "23" },
+  // PROTECTED_HOSTS (FEAT-pEWA6N6 phase 2): zone names the lifecycle
+  // zone-removal path hard-refuses unless the request carries override:true
+  // AND the ZONE_REMOVE_OVERRIDE var is "1" (unset by default — deploy it
+  // deliberately, e.g. `wrangler versions upload --var ZONE_REMOVE_OVERRIDE:1`).
+  "vars": { "BILLING_ANCHOR_DAY": "23", "PROTECTED_HOSTS": "cosmolabs.org,noble.coffee,cosmoflare.dev" },
   // Served on a Workers Custom Domain attached via the API (kept out of this
   // public config); the workers.dev route stays off so the custom domain is
   // the only entry point. Verify after each deploy that the domain remains.

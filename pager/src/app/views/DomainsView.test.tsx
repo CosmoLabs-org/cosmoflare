@@ -5,10 +5,10 @@
 // the /api/domains/detail enrichment (the historical "Previous nameservers
 // (before Cloudflare)" label) — with every fetch injected
 // (the worker_profile.test.ts pattern).
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, type FetchResult } from "../../api";
-import type { AttachmentsPayload, DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
+import type { AttachmentsPayload, AuditEntry, AuditPayload, DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
 import DomainsView from "./DomainsView";
 
 afterEach(cleanup);
@@ -253,5 +253,218 @@ describe("DomainsView (P-05b)", () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(document.querySelector(".cf-attachments")).toBeNull();
     expect(text(".cf-domain-name")).toEqual(["soon.dev", "warn.net", "later.org", "outside.example"]);
+  });
+});
+
+// ---- Lifecycle UI (FEAT-pEWA6N6 phases 2-3): detach/attach rows, the
+// gated zone-removal panel, and the audit card. Same injection patterns as
+// above: reads through fetcher, mutations through mutator.
+
+const LIFECYCLE_ATTACHMENTS: AttachmentsPayload = {
+  generatedAt: "2026-10-12T00:00:00Z",
+  pages: [
+    {
+      project: "noble-web",
+      domains: [{ hostname: "staging.noble.coffee", status: "active", ssl: "active", verification: "active" }],
+    },
+  ],
+  workers: [{ hostname: "api.example.dev", service: "noble-api", environment: "production", id: "dmn_123" }],
+  zones: [
+    { id: "z1", name: "noble.coffee", status: "active", recordCount: 42, protected: true },
+    { id: "z2", name: "example.dev", status: "active", recordCount: 7 },
+  ],
+  errors: [],
+};
+
+const AUDIT_ENTRIES: AuditEntry[] = [
+  { ts: "2026-10-12T01:00:00Z", action: "detach", target: "noble-web/staging.noble.coffee", operator: "owner@example.com", ok: true },
+  { ts: "2026-10-12T00:30:00Z", action: "zone-remove", target: "example.dev", operator: "owner@example.com", ok: false, error: "typed name does not match" },
+];
+
+const AUDIT: AuditPayload = { audit: AUDIT_ENTRIES };
+
+/** Fetcher over the lifecycle fixtures: domains + attachments + audit. */
+function lifecycleFetcher(opts: { attachments?: AttachmentsPayload; audit?: AuditPayload; auditError?: Error } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
+  return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+    if (endpoint === "api/domains") return { data: DOMAINS as unknown as T, source: "network", ageSec: 0, demo: false };
+    if (endpoint === "api/attachments") {
+      if (opts.attachments) return { data: opts.attachments as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 503");
+    }
+    if (endpoint === "api/audit") {
+      if (opts.auditError) throw opts.auditError;
+      if (opts.audit) return { data: opts.audit as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 503");
+    }
+    throw new Error("HTTP 404");
+  };
+}
+
+const buttonByText = (label: string): HTMLButtonElement | undefined =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find((b) => b.textContent === label);
+
+describe("DomainsView lifecycle (FEAT-pEWA6N6 phases 2-3)", () => {
+  it("detaches a Pages domain after the inline confirm: Take offline → Confirm detach POSTs and the row flips to detached", async () => {
+    const calls: { endpoint: string; body: unknown }[] = [];
+    const mutator = async (endpoint: string, body: unknown): Promise<unknown> => {
+      calls.push({ endpoint, body });
+      return { ok: true };
+    };
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS })} mutator={mutator} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-row")).toBeTruthy();
+    });
+    // One inline confirm: Take offline turns into Confirm detach + Cancel.
+    fireEvent.click(buttonByText("Take offline")!);
+    await waitFor(() => {
+      expect(buttonByText("Confirm detach")?.textContent).toBe("Confirm detach");
+    });
+    expect(buttonByText("Cancel")?.textContent).toBe("Cancel");
+    fireEvent.click(buttonByText("Confirm detach")!);
+    await waitFor(() => {
+      expect(calls).toEqual([{ endpoint: "api/domains/detach", body: { kind: "pages", project: "noble-web", name: "staging.noble.coffee" } }]);
+    });
+    // The row flips to a detached state with a Put back control.
+    await waitFor(() => {
+      expect(buttonByText("Put back")).toBeTruthy();
+    });
+    expect(text(".cf-attachment-badges .cf-badge")).toContain("detached");
+    // Put back POSTs the attach counterpart.
+    fireEvent.click(buttonByText("Put back")!);
+    await waitFor(() => {
+      expect(calls[1]).toEqual({ endpoint: "api/domains/attach", body: { kind: "pages", project: "noble-web", name: "staging.noble.coffee" } });
+    });
+  });
+
+  it("surfaces a detached-state API error verbatim under the row", async () => {
+    const mutator = async (): Promise<unknown> => {
+      throw new Error("routing conflict: domain is in use");
+    };
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS })} mutator={mutator} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-row")).toBeTruthy();
+    });
+    fireEvent.click(buttonByText("Take offline")!); // → confirm
+    await waitFor(() => {
+      expect(buttonByText("Confirm detach")).toBeTruthy();
+    });
+    fireEvent.click(buttonByText("Confirm detach")!);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-error")?.textContent).toBe("routing conflict: domain is in use");
+    });
+    expect(document.querySelector(".cf-attachment-error")?.classList.contains("cf-level-warning-text")).toBe(true);
+  });
+
+  it("shows the workers certificate note in the detached state and sends the domainId on detach", async () => {
+    const calls: { endpoint: string; body: unknown }[] = [];
+    const mutator = async (endpoint: string, body: unknown): Promise<unknown> => {
+      calls.push({ endpoint, body });
+      return { ok: true };
+    };
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS })} mutator={mutator} />);
+    await waitFor(() => {
+      expect(text(".cf-attachment-hostname")).toContain("api.example.dev");
+    });
+    // The workers row is the second Take offline button (after the Pages row's).
+    const takeOffline = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter((b) => b.textContent === "Take offline");
+    fireEvent.click(takeOffline[1]);
+    await waitFor(() => {
+      expect(buttonByText("Confirm detach")).toBeTruthy();
+    });
+    fireEvent.click(buttonByText("Confirm detach")!);
+    await waitFor(() => {
+      expect(calls).toEqual([{ endpoint: "api/domains/detach", body: { kind: "workers", name: "api.example.dev", domainId: "dmn_123" } }]);
+    });
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-note")?.textContent).toContain("does not delete its advanced certificate");
+    });
+  });
+
+  it("gates zone removal: exact typed name required, protected zones show the lock line with a disabled submit", async () => {
+    const calls: { endpoint: string; body: unknown }[] = [];
+    const mutator = async (endpoint: string, body: unknown): Promise<unknown> => {
+      calls.push({ endpoint, body });
+      return { ok: true };
+    };
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS })} mutator={mutator} />);
+    await waitFor(() => {
+      expect(text(".cf-product-name")).toContain("Zones");
+    });
+    const removeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter((b) => b.textContent === "Remove");
+    expect(removeButtons).toHaveLength(2);
+    // Protected zone first (z1): the panel shows the lock line and the
+    // submit stays disabled — no typed input is even offered.
+    fireEvent.click(removeButtons[0]);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-zone-lock")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-zone-lock")?.textContent).toContain("noble.coffee is a protected host");
+    expect(document.querySelector(".cf-zone-lock")?.textContent).toContain("operator override");
+    expect(document.querySelector(".cf-zone-warning")?.textContent).toContain("This cannot be undone");
+    expect(buttonByText("Confirm removal")!.disabled).toBe(true);
+    fireEvent.click(buttonByText("Confirm removal")!);
+    expect(calls).toEqual([]);
+    // Non-protected zone (z2): submit enables only on an exact typed match.
+    fireEvent.click(removeButtons[1]);
+    await waitFor(() => {
+      expect(document.querySelector("input.cf-input")).toBeTruthy();
+    });
+    const input = document.querySelector<HTMLInputElement>("input.cf-input")!;
+    const nonProtectedConfirm = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter((b) => b.textContent === "Confirm removal")[1];
+    expect(nonProtectedConfirm.disabled).toBe(true);
+    fireEvent.change(input, { target: { value: "example.dev " } });
+    expect(nonProtectedConfirm.disabled).toBe(true); // trailing space ≠ exact
+    fireEvent.change(input, { target: { value: "example.dev" } });
+    expect(nonProtectedConfirm.disabled).toBe(false);
+    fireEvent.click(nonProtectedConfirm);
+    await waitFor(() => {
+      expect(calls).toEqual([{ endpoint: "api/zones/remove", body: { zoneId: "z2", typedName: "example.dev", override: false } }]);
+    });
+    // The row flips to its removed state.
+    await waitFor(() => {
+      expect(text(".cf-attachment-badges .cf-badge")).toContain("removed");
+    });
+  });
+
+  it("renders zone-removal API refusals verbatim under the zone row", async () => {
+    const mutator = async (): Promise<unknown> => {
+      throw new Error("example.dev is a protected host — removal requires an operator override (ZONE_REMOVE_OVERRIDE=1 and override:true)");
+    };
+    const attachments: AttachmentsPayload = { ...LIFECYCLE_ATTACHMENTS, zones: [LIFECYCLE_ATTACHMENTS.zones[1]] };
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments })} mutator={mutator} />);
+    await waitFor(() => {
+      expect(buttonByText("Remove")).toBeTruthy();
+    });
+    fireEvent.click(buttonByText("Remove")!);
+    await waitFor(() => {
+      expect(document.querySelector("input.cf-input")).toBeTruthy();
+    });
+    fireEvent.change(document.querySelector<HTMLInputElement>("input.cf-input")!, { target: { value: "example.dev" } });
+    fireEvent.click(buttonByText("Confirm removal")!);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-attachment-error")?.textContent).toContain("operator override");
+    });
+  });
+
+  it("renders the audit card newest-first from api/audit and shows skeleton/error states", async () => {
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS, audit: AUDIT })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-audit-row")).toBeTruthy();
+    });
+    expect(document.querySelector(".cf-audit-title")?.textContent).toBe("Audit");
+    // Newest first: the successful detach (01:00) above the failed removal (00:30).
+    const actions = Array.from(document.querySelectorAll(".cf-audit-row .cf-audit-action")).map((n) => n.textContent);
+    expect(actions).toEqual(["detach", "zone-remove"]);
+    const fails = Array.from(document.querySelectorAll(".cf-audit-row .cf-audit-fail")).map((n) => n.textContent);
+    expect(fails).toEqual(["error — typed name does not match"]);
+    expect(document.querySelector(".cf-audit-row .cf-audit-operator")?.textContent).toBe("owner@example.com");
+  });
+
+  it("shows the audit error state when api/audit fails", async () => {
+    render(<DomainsView fetcher={lifecycleFetcher({ attachments: LIFECYCLE_ATTACHMENTS, auditError: new Error("HTTP 503") })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-audit .cf-level-warning-text")?.textContent).toContain("Could not load the audit log — HTTP 503");
+    });
+    expect(document.querySelector(".cf-audit-row")).toBeNull();
   });
 });
