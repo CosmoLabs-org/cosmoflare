@@ -1,11 +1,13 @@
 id: FEAT-pEWA6N6
 type: feature
 created_at: 2026-10-11T20:55:27.88521+04:00
-updated_at: 2026-10-11T20:55:28.360032+04:00
+updated_at: 2026-10-11T20:55:29.616146+04:00
 source: local
 ulid: 01M4NY83B8C35NZF1KSAEWA6N6
 provisional: true
 status: open
+origin:
+    session: 75
 title: 'Ops domain & zone lifecycle: inventory + reversible detach + gated zone deletion (Noble.Coffee)'
 description: 'From Noble.Coffee operator feedback (full verbatim spec: docs/brainstorming/2026-10-11-noblecoffee-domain-zone-lifecycle.md). Domains/Zones section on the ops page: (1) inventory — every custom domain attached to Pages/Workers projects (hostname, project, status, DNS/SSL state) plus every zone (name, status, record count), batch view per project; (2) Take offline — reversible custom-domain detach, one-click re-attach, zone+DNS untouched; (3) Remove — destructive zone deletion, gated by typed exact-name confirmation, HARD-REFUSING protected apex hostnames (configurable allowlist: noble.coffee, cosmolabs.org, ...) unless an explicit operator override. Requirements: dry-run preview before either action; one-confirm for detach, typed-confirm for deletion; audit log (operator, timestamp, target, action) with a list view; CF API v4 Pages/Workers custom domains + Zones endpoints; API errors surface verbatim, never silent. Prerequisite shared with the Ops write-path idea: a second write-scoped CF token + guarded action plumbing + audit trail.'
 affected_files:
