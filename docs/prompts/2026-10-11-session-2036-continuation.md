@@ -4,7 +4,7 @@ created: 2026-10-10
 status: PENDING
 branch: master
 goals_total: 3
-goals_completed: 0
+goals_completed: 2
 supersedes: "docs/prompts/2026-10-10-session-2035-continuation.md"
 requires_reading:
     - docs/prompts/2026-10-10-session-2035-continuation.md
@@ -48,8 +48,8 @@ _(none)_
 
 
 ### [ ] G-01 Cron push from the Worker — finish delivery to the iPhone (carried from P-2026-10-09-cf-cli-review G-06)
-### [ ] G-02 Billing period from the real subscription (ROAD-103, BUG-056) (carried from docs/prompts/2026-10-10-session-2035-continuation.md G-02)
-### [ ] G-03 FIRST: independently verify this session's Ops work before building on it (operator request) (carried from docs/prompts/2026-10-10-session-2035-continuation.md G-03)
+### [x] G-02 Billing period from the real subscription (ROAD-103, BUG-056) (carried from docs/prompts/2026-10-10-session-2035-continuation.md G-02)
+### [x] G-03 FIRST: independently verify this session's Ops work before building on it (operator request) (carried from docs/prompts/2026-10-10-session-2035-continuation.md G-03)
 ## Carry-Over
 
 _(none)_

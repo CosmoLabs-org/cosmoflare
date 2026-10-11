@@ -179,3 +179,8 @@ records:
       idle_timeouts: 2
       last_stall_point: "\e]0;_glm-agent-0300-feat-018-p0-cosmoflare (GLM)\a[claude-code:unrecognized_model] {\"model\":\"glm-5.3\",\"query_source\":\"sdk"
       updated: 2026-09-22T16:56:48.113438+04:00
+    - brief_hash: 04affd73a40ea99f
+      model: glm-5.3-flash
+      idle_timeouts: 1
+      last_stall_point: '[oh-my-zsh] Would you like to update? [Y/n]'
+      updated: 2026-10-11T04:17:27.673579+04:00
