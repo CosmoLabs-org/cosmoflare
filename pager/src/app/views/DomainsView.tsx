@@ -17,6 +17,7 @@ import {
   daysUntil,
   expiryLevel,
   sortDomains,
+  type AttachmentsPayload,
   type DomainDetailPayload,
   type DomainRecord,
   type DomainsPayload,
@@ -192,11 +193,62 @@ function DomainRow({ d, nowMs, onOpen }: { d: DomainRecord; nowMs: number; onOpe
 
 const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
 
+/** The attachment inventory (FEAT-pEWA6N6 phase 1): one group per Pages
+ *  project (project name row, one row per domain with muted status + the
+ *  SSL state when present), then the Workers group (hostname →
+ *  service/environment). Hidden entirely while the attachments fetch has
+ *  not landed — its failure changes nothing in the domains error paths. */
+function AttachmentsSection({ payload }: { payload: AttachmentsPayload | null }): React.JSX.Element | null {
+  if (payload === null) return null;
+  return (
+    <section className="cf-card cf-attachments">
+      <p className="cf-row-detail">
+        {payload.errors.length > 0 ? `Custom domains by project — partial load — ${payload.errors[0]}` : "Custom domains by project"}
+      </p>
+      {payload.pages.map((p) => (
+        <div className="cf-attachments-group" key={p.project}>
+          <div className="cf-product-head">
+            <strong className="cf-product-name">{p.project}</strong>
+          </div>
+          {p.domains.map((d) => (
+            <div className="cf-attachment-row" key={d.hostname}>
+              <span className="cf-attachment-hostname">{d.hostname}</span>
+              <span className="cf-attachment-badges">
+                {d.status ? <span className="cf-badge is-muted">{d.status}</span> : null}
+                {d.ssl ? <span className="cf-badge is-muted">ssl: {d.ssl}</span> : null}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
+      {payload.workers.length > 0 ? (
+        <div className="cf-attachments-group">
+          <div className="cf-product-head">
+            <strong className="cf-product-name">Workers</strong>
+          </div>
+          {payload.workers.map((w) => (
+            <div className="cf-attachment-row" key={`${w.hostname}/${w.service}/${w.environment}`}>
+              <span className="cf-attachment-hostname">{w.hostname}</span>
+              <span className="cf-attachment-badges">
+                <span className="cf-badge is-muted">{`${w.service} / ${w.environment}`}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: number; fetcher?: ViewFetcher }): React.JSX.Element {
   // The Retry re-render must go through the SAME fetcher (injected or the
   // shared client) — hence the closure rather than a bare method reference.
   const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [data, setData] = useState<FetchResult<DomainsPayload> | null>(null);
+  // Attachment inventory (FEAT-pEWA6N6 phase 1): fetched independently of
+  // api/domains — a failure here leaves the zones view and its error paths
+  // untouched (the section just stays hidden).
+  const [attachments, setAttachments] = useState<FetchResult<AttachmentsPayload> | null>(null);
   // Master-detail drill-down INSIDE the component (the vanilla module's
   // activeDomainId, as React state — no route change).
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -236,6 +288,13 @@ export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
         }
       }
     })();
+    // Attachments ride along independently (soft): any failure is dropped.
+    void fetchJson<AttachmentsPayload>("api/attachments").then(
+      (res) => {
+        if (!cancelled) setAttachments(res);
+      },
+      () => undefined,
+    );
     return () => {
       cancelled = true;
     };
@@ -315,6 +374,8 @@ export default function DomainsView({ refreshSeq = 0, fetcher }: { refreshSeq?: 
           sorted.map((d) => <DomainRow key={d.id} d={d} nowMs={nowMs} onOpen={() => setActiveId(d.id)} />)
         )}
       </section>
+
+      <AttachmentsSection payload={attachments?.data ?? null} />
     </motion.div>
   );
 }
