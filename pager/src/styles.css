@@ -355,12 +355,31 @@ body.cf-nav-open { overflow: hidden; }
 .cf-navlink[aria-current="page"] .cf-navcount {
   color: var(--text);
 }
+/* Per-section color identity (operator 2026-10-11): one token per route,
+   scoped onto anything carrying data-route. Hue rides icons, markers and
+   glows ONLY — labels and body text stay in the existing neutrals. */
+[data-route="overview"] { --section-color: #f5a623; }
+[data-route="billing"] { --section-color: #34d399; }
+[data-route="ai"] { --section-color: #a78bfa; }
+[data-route="projects"] { --section-color: #38bdf8; }
+[data-route="domains"] { --section-color: #2dd4bf; }
+[data-route="workers"] { --section-color: #facc15; }
+[data-route="d1"] { --section-color: #60a5fa; }
+[data-route="durable-objects"] { --section-color: #f472b6; }
+[data-route="zones"] { --section-color: #a3e635; }
+[data-route="alerts"] { --section-color: #f87171; }
+[data-route="rules"] { --section-color: #818cf8; }
+[data-route="pairing"] { --section-color: #22d3ee; }
+
 .cf-navlink[aria-current="page"] {
   color: var(--text);
   background: var(--surface-raised);
   font-weight: 600;
 }
-.cf-navlink[aria-current="page"] .cf-navglyph { color: var(--accent); }
+.cf-navlink[aria-current="page"] .cf-navglyph {
+  color: var(--section-color, var(--accent));
+  animation: cf-glyph-breathe 2.8s ease-in-out infinite;
+}
 .cf-navglyph { width: 20px; display: inline-flex; opacity: 0.9; }
 .cf-navglyph svg { display: block; }
 .cf-navlink:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
@@ -697,6 +716,8 @@ body.cf-nav-open { overflow: hidden; }
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  /* Operator 2026-10-11: circular refresh button. */
+  border-radius: 999px;
 }
 .cf-refresh-icon { display: inline-flex; transform-origin: center; }
 .cf-refresh-busy .cf-refresh-icon { animation: cf-refresh-spin 900ms linear infinite; }
@@ -1710,6 +1731,12 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   50% { transform: translateX(2px); }
   75% { transform: translateX(-2px); }
 }
+/* Section color identity (operator 2026-10-11): the active nav glyph and
+   quicknav icon breathe a soft drop-shadow in the section's own hue. */
+@keyframes cf-glyph-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent)); }
+  50% { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent)); }
+}
 
 /* ============================================================
    8. REDUCED MOTION — every animation and transition in the file,
@@ -1742,7 +1769,9 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-flow .cf-gauge-track,
   .cf-flow .cf-ring-projected,
   .cf-refresh-busy .cf-refresh-icon,
-  .cf-refresh-shake .cf-refresh-icon {
+  .cf-refresh-shake .cf-refresh-icon,
+  .cf-navlink[aria-current="page"] .cf-navglyph,
+  .cf-quicknav-link[aria-current="page"] .cf-quicknav-icon {
     animation: none;
   }
 }
@@ -1995,7 +2024,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   height: 40px;
   border-radius: var(--radius);
   background: var(--surface-raised);
-  color: var(--accent);
+  color: var(--section-color, var(--accent));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--section-color, var(--accent)) 45%, transparent));
   flex: none;
 }
 .cf-sectionhead-title {
@@ -2005,6 +2035,14 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   font-weight: 700;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
+}
+/* Masthead count (operator 2026-10-11): the section's entity count trails
+   the title in quiet muted type — a tabular numeral, never a hue. */
+.cf-sectionhead-count {
+  color: var(--muted);
+  font-size: 0.72em;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Quick nav icon + label roles (operator 2026-10-11): bigger icon (20px),
@@ -2018,7 +2056,14 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   color: var(--text);
 }
 .cf-quicknav-link[aria-current="page"] .cf-quicknav-icon {
-  color: var(--accent);
+  color: var(--section-color, var(--accent));
+  animation: cf-glyph-breathe 2.8s ease-in-out infinite;
+}
+/* Active underline takes the section color too (operator 2026-10-11) — the
+   bar and its glow, nothing else. */
+.cf-quicknav-link[aria-current="page"]::after {
+  background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--section-color, var(--accent)) 55%, transparent);
 }
 .cf-quicknav-label {
   font-family: var(--font-indicator);
@@ -2036,7 +2081,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   color: var(--muted);
 }
 .cf-navlink[aria-current="page"] .cf-navglyph {
-  color: var(--accent);
+  color: var(--section-color, var(--accent));
+  animation: cf-glyph-breathe 2.8s ease-in-out infinite;
 }
 
 /* ---- P-07: gradient hierarchy + microanimations (operator 2026-10-10)
@@ -2127,7 +2173,9 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 
 @media (prefers-reduced-motion: reduce) {
   .cf-main .cf-card,
-  .cf-sectionhead-icon {
+  .cf-sectionhead-icon,
+  .cf-navlink[aria-current="page"] .cf-navglyph,
+  .cf-quicknav-link[aria-current="page"] .cf-quicknav-icon {
     animation: none;
   }
   .cf-quicknav-link::after {

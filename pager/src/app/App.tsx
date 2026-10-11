@@ -201,8 +201,22 @@ function RefreshControl({ onRefresh }: { onRefresh: () => Promise<void> }): Reac
       aria-busy={busy}
       disabled={busy}
       title={failed ? `Refresh failed — ${failed}` : "Refresh"}
-      animate={failed && !reduced ? { x: [0, -4, 4, -3, 3, 0] } : {}}
-      transition={{ duration: 0.24 }}
+      animate={
+        failed && !reduced
+          ? { x: [0, -4, 4, -3, 3, 0], scale: 1 }
+          : busy && !reduced
+            ? { scale: [1, 1.14, 1] }
+            : { scale: 1 }
+      }
+      transition={
+        failed && !reduced
+          ? { duration: 0.24 }
+          : busy && !reduced
+            ? { repeat: Infinity, duration: 1.1, ease: "easeInOut" }
+            : { type: "spring", stiffness: 400, damping: 22 }
+      }
+      whileHover={reduced ? undefined : { scale: 1.06 }}
+      whileTap={reduced ? undefined : { scale: 0.9 }}
       onClick={() => void run()}
     >
       <motion.span
@@ -259,6 +273,7 @@ function NavLinks({
               <a
                 href={hrefFor(r)}
                 className="cf-quicknav-link"
+                data-route={r}
                 aria-current={active === r ? "page" : undefined}
                 onClick={onNavigate}
               >
@@ -282,6 +297,7 @@ function NavLinks({
             key={`${variant}-${r}`}
             href={hrefFor(r)}
             className="cf-navlink"
+            data-route={r}
             aria-current={active === r ? "page" : undefined}
             onClick={onNavigate}
           >
@@ -390,20 +406,38 @@ export default function App(): React.JSX.Element {
         <main id="main" className="cf-main">
           {/* Section masthead (operator 2026-10-10): large heading with the
               section's icon pronounced at its left — one place, every view. */}
-          <div className="cf-sectionhead">
+          <div
+            className="cf-sectionhead"
+            data-route={view.kind === "route" ? view.route : "workers"}
+          >
             <span className="cf-sectionhead-icon" aria-hidden="true">
-              {view.kind === "route"
-                ? (() => {
-                    const Icon = NAV_ICON[view.route];
-                    return <Icon size={22} strokeWidth={1.9} />;
-                  })()
-                : (() => {
-                    const Icon = NAV_ICON.workers;
-                    return <Icon size={22} strokeWidth={1.9} />;
-                  })()}
+              <motion.span
+                key={activeKey}
+                initial={reduced ? false : { scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 24 }
+                }
+                style={{ display: "inline-flex" }}
+              >
+                {view.kind === "route"
+                  ? (() => {
+                      const Icon = NAV_ICON[view.route];
+                      return <Icon size={22} strokeWidth={1.9} />;
+                    })()
+                  : (() => {
+                      const Icon = NAV_ICON.workers;
+                      return <Icon size={22} strokeWidth={1.9} />;
+                    })()}
+              </motion.span>
             </span>
             <h2 className="cf-sectionhead-title">
               {view.kind === "route" ? NAV_LABEL[view.route] : view.name}
+              {view.kind === "route" && Number.isFinite(counts[view.route]) ? (
+                <span className="cf-sectionhead-count"> ({counts[view.route]})</span>
+              ) : null}
             </h2>
           </div>
           <ViewHost key={activeKey} entry={entry} onReady={onReady} />
