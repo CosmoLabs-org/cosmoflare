@@ -133,6 +133,14 @@ export interface ApiClientOptions {
 // data is under 60s old).
 const FRESH_MS = 60_000;
 
+// BUG-pZKJ5VB hard cap (FEAT-pT0AFDM): at most 6 real network attempts per
+// endpoint per rolling 60s window. This is a cap, not backoff — nothing
+// retries faster inside the window. The window slides: attempts simply age
+// out of the counter, so the endpoint can fetch again 60s after its oldest
+// attempts. Only fromNetwork calls consume budget; cache hits never do.
+const MAX_NETWORK_ATTEMPTS_PER_WINDOW = 6;
+const NETWORK_BUDGET_WINDOW_MS = 60_000;
+
 const ssKey = (endpoint: string): string => `pager-cache:${endpoint}`;
 
 export class ApiClient {
@@ -141,6 +149,8 @@ export class ApiClient {
   private readonly now: () => number;
   private readonly allowFixtures: boolean;
   private readonly memory = new Map<string, { data: unknown; fetchedAt: number }>();
+  // Sliding-window attempt timestamps per endpoint key (BUG-pZKJ5VB cap).
+  private readonly networkBudget = new Map<string, number[]>();
 
   constructor(opts: ApiClientOptions = {}) {
     // Never store the bare global: calling it as this.fetchFn(...) binds
@@ -169,6 +179,12 @@ export class ApiClient {
       if (ageSec < FRESH_MS / 1000) {
         return { data: local.data as T, source: local.source, ageSec, demo: false };
       }
+      // BUG-pZKJ5VB: with the network budget for this key spent, keep
+      // serving the stale copy (its real age) instead of revalidating —
+      // no background fetch while the budget is exhausted.
+      if (!this.spendBudget(key)) {
+        return { data: local.data as T, source: local.source, ageSec, demo: false };
+      }
       // Stale local copy: render cached instantly, then revalidate in the background.
       void this.fromNetwork<T>(endpoint, opts.onRevalidate).catch(() => undefined);
       return { data: local.data as T, source: local.source, ageSec, demo: false };
@@ -179,13 +195,22 @@ export class ApiClient {
   // localhost fixtures fallback. On success the fresh copy is stored under
   // the bare endpoint key (query string dropped).
   private async fromNetwork<T>(endpoint: string, onRevalidate?: (data: T) => void): Promise<FetchResult<T>> {
+    const key = keyOf(endpoint);
+    // BUG-pZKJ5VB hard cap: spend one budget slot before any request leaves
+    // (forced ?refresh fetches count like any other attempt). When the
+    // budget is spent there is no cache fallback here — a forced refresh
+    // demands the network, and views paint their own error states; the
+    // stale-copy fallback for plain navigation lives in fetchJson.
+    if (!this.spendBudget(key)) {
+      throw new Error(`fetch budget exceeded for ${key} — retry in a moment`);
+    }
     try {
       const res = await this.fetchFn(`/${endpoint}`, { credentials: "same-origin", redirect: "manual" });
       // An expired Access session answers with a redirect to the login page.
       if (res.type === "opaqueredirect" || res.status === 403) throw new LoginExpiredError();
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as T;
-      this.store(keyOf(endpoint), data);
+      this.store(key, data);
       onRevalidate?.(data);
       return { data, source: "network", ageSec: 0, demo: false };
     } catch (err) {
@@ -238,6 +263,22 @@ export class ApiClient {
     } catch {
       return null;
     }
+  }
+
+  // spendBudget records one real network attempt for `key` against the
+  // BUG-pZKJ5VB sliding window and returns false once
+  // MAX_NETWORK_ATTEMPTS_PER_WINDOW live attempts are already recorded.
+  // Old attempts fall out of the window naturally as the clock advances.
+  private spendBudget(key: string): boolean {
+    const now = this.now();
+    const stamps = (this.networkBudget.get(key) ?? []).filter((t) => now - t < NETWORK_BUDGET_WINDOW_MS);
+    if (stamps.length >= MAX_NETWORK_ATTEMPTS_PER_WINDOW) {
+      this.networkBudget.set(key, stamps);
+      return false;
+    }
+    stamps.push(now);
+    this.networkBudget.set(key, stamps);
+    return true;
   }
 
   // store writes the fresh copy into memory and sessionStorage. A storage
