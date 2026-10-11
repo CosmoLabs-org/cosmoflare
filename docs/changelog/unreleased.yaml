@@ -96,6 +96,9 @@ entries:
         - description: 'CLI: errors carry HTTP status + API cause; --json stdout is pure envelope; auth status shows real token scopes (BUG-pPF2BCF)'
           source: manual
           date: 2026-10-10T04:39:44.755989+04:00
+        - description: 'Ops pager: fixed an infinite fetch loop (BUG-pZKJ5VB) that re-requested API endpoints ~50x/second on every page since the React rebuild and stuck iOS on the skeleton loader; fetchers now use stable module-level identity, with regression tests on the production path'
+          source: manual
+          date: 2026-10-11T20:46:09.002535+04:00
     changed:
         - description: 'Ops pager styles pass: token-driven sections (spacing/type/motion), Space Grotesk display face, amber-tinted neutrals, deduplicated stylesheet (G-11)'
           source: manual

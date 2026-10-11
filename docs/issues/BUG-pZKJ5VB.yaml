@@ -1,14 +1,25 @@
 id: BUG-pZKJ5VB
 type: bug
 created_at: 2026-10-11T19:36:59.640409+04:00
-updated_at: 2026-10-11T19:37:00.143723+04:00
+updated_at: 2026-10-11T20:45:25.279351+04:00
 source: local
 ulid: 01M4NSRDFFGZ7VNSSR6RZKJ5VB
 provisional: true
 severity: critical
-status: open
+status: fixed
+origin:
+    session: 75
 title: Ops pager infinite fetch loop sticks iOS on skeleton (unstable fetcher dep)
 description: 'Every React view builds its fetcher inline (fetcher ?? closure) and lists it in the load-effect deps. The closure is recreated each render, so every setState re-fires the effect: fetch -> new result object -> render -> new closure -> refetch, endlessly (~50 req/s, instant because the ApiClient 60s cache answers). Desktop Chrome tolerates it; iOS WebKit''s per-host connection cap saturates and the page''s primary fetch queues forever -> stuck skeleton (operator report 2026-10-11 ''cant load the page its stuck in skeleton''). The steady stream of 200s in wrangler tail was this loop. Tests never caught it because they inject a stable fetcher prop — the production path passes no prop (same class as the fixtures-hid-it lesson: the untested path is the shipped one).'
+reproduction_steps: |
+    1. Serve the built pager (v cc52e279 or earlier post-rebuild) with any
+       endpoint failing or 404.
+    2. Load the app in a browser with the network tab open; observe the same
+       /api/* endpoint re-requested ~50x/sec indefinitely (harness measured
+       1,500+ requests in 30s on the ai route).
+    3. On iOS (PWA or Safari): the page never leaves the skeleton state.
+expected_behavior: One fetch per view load (plus cache-age-driven revalidation); skeleton clears when the first response lands.
+actual_behavior: Page stuck on skeleton loader indefinitely on iOS; continuous background fetch loop (~50 req/s) on every platform.
 fix_direction: Hoist a module-level defaultFetchJson in each view and use fetcher ?? defaultFetchJson so the dep is stable; add a no-prop spy test that asserts call count stays flat over time (red before, green after).
 affected_files:
     - pager/src/app/views/AIView.tsx
@@ -20,3 +31,33 @@ affected_files:
     - pager/src/app/views/RulesView.tsx
     - pager/src/app/views/ZonesView.tsx
     - pager/src/app/views/WorkersView.tsx
+resolution:
+    lessons_learned: 'Inline ''??''-fallback closures built in component bodies are unstable effect deps: the injected-prop test seam is stable, the production fallback is not. Test every seam from both sides, and count real requests on the production path (request-budget E2E) — cache-absorbed loops hide on success paths and surface as outages on failure paths.'
+revisions:
+    - date: "2026-10-11T20:44:38.009396+04:00"
+      action: closed
+fix_evidence: |
+    Fix commit a43e03b (merge 1fd77f4): module-level defaultFetchJson hoisted
+    in all 9 views; fetcher ?? defaultFetchJson keeps the dep stable.
+    Regression tests 'does not loop fetches when no fetcher prop is injected
+    (production path)' in AIView.test.tsx and DomainsView.test.tsx measured
+    1720 / 1203 spy calls before the fix, flat after. Suite 236/236 green.
+    Deployed as worker version 30fa2042; post-deploy harness verification:
+    request counts 8 / 1 / 0 per route in a 4s window (was 1500+).
+    Full report: docs/bug-fixes/2026-10-11-pager-infinite-fetch-loop.md
+root_cause: |
+    Unstable object identity in a React effect dependency array. Each view built
+    its fetch helper inline inside the component body:
+      const fetchJson: ViewFetcher = fetcher ?? ((endpoint, opts) => api.fetchJson(endpoint, opts));
+    A fresh closure exists per render, so the load effect's [.., fetchJson] dep
+    compares unequal after EVERY render. Every fetch completion calls setState
+    with a new result object, which re-renders, which rebuilds the closure,
+    which re-fires the effect: a self-feeding loop at ~50 fetches/sec per open
+    page. On success iterations the ApiClient 60s cache answers in-memory (no
+    network); on ANY failure path (HTTP error, expired Access session) nothing
+    caches, so every iteration is a real network request. iOS WebKit caps
+    concurrent connections per host (~6); a failing endpoint's real-request
+    storm saturates the pool and the page's primary load fetch never completes
+    -> permanent skeleton. Present since the P-04..P-06 React rebuild (all
+    views carried the pattern from their first commit).
+session_ref: Session 2037 continuation (2026-10-11), operator live report; diagnosed via scratchpad harness + Playwright sweep, fixed by GLM agent 0401 through the S334 gate.
