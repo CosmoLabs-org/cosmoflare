@@ -1,0 +1,17 @@
+id: FEAT-pXNQ5GW
+type: feature
+created_at: 2026-10-11T11:58:29.12449+04:00
+updated_at: 2026-10-11T11:58:29.526019+04:00
+source: local
+ulid: 01M4MZGVMNX9HMQHAKJFXNQ5GW
+provisional: true
+status: open
+title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
+description: |-
+    # PWA install guidance: install banner, native prompt, pairing-as-funnel
+
+    The Ops pager is already a full PWA (manifest standalone + maskable icons + sw.js + apple-touch-icon) but nothing advertises installability. Build the advertising layer: (1) install-state detection via matchMedia('(display-mode: standalone)') / navigator.standalone — guidance hides itself once installed; (2) Android/desktop: capture beforeinstallprompt and surface an Install button that fires prompt() (native dialog); (3) iOS: dismissible step card 'Share -> Add to Home Screen -> open from Home Screen', shown only on iOS Safari when not standalone; (4) Pairing view becomes the funnel: step 1 Install, step 2 Allow notifications, step 3 Paired — push value is the install reason; (5) banner appears after first successful data render, once per viewer, dismissal remembered. iOS 16.4+ push requires the installed PWA, which is why G-01 pairing depends on this.
+
+    ## Additional context
+
+    Phase 1 of ROAD-p2FSZR0 (mobile via PWA): in-app install guidance so users discover Add to Home Screen. Install-state detection (display-mode: standalone / navigator.standalone) hides guidance once installed; Android/desktop captures beforeinstallprompt for a native Install button; iOS gets a dismissible Share->Add-to-Home-Screen step card; Pairing view becomes the funnel (1 Install, 2 Allow notifications, 3 Paired); banner shows after first data render, once per viewer, dismissal remembered.
