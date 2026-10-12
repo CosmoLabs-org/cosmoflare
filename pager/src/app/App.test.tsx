@@ -121,12 +121,28 @@ describe("Bottom tab bar (operator 2026-10-12)", () => {
   it("renders exactly the 5 primary tabs + More, each tagged with data-route", () => {
     render(<App />);
     const tabs = document.querySelectorAll(".cf-bottomtabs [data-route]");
-    expect(Array.from(tabs).map((el) => el.getAttribute("data-route"))).toEqual(TAB_ROUTES);
-    // More is a button (opens the drawer), not a route anchor — it carries a
-    // distinct marker-free identity as the only <button> in the bar.
+    expect(Array.from(tabs).map((el) => el.getAttribute("data-route"))).toEqual([...TAB_ROUTES, "more"]);
+    // More is a button (opens the drawer), not a route anchor — it carries
+    // data-route="more" so it can hold the active mark for drawer-only
+    // sections (operator 2026-10-12).
     const more = document.querySelector(".cf-bottomtabs button");
     expect(more?.textContent).toContain("More");
+    expect(more?.getAttribute("data-route")).toBe("more");
     expect(document.querySelector(".cf-bottomtabs")).toBeTruthy();
+  });
+
+  it("More carries the active mark for drawer-only sections and while open (operator 2026-10-12)", async () => {
+    window.location.hash = "#/rules"; // drawer-only route: no tab matches
+    render(<App />);
+    expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBe("page");
+    window.location.hash = "#/billing"; // a primary tab: More stays quiet
+    await waitFor(() => {
+      expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBeNull();
+    });
+    const more = document.querySelector<HTMLButtonElement>('.cf-bottomtab[data-route="more"]');
+    fireEvent.click(more!); // opening the drawer highlights More again
+    expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBe("page");
+    window.location.hash = "";
   });
 
   it("marks the active route with aria-current='page'", () => {

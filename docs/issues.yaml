@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T14:06:09.302603+04:00
+last_updated: 2026-10-12T19:29:05.027307+04:00
 next_bug_id: 64
-next_feat_id: 75
+next_feat_id: 80
 next_task_id: 18
 next_imp_id: 5
 issues:
@@ -784,6 +784,11 @@ issues:
       status: open
       title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
       created_at: 2026-10-12T03:39:51.93768+04:00
+    - id: FEAT-pCT8CT2
+      type: feature
+      status: open
+      title: Tab bar polish + reusable lever buttons with labels
+      created_at: 2026-10-12T19:29:01.401583+04:00
     - id: FEAT-pEWA6N6
       type: feature
       status: open

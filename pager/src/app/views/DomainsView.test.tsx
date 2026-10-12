@@ -503,7 +503,7 @@ describe("DomainProfile DNS records (action buttons wave 2)", () => {
     await waitFor(() => {
       expect(document.querySelectorAll(".cf-dns-row")).toHaveLength(2);
     });
-    return document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-btn");
+    return document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-lever");
   }
 
   afterEach(() => {
@@ -541,7 +541,7 @@ describe("DomainProfile DNS records (action buttons wave 2)", () => {
     await waitFor(() => {
       expect(document.querySelector('[data-record="warn.net"] .cf-dns-paused')).toBeTruthy();
     });
-    expect(document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-btn")[0].textContent).toBe("Enable");
+    expect(document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-lever")[0].textContent).toBe("Enable");
   });
 
   it("Enable fires directly (no arming) — restoring service needs no confirm", async () => {
@@ -567,7 +567,7 @@ describe("DomainProfile DNS records (action buttons wave 2)", () => {
     fireEvent.click(buttons[0]);
     fireEvent.click(buttons[0]);
     await waitFor(() => {
-      expect(document.querySelector(".cf-purge-error")?.textContent).toContain("protected host");
+      expect(document.querySelector(".cf-lever-error")?.textContent).toContain("protected host");
     });
   });
 });
@@ -617,7 +617,7 @@ describe("DomainProfile Firewall section (action buttons wave 3)", () => {
     await waitFor(() => {
       expect(document.querySelectorAll(".cf-waf-action")).toHaveLength(2);
     });
-    const levers = document.querySelectorAll<HTMLButtonElement>('[data-record="block bad bots"] .cf-dns-actions .cf-btn');
+    const levers = document.querySelectorAll<HTMLButtonElement>('[data-record="block bad bots"] .cf-dns-actions .cf-lever');
     expect(levers[0].textContent).toBe("Disable");
     fireEvent.click(levers[0]);
     expect(levers[0].textContent).toBe("Confirm disable"); // armed, nothing sent
@@ -632,7 +632,7 @@ describe("DomainProfile Firewall section (action buttons wave 3)", () => {
       expect(document.querySelector('[data-record="block bad bots"] .cf-dns-paused')).toBeTruthy();
     });
     // w2 starts disabled: Enable fires on the FIRST tap
-    const enableLever = document.querySelector<HTMLButtonElement>('[data-record="log api abuse"] .cf-dns-actions .cf-btn');
+    const enableLever = document.querySelector<HTMLButtonElement>('[data-record="log api abuse"] .cf-dns-actions .cf-lever');
     expect(enableLever?.textContent).toBe("Enable");
     fireEvent.click(enableLever!);
     await waitFor(() => {

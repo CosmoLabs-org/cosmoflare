@@ -337,6 +337,11 @@ function BottomTabs({
   moreOpen: boolean;
   onMore: () => void;
 }): React.JSX.Element {
+  // The More tab carries the active mark whenever the drawer is open OR the
+  // current section lives only in it (D1, DO, AI, Rules, Pairing, Projects)
+  // — landing on those used to leave the tab bar with nothing highlighted
+  // (operator 2026-10-12).
+  const moreActive = moreOpen || (active !== null && !BOTTOM_TABS.includes(active as (typeof BOTTOM_TABS)[number]));
   return (
     <nav className="cf-bottomtabs" aria-label="Sections">
       {BOTTOM_TABS.map((r) => {
@@ -359,9 +364,11 @@ function BottomTabs({
       <button
         type="button"
         className="cf-bottomtab"
+        data-route="more"
         aria-label="More sections"
         aria-expanded={moreOpen}
         aria-controls="cf-drawer"
+        aria-current={moreActive ? "page" : undefined}
         onClick={onMore}
       >
         <span className="cf-bottomtab-icon" aria-hidden="true">

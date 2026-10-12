@@ -1,11 +1,15 @@
 id: FEAT-pCT8CT2
 type: feature
 created_at: 2026-10-12T19:29:01.401583+04:00
-updated_at: 2026-10-12T19:29:02.766387+04:00
+updated_at: 2026-10-12T19:29:05.057845+04:00
 source: local
 ulid: 01M4RBPJ9E6SQN0A628WCT8CT2
 provisional: true
 status: open
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 76
 title: Tab bar polish + reusable lever buttons with labels
 description: 'Operator 2026-10-12: (1) active bottom tab should be slightly larger; its top glow should animate FROM CENTER outward to both sides and be more noticeable; (2) opening More and landing on a More-only section leaves nothing highlighted in the tab bar — More (or the section) must show active state; (3) the pause/purge/toggle buttons across Domains/Zones should be ONE reusable component, same theme app-wide; (4) those levers become real buttons with an icon and the label BELOW it.'
 roadmap_ref: ROAD-107

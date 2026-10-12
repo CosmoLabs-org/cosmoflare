@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { Pause, Play, Shield, ShieldOff } from "lucide-react";
 import { api, LoginExpiredError, type FetchResult, type Summary } from "../../api";
 import { formatCount } from "../../format";
 import {
@@ -30,6 +31,7 @@ import {
   type ZoneAttachment,
 } from "../../domains";
 import type { ViewFetcher } from "./WorkersView";
+import LeverButton from "../components/LeverButton";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -96,57 +98,34 @@ async function toggleWafRule(zone: string, rule: WafRule, enabled: boolean): Pro
   throw new Error(detail);
 }
 
-type TogglePhase = "idle" | "armed" | "busy" | { error: string };
-
-/** Per-record pause/enable (operator action buttons wave 2). Pausing
+/** Per-record pause/enable (operator action buttons wave 2) — both are
+ *  LeverButtons now (one app-wide theme, icon + label below). Pausing
  *  ARMS first — a paused record stops resolving, so the second tap is the
  *  confirm. Re-enabling restores service and fires directly. */
 function RecordToggle({ zone, record, onChanged }: { zone: string; record: DnsRecord; onChanged: (record: DnsRecord) => void }): React.JSX.Element {
-  const [phase, setPhase] = useState<TogglePhase>("idle");
-
-  const fire = (paused: boolean): void => {
-    setPhase("busy");
-    void toggleDnsRecord(zone, record, paused)
-      .then(() => {
-        setPhase("idle");
-        onChanged({ ...record, paused });
-      })
-      .catch((err: unknown) => setPhase({ error: err instanceof Error ? err.message : String(err) }));
-  };
-
   if (record.paused) {
     return (
       <span className="cf-dns-actions">
-        <button
-          type="button"
-          className="cf-btn cf-btn-sm"
-          disabled={phase === "busy"}
-          onClick={() => fire(false)}
-        >
-          {phase === "busy" ? "Enabling…" : "Enable"}
-        </button>
-        {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+        <LeverButton
+          icon={Play}
+          label="Enable"
+          busyLabel="Enabling…"
+          ariaLabel={`Re-enable DNS record ${record.name}`}
+          onFire={() => toggleDnsRecord(zone, record, false).then(() => onChanged({ ...record, paused: false }))}
+        />
       </span>
     );
   }
   return (
     <span className="cf-dns-actions">
-      <button
-        type="button"
-        className={`cf-btn cf-btn-sm ${phase === "armed" ? "cf-btn-danger" : ""}`}
-        disabled={phase === "busy"}
-        onClick={() => {
-          if (phase === "idle") {
-            setPhase("armed");
-            window.setTimeout(() => setPhase((cur) => (cur === "armed" ? "idle" : cur)), 4000);
-            return;
-          }
-          if (phase === "armed") fire(true);
-        }}
-      >
-        {phase === "armed" ? "Confirm pause" : phase === "busy" ? "Pausing…" : "Pause"}
-      </button>
-      {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+      <LeverButton
+        icon={Pause}
+        label="Pause"
+        confirmLabel="Confirm pause"
+        busyLabel="Pausing…"
+        ariaLabel={`Pause DNS record ${record.name}`}
+        onFire={() => toggleDnsRecord(zone, record, true).then(() => onChanged({ ...record, paused: true }))}
+      />
     </span>
   );
 }
@@ -213,45 +192,33 @@ function DnsRecordsSection({ zoneId, zoneName, fetchJson }: { zoneId: string; zo
   );
 }
 
-/** Per-rule WAF lever (action buttons wave 3): DISABLING a firewall rule
- *  drops protection, so it arms like Pause; ENABLING fires directly. */
+/** Per-rule WAF lever (action buttons wave 3) — a LeverButton like every
+ *  other action. DISABLING a firewall rule drops protection, so it arms;
+ *  ENABLING fires directly. */
 function WafLever({ zone, rule, onChanged }: { zone: string; rule: WafRule; onChanged: (rule: WafRule) => void }): React.JSX.Element {
-  const [phase, setPhase] = useState<TogglePhase>("idle");
-
-  const fire = (enabled: boolean): void => {
-    setPhase("busy");
-    void toggleWafRule(zone, rule, enabled)
-      .then(() => {
-        setPhase("idle");
-        onChanged({ ...rule, enabled });
-      })
-      .catch((err: unknown) => setPhase({ error: err instanceof Error ? err.message : String(err) }));
-  };
-
+  if (rule.enabled) {
+    return (
+      <span className="cf-dns-actions">
+        <LeverButton
+          icon={ShieldOff}
+          label="Disable"
+          confirmLabel="Confirm disable"
+          busyLabel="Disabling…"
+          ariaLabel={`Disable firewall rule ${rule.description || rule.id}`}
+          onFire={() => toggleWafRule(zone, rule, false).then(() => onChanged({ ...rule, enabled: false }))}
+        />
+      </span>
+    );
+  }
   return (
     <span className="cf-dns-actions">
-      <button
-        type="button"
-        className={`cf-btn cf-btn-sm ${phase === "armed" ? "cf-btn-danger" : ""}`}
-        disabled={phase === "busy"}
-        onClick={() => {
-          if (rule.enabled) {
-            // enabled rule → the lever DISABLES it: confirm first
-            if (phase === "idle") {
-              setPhase("armed");
-              window.setTimeout(() => setPhase((cur) => (cur === "armed" ? "idle" : cur)), 4000);
-              return;
-            }
-            if (phase === "armed") fire(false);
-            return;
-          }
-          // disabled rule → the lever ENABLES it: direct
-          if (phase === "idle") fire(true);
-        }}
-      >
-        {phase === "busy" ? "Working…" : rule.enabled ? (phase === "armed" ? "Confirm disable" : "Disable") : "Enable"}
-      </button>
-      {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+      <LeverButton
+        icon={Shield}
+        label="Enable"
+        busyLabel="Enabling…"
+        ariaLabel={`Enable firewall rule ${rule.description || rule.id}`}
+        onFire={() => toggleWafRule(zone, rule, true).then(() => onChanged({ ...rule, enabled: true }))}
+      />
     </span>
   );
 }

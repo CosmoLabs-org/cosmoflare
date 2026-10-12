@@ -358,6 +358,7 @@ body.cf-nav-open { overflow: hidden; }
 /* Per-section color identity (operator 2026-10-11): one token per route,
    scoped onto anything carrying data-route. Hue rides icons, markers and
    glows ONLY — labels and body text stay in the existing neutrals. */
+[data-route="more"] { --section-color: var(--accent); }
 [data-route="overview"] { --section-color: #f5a623; }
 [data-route="billing"] { --section-color: #34d399; }
 [data-route="ai"] { --section-color: #a78bfa; }
@@ -500,7 +501,45 @@ body.cf-nav-open { overflow: hidden; }
   gap: var(--space-2);
   flex-wrap: wrap;
 }
-.cf-purge-error {
+
+/* LeverButton (operator 2026-10-12): THE app-wide action lever — icon on
+   top, label below, vertical pill. Same 44px touch floor, one theme. */
+.cf-lever-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.cf-lever {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--muted);
+  font-family: var(--font-brand);
+  font-size: 10px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+.cf-lever:hover { color: var(--text); filter: brightness(1.1); }
+.cf-lever:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cf-lever:disabled { opacity: 0.6; cursor: not-allowed; }
+.cf-lever-icon { display: inline-flex; }
+.cf-lever.is-armed {
+  color: var(--sev-critical);
+  border-color: var(--sev-critical);
+  background: color-mix(in srgb, var(--sev-critical) 12%, transparent);
+}
+.cf-lever-error {
   color: var(--sev-critical);
   font-size: var(--text-xs);
   max-width: 16rem;
@@ -1968,9 +2007,14 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-toggle, .cf-chip-remove, .cf-fade-swap,
   .cf-domain-chevron, .cf-domain-detail,
   .cf-attention-chevron,
-  .cf-bottomtab, .cf-bottomtab::after {
+  .cf-bottomtab, .cf-bottomtab::after, .cf-bottomtab-icon {
     transition: none;
   }
+  .cf-bottomtab[aria-current="page"]::after {
+    animation: none;
+    transform: scaleX(1); /* still marks the section — without the sweep */
+  }
+  .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon { transform: none; }
   .cf-btn, .cf-btn:active { transform: none; }
   .cf-skeleton,
   .cf-pairing-glyph .cf-wave,
@@ -2106,32 +2150,45 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   /* Color-only transitions (reduced-motion convention, ~160ms). */
   transition: color 160ms var(--ease-out);
 }
-.cf-bottomtab-icon {
-  display: inline-flex;
-}
 /* The underline: same gradient treatment as the quicknav's glow line, but in
    the tab's own --section-color (each anchor carries its data-route token).
-   Sits at the bar's top edge, under the tab segment. */
+   Sits at the bar's top edge, under the tab segment. Operator 2026-10-12:
+   it sweeps out FROM THE CENTER to both sides and the sweep is meant to be
+   SEEN — 3px tall, near-full width, a 420ms sweep with a glow flare, and
+   the active tab's icon grows a little. */
 .cf-bottomtab::after {
   content: "";
   position: absolute;
-  left: 18%;
-  right: 18%;
+  left: 6%;
+  right: 6%;
   top: 0;
-  height: 2px;
+  height: 3px;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--section-color, var(--accent)) 55%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--section-color, var(--accent)) 55%, transparent);
   transform: scaleX(0);
   transform-origin: 50% 50%;
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform 320ms var(--ease-out);
   pointer-events: none;
+}
+@keyframes cf-tab-sweep {
+  0% { transform: scaleX(0); opacity: 0.4; }
+  55% { transform: scaleX(1.12); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+.cf-bottomtab-icon {
+  display: inline-flex;
+  transition: transform 240ms var(--ease-out);
 }
 .cf-bottomtab[aria-current="page"] {
   color: var(--section-color, var(--accent));
   font-weight: 600;
 }
+.cf-bottomtab[aria-current="page"] .cf-bottomtab-icon {
+  transform: scale(1.18);
+}
 .cf-bottomtab[aria-current="page"]::after {
+  animation: cf-tab-sweep 420ms var(--ease-out) both;
   transform: scaleX(1);
 }
 .cf-bottomtab:focus-visible {
