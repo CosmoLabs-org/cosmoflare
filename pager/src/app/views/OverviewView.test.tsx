@@ -77,7 +77,9 @@ describe("OverviewView (P-04)", () => {
       expect(age?.textContent).toContain("Updated");
     });
     expect(period?.hidden).toBe(false);
-    expect(period?.textContent).toMatch(/^Day \d+ of \d+$/);
+    // IMP-pSZEMZP: the period paints as a 24/30 counter lockup, not prose.
+    expect(period?.querySelector(".cf-cycle-day")?.textContent).toMatch(/^\d+$/);
+    expect(period?.querySelector(".cf-cycle-total")?.textContent).toMatch(/^\/\d+$/);
   });
 
   it("renders the skeleton until both first fetches resolve", async () => {

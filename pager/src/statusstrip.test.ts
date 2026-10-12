@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatAgeText, periodText } from "./statusstrip";
+import { formatAgeText, periodMarkup } from "./statusstrip";
 
 // UI-1 (operator request 2026-10-10): the bottom status strip's pure
-// formatting helpers — honest "updated X ago" and the billing-period day.
+// formatting helpers — honest "updated X ago" and the billing-period day
+// counter (IMP-pSZEMZP, operator request 2026-10-12).
 
 describe("formatAgeText", () => {
   it("says just now under a minute", () => {
@@ -27,14 +28,19 @@ describe("formatAgeText", () => {
   });
 });
 
-describe("periodText", () => {
+describe("periodMarkup", () => {
   it("returns null when the period is unknown", () => {
-    expect(periodText()).toBeNull();
-    expect(periodText(undefined, 30)).toBeNull();
-    expect(periodText(3, undefined)).toBeNull();
+    expect(periodMarkup()).toBeNull();
+    expect(periodMarkup(undefined, 30)).toBeNull();
+    expect(periodMarkup(3, undefined)).toBeNull();
   });
 
-  it("renders Day N of M", () => {
-    expect(periodText(3, 30)).toBe("Day 3 of 30");
+  it("renders the 24/30 counter lockup", () => {
+    expect(periodMarkup(3, 30)).toBe(
+      "<span class='cf-cycle-day'>3</span><span class='cf-cycle-total'>/30</span>",
+    );
+    expect(periodMarkup(24, 30)).toBe(
+      "<span class='cf-cycle-day'>24</span><span class='cf-cycle-total'>/30</span>",
+    );
   });
 });
