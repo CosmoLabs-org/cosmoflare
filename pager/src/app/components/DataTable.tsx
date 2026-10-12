@@ -125,6 +125,11 @@ export default function DataTable<T>({
   // remaining numeric metrics in muted text.
   const primaryCol = sorted.col.numeric ? sorted.col : columns.find((c) => c.numeric);
   const statusCol = columns.find((c) => c.key === "byStatus" && c.cell);
+  // Rich non-status cells (action levers, links) used to vanish on phones —
+  // the mobile list printed only text columns, so the Zones purge button and
+  // the Workers drill-in link were unreachable on the device the app targets
+  // (critique P0/P1, 2026-10-12). They render as a footer row now.
+  const richCols = columns.filter((c) => c.cell && c !== statusCol && c !== primaryCol && c !== columns[0]);
   const shortLabel = (label: string): string => label.replace(/%\s*$/, "").trim().toLowerCase();
 
   const showAllButton = (
@@ -238,12 +243,23 @@ export default function DataTable<T>({
           return (
             <li key={rowKey?.(row) ?? i} className={rowClass?.(row) || undefined}>
               <div className="cf-mrow-top">
-                <span className="cf-mrow-name">{columns[0].text(row)}</span>
+                <span className="cf-mrow-name">
+                  {/* A rich first column (the Workers script link) becomes the
+                      card's title link — drill-in on phones, keyboard-tabbable. */}
+                  {columns[0].cell?.(row) ?? columns[0].text(row)}
+                </span>
                 <span className="cf-mrow-primary">{primaryCol ? primaryCol.text(row) : ""}</span>
               </div>
               {barInfo ? <MiniUsageBar pctOfAllowance={barInfo.pctOfAllowance} /> : null}
               {statusCol?.cell ? <div className="cf-mrow-status">{statusCol.cell(row)}</div> : null}
               {meta ? <div className="cf-mrow-meta">{meta}</div> : null}
+              {richCols.length > 0 ? (
+                <div className="cf-mrow-actions">
+                  {richCols.map((c) => (
+                    <span key={c.key} className="cf-mrow-action">{c.cell?.(row)}</span>
+                  ))}
+                </div>
+              ) : null}
             </li>
           );
         })}
