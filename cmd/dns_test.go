@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // --- Command registration ---
@@ -703,6 +704,12 @@ func TestDNSRunners_ErrorCodes(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			APIToken = tc.apiToken
+			// The runner closures share the package-level cobra commands —
+			// a Changed flag from ANY earlier suite test would let update
+			// skip its "no update flags" validation (observed in-suite only).
+			for _, c := range []*cobra.Command{dnsCreateCmd, dnsListCmd, dnsGetCmd, dnsUpdateCmd, dnsDeleteCmd} {
+				c.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
+			}
 			r, restore := captureStdout(t)
 			err := tc.run()
 			restore()
