@@ -11,6 +11,7 @@ import { cached } from "./cache";
 import { collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
 import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
+import { handlePurge } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
@@ -164,6 +165,9 @@ export default {
       case "/api/zones/remove":
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
         return handleZoneRemove(request, env, ctx, operator);
+      case "/api/zones/purge": // POST purge_everything on one zone (operator action button)
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handlePurge(request, env, ctx, operator);
       case "/api/audit": // GET the mutation audit log, newest first
         if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
         return auditResponse(env);

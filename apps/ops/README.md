@@ -25,6 +25,8 @@ stays closed even if the Access app is later removed.
   capped at 100): `{ feed: [{ ts, ruleId, condition, title, value, threshold,
   unit, message, sent }] }`. The pager's Notifications center reads this.
   Other methods: 405.
+- `POST /api/zones/purge` — purge a zone's edge cache (`{ zone: name-or-id }`,
+  `purge_everything`; needs `Zone > Cache Purge` on the write token; audited).
 - `GET /api/vapid-public-key` — the key the pager needs to subscribe to push.
 
 Every API response carries `Cache-Control: private, no-store`.

@@ -13,6 +13,7 @@ import { zoneAttentionLevel } from "../../attention";
 import { formatCount, formatPct } from "../../format";
 import { byStatusLegend, byStatusStack } from "../../tables";
 import DataTable, { type DataTableColumn } from "../components/DataTable";
+import PurgeButton from "../components/PurgeButton";
 import type { ViewFetcher } from "./WorkersView";
 
 /** DomSlot mounts an imperatively-built HTMLElement (tables.ts's exported
@@ -47,6 +48,14 @@ const ZONE_COLUMNS: DataTableColumn<ZoneRow>[] = [
         {z.byStatus ? <DomSlot build={() => byStatusLegend(z.byStatus as Record<string, number>)} /> : null}
       </div>
     ),
+  },
+  {
+    // Operator action (2026-10-12): purge the zone's edge cache. Two-step
+    // confirm inside the button.
+    key: "actions",
+    label: "Actions",
+    text: () => "purge cache",
+    cell: (z) => <PurgeButton zone={z.zone} />,
   },
 ];
 

@@ -103,7 +103,7 @@ type WriteResult = { ok: true } | { ok: false; error: string };
 // One v4 mutation call with the WRITE token. On failure the API's first
 // error message is surfaced VERBATIM (no silent failures); non-JSON bodies
 // degrade to "HTTP <status>".
-async function cfWrite(env: LifecycleEnv, method: string, path: string, body?: unknown): Promise<WriteResult> {
+export async function cfWrite(env: LifecycleEnv, method: string, path: string, body?: unknown): Promise<WriteResult> {
   let res: Response;
   try {
     res = await fetch(`${API}${path}`, {

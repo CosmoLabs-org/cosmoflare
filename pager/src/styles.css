@@ -487,6 +487,25 @@ body.cf-nav-open { overflow: hidden; }
   border-color: var(--border);
   color: var(--muted);
 }
+
+/* Compact table-row action (purge buttons): tighter padding, same 44px
+   touch target — dense rows must not shrink reachability. */
+.cf-btn-sm {
+  font-size: var(--text-sm);
+  padding: 8px 14px;
+}
+.cf-purge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.cf-purge-error {
+  color: var(--sev-critical);
+  font-size: var(--text-xs);
+  max-width: 16rem;
+  overflow-wrap: anywhere;
+}
 .cf-btn-ghost:hover {
   background: var(--surface-raised);
   color: var(--text);
