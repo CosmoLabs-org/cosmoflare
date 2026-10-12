@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-13T02:36:06.23223+04:00
+last_updated: 2026-10-13T03:45:56.611172+04:00
 next_bug_id: 64
-next_feat_id: 82
+next_feat_id: 81
 next_task_id: 18
 next_imp_id: 6
 issues:
@@ -383,24 +383,18 @@ issues:
       title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
       severity: high
       created_at: 2026-10-10T04:26:20.692641+04:00
+    - id: BUG-062
+      type: bug
+      status: fixed
+      title: Ops pager infinite fetch loop sticks iOS on skeleton (unstable fetcher dep)
+      severity: critical
+      created_at: 2026-10-11T19:36:59.640409+04:00
     - id: BUG-063
       type: bug
       status: fixed
       title: 'Cache-miss alert rides a tiny base: percentage alerts page without volume floor or absolute numbers'
       severity: medium
       created_at: 2026-10-12T05:28:39.310973+04:00
-    - id: BUG-pEPB03A
-      type: bug
-      status: open
-      title: 'Cache-miss alert rides a tiny base: percentage alerts page without volume floor or absolute numbers'
-      severity: medium
-      created_at: 2026-10-12T05:28:39.310973+04:00
-    - id: BUG-pZKJ5VB
-      type: bug
-      status: fixed
-      title: Ops pager infinite fetch loop sticks iOS on skeleton (unstable fetcher dep)
-      severity: critical
-      created_at: 2026-10-11T19:36:59.640409+04:00
     - id: FEAT-001
       type: feature
       status: closed
@@ -779,16 +773,46 @@ issues:
       status: open
       title: Baseline anomaly detection for Workers/DO usage (model B)
       created_at: 2026-10-10T18:22:08.661264+04:00
+    - id: FEAT-074
+      type: feature
+      status: open
+      title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
+      created_at: 2026-10-12T03:39:51.93768+04:00
+    - id: FEAT-075
+      type: feature
+      status: open
+      title: 'Ops domain & zone lifecycle: inventory + reversible detach + gated zone deletion (Noble.Coffee)'
+      created_at: 2026-10-11T20:55:27.88521+04:00
+    - id: FEAT-076
+      type: feature
+      status: open
+      title: 'PWA offline app-shell: native-feel launches without network'
+      created_at: 2026-10-11T11:58:41.630836+04:00
+    - id: FEAT-077
+      type: feature
+      status: open
+      title: 'ApiClient resilience: single-flight dedup, failure backoff, request-budget E2E'
+      created_at: 2026-10-11T20:45:23.485653+04:00
+    - id: FEAT-078
+      type: feature
+      status: open
+      title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
+      created_at: 2026-10-11T11:58:29.12449+04:00
+    - id: FEAT-079
+      type: feature
+      status: closed
+      title: Tab bar polish + reusable lever buttons with labels
+      created_at: 2026-10-12T19:29:01.401583+04:00
+    - id: FEAT-080
+      type: feature
+      status: closed
+      title: 'Ops retheme: cyberpunk command center — dark grays, glows, micro-animations'
+      created_at: 2026-10-12T20:42:54.061845+04:00
     - id: FEAT-p2H8GZ6
       type: feature
       status: closed
       title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
       created_at: 2026-10-12T03:39:51.93768+04:00
-    - id: FEAT-pCT8CT2
-      type: feature
-      status: closed
-      title: Tab bar polish + reusable lever buttons with labels
-      created_at: 2026-10-12T19:29:01.401583+04:00
     - id: FEAT-pDQEFQV
       type: feature
       status: open
@@ -804,11 +828,6 @@ issues:
       status: closed
       title: 'PWA offline app-shell: native-feel launches without network'
       created_at: 2026-10-11T11:58:41.630836+04:00
-    - id: FEAT-pRZVE8Y
-      type: feature
-      status: closed
-      title: 'Ops retheme: cyberpunk command center — dark grays, glows, micro-animations'
-      created_at: 2026-10-12T20:42:54.061845+04:00
     - id: FEAT-pT0AFDM
       type: feature
       status: open
@@ -848,7 +867,7 @@ issues:
       status: open
       title: 'Ops UI: reusable components + progress-bar and micro-animation polish'
       created_at: 2026-10-10T03:26:35.343956+04:00
-    - id: IMP-pSZEMZP
+    - id: IMP-005
       type: improvement
       status: closed
       title: 'Billing cycle typography: ''day 24 of 30'' lockup needs a proper design'
