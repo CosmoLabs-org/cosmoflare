@@ -3015,6 +3015,8 @@ Cosmoflare Ops (FEAT-052) is the private, phone-installable dashboard and push-a
 | `POST /api/zones/purge` | Purge a zone's edge cache (`{ zone: name-or-id }` → `purge_everything`). Needs `Zone > Cache Purge` on the `CF_API_TOKEN_WRITE` token; audited under action `purge`. Write-token gate: 503 without it. |
 | `GET /api/dns/records?id=` | One zone's DNS records (`{ records: [{ id, type, name, content, proxied, paused, ttl }], error }`), cached 5 min / stale 1 h; invalidated on every toggle. |
 | `POST /api/dns/toggle` | Pause or re-enable one record (`{ zone, record, name?, paused, override? }` — a paused record stops resolving without being deleted). Needs `Zone > DNS > Edit` on the write token; audited under `dns-toggle`. Pausing on a protected host refuses 403 without the operator override; re-enabling is always allowed. |
+| `GET /api/waf/rules?id=` | One zone's WAF custom rules (`{ rulesetId, rules: [{ id, description, expression, action, enabled }], error }`), cached 5 min / stale 1 h. |
+| `POST /api/waf/toggle` | Enable/disable one WAF custom rule (`{ zone, rule, name?, enabled, override? }`). Needs `Zone > WAF > Edit` (Rulesets Write) on the write token; audited under `waf-toggle`. Disabling on a protected host refuses 403 without the override; enabling always allowed. |
 | `GET /api/vapid-public-key` | The key the pager needs to subscribe to push. |
 
 Every API response carries `Cache-Control: private, no-store`.

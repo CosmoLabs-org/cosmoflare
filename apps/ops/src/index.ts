@@ -11,7 +11,7 @@ import { cached } from "./cache";
 import { collectDnsRecords, collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
 import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
-import { handleDnsToggle, handlePurge } from "./actions";
+import { collectWafRules, handleDnsToggle, handlePurge, handleWafToggle } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
@@ -182,6 +182,18 @@ export default {
       case "/api/dns/toggle": // POST pause/enable one DNS record (operator action button)
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
         return handleDnsToggle(request, env, ctx, operator);
+      case "/api/waf/rules": { // GET one zone's WAF custom rules (action buttons wave 3)
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        const zoneId = url.searchParams.get("id");
+        if (!zoneId) return json({ error: "missing id" }, 400);
+        const result = await cached(ctx, env, `waf:${zoneId}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectWafRules(env.CF_API_TOKEN, zoneId),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/waf/toggle": // POST enable/disable one WAF custom rule (operator action button)
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handleWafToggle(request, env, ctx, operator);
       case "/api/audit": // GET the mutation audit log, newest first
         if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
         return auditResponse(env);

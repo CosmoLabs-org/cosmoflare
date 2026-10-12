@@ -3,7 +3,7 @@
 // handlers: write-token gate → audited mutation with the WRITE token →
 // the CF API's error text surfaces verbatim.
 import { beforeEach, describe, expect, it } from "vitest";
-import { handlePurge, handleDnsToggle } from "./actions";
+import { handlePurge, handleDnsToggle, handleWafToggle } from "./actions";
 import { readAudit, type LifecycleEnv } from "./lifecycle";
 
 interface Route {
@@ -170,5 +170,54 @@ describe("handleDnsToggle", () => {
     const failedBody = (await failed.json()) as { error: string; hint: string };
     expect(failedBody.error).toBe("dns edit denied");
     expect(failedBody.hint).toContain("DNS > Edit");
+  });
+});
+
+describe("handleWafToggle", () => {
+  const ENTRYPOINT = {
+    match: (u: string) => u.includes(`/rulesets/phases/http_request_firewall_custom/entrypoint`),
+    body: { success: true, result: { id: "rs1", rules: [{ id: "w1", description: "block bad bots", expression: 'http.user_agent.contains("badbot")', action: "block", enabled: true }] } },
+  };
+  const RULE_PATCH = { match: (u: string, r: Request) => u.includes("/rulesets/rs1/rules/") && r.method === "PATCH", body: { success: true } };
+
+  function postWaf(body: unknown): Request {
+    return new Request("https://ops.example/api/waf/toggle", { method: "POST", body: JSON.stringify(body) });
+  }
+
+  it("disables a rule on a normal zone: reads the entrypoint id, PATCHes with the WRITE token, audits", async () => {
+    const kv = fakeKV();
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: kv, PROTECTED_HOSTS: "cosmolabs.org" } as unknown as LifecycleEnv;
+    const { requests } = stubFetch([ZONES_OK, ENTRYPOINT, RULE_PATCH]);
+    const res = await handleWafToggle(postWaf({ zone: "example.dev", rule: "w1", name: "block bad bots", enabled: false }), env, fakeCtx(), OPERATOR);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ zone: "example.dev", enabled: false });
+    const patch = requests.find((r) => r.method === "PATCH");
+    expect(patch?.url).toContain("/zones/z2/rulesets/rs1/rules/w1");
+    expect(patch?.body).toEqual({ enabled: false });
+    const audit = await readAudit(env);
+    expect(audit[0]).toMatchObject({ action: "waf-toggle", target: "example.dev: block bad bots → disabled", ok: true });
+  });
+
+  it("disabling a rule on a PROTECTED host refuses 403 without the override; enabling always passes", async () => {
+    const kv = fakeKV();
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: kv, PROTECTED_HOSTS: "cosmolabs.org" } as unknown as LifecycleEnv;
+    const { requests } = stubFetch([ZONES_OK, ENTRYPOINT, RULE_PATCH]);
+    const refused = await handleWafToggle(postWaf({ zone: "cosmolabs.org", rule: "w1", enabled: false }), env, fakeCtx(), OPERATOR);
+    expect(refused.status).toBe(403);
+    expect(((await refused.json()) as { error: string }).error).toContain("protected host");
+    const enabled = await handleWafToggle(postWaf({ zone: "cosmolabs.org", rule: "w1", enabled: true }), env, fakeCtx(), OPERATOR);
+    expect(enabled.status).toBe(200); // raising protection never refuses
+    expect(requests.find((r) => r.method === "PATCH")?.body).toEqual({ enabled: true });
+  });
+
+  it("503 without the write token; entrypoint read failure surfaces verbatim", async () => {
+    const noToken: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", OPS_KV: fakeKV() } as unknown as LifecycleEnv;
+    const gated = await handleWafToggle(postWaf({ zone: "example.dev", rule: "w1", enabled: false }), noToken, fakeCtx(), OPERATOR);
+    expect(gated.status).toBe(503);
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: fakeKV() } as LifecycleEnv;
+    stubFetch([ZONES_OK, { match: (u) => u.includes("/entrypoint"), body: { success: false, errors: [{ message: "rulesets read denied" }] } }]);
+    const failed = await handleWafToggle(postWaf({ zone: "example.dev", rule: "w1", enabled: false }), env, fakeCtx(), OPERATOR);
+    expect(failed.status).toBe(502);
+    expect(((await failed.json()) as { error: string }).error).toBe("rulesets read denied");
   });
 });

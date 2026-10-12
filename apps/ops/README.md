@@ -32,6 +32,10 @@ stays closed even if the Access app is later removed.
 - `POST /api/dns/toggle` — pause/enable one record (`{ zone, record, paused }`;
   needs `Zone > DNS > Edit`; protected hosts refuse pause without the
   operator override; audited; invalidates the zone's records cache).
+- `GET /api/waf/rules?id=` — one zone's WAF custom rules (cached 5 min).
+- `POST /api/waf/toggle` — enable/disable one WAF custom rule (`{ zone, rule,
+  enabled }`; needs `Zone > WAF > Edit` / Rulesets Write; disabling on a
+  protected host refuses without the override; audited).
 - `GET /api/vapid-public-key` — the key the pager needs to subscribe to push.
 
 Every API response carries `Cache-Control: private, no-store`.

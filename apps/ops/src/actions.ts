@@ -7,6 +7,7 @@
 
 import { appendAudit, cfWrite, NO_WRITE_TOKEN, parseProtectedHosts, type LifecycleEnv } from "./lifecycle";
 import { cached, invalidate } from "./cache";
+import { fetchRetry } from "./retry";
 import { fetchZonesList } from "./summary";
 
 const LIST_TTL = { ttlSec: 60 * 60, staleSec: 24 * 60 * 60 };
@@ -119,4 +120,102 @@ export async function handleDnsToggle(request: Request, env: LifecycleEnv, ctx: 
   // read back immediately.
   await invalidate(env, `dns:${zone.id}`);
   return json({ zone: zone.name, record: body.record, paused: action === "pause" });
+}
+
+// ---- WAF custom rules (action buttons wave 3, 2026-10-12) ----
+
+/** One WAF custom rule as the pager renders it: the custom-firewall phase
+ *  entrypoint's rules (Rulesets API). */
+export interface WafRule {
+  id: string;
+  description: string;
+  expression: string;
+  action: string; // block / skip / log / challenge …
+  enabled: boolean;
+}
+
+const WAF_PHASE = "http_request_firewall_custom";
+
+/** Read the zone's custom firewall rules: the phase entrypoint ruleset.
+ *  Soft-failed like every collector — a permission gap yields an error
+ *  line and an empty list, never a blank section. */
+export async function collectWafRules(token: string, zoneId: string): Promise<{ rulesetId: string | null; rules: WafRule[]; error: string | null }> {
+  try {
+    const res = await fetchRetry(`https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/phases/${WAF_PHASE}/entrypoint`, { headers: { Authorization: `Bearer ${token}` } });
+    const body = (await res.json()) as {
+      success: boolean;
+      result: { id: string; rules?: { id: string; description?: string; expression: string; action: string; enabled: boolean }[] } | null;
+      errors?: { message: string }[];
+    };
+    if (!body.success || !body.result) return { rulesetId: null, rules: [], error: body.errors?.[0]?.message ?? `HTTP ${res.status}` };
+    return {
+      rulesetId: body.result.id,
+      rules: (body.result.rules ?? []).map((r) => ({ id: r.id, description: r.description ?? "", expression: r.expression, action: r.action, enabled: r.enabled })),
+      error: null,
+    };
+  } catch (err) {
+    return { rulesetId: null, rules: [], error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+interface WafToggleBody {
+  zone?: string;
+  rule?: string; // rule id
+  name?: string; // rule description (audit readability)
+  enabled?: boolean;
+  override?: boolean;
+}
+
+// POST /api/waf/toggle {zone, rule, enabled} — enable/disable ONE WAF
+// custom rule. Needs "Zone > WAF > Edit" (Rulesets Write) on the WRITE
+// token. Disabling a rule on a PROTECTED host drops its protection, so it
+// refuses like zone-remove (same ZONE_REMOVE_OVERRIDE gate); ENABLING is
+// always allowed.
+export async function handleWafToggle(request: Request, env: LifecycleEnv, ctx: ExecutionContext, operator: string): Promise<Response> {
+  let body: WafToggleBody;
+  try {
+    body = (await request.json()) as WafToggleBody;
+  } catch {
+    return json({ error: "invalid JSON body" }, 400);
+  }
+  if (!body.zone || !body.rule || typeof body.enabled !== "boolean") {
+    return json({ error: "waf toggle needs zone, rule and enabled (true|false)" }, 400);
+  }
+  const target = `${body.zone}: ${body.name ?? body.rule}`;
+  if (!env.CF_API_TOKEN_WRITE) {
+    await appendAudit(env, { ts: new Date().toISOString(), action: "waf-toggle", target, operator, ok: false, error: NO_WRITE_TOKEN });
+    return json({ error: NO_WRITE_TOKEN }, 503);
+  }
+  const zones = (await cached(ctx, env, "zones-list", LIST_TTL, () => fetchZonesList(env.CF_API_TOKEN, env.CF_ACCOUNT_ID))).value;
+  const zone = zones.find((z) => z.id === body.zone || z.name === body.zone);
+  if (!zone) return json({ error: "zone not found in the cached zone list — refresh and retry" }, 404);
+
+  if (body.enabled === false && parseProtectedHosts(env.PROTECTED_HOSTS).includes(zone.name)) {
+    const overrideAllowed = body.override === true && env.ZONE_REMOVE_OVERRIDE === "1";
+    if (!overrideAllowed) {
+      const error = `${zone.name} is a protected host — disabling its WAF rules requires an operator override (ZONE_REMOVE_OVERRIDE=1 and override:true)`;
+      await appendAudit(env, { ts: new Date().toISOString(), action: "waf-toggle", target, operator, ok: false, error });
+      return json({ error }, 403);
+    }
+  }
+
+  // The PATCH needs the phase entrypoint's ruleset id — read it with the
+  // read token (it is the same object the list endpoint serves).
+  const { rulesetId, error: listError } = await collectWafRules(env.CF_API_TOKEN, zone.id);
+  if (!rulesetId) return json({ error: listError ?? "no custom ruleset for this zone" }, 502);
+
+  const result = await cfWrite(env, "PATCH", `/zones/${encodeURIComponent(zone.id)}/rulesets/${encodeURIComponent(rulesetId)}/rules/${encodeURIComponent(body.rule)}`, { enabled: body.enabled });
+  await appendAudit(env, {
+    ts: new Date().toISOString(),
+    action: "waf-toggle",
+    target: `${target} → ${body.enabled ? "enabled" : "disabled"}`,
+    operator,
+    ok: result.ok,
+    ...(result.ok ? {} : { error: result.error }),
+  });
+  if (!result.ok) {
+    return json({ error: result.error, hint: "the write token may be missing the 'Zone > WAF > Edit' (Rulesets Write) permission" }, 502);
+  }
+  await invalidate(env, `waf:${zone.id}`);
+  return json({ zone: zone.name, rule: body.rule, enabled: body.enabled });
 }

@@ -25,6 +25,8 @@ import {
   type DomainsPayload,
   type DnsRecord,
   type DnsRecordsPayload,
+  type WafRule,
+  type WafRulesPayload,
   type ZoneAttachment,
 } from "../../domains";
 import type { ViewFetcher } from "./WorkersView";
@@ -63,6 +65,25 @@ async function toggleDnsRecord(zone: string, record: DnsRecord, paused: boolean)
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ zone, record: record.id, name: record.name, paused }),
+  });
+  if (res.ok) return;
+  let detail = `HTTP ${res.status}`;
+  try {
+    const body = (await res.json()) as { error?: string };
+    if (body.error) detail = body.error;
+  } catch {
+    // non-JSON error body: keep the HTTP status text
+  }
+  throw new Error(detail);
+}
+
+/** POST /api/waf/toggle — identical mutation pattern. */
+async function toggleWafRule(zone: string, rule: WafRule, enabled: boolean): Promise<void> {
+  const res = await fetch("/api/waf/toggle", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ zone, rule: rule.id, name: rule.description || rule.id, enabled }),
   });
   if (res.ok) return;
   let detail = `HTTP ${res.status}`;
@@ -192,6 +213,110 @@ function DnsRecordsSection({ zoneId, zoneName, fetchJson }: { zoneId: string; zo
   );
 }
 
+/** Per-rule WAF lever (action buttons wave 3): DISABLING a firewall rule
+ *  drops protection, so it arms like Pause; ENABLING fires directly. */
+function WafLever({ zone, rule, onChanged }: { zone: string; rule: WafRule; onChanged: (rule: WafRule) => void }): React.JSX.Element {
+  const [phase, setPhase] = useState<TogglePhase>("idle");
+
+  const fire = (enabled: boolean): void => {
+    setPhase("busy");
+    void toggleWafRule(zone, rule, enabled)
+      .then(() => {
+        setPhase("idle");
+        onChanged({ ...rule, enabled });
+      })
+      .catch((err: unknown) => setPhase({ error: err instanceof Error ? err.message : String(err) }));
+  };
+
+  return (
+    <span className="cf-dns-actions">
+      <button
+        type="button"
+        className={`cf-btn cf-btn-sm ${phase === "armed" ? "cf-btn-danger" : ""}`}
+        disabled={phase === "busy"}
+        onClick={() => {
+          if (rule.enabled) {
+            // enabled rule → the lever DISABLES it: confirm first
+            if (phase === "idle") {
+              setPhase("armed");
+              window.setTimeout(() => setPhase((cur) => (cur === "armed" ? "idle" : cur)), 4000);
+              return;
+            }
+            if (phase === "armed") fire(false);
+            return;
+          }
+          // disabled rule → the lever ENABLES it: direct
+          if (phase === "idle") fire(true);
+        }}
+      >
+        {phase === "busy" ? "Working…" : rule.enabled ? (phase === "armed" ? "Confirm disable" : "Disable") : "Enable"}
+      </button>
+      {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+    </span>
+  );
+}
+
+/** The zone's WAF custom rules (action buttons wave 3): read from
+ *  /api/waf/rules (5-min cache, invalidated server-side on every toggle),
+ *  one row per rule with its lever. */
+function WafRulesSection({ zoneId, zoneName, fetchJson }: { zoneId: string; zoneName: string; fetchJson: ViewFetcher }): React.JSX.Element | null {
+  const [payload, setPayload] = useState<WafRulesPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPayload(null);
+    setError(null);
+    void fetchJson<WafRulesPayload>(`api/waf/rules?id=${encodeURIComponent(zoneId)}`).then(
+      (res) => {
+        if (!cancelled) setPayload(res.data);
+      },
+      (err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [zoneId, fetchJson, retryTick]);
+
+  if (error !== null) {
+    return (
+      <p className="cf-empty cf-level-warning-text" role="alert">
+        {`WAF rules failed — ${error} `}
+        <button type="button" className="cf-btn cf-btn-sm" onClick={() => setRetryTick((t) => t + 1)}>Retry</button>
+      </p>
+    );
+  }
+  if (payload === null) return <div className="cf-loading cf-dns-loading"><div className="cf-skeleton" /></div>;
+  if (payload.error) return <p className="cf-empty cf-empty-quiet">{payload.error}</p>;
+  if (payload.rules.length === 0) return <p className="cf-empty cf-empty-quiet">No custom firewall rules.</p>;
+
+  return (
+    <div className="cf-dns-list">
+      {payload.rules.map((r) => (
+        <div key={r.id} className="cf-dns-row" data-record={r.description || r.id}>
+          <span className="cf-waf-action">{r.action}</span>
+          <span className="cf-dns-name">{r.description || r.id}</span>
+          <span className="cf-dns-content">{r.expression}</span>
+          <span className="cf-dns-badges">
+            {r.enabled ? null : <span className="cf-dns-paused">disabled</span>}
+          </span>
+          <WafLever
+            zone={zoneName}
+            rule={r}
+            onChanged={(updated) => setPayload((cur) => {
+              if (cur === null) return cur;
+              return { ...cur, rules: cur.rules.map((x) => (x.id === updated.id ? updated : x)) };
+            })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Enrichment rows from /api/domains/detail — each optional, appended into
  *  its section only when the fetch resolved it. */
 interface DetailFields {
@@ -307,6 +432,10 @@ function DomainProfile({ domain, onBack, fetchJson }: {
         {domain.developmentMode ? <Field label="Development mode" value="on" /> : null}
         {detail?.dnssecStatus ? <Field label="DNSSEC" value={detail.dnssecStatus} /> : null}
         {detail?.sslMode ? <Field label="SSL mode" value={detail.sslMode} /> : null}
+      </ProfileSection>
+
+      <ProfileSection heading="Firewall">
+        <WafRulesSection zoneId={domain.id} zoneName={domain.name} fetchJson={fetchJson} />
       </ProfileSection>
     </motion.div>
   );

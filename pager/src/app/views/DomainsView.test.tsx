@@ -8,7 +8,7 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, type FetchResult } from "../../api";
-import type { AttachmentsPayload, AuditEntry, AuditPayload, DomainDetailPayload, DomainRecord, DomainsPayload, DnsRecord, DnsRecordsPayload } from "../../domains";
+import type { AttachmentsPayload, AuditEntry, AuditPayload, DomainDetailPayload, DomainRecord, DomainsPayload, DnsRecord, DnsRecordsPayload, WafRulesPayload } from "../../domains";
 import DomainsView from "./DomainsView";
 
 afterEach(cleanup);
@@ -71,7 +71,7 @@ const ATTACHMENTS: AttachmentsPayload = {
 
 /** Stub fetcher: answers api/domains and the detail/summary endpoints; the
  *  summary deliberately fails to prove enrichment is soft. */
-function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error; attachments?: AttachmentsPayload; dns?: DnsRecordsPayload } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
+function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error; attachments?: AttachmentsPayload; dns?: DnsRecordsPayload; waf?: WafRulesPayload } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
   return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
     if (opts.failFirstLoad) throw opts.failFirstLoad;
     if (endpoint === "api/domains") return { data: DOMAINS as unknown as T, source: "network", ageSec: 0, demo: false };
@@ -85,6 +85,10 @@ function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Er
     }
     if (endpoint.startsWith("api/dns/records")) {
       if (opts.dns) return { data: opts.dns as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 503");
+    }
+    if (endpoint.startsWith("api/waf/rules")) {
+      if (opts.waf) return { data: opts.waf as unknown as T, source: "network", ageSec: 0, demo: false };
       throw new Error("HTTP 503");
     }
     throw new Error("HTTP 404");
@@ -154,9 +158,9 @@ describe("DomainsView (P-05b)", () => {
     });
     expect(document.querySelector(".cf-profile-title")?.textContent).toBe("warn.net");
     expect(document.querySelector(".cf-profile-eyebrow")?.textContent).toBe("Domain profile");
-    // The four sections, in the vanilla order.
+    // The five sections, in the vanilla order + Firewall (wave 3).
     const sections = text(".cf-profile-section-title");
-    expect(sections).toEqual(["Renewal", "Registration", "DNS", "Security"]);
+    expect(sections).toEqual(["Renewal", "Registration", "DNS", "Security", "Firewall"]);
     // Back control returns to the list.
     const back = document.querySelector<HTMLButtonElement>(".cf-profile-back");
     expect(back?.textContent).toBe("All domains");
@@ -205,7 +209,7 @@ describe("DomainsView (P-05b)", () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(text(".cf-domain-field-label")).not.toContain("Previous nameservers (before Cloudflare)");
     // The base sections still paint.
-    expect(text(".cf-profile-section-title")).toEqual(["Renewal", "Registration", "DNS", "Security"]);
+    expect(text(".cf-profile-section-title")).toEqual(["Renewal", "Registration", "DNS", "Security", "Firewall"]);
   });
 
   it("paints the quiet empty state when no domains exist", async () => {
@@ -565,5 +569,75 @@ describe("DomainProfile DNS records (action buttons wave 2)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-purge-error")?.textContent).toContain("protected host");
     });
+  });
+});
+
+describe("DomainProfile Firewall section (action buttons wave 3)", () => {
+  const WAF: WafRulesPayload = {
+    rulesetId: "rs1",
+    rules: [
+      { id: "w1", description: "block bad bots", expression: 'http.user_agent.contains("badbot")', action: "block", enabled: true },
+      { id: "w2", description: "log api abuse", expression: 'http.request.uri.path contains "/api"', action: "log", enabled: false },
+    ],
+    error: null,
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders one row per rule: action chip, description, expression, disabled badge", async () => {
+    render(<DomainsView fetcher={domainsFetcher({ waf: WAF })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    });
+    document.querySelectorAll<HTMLButtonElement>(".cf-domain-row")[1].click();
+    await waitFor(() => {
+      expect(document.querySelectorAll(".cf-dns-row[data-record='block bad bots']")).toHaveLength(1);
+    });
+    expect(text(".cf-waf-action")).toEqual(["block", "log"]);
+    expect(text(".cf-dns-name")).toContain("block bad bots");
+    expect(text(".cf-dns-content")).toContain('http.user_agent.contains("badbot")');
+    // w2 disabled carries the badge; w1 (enabled) does not
+    expect(document.querySelector('[data-record="log api abuse"] .cf-dns-paused')?.textContent).toBe("disabled");
+    expect(document.querySelector('[data-record="block bad bots"] .cf-dns-paused')).toBeNull();
+  });
+
+  it("Disable arms then fires; the rule flips to disabled; Enable fires directly", async () => {
+    const posts: { url: string; body: unknown }[] = [];
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      posts.push({ url: String(input), body: JSON.parse(String(init?.body)) as unknown });
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    render(<DomainsView fetcher={domainsFetcher({ waf: WAF })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    });
+    document.querySelectorAll<HTMLButtonElement>(".cf-domain-row")[1].click();
+    await waitFor(() => {
+      expect(document.querySelectorAll(".cf-waf-action")).toHaveLength(2);
+    });
+    const levers = document.querySelectorAll<HTMLButtonElement>('[data-record="block bad bots"] .cf-dns-actions .cf-btn');
+    expect(levers[0].textContent).toBe("Disable");
+    fireEvent.click(levers[0]);
+    expect(levers[0].textContent).toBe("Confirm disable"); // armed, nothing sent
+    expect(posts).toHaveLength(0);
+    fireEvent.click(levers[0]);
+    await waitFor(() => {
+      expect(posts).toHaveLength(1);
+    });
+    expect(posts[0].url).toContain("/api/waf/toggle");
+    expect(posts[0].body).toMatchObject({ zone: "warn.net", rule: "w1", enabled: false });
+    await waitFor(() => {
+      expect(document.querySelector('[data-record="block bad bots"] .cf-dns-paused')).toBeTruthy();
+    });
+    // w2 starts disabled: Enable fires on the FIRST tap
+    const enableLever = document.querySelector<HTMLButtonElement>('[data-record="log api abuse"] .cf-dns-actions .cf-btn');
+    expect(enableLever?.textContent).toBe("Enable");
+    fireEvent.click(enableLever!);
+    await waitFor(() => {
+      expect(posts).toHaveLength(2);
+    });
+    expect(posts[1].body).toMatchObject({ rule: "w2", enabled: true });
   });
 });

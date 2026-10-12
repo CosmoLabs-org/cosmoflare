@@ -58,6 +58,24 @@ export interface DnsRecordsPayload {
   cache?: { ageSec: number; stale: boolean };
 }
 
+/** One WAF custom rule (action buttons wave 3, 2026-10-12): the zone's
+ *  custom-firewall phase ruleset. */
+export interface WafRule {
+  id: string;
+  description: string;
+  expression: string;
+  action: string; // block / skip / log / challenge …
+  enabled: boolean;
+}
+
+/** /api/waf/rules?id= response. */
+export interface WafRulesPayload {
+  rulesetId: string | null;
+  rules: WafRule[];
+  error?: string | null;
+  cache?: { ageSec: number; stale: boolean };
+}
+
 // Attachment inventory (FEAT-pEWA6N6 phase 1): mirrors the ops worker's
 // attachments.ts payload — read-only, no mutations.
 export interface PageDomainAttachment {
