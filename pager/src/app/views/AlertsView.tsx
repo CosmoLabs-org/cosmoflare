@@ -53,8 +53,13 @@ function markSeen(now: number): void {
   }
 }
 
-/** Local relative-time helper for feed rows: "14m ago", "2h ago", "3d ago". */
-function timeAgo(ts: string, nowMs: number = Date.now()): string {
+/** Feed numbers: % renders one decimal (the wire carries full float precision
+ *  — "50.40650406504065" must never reach the screen); counts stay plain. */
+function feedNum(v: number, unit: string): string {
+  return unit === "%" ? v.toFixed(1) : String(v);
+}
+
+/** Local relative-time helper for feed rows: "14m ago", "2h ago", "3d ago". */function timeAgo(ts: string, nowMs: number = Date.now()): string {
   const at = Date.parse(ts);
   if (!Number.isFinite(at)) return "";
   const seconds = Math.max(0, Math.floor((nowMs - at) / 1000));
@@ -134,12 +139,13 @@ function FeedDetail({ entry }: { entry: AlertFeedEntry }): React.JSX.Element {
     >
       <table className="cf-feed-table">
         <tbody>
-          <tr><th scope="row">Value</th><td>{entry.value}</td></tr>
-          <tr><th scope="row">Threshold</th><td>{entry.threshold}</td></tr>
+          <tr><th scope="row">Value</th><td>{feedNum(entry.value, entry.unit)}</td></tr>
+          <tr><th scope="row">Threshold</th><td>{feedNum(entry.threshold, entry.unit)}</td></tr>
           <tr><th scope="row">Unit</th><td>{entry.unit || "—"}</td></tr>
           <tr><th scope="row">Fired at</th><td>{entry.ts}</td></tr>
         </tbody>
       </table>
+      {entry.context ? <p className="cf-feed-context">{entry.context}</p> : null}
       <p className="cf-feed-explanation">{explanationFor(entry.condition)}</p>
       <p className="cf-feed-footer">
         {entry.ruleId} · {entry.sent ? "push delivered" : "push not delivered"}
@@ -162,7 +168,7 @@ function FeedRow({ entry, unread, expanded, onToggle }: {
         {unread ? <span className="cf-feed-dot" aria-label="unread" /> : null}
         <time className="cf-feed-time">{timeAgo(entry.ts)}</time>
         <strong className="cf-feed-title">{entry.title}</strong>
-        <span className="cf-feed-value">{entry.value} / {entry.threshold} {entry.unit}</span>
+        <span className="cf-feed-value">{feedNum(entry.value, entry.unit)} / {feedNum(entry.threshold, entry.unit)} {entry.unit}</span>
       </button>
       {expanded ? <FeedDetail entry={entry} /> : null}
     </div>

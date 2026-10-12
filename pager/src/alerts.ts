@@ -17,6 +17,7 @@ export interface AlertFeedEntry {
   unit: string; // "%" | "requests" | "rows" | "writes" ("" for gaps)
   message: string; // the page detail line
   sent: boolean; // whether the push reached at least one device
+  context: string; // absolute base for ratio fires ("46 misses of 139 eligible requests"); "" for counts
 }
 
 // AlertFeed is the /api/alerts/feed response envelope.

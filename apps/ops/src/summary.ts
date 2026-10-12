@@ -30,6 +30,7 @@ export interface ZoneRow {
   uncached: number;
   eligible: number;
   missPct: number | null; // null under the 100-eligible floor
+  misses: number; // absolute miss+expired count behind missPct
   byStatus: Record<string, number>; // every cacheStatus count, v2
 }
 export interface D1Group {
@@ -96,7 +97,10 @@ export function summarizeZones(data: ZoneGroups[], names: Record<string, string>
     const missPct = eligible >= ZONE_CACHE_FLOOR ? (100 * missed) / eligible : null;
     const byStatus: Record<string, number> = {};
     for (const [status, n] of m) byStatus[status] = n;
-    return { zone, total, uncached, eligible, missPct, byStatus };
+    // misses is the absolute MISSED count behind missPct — alerts carry it so
+    // a percentage is never judged without its base (operator 2026-10-12:
+    // "50.4%" on 139 eligible was threshold noise).
+    return { zone, total, uncached, eligible, missPct, misses: missed, byStatus };
   });
   return rows.sort((a, b) => b.uncached - a.uncached || a.zone.localeCompare(b.zone));
 }

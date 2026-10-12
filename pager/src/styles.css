@@ -1356,6 +1356,12 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   text-align: right;
   padding: 2px 0;
 }
+.cf-feed-context {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  margin: var(--space-3) 0 0;
+}
 .cf-feed-explanation {
   color: var(--text);
   font-size: var(--text-sm);

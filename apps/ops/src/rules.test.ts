@@ -24,7 +24,7 @@ function stateP(): FireState {
 
 // zoneObsP builds a zone observation row.
 function zoneObsP(overrides: Partial<ZoneObs>): ZoneObs {
-  return { zone: "a.example", uncached: 0, eligible: 500, missPct: 10, ...overrides };
+  return { zone: "a.example", uncached: 0, eligible: 500, missPct: 10, misses: 50, ...overrides };
 }
 
 describe("humanCount / formatValue (Go format.go + evaluator.go parity)", () => {
@@ -57,6 +57,18 @@ describe("conditionValues thresholds", () => {
     const zones = [zoneObsP({ zone: "tiny.example", eligible: 3, missPct: null })];
     const fires = evaluate([ruleP({ name: "misspct", condition: "zone-cache-miss-pct", threshold: 50 })], zones, [], {}, stateP(), 1000);
     expect(fires).toHaveLength(0);
+  });
+  it("zone-cache-miss-pct never pages under the 1000-eligible ALERTING floor, however high the ratio (operator 2026-10-12: 50.4% on 139 eligible was noise)", () => {
+    const zones = [zoneObsP({ zone: "illuminate.am", eligible: 139, missPct: 50.4, misses: 62 })];
+    const fires = evaluate([ruleP({ name: "misspct", condition: "zone-cache-miss-pct", threshold: 50 })], zones, [], {}, stateP(), 1000);
+    expect(fires).toHaveLength(0);
+  });
+  it("zone-cache-miss-pct fires above the alerting floor and carries the absolute base as context", () => {
+    const zones = [zoneObsP({ zone: "busy.example", eligible: 1200, missPct: 55, misses: 660 })];
+    const fires = evaluate([ruleP({ name: "misspct", condition: "zone-cache-miss-pct", threshold: 50 })], zones, [], {}, stateP(), 1000);
+    expect(fires).toHaveLength(1);
+    expect(fires[0].context).toBe("660 misses of 1200 eligible requests");
+    expect(fires[0].title).toBe("Cache miss rate · busy.example");
   });
   it("d1-rows-read fires and names the database", () => {
     const d1 = [{ name: "big-db", rowsRead: 2_000_000_000 }];

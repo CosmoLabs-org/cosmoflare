@@ -74,6 +74,7 @@ export interface AlertFeedEntry {
   unit: string; // "%" | "requests" | "rows" | "writes" ("" for gaps)
   message: string; // the page detail line
   sent: boolean; // whether the push reached at least one device
+  context: string; // absolute base for ratio fires ("46 misses of 139 eligible requests"); "" for counts
 }
 
 // toFeedEntry projects one fire into the feed shape; sent starts false and is
@@ -89,6 +90,7 @@ function toFeedEntry(fire: Fire, ts: string, sent: boolean): AlertFeedEntry {
     unit: fire.unit,
     message: fire.message,
     sent,
+    context: fire.context,
   };
 }
 
@@ -104,7 +106,12 @@ function fireBody(fire: Fire): string {
   if (fire.condition === "telemetry-gap") {
     return `Cloudflare ${fire.dataset} analytics were unavailable this cycle, so ${fire.dataset} rules could not run.`;
   }
-  return `${formatValue(fire.value, fire.unit)} ${fire.unit} in 24h — threshold ${formatValue(fire.threshold, fire.unit)}`;
+  // % reads as "63.6% — threshold 50.0%"; counts keep their unit word.
+  const base = fire.unit === "%"
+    ? `${formatValue(fire.value, fire.unit)}% in 24h — threshold ${formatValue(fire.threshold, fire.unit)}%`
+    : `${formatValue(fire.value, fire.unit)} ${fire.unit} in 24h — threshold ${formatValue(fire.threshold, fire.unit)}`;
+  // A ratio never travels without its base (operator 2026-10-12).
+  return fire.context ? `${base} · ${fire.context}` : base;
 }
 
 function pagePayload(fires: Fire[], end: string): { id: string; severity: string; service: string; title: string; detail: string; fired_at: string } {

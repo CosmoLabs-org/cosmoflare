@@ -57,6 +57,7 @@ function entry(partial: Partial<AlertFeedEntry>): AlertFeedEntry {
     unit: "requests",
     message: "zone-uncached-requests hot.example [uncached requests]: observed 12000 meets threshold 10000 (requests)",
     sent: true,
+    context: "",
     ...partial,
   };
 }
@@ -89,7 +90,7 @@ describe("AlertsView — Notifications center", () => {
   });
 
   it("clicking a row expands the detail: numbers table, the condition explanation, and the delivery footer", async () => {
-    const kvFire = entry({ condition: "kv-writes", title: "kvday", value: 250000, threshold: 100000, unit: "writes", ruleId: "kvday/SESSIONS", sent: false });
+    const kvFire = entry({ condition: "kv-writes", title: "kvday", value: 250000, threshold: 100000, unit: "writes", ruleId: "kvday/SESSIONS", sent: false, context: "250000 misses of 400000 eligible requests" });
     render(<AlertsView fetcher={feedFetcher({ feed: [kvFire] })} />);
     await waitFor(() => {
       expect(document.querySelector(".cf-feed-row")).toBeTruthy();
@@ -104,6 +105,8 @@ describe("AlertsView — Notifications center", () => {
     // numbers table: value, threshold, unit, fired at
     const cells = document.querySelectorAll(".cf-feed-table td");
     expect(Array.from(cells).map((c) => c.textContent)).toEqual(["250000", "100000", "writes", kvFire.ts]);
+    // the absolute base behind a ratio travels with the entry
+    expect(document.querySelector(".cf-feed-context")?.textContent).toBe("250000 misses of 400000 eligible requests");
     // the plain-language explanation for the kv-writes condition
     const text = document.querySelector(".cf-feed-explanation")?.textContent ?? "";
     expect(text).toContain("KV writes");

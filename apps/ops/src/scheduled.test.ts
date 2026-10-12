@@ -460,6 +460,58 @@ describe("runScheduled", () => {
     expect(feed[0].ruleId.startsWith("kvday/")).toBe(true);
     expect(feed[0].sent).toBe(false);
   });
+  it("miss% above the 1000-eligible floor fires with its absolute base in the feed entry and the push body", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "misspct", condition: "zone-cache-miss-pct", threshold: 50, enabled: true }]));
+    await seedSubs(kv);
+    routeFetch();
+    // Override the zone GraphQL: 1100 eligible (400 hit + 700 miss), 63.6% miss.
+    const inner = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/graphql") && !String(init?.body ?? "").includes("d1Analytics")) {
+        const body = { data: { viewer: { zones: [{ zoneTag: "z-1", httpRequestsAdaptiveGroups: [
+          { count: 400, dimensions: { cacheStatus: "hit" } },
+          { count: 700, dimensions: { cacheStatus: "miss" } },
+          { count: 9000, dimensions: { cacheStatus: "dynamic" } },
+        ] }] } } };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }
+      return inner(input as never, init);
+    }) as typeof fetch;
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(1);
+    const feed = (await kv.get(ALERT_FEED_KEY, "json")) as { context: string }[];
+    expect(feed[0].context).toBe("700 misses of 1100 eligible requests");
+    const payload = parsePayload(JSON.parse(envelopes[0].data));
+    expect(payload!.title).toBe("Cache miss rate · hot.example");
+    expect(payload!.detail).toContain("63.6% in 24h — threshold 50.0% · 700 misses of 1100 eligible requests");
+  });
+  it("miss% below the 1000-eligible floor is measured but never pages (illuminate.am noise)", async () => {
+    const kv = fakeKV();
+    await kv.put(RULES_KEY, JSON.stringify([{ name: "misspct", condition: "zone-cache-miss-pct", threshold: 50, enabled: true }]));
+    await seedSubs(kv);
+    const { calls } = routeFetch();
+    // Default stub: 500 eligible (500 hit), missPct 0 — plus dynamic 12k.
+    // Swap to a 139-eligible 50.4% shape: 77 hit + 62 miss, dynamic rest.
+    const inner = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/graphql") && !String(init?.body ?? "").includes("d1Analytics")) {
+        const body = { data: { viewer: { zones: [{ zoneTag: "z-1", httpRequestsAdaptiveGroups: [
+          { count: 77, dimensions: { cacheStatus: "hit" } },
+          { count: 62, dimensions: { cacheStatus: "miss" } },
+          { count: 1805, dimensions: { cacheStatus: "dynamic" } },
+        ] }] } } };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }
+      return inner(input as never, init);
+    }) as typeof fetch;
+    const out = await runScheduled(envP(kv), NOW);
+    expect(out.fired).toBe(0);
+    expect(out.sent).toBe(0);
+    expect(calls.length).toBeGreaterThan(0); // telemetry still ran: measured, not paged
+  });
 });
 
 describe("testFire", () => {

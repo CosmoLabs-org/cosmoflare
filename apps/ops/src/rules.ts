@@ -43,6 +43,7 @@ export interface ZoneObs {
   uncached: number;
   eligible: number;
   missPct: number | null; // null under the 100-eligible floor (design D6)
+  misses: number; // absolute miss+expired count behind missPct
 }
 
 export interface D1Obs {
@@ -95,6 +96,14 @@ export const COOLDOWN_MS = 6 * 60 * 60 * 1000;
 // and 2 misses must not page at 67%.
 export const ZONE_CACHE_FLOOR = 100;
 
+// MISS_PCT_ELIGIBLE_FLOOR is the ALERTING floor for zone-cache-miss-pct
+// (operator 2026-10-12): a percentage needs a base before it can mean
+// anything. illuminate.am paged at 50.4% on 139 eligible requests — 62
+// origin hits a day, pure threshold noise as the 24h window slid across the
+// line. Under this floor the miss ratio is measured (summary view) but never
+// pages.
+export const MISS_PCT_ELIGIBLE_FLOOR = 1000;
+
 const ESCALATION_PREFIX = "escalated (≥2× last page): ";
 
 // humanCount renders row counts the way the Go watch does (format.go
@@ -122,6 +131,8 @@ export interface ScopedValue {
   key: string; // stable identity for cooldown/exclude/payload ID
   value: number;
   unit: string;
+  /** Absolute base behind a ratio value ("46 misses of 139 eligible") — empty for counts. */
+  context?: string;
 }
 
 // conditionValues fans a condition out over the observations: one value per
@@ -134,7 +145,10 @@ export function conditionValues(condition: string, zones: ZoneObs[], d1: D1Obs[]
     for (const z of zones) {
       if (condition === "zone-cache-miss-pct") {
         if (z.missPct === null) continue; // under the floor: not judgeable (D6)
-        out.push({ scopeName: z.zone, key: z.id || z.zone, value: z.missPct, unit: desc.unit });
+        // Alerting floor: a ratio this small cannot mean anything (see
+        // MISS_PCT_ELIGIBLE_FLOOR) — measured, never paged.
+        if (z.eligible < MISS_PCT_ELIGIBLE_FLOOR) continue;
+        out.push({ scopeName: z.zone, key: z.id || z.zone, value: z.missPct, unit: desc.unit, context: `${z.misses} misses of ${z.eligible} eligible requests` });
       } else {
         // zone-uncached-requests: absolute volume, no floor.
         out.push({ scopeName: z.zone, key: z.id || z.zone, value: z.uncached, unit: desc.unit });
@@ -186,6 +200,8 @@ export interface Fire {
   unit: string;
   title: string;
   severity: "info" | "warning";
+  /** Absolute base for ratio fires ("46 misses of 139 eligible requests"); "" for counts. */
+  context: string;
 }
 
 // evaluate runs every enabled rule against the observations. Mutates state in
@@ -227,7 +243,7 @@ export function evaluate(
       let message = `${rule.condition} ${sv.scopeName} [${rule.name}]: observed ${observed} meets threshold ${threshold} (${desc.unit})`;
       if (escalated) message = ESCALATION_PREFIX + message;
       const title = sv.scopeName ? `${desc.label} · ${sv.scopeName}` : desc.label;
-      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset, condition: rule.condition, value: sv.value, threshold: rule.threshold, unit: desc.unit, title, severity: escalated ? "warning" : "info" });
+      fires.push({ alertId, ruleName: rule.name, scopeName: sv.scopeName, message, dataset: desc.dataset, condition: rule.condition, value: sv.value, threshold: rule.threshold, unit: desc.unit, title, severity: escalated ? "warning" : "info", context: sv.context ?? "" });
     }
   }
 
@@ -242,7 +258,7 @@ export function evaluate(
     state.lastFired[alertId] = now;
     state.fires[alertId] = (state.fires[alertId] ?? 0) + 1;
     const message = `telemetry gap: ${dataset} analytics unavailable, ${dataset} rules cannot fire: ${gaps[dataset]}`;
-    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"], condition: "telemetry-gap", value: 0, threshold: 0, unit: "", title: `Telemetry gap (${dataset})`, severity: "info" });
+    fires.push({ alertId, ruleName: "telemetry-gap", scopeName: "", message, dataset: dataset as Fire["dataset"], condition: "telemetry-gap", value: 0, threshold: 0, unit: "", title: `Telemetry gap (${dataset})`, severity: "info", context: "" });
   }
   return fires;
 }

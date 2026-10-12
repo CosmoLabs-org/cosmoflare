@@ -19,6 +19,7 @@ describe("summarizeZones", () => {
     expect(siteA.total).toBe(1541);
     expect(siteA.uncached).toBe(960); // dynamic + bypass
     expect(siteA.missPct).toBeCloseTo((100 * 87) / 384, 9); // (miss+expired)/eligible
+    expect(siteA.misses).toBe(87); // absolute miss+expired behind the ratio
     expect(siteA.byStatus).toEqual({ dynamic: 939, bypass: 21, hit: 61, miss: 83, expired: 4, revalidated: 236, none: 197 });
     const tiny = rows.find((r) => r.zone === "tiny.example")!;
     expect(tiny.missPct).toBeNull(); // 10 eligible < 100 floor
