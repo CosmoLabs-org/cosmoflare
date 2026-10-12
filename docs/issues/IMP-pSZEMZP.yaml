@@ -1,0 +1,11 @@
+id: IMP-pSZEMZP
+type: improvement
+created_at: 2026-10-12T20:43:00.354952+04:00
+updated_at: 2026-10-12T20:43:01.928957+04:00
+source: local
+ulid: 01M4RFY1D89FC6HTS7X6SZEMZP
+provisional: true
+status: open
+title: 'Billing cycle typography: ''day 24 of 30'' lockup needs a proper design'
+description: 'Operator 2026-10-12: the statusbar right group renders the billing-period day count as thin progress + ''day 24 of 30''-style text that looks ugly. Needs a designed lockup: tabular numerals, cleaner hierarchy, better progress treatment.'
+roadmap_ref: ROAD-107
