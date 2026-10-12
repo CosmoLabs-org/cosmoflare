@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T23:11:48.401516+04:00
+last_updated: 2026-10-13T02:36:06.23223+04:00
 next_bug_id: 64
-next_feat_id: 80
+next_feat_id: 82
 next_task_id: 18
 next_imp_id: 6
 issues:
@@ -789,6 +789,11 @@ issues:
       status: closed
       title: Tab bar polish + reusable lever buttons with labels
       created_at: 2026-10-12T19:29:01.401583+04:00
+    - id: FEAT-pDQEFQV
+      type: feature
+      status: open
+      title: In-app permissions guide — Ops tells the operator exactly what access it's missing and how to grant it
+      created_at: 2026-10-13T02:36:02.010968+04:00
     - id: FEAT-pEWA6N6
       type: feature
       status: closed
@@ -809,6 +814,11 @@ issues:
       status: open
       title: 'ApiClient resilience: single-flight dedup, failure backoff, request-budget E2E'
       created_at: 2026-10-11T20:45:23.485653+04:00
+    - id: FEAT-pT9Y6FM
+      type: feature
+      status: open
+      title: Ops cache diagnostics per zone + cache-setting write path
+      created_at: 2026-10-13T02:35:56.24891+04:00
     - id: FEAT-pXNQ5GW
       type: feature
       status: closed
