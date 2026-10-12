@@ -2,12 +2,15 @@
 ulid: 01M4M3ZKZDTFEDT80PHRJNC5DY
 title: In-app permissions guide — Ops tells the operator exactly what access it's missing and how to grant it
 created: "2026-10-11T03:57:13.069474+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 74
     trigger: operator 2026-10-11 at session close
+promoted_to: FEAT-pDQEFQV
 ---
+
+# In-app permissions guide — Ops tells the operator exactly what access it's missing and how to grant it
 
 # Guides section — articles and educational tutorials inside Ops
 

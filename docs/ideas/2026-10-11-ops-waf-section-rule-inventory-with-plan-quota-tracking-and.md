@@ -2,11 +2,17 @@
 ulid: 01M4M5XZPKRWTMGNS7Q2KN1A2F
 title: 'Ops WAF section: rule inventory with plan-quota tracking and over-limit warnings'
 created: "2026-10-11T04:31:16.691323+04:00"
-status: seed
+status: withered
 source: human
 origin:
     session: 75
+resolution:
+    reason: implemented
+    date: "2026-10-13T02:36:37.015678+04:00"
+    ref: FEAT-074 (commits 8446598, e3159156, session 2040)
 ---
+
+# Ops WAF section: rule inventory with plan-quota tracking and over-limit warnings
 
 # Ops WAF section: rule inventory with plan-quota tracking and over-limit warnings
 

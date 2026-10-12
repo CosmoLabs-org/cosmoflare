@@ -2,11 +2,14 @@
 ulid: 01M4PR0F7XVYQ3J6ZFB3AWVJHK
 title: Ops cache diagnostics per zone + cache-setting write path
 created: "2026-10-12T04:25:41.373881+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 76
+promoted_to: FEAT-pT9Y6FM
 ---
+
+# Ops cache diagnostics per zone + cache-setting write path
 
 # Ops cache diagnostics per zone + cache-setting write path
 

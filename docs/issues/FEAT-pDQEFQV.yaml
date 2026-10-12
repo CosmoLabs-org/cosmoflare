@@ -1,11 +1,14 @@
 id: FEAT-pDQEFQV
 type: feature
 created_at: 2026-10-13T02:36:02.010968+04:00
-updated_at: 2026-10-13T02:36:03.588774+04:00
+updated_at: 2026-10-13T02:36:06.234892+04:00
 source: local
 ulid: 01M4S44EM4JFA36M52XPDQEFQV
 provisional: true
 status: open
+origin:
+    idea_slug: 2026-10-11-in-app-permissions-guide-ops-tells-the-operator-exactly
+    session: 74
 title: In-app permissions guide — Ops tells the operator exactly what access it's missing and how to grant it
 description: |-
     # Guides section — articles and educational tutorials inside Ops
