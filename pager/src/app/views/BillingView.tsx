@@ -191,25 +191,42 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
           its plan name UNDER the amount, the projected overage beside it,
           and the whole month at current pace as one total. */}
       <section className="cf-card">
-        <h2>{`Billing period — day ${b.period.day} of ${b.period.days}`}</h2>
+        <h2>Billing period</h2>
+        {/* The day counter (operator 2026-10-13): the 24/30 lockup from the
+            status bar, big on the card, next to nothing else — prose
+            headings like "day 24 of 30" read like a sentence, not a dial. */}
+        <p className="cf-cycle cf-cycle-lg" aria-label={`Billing period day ${b.period.day} of ${b.period.days}`}>
+          <span className="cf-cycle-day">{b.period.day}</span>
+          <span className="cf-cycle-total">/{b.period.days}</span>
+        </p>
+        {/* The month as an equation (operator 2026-10-13): base + overage
+            = total, left to right, each cost with its name beneath it. */}
         <div className="cf-cost">
-          <div className="cf-cost-base">
+          <div className="cf-cost-part">
             <span className="cf-cost-amount">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
             <span className="cf-cost-plan">{`${WORKERS_PAID_PLAN} · base`}</span>
           </div>
-          <div className="cf-cost-side">
-            {projectedOverageTotal(b.products) > 0 ? (
-              <span className="cf-cost-overage">{`+ ${formatUsd(projectedOverageTotal(b.products))} projected overage`}</span>
-            ) : (
-              <span className="cf-cost-overage is-clear">no overage projected</span>
-            )}
-            <span className="cf-cost-total">{`≈ ${formatUsd(projectedMonthlyTotal(b.products))} this month`}</span>
+          <span className="cf-cost-op" aria-hidden="true">+</span>
+          <div className="cf-cost-part">
+            <span className={`cf-cost-amount${projectedOverageTotal(b.products) > 0 ? " is-overage" : " is-clear"}`}>
+              {projectedOverageTotal(b.products) > 0 ? formatUsd(projectedOverageTotal(b.products)) : "$0.00"}
+            </span>
+            <span className="cf-cost-plan">projected overage</span>
+          </div>
+          <span className="cf-cost-op" aria-hidden="true">=</span>
+          <div className="cf-cost-part">
+            <span className="cf-cost-amount is-total">{formatUsd(projectedMonthlyTotal(b.products))}</span>
+            <span className="cf-cost-plan">this month</span>
           </div>
         </div>
-        <div className="cf-progress">
+        <div
+          className={`cf-progress${periodProgress(b.period.day, b.period.days).elapsedPct >= 80 ? " is-hot" : ""}`}
+          role="progressbar"
+          aria-label="Billing period progress"
+        >
           <div
             className="cf-progress-fill"
-            style={{ width: `${periodProgress(b.period.day, b.period.days).elapsedPct}%` }}
+            style={{ transform: `scaleX(${Math.min(1, Math.max(0, periodProgress(b.period.day, b.period.days).elapsedPct / 100))})` }}
           />
         </div>
         <p className="cf-row-detail">

@@ -577,18 +577,19 @@ body.cf-nav-open { overflow: hidden; }
 
 /* Billing period progress bar. Inside a KPI tile it runs thin and flush
    with the tile bottom; standalone (billing view) it stays 8px. */
+/* The month as an equation (operator 2026-10-13): base + overage = total,
+   each amount with its name beneath, muted operators between the parts. */
 .cf-cost {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-5);
+  gap: var(--space-2) var(--space-3);
   margin: var(--space-2) 0 var(--space-4);
 }
-.cf-cost-base {
+.cf-cost-part {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .cf-cost-amount {
   font-family: var(--font-data);
@@ -598,43 +599,73 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--text);
   line-height: 1.05;
 }
+.cf-cost-amount.is-overage { color: var(--sev-warning); }
+.cf-cost-amount.is-clear { color: var(--muted); font-weight: 500; }
+.cf-cost-amount.is-total { font-size: 30px; }
 .cf-cost-plan {
   color: var(--muted);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.cf-cost-side {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: flex-end;
-  text-align: right;
-}
-.cf-cost-overage {
+.cf-cost-op {
   font-family: var(--font-data);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--sev-warning);
+  font-size: var(--text-lg);
+  color: var(--muted);
+  padding-top: 4px;
 }
-.cf-cost-overage.is-clear { color: var(--muted); }
-.cf-cost-total {
-  font-family: var(--font-data);
-  font-size: var(--text-base);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
+/* Period track (operator 2026-10-13): the same instrument language as the
+   status bar — inset-edged track, gradient fill, traveling head dot, and
+   the hot state at >=80% of the cycle. */
 .cf-progress {
-  height: 8px;
+  position: relative;
+  height: 10px;
   background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--border);
   border-radius: var(--radius-pill);
   overflow: hidden;
 }
 .cf-progress-fill {
+  position: relative;
   height: 100%;
-  background: var(--accent);
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.7), var(--accent));
   border-radius: var(--radius-pill);
+  transition: transform var(--dur-med) var(--ease-out);
+}
+.cf-progress-fill::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+.cf-progress.is-hot .cf-progress-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, var(--sev-critical)), var(--sev-critical));
+}
+.cf-progress.is-hot .cf-progress-fill::after {
+  background: var(--sev-critical);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sev-critical) 80%, transparent);
+}
+/* The big card-level 24/30 counter (status bar lockup, scaled up). */
+.cf-cycle-lg {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin: var(--space-1) 0 var(--space-3);
+}
+.cf-cycle-lg .cf-cycle-day {
+  font-size: 30px;
+  line-height: 1;
+}
+.cf-cycle-lg .cf-cycle-total {
+  font-size: var(--text-md, 14px);
 }
 
 /* Meters (billing products). */

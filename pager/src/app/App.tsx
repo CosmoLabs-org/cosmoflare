@@ -437,6 +437,15 @@ export default function App(): React.JSX.Element {
     refreshFn();
   }, [refreshFn]);
 
+  // Update checks on open (operator 2026-10-13): iOS only re-fetches sw.js
+  // on its own schedule; forcing reg.update() at every open means a deploy
+  // that landed while the app was closed still installs now — and the
+  // UpdateModal (controllerchange) offers the reload.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.getRegistration().then((reg) => reg?.update()).catch(() => undefined);
+  }, []);
+
   // Live alert appearance (operator 2026-10-12): when the service worker
   // lands a push, it messages every open window — re-run the active view's
   // refresh so a fire shows up while the app is open, not on next open.
