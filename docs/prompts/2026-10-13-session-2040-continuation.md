@@ -3,7 +3,7 @@ title: "Session 2040 Continuation — full design review + finish what we starte
 created: 2026-10-13T00:30:00+04:00
 status: PENDING
 branch: master
-goals_total: 8
+goals_total: 9
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-12-session-2037-continuation.md"
 schema_version: 1
@@ -43,6 +43,9 @@ Have the operator confirm: sticky tab bar under scroll (iOS backdrop-filter fix)
 
 ### [ ] G-08 Critique minor items
 timeAgo goes stale on long-lived screens (needs a tick); card h2 hierarchy (12px uppercase muted vs masthead); RulesView draft Delete needs the arm/confirm convention.
+
+### [ ] G-09 Gate + merge the two in-flight quick-win agents
+Dispatched at session close (2026-10-13, not yet returned): one CSS craft agent (description-line font, lever label legibility, card heading weight) and one TSX agent (AlertsView 60s time-ago tick + RulesView two-step draft delete). Find them via `ccs glm-agent status` (the two newest, running/done), review each diff, re-run pager gates in the worktrees, S334-gate, and `ccs merge` both.
 
 ## Carry-Over Tasks
 
