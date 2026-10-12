@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, type ProductUsage, type Summary } from "../../api";
+import type { EmailRoutingPayload } from "../../email";
 import { ATTENTION_CAP, capAttention, collectAttention, type AttentionItem } from "../../attention";
 import { isRollingStorage } from "../../billing";
 import { formatPct, formatUsd, periodProgress } from "../../format";
@@ -102,6 +103,7 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [showAllRings, setShowAllRings] = useState(false);
   const [retryTick, setRetryTick] = useState(0);
+  const [email, setEmail] = useState<EmailRoutingPayload | null>(null);
   const reduced = useReducedMotion();
 
   // A background revalidation repaints the view with the fresh data
@@ -154,6 +156,23 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
       cancelled = true;
     };
   }, [refreshSeq, retryTick, repaint]);
+
+  // Email Routing (FEAT-059): a side fetch that must NOT gate the first
+  // paint or the error states — the collector is operator-gated (Email
+  // Routing Read), so an errors-only payload or a failed fetch simply
+  // leaves the card off the overview.
+  useEffect(() => {
+    let cancelled = false;
+    void api.fetchJson<EmailRoutingPayload>("api/email", { refresh: refreshSeq > 0 }).then(
+      (res) => {
+        if (!cancelled) setEmail(res.data);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshSeq, retryTick]);
 
   // Bottom status strip (UI-1): the worst age across both endpoints (the
   // honest client copy age + server cache age) plus the billing-period day.
@@ -274,6 +293,33 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
           level={attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"}
         />
       </div>
+
+      {/* Email Routing (FEAT-059): rendered ONLY when the collector returned
+          zones — an errors-only payload (token without Email Routing Read)
+          keeps the overview unchanged, the same gate the AI view applies
+          before painting gateway cards. */}
+      {email !== null && email.zones.length > 0 ? (
+        <section className="cf-card" aria-label="Email Routing">
+          <h2>Email Routing</h2>
+          <div className="cf-kpi cf-level-ok" role="group">
+            <div className="cf-kpi-value">{`${email.zones.filter((z) => z.enabled).length}/${email.zones.length}`}</div>
+            <div className="cf-kpi-label">zones with routing enabled</div>
+          </div>
+          <ul className="cf-consumers-list">
+            {email.zones.map((z) => (
+              <li className="cf-consumer" key={z.zone}>
+                <span className="cf-consumer-who">
+                  <span className="cf-consumer-name">{z.name ?? z.zone}</span>
+                  {z.name && z.name !== z.zone ? <span className="cf-consumer-project">{z.zone}</span> : null}
+                </span>
+                <span className="cf-consumer-sharewrap">
+                  <span className="cf-chip">{z.enabled ? "enabled" : "disabled"}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="cf-card">
         <h2>Workers Paid allowances</h2>

@@ -126,3 +126,68 @@ describe("OverviewView (P-04)", () => {
     expect(document.querySelector(".cf-card.cf-level-warning")).toBeNull();
   });
 });
+
+// FEAT-059: the Email Routing card renders only when the /api/email
+// collector returned zones — an errors-only payload (the token lacks
+// Email Routing Read) or a failed fetch must leave the overview unchanged.
+describe("OverviewView email card (FEAT-059)", () => {
+  const fx = makeFixtures(new Date());
+
+  function mockEndpoints(email: unknown | null, fail = false): void {
+    vi.spyOn(api, "fetchJson").mockImplementation(async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+      if (fail || endpoint === "api/email" && email === null) throw new Error("HTTP 503");
+      const data = endpoint === "api/billing" ? fx.billing : endpoint === "api/email" ? email : fx.summary;
+      return { data: data as unknown as T, source: "network", ageSec: 0, demo: false };
+    });
+  }
+
+  it("renders the tile + per-zone rows when the collector returns zones", async () => {
+    installStatusStrip();
+    mockEndpoints({
+      generatedAt: "2026-10-11T12:00:00.000Z",
+      zones: [
+        { zone: "cosmolabs.org", enabled: true, name: "cosmolabs.org" },
+        { zone: "noble.coffee", enabled: false },
+      ],
+      errors: [],
+    });
+    render(<OverviewView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-kpis")).toBeTruthy();
+    });
+    const card = document.querySelector('section[aria-label="Email Routing"]');
+    expect(card).toBeTruthy();
+    expect(card?.querySelector("h2")?.textContent).toBe("Email Routing");
+    // The summary tile: enabled zones over total.
+    expect(card?.querySelector(".cf-kpi-value")?.textContent).toBe("1/2");
+    // One row per zone, the enabled/disabled chip as the data face.
+    const rows = card?.querySelectorAll(".cf-consumers-list .cf-consumer");
+    expect(rows?.length).toBe(2);
+    expect(rows?.[0].querySelector(".cf-consumer-name")?.textContent).toBe("cosmolabs.org");
+    expect(rows?.[0].querySelector(".cf-chip")?.textContent).toBe("enabled");
+    expect(rows?.[1].querySelector(".cf-consumer-name")?.textContent).toBe("noble.coffee");
+    expect(rows?.[1].querySelector(".cf-chip")?.textContent).toBe("disabled");
+  });
+
+  it("stays absent when the collector returns an errors-only payload", async () => {
+    installStatusStrip();
+    mockEndpoints({ generatedAt: "2026-10-11T12:00:00.000Z", zones: [], errors: ["email routing unavailable for cosmolabs.org: HTTP 403"] });
+    render(<OverviewView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-kpis")).toBeTruthy();
+    });
+    expect(document.querySelector('section[aria-label="Email Routing"]')).toBeNull();
+  });
+
+  it("stays absent when the /api/email fetch fails", async () => {
+    installStatusStrip();
+    // email=null makes ONLY api/email throw (see the helper); summary and
+    // billing must still resolve so the view renders at all.
+    mockEndpoints(null);
+    render(<OverviewView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-kpis")).toBeTruthy();
+    });
+    expect(document.querySelector('section[aria-label="Email Routing"]')).toBeNull();
+  });
+});
