@@ -30,13 +30,14 @@
 :root {
   color-scheme: dark;
 
-  /* Surfaces: neutrals tinted toward the amber accent — no pure mid-greys. */
-  --bg: #1a1611;
-  --surface: #251f16;
-  --surface-raised: #2f2820;
-  --border: #3e362a;
-  --text: #f1ede4;
-  --muted: #a79e8f;
+  /* Surfaces: neutral dark grey (operator 2026-10-12, cyberpunk command
+     center) — amber accent and severity hues unchanged, glows on grey. */
+  --bg: #0c0d0f;
+  --surface: #131518;
+  --surface-raised: #1a1d21;
+  --border: #262a30;
+  --text: #e8eaed;
+  --muted: #9aa1ab;
   --accent: #f5a623;
   --focus: #7dd3fc;
   --sev-info: #7dd3fc;
@@ -473,12 +474,12 @@ body.cf-nav-open { overflow: hidden; }
    dark surface — no gradients. */
 .cf-btn-primary {
   background: var(--accent);
-  color: #1a1611;
+  color: #0c0d0f;
   font-weight: 700;
 }
 .cf-btn-primary:hover {
   filter: none;
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 .cf-btn-primary:active { background: color-mix(in srgb, var(--accent) 85%, #000); }
 
@@ -561,10 +562,10 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-btn-danger:hover { background: color-mix(in srgb, var(--sev-critical) 12%, transparent); }
 .cf-btn-danger:active { background: color-mix(in srgb, var(--sev-critical) 20%, transparent); }
-.cf-btn-danger-filled { background: var(--sev-critical); border-color: var(--sev-critical); color: #1a1611; font-weight: 700; }
+.cf-btn-danger-filled { background: var(--sev-critical); border-color: var(--sev-critical); color: #0c0d0f; font-weight: 700; }
 .cf-btn-danger-filled:hover {
   filter: none;
-  box-shadow: 0 0 14px color-mix(in srgb, var(--sev-critical) 45%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sev-critical) 60%, transparent);
 }
 
 /* Size variant: the pairing enable CTA — 44px touch target minimum. */
@@ -2165,7 +2166,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   height: 3px;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--section-color, var(--accent)) 55%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent);
   transform: scaleX(0);
   transform-origin: 50% 50%;
   transition: transform 320ms var(--ease-out);
@@ -2395,7 +2396,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   border-radius: var(--radius);
   background: var(--surface-raised);
   color: var(--section-color, var(--accent));
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--section-color, var(--accent)) 45%, transparent));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--section-color, var(--accent)) 60%, transparent));
   flex: none;
 }
 .cf-sectionhead-title {
@@ -2433,7 +2434,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    bar and its glow, nothing else. */
 .cf-quicknav-link[aria-current="page"]::after {
   background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--section-color, var(--accent)) 55%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent);
 }
 .cf-quicknav-label {
   font-family: var(--font-indicator);
