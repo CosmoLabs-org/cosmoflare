@@ -1,8 +1,9 @@
 // Bottom status strip (UI-1, operator request 2026-10-10): one global
-// "updated X ago" line plus the billing-period day ("day eighteen out of
-// thirty"), pinned to the bottom of the shell. The per-view status bars are
-// gone — this strip replaces them. Pure formatting helpers are split from
-// the DOM writers so they test in the node vitest environment.
+// "updated X ago" line plus the billing-period day counter ("24/30",
+// IMP-pSZEMZP operator request 2026-10-12), pinned to the bottom of the
+// shell. The per-view status bars are gone — this strip replaces them. Pure
+// formatting helpers are split from the DOM writers so they test in the
+// node vitest environment.
 
 /** formatAgeText renders a data age honestly: "just now" under a minute,
  *  then Xm, Xh, Xd. Floor, never round up — "59m ago" must not read as an
@@ -14,11 +15,13 @@ export function formatAgeText(ageSec: number): string {
   return `${Math.floor(ageSec / 86400)}d ago`;
 }
 
-/** periodText renders the billing-period progress — "Day 3 of 30" — or null
- *  when the period is unknown (the span stays hidden rather than guessing). */
-export function periodText(day?: number, days?: number): string | null {
+/** periodMarkup renders the billing-period counter lockup — the day number
+ *  and the "/total" as separate spans (styled by .cf-cycle-day/.cf-cycle-total)
+ *  — or null when the period is unknown (the span stays hidden rather than
+ *  guessing). */
+export function periodMarkup(day?: number, days?: number): string | null {
   if (day === undefined || days === undefined) return null;
-  return `Day ${day} of ${days}`;
+  return `<span class='cf-cycle-day'>${day}</span><span class='cf-cycle-total'>/${days}</span>`;
 }
 
 // Last painted data age and the wall-clock time it was painted, so the
@@ -39,12 +42,12 @@ export function updateStatusStrip(info: { ageSec: number | null; day?: number; d
   const right = document.getElementById("cf-status-right");
   const period = document.getElementById("cf-status-period");
   const bar = document.getElementById("cf-status-bar");
-  const text = periodText(info.day, info.days);
+  const markup = periodMarkup(info.day, info.days);
   if (period) {
-    period.textContent = text ?? "";
-    period.hidden = text === null;
+    period.innerHTML = markup ?? "";
+    period.hidden = markup === null;
   }
-  if (right) right.hidden = text === null;
+  if (right) right.hidden = markup === null;
   if (bar && info.days !== undefined && info.days > 0) {
     (bar as HTMLElement).style.transform = `scaleX(${Math.min(1, Math.max(0, (info.day ?? 0) / info.days))})`;
   } else if (bar) {
