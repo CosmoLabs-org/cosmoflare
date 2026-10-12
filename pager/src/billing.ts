@@ -26,6 +26,25 @@ export function meterPct(p: ProductUsage): { usedPct: number; projectedPct: numb
  * "no overage" when there is not — the pair (grade + overage) stays complete
  * and same-size on every card instead of overage appearing only on some.
  */
+/**
+ * The plan's monthly base price — public Cloudflare pricing, not an API
+ * metric (the token cannot read subscriptions; verified 2026-10-09). The
+ * billing header shows it as the base under the amount (operator
+ * 2026-10-12: "$5.00 with 'Workers Paid' at the bottom as the base cost").
+ */
+export const WORKERS_PAID_PLAN = "Workers Paid";
+export const WORKERS_PAID_BASE_USD = 5;
+
+/** Sum of every product's projected overage — the month's metered risk. */
+export function projectedOverageTotal(products: ProductUsage[]): number {
+  return products.reduce((sum, p) => sum + (p.projectedOverageUsd > 0 ? p.projectedOverageUsd : 0), 0);
+}
+
+/** Base + projected overage: the whole month at current pace. */
+export function projectedMonthlyTotal(products: ProductUsage[]): number {
+  return WORKERS_PAID_BASE_USD + projectedOverageTotal(products);
+}
+
 export function overageHeadText(p: ProductUsage): string {
   return p.projectedOverageUsd > 0 ? `+${formatUsd(p.projectedOverageUsd)} overage` : "no overage";
 }

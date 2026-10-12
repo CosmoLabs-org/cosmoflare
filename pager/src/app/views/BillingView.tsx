@@ -11,7 +11,13 @@ import { motion, useReducedMotion } from "framer-motion";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type BillingPeriod, type FetchResult, type ProductUsage } from "../../api";
 import { formatAmount, formatPct, formatUsd, formatDateShort, periodProgress } from "../../format";
 import { productLabel, scaleFitPct } from "../../gauges";
-import { isRollingStorage } from "../../billing";
+import {
+  isRollingStorage,
+  projectedMonthlyTotal,
+  projectedOverageTotal,
+  WORKERS_PAID_BASE_USD,
+  WORKERS_PAID_PLAN,
+} from "../../billing";
 import { updateStatusStrip } from "../../statusstrip";
 import BarGauge from "../components/BarGauge";
 
@@ -181,9 +187,25 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
 
       <p className="cf-row-detail">Real usage against your plan allowances. Projections assume current pace to the period end.</p>
 
-      {/* Period progress */}
+      {/* Period + monthly cost (operator 2026-10-12): the base price with
+          its plan name UNDER the amount, the projected overage beside it,
+          and the whole month at current pace as one total. */}
       <section className="cf-card">
         <h2>{`Billing period — day ${b.period.day} of ${b.period.days}`}</h2>
+        <div className="cf-cost">
+          <div className="cf-cost-base">
+            <span className="cf-cost-amount">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
+            <span className="cf-cost-plan">{`${WORKERS_PAID_PLAN} · base`}</span>
+          </div>
+          <div className="cf-cost-side">
+            {projectedOverageTotal(b.products) > 0 ? (
+              <span className="cf-cost-overage">{`+ ${formatUsd(projectedOverageTotal(b.products))} projected overage`}</span>
+            ) : (
+              <span className="cf-cost-overage is-clear">no overage projected</span>
+            )}
+            <span className="cf-cost-total">{`≈ ${formatUsd(projectedMonthlyTotal(b.products))} this month`}</span>
+          </div>
+        </div>
         <div className="cf-progress">
           <div
             className="cf-progress-fill"

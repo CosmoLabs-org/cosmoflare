@@ -66,7 +66,7 @@
      labels; the data face is a softer grotesk for figures. Space Grotesk
      (squarer) remains the display/fallback role. */
   --font-indicator: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --font-data: "Schibsted Grotesk", "Space Grotesk", var(--font-body);
+  --font-data: "JetBrains Mono", "Spline Sans Mono", "Schibsted Grotesk", var(--font-body);
   --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   /* Brand + navigation face (operator 2026-10-10: "clean sans serif and
      round") — Nunito for the lockup and nav links; numbers stay Space
@@ -577,6 +577,54 @@ body.cf-nav-open { overflow: hidden; }
 
 /* Billing period progress bar. Inside a KPI tile it runs thin and flush
    with the tile bottom; standalone (billing view) it stays 8px. */
+.cf-cost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-2) 0 var(--space-4);
+}
+.cf-cost-base {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cf-cost-amount {
+  font-family: var(--font-data);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1.05;
+}
+.cf-cost-plan {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cf-cost-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+  text-align: right;
+}
+.cf-cost-overage {
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--sev-warning);
+}
+.cf-cost-overage.is-clear { color: var(--muted); }
+.cf-cost-total {
+  font-family: var(--font-data);
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
 .cf-progress {
   height: 8px;
   background: var(--surface-raised);
@@ -1788,7 +1836,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-ring-value {
   fill: var(--accent);
   font-family: var(--font-data);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -1798,22 +1846,22 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-ring-usedpct {
   fill: var(--muted);
   font-family: var(--font-indicator);
-  font-size: 9px;
-  letter-spacing: 0.06em;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .cf-ring-sub {
   fill: var(--muted);
   font-family: var(--font-indicator);
-  font-size: 9px;
-  letter-spacing: 0.06em;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .cf-ring-label {
   fill: var(--muted);
   font-family: var(--font-indicator);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 /* Today dot: a 3px point ON the track at the expected-to-date angle — not
@@ -1825,9 +1873,20 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    custom properties come inline from gauges.ts — stroke-dasharray is a
    paint-only property, no layout shift), bars via scaleX. Both 600ms
    ease-out. */
-.cf-anim-used,
+.cf-anim-used {
+  animation: cf-ring-in 900ms var(--ease-out) both;
+}
+/* The projection trails the used arc (operator 2026-10-13): draws in
+   fading, a beat after the solid arc — the eye reads used→projected. */
 .cf-anim-projected {
-  animation: cf-ring-in 600ms var(--ease-out);
+  animation: cf-ring-in 800ms var(--ease-out) 260ms both;
+}
+.cf-ring-today {
+  animation: cf-ring-dot 420ms var(--ease-out) 620ms both;
+}
+@keyframes cf-ring-dot {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Bar gauges (billing view). Track scale fits max(used, projected, included);
@@ -2033,7 +2092,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     animation: none;
     transform: scaleX(1); /* still marks the section — without the sweep */
   }
-  .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon { transform: none; }
+  .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon { transform: scale(1.16); animation: none; }
   .cf-btn, .cf-btn:active { transform: none; }
   .cf-skeleton,
   .cf-pairing-glyph .cf-wave,
@@ -2201,15 +2260,24 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-bottomtab[aria-current="page"] {
   color: var(--section-color, var(--accent));
-  font-weight: 700;
-  /* The selected tab reads as selected at a glance (operator 2026-10-12):
-     label grows AND the icon-label gap opens up, not just a color change. */
+  font-weight: 600;
   font-size: var(--text-xs);
-  gap: 5px;
+  /* More separation under the icon (operator 2026-10-13) and a little
+     headroom so the grown icon never kisses the glow line. */
+  gap: 7px;
   letter-spacing: 0.02em;
+  padding-top: 5px;
 }
+/* Activation: accelerate up, overshoot, settle (operator 2026-10-13) — a
+   transient pulse, then the calm selected state rests at a modest grow. */
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon {
-  transform: scale(1.32);
+  transform: scale(1.16);
+  animation: cf-tab-pop 420ms cubic-bezier(0.34, 1.36, 0.42, 1) both;
+}
+@keyframes cf-tab-pop {
+  0% { transform: scale(0.92); }
+  55% { transform: scale(1.3); }
+  100% { transform: scale(1.16); }
 }
 .cf-bottomtab[aria-current="page"]::after {
   animation: cf-tab-sweep 420ms var(--ease-out) both;

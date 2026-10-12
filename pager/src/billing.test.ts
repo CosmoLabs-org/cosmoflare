@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { gradeLabel, overageHeadText } from "./billing";
+import { gradeLabel, overageHeadText,
+  projectedMonthlyTotal,
+  projectedOverageTotal,
+  WORKERS_PAID_BASE_USD,
+  WORKERS_PAID_PLAN,
+} from "./billing";
 import type { ProductUsage } from "./api";
 
 // Operator 2026-10-10 (Workers Paid section): every product card head shows
@@ -39,5 +44,17 @@ describe("gradeLabel (grade half of the pair)", () => {
   it("matches the gauge's own level decision (the badge and the chip agree)", () => {
     expect(gradeLabel(0, 76).level).toBe("warning");
     expect(gradeLabel(0, 91).level).toBe("critical");
+  });
+});
+
+describe("monthly cost totals (operator 2026-10-12)", () => {
+  const over = (usd: number): ProductUsage => ({ projectedOverageUsd: usd } as ProductUsage);
+  it("sums only positive projected overages", () => {
+    expect(projectedOverageTotal([over(1.44), over(0), over(0.5)])).toBeCloseTo(1.94, 9);
+  });
+  it("monthly total = Workers Paid base + overage", () => {
+    expect(projectedMonthlyTotal([over(1.44)])).toBeCloseTo(6.44, 9);
+    expect(projectedMonthlyTotal([])).toBe(WORKERS_PAID_BASE_USD);
+    expect(WORKERS_PAID_PLAN).toBe("Workers Paid");
   });
 });

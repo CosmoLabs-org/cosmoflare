@@ -27,6 +27,12 @@ describe("BillingView (P-04)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-product")).toBeTruthy();
     });
+    // Cost lockup (operator 2026-10-12): base under the amount, overage +
+    // month total beside it — all from the same fixture the cards use.
+    expect(document.querySelector(".cf-cost-amount")?.textContent).toBe("$5.00");
+    expect(document.querySelector(".cf-cost-plan")?.textContent).toBe("Workers Paid · base");
+    expect(document.querySelector(".cf-cost-overage")?.textContent).toBeTruthy();
+    expect(document.querySelector(".cf-cost-total")?.textContent).toContain("this month");
     const cards = document.querySelectorAll(".cf-product");
     expect(cards.length).toBe(4); // all fixture products but kv.storage
     for (const card of Array.from(cards)) {
