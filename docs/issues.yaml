@@ -1,10 +1,10 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T19:29:05.027307+04:00
+last_updated: 2026-10-12T22:50:59.243338+04:00
 next_bug_id: 64
 next_feat_id: 80
 next_task_id: 18
-next_imp_id: 5
+next_imp_id: 6
 issues:
     - id: BUG-001
       type: bug
@@ -701,7 +701,7 @@ issues:
       created_at: 2026-10-10T04:17:33.32696+04:00
     - id: FEAT-058
       type: feature
-      status: open
+      status: closed
       title: Stable error codes in --json error output
       created_at: 2026-10-10T00:33:01.434889+04:00
     - id: FEAT-059
@@ -781,24 +781,29 @@ issues:
       created_at: 2026-10-10T18:22:08.661264+04:00
     - id: FEAT-p2H8GZ6
       type: feature
-      status: open
+      status: closed
       title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
       created_at: 2026-10-12T03:39:51.93768+04:00
     - id: FEAT-pCT8CT2
       type: feature
-      status: open
+      status: closed
       title: Tab bar polish + reusable lever buttons with labels
       created_at: 2026-10-12T19:29:01.401583+04:00
     - id: FEAT-pEWA6N6
       type: feature
-      status: open
+      status: closed
       title: 'Ops domain & zone lifecycle: inventory + reversible detach + gated zone deletion (Noble.Coffee)'
       created_at: 2026-10-11T20:55:27.88521+04:00
     - id: FEAT-pRXPMMY
       type: feature
-      status: open
+      status: closed
       title: 'PWA offline app-shell: native-feel launches without network'
       created_at: 2026-10-11T11:58:41.630836+04:00
+    - id: FEAT-pRZVE8Y
+      type: feature
+      status: open
+      title: 'Ops retheme: cyberpunk command center — dark grays, glows, micro-animations'
+      created_at: 2026-10-12T20:42:54.061845+04:00
     - id: FEAT-pT0AFDM
       type: feature
       status: open
@@ -806,7 +811,7 @@ issues:
       created_at: 2026-10-11T20:45:23.485653+04:00
     - id: FEAT-pXNQ5GW
       type: feature
-      status: open
+      status: closed
       title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
       created_at: 2026-10-11T11:58:29.12449+04:00
     - id: IMP-001
@@ -833,6 +838,11 @@ issues:
       status: open
       title: 'Ops UI: reusable components + progress-bar and micro-animation polish'
       created_at: 2026-10-10T03:26:35.343956+04:00
+    - id: IMP-pSZEMZP
+      type: improvement
+      status: open
+      title: 'Billing cycle typography: ''day 24 of 30'' lockup needs a proper design'
+      created_at: 2026-10-12T20:43:00.354952+04:00
     - id: TASK-001
       type: task
       status: closed
@@ -915,7 +925,7 @@ issues:
       created_at: 2026-09-20T02:18:26.823559+04:00
     - id: TASK-017
       type: task
-      status: open
+      status: closed
       title: add
       created_at: 2026-10-10T23:21:34.324088+04:00
     - id: TASK-pD575FN

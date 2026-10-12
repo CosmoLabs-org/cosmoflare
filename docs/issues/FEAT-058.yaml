@@ -1,12 +1,12 @@
 id: FEAT-058
 type: feature
 created_at: 2026-10-10T00:33:01.434889+04:00
-updated_at: 2026-10-10T03:10:42.996603+04:00
+updated_at: 2026-10-12T22:50:59.238169+04:00
 source: local
 ulid: 01M4H5X0ZS3T27RH2PGP8KYM5K
 aliases:
     - FEAT-p8KYM5K
-status: open
+status: closed
 origin:
     roadmap_items:
         - ROAD-102
@@ -19,3 +19,7 @@ acceptance_criteria:
 roadmap_ref: ROAD-102
 resolution:
     notes: 'Wave 1 landed on master cbd6ea2/c01dc52: internal/cli/errors.go (8 stable codes, CodeFor classification, CodedError), JSON envelope extends the historical error shape with error_code (human mode byte-identical). REMAINING wave 2: explicit CodedError wraps at r2/kv/dns/d1/workers failure sites + USAGE.md codes table.'
+revisions:
+    - date: "2026-10-12T22:50:59.236778+04:00"
+      action: closed
+# Closed 2026-10-12: wave 2 complete — slice A (kv/r2 construction, credErrorCode), slice B (dns/d1/zones runners+getters), slice C (workers wraps + USAGE codes table). Merged via 24691f8, 1309a2a, 1c7c246 after three provider-death salvage rounds.
