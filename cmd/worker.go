@@ -11,6 +11,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
@@ -174,7 +175,14 @@ func init() {
 }
 
 func getWorkerService() (*cosmoflare.WorkerService, error) {
-	return cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+	svc, err := cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		// Coded (FEAT-058 wave 2c): construction failures carry a stable
+		// machine-readable code for the --json envelope; human output
+		// unchanged.
+		return nil, cli.NewCoded(credErrorCode(err), err)
+	}
+	return svc, nil
 }
 
 // filterWorkersByProfile keeps only workers whose name carries the active
@@ -191,12 +199,15 @@ func filterWorkersByProfile(workers []*cosmoflare.Worker) []*cosmoflare.Worker {
 
 func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("worker name is required")
+		// FEAT-058 wave 2c: local validation failures carry a stable code;
+		// human mode returns the identical error message.
+		return outErrCodef(cli.CodeValidationError, "worker name is required")
 	}
 	name := args[0]
 
 	if workerScript == "" {
-		return fmt.Errorf("script file is required (--script or -s)")
+		// FEAT-058 wave 2c: stable code for missing required flag.
+		return outErrCodef(cli.CodeValidationError, "script file is required (--script or -s)")
 	}
 
 	svc, err := getWorkerService()
@@ -206,7 +217,9 @@ func runWorkerDeploy(cmd *cobra.Command, args []string) error {
 
 	f, err := os.Open(workerScript)
 	if err != nil {
-		return outErr("failed to open script file", err)
+		// FEAT-058 wave 2c: a bad --script path is user input failure.
+		// Message is identical to the previous outErr form.
+		return outErrCodef(cli.CodeValidationError, "failed to open script file: %v", err)
 	}
 	defer f.Close()
 
@@ -284,7 +297,9 @@ func runWorkerList(cmd *cobra.Command, args []string) error {
 
 func runWorkerGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("worker name is required")
+		// FEAT-058 wave 2c: local validation failures carry a stable code;
+		// human mode returns the identical error message.
+		return outErrCodef(cli.CodeValidationError, "worker name is required")
 	}
 	name := args[0]
 
@@ -319,7 +334,9 @@ func runWorkerGet(cmd *cobra.Command, args []string) error {
 
 func runWorkerDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("worker name is required")
+		// FEAT-058 wave 2c: local validation failures carry a stable code;
+		// human mode returns the identical error message.
+		return outErrCodef(cli.CodeValidationError, "worker name is required")
 	}
 	name := args[0]
 
@@ -351,7 +368,9 @@ func runWorkerDelete(cmd *cobra.Command, args []string) error {
 
 func runWorkerLogs(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("worker name is required")
+		// FEAT-058 wave 2c: local validation failures carry a stable code;
+		// human mode returns the identical error message.
+		return outErrCodef(cli.CodeValidationError, "worker name is required")
 	}
 	name := args[0]
 
@@ -445,7 +464,9 @@ func runWorkerLogsFollow(cmd *cobra.Command, svc *cosmoflare.WorkerService, name
 
 func runWorkerSettings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("worker name is required")
+		// FEAT-058 wave 2c: local validation failures carry a stable code;
+		// human mode returns the identical error message.
+		return outErrCodef(cli.CodeValidationError, "worker name is required")
 	}
 	name := args[0]
 

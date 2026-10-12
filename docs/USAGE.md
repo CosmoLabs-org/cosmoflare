@@ -67,6 +67,23 @@ Cosmoflare is a CLI tool for managing the full Cloudflare developer platform: R2
 - [Analytics](#analytics)
 - [Config Profile Commands](#config-profile-commands)
 
+## Error codes (FEAT-058)
+
+Every `--json` error response carries a stable machine-readable `error_code` alongside the actionable message (human-mode output is unchanged). Codes (defined in `internal/cli/errors.go`):
+
+| Code | Meaning | Typical trigger |
+|------|---------|-----------------|
+| `AUTH_MISSING_TOKEN` | No API token in the environment/config | Run `cosmoflare auth login` or set `CF_API_TOKEN` |
+| `AUTH_INVALID_TOKEN` | The token was rejected or malformed | Re-issue the token in the dashboard |
+| `CONFIG_MISSING` | A required config value is absent (e.g. account ID) | Run `cosmoflare init` or set `CLOUDFLARE_ACCOUNT_ID` |
+| `CONFIG_INVALID` | A config value failed validation | Check `.cosmoflare.yaml` |
+| `VALIDATION_ERROR` | Command arguments/flags failed local validation | See the message for the missing argument |
+| `NETWORK_ERROR` | Transport failure reaching the API | Check connectivity, retry |
+| `API_ERROR` | The Cloudflare API rejected the call | The message carries the API's own error text |
+| `RESOURCE_NOT_FOUND` | The named bucket/zone/record/database does not exist | Check the name/ID and the account |
+
+Service construction across kv/r2/dns/d1/zones/workers wraps failures with these codes (`credErrorCode` classifies missing credentials); command runners emit `VALIDATION_ERROR` for missing arguments and flags.
+
 ## Setup
 
 Set environment variables:
