@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli/ux"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
@@ -159,13 +160,24 @@ func init() {
 	dnsDeleteCmd.Flags().BoolVar(&dnsForce, "force", false, "Skip confirmation prompt")
 }
 
+// getDNSService builds the DNS service, attaching stable machine-readable
+// error codes (FEAT-058 wave 2): a missing token maps to AUTH_MISSING_TOKEN,
+// any other construction failure (e.g. an empty zone ID) to VALIDATION_ERROR.
+// The CodedError wrap preserves the message, so human output is unchanged.
 func getDNSService(zoneID string) (*cosmoflare.DNSService, error) {
-	return cosmoflare.NewDNSServiceFromCreds(zoneID, APIToken)
+	svc, err := cosmoflare.NewDNSServiceFromCreds(zoneID, APIToken)
+	if err != nil {
+		if APIToken == "" {
+			return nil, cli.NewCoded(cli.CodeAuthMissingToken, err)
+		}
+		return nil, cli.NewCoded(cli.CodeValidationError, err)
+	}
+	return svc, nil
 }
 
 func runDNSCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone ID is required")
+		return outErrCodef(cli.CodeValidationError, "zone ID is required")
 	}
 	zoneID := args[0]
 
@@ -221,7 +233,7 @@ func runDNSCreate(cmd *cobra.Command, args []string) error {
 
 func runDNSList(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone ID is required")
+		return outErrCodef(cli.CodeValidationError, "zone ID is required")
 	}
 	zoneID := args[0]
 
@@ -280,7 +292,7 @@ func runDNSList(cmd *cobra.Command, args []string) error {
 
 func runDNSGet(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("zone ID and record ID are required")
+		return outErrCodef(cli.CodeValidationError, "zone ID and record ID are required")
 	}
 	zoneID, recordID := args[0], args[1]
 
@@ -320,7 +332,7 @@ func runDNSGet(cmd *cobra.Command, args []string) error {
 
 func runDNSUpdate(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("zone ID and record ID are required")
+		return outErrCodef(cli.CodeValidationError, "zone ID and record ID are required")
 	}
 	zoneID, recordID := args[0], args[1]
 
@@ -339,7 +351,7 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(opts) == 0 {
-		return fmt.Errorf("at least one update flag is required (--ttl, --proxied, --priority, --comment)")
+		return outErrCodef(cli.CodeValidationError, "at least one update flag is required (--ttl, --proxied, --priority, --comment)")
 	}
 
 	svc, err := getDNSService(zoneID)
@@ -373,7 +385,7 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 
 func runDNSDelete(cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("zone ID and record ID are required")
+		return outErrCodef(cli.CodeValidationError, "zone ID and record ID are required")
 	}
 	zoneID, recordID := args[0], args[1]
 

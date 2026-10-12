@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
+	"io"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -618,5 +620,103 @@ func TestDNSDelete_FlagUsageNonEmpty(t *testing.T) {
 	}
 	if f.Usage == "" {
 		t.Error("--force has empty Usage string")
+	}
+}
+
+// --- FEAT-058 wave 2: stable error codes on dns failure paths ---
+
+// codedErrorCode decodes the JSON error envelope printed to captured stdout
+// and returns its stable machine-readable error_code. Shared by the dns/d1/
+// zone error-code tables. Also asserts the envelope shape (success=false,
+// non-empty error message).
+func codedErrorCode(t *testing.T, out []byte) string {
+	t.Helper()
+	var env struct {
+		Success   bool   `json:"success"`
+		Error     string `json:"error"`
+		ErrorCode string `json:"error_code"`
+	}
+	if err := json.Unmarshal(out, &env); err != nil {
+		t.Fatalf("stdout is not a parseable JSON error envelope: %v; raw: %q", err, out)
+	}
+	if env.Success {
+		t.Error("envelope success = true, want false")
+	}
+	if env.Error == "" {
+		t.Error("envelope error field is empty")
+	}
+	return env.ErrorCode
+}
+
+// TestDNSRunners_ErrorCodes asserts that the dns runners' main failure paths
+// (missing args, missing token) surface stable machine-readable error codes
+// in the --json error envelope (FEAT-058 wave 2).
+func TestDNSRunners_ErrorCodes(t *testing.T) {
+	savedJSON, savedDry, savedToken := JSONOutput, DryRun, APIToken
+	defer func() { JSONOutput, DryRun, APIToken = savedJSON, savedDry, savedToken }()
+	JSONOutput = true
+	DryRun = false
+
+	cases := []struct {
+		name     string
+		apiToken string
+		run      func() error
+		wantCode string
+	}{
+		{
+			name:     "create missing zone id",
+			apiToken: "test-token",
+			run:      func() error { return runDNSCreate(dnsCreateCmd, nil) },
+			wantCode: "VALIDATION_ERROR",
+		},
+		{
+			name:     "list missing zone id",
+			apiToken: "test-token",
+			run:      func() error { return runDNSList(dnsListCmd, nil) },
+			wantCode: "VALIDATION_ERROR",
+		},
+		{
+			name:     "get missing record id",
+			apiToken: "test-token",
+			run:      func() error { return runDNSGet(dnsGetCmd, []string{"zone123"}) },
+			wantCode: "VALIDATION_ERROR",
+		},
+		{
+			name:     "update no update flags",
+			apiToken: "test-token",
+			run:      func() error { return runDNSUpdate(dnsUpdateCmd, []string{"zone123", "rec456"}) },
+			wantCode: "VALIDATION_ERROR",
+		},
+		{
+			name:     "delete missing record id",
+			apiToken: "test-token",
+			run:      func() error { return runDNSDelete(dnsDeleteCmd, []string{"zone123"}) },
+			wantCode: "VALIDATION_ERROR",
+		},
+		{
+			name:     "list missing token",
+			apiToken: "",
+			run:      func() error { return runDNSList(dnsListCmd, []string{"zone123"}) },
+			wantCode: "AUTH_MISSING_TOKEN",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			APIToken = tc.apiToken
+			r, restore := captureStdout(t)
+			err := tc.run()
+			restore()
+
+			out, readErr := io.ReadAll(r)
+			if readErr != nil {
+				t.Fatalf("reading captured stdout failed: %v", readErr)
+			}
+			if err == nil {
+				t.Fatalf("expected error, got nil; stdout: %q", out)
+			}
+			if code := codedErrorCode(t, out); code != tc.wantCode {
+				t.Errorf("error_code = %q, want %q", code, tc.wantCode)
+			}
+		})
 	}
 }

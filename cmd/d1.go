@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -130,8 +131,24 @@ func init() {
 	_ = d1QueryCmd.MarkFlagRequired("sql")
 }
 
+// getD1Service builds the D1 service, attaching stable machine-readable
+// error codes (FEAT-058 wave 2): a missing token maps to AUTH_MISSING_TOKEN,
+// a missing account ID to CONFIG_MISSING, and any other construction
+// failure to VALIDATION_ERROR. The CodedError wrap preserves the message,
+// so human output is unchanged.
 func getD1Service() (*cosmoflare.D1Service, error) {
-	return cosmoflare.NewD1ServiceFromCreds(AccountID, APIToken)
+	svc, err := cosmoflare.NewD1ServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		switch {
+		case APIToken == "":
+			return nil, cli.NewCoded(cli.CodeAuthMissingToken, err)
+		case AccountID == "":
+			return nil, cli.NewCoded(cli.CodeConfigMissing, err)
+		default:
+			return nil, cli.NewCoded(cli.CodeValidationError, err)
+		}
+	}
+	return svc, nil
 }
 
 func runD1Create(cmd *cobra.Command, args []string) error {
@@ -256,10 +273,10 @@ func runD1Query(cmd *cobra.Command, args []string) error {
 	databaseID := args[0]
 
 	if d1SQL == "" {
-		return fmt.Errorf("--sql flag is required")
+		return outErrCodef(cli.CodeValidationError, "--sql flag is required")
 	}
 	if d1Local && d1Remote {
-		return fmt.Errorf("use only one of --local or --remote")
+		return outErrCodef(cli.CodeValidationError, "use only one of --local or --remote")
 	}
 	if d1Local {
 		return runD1QueryLocal(databaseID)

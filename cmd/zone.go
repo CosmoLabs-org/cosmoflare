@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -115,13 +116,29 @@ func init() {
 	zoneDeleteCmd.Flags().BoolVar(&zoneForce, "force", false, "Skip confirmation prompt")
 }
 
+// getZoneService builds the zone service, attaching stable machine-readable
+// error codes (FEAT-058 wave 2): a missing token maps to AUTH_MISSING_TOKEN,
+// a missing account ID to CONFIG_MISSING, and any other construction
+// failure to VALIDATION_ERROR. The CodedError wrap preserves the message,
+// so human output is unchanged.
 func getZoneService() (*cosmoflare.ZoneService, error) {
-	return cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
+	svc, err := cosmoflare.NewZoneServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		switch {
+		case APIToken == "":
+			return nil, cli.NewCoded(cli.CodeAuthMissingToken, err)
+		case AccountID == "":
+			return nil, cli.NewCoded(cli.CodeConfigMissing, err)
+		default:
+			return nil, cli.NewCoded(cli.CodeValidationError, err)
+		}
+	}
+	return svc, nil
 }
 
 func runZoneCreate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone name is required")
+		return outErrCodef(cli.CodeValidationError, "zone name is required")
 	}
 	name := args[0]
 
@@ -190,7 +207,7 @@ func runZoneList(cmd *cobra.Command, args []string) error {
 
 func runZoneGet(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone ID is required")
+		return outErrCodef(cli.CodeValidationError, "zone ID is required")
 	}
 	zoneID := args[0]
 
@@ -224,7 +241,7 @@ func runZoneGet(cmd *cobra.Command, args []string) error {
 
 func runZoneSettings(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone ID is required")
+		return outErrCodef(cli.CodeValidationError, "zone ID is required")
 	}
 	zoneID := args[0]
 
@@ -270,7 +287,7 @@ func runZoneSettings(cmd *cobra.Command, args []string) error {
 
 func runZoneDelete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("zone ID is required")
+		return outErrCodef(cli.CodeValidationError, "zone ID is required")
 	}
 	zoneID := args[0]
 
