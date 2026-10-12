@@ -851,6 +851,15 @@ body.cf-nav-open { overflow: hidden; }
    billing views; the gauge detail line reuses .cf-row-detail. */
 .cf-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
 .cf-row-detail { color: var(--muted); font-size: var(--text-sm); }
+/* View-intro description lines (operator 2026-10-12): a hint that directly
+   precedes a list or card gets breathing room below — no more
+   flush-against-the-list cramming, app-wide. */
+.cf-row-detail + section.cf-card,
+.cf-row-detail + .cf-feed,
+.cf-row-detail + .cf-alert-list,
+.cf-row-detail + div:not(.cf-loading) {
+  margin-top: var(--space-4);
+}
 .cf-row-value {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);
@@ -2204,6 +2213,10 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-quicknav {
     display: none;
   }
+  /* Sticky hardening (operator 2026-10-12): backdrop-filter ON a fixed
+     element breaks its tracking in iOS home-screen PWAs (the bar drifts
+     mid-page). The blur now lives on an inner ::before layer; the fixed
+     element itself stays filter-free, which WebKit composites correctly. */
   .cf-bottomtabs {
     position: fixed;
     inset-inline: 0;
@@ -2213,10 +2226,16 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     align-items: stretch;
     padding: 0 max(env(safe-area-inset-right), 4px) env(safe-area-inset-bottom)
       max(env(safe-area-inset-left), 4px);
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+    border-top: 1px solid var(--border);
+  }
+  .cf-bottomtabs::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-top: 1px solid var(--border);
   }
   .cf-bottomtab {
     flex: 1 1 0;
@@ -2271,14 +2290,17 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-statusbar-progress {
   display: inline-block;
-  width: 64px;
-  height: 2px;
+  width: 88px;
+  height: 6px;
   border-radius: var(--radius-pill);
   background: var(--surface-raised);
+  /* Track edge via inset shadow — a 1px border would eat the height. */
+  box-shadow: inset 0 0 0 1px var(--border);
   overflow: hidden;
 }
 /* Fill scales from the left (transform, not width — no layout thrash). */
 .cf-statusbar-fill {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -2288,6 +2310,30 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   transform-origin: left center;
   transform: scaleX(0);
   transition: transform var(--dur-med) var(--ease-out);
+}
+/* The traveling head dot rides the fill's leading edge — the eye tracks a
+   moving point far better than a growing edge (operator 2026-10-12). */
+.cf-statusbar-fill::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+/* >=80% of the cycle: the track runs hot — critical-shifted fill, harder
+   glow (statusstrip toggles .is-hot; same language as the gauges). */
+.cf-statusbar-progress.is-hot .cf-statusbar-fill {
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, var(--sev-critical)), var(--sev-critical));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--sev-critical) 50%, transparent);
+}
+.cf-statusbar-progress.is-hot .cf-statusbar-fill::after {
+  background: var(--sev-critical);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sev-critical) 80%, transparent);
 }
 /* IMP-pSZEMZP (operator 2026-10-12): the billing day is a counter lockup —
    the day number large in the data face with tabular numerals, the "/total"

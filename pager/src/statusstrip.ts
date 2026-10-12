@@ -49,9 +49,14 @@ export function updateStatusStrip(info: { ageSec: number | null; day?: number; d
   }
   if (right) right.hidden = markup === null;
   if (bar && info.days !== undefined && info.days > 0) {
-    (bar as HTMLElement).style.transform = `scaleX(${Math.min(1, Math.max(0, (info.day ?? 0) / info.days))})`;
+    const pct = Math.min(1, Math.max(0, (info.day ?? 0) / info.days));
+    (bar as HTMLElement).style.transform = `scaleX(${pct})`;
+    // Near the cycle's end the track runs hot — the fill shifts toward
+    // critical and glows harder (same language as the usage gauges).
+    bar.closest(".cf-statusbar-progress")?.classList.toggle("is-hot", pct >= 0.8);
   } else if (bar) {
     (bar as HTMLElement).style.transform = "scaleX(0)";
+    bar.closest(".cf-statusbar-progress")?.classList.toggle("is-hot", false);
   }
 }
 

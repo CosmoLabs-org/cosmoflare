@@ -22,7 +22,7 @@ const SEVERITIES = ["info", "warning", "critical"];
 
 // Bump CACHE_NAME on every deploy: activate deletes any older cache, so a
 // new build's assets replace the old ones wholesale.
-const CACHE_NAME = "pager-shell-v3";
+const CACHE_NAME = "pager-shell-v4";
 
 // The un-hashed shell files precached at install. Hashed /assets/* files are
 // cached lazily on first fetch (cache-first), so this list stays short.
