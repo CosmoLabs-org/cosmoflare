@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T22:50:59.243338+04:00
+last_updated: 2026-10-12T22:52:27.907092+04:00
 next_bug_id: 64
 next_feat_id: 80
 next_task_id: 18
@@ -801,7 +801,7 @@ issues:
       created_at: 2026-10-11T11:58:41.630836+04:00
     - id: FEAT-pRZVE8Y
       type: feature
-      status: open
+      status: closed
       title: 'Ops retheme: cyberpunk command center — dark grays, glows, micro-animations'
       created_at: 2026-10-12T20:42:54.061845+04:00
     - id: FEAT-pT0AFDM
@@ -840,7 +840,7 @@ issues:
       created_at: 2026-10-10T03:26:35.343956+04:00
     - id: IMP-pSZEMZP
       type: improvement
-      status: open
+      status: closed
       title: 'Billing cycle typography: ''day 24 of 30'' lockup needs a proper design'
       created_at: 2026-10-12T20:43:00.354952+04:00
     - id: TASK-001
