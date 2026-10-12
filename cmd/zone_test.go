@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -472,5 +473,93 @@ func TestZoneList_HasNoRequiredFlags(t *testing.T) {
 	})
 	if count != 0 {
 		t.Errorf("zoneListCmd has %d required flag(s), want 0", count)
+	}
+}
+
+// --- FEAT-058 wave 2: stable error codes on zone failure paths ---
+
+// TestZoneRunners_ErrorCodes asserts that the zone runners' main failure
+// paths (missing args, missing token, missing account ID) surface stable
+// machine-readable error codes in the --json error envelope (FEAT-058
+// wave 2).
+func TestZoneRunners_ErrorCodes(t *testing.T) {
+	savedJSON, savedDry := JSONOutput, DryRun
+	savedToken, savedAcct := APIToken, AccountID
+	defer func() {
+		JSONOutput, DryRun = savedJSON, savedDry
+		APIToken, AccountID = savedToken, savedAcct
+	}()
+	JSONOutput = true
+	DryRun = false
+
+	cases := []struct {
+		name      string
+		apiToken  string
+		accountID string
+		run       func() error
+		wantCode  string
+	}{
+		{
+			name:      "create missing zone name",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			run:       func() error { return runZoneCreate(zoneCreateCmd, nil) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "get missing zone id",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			run:       func() error { return runZoneGet(zoneGetCmd, nil) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "settings missing zone id",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			run:       func() error { return runZoneSettings(zoneSettingsCmd, nil) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "delete missing zone id",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			run:       func() error { return runZoneDelete(zoneDeleteCmd, nil) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "list missing token",
+			apiToken:  "",
+			accountID: "acct123",
+			run:       func() error { return runZoneList(zoneListCmd, nil) },
+			wantCode:  "AUTH_MISSING_TOKEN",
+		},
+		{
+			name:      "list missing account id",
+			apiToken:  "test-token",
+			accountID: "",
+			run:       func() error { return runZoneList(zoneListCmd, nil) },
+			wantCode:  "CONFIG_MISSING",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			APIToken, AccountID = tc.apiToken, tc.accountID
+
+			r, restore := captureStdout(t)
+			err := tc.run()
+			restore()
+
+			out, readErr := io.ReadAll(r)
+			if readErr != nil {
+				t.Fatalf("reading captured stdout failed: %v", readErr)
+			}
+			if err == nil {
+				t.Fatalf("expected error, got nil; stdout: %q", out)
+			}
+			if code := codedErrorCode(t, out); code != tc.wantCode {
+				t.Errorf("error_code = %q, want %q", code, tc.wantCode)
+			}
+		})
 	}
 }

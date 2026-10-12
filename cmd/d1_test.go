@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"testing"
 
@@ -261,5 +262,89 @@ func TestFormatBytes(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("formatBytes(%d) = %q, want %q", tc.input, got, tc.want)
 		}
+	}
+}
+
+// --- FEAT-058 wave 2: stable error codes on d1 failure paths ---
+
+// TestD1Runners_ErrorCodes asserts that the d1 runners' main failure paths
+// (missing args/flags, missing token, missing account ID) surface stable
+// machine-readable error codes in the --json error envelope (FEAT-058
+// wave 2).
+func TestD1Runners_ErrorCodes(t *testing.T) {
+	savedJSON, savedDry := JSONOutput, DryRun
+	savedToken, savedAcct := APIToken, AccountID
+	savedSQL, savedLocal, savedRemote := d1SQL, d1Local, d1Remote
+	defer func() {
+		JSONOutput, DryRun = savedJSON, savedDry
+		APIToken, AccountID = savedToken, savedAcct
+		d1SQL, d1Local, d1Remote = savedSQL, savedLocal, savedRemote
+	}()
+	JSONOutput = true
+	DryRun = false
+	d1Local, d1Remote = false, false
+
+	cases := []struct {
+		name      string
+		apiToken  string
+		accountID string
+		sql       string
+		local     bool
+		remote    bool
+		run       func() error
+		wantCode  string
+	}{
+		{
+			name:      "query missing --sql",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			run:       func() error { return runD1Query(d1QueryCmd, []string{"db123"}) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "query local and remote conflict",
+			apiToken:  "test-token",
+			accountID: "acct123",
+			sql:       "SELECT 1",
+			local:     true,
+			remote:    true,
+			run:       func() error { return runD1Query(d1QueryCmd, []string{"db123"}) },
+			wantCode:  "VALIDATION_ERROR",
+		},
+		{
+			name:      "list missing token",
+			apiToken:  "",
+			accountID: "acct123",
+			run:       func() error { return runD1List(d1ListCmd, nil) },
+			wantCode:  "AUTH_MISSING_TOKEN",
+		},
+		{
+			name:      "list missing account id",
+			apiToken:  "test-token",
+			accountID: "",
+			run:       func() error { return runD1List(d1ListCmd, nil) },
+			wantCode:  "CONFIG_MISSING",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			APIToken, AccountID = tc.apiToken, tc.accountID
+			d1SQL, d1Local, d1Remote = tc.sql, tc.local, tc.remote
+
+			r, restore := captureStdout(t)
+			err := tc.run()
+			restore()
+
+			out, readErr := io.ReadAll(r)
+			if readErr != nil {
+				t.Fatalf("reading captured stdout failed: %v", readErr)
+			}
+			if err == nil {
+				t.Fatalf("expected error, got nil; stdout: %q", out)
+			}
+			if code := codedErrorCode(t, out); code != tc.wantCode {
+				t.Errorf("error_code = %q, want %q", code, tc.wantCode)
+			}
+		})
 	}
 }
