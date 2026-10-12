@@ -99,7 +99,7 @@ func TestAuditDeadFunctionsWorkerPathPrecedence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan: %v", err)
 	}
-	if report.Worker == nil || filepath.Base(filepath.Dir(*report.Worker)) != dir || !strings.HasSuffix(*report.Worker, "_worker.js") {
+	if report.Worker == nil || filepath.Dir(*report.Worker) != dir || !strings.HasSuffix(*report.Worker, "_worker.js") {
 		t.Fatalf("expected root _worker.js, got %v", report.Worker)
 	}
 }
@@ -119,7 +119,8 @@ func TestAuditDeadFunctionsBuildWorkerDetected(t *testing.T) {
 }
 
 func TestAuditDeadFunctionsRouteMapping(t *testing.T) {
-	dir := deadFunctionsFixture(t, "functions/index.ts")
+	// Shadowing needs BOTH sides present: an index handler and a worker.
+	dir := deadFunctionsFixture(t, "functions/index.ts", "_worker.js")
 	report, err := auditDeadFunctionsScan(dir)
 	if err != nil {
 		t.Fatalf("scan: %v", err)

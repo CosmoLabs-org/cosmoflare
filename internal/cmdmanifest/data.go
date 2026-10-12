@@ -1207,6 +1207,50 @@ var registry = []Command{
 	// /accounts/{id}/logs/audit surface requires "Account Settings" (Read or
 	// Edit) — "Access: Audit Logs" in the dataset is the Zero Trust surface.
 	{
+		ID: "audit.log", CLIPath: []string{"audit", "log"},
+		WranglerEquivalent: "wrangler tail (local audit trail)",
+		Service:            "account", Scope: "audit_log", Verb: "read",
+		APIOps:      []string{},
+		Permissions: Permissions{},
+		DangerLevel: "low", Destructive: false, Trackable: false,
+	},
+	{
+		ID: "audit.search", CLIPath: []string{"audit", "search"},
+		WranglerEquivalent: "wrangler tail (local audit search)",
+		Service:            "account", Scope: "audit_log", Verb: "read",
+		APIOps:      []string{},
+		Permissions: Permissions{},
+		DangerLevel: "low", Destructive: false, Trackable: false,
+	},
+	{
+		ID: "audit.export", CLIPath: []string{"audit", "export"},
+		WranglerEquivalent: "wrangler tail (local audit export)",
+		Service:            "account", Scope: "audit_log", Verb: "read",
+		APIOps:      []string{},
+		Permissions: Permissions{},
+		DangerLevel: "low", Destructive: false, Trackable: false,
+	},
+	{
+		ID: "audit.clear", CLIPath: []string{"audit", "clear"},
+		WranglerEquivalent: "wrangler tail (local audit clear)",
+		Service:            "account", Scope: "audit_log", Verb: "write",
+		APIOps:      []string{},
+		Permissions: Permissions{},
+		// Local trail, not an upstream mutation — its own --force gate is
+		// the confirmation; the destructive-dry-run contract targets CF writes.
+		LocalChecks: []string{"clears_local_audit_trail", "force_flag_confirms"},
+		DangerLevel: "high", Destructive: false, Trackable: false,
+	},
+	{
+		ID: "audit.dead-functions", CLIPath: []string{"audit", "dead-functions"},
+		WranglerEquivalent: "wrangler pages deploy (no equivalent check)",
+		Service:            "pages", Scope: "project", Verb: "read",
+		APIOps:      []string{},
+		Permissions: Permissions{},
+		LocalChecks: []string{"functions_dir_shadowed_by_worker"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
 		ID: "account.audit-logs.list", CLIPath: []string{"account", "audit-logs", "list"},
 		Service: "account", Scope: "audit_log", Verb: "list",
 		APIOps:      []string{"GET /accounts/{account_id}/logs/audit"},
