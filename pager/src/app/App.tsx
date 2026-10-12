@@ -47,6 +47,7 @@ import AIView from "./views/AIView";
 import AlertsView from "./views/AlertsView";
 import RulesView from "./views/RulesView";
 import PairingView from "./views/PairingView";
+import UpdateModal, { useSwUpdateReady } from "./components/UpdateModal";
 
 /** Nav labels per route (mirror of the old main.ts NAV). */
 /** Section icons (operator 2026-10-10: icons left of every nav title, above
@@ -407,6 +408,11 @@ export default function App(): React.JSX.Element {
   const counts = useNavCounts();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const reduced = useReducedMotion();
+  // A deploy lands while the app is open → the new service worker takes
+  // control → the centered UpdateModal offers a one-tap reload (operator
+  // 2026-10-12).
+  const updateReady = useSwUpdateReady();
+  const [updateDismissed, setUpdateDismissed] = useState(false);
 
   useEffect(() => {
     startStatusStripClock();
@@ -558,8 +564,13 @@ export default function App(): React.JSX.Element {
         onMore={() => setDrawerOpen(true)}
       />
 
-      <footer className="cf-statusbar" role="status" aria-live="polite">
-        {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
+      {/* New version ready (operator 2026-10-12): centered dialog the moment
+          a deploy's service worker takes control while the app is open. */}
+      {updateReady && !updateDismissed ? (
+        <UpdateModal onReload={() => window.location.reload()} onDismiss={() => setUpdateDismissed(true)} />
+      ) : null}
+
+      <footer className="cf-statusbar" role="status" aria-live="polite">        {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
             group carries the billing-period day count with a thin progress
             bar. Both are fed imperatively by statusstrip.ts. */}
         <span id="cf-status-age" className="cf-statusbar-age" />
