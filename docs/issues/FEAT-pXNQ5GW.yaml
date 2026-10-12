@@ -1,0 +1,9 @@
+id: FEAT-pXNQ5GW
+type: feature
+created_at: 2026-10-11T11:58:29.12449+04:00
+updated_at: 2026-10-12T20:36:42.627883+04:00
+status: closed
+title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
+revisions:
+    - date: "2026-10-12T20:36:42.626888+04:00"
+      action: closed
