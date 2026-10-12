@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T22:52:27.907092+04:00
+last_updated: 2026-10-12T23:11:48.401516+04:00
 next_bug_id: 64
 next_feat_id: 80
 next_task_id: 18
@@ -706,7 +706,7 @@ issues:
       created_at: 2026-10-10T00:33:01.434889+04:00
     - id: FEAT-059
       type: feature
-      status: open
+      status: closed
       title: Ops email metrics — emails sent per zone
       created_at: 2026-10-10T03:26:15.61962+04:00
     - id: FEAT-060
@@ -766,12 +766,12 @@ issues:
       priority: 70
     - id: FEAT-071
       type: feature
-      status: open
+      status: closed
       title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
       priority: 50
     - id: FEAT-072
       type: feature
-      status: open
+      status: closed
       title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
       priority: 50
     - id: FEAT-073
