@@ -1,16 +1,20 @@
 ---
 id: FEAT-072
-title: 'Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"'
 type: feature
-status: open
+created: "2026-10-10"
+updated: "2026-10-12T23:11:48.39682+04:00"
 priority: 50
-created: 2026-10-10
-updated: 2026-10-10
+status: closed
 origin:
-  feedback_id: FB-30
-  from_project: MyCarGuide
-  received: 2026-10-10
-  converted: 2026-10-10
+    feedback_id: FB-30
+    from_project: MyCarGuide
+    received: "2026-10-10"
+    converted: "2026-10-10"
+title: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"
+revisions:
+    - date: "2026-10-12T23:11:48.395612+04:00"
+      action: closed
+
 ---
 
 # FEAT-072: Permissions preflight — check token scopes BEFORE operations fail with "request is not authorized"

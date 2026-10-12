@@ -1,16 +1,20 @@
 ---
 id: FEAT-071
-title: 'Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run'
 type: feature
-status: open
+created: "2026-10-10"
+updated: "2026-10-12T23:11:48.185843+04:00"
 priority: 50
-created: 2026-10-10
-updated: 2026-10-10
+status: closed
 origin:
-  feedback_id: FB-31
-  from_project: MyCarGuide
-  received: 2026-10-10
-  converted: 2026-10-10
+    feedback_id: FB-31
+    from_project: MyCarGuide
+    received: "2026-10-10"
+    converted: "2026-10-10"
+title: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
+revisions:
+    - date: "2026-10-12T23:11:48.184478+04:00"
+      action: closed
+
 ---
 
 # FEAT-071: Dead functions/ detector — Pages ignores functions/ beside _worker.js; endpoints silently never run
