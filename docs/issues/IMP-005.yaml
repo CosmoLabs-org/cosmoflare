@@ -1,10 +1,11 @@
-id: IMP-pSZEMZP
+id: IMP-005
 type: improvement
 created_at: 2026-10-12T20:43:00.354952+04:00
 updated_at: 2026-10-12T22:52:27.898434+04:00
 source: local
 ulid: 01M4RFY1D89FC6HTS7X6SZEMZP
-provisional: true
+aliases:
+    - IMP-pSZEMZP
 status: closed
 origin:
     roadmap_items:
