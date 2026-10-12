@@ -3,7 +3,7 @@ title: "Session 2040 Continuation — full design review + finish what we starte
 created: 2026-10-13T00:30:00+04:00
 status: PENDING
 branch: master
-goals_total: 9
+goals_total: 10
 goals_completed: 0
 supersedes: "docs/prompts/2026-10-12-session-2037-continuation.md"
 schema_version: 1
@@ -47,6 +47,7 @@ timeAgo goes stale on long-lived screens (needs a tick); card h2 hierarchy (12px
 ### [ ] G-09 Gate + merge the two in-flight quick-win agents
 Dispatched at session close (2026-10-13, not yet returned): one CSS craft agent (description-line font, lever label legibility, card heading weight) and one TSX agent (AlertsView 60s time-ago tick + RulesView two-step draft delete). Find them via `ccs glm-agent status` (the two newest, running/done), review each diff, re-run pager gates in the worktrees, S334-gate, and `ccs merge` both.
 
+### [ ] G-10 Cron push from the Worker — finish delivery to the iPhone (carried from P-2026-10-09-cf-cli-review G-06)
 ## Carry-Over Tasks
 
 1. Operator decisions pending: IDEA-019/020 pushed-duplicate repair (needs explicit go — it pushes); 10 stale-issue candidates (offer the verify-then-close scout sweep); `/independent-review --scan` for 142 unreviewed docs; v0.33.0 release (operator go only); FEAT-029 auth (conflicts with the no-keychain rule — needs a design decision).
