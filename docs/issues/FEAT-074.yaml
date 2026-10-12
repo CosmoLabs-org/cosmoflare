@@ -1,10 +1,11 @@
-id: FEAT-p2H8GZ6
+id: FEAT-074
 type: feature
 created_at: 2026-10-12T03:39:51.93768+04:00
 updated_at: 2026-10-12T03:39:53.808587+04:00
 source: local
 ulid: 01M4PNCJP6DDTYYY43AS2H8GZ6
-provisional: true
+aliases:
+    - FEAT-p2H8GZ6
 status: open
 origin:
     roadmap_items:

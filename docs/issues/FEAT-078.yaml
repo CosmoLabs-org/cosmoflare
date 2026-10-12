@@ -1,10 +1,11 @@
-id: FEAT-pXNQ5GW
+id: FEAT-078
 type: feature
 created_at: 2026-10-11T11:58:29.12449+04:00
 updated_at: 2026-10-11T11:58:30.753599+04:00
 source: local
 ulid: 01M4MZGVMNX9HMQHAKJFXNQ5GW
-provisional: true
+aliases:
+    - FEAT-pXNQ5GW
 status: open
 origin:
     idea_slug: 2026-10-11-pwa-install-guidance-install-banner-native-prompt-pairing

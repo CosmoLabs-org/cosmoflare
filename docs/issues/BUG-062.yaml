@@ -1,10 +1,11 @@
-id: BUG-pZKJ5VB
+id: BUG-062
 type: bug
 created_at: 2026-10-11T19:36:59.640409+04:00
 updated_at: 2026-10-11T20:45:25.279351+04:00
 source: local
 ulid: 01M4NSRDFFGZ7VNSSR6RZKJ5VB
-provisional: true
+aliases:
+    - BUG-pZKJ5VB
 severity: critical
 status: fixed
 origin:

@@ -1,10 +1,11 @@
-id: FEAT-pRXPMMY
+id: FEAT-076
 type: feature
 created_at: 2026-10-11T11:58:41.630836+04:00
 updated_at: 2026-10-11T11:58:43.328039+04:00
 source: local
 ulid: 01M4MZH7XF3YGQAM2VRYRXPMMY
-provisional: true
+aliases:
+    - FEAT-pRXPMMY
 status: open
 origin:
     session: 75

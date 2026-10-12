@@ -1,10 +1,11 @@
-id: FEAT-pT0AFDM
+id: FEAT-077
 type: feature
 created_at: 2026-10-11T20:45:23.485653+04:00
 updated_at: 2026-10-11T20:45:25.224244+04:00
 source: local
 ulid: 01M4NXNN44YACG2BYH8HT0AFDM
-provisional: true
+aliases:
+    - FEAT-pT0AFDM
 status: open
 origin:
     session: 75

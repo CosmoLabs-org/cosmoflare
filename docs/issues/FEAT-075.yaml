@@ -1,10 +1,11 @@
-id: FEAT-pEWA6N6
+id: FEAT-075
 type: feature
 created_at: 2026-10-11T20:55:27.88521+04:00
 updated_at: 2026-10-11T20:55:29.616146+04:00
 source: local
 ulid: 01M4NY83B8C35NZF1KSAEWA6N6
-provisional: true
+aliases:
+    - FEAT-pEWA6N6
 status: open
 origin:
     session: 75
