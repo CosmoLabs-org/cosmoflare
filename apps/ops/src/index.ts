@@ -7,6 +7,7 @@ import { verifyAccessJwt } from "./access";
 import { collectAttachments } from "./attachments";
 import { collectAIGateways } from "./ai_gateway";
 import { collectBilling } from "./billing";
+import { collectEmailMetrics } from "./email";
 import { cached } from "./cache";
 import { collectDnsRecords, collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
@@ -146,6 +147,15 @@ export default {
         // KV-cached field probe, at the summary cadence (5 min / 1 h).
         const result = await cached(ctx, env, "ai", { ttlSec: 5 * 60, staleSec: 60 * 60, force: url.searchParams.has("refresh") }, () =>
           collectAIGateways(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date(), env.OPS_KV),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/email": {
+        // FEAT-059 (ROAD-107): per-zone Email Routing status, operator-gated
+        // (a missing scope degrades to per-zone error strings), at the
+        // /api/ai cadence (5 min fresh / 1 h stale).
+        const result = await cached(ctx, env, "email", { ttlSec: 5 * 60, staleSec: 60 * 60, force: url.searchParams.has("refresh") }, () =>
+          collectEmailMetrics(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date()),
         );
         return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
       }
