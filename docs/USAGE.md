@@ -1095,6 +1095,13 @@ JSON output:
 {"success":true,"data":{"columns":["id","name"],"rows":[[1,"Alice"]],"meta":{"changes":0,"duration":0.5}}}
 ```
 
+### Compare local migrations against the remote schema (FEAT-051)
+```bash
+cosmoflare d1 schema-diff --database prod-db --migrations ./migrations
+cosmoflare d1 schema-diff --database prod-db --migrations ./migrations --json
+```
+Prints one verdict per table: `ADDED-LOCAL-ONLY` (migration never applied remotely), `REMOTE-ONLY` (reverse drift), `COLUMN-DRIFT` (columns listed), `MATCH`. Informational only — exits 0 even with drift or a remote read failure (the error is printed, not returned). `--json` carries `{database, tables:[{table, status, local_only, remote_only}], legend}`.```
+
 | Flag | Description |
 |------|-------------|
 | `--sql` | SQL query to execute (required) |

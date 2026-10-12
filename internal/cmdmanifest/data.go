@@ -517,6 +517,15 @@ var registry = []Command{
 		DangerLevel: "medium", Destructive: false, Trackable: true,
 	},
 	{
+		ID: "d1.schema-diff", CLIPath: []string{"d1", "schema-diff"},
+		WranglerEquivalent: "wrangler d1 insights (manual diff)",
+		Service:            "d1", Scope: "database", Verb: "read",
+		APIOps:      []string{"POST /accounts/{account_id}/d1/database/{database_id}/query"},
+		Permissions: Permissions{Account: []string{"D1"}},
+		LocalChecks: []string{"migrations_dir_readable"},
+		DangerLevel: "low", Destructive: false, Trackable: true,
+	},
+	{
 		ID: "d1.import", CLIPath: []string{"d1", "import"},
 		WranglerEquivalent: "wrangler d1 import",
 		Service:            "d1", Scope: "database", Verb: "write",
