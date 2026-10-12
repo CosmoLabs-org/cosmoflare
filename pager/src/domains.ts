@@ -38,6 +38,26 @@ export interface DomainDetailPayload {
   errors: string[];
 }
 
+/** One DNS record row (operator action buttons wave 2, 2026-10-12):
+ *  /api/dns/records?id=. `paused` is the pause lever — a paused record
+ *  stops resolving without being deleted. */
+export interface DnsRecord {
+  id: string;
+  type: string;
+  name: string;
+  content: string;
+  proxied: boolean;
+  paused: boolean;
+  ttl: number;
+}
+
+/** /api/dns/records?id= response. */
+export interface DnsRecordsPayload {
+  records: DnsRecord[];
+  error?: string | null;
+  cache?: { ageSec: number; stale: boolean };
+}
+
 // Attachment inventory (FEAT-pEWA6N6 phase 1): mirrors the ops worker's
 // attachments.ts payload — read-only, no mutations.
 export interface PageDomainAttachment {

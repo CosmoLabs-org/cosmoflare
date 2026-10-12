@@ -23,6 +23,8 @@ import {
   type DomainDetailPayload,
   type DomainRecord,
   type DomainsPayload,
+  type DnsRecord,
+  type DnsRecordsPayload,
   type ZoneAttachment,
 } from "../../domains";
 import type { ViewFetcher } from "./WorkersView";
@@ -49,6 +51,144 @@ function ProfileSection({ heading, children }: { heading: string; children: Reac
       <h3 className="cf-profile-section-title">{heading}</h3>
       <div className="cf-profile-fields">{children}</div>
     </section>
+  );
+}
+
+/** POST /api/dns/toggle — the same raw-fetch mutation pattern as the
+ *  purge button; the Worker's error JSON (permission hint, protected-host
+ *  refusal) surfaces verbatim. */
+async function toggleDnsRecord(zone: string, record: DnsRecord, paused: boolean): Promise<void> {
+  const res = await fetch("/api/dns/toggle", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ zone, record: record.id, name: record.name, paused }),
+  });
+  if (res.ok) return;
+  let detail = `HTTP ${res.status}`;
+  try {
+    const body = (await res.json()) as { error?: string };
+    if (body.error) detail = body.error;
+  } catch {
+    // non-JSON error body: keep the HTTP status text
+  }
+  throw new Error(detail);
+}
+
+type TogglePhase = "idle" | "armed" | "busy" | { error: string };
+
+/** Per-record pause/enable (operator action buttons wave 2). Pausing
+ *  ARMS first — a paused record stops resolving, so the second tap is the
+ *  confirm. Re-enabling restores service and fires directly. */
+function RecordToggle({ zone, record, onChanged }: { zone: string; record: DnsRecord; onChanged: (record: DnsRecord) => void }): React.JSX.Element {
+  const [phase, setPhase] = useState<TogglePhase>("idle");
+
+  const fire = (paused: boolean): void => {
+    setPhase("busy");
+    void toggleDnsRecord(zone, record, paused)
+      .then(() => {
+        setPhase("idle");
+        onChanged({ ...record, paused });
+      })
+      .catch((err: unknown) => setPhase({ error: err instanceof Error ? err.message : String(err) }));
+  };
+
+  if (record.paused) {
+    return (
+      <span className="cf-dns-actions">
+        <button
+          type="button"
+          className="cf-btn cf-btn-sm"
+          disabled={phase === "busy"}
+          onClick={() => fire(false)}
+        >
+          {phase === "busy" ? "Enabling…" : "Enable"}
+        </button>
+        {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+      </span>
+    );
+  }
+  return (
+    <span className="cf-dns-actions">
+      <button
+        type="button"
+        className={`cf-btn cf-btn-sm ${phase === "armed" ? "cf-btn-danger" : ""}`}
+        disabled={phase === "busy"}
+        onClick={() => {
+          if (phase === "idle") {
+            setPhase("armed");
+            window.setTimeout(() => setPhase((cur) => (cur === "armed" ? "idle" : cur)), 4000);
+            return;
+          }
+          if (phase === "armed") fire(true);
+        }}
+      >
+        {phase === "armed" ? "Confirm pause" : phase === "busy" ? "Pausing…" : "Pause"}
+      </button>
+      {typeof phase === "object" ? <span className="cf-purge-error" role="alert">{phase.error}</span> : null}
+    </span>
+  );
+}
+
+/** The zone's DNS records (operator action buttons wave 2, 2026-10-12):
+ *  read from /api/dns/records (5-min cache, invalidated server-side on
+ *  every toggle), one row per record with its pause/enable lever. */
+function DnsRecordsSection({ zoneId, zoneName, fetchJson }: { zoneId: string; zoneName: string; fetchJson: ViewFetcher }): React.JSX.Element | null {
+  const [payload, setPayload] = useState<DnsRecordsPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPayload(null);
+    setError(null);
+    void fetchJson<DnsRecordsPayload>(`api/dns/records?id=${encodeURIComponent(zoneId)}`).then(
+      (res) => {
+        if (!cancelled) setPayload(res.data);
+      },
+      (err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [zoneId, fetchJson, retryTick]);
+
+  if (error !== null) {
+    return (
+      <p className="cf-empty cf-level-warning-text" role="alert">
+        {`DNS records failed — ${error} `}
+        <button type="button" className="cf-btn cf-btn-sm" onClick={() => setRetryTick((t) => t + 1)}>Retry</button>
+      </p>
+    );
+  }
+  if (payload === null) return <div className="cf-loading cf-dns-loading"><div className="cf-skeleton" /></div>;
+  if (payload.error) return <p className="cf-empty cf-empty-quiet">{payload.error}</p>;
+  if (payload.records.length === 0) return <p className="cf-empty cf-empty-quiet">No DNS records.</p>;
+
+  return (
+    <div className="cf-dns-list">
+      {payload.records.map((r) => (
+        <div key={r.id} className="cf-dns-row" data-record={r.name}>
+          <span className="cf-dns-type">{r.type}</span>
+          <span className="cf-dns-name">{r.name}</span>
+          <span className="cf-dns-content">{r.content}</span>
+          <span className="cf-dns-badges">
+            {r.paused ? <span className="cf-dns-paused">paused</span> : null}
+            <span className="cf-dns-proxy">{r.proxied ? "proxied" : "DNS only"}</span>
+          </span>
+          <RecordToggle
+            zone={zoneName}
+            record={r}
+            onChanged={(updated) => setPayload((cur) => {
+              if (cur === null) return cur;
+              return { ...cur, records: cur.records.map((x) => (x.id === updated.id ? updated : x)) };
+            })}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -160,6 +300,7 @@ function DomainProfile({ domain, onBack, fetchJson }: {
           // so it never reads as current.
           <Field label="Previous nameservers (before Cloudflare)" value={detail.originalNameServers.join("\n")} />
         ) : null}
+        <DnsRecordsSection zoneId={domain.id} zoneName={domain.name} fetchJson={fetchJson} />
       </ProfileSection>
 
       <ProfileSection heading="Security">

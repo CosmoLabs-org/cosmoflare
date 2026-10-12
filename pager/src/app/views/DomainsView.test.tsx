@@ -8,7 +8,7 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, type FetchResult } from "../../api";
-import type { AttachmentsPayload, AuditEntry, AuditPayload, DomainDetailPayload, DomainRecord, DomainsPayload } from "../../domains";
+import type { AttachmentsPayload, AuditEntry, AuditPayload, DomainDetailPayload, DomainRecord, DomainsPayload, DnsRecord, DnsRecordsPayload } from "../../domains";
 import DomainsView from "./DomainsView";
 
 afterEach(cleanup);
@@ -71,7 +71,7 @@ const ATTACHMENTS: AttachmentsPayload = {
 
 /** Stub fetcher: answers api/domains and the detail/summary endpoints; the
  *  summary deliberately fails to prove enrichment is soft. */
-function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error; attachments?: AttachmentsPayload } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
+function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Error; attachments?: AttachmentsPayload; dns?: DnsRecordsPayload } = {}): Parameters<typeof DomainsView>[0]["fetcher"] {
   return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
     if (opts.failFirstLoad) throw opts.failFirstLoad;
     if (endpoint === "api/domains") return { data: DOMAINS as unknown as T, source: "network", ageSec: 0, demo: false };
@@ -81,6 +81,10 @@ function domainsFetcher(opts: { detail?: DomainDetailPayload; failFirstLoad?: Er
     }
     if (endpoint.startsWith("api/domains/detail")) {
       if (opts.detail) return { data: opts.detail as unknown as T, source: "network", ageSec: 0, demo: false };
+      throw new Error("HTTP 503");
+    }
+    if (endpoint.startsWith("api/dns/records")) {
+      if (opts.dns) return { data: opts.dns as unknown as T, source: "network", ageSec: 0, demo: false };
       throw new Error("HTTP 503");
     }
     throw new Error("HTTP 404");
@@ -474,5 +478,92 @@ describe("DomainsView lifecycle (FEAT-pEWA6N6 phases 2-3)", () => {
       expect(document.querySelector(".cf-audit .cf-level-warning-text")?.textContent).toContain("Could not load the audit log — HTTP 503");
     });
     expect(document.querySelector(".cf-audit-row")).toBeNull();
+  });
+});
+
+describe("DomainProfile DNS records (action buttons wave 2)", () => {
+  const RECORDS: DnsRecord[] = [
+    { id: "r1", type: "A", name: "warn.net", content: "203.0.113.9", proxied: true, paused: false, ttl: 1 },
+    { id: "r2", type: "TXT", name: "_verify.warn.net", content: "very-long-verification-string", proxied: false, paused: true, ttl: 3600 },
+  ];
+  const dnsPayload: DnsRecordsPayload = { records: RECORDS, error: null };
+
+  /** Drill into warn.net's profile with records stubbed, then return the
+   *  toggle buttons in DOM order. */
+  async function openProfileWithDns(): Promise<NodeListOf<HTMLButtonElement>> {
+    render(<DomainsView fetcher={domainsFetcher({ dns: dnsPayload })} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-domain-row")).toBeTruthy();
+    });
+    document.querySelectorAll<HTMLButtonElement>(".cf-domain-row")[1].click(); // warn.net
+    await waitFor(() => {
+      expect(document.querySelectorAll(".cf-dns-row")).toHaveLength(2);
+    });
+    return document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-btn");
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders one row per record: type, name, content, badges", async () => {
+    await openProfileWithDns();
+    expect(text(".cf-dns-type")).toEqual(["A", "TXT"]);
+    expect(text(".cf-dns-name")).toEqual(["warn.net", "_verify.warn.net"]);
+    expect(text(".cf-dns-content")[1]).toContain("very-long-verification");
+    // r1 active+proxied, r2 paused+DNS-only
+    expect(document.querySelector('[data-record="_verify.warn.net"] .cf-dns-paused')).toBeTruthy();
+    expect(text(".cf-dns-proxy")).toEqual(["proxied", "DNS only"]);
+  });
+
+  it("Pause arms then fires on the second tap; the row flips to paused", async () => {
+    const posts: { url: string; body: unknown }[] = [];
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      posts.push({ url: String(input), body: JSON.parse(String(init?.body)) as unknown });
+      return new Response(JSON.stringify({ zone: "warn.net", record: "r1", paused: true }), { status: 200 });
+    }) as typeof fetch;
+    const buttons = await openProfileWithDns();
+    expect(buttons[0].textContent).toBe("Pause");
+    fireEvent.click(buttons[0]);
+    expect(buttons[0].textContent).toBe("Confirm pause"); // armed, nothing sent
+    expect(posts).toHaveLength(0);
+    fireEvent.click(buttons[0]);
+    await waitFor(() => {
+      expect(posts).toHaveLength(1);
+    });
+    expect(posts[0].url).toContain("/api/dns/toggle");
+    expect(posts[0].body).toMatchObject({ zone: "warn.net", record: "r1", paused: true });
+    // local flip: the row now shows paused + Enable
+    await waitFor(() => {
+      expect(document.querySelector('[data-record="warn.net"] .cf-dns-paused')).toBeTruthy();
+    });
+    expect(document.querySelectorAll<HTMLButtonElement>(".cf-dns-actions .cf-btn")[0].textContent).toBe("Enable");
+  });
+
+  it("Enable fires directly (no arming) — restoring service needs no confirm", async () => {
+    const posts: unknown[] = [];
+    globalThis.fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      posts.push(JSON.parse(String(init?.body)) as unknown);
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    const buttons = await openProfileWithDns();
+    expect(buttons[1].textContent).toBe("Enable"); // r2 starts paused
+    fireEvent.click(buttons[1]);
+    await waitFor(() => {
+      expect(posts).toHaveLength(1);
+    });
+    expect(posts[0]).toMatchObject({ record: "r2", paused: false });
+  });
+
+  it("a protected-host refusal surfaces verbatim in the row", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      new Response(JSON.stringify({ error: "cosmolabs.org is a protected host — pausing its DNS requires an operator override" }), { status: 403 }),
+    ) as typeof fetch;
+    const buttons = await openProfileWithDns();
+    fireEvent.click(buttons[0]);
+    fireEvent.click(buttons[0]);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-purge-error")?.textContent).toContain("protected host");
+    });
   });
 });

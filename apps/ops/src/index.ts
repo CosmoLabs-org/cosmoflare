@@ -8,10 +8,10 @@ import { collectAttachments } from "./attachments";
 import { collectAIGateways } from "./ai_gateway";
 import { collectBilling } from "./billing";
 import { cached } from "./cache";
-import { collectDomainDetail, collectDomains } from "./domains";
+import { collectDnsRecords, collectDomainDetail, collectDomains } from "./domains";
 import { collectDurableObjects } from "./durable_objects";
 import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
-import { handlePurge } from "./actions";
+import { handleDnsToggle, handlePurge } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
@@ -168,6 +168,20 @@ export default {
       case "/api/zones/purge": // POST purge_everything on one zone (operator action button)
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
         return handlePurge(request, env, ctx, operator);
+      case "/api/dns/records": { // GET one zone's DNS records (operator action buttons wave 2)
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        const zoneId = url.searchParams.get("id");
+        if (!zoneId) return json({ error: "missing id" }, 400);
+        // 5 min fresh / 1 h stale: records change on operator edits, and a
+        // toggle invalidates its zone's key immediately.
+        const result = await cached(ctx, env, `dns:${zoneId}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectDnsRecords(env.CF_API_TOKEN, zoneId),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/dns/toggle": // POST pause/enable one DNS record (operator action button)
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+        return handleDnsToggle(request, env, ctx, operator);
       case "/api/audit": // GET the mutation audit log, newest first
         if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
         return auditResponse(env);

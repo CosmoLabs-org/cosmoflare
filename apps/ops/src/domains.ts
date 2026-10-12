@@ -86,6 +86,42 @@ export interface DomainDetail {
   errors: string[];
 }
 
+/** One DNS record as the pager's records list renders it (GET
+ *  /zones/{id}/dns_records). `paused` is the operator pause lever: a paused
+ *  record stops resolving without being deleted. */
+export interface DnsRecord {
+  id: string;
+  type: string;
+  name: string;
+  content: string;
+  proxied: boolean;
+  paused: boolean;
+  ttl: number;
+}
+
+/** DNS records for one zone (operator action buttons wave 2, 2026-10-12):
+ *  paginated read, soft-failed — a permission gap yields an error line and
+ *  an empty list, never a blank profile. */
+export async function collectDnsRecords(token: string, zoneId: string): Promise<{ records: DnsRecord[]; error: string | null }> {
+  const records: DnsRecord[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetchRetry(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records?page=${page}&per_page=100`, { headers: { Authorization: `Bearer ${token}` } });
+    const body = (await res.json()) as {
+      success: boolean;
+      result: { id: string; type: string; name: string; content: string; proxied: boolean; paused: boolean; ttl: number }[];
+      errors?: { message: string }[];
+      result_info?: { total_pages?: number; total_count?: number };
+    };
+    if (!body.success) return { records: [], error: body.errors?.[0]?.message ?? `HTTP ${res.status}` };
+    for (const r of body.result) {
+      records.push({ id: r.id, type: r.type, name: r.name, content: r.content, proxied: r.proxied, paused: r.paused, ttl: r.ttl });
+    }
+    const pages = body.result_info?.total_pages ?? (body.result_info?.total_count !== undefined ? Math.ceil(body.result_info.total_count / 100) : undefined);
+    if (body.result.length < 100 || (pages !== undefined && page >= pages)) break;
+  }
+  return { records, error: null };
+}
+
 /** Per-domain profile data (operator ask 2026-10-10): the zone detail plus
  *  DNSSEC and SSL status — three GETs, each soft-failed into errors so one
  *  permission gap never blanks the profile. */

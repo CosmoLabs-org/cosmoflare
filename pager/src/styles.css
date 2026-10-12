@@ -1090,6 +1090,52 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-profile-line { margin: 0 0 var(--space-1); }
 .cf-profile-line:last-child { margin-bottom: 0; }
 .cf-profile-fields { display: grid; gap: var(--space-2); }
+
+/* DNS records list (operator action buttons wave 2): one row per record —
+   type chip, name, content, badges, pause/enable lever. Wraps to a stack
+   on narrow screens; the content line always wraps anywhere (records carry
+   long TXT/CAA values). */
+.cf-dns-list { display: grid; gap: var(--space-1); margin-top: var(--space-2); }
+.cf-dns-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+.cf-dns-row:last-child { border-bottom: none; }
+.cf-dns-type {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  min-width: 3rem;
+}
+.cf-dns-name { color: var(--text); overflow-wrap: anywhere; }
+.cf-dns-content {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.cf-dns-badges { margin-left: auto; display: flex; gap: var(--space-2); align-items: center; }
+.cf-dns-proxy {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.cf-dns-paused {
+  color: var(--sev-critical);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cf-dns-actions { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.cf-dns-loading { padding: var(--space-2) 0; }
 .cf-domain-field {
   display: flex;
   flex-wrap: wrap;

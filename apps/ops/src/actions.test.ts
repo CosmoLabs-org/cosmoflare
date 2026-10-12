@@ -3,7 +3,7 @@
 // handlers: write-token gate → audited mutation with the WRITE token →
 // the CF API's error text surfaces verbatim.
 import { beforeEach, describe, expect, it } from "vitest";
-import { handlePurge } from "./actions";
+import { handlePurge, handleDnsToggle } from "./actions";
 import { readAudit, type LifecycleEnv } from "./lifecycle";
 
 interface Route {
@@ -41,11 +41,15 @@ function post(body: unknown): Request {
   return new Request("https://ops.example/api/zones/purge", { method: "POST", body: JSON.stringify(body) });
 }
 
+function postToggle(body: unknown): Request {
+  return new Request("https://ops.example/api/dns/toggle", { method: "POST", body: JSON.stringify(body) });
+}
+
 const OPERATOR = "gab@cosmolabs.org";
 
 const ZONES_OK = {
   match: (u: string) => u.includes("/zones?account.id="),
-  body: { success: true, result: [{ id: "z1", name: "noble.coffee", status: "active" }, { id: "z2", name: "example.dev", status: "active" }], result_info: { total_pages: 1 } },
+  body: { success: true, result: [{ id: "z1", name: "noble.coffee", status: "active" }, { id: "z2", name: "example.dev", status: "active" }, { id: "z3", name: "cosmolabs.org", status: "active" }], result_info: { total_pages: 1 } },
 };
 
 beforeEach(() => {
@@ -113,5 +117,58 @@ describe("handlePurge", () => {
     stubFetch([ZONES_OK]);
     const missing = await handlePurge(post({ zone: "nope.example" }), env, fakeCtx(), OPERATOR);
     expect(missing.status).toBe(404);
+  });
+});
+
+describe("handleDnsToggle", () => {
+  const DNS_PATCH = { match: (u: string, r: Request) => u.includes("/dns_records/") && r.method === "PATCH", body: { success: true } };
+
+  it("pauses a record on a normal zone with the WRITE token and audits the pause", async () => {
+    const kv = fakeKV();
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: kv, PROTECTED_HOSTS: "cosmolabs.org" } as unknown as LifecycleEnv;
+    const { requests } = stubFetch([ZONES_OK, DNS_PATCH]);
+    const res = await handleDnsToggle(postToggle({ zone: "example.dev", record: "rec1", name: "api.example.dev", paused: true }), env, fakeCtx(), OPERATOR);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ zone: "example.dev", record: "rec1", paused: true });
+    const patch = requests.find((r) => r.method === "PATCH");
+    expect(patch?.url).toContain("/zones/z2/dns_records/rec1");
+    expect(patch?.body).toEqual({ paused: true });
+    const audit = await readAudit(env);
+    expect(audit[0]).toMatchObject({ action: "dns-toggle", target: "example.dev: api.example.dev → paused", ok: true });
+  });
+
+  it("pausing a record on a PROTECTED host refuses 403 without the operator override", async () => {
+    const kv = fakeKV();
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: kv, PROTECTED_HOSTS: "cosmolabs.org" } as unknown as LifecycleEnv;
+    const { requests } = stubFetch([ZONES_OK, DNS_PATCH]);
+    const res = await handleDnsToggle(postToggle({ zone: "cosmolabs.org", record: "rec1", paused: true }), env, fakeCtx(), OPERATOR);
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { error: string }).error).toContain("protected host");
+    expect(requests.find((r) => r.method === "PATCH")).toBeUndefined(); // never reached CF
+    const audit = await readAudit(env);
+    expect(audit[0]).toMatchObject({ action: "dns-toggle", ok: false });
+  });
+
+  it("RE-ENABLING a record on a protected host is always allowed (restores service)", async () => {
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: fakeKV(), PROTECTED_HOSTS: "cosmolabs.org" } as unknown as LifecycleEnv;
+    const { requests } = stubFetch([ZONES_OK, DNS_PATCH]);
+    const res = await handleDnsToggle(postToggle({ zone: "cosmolabs.org", record: "rec1", paused: false }), env, fakeCtx(), OPERATOR);
+    expect(res.status).toBe(200);
+    expect(requests.find((r) => r.method === "PATCH")?.body).toEqual({ paused: false });
+  });
+
+  it("503 without a write token; 400 on a malformed body; CF errors surface verbatim", async () => {
+    const noToken: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", OPS_KV: fakeKV() } as unknown as LifecycleEnv;
+    const gated = await handleDnsToggle(postToggle({ zone: "example.dev", record: "rec1", paused: true }), noToken, fakeCtx(), OPERATOR);
+    expect(gated.status).toBe(503);
+    const env: LifecycleEnv = { CF_ACCOUNT_ID: "acct", CF_API_TOKEN: "r", CF_API_TOKEN_WRITE: "w", OPS_KV: fakeKV() } as LifecycleEnv;
+    const malformed = await handleDnsToggle(postToggle({ zone: "example.dev", record: "rec1" }), env, fakeCtx(), OPERATOR);
+    expect(malformed.status).toBe(400);
+    stubFetch([ZONES_OK, { match: (u, r) => u.includes("/dns_records/") && r.method === "PATCH", body: { success: false, errors: [{ message: "dns edit denied" }] } }]);
+    const failed = await handleDnsToggle(postToggle({ zone: "example.dev", record: "rec1", paused: true }), env, fakeCtx(), OPERATOR);
+    expect(failed.status).toBe(502);
+    const failedBody = (await failed.json()) as { error: string; hint: string };
+    expect(failedBody.error).toBe("dns edit denied");
+    expect(failedBody.hint).toContain("DNS > Edit");
   });
 });

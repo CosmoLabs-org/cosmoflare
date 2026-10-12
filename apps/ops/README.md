@@ -27,6 +27,11 @@ stays closed even if the Access app is later removed.
   Other methods: 405.
 - `POST /api/zones/purge` — purge a zone's edge cache (`{ zone: name-or-id }`,
   `purge_everything`; needs `Zone > Cache Purge` on the write token; audited).
+- `GET /api/dns/records?id=` — one zone's DNS records (cached 5 min; type,
+  name, content, proxied, paused).
+- `POST /api/dns/toggle` — pause/enable one record (`{ zone, record, paused }`;
+  needs `Zone > DNS > Edit`; protected hosts refuse pause without the
+  operator override; audited; invalidates the zone's records cache).
 - `GET /api/vapid-public-key` — the key the pager needs to subscribe to push.
 
 Every API response carries `Cache-Control: private, no-store`.
