@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 )
@@ -106,6 +107,26 @@ func outErrCodef(code cli.ErrorCode, format string, a ...any) error {
 	}
 	return fmt.Errorf(format, a...)
 }
+// credErrorCode classifies a service/client construction failure into a
+// stable ErrorCode (FEAT-058 wave 2a). The pkg/cosmoflare credential
+// constructors (NewKVServiceFromCreds, NewClient) validate the ambient
+// AccountID/APIToken before any I/O and name the missing credential in the
+// error message, so the classification matches on that text: a missing
+// token surfaces as AUTH_MISSING_TOKEN, a missing account ID as
+// CONFIG_MISSING, and any other construction failure (e.g. the Cloudflare
+// API client rejecting a malformed token) as AUTH_INVALID_TOKEN.
+func credErrorCode(err error) cli.ErrorCode {
+	msg := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(msg, "token"):
+		return cli.CodeAuthMissingToken
+	case strings.Contains(msg, "account"):
+		return cli.CodeConfigMissing
+	default:
+		return cli.CodeAuthInvalidToken
+	}
+}
+
 func outResult(data any, human func()) error    { return NewPresenter().Result(data, human) }
 func outSuccess(message string, data any) error { return NewPresenter().Success(message, data) }
 func outPayload(message string, json func() any, human func()) error {

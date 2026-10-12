@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
@@ -166,7 +167,15 @@ func init() {
 }
 
 func getKVService() (*cosmoflare.KVService, error) {
-	return cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+	svc, err := cosmoflare.NewKVServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		// Coded (FEAT-058 wave 2a): the construction failure carries a
+		// stable machine-readable code for the --json envelope. CodedError
+		// delegates Error() to the wrapped error, so human output is
+		// byte-identical and CodeFor picks the explicit code in JSON mode.
+		return nil, cli.NewCoded(credErrorCode(err), err)
+	}
+	return svc, nil
 }
 
 // filterKVNamespacesByProfile keeps only namespaces whose title carries the
