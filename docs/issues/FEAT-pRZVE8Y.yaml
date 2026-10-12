@@ -1,11 +1,18 @@
 id: FEAT-pRZVE8Y
 type: feature
 created_at: 2026-10-12T20:42:54.061845+04:00
-updated_at: 2026-10-12T20:42:56.161369+04:00
+updated_at: 2026-10-12T22:52:27.633166+04:00
 source: local
 ulid: 01M4RFXVS13DVZBKR5WSRZVE8Y
 provisional: true
-status: open
+status: closed
+origin:
+    roadmap_items:
+        - ROAD-107
+    session: 76
 title: 'Ops retheme: cyberpunk command center — dark grays, glows, micro-animations'
 description: 'Operator 2026-10-12: the current brown-tinted dark theme should become dark SHADES OF GRAY with great glows here and there, micro animations, good shader-like effects — a cypherpunk command center feel. Amber accent likely stays as the glow color on neutral gray surfaces. Touches: token palette (bg/surface/border), gauge glows, statusbar, cards. Pairs with FEAT-046 (shader design pass).'
 roadmap_ref: ROAD-107
+revisions:
+    - date: "2026-10-12T22:52:27.63158+04:00"
+      action: closed
