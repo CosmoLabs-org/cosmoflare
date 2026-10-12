@@ -21,6 +21,7 @@ import (
 
 	"golang.org/x/term"
 
+	"github.com/CosmoLabs-org/cosmoflare/internal/cli"
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
@@ -1135,11 +1136,17 @@ func projectConfigOptions(dir string) []cosmoflare.ClientOption {
 }
 
 // getAPIClient creates an R2 client using the pkg/cosmoflare library.
+// Coded (FEAT-058 wave 2a): construction failures carry a stable
+// machine-readable code for the --json envelope; human output unchanged.
 func getAPIClient() (cosmoflare.R2Client, error) {
-	return cosmoflare.NewClient(append([]cosmoflare.ClientOption{
+	client, err := cosmoflare.NewClient(append([]cosmoflare.ClientOption{
 		cosmoflare.WithAccountID(AccountID),
 		cosmoflare.WithAPIToken(APIToken),
 	}, projectConfigOptions(".")...)...)
+	if err != nil {
+		return nil, cli.NewCoded(credErrorCode(err), err)
+	}
+	return client, nil
 }
 
 func runObjectPresign(cmd *cobra.Command, args []string) error {
