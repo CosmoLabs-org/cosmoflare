@@ -1088,6 +1088,14 @@ cosmoflare d1 delete <database-id> --force
 cosmoflare d1 query <database-id> --sql="SELECT * FROM users"
 cosmoflare d1 query <database-id> --sql="SELECT * FROM users WHERE id = ?1" --param="42"
 cosmoflare d1 query <database-id> --sql="CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)" --json
+```
+
+### Detect dead functions/ handlers (FEAT-071)
+```bash
+cosmoflare audit dead-functions ./web            # human report
+cosmoflare audit dead-functions ./web --json     # {"shadowed":[...],"worker":"..."}
+```
+Flags every functions/ route as SHADOWED when _worker.js exists in the build output (root, dist/, build/) — Cloudflare Pages ignores functions/ entirely in that case, so those endpoints silently never run. Exit 1 when shadowed endpoints are found — usable as a deploy gate.
 cosmoflare d1 query <database-id> --sql="INSERT INTO users (name) VALUES (?1)" --param="Alice" --json
 ```
 JSON output:

@@ -49,8 +49,8 @@ func TestAuditCmd_HasSubcommands(t *testing.T) {
 }
 
 func TestAuditCmd_SubcommandCount(t *testing.T) {
-	if len(auditCmd.Commands()) != 4 {
-		t.Errorf("auditCmd has %d subcommands, want 4", len(auditCmd.Commands()))
+	if len(auditCmd.Commands()) != 5 {
+		t.Errorf("auditCmd has %d subcommands, want 5", len(auditCmd.Commands()))
 	}
 }
 
