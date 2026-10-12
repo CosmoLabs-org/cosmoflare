@@ -232,3 +232,6 @@ GOrchestra/
 docs/feedback/queue/
 docs/feedback/outgoing/
 .wrangler/
+
+# Oversized root screenshot accidentally committed (38.6MB, /project-upgrade 2026-10-13)
+/Screenshot*.png

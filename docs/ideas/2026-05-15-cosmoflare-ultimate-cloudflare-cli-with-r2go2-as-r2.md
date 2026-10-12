@@ -1,5 +1,7 @@
 ---
-id: IDEA-020
+# Renumbered from IDEA-020 (duplicate collision, both sides pushed; first-created
+# 2026-05-14 file keeps the number — resolved by /project-upgrade 2026-10-13)
+id: IDEA-058
 title: Cosmoflare — ultimate Cloudflare CLI with R2Go2 as R2 component
 created: "2026-05-15T23:47:45.081526-03:00"
 status: withered

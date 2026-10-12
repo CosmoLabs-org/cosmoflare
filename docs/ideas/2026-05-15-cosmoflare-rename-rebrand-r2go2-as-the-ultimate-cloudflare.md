@@ -1,5 +1,7 @@
 ---
-id: IDEA-019
+# Renumbered from IDEA-019 (duplicate collision, both sides pushed; first-created
+# 2026-05-14 file keeps the number — resolved by /project-upgrade 2026-10-13)
+id: IDEA-057
 title: Cosmoflare — rename/rebrand R2Go2 as the ultimate Cloudflare CLI managing R2, Workers, KV, D1, DNS, Domains, Pages, Queues. R2Go2 becomes the R2 storage component within Cosmoflare.
 created: "2026-05-15T23:47:12.500624-03:00"
 status: withered
