@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T05:28:41.314508+04:00
+last_updated: 2026-10-12T14:06:09.302603+04:00
 next_bug_id: 64
 next_feat_id: 75
 next_task_id: 18
@@ -383,6 +383,12 @@ issues:
       title: 'CLI analytics: opaque double-wrapped errors; --json mode pollutes stdout with Error+usage; auth status assumes R2 scope'
       severity: high
       created_at: 2026-10-10T04:26:20.692641+04:00
+    - id: BUG-063
+      type: bug
+      status: fixed
+      title: 'Cache-miss alert rides a tiny base: percentage alerts page without volume floor or absolute numbers'
+      severity: medium
+      created_at: 2026-10-12T05:28:39.310973+04:00
     - id: BUG-pEPB03A
       type: bug
       status: open
