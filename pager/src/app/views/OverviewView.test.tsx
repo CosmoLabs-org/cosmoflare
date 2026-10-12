@@ -181,7 +181,9 @@ describe("OverviewView email card (FEAT-059)", () => {
 
   it("stays absent when the /api/email fetch fails", async () => {
     installStatusStrip();
-    mockEndpoints(null, true);
+    // email=null makes ONLY api/email throw (see the helper); summary and
+    // billing must still resolve so the view renders at all.
+    mockEndpoints(null);
     render(<OverviewView />);
     await waitFor(() => {
       expect(document.querySelector(".cf-kpis")).toBeTruthy();
