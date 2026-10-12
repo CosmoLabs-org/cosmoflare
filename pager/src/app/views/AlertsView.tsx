@@ -44,6 +44,13 @@ function markSeen(now: number): void {
   } catch {
     // Quota/privacy failure: the dot simply returns next session.
   }
+  // Clear the home-screen badge the service worker set on push (feature-
+  // detected; a throwing clearBadge must not break the render).
+  try {
+    void navigator.clearAppBadge?.();
+  } catch {
+    // Badging unsupported: nothing to clear.
+  }
 }
 
 /** Local relative-time helper for feed rows: "14m ago", "2h ago", "3d ago". */

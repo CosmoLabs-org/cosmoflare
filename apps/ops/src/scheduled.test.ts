@@ -471,8 +471,8 @@ describe("testFire", () => {
     expect(out.sent).toBe(1);
     const payload = parsePayload(JSON.parse(envelopes[0].data));
     expect(payload!.id).toBe("test-fire");
-    expect(payload!.title).toBe("Cosmoflare pager test");
-    expect(payload!.detail).toContain("alerts watch --test-fire");
+    expect(payload!.title).toBe("Test alert · Cosmoflare");
+    expect(payload!.detail).toContain("Pairing works");
   });
   it("does nothing with zero subscriptions", async () => {
     const kv = fakeKV();

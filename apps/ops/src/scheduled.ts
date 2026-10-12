@@ -369,8 +369,11 @@ export async function testFire(env: OpsEnv): Promise<{ sent: number; pruned: num
     id: "test-fire",
     severity: "info",
     service: "cloudflare",
-    title: "Cosmoflare pager test",
-    detail: "Test fire from 'cosmoflare alerts watch --test-fire'. Seeing this on your pager means pairing works.",
+    // Same shape a real alert now uses (operator 2026-10-12): headline +
+    // plain-language body, so the test shows exactly what a breach will
+    // look like on the phone.
+    title: "Test alert · Cosmoflare",
+    detail: "Pairing works. Real alerts look exactly like this — a headline naming the condition, then the numbers.",
     fired_at: new Date().toISOString(),
   };
   const outcome = await sendPushes(env, subs, payload);
