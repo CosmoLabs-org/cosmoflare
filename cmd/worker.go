@@ -175,7 +175,14 @@ func init() {
 }
 
 func getWorkerService() (*cosmoflare.WorkerService, error) {
-	return cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+	svc, err := cosmoflare.NewWorkerServiceFromCreds(AccountID, APIToken)
+	if err != nil {
+		// Coded (FEAT-058 wave 2c): construction failures carry a stable
+		// machine-readable code for the --json envelope; human output
+		// unchanged.
+		return nil, cli.NewCoded(credErrorCode(err), err)
+	}
+	return svc, nil
 }
 
 // filterWorkersByProfile keeps only workers whose name carries the active
