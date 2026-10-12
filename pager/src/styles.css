@@ -2192,10 +2192,15 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-bottomtab[aria-current="page"] {
   color: var(--section-color, var(--accent));
-  font-weight: 600;
+  font-weight: 700;
+  /* The selected tab reads as selected at a glance (operator 2026-10-12):
+     label grows AND the icon-label gap opens up, not just a color change. */
+  font-size: var(--text-xs);
+  gap: 5px;
+  letter-spacing: 0.02em;
 }
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon {
-  transform: scale(1.18);
+  transform: scale(1.32);
 }
 .cf-bottomtab[aria-current="page"]::after {
   animation: cf-tab-sweep 420ms var(--ease-out) both;

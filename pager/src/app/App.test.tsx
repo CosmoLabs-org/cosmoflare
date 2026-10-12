@@ -140,8 +140,10 @@ describe("Bottom tab bar (operator 2026-10-12)", () => {
       expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBeNull();
     });
     const more = document.querySelector<HTMLButtonElement>('.cf-bottomtab[data-route="more"]');
-    fireEvent.click(more!); // opening the drawer highlights More again
-    expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBe("page");
+    fireEvent.click(more!); // drawer open over a PRIMARY section: exactly one mark
+    expect(document.querySelector('.cf-bottomtab[data-route="more"]')?.getAttribute("aria-current")).toBeNull();
+    expect(document.querySelector('.cf-bottomtab[data-route="billing"]')?.getAttribute("aria-current")).toBe("page");
+    expect(more?.getAttribute("aria-expanded")).toBe("true"); // pressed, not active
     window.location.hash = "";
   });
 

@@ -337,11 +337,12 @@ function BottomTabs({
   moreOpen: boolean;
   onMore: () => void;
 }): React.JSX.Element {
-  // The More tab carries the active mark whenever the drawer is open OR the
-  // current section lives only in it (D1, DO, AI, Rules, Pairing, Projects)
-  // — landing on those used to leave the tab bar with nothing highlighted
-  // (operator 2026-10-12).
-  const moreActive = moreOpen || (active !== null && !BOTTOM_TABS.includes(active as (typeof BOTTOM_TABS)[number]));
+  // The More tab carries the active mark ONLY when the current section
+  // lives in the drawer (D1, DO, AI, Rules, Pairing, Projects) — landing on
+  // those used to leave the tab bar with nothing highlighted. Opening the
+  // drawer over a PRIMARY section must NOT double-highlight (operator
+  // 2026-10-12): the section keeps its mark; More keeps its pressed state.
+  const moreActive = active !== null && !BOTTOM_TABS.includes(active as (typeof BOTTOM_TABS)[number]);
   return (
     <nav className="cf-bottomtabs" aria-label="Sections">
       {BOTTOM_TABS.map((r) => {
