@@ -1,0 +1,13 @@
+id: FEAT-pAVXJZ4
+type: feature
+created_at: 2026-10-13T21:06:23.382424+04:00
+updated_at: 2026-10-13T21:06:24.582801+04:00
+source: local
+ulid: 01M4V3NJ66A0TTEMDC5KAVXJZ4
+provisional: true
+status: open
+title: Provision AI Gateways from the Ops Projects view
+description: |-
+    # Provision AI Gateways from the Ops Projects view
+
+    From a project's profile in Ops, create/attach a Cloudflare AI Gateway (first-class API) and link it to that project's workers, so per-project model usage, caching and rate limits (already collected by the AI Gateway collector, BR-02) can be governed per project. Same write-path prerequisites as the emergency-actions idea: write-scoped token, confirmation, audit log.
