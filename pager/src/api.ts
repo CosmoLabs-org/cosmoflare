@@ -48,6 +48,37 @@ export interface WorkerRow {
   cpuP99Ms: number | null;
 }
 
+// ---- /api/worker-profile contract (mirrors apps/ops/src/worker_profile.ts,
+// plus the cache envelope index.ts's cached() wraps around it — the same
+// flow EmailRoutingPayload takes for /api/email) ----
+
+export interface WorkerBindingRow {
+  type: string;
+  name: string;
+}
+
+export interface WorkerRouteRow {
+  zone: string;
+  pattern: string;
+}
+
+export interface WorkerVersionRow {
+  /** Deployment version number, newest first in the payload. */
+  number: number;
+  createdOn: string | null;
+}
+
+export interface WorkerProfilePayload {
+  generatedAt: string;
+  bindings: WorkerBindingRow[];
+  cronTriggers: string[];
+  routes: WorkerRouteRow[];
+  versions: WorkerVersionRow[];
+  /** One line per failed section — an omitted section is data absent, never invented. */
+  errors: string[];
+  cache?: CacheInfo;
+}
+
 export interface Summary {
   generatedAt: string;
   windowHours: number;

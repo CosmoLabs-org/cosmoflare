@@ -5,7 +5,7 @@
 // summary fetch injected (the worker_profile.test.ts pattern).
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { LoginExpiredError, type FetchResult, type Summary, type WorkerRow } from "../../api";
+import { LoginExpiredError, type FetchResult, type Summary, type WorkerProfilePayload, type WorkerRow } from "../../api";
 import WorkerProfileView from "./WorkerProfileView";
 
 afterEach(cleanup);
@@ -49,6 +49,85 @@ function gatedSummaryFetcher(summary: Summary): { fetcher: Parameters<typeof Wor
     go: () => release({ data: summary, source: "network", ageSec: 0, demo: false }),
   };
 }
+
+/** Endpoint-aware fetcher: maps "api/summary" and "api/worker-profile?…"
+ *  to injected payloads (the multi-fetch views' injection pattern). */
+function multiFetcher(endpoints: Record<string, unknown>): Parameters<typeof WorkerProfileView>[0]["fetcher"] {
+  return async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+    for (const [prefix, body] of Object.entries(endpoints)) {
+      if (endpoint === prefix || endpoint.startsWith(`${prefix}?`)) {
+        return { data: body as T, source: "network", ageSec: 0, demo: false };
+      }
+    }
+    throw new Error(`unexpected endpoint ${endpoint}`);
+  };
+}
+
+const PROFILE: WorkerProfilePayload = {
+  generatedAt: "2026-10-13T00:00:00.000Z",
+  bindings: [{ type: "kv_namespace", name: "CACHE" }, { type: "plain_text", name: "FLAG" }],
+  cronTriggers: ["*/5 * * * *"],
+  routes: [{ zone: "cosmolabs.org", pattern: "cosmolabs.org/api*" }],
+  versions: [{ number: 7, createdOn: "2026-10-05T00:00:00Z" }, { number: 6, createdOn: null }],
+  errors: [],
+};
+
+describe("WorkerProfileView worker-profile expansion", () => {
+  it("renders the four configuration sections with a binding row and a version row", async () => {
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": PROFILE })}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    for (const title of ["Bindings", "Cron triggers", "Routes", "Versions"]) {
+      const h2 = Array.from(document.querySelectorAll(".cf-card h2")).find((el) => el.textContent === title);
+      expect(h2, title).toBeTruthy();
+    }
+    // A binding row: name left, type in the data face.
+    const bindingLabel = Array.from(document.querySelectorAll(".cf-domain-field-label")).find((el) => el.textContent === "CACHE");
+    expect(bindingLabel).toBeTruthy();
+    // A version row: "v7" with its display-only date.
+    const versionLabel = Array.from(document.querySelectorAll(".cf-domain-field-label")).find((el) => el.textContent === "v7");
+    expect(versionLabel?.parentElement?.textContent).toContain("2026-10-05");
+  });
+
+  it("renders no Bindings card when the payload carries no bindings", async () => {
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": { ...PROFILE, bindings: [] } })}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    const headings = Array.from(document.querySelectorAll(".cf-card h2")).map((el) => el.textContent);
+    expect(headings).not.toContain("Bindings");
+    // Sections with data still render.
+    expect(headings).toContain("Versions");
+  });
+
+  it("a failed side fetch leaves the analytics card untouched (no section cards)", async () => {
+    const fetcher: Parameters<typeof WorkerProfileView>[0]["fetcher"] = async <T,>(endpoint: string): Promise<FetchResult<T>> => {
+      if (endpoint === "api/summary") {
+        return { data: SUMMARY([ROW]) as unknown as T, source: "network", ageSec: 0, demo: false };
+      }
+      throw new Error("HTTP 500");
+    };
+    render(<WorkerProfileView name="api-gateway" fetcher={fetcher} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-stat-value")).toBeTruthy();
+    });
+    const headings = Array.from(document.querySelectorAll(".cf-card h2")).map((el) => el.textContent);
+    for (const title of ["Bindings", "Cron triggers", "Routes", "Versions"]) {
+      expect(headings).not.toContain(title);
+    }
+  });
+});
 
 describe("WorkerProfileView (P-05a)", () => {
   it("renders the 24h stats with the statRow visual rules", async () => {

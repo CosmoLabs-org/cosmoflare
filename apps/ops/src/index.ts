@@ -14,6 +14,7 @@ import { collectDurableObjects } from "./durable_objects";
 import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProtectedHosts } from "./lifecycle";
 import { collectWafRules, handleDnsToggle, handlePurge, handleWafToggle } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
+import { collectWorkerProfile } from "./worker_profile";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
@@ -214,6 +215,17 @@ export default {
         if (!id) return json({ error: "missing id" }, 400);
         const result = await cached(ctx, env, `domain:${id}`, LIST_TTL, () =>
           collectDomainDetail(env.CF_API_TOKEN, id),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/worker-profile": {
+        // /api/worker-profile?name=<script> — one script's configuration
+        // (bindings, crons, routes, versions), cached 5 min per script like
+        // the other per-entity detail endpoints.
+        const name = url.searchParams.get("name");
+        if (!name) return json({ error: "missing name" }, 400);
+        const result = await cached(ctx, env, `worker-profile:${name}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectWorkerProfile(env, name),
         );
         return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
       }

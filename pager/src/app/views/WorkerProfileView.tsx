@@ -1,16 +1,20 @@
 // Worker profile as a real React view (P-05a, docs/planning-mode/
 // 2026-10-10-pager-react-rebuild.md): replaces the imperative bridge to
 // worker_profile.ts's renderWorkerProfile. The 24h analytics row from
-// /api/summary, exactly as the Workers table shows it, plus the Cloudflare
-// dashboard link out — no new endpoints, no invented numbers. The statRow
-// visual rules (cf-stat-value, zero-errors green, error-rate tint, the
-// "All workers" back control, the not-found quiet state) carry over; the
-// masthead owns the page title, so the stats card drops its name heading
-// and keeps the subtitle.
+// /api/summary, exactly as the Workers table project shows it, plus the
+// Cloudflare dashboard link out — no invented numbers. The worker-profile
+// expansion (2026-10-13) adds the script's configuration as a side fetch
+// (OverviewView's email pattern): bindings, cron triggers, routes, and
+// recent versions — each section renders only with data (an omitted section
+// is data absent, never invented), and a failed/absent side fetch leaves
+// the analytics card untouched. The statRow visual rules (cf-stat-value,
+// zero-errors green, error-rate tint, the "All workers" back control, the
+// not-found quiet state) carry over; the masthead owns the page title, so
+// the stats card drops its name heading and keeps the subtitle.
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { api, LoginExpiredError, type Summary, type WorkerRow } from "../../api";
+import { api, LoginExpiredError, type Summary, type WorkerProfilePayload, type WorkerRow } from "../../api";
 import { levelForErrorPct } from "../../dashboard";
 import { formatCount, formatPct } from "../../format";
 import { cpuMs } from "../../worker_profile";
@@ -29,6 +33,11 @@ function StatRow({ label, value, valueClass }: { label: string; value: string; v
   );
 }
 
+/** Display-only ISO date from a version's created_on, "—" when absent. */
+function versionDate(createdOn: string | null): string {
+  return createdOn === null ? "—" : createdOn.slice(0, 10);
+}
+
 const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
 
 export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
@@ -43,6 +52,7 @@ export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
+  const [profile, setProfile] = useState<WorkerProfilePayload | null>(null);
   const reduced = useReducedMotion();
 
   const repaint = useCallback((fresh: Summary): void => {
@@ -80,6 +90,22 @@ export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
       cancelled = true;
     };
   }, [name, refreshSeq, retryTick, repaint, fetchJson]);
+
+  // Side fetch (OverviewView's email pattern): the configuration payload
+  // must not gate the analytics card — a failed/absent worker-profile fetch
+  // silently leaves the section cards unrendered.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJson<WorkerProfilePayload>(`api/worker-profile?name=${encodeURIComponent(name)}`, { refresh: refreshSeq > 0 }).then(
+      (res) => {
+        if (!cancelled) setProfile(res.data);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [name, refreshSeq, retryTick, fetchJson]);
 
   if (loadError !== null) {
     if (loadError.expired) {
@@ -149,10 +175,67 @@ export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
         </section>
       )}
 
+      {profile?.bindings?.length ? (
+        <section className="cf-card">
+          <h2>Bindings</h2>
+          {profile.bindings.map((b) => (
+            <div className="cf-domain-field" key={`binding-${b.name}`}>
+              <span className="cf-domain-field-label">{b.name}</span>
+              <span className="cf-domain-field-value cf-stat-value">{b.type}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile?.cronTriggers?.length ? (
+        <section className="cf-card">
+          <h2>Cron triggers</h2>
+          {profile.cronTriggers.map((c) => (
+            <div className="cf-domain-field" key={`cron-${c}`}>
+              <span className="cf-domain-field-label">Cron</span>
+              <span className="cf-domain-field-value cf-stat-value">{c}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile?.routes?.length ? (
+        <section className="cf-card">
+          <h2>Routes</h2>
+          {profile.routes.map((r) => (
+            <div className="cf-domain-field" key={`route-${r.zone}-${r.pattern}`}>
+              <span className="cf-domain-field-label">{r.zone}</span>
+              <span className="cf-domain-field-value cf-stat-value">{r.pattern}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile?.versions?.length ? (
+        <section className="cf-card">
+          <h2>Versions</h2>
+          {profile.versions.map((v) => (
+            <div className="cf-domain-field" key={`version-${v.number}`}>
+              <span className="cf-domain-field-label">{`v${v.number}`}</span>
+              <span className="cf-domain-field-value cf-stat-value">{versionDate(v.createdOn)}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile?.errors?.length ? (
+        <section className="cf-card">
+          <h2>Collection notes</h2>
+          {profile.errors.map((e) => (
+            <p className="cf-empty cf-empty-quiet" key={e}>{e}</p>
+          ))}
+        </section>
+      ) : null}
+
       <section className="cf-card">
         <h2>About this worker</h2>
         <p className="cf-empty cf-empty-quiet">
-          Profiles currently surface the 24h analytics row — the same numbers the Workers table shows.
+          Sections render from the live API only — an absent section means no data, never an invented number.
         </p>
         <a
           className="cf-link"
