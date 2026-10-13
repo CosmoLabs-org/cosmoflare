@@ -122,6 +122,7 @@ function RecordToggle({ zone, record, onChanged }: { zone: string; record: DnsRe
         icon={Pause}
         label="Pause"
         confirmLabel="Confirm pause"
+        armedHint="record stops resolving until re-enabled"
         busyLabel="Pausing…"
         ariaLabel={`Pause DNS record ${record.name}`}
         onFire={() => toggleDnsRecord(zone, record, true).then(() => onChanged({ ...record, paused: true }))}
@@ -203,6 +204,7 @@ function WafLever({ zone, rule, onChanged }: { zone: string; rule: WafRule; onCh
           icon={ShieldOff}
           label="Disable"
           confirmLabel="Confirm disable"
+          armedHint="firewall protection drops for this rule"
           busyLabel="Disabling…"
           ariaLabel={`Disable firewall rule ${rule.description || rule.id}`}
           onFire={() => toggleWafRule(zone, rule, false).then(() => onChanged({ ...rule, enabled: false }))}

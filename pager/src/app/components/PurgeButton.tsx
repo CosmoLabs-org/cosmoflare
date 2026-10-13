@@ -30,6 +30,7 @@ export default function PurgeButton({ zone, onPurge = purgeZone }: { zone: strin
         icon={Eraser}
         label="Purge cache"
         confirmLabel="Confirm purge"
+        armedHint="cache empties; files re-fetch from origin"
         busyLabel="Purging…"
         doneLabel="Purged"
         ariaLabel={`Purge cache for ${zone}`}

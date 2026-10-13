@@ -77,6 +77,28 @@ describe("BillingView (P-04)", () => {
     expect(document.querySelector(".cf-card.cf-level-warning")?.textContent).toContain("Telemetry gaps");
   });
 
+  it("collapses the cost line to the base alone when no overage is projected (critique P2)", async () => {
+    const calm = fixtureBilling();
+    calm.products = calm.products.map((p) => ({ ...p, projectedOverageUsd: 0 }));
+    calm.totalProjectedOverageUsd = 0;
+    vi.spyOn(api, "fetchJson").mockImplementation(async <T,>(): Promise<FetchResult<T>> => ({
+      data: calm as unknown as T,
+      source: "network",
+      ageSec: 0,
+      demo: false,
+    }));
+    render(<BillingView />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-product")).toBeTruthy();
+    });
+    // Zero overage: the base carries the month — no "+ $0.00" noise, no
+    // duplicated total.
+    expect(document.querySelector(".cf-cost-line-base")?.textContent).toBe("$5.00");
+    expect(document.querySelector(".cf-cost-line-over")).toBeNull();
+    expect(document.querySelector(".cf-cost-line-total")).toBeNull();
+    expect(document.querySelector(".cf-cost-line-month")?.textContent).toBe("this month");
+  });
+
   it("renders the skeleton while the first fetch is in flight", async () => {
     let release!: (r: FetchResult<Billing>) => void;
     vi.spyOn(api, "fetchJson").mockImplementation(

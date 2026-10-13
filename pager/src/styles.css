@@ -356,30 +356,20 @@ body.cf-nav-open { overflow: hidden; }
 .cf-navlink[aria-current="page"] .cf-navcount {
   color: var(--text);
 }
-/* Per-section color identity (operator 2026-10-11): one token per route,
-   scoped onto anything carrying data-route. Hue rides icons, markers and
-   glows ONLY — labels and body text stay in the existing neutrals. */
-[data-route="more"] { --section-color: var(--accent); }
-[data-route="overview"] { --section-color: #f5a623; }
-[data-route="billing"] { --section-color: #34d399; }
-[data-route="ai"] { --section-color: #a78bfa; }
-[data-route="projects"] { --section-color: #38bdf8; }
-[data-route="domains"] { --section-color: #2dd4bf; }
-[data-route="workers"] { --section-color: #facc15; }
-[data-route="d1"] { --section-color: #60a5fa; }
-[data-route="durable-objects"] { --section-color: #f472b6; }
-[data-route="zones"] { --section-color: #a3e635; }
-[data-route="alerts"] { --section-color: #f87171; }
-[data-route="rules"] { --section-color: #818cf8; }
-[data-route="pairing"] { --section-color: #22d3ee; }
-
+/* Section identity is GLYPH-ONLY (operator 2026-10-13, critique P1): the
+   old per-route --section-color tokens collided with the severity ramp —
+   the active Alerts tab glowed exactly --sev-critical, billing the ok
+   green, workers the warning amber — training the eye that red means
+   "you are here." Hue in nav is gone; the active mark is the icon, its
+   weight and the neutral underline sweep. Severity color now appears
+   ONLY on severity. */
 .cf-navlink[aria-current="page"] {
   color: var(--text);
   background: var(--surface-raised);
   font-weight: 600;
 }
 .cf-navlink[aria-current="page"] .cf-navglyph {
-  color: var(--section-color, var(--accent));
+  color: var(--text);
   animation: cf-glyph-breathe 2.8s ease-in-out infinite;
 }
 .cf-navglyph { width: 20px; display: inline-flex; opacity: 0.9; }
@@ -548,6 +538,12 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--sev-critical);
   border-color: var(--sev-critical);
   background: color-mix(in srgb, var(--sev-critical) 12%, transparent);
+}
+.cf-lever-hint {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+  max-width: 16em;
 }
 .cf-lever-error {
   color: var(--sev-critical);
@@ -2095,11 +2091,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   50% { transform: translateX(2px); }
   75% { transform: translateX(-2px); }
 }
-/* Section color identity (operator 2026-10-11): the active nav glyph and
-   quicknav icon breathe a soft drop-shadow in the section's own hue. */
+/* Glyph breathe (operator 2026-10-13): an opacity pulse — motion carries
+   the active identity now that hue is reserved for severity. */
 @keyframes cf-glyph-breathe {
-  0%, 100% { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent)); }
-  50% { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent)); }
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
 }
 
 /* ============================================================
@@ -2198,15 +2194,15 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    scaleX from center, amber with a soft shadow. Hover warms it to a hint;
    the active item opens it fully. */
 .cf-quicknav-link::after {
-  content: \\;
+  content: "";
   position: absolute;
   left: 10%;
   right: 10%;
   bottom: 2px;
   height: 2px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  box-shadow: 0 0 8px rgba(245, 166, 35, 0.55);
+  background: linear-gradient(90deg, transparent, var(--text), transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--text) 45%, transparent);
   transform: scaleX(0);
   transform-origin: 50% 50%;
   transition: transform var(--dur-med) var(--ease-out);
@@ -2220,7 +2216,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-quicknav-link[aria-current="page"] {
   background: var(--surface-raised);
-  border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
 }
@@ -2234,10 +2229,9 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    the section we're in'): phone widths only, stacked UNDER the statusbar at
    the viewport bottom — statusbar above, tabs at the very bottom edge. Five
    primary sections + a More tab that opens the drawer for the full list.
-   Reuses the data-route --section-color tokens: the active tab's label and
-   icon take that route's hue, with a 2px gradient underline in the same
-   treatment as the quicknav's glow line. Visibility gating is pure CSS, so
-   the component renders unconditionally. ---- */
+   Glyph-only identity (operator 2026-10-13): the active tab's label, icon
+   and underline sweep are neutral — hue is reserved for severity.
+   Visibility gating is pure CSS, so the component renders unconditionally. ---- */
 .cf-bottomtabs {
   display: none;
 }
@@ -2262,12 +2256,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   /* Color-only transitions (reduced-motion convention, ~160ms). */
   transition: color 160ms var(--ease-out);
 }
-/* The underline: same gradient treatment as the quicknav's glow line, but in
-   the tab's own --section-color (each anchor carries its data-route token).
-   Sits at the bar's top edge, under the tab segment. Operator 2026-10-12:
-   it sweeps out FROM THE CENTER to both sides and the sweep is meant to be
-   SEEN — 3px tall, near-full width, a 420ms sweep with a glow flare, and
-   the active tab's icon grows a little. */
+/* The underline: same gradient treatment as the quicknav's glow line, in
+   the neutral text tone. Sits at the bar's top edge, under the tab segment.
+   Operator 2026-10-12: it sweeps out FROM THE CENTER to both sides and the
+   sweep is meant to be SEEN — 3px tall, near-full width, a 420ms sweep with
+   a glow flare, and the active tab's icon grows a little. */
 .cf-bottomtab::after {
   content: "";
   position: absolute;
@@ -2276,8 +2269,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   top: 0;
   height: 3px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent);
+  background: linear-gradient(90deg, transparent, var(--text), transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--text) 50%, transparent);
   transform: scaleX(0);
   transform-origin: 50% 50%;
   transition: transform 320ms var(--ease-out);
@@ -2293,7 +2286,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   transition: transform 240ms var(--ease-out);
 }
 .cf-bottomtab[aria-current="page"] {
-  color: var(--section-color, var(--accent));
+  color: var(--text);
   font-weight: 600;
   font-size: var(--text-xs);
   /* More separation under the icon (operator 2026-10-13) and a little
@@ -2573,8 +2566,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   height: 40px;
   border-radius: var(--radius);
   background: var(--surface-raised);
-  color: var(--section-color, var(--accent));
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--section-color, var(--accent)) 60%, transparent));
+  color: var(--text);
   flex: none;
 }
 .cf-sectionhead-title {
@@ -2605,14 +2597,14 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   color: var(--text);
 }
 .cf-quicknav-link[aria-current="page"] .cf-quicknav-icon {
-  color: var(--section-color, var(--accent));
+  color: var(--text);
   animation: cf-glyph-breathe 2.8s ease-in-out infinite;
 }
-/* Active underline takes the section color too (operator 2026-10-11) — the
-   bar and its glow, nothing else. */
+/* Active underline stays neutral (operator 2026-10-13) — the bar and its
+   glow, nothing else. */
 .cf-quicknav-link[aria-current="page"]::after {
-  background: linear-gradient(90deg, transparent, var(--section-color, var(--accent)), transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--section-color, var(--accent)) 70%, transparent);
+  background: linear-gradient(90deg, transparent, var(--text), transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--text) 45%, transparent);
 }
 .cf-quicknav-label {
   font-family: var(--font-indicator);
@@ -2630,7 +2622,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   color: var(--muted);
 }
 .cf-navlink[aria-current="page"] .cf-navglyph {
-  color: var(--section-color, var(--accent));
+  color: var(--text);
   animation: cf-glyph-breathe 2.8s ease-in-out infinite;
 }
 

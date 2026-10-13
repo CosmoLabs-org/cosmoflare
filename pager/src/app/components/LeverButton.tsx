@@ -16,6 +16,9 @@ export interface LeverButtonProps {
   label: string;
   /** Armed label ("Confirm pause"); omit to fire without confirming. */
   confirmLabel?: string;
+  /** What happens if the armed action fires ("record stops resolving") —
+   *  shown under the lever while armed (critique P2: state the impact). */
+  armedHint?: string;
   busyLabel?: string;
   /** Success flash label ("Purged"); omit to return straight to idle. */
   doneLabel?: string;
@@ -25,7 +28,7 @@ export interface LeverButtonProps {
   onFire: () => Promise<void>;
 }
 
-export default function LeverButton({ icon: Icon, label, confirmLabel, busyLabel = "Working…", doneLabel, ariaLabel, onFire }: LeverButtonProps): React.JSX.Element {
+export default function LeverButton({ icon: Icon, label, confirmLabel, armedHint, busyLabel = "Working…", doneLabel, ariaLabel, onFire }: LeverButtonProps): React.JSX.Element {
   const [phase, setPhase] = useState<Phase>("idle");
   const timer = useRef<number | undefined>(undefined);
 
@@ -76,6 +79,7 @@ export default function LeverButton({ icon: Icon, label, confirmLabel, busyLabel
         </span>
         <span className="cf-lever-label">{textLabel}</span>
       </button>
+      {armed && armedHint ? <span className="cf-lever-hint" role="status">{armedHint}</span> : null}
       {typeof phase === "object" ? <span className="cf-lever-error" role="alert">{phase.error}</span> : null}
     </span>
   );

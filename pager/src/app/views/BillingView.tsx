@@ -201,17 +201,24 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
         </p>
         {/* The month on one line (operator 2026-10-13): gray standard base,
             projected overage, the month total closing with its weight — no
-            equals sign needed. */}
+            equals sign. Zero-overage collapses to the base alone (critique
+            P2: "+ $0.00" is noise, not information). */}
         <p
           className="cf-cost-line cf-cost-line-lg"
-          aria-label={`Base ${formatUsd(WORKERS_PAID_BASE_USD)} on ${WORKERS_PAID_PLAN} plus projected overage ${formatUsd(projectedOverageTotal(b.products))}, ${formatUsd(projectedMonthlyTotal(b.products))} this month`}
+          aria-label={
+            projectedOverageTotal(b.products) > 0
+              ? `Base ${formatUsd(WORKERS_PAID_BASE_USD)} on ${WORKERS_PAID_PLAN} plus projected overage ${formatUsd(projectedOverageTotal(b.products))}, ${formatUsd(projectedMonthlyTotal(b.products))} this month`
+              : `Base ${formatUsd(WORKERS_PAID_BASE_USD)} on ${WORKERS_PAID_PLAN}, no overage projected, this month`
+          }
         >
           <span className="cf-cost-line-base">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
-          <span className="cf-cost-line-op" aria-hidden="true">+</span>
-          <span className={`cf-cost-line-over${projectedOverageTotal(b.products) > 0 ? "" : " is-clear"}`}>
-            {projectedOverageTotal(b.products) > 0 ? formatUsd(projectedOverageTotal(b.products)) : "$0.00"}
-          </span>
-          <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(b.products))}</span>
+          {projectedOverageTotal(b.products) > 0 ? (
+            <>
+              <span className="cf-cost-line-op" aria-hidden="true">+</span>
+              <span className="cf-cost-line-over">{formatUsd(projectedOverageTotal(b.products))}</span>
+              <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(b.products))}</span>
+            </>
+          ) : null}
           <span className="cf-cost-line-month">this month</span>
         </p>
         <div

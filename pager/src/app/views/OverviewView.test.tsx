@@ -38,8 +38,12 @@ describe("OverviewView (P-04)", () => {
     expect(document.querySelector(".cf-plan-line .cf-cost-line-base")?.textContent).toBe("$5.00");
     expect(document.querySelector(".cf-plan-line .cf-cost-line-total")?.textContent).toMatch(/^\$[\d,.]+$/);
     expect(document.querySelector(".cf-plan-line .cf-cost-line-month")?.textContent).toBe("this month");
-    // Four KPI tiles — the period day moved to the status strip (critique P2).
+    // Four KPI tiles — the period day moved to the status strip and the
+    // overage dollars live in the plan line, so tile 1 carries worker
+    // errors instead (fixture: 620 + 1800 + 0).
     expect(document.querySelectorAll(".cf-kpis .cf-kpi").length).toBe(4);
+    expect(document.querySelector(".cf-kpis .cf-kpi .cf-kpi-value")?.textContent).toBe("2.4k");
+    expect(document.querySelector(".cf-kpis .cf-kpi .cf-kpi-label")?.textContent).toBe("worker errors · 24h");
     // The KPI row no longer carries a period progress bar.
     expect(document.querySelector(".cf-kpis .cf-progress")).toBeNull();
     // Rings card: every non-rolling fixture product renders a ring

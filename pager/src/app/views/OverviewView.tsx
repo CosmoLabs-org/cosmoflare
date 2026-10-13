@@ -11,7 +11,7 @@ import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, ty
 import type { EmailRoutingPayload } from "../../email";
 import { ATTENTION_CAP, capAttention, collectAttention, type AttentionItem } from "../../attention";
 import { isRollingStorage, projectedMonthlyTotal, WORKERS_PAID_BASE_USD, WORKERS_PAID_PLAN } from "../../billing";
-import { formatPct, formatUsd } from "../../format";
+import { formatCount, formatPct, formatUsd } from "../../format";
 import { capTopRings, gaugeLevel, productLabel, sortByProjectedDesc, type Level } from "../../gauges";
 import { hrefFor } from "../../routes";
 import { updateStatusStrip } from "../../statusstrip";
@@ -219,11 +219,13 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
   const attention = collectAttention(summary, billing);
   const { shown: attentionShown, extra: attentionExtra } = capAttention(attention, ATTENTION_CAP);
 
-  // KPI tiles — the period day lives in the status strip, not a tile
-  // (critique P2: five tiles chunked the row).
+  // KPI tiles — the period day lives in the status strip (critique P2) and
+  // the overage dollars live in the plan line, so the tiles carry what the
+  // rings don't: worker errors, pacing, attention count.
   const d1Prod = findProduct(billing, "d1.rows_read");
   const wProd = findProduct(billing, "workers.requests");
   const over = billing.totalProjectedOverageUsd;
+  const workerErrors = summary.workers.reduce((n, w) => n + w.errors, 0);
 
   // Workers Paid allowances — the 8 rings closest to their limit, worst-first
   // (projected % desc), the rest behind a "Show all N" toggle.
@@ -243,19 +245,26 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
 
       {/* Plan line (operator 2026-10-13): the plan name, then the month on
           one line — the same cost lockup the billing card runs, at line
-          scale. Gray base reads as the standard price; the total closes. */}
+          scale. Gray base reads as the standard price; the total closes.
+          Zero-overage collapses to the base alone (critique P2). */}
       <p className="cf-plan-line">
         <span className="cf-plan-name">{`${WORKERS_PAID_PLAN} ·`}</span>
         <span
           className="cf-cost-line"
-          aria-label={`Base ${formatUsd(WORKERS_PAID_BASE_USD)} plus projected overage ${formatUsd(over)}, ${formatUsd(projectedMonthlyTotal(billing.products))} this month`}
+          aria-label={
+            over >= 0.01
+              ? `Base ${formatUsd(WORKERS_PAID_BASE_USD)} plus projected overage ${formatUsd(over)}, ${formatUsd(projectedMonthlyTotal(billing.products))} this month`
+              : `Base ${formatUsd(WORKERS_PAID_BASE_USD)}, no overage projected, this month`
+          }
         >
           <span className="cf-cost-line-base">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
-          <span className="cf-cost-line-op" aria-hidden="true">+</span>
-          <span className={`cf-cost-line-over${over >= 0.01 ? (over >= 50 ? " cf-level-critical-text" : "") : " is-clear"}`}>
-            {over >= 0.01 ? formatUsd(over) : "$0.00"}
-          </span>
-          <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(billing.products))}</span>
+          {over >= 0.01 ? (
+            <>
+              <span className="cf-cost-line-op" aria-hidden="true">+</span>
+              <span className={`cf-cost-line-over${over >= 50 ? " cf-level-critical-text" : ""}`}>{formatUsd(over)}</span>
+              <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(billing.products))}</span>
+            </>
+          ) : null}
           <span className="cf-cost-line-month">this month</span>
         </span>
       </p>
@@ -264,9 +273,9 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
 
       <div className="cf-kpis">
         <KpiTile
-          value={formatUsd(billing.totalProjectedOverageUsd)}
-          label="projected overage"
-          level={over >= 0.01 ? (over >= 50 ? "critical" : "warning") : "ok"}
+          value={formatCount(workerErrors)}
+          label={workerErrors === 1 ? "worker error · 24h" : "worker errors · 24h"}
+          level={workerErrors > 0 ? "warning" : "ok"}
         />
         <KpiTile
           value={d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—"}
