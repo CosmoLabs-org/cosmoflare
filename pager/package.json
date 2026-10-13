@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Cosmoflare Pager — installable static PWA receiving Web Push alerts (FEAT-045)",
+  "description": "Cosmoflare Pager \u2014 installable static PWA receiving Web Push alerts (FEAT-045)",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node stamp-sw.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"

@@ -2404,10 +2404,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   outline-offset: -2px;
 }
 @media (max-width: 640px) {
-  :root {
-    /* Pill footprint: 56px bar + 10px float offset above the safe area. */
-    --cf-tabbar-h: calc(66px + env(safe-area-inset-bottom));
-  }
   /* The quicknav row gives way to the tab bar on phones. */
   .cf-quicknav {
     display: none;
@@ -2494,8 +2490,12 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     flex: 1 1 0;
     min-height: 56px; /* comfortable tap target */
   }
+  /* Full overlay (operator 2026-10-14): the pill reserves NOTHING —
+     content flows to the true viewport bottom and scrolls under the
+     glass. The only bottom padding left is the ordinary page inset and
+     the OS home-indicator safe area, same as every other edge. */
   .cf-main {
-    padding-bottom: calc(var(--space-4) + var(--cf-tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   }
 }
 

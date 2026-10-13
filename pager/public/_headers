@@ -1,0 +1,10 @@
+# The service worker must always be revalidated, never HTTP-cached — iOS
+# Safari otherwise serves a stale sw.js and the update modal can never
+# fire (the browser byte-compares the file to detect updates).
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# The shell document follows the same rule — the SW's network-first
+# navigation handler covers open clients; this covers the rest.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
