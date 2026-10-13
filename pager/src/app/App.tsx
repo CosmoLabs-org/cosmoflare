@@ -460,6 +460,25 @@ export default function App(): React.JSX.Element {
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
+  // Drawer keyboard hardening (critique P1): Escape closes, focus moves in
+  // on open (the close button — the drawer's first control) and restores to
+  // whatever had focus before the drawer opened — the same contract the
+  // UpdateModal keeps.
+  const drawerCloseRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const restoreTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    drawerCloseRef.current?.focus();
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      restoreTo?.focus();
+    };
+  }, [drawerOpen]);
+
   return (
     <>
       <a className="cf-skip-link" href="#main">Skip to content</a>
@@ -560,7 +579,7 @@ export default function App(): React.JSX.Element {
             >
               <div className="cf-drawer-head">
                 <Brand tag="div" />
-                <button type="button" className="cf-drawer-close" aria-label="Close menu" onClick={closeDrawer}>×</button>
+                <button type="button" className="cf-drawer-close" aria-label="Close menu" onClick={closeDrawer} ref={drawerCloseRef}>×</button>
               </div>
               <NavLinks variant="drawer" active={view.kind === "route" ? view.route : null} counts={counts} onNavigate={closeDrawer} />
             </motion.nav>

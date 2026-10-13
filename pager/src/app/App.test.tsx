@@ -167,6 +167,23 @@ describe("Bottom tab bar (operator 2026-10-12)", () => {
     expect(drawer?.textContent).toContain("Pairing");
     expect(drawer?.textContent).toContain("Durable Objects");
   });
+
+  it("Escape closes the drawer, focus moves in on open and restores on close (critique P1)", async () => {
+    render(<App />);
+    const more = screen.getByRole("button", { name: "More sections" });
+    more.focus();
+    fireEvent.click(more);
+    // Focus moved into the drawer — the close button is the first control.
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Close menu" }));
+    expect(document.getElementById("cf-drawer")).toBeTruthy();
+    fireEvent.keyDown(window, { key: "Escape" });
+    // AnimatePresence keeps the DOM through the exit slide — wait it out.
+    await waitFor(() => {
+      expect(document.getElementById("cf-drawer")).toBeNull();
+    });
+    // Focus restored to the control that opened the drawer.
+    expect(document.activeElement).toBe(more);
+  });
 });
 
 describe("Install banner mount (FEAT-pXNQ5GW)", () => {
