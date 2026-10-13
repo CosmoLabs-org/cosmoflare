@@ -1,0 +1,17 @@
+id: FEAT-pCTEKWX
+type: feature
+created_at: 2026-10-14T00:31:11.887178+04:00
+updated_at: 2026-10-14T00:31:13.547395+04:00
+source: local
+ulid: 01M4VFCK4BHGAZ9X1Y2ZCTEKWX
+provisional: true
+status: open
+title: Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
+description: |-
+    # Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
+
+
+
+    This idea proposes building a tab bar for the Ops PWA where the active tab indicator is a translucent "liquid glass" pill — think Apple's Liquid Glass design language: frosted, light-refracting material that slides smoothly between tabs to mark the current section. Rather than hardcoding that effect once, the glass rendering itself (backdrop blur, translucency, specular edge highlights) would be extracted into a reusable `glass-surface` module in CosmoKit, so the same material could later back cards, modals, and toolbars. It's useful because it modernizes the PWA with a native-app feel while centralizing the notoriously fiddly parts — `backdrop-filter` performance, browser fallbacks, stacking-context bugs — into one tested primitive instead of copy-pasted glassmorphism CSS.
+
+    If you share the current tab component, I can sketch exactly where the pill logic would slot in.
