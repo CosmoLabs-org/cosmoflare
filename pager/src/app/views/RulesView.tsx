@@ -12,6 +12,7 @@
 // masthead owns the page title.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Plus, Save, Trash2, X } from "lucide-react";
 import { api, LoginExpiredError } from "../../api";
 import {
   addExclude,
@@ -55,6 +56,28 @@ async function putRules(rules: AlertRule[]): Promise<RulesPayload> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   if (!body || !Array.isArray(body.rules)) throw new Error("The server returned no rules — try Refresh.");
   return { rules: body.rules, conditions: [], starter: false };
+}
+
+/** The enabled control (operator 2026-10-14): a real switch — track and
+ *  knob, position carries the state, nothing to read and parse. The hit
+ *  area extends past the visual track to the 44px floor. */
+function ToggleSwitch({ checked, ariaLabel, onChange }: {
+  checked: boolean;
+  ariaLabel: string;
+  onChange: (next: boolean) => void;
+}): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      className={`cf-switch${checked ? " is-on" : ""}`}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="cf-switch-knob" aria-hidden="true" />
+    </button>
+  );
 }
 
 /** One editable rule card. Structural edits go up through onChange; the
@@ -121,15 +144,11 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
           aria-label={`Rule ${index + 1} name`}
           onChange={(e) => onChange({ name: e.target.value })}
         />
-        <button
-          type="button"
-          className="cf-toggle"
-          aria-pressed={draft.enabled}
-          aria-label={`Rule ${index + 1} enabled`}
-          onClick={() => onChange({ enabled: !draft.enabled })}
-        >
-          {draft.enabled ? "On" : "Off"}
-        </button>
+        <ToggleSwitch
+          checked={draft.enabled}
+          ariaLabel={`Rule ${index + 1} enabled`}
+          onChange={(enabled) => onChange({ enabled })}
+        />
       </div>
 
       {/* Condition select from the server's list. */}
@@ -153,7 +172,7 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
         <div className="cf-field-row">
           <input
             type="number"
-            className="cf-input"
+            className="cf-input cf-input-num"
             min="0"
             step="any"
             value={Number.isFinite(draft.threshold) ? String(draft.threshold) : ""}
@@ -177,7 +196,7 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
                 aria-label={`Remove ${value}`}
                 onClick={() => chipRemove(value)}
               >
-                ×
+                <X size={11} strokeWidth={2.4} aria-hidden="true" />
               </button>
             </span>
           ))}
@@ -191,19 +210,25 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
             value={addValue}
             onChange={(e) => setAddValue(e.target.value)}
           />
-          <button type="button" className="cf-btn cf-btn-ghost" onClick={chipAdd}>Add</button>
+          <button type="button" className="cf-btn cf-btn-ghost" onClick={chipAdd}>
+            <span className="cf-btn-glyph" aria-hidden="true"><Plus size={15} strokeWidth={2.2} /></span>
+            Add
+          </button>
         </div>
       </div>
 
-      {/* Per-card footer: two-step Delete. Validation errors surface at the
-          action bar with the offending card highlighted. */}
-      <button
-        type="button"
-        className={`cf-btn${armed ? " cf-btn-danger" : " cf-btn-ghost"}`}
-        onClick={deleteClick}
-      >
-        {armed ? "Confirm delete" : "Delete"}
-      </button>
+      {/* Per-card footer: two-step Delete, right-aligned. Validation errors
+          surface at the action bar with the offending card highlighted. */}
+      <div className="cf-rule-foot">
+        <button
+          type="button"
+          className={`cf-btn${armed ? " cf-btn-danger" : " cf-btn-ghost"}`}
+          onClick={deleteClick}
+        >
+          <span className="cf-btn-glyph" aria-hidden="true"><Trash2 size={15} strokeWidth={2} /></span>
+          {armed ? "Confirm delete" : "Delete"}
+        </button>
+      </div>
     </section>
   );
 }
@@ -412,8 +437,12 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
       {saveStatus !== null ? <p className="cf-save-status">{saveStatus}</p> : null}
 
       <div className="cf-rules-actions">
-        <button type="button" className="cf-btn" onClick={addRule}>Add rule</button>
+        <button type="button" className="cf-btn" onClick={addRule}>
+          <span className="cf-btn-glyph" aria-hidden="true"><Plus size={16} strokeWidth={2.2} /></span>
+          Add rule
+        </button>
         <button type="button" className="cf-btn cf-btn-primary" disabled={saving} onClick={save}>
+          <span className="cf-btn-glyph" aria-hidden="true"><Save size={16} strokeWidth={2} /></span>
           Save
         </button>
       </div>

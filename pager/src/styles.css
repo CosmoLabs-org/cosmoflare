@@ -446,6 +446,10 @@ body.cf-nav-open { overflow: hidden; }
   white-space: nowrap;
 }
 .cf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   font-family: var(--font-brand);
   font-size: 15px;
   font-weight: 600;
@@ -1724,29 +1728,72 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-rule-head { display: flex; gap: var(--space-2); align-items: center; }
 .cf-rule-head .cf-rule-name { flex: 1 1 auto; }
 
-/* Enabled toggle: On/Off button with aria-pressed. */
-.cf-toggle {
+/* Enabled switch (operator 2026-10-14: a real toggle, not an On/Off text
+   button): track + knob, position carries the state. The ::before expands
+   the hit area past the visual track to the 44px floor. */
+.cf-switch {
+  position: relative;
   flex: 0 0 auto;
-  min-width: 56px;
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-  font: inherit;
-  font-weight: 600;
-  color: var(--muted);
-  background: none;
-  border: 1px solid var(--border);
+  width: 50px;
+  height: 30px;
+  padding: 0;
   border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
   cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
 }
-.cf-toggle[aria-pressed="true"] {
-  color: var(--bg);
-  background: var(--sev-ok);
-  border-color: var(--sev-ok);
+.cf-switch::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
 }
-.cf-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cf-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--muted);
+  transition:
+    transform 200ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+.cf-switch.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.cf-switch.is-on .cf-switch-knob {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+.cf-switch:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.cf-rule-off .cf-switch { opacity: 0.7; }
 
-/* Formatted threshold hint ("1.0B" for 1e9 on d1-rows-read). */
-.cf-rule-hint { flex: 0 0 auto; font-size: var(--text-sm); color: var(--muted); white-space: nowrap; }
+/* Formatted threshold hint ("1.0B" for 1e9 on d1-rows-read) — the data
+   face, tabular: it IS a number (operator 2026-10-14). */
+.cf-rule-hint {
+  flex: 0 0 auto;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* Numeric inputs wear the data face (operator 2026-10-14). */
+.cf-input-num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+/* Per-card footer: destructive action right-aligned, in order. */
+.cf-rule-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
 
 /* Exclude chips: removable pills. */
 .cf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-2); }
@@ -1778,7 +1825,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 
 /* Disabled rule card reads muted. */
 .cf-rule-off .cf-input, .cf-rule-off .cf-chip { opacity: 0.55; }
-.cf-rule-off .cf-toggle { color: var(--muted); background: none; border-color: var(--border); }
 
 /* Server/client rejection highlight on the offending card. */
 .cf-rule-invalid { border-color: var(--sev-critical); }
@@ -2131,7 +2177,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .cf-drawer, .cf-backdrop, .cf-burger-bar, .cf-btn, .cf-btn:active,
-  .cf-toggle, .cf-chip-remove, .cf-fade-swap,
+  .cf-toggle, .cf-switch, .cf-switch-knob, .cf-chip-remove, .cf-fade-swap,
   .cf-domain-chevron, .cf-domain-detail,
   .cf-attention-chevron,
   .cf-bottomtab, .cf-bottomtab::after, .cf-bottomtab-icon {

@@ -151,7 +151,12 @@ describe("RulesView (P-06)", () => {
     expect(input("Rule 1 threshold").value).toBe("5000");
     expect(document.querySelector(".cf-alert-list")).toBeNull();
     expect(document.querySelector(".cf-chip-value")?.textContent).toBe("cf-state");
-    expect(document.querySelector(".cf-toggle")?.textContent).toBe("Off");
+    // The switch carries the echo's disabled state: role=switch, not
+    // checked, no .is-on (operator 2026-10-14 — a switch, not text).
+    const sw = document.querySelector<HTMLButtonElement>('.cf-switch[aria-label="Rule 1 enabled"]');
+    expect(sw?.getAttribute("role")).toBe("switch");
+    expect(sw?.getAttribute("aria-checked")).toBe("false");
+    expect(sw?.classList.contains("is-on")).toBe(false);
   });
 
   it("a duplicate exclude chip is not added and remove kills it", async () => {
@@ -220,7 +225,7 @@ describe("RulesView (P-06)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-rule")).toBeTruthy();
     });
-    const del = () => document.querySelector<HTMLButtonElement>(".cf-rule > .cf-btn")!;
+    const del = () => document.querySelector<HTMLButtonElement>(".cf-rule-foot .cf-btn")!;
     expect(del().textContent).toBe("Delete");
 
     // First tap: arm only — the button turns danger + "Confirm delete" and
@@ -242,7 +247,7 @@ describe("RulesView (P-06)", () => {
     try {
       fireEvent.click(document.querySelector<HTMLButtonElement>(".cf-rules-actions .cf-btn")!);
       expect(document.querySelectorAll(".cf-rule")).toHaveLength(1);
-      const del2 = document.querySelector<HTMLButtonElement>(".cf-rule > .cf-btn")!;
+      const del2 = document.querySelector<HTMLButtonElement>(".cf-rule-foot .cf-btn")!;
       fireEvent.click(del2);
       expect(del2.textContent).toBe("Confirm delete");
       act(() => {
