@@ -2249,12 +2249,26 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   border: 0;
   background: none;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.2;
   color: var(--muted);
   text-decoration: none;
-  /* Color-only transitions (reduced-motion convention, ~160ms). */
-  transition: color 160ms var(--ease-out);
+  transition: color 240ms var(--ease-out);
+}
+/* The label: one size in both states (the old 10px->12px snap was the
+   graceless jump, operator 2026-10-14) — emphasis arrives as color, a
+   gentle scale and letter-spacing opening, all transitioned. */
+.cf-bottomtab-label {
+  display: inline-block;
+  transform-origin: center;
+  transition:
+    color 240ms var(--ease-out),
+    transform 320ms var(--ease-out),
+    letter-spacing 320ms var(--ease-out);
+}
+.cf-bottomtab[aria-current="page"] .cf-bottomtab-label {
+  transform: scale(1.12);
+  letter-spacing: 0.04em;
 }
 /* The underline: same gradient treatment as the quicknav's glow line, in
    the neutral text tone. Sits at the bar's top edge, under the tab segment.
@@ -2288,26 +2302,25 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-bottomtab[aria-current="page"] {
   color: var(--text);
   font-weight: 600;
-  font-size: var(--text-xs);
   /* More separation under the icon (operator 2026-10-13) and a little
      headroom so the grown icon never kisses the glow line. */
   gap: 7px;
-  letter-spacing: 0.02em;
   padding-top: 5px;
 }
-/* Activation: accelerate up, overshoot, settle (operator 2026-10-13) — a
-   transient pulse, then the calm selected state rests at a modest grow. */
+/* Activation (operator 2026-10-14, "without grace" fix): a longer, softer
+   spring — the icon rises, overshoots gently and settles into its resting
+   grow instead of snapping. */
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon {
   transform: scale(1.16);
-  animation: cf-tab-pop 420ms var(--ease-out) both;
+  animation: cf-tab-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes cf-tab-pop {
-  0% { transform: scale(0.92); }
-  55% { transform: scale(1.3); }
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.24); }
   100% { transform: scale(1.16); }
 }
 .cf-bottomtab[aria-current="page"]::after {
-  animation: cf-tab-sweep 420ms var(--ease-out) both;
+  animation: cf-tab-sweep 540ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transform: scaleX(1);
 }
 .cf-bottomtab:focus-visible {
