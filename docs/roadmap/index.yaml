@@ -1,9 +1,13 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-13T21:06:12.659111+04:00
-next_id: 120
+last_updated: 2026-10-13T21:06:26.784164+04:00
+next_id: 121
 items:
-    - id: ROAD-119
+    - id: ROAD-120
+      title: 'Ops write-path: guarded emergency actions in the Ops GUI'
+      status: captured
+      created_at: 2026-10-13T21:06:26.783881+04:00
+    - id: ROAD-p7QJ0RX
       title: Profile pages for every unique entity + future control actions
       status: captured
       created_at: 2026-10-13T21:06:12.658928+04:00
