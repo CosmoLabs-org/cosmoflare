@@ -10,25 +10,19 @@ import { motion, useReducedMotion } from "framer-motion";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, type ProductUsage, type Summary } from "../../api";
 import type { EmailRoutingPayload } from "../../email";
 import { ATTENTION_CAP, capAttention, collectAttention, type AttentionItem } from "../../attention";
-import { isRollingStorage } from "../../billing";
-import { formatPct, formatUsd, periodProgress } from "../../format";
+import { isRollingStorage, projectedMonthlyTotal, WORKERS_PAID_BASE_USD, WORKERS_PAID_PLAN } from "../../billing";
+import { formatPct, formatUsd } from "../../format";
 import { capTopRings, gaugeLevel, productLabel, sortByProjectedDesc, type Level } from "../../gauges";
 import { hrefFor } from "../../routes";
 import { updateStatusStrip } from "../../statusstrip";
 import {
   pacingPct,
   pacingSublabel,
-  periodEndsLabel,
   ringOverageText,
   ringPropsFor,
   usageLevelFromPct,
 } from "../../dashboard";
 import RingGauge from "../components/RingGauge";
-
-// Workers Paid base: $5.00/mo (cloudflare.com/workers/pricing, the same
-// source pricing.ts verifies product prices against) — same constant the
-// vanilla planLine uses.
-const WORKERS_PAID_BASE_USD = 5;
 
 /** findProduct locates a billing product by id, for the pacing KPI tiles. */
 const findProduct = (b: Billing | null, id: string): ProductUsage | null => b?.products.find((p) => p.id === id) ?? null;
@@ -225,11 +219,11 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
   const attention = collectAttention(summary, billing);
   const { shown: attentionShown, extra: attentionExtra } = capAttention(attention, ATTENTION_CAP);
 
-  // KPI tiles. The billing-period tile embeds its own thin progress bar.
+  // KPI tiles — the period day lives in the status strip, not a tile
+  // (critique P2: five tiles chunked the row).
   const d1Prod = findProduct(billing, "d1.rows_read");
   const wProd = findProduct(billing, "workers.requests");
   const over = billing.totalProjectedOverageUsd;
-  const periodElapsed = periodProgress(billing.period.day, billing.period.days).elapsedPct;
 
   // Workers Paid allowances — the 8 rings closest to their limit, worst-first
   // (projected % desc), the rest behind a "Show all N" toggle.
@@ -247,12 +241,22 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      {/* Plan line: the plan and its base price — neutral grey — plus the
-          month's projected overage in its severity color. */}
+      {/* Plan line (operator 2026-10-13): the plan name, then the month on
+          one line — the same cost lockup the billing card runs, at line
+          scale. Gray base reads as the standard price; the total closes. */}
       <p className="cf-plan-line">
-        <span className="cf-plan-base">{`Workers Paid · $${WORKERS_PAID_BASE_USD}.00/mo`}</span>
-        <span className={`cf-plan-overage ${over >= 0.01 ? (over >= 50 ? "cf-level-critical-text" : "cf-level-warning-text") : "cf-ok-text"}`}>
-          {over >= 0.01 ? `+ ${formatUsd(over)} overage this month` : "no overage projected"}
+        <span className="cf-plan-name">{`${WORKERS_PAID_PLAN} ·`}</span>
+        <span
+          className="cf-cost-line"
+          aria-label={`Base ${formatUsd(WORKERS_PAID_BASE_USD)} plus projected overage ${formatUsd(over)}, ${formatUsd(projectedMonthlyTotal(billing.products))} this month`}
+        >
+          <span className="cf-cost-line-base">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
+          <span className="cf-cost-line-op" aria-hidden="true">+</span>
+          <span className={`cf-cost-line-over${over >= 0.01 ? (over >= 50 ? " cf-level-critical-text" : "") : " is-clear"}`}>
+            {over >= 0.01 ? formatUsd(over) : "$0.00"}
+          </span>
+          <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(billing.products))}</span>
+          <span className="cf-cost-line-month">this month</span>
         </span>
       </p>
 
@@ -264,17 +268,6 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
           label="projected overage"
           level={over >= 0.01 ? (over >= 50 ? "critical" : "warning") : "ok"}
         />
-        <KpiTile
-          value={`day ${billing.period.day} of ${billing.period.days}`}
-          label={periodEndsLabel(billing.period.end, billing.period.source)}
-        >
-          <div
-            className="cf-progress"
-            aria-label={`Billing period: day ${billing.period.day} of ${billing.period.days}`}
-          >
-            <div className="cf-progress-fill" style={{ width: `${periodElapsed}%` }} />
-          </div>
-        </KpiTile>
         <KpiTile
           value={d1Prod ? formatPct(pacingPct(d1Prod), 0) : "—"}
           label={d1Prod ? productLabel(d1Prod.id, d1Prod.product, d1Prod.metric) : "D1 rows-read pacing"}

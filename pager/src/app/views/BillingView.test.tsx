@@ -27,15 +27,14 @@ describe("BillingView (P-04)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-product")).toBeTruthy();
     });
-    // Cost lockup (operator 2026-10-12): base under the amount, overage +
-    // month total beside it — all from the same fixture the cards use.
-    // The month as an equation: $5.00 + overage = total, named beneath.
-    const amounts = Array.from(document.querySelectorAll(".cf-cost-amount")).map((n) => n.textContent);
-    expect(amounts[0]).toBe("$5.00");
-    expect(document.querySelectorAll(".cf-cost-plan")[0]?.textContent).toBe("Workers Paid · base");
-    expect(document.querySelectorAll(".cf-cost-plan")[2]?.textContent).toBe("this month");
-    const ops = Array.from(document.querySelectorAll(".cf-cost-op")).map((n) => n.textContent);
-    expect(ops).toEqual(["+", "="]);
+    // Cost lockup (operator 2026-10-13): the month on ONE line — gray base,
+    // plus, overage, month total — no equals sign, no column layout.
+    expect(document.querySelector(".cf-cost-line-base")?.textContent).toBe("$5.00");
+    const overage = document.querySelector(".cf-cost-line-over")?.textContent ?? "";
+    expect(/^\$[\d,.]+$/.test(overage)).toBe(true);
+    expect(document.querySelector(".cf-cost-line-total")?.textContent).toMatch(/^\$[\d,.]+$/);
+    expect(document.querySelector(".cf-cost-line-month")?.textContent).toBe("this month");
+    expect(document.querySelector(".cf-cost-op")).toBeNull();
     const cards = document.querySelectorAll(".cf-product");
     expect(cards.length).toBe(4); // all fixture products but kv.storage
     for (const card of Array.from(cards)) {

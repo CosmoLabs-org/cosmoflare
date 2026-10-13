@@ -199,26 +199,21 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
           <span className="cf-cycle-day">{b.period.day}</span>
           <span className="cf-cycle-total">/{b.period.days}</span>
         </p>
-        {/* The month as an equation (operator 2026-10-13): base + overage
-            = total, left to right, each cost with its name beneath it. */}
-        <div className="cf-cost">
-          <div className="cf-cost-part">
-            <span className="cf-cost-amount">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
-            <span className="cf-cost-plan">{`${WORKERS_PAID_PLAN} · base`}</span>
-          </div>
-          <span className="cf-cost-op" aria-hidden="true">+</span>
-          <div className="cf-cost-part">
-            <span className={`cf-cost-amount${projectedOverageTotal(b.products) > 0 ? " is-overage" : " is-clear"}`}>
-              {projectedOverageTotal(b.products) > 0 ? formatUsd(projectedOverageTotal(b.products)) : "$0.00"}
-            </span>
-            <span className="cf-cost-plan">projected overage</span>
-          </div>
-          <span className="cf-cost-op" aria-hidden="true">=</span>
-          <div className="cf-cost-part">
-            <span className="cf-cost-amount is-total">{formatUsd(projectedMonthlyTotal(b.products))}</span>
-            <span className="cf-cost-plan">this month</span>
-          </div>
-        </div>
+        {/* The month on one line (operator 2026-10-13): gray standard base,
+            projected overage, the month total closing with its weight — no
+            equals sign needed. */}
+        <p
+          className="cf-cost-line cf-cost-line-lg"
+          aria-label={`Base ${formatUsd(WORKERS_PAID_BASE_USD)} on ${WORKERS_PAID_PLAN} plus projected overage ${formatUsd(projectedOverageTotal(b.products))}, ${formatUsd(projectedMonthlyTotal(b.products))} this month`}
+        >
+          <span className="cf-cost-line-base">{formatUsd(WORKERS_PAID_BASE_USD)}</span>
+          <span className="cf-cost-line-op" aria-hidden="true">+</span>
+          <span className={`cf-cost-line-over${projectedOverageTotal(b.products) > 0 ? "" : " is-clear"}`}>
+            {projectedOverageTotal(b.products) > 0 ? formatUsd(projectedOverageTotal(b.products)) : "$0.00"}
+          </span>
+          <span className="cf-cost-line-total">{formatUsd(projectedMonthlyTotal(b.products))}</span>
+          <span className="cf-cost-line-month">this month</span>
+        </p>
         <div
           className={`cf-progress${periodProgress(b.period.day, b.period.days).elapsedPct >= 80 ? " is-hot" : ""}`}
           role="progressbar"

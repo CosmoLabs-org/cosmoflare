@@ -32,12 +32,16 @@ describe("OverviewView (P-04)", () => {
     await waitFor(() => {
       expect(document.querySelector(".cf-kpis")).toBeTruthy();
     });
-    // Plan line (the vanilla view's constant).
-    expect(screen.getByText("Workers Paid · $5.00/mo")).toBeTruthy();
-    // Five KPI tiles, one per paintOverview tile.
-    expect(document.querySelectorAll(".cf-kpis .cf-kpi").length).toBe(5);
-    // The period tile carries its own progress bar.
-    expect(document.querySelector(".cf-kpis .cf-progress .cf-progress-fill")).toBeTruthy();
+    // Plan line (operator 2026-10-13): plan name, then the month on one
+    // line — base, overage, total — the billing card's lockup at line scale.
+    expect(screen.getByText("Workers Paid ·")).toBeTruthy();
+    expect(document.querySelector(".cf-plan-line .cf-cost-line-base")?.textContent).toBe("$5.00");
+    expect(document.querySelector(".cf-plan-line .cf-cost-line-total")?.textContent).toMatch(/^\$[\d,.]+$/);
+    expect(document.querySelector(".cf-plan-line .cf-cost-line-month")?.textContent).toBe("this month");
+    // Four KPI tiles — the period day moved to the status strip (critique P2).
+    expect(document.querySelectorAll(".cf-kpis .cf-kpi").length).toBe(4);
+    // The KPI row no longer carries a period progress bar.
+    expect(document.querySelector(".cf-kpis .cf-progress")).toBeNull();
     // Rings card: every non-rolling fixture product renders a ring
     // (4 fixture products, none rolling — under the 8-ring cap).
     expect(document.querySelectorAll(".cf-ring-svg").length).toBe(4);

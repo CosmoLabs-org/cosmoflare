@@ -577,42 +577,33 @@ body.cf-nav-open { overflow: hidden; }
 
 /* Billing period progress bar. Inside a KPI tile it runs thin and flush
    with the tile bottom; standalone (billing view) it stays 8px. */
-/* The month as an equation (operator 2026-10-13): base + overage = total,
-   each amount with its name beneath, muted operators between the parts. */
-.cf-cost {
+/* The month on one line (operator 2026-10-13): gray standard base, amber
+   overage, the month total closing with its weight — no equals sign. All
+   parts size in em off the container, so the billing card runs it at 20px
+   and the overview plan line inherits its compact size. */
+.cf-cost-line {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-2) var(--space-3);
-  margin: var(--space-2) 0 var(--space-4);
-}
-.cf-cost-part {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.cf-cost-amount {
+  align-items: baseline;
+  column-gap: 0.4em;
+  row-gap: 2px;
   font-family: var(--font-data);
-  font-size: 26px;
-  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
-  line-height: 1.05;
+  line-height: 1.2;
 }
-.cf-cost-amount.is-overage { color: var(--sev-warning); }
-.cf-cost-amount.is-clear { color: var(--muted); font-weight: 500; }
-.cf-cost-amount.is-total { font-size: 30px; }
-.cf-cost-plan {
+.cf-cost-line-lg { font-size: 20px; margin: var(--space-2) 0 var(--space-3); }
+.cf-cost-line-base { font-size: 1em; font-weight: 500; color: var(--muted); }
+.cf-cost-line-op { font-size: 0.8em; color: var(--muted); }
+.cf-cost-line-over { font-size: 1em; font-weight: 700; color: var(--sev-warning); }
+.cf-cost-line-over.is-clear { color: var(--muted); font-weight: 500; }
+.cf-cost-line-total { font-size: 1.25em; font-weight: 700; color: var(--text); }
+.cf-cost-line-month {
+  font-family: var(--font-body);
+  font-size: 0.65em;
+  font-weight: 600;
   color: var(--muted);
-  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-}
-.cf-cost-op {
-  font-family: var(--font-data);
-  font-size: var(--text-lg);
-  color: var(--muted);
-  padding-top: 4px;
 }
 /* Period track (operator 2026-10-13): the same instrument language as the
    status bar — inset-edged track, gradient fill, traveling head dot, and
@@ -967,19 +958,19 @@ body.cf-nav-open { overflow: hidden; }
    ============================================================ */
 
 /* ---- Overview / dashboard ---- */
-/* Plan line (overview): the base plan in neutral grey, the month's overage
-   in its severity color — tabular so the two amounts align. */
+/* Plan line (overview): the plan name, then the month on one line (the same
+   cost lockup the billing card runs) — gray base, overage in its severity
+   color, month total strongest. */
 .cf-plan-line {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 0 0.5em;
   align-items: baseline;
   margin: var(--space-2) 0 0;
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
-.cf-plan-base { color: var(--muted); }
-.cf-plan-overage { font-weight: 600; }
+.cf-plan-name { color: var(--muted); }
 
 
 /* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
@@ -1025,11 +1016,10 @@ body.cf-nav-open { overflow: hidden; }
 .cf-kpi.cf-level-critical .cf-kpi-value { color: var(--sev-critical); }
 .cf-kpi.cf-level-warning .cf-kpi-value { color: var(--sev-warning); }
 
-/* Mobile: 5 tiles leave an orphan at auto-fit. Two columns with the first
-   tile (projected overage) spanning both fills 1 + 2 + 2 evenly. */
+/* Mobile: four tiles after the billing-day tile was dropped (critique P2 —
+   the status strip already carries the period), a clean 2×2. */
 @media (max-width: 599.98px) {
   .cf-kpis { grid-template-columns: 1fr 1fr; }
-  .cf-kpi:first-child { grid-column: 1 / -1; }
 }
 
 /* In-tile progress runs thin, flush with the tile bottom. */
