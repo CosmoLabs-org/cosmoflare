@@ -185,7 +185,7 @@ export default function BillingView({ refreshSeq = 0 }: { refreshSeq?: number })
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail">Real usage against your plan allowances. Projections assume current pace to the period end.</p>
+      <p className="cf-row-detail cf-view-intro">Real usage against your plan allowances. Projections assume current pace to the period end.</p>
 
       {/* Period + monthly cost (operator 2026-10-12): the base price with
           its plan name UNDER the amount, the projected overage beside it,

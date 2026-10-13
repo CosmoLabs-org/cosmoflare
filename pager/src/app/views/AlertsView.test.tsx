@@ -7,7 +7,7 @@
 // marks everything read (quota-safe), and the empty/error states follow the
 // house patterns. The IndexedDB store module is mocked — the push-history
 // section is covered by store.test.ts.
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FetchResult } from "../../api";
 import type { AlertFeed, AlertFeedEntry } from "../../alerts";
@@ -87,6 +87,31 @@ describe("AlertsView — Notifications center", () => {
     expect(rows[1].querySelector(".cf-feed-title")?.textContent).toBe("older fire");
     expect(rows[1].querySelector(".cf-feed-time")?.textContent).toBe("2h ago");
     expect(rows[1].querySelector(".cf-feed-value")?.textContent).toBe("250000 / 100000 writes");
+  });
+
+  it("feed rows age honestly: the 60-second tick re-renders their relative times", async () => {
+    // Only the interval goes fake — everything else (promise microtasks,
+    // waitFor's own timers) stays real, so the assertions stay readable.
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    const nowSpy = vi.spyOn(Date, "now");
+    try {
+      nowSpy.mockImplementation(() => NOW + 19 * 60 * 1000); // 14m after the entry
+      render(<AlertsView fetcher={feedFetcher({ feed: [entry({})] })} />);
+      await waitFor(() => {
+        expect(document.querySelector(".cf-feed-time")?.textContent).toBe("14m ago");
+      });
+
+      // A minute passes (real Date.now advances), the tick fires and the
+      // label re-renders — no manual refresh involved.
+      nowSpy.mockImplementation(() => NOW + 20 * 60 * 1000); // 15m after the entry
+      act(() => {
+        vi.advanceTimersByTime(60_000);
+      });
+      expect(document.querySelector(".cf-feed-time")?.textContent).toBe("15m ago");
+    } finally {
+      vi.useRealTimers();
+      nowSpy.mockImplementation(() => NOW + 19 * 60 * 1000); // back to the module default
+    }
   });
 
   it("clicking a row expands the detail: numbers table, the condition explanation, and the delivery footer", async () => {

@@ -5,7 +5,7 @@
 // stale rules), the starter note clearing on save, and the 400
 // RulesHttpError path with the index highlight — GETs injected through the
 // fetcher, the PUT observed on a stubbed global fetch.
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FetchResult } from "../../api";
 import type { AlertRule, RulesPayload } from "../../rules";
@@ -213,6 +213,49 @@ describe("RulesView (P-06)", () => {
     const hint = document.querySelector(".cf-rule-hint") as HTMLElement | null;
     expect(hint?.hidden).toBe(false);
     expect(hint?.textContent).toBe("1.0B");
+  });
+
+  it("Delete is two-step: the first tap only arms, the second fires, and arming expires after 4s", async () => {
+    render(<RulesView fetcher={rulesFetcher(payload([rule({ name: "kv blast" })]))} />);
+    await waitFor(() => {
+      expect(document.querySelector(".cf-rule")).toBeTruthy();
+    });
+    const del = () => document.querySelector<HTMLButtonElement>(".cf-rule > .cf-btn")!;
+    expect(del().textContent).toBe("Delete");
+
+    // First tap: arm only — the button turns danger + "Confirm delete" and
+    // the rule survives.
+    fireEvent.click(del());
+    expect(del().textContent).toBe("Confirm delete");
+    expect(del().classList.contains("cf-btn-danger")).toBe(true);
+    expect(document.querySelectorAll(".cf-rule")).toHaveLength(1);
+
+    // Second tap fires the existing delete.
+    fireEvent.click(del());
+    await waitFor(() => {
+      expect(document.querySelectorAll(".cf-rule")).toHaveLength(0);
+    });
+
+    // Arming is not forever: after 4 seconds it falls back to idle, and the
+    // next tap is again just the arming tap (the rule survives).
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      fireEvent.click(document.querySelector<HTMLButtonElement>(".cf-rules-actions .cf-btn")!);
+      expect(document.querySelectorAll(".cf-rule")).toHaveLength(1);
+      const del2 = document.querySelector<HTMLButtonElement>(".cf-rule > .cf-btn")!;
+      fireEvent.click(del2);
+      expect(del2.textContent).toBe("Confirm delete");
+      act(() => {
+        vi.advanceTimersByTime(4000);
+      });
+      expect(del2.textContent).toBe("Delete");
+      expect(del2.classList.contains("cf-btn-danger")).toBe(false);
+      fireEvent.click(del2); // re-arms, still not a delete
+      expect(document.querySelectorAll(".cf-rule")).toHaveLength(1);
+      expect(del2.textContent).toBe("Confirm delete");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders the skeleton while the first fetch is in flight", async () => {

@@ -118,7 +118,7 @@ export default function D1View({ refreshSeq = 0, fetcher }: { refreshSeq?: numbe
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail">Rows read/written per database. Query volume shows which database drives usage.</p>
+      <p className="cf-row-detail cf-view-intro">Rows read/written per database. Query volume shows which database drives usage.</p>
 
       <section className="cf-card">
         <p className="cf-row-detail">(24h)</p>

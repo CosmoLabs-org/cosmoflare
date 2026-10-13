@@ -186,6 +186,10 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
   // seenAt is read once per mount: entries newer than it carry the unread
   // dot for this session; the feed render then marks everything read.
   const [seenAt] = useState<number>(() => readSeen());
+  // 60-second tick: a long-lived screen must age the feed rows' relative
+  // times honestly — the tick state is never read, it only re-renders so
+  // timeAgo recomputes against the new Date.now().
+  const [, setTick] = useState(0);
   const seenMarkedRef = useRef(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -197,6 +201,14 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
   useEffect(() => {
     load();
   }, [load, refreshSeq]);
+
+  // Relative times go stale on a long-lived screen: every 60s the tick
+  // re-renders the feed rows so "14m ago" ages honestly (cleaned up on
+  // unmount).
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,7 +241,7 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
 
   return (
     <div>
-      <p className="cf-row-detail">
+      <p className="cf-row-detail cf-view-intro">
         Alert feed: every fired rule with what it hit, why it matters and what to do next — plus the push history. Alerts page your paired devices — pair in the Pairing section.
       </p>
 

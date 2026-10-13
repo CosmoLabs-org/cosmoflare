@@ -156,7 +156,7 @@ export default function AIView({ refreshSeq = 0, fetcher }: { refreshSeq?: numbe
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail">Per-gateway model usage, 24h and month-to-date. Costs are gateway estimates, not bill numbers.</p>
+      <p className="cf-row-detail cf-view-intro">Per-gateway model usage, 24h and month-to-date. Costs are gateway estimates, not bill numbers.</p>
 
       {d.gateways.length === 0 ? (
         <section className="cf-card">

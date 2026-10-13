@@ -68,8 +68,35 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
   onDelete: () => void;
 }): React.JSX.Element {
   const [addValue, setAddValue] = useState("");
+  // Two-step Delete (the app's only destructive button without a confirm):
+  // the first tap arms to cf-btn-danger + "Confirm delete" and the arming
+  // self-cancels after 4s; the second tap fires the existing delete — the
+  // same one-tap-to-arm state machine as LeverButton.
+  const [armed, setArmed] = useState(false);
+  const armTimer = useRef<number | null>(null);
   const exclude = draft.exclude ?? [];
   const hint = thresholdHint(draft.condition, draft.threshold);
+
+  useEffect(() => () => {
+    if (armTimer.current !== null) window.clearTimeout(armTimer.current);
+  }, []);
+
+  const deleteClick = (): void => {
+    if (!armed) {
+      setArmed(true);
+      if (armTimer.current !== null) window.clearTimeout(armTimer.current);
+      armTimer.current = window.setTimeout(() => {
+        setArmed(false);
+        armTimer.current = null;
+      }, 4000);
+      return;
+    }
+    if (armTimer.current !== null) {
+      window.clearTimeout(armTimer.current);
+      armTimer.current = null;
+    }
+    onDelete();
+  };
 
   const chipRemove = (value: string): void => {
     onChange({ exclude: removeExclude(exclude, value) });
@@ -168,10 +195,14 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
         </div>
       </div>
 
-      {/* Per-card footer: Delete. Validation errors surface at the action
-          bar with the offending card highlighted. */}
-      <button type="button" className="cf-btn cf-btn-ghost cf-btn-danger" onClick={onDelete}>
-        Delete
+      {/* Per-card footer: two-step Delete. Validation errors surface at the
+          action bar with the offending card highlighted. */}
+      <button
+        type="button"
+        className={`cf-btn${armed ? " cf-btn-danger" : " cf-btn-ghost"}`}
+        onClick={deleteClick}
+      >
+        {armed ? "Confirm delete" : "Delete"}
       </button>
     </section>
   );
@@ -353,7 +384,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail">Usage rules evaluated on the account. Toggle or edit a rule; changes PUT immediately.</p>
+      <p className="cf-row-detail cf-view-intro">Usage rules evaluated on the account. Toggle or edit a rule; changes PUT immediately.</p>
 
       {payload.starter ? <p className="cf-rule-note">Using starter rules — save to customise</p> : null}
 
