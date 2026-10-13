@@ -2418,7 +2418,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
      performance discipline. */
   .cf-bottomtabs {
     position: fixed;
-    inset-inline: 10px;
+    /* Not stretched rail-to-rail (operator 2026-10-14): the pill centers
+       with a capped width — five labeled tabs plus a compact Plus. */
+    inset-inline: 0;
+    margin-inline: auto;
+    max-width: min(360px, calc(100vw - 32px));
     bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 41;
     display: flex;
@@ -2489,6 +2493,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-bottomtab {
     flex: 1 1 0;
     min-height: 56px; /* comfortable tap target */
+  }
+  /* The Plus overflow tab: compact, icon-only, keeps the pill tight. */
+  .cf-bottomtab-more {
+    flex: 0 0 auto;
+    padding-inline: 16px;
   }
   /* Full overlay (operator 2026-10-14): the pill reserves NOTHING —
      content flows to the true viewport bottom and scrolls under the
@@ -2811,6 +2820,32 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+/* The Update button becomes the progress (operator 2026-10-14): a bright
+   fill sweeps the button's track while the reload is issued — the update
+   is an event you watch, not a silent flash. */
+.cf-update-btn {
+  position: relative;
+  overflow: hidden;
+  min-width: 138px;
+}
+.cf-update-progress {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cf-update-progress-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: rgba(255, 255, 255, 0.22);
+  animation: cf-update-fill 950ms var(--ease-out) forwards;
+}
+@keyframes cf-update-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.cf-update-label { position: relative; }
 .cf-modal-actions .cf-btn {
   min-height: 44px;
   flex: 1 1 auto;

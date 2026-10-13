@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const dist = new URL("./dist/", import.meta.url);
-const assets = readdirSync(new URL("assets/", dist)).filter((f) => f.startsWith("index-"));
+const assets = readdirSync(new URL("assets/", dist)).filter((f) => /^index-[A-Za-z0-9_-]+\.js$/.test(f));
 if (assets.length === 0) throw new Error("stamp-sw: no index-*.js in dist/assets — run after vite build");
 const hash = assets[0].match(/index-([A-Za-z0-9_-]+)\.js$/)?.[1];
 if (!hash) throw new Error(`stamp-sw: cannot parse hash from ${assets[0]}`);

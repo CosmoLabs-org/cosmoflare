@@ -20,7 +20,7 @@ import {
   FolderOpen,
   Globe,
   LayoutDashboard,
-  Menu,
+  Plus,
   SlidersHorizontal,
   Sparkles,
   Tag,
@@ -396,9 +396,12 @@ function BottomTabs({
           </a>
         );
       })}
+      {/* The overflow tab (operator 2026-10-14): a compact icon-only Plus
+          at the pill's end opens the drawer — the labeled More tab is gone,
+          the pill stays tight. */}
       <button
         type="button"
-        className="cf-bottomtab"
+        className="cf-bottomtab cf-bottomtab-more"
         data-route="more"
         aria-label="More sections"
         aria-expanded={moreOpen}
@@ -407,9 +410,8 @@ function BottomTabs({
         onClick={onMore}
       >
         <span className="cf-bottomtab-icon" aria-hidden="true">
-          <Menu size={22} strokeWidth={1.8} />
+          <Plus size={22} strokeWidth={1.8} />
         </span>
-        <span className="cf-bottomtab-label">More</span>
       </button>
     </nav>
   );

@@ -48,15 +48,27 @@ describe("UpdateModal", () => {
     expect(buttons[1].textContent).toBe("Later");
   });
 
-  it("Update now calls onReload; Later calls onDismiss", () => {
+  it("Update now shows the in-button progress, then reloads; Later dismisses", () => {
     const onReload = vi.fn();
     const onDismiss = vi.fn();
-    render(<UpdateModal onReload={onReload} onDismiss={onDismiss} />);
-    const [update, later] = Array.from(document.querySelectorAll<HTMLButtonElement>(".cf-modal-actions .cf-btn"));
-    later.click();
-    expect(onDismiss).toHaveBeenCalledTimes(1);
-    update.click();
-    expect(onReload).toHaveBeenCalledTimes(1);
+    vi.useFakeTimers();
+    try {
+      render(<UpdateModal onReload={onReload} onDismiss={onDismiss} />);
+      const [update, later] = Array.from(document.querySelectorAll<HTMLButtonElement>(".cf-modal-actions .cf-btn"));
+      later.click();
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+      fireEvent.click(update);
+      // The button becomes the progress: disabled, sweeping fill, label.
+      expect(update.disabled).toBe(true);
+      expect(document.querySelector(".cf-update-progress-fill")).toBeTruthy();
+      expect(update.textContent).toContain("Updating…");
+      expect(onReload).not.toHaveBeenCalled();
+      // The reload fires after the sweep (950ms beat).
+      vi.advanceTimersByTime(1000);
+      expect(onReload).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("Escape and backdrop click dismiss; a click inside the dialog does not", () => {

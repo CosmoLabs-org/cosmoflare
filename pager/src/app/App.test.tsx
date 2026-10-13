@@ -122,11 +122,13 @@ describe("Bottom tab bar (operator 2026-10-12)", () => {
     render(<App />);
     const tabs = document.querySelectorAll(".cf-bottomtabs [data-route]");
     expect(Array.from(tabs).map((el) => el.getAttribute("data-route"))).toEqual([...TAB_ROUTES, "more"]);
-    // More is a button (opens the drawer), not a route anchor — it carries
+    // More is a button (opens the drawer), not a route anchor — icon-only
+    // Plus since 2026-10-14, named by its aria-label; it carries
     // data-route="more" so it can hold the active mark for drawer-only
     // sections (operator 2026-10-12).
     const more = document.querySelector(".cf-bottomtabs button");
-    expect(more?.textContent).toContain("More");
+    expect(more?.getAttribute("aria-label")).toBe("More sections");
+    expect(more?.querySelector("svg")).toBeTruthy();
     expect(more?.getAttribute("data-route")).toBe("more");
     expect(document.querySelector(".cf-bottomtabs")).toBeTruthy();
   });
