@@ -2309,8 +2309,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   gap: 2px;
   flex: 1 1 0;
   min-width: 0;
-  min-height: 48px;
-  padding: 6px 2px;
+  min-height: 64px;
+  padding: 8px 2px;
   border: 0;
   background: none;
   font-family: inherit;
@@ -2332,7 +2332,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     letter-spacing 320ms var(--ease-out);
 }
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-label {
-  transform: scale(1.12);
+  transform: scale(1.1);
   letter-spacing: 0.04em;
 }
 /* The underline: same gradient treatment as the quicknav's glow line, in
@@ -2362,7 +2362,7 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-bottomtab-icon {
   display: inline-flex;
-  transition: transform 240ms var(--ease-out);
+  transition: transform 320ms var(--ease-out);
 }
 /* Section identity hues return to the PILL (operator 2026-10-14: don't
    lose the unique colors) — scoped to the bottom tabs only, and moved
@@ -2383,17 +2383,11 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   gap: 7px;
   padding-top: 5px;
 }
-/* Activation (operator 2026-10-14, "without grace" fix): a longer, softer
-   spring — the icon rises, overshoots gently and settles into its resting
-   grow instead of snapping. */
+/* Activation (operator 2026-10-14, on-device feedback): the icon keeps
+   its size and just lifts a touch; the TEXT does the zooming. One moving
+   part per element, nothing pops. */
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-icon {
-  transform: scale(1.16);
-  animation: cf-tab-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes cf-tab-pop {
-  0% { transform: scale(0.94); }
-  60% { transform: scale(1.24); }
-  100% { transform: scale(1.16); }
+  transform: translateY(-2px);
 }
 .cf-bottomtab[aria-current="page"]::after {
   animation: cf-tab-sweep 540ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -2492,7 +2486,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   }
   .cf-bottomtab {
     flex: 1 1 0;
-    min-height: 56px; /* comfortable tap target */
   }
   /* The Plus overflow tab: compact, icon-only, keeps the pill tight. */
   .cf-bottomtab-more {

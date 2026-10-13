@@ -365,11 +365,11 @@ function BottomTabs({
       tint: 0.25,
       tintTone: "dark",
       frost: 0.45,
-      // The droplet lens (operator 2026-10-14): push the magnifying
-      // character toward Apple's material — a stronger refraction body,
-      // wider edge reach so the bend starts further from the rim, and
-        // RGB dispersion for the chromatic fringe native glass shows.
-      material: { refraction: 110, edgeReach: 0.2, dispersion: 2.4 },
+      // The droplet lens (operator 2026-10-14, tuned on-device): a wider
+      // edge band so the distortion carries further in from the rim —
+      // closer to Apple's material, where the bending reads as a lens
+      // edge, not a border.
+      material: { refraction: 110, edgeReach: 0.32, dispersion: 2.4 },
       fallback: "none",
       maxDpr: 2,
       respectReducedTransparency: true,
