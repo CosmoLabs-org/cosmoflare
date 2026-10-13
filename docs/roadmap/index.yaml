@@ -1,8 +1,12 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-12T20:43:04.416435+04:00
-next_id: 119
+last_updated: 2026-10-13T21:06:12.659111+04:00
+next_id: 120
 items:
+    - id: ROAD-119
+      title: Profile pages for every unique entity + future control actions
+      status: captured
+      created_at: 2026-10-13T21:06:12.658928+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
