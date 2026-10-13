@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { LiquidGlass } from "apple-liquid-glass-webgl";
 import {
   Bell,
   Boxes,
@@ -343,8 +344,29 @@ function BottomTabs({
   // drawer over a PRIMARY section must NOT double-highlight (operator
   // 2026-10-12): the section keeps its mark; More keeps its pressed state.
   const moreActive = active !== null && !BOTTOM_TABS.includes(active as (typeof BOTTOM_TABS)[number]);
+
+  // Liquid glass phase 2 (operator 2026-10-13): real refraction on the tab
+  // pill where WebGL2 exists — the CSS ::before material stays as the
+  // fallback (fallback: "none" keeps the library from injecting its own),
+  // and reduced transparency is respected on both layers independently.
+  // One refractive element per the brief's performance guardrail.
+  const navRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!navRef.current || !LiquidGlass.isSupported()) return;
+    const glass = new LiquidGlass(navRef.current, {
+      shape: "auto",
+      tint: 0.25,
+      tintTone: "dark",
+      frost: 0.3,
+      fallback: "none",
+      maxDpr: 2,
+      respectReducedTransparency: true,
+    });
+    return () => glass.destroy();
+  }, []);
+
   return (
-    <nav className="cf-bottomtabs" aria-label="Sections">
+    <nav ref={navRef} className="cf-bottomtabs" aria-label="Sections">
       {BOTTOM_TABS.map((r) => {
         const Icon = NAV_ICON[r];
         return (

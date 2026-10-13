@@ -5,6 +5,7 @@
     "": {
       "name": "cosmoflare-pager",
       "dependencies": {
+        "apple-liquid-glass-webgl": "2.6.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "framer-motion": "^14.0.0",
@@ -229,6 +230,8 @@
     "ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 
     "ansi-styles": ["ansi-styles@5.2.0", "", {}, "sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA=="],
+
+    "apple-liquid-glass-webgl": ["apple-liquid-glass-webgl@2.6.0", "", {}, "sha512-fwxbpJnB5jj8/8EmaR5Baqp9Ad/x5M+feSL7UfV0jpUI1NNJJDeAZzoNdY0tEJcl2CC3Pc1ilQ00hxxwfJI1BA=="],
 
     "aria-query": ["aria-query@5.3.2", "", {}, "sha512-COROpnaoap1E2F000S62r6A60uHZnmlvomhfyT2DlTcrY1OrBKn2UhH7qn5wTC9zMvD0AY7csdPSNwKP+7WiQw=="],
 
