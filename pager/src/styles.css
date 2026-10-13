@@ -2316,35 +2316,77 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 @media (max-width: 640px) {
   :root {
-    --cf-tabbar-h: calc(56px + env(safe-area-inset-bottom));
+    /* Pill footprint: 56px bar + 10px float offset above the safe area. */
+    --cf-tabbar-h: calc(66px + env(safe-area-inset-bottom));
   }
   /* The quicknav row gives way to the tab bar on phones. */
   .cf-quicknav {
     display: none;
   }
-  /* Sticky hardening (operator 2026-10-12): backdrop-filter ON a fixed
-     element breaks its tracking in iOS home-screen PWAs (the bar drifts
-     mid-page). The blur now lives on an inner ::before layer; the fixed
-     element itself stays filter-free, which WebKit composites correctly. */
+  /* Liquid glass pill (operator 2026-10-13, Grok-briefed): the tab bar
+     floats as a glass pill — Apple's functional-layer rule, web-native
+     material. Two constraints carried forward: (1) the iOS home-screen
+     PWA workaround (operator 2026-10-12) — backdrop-filter ON the fixed
+     element breaks its tracking, so ALL glass rendering lives on the
+     ::before layer and the fixed element stays filter-free; (2) blur
+     stays modest (one element, compositor-accelerated) per the paid-plan
+     performance discipline. */
   .cf-bottomtabs {
     position: fixed;
-    inset-inline: 0;
-    bottom: 0;
+    inset-inline: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 41;
     display: flex;
     align-items: stretch;
-    padding: 0 max(env(safe-area-inset-right), 4px) env(safe-area-inset-bottom)
-      max(env(safe-area-inset-left), 4px);
-    background: color-mix(in srgb, var(--surface) 96%, var(--bg));
-    border-top: 1px solid var(--border);
+    border-radius: 22px;
+    isolation: isolate;
+    /* Clip the tab sweep underlines to the pill's rounded corners. */
+    overflow: hidden;
   }
   .cf-bottomtabs::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.05);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 32px rgba(0, 0, 0, 0.28);
+  }
+  /* The gloss: a diagonal sheen over the glass, blended in. */
+  .cf-bottomtabs::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  /* Reduced transparency: solid bar, no filters, no gloss — legibility
+     outranks the material (Grok brief + house a11y discipline). */
+  @media (prefers-reduced-transparency: reduce) {
+    .cf-bottomtabs::before {
+      background: rgba(26, 26, 30, 0.92);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: var(--border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+    }
+    .cf-bottomtabs::after {
+      content: none;
+    }
   }
   .cf-bottomtab {
     flex: 1 1 0;
