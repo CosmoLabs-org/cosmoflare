@@ -16,12 +16,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// The status strip writes into #cf-status-age/#cf-status-period, which live
-// in the App shell's footer; the view test provides them.
+// The age line writes into #cf-status-age, which lives beside the
+// masthead Refresh control; the view test provides the span.
 function installStatusStrip(): void {
   document.body.insertAdjacentHTML(
     "beforeend",
-    '<span id="cf-status-age"></span><span id="cf-status-period" class="cf-status-period" hidden></span>',
+    '<span id="cf-status-age"></span>',
   );
 }
 
@@ -76,18 +76,17 @@ describe("OverviewView (P-04)", () => {
     expect(detail?.querySelector<HTMLAnchorElement>(".cf-attention-open")?.href).toContain("#/billing");
   });
 
-  it("feeds the bottom status strip on paint (age line + period)", async () => {
+  it("feeds the masthead age line and carries the billing day in the plan line", async () => {
     installStatusStrip();
     render(<OverviewView />);
     const age = document.getElementById("cf-status-age");
-    const period = document.getElementById("cf-status-period");
     await waitFor(() => {
       expect(age?.textContent).toContain("Updated");
     });
-    expect(period?.hidden).toBe(false);
-    // IMP-pSZEMZP: the period paints as a 24/30 counter lockup, not prose.
-    expect(period?.querySelector(".cf-cycle-day")?.textContent).toMatch(/^\d+$/);
-    expect(period?.querySelector(".cf-cycle-total")?.textContent).toMatch(/^\/\d+$/);
+    // The strip is gone (operator 2026-10-14): the period day lives in the
+    // plan line now — "day N/M" ahead of the plan name.
+    const day = document.querySelector(".cf-plan-line .cf-plan-day");
+    expect(day?.textContent).toMatch(/^day \d+\/\d+$/);
   });
 
   it("renders the skeleton until both first fetches resolve", async () => {

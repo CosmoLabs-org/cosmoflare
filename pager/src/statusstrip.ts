@@ -1,8 +1,9 @@
-// Bottom status strip (UI-1, operator request 2026-10-10): one global
-// "updated X ago" line plus the billing-period day counter ("24/30",
-// IMP-pSZEMZP operator request 2026-10-12), pinned to the bottom of the
-// shell. The per-view status bars are gone — this strip replaces them. Pure
-// formatting helpers are split from the DOM writers so they test in the
+// Honest data age (UI-1, operator request 2026-10-10; relocated
+// 2026-10-14): one global "updated X ago" line, painted into the span
+// beside the masthead's Refresh control (the bottom status strip is gone —
+// the liquid-glass pill owns the bottom). The billing-period day counter
+// moved to the Overview plan line; Billing keeps its dial. Pure
+// formatting helpers are split from the DOM writer so they test in the
 // node vitest environment.
 
 /** formatAgeText renders a data age honestly: "just now" under a minute,
@@ -15,53 +16,25 @@ export function formatAgeText(ageSec: number): string {
   return `${Math.floor(ageSec / 86400)}d ago`;
 }
 
-/** periodMarkup renders the billing-period counter lockup — the day number
- *  and the "/total" as separate spans (styled by .cf-cycle-day/.cf-cycle-total)
- *  — or null when the period is unknown (the span stays hidden rather than
- *  guessing). */
-export function periodMarkup(day?: number, days?: number): string | null {
-  if (day === undefined || days === undefined) return null;
-  return `<span class='cf-cycle-day'>${day}</span><span class='cf-cycle-total'>/${days}</span>`;
-}
-
 // Last painted data age and the wall-clock time it was painted, so the
 // 60s clock can age the line forward between data updates.
 let lastAgeSec: number | null = null;
 let lastSetAtMs = 0;
 
-/** updateStatusStrip paints one update into the strip: the age line small on
- *  the left (#cf-status-age, empty when ageSec is null — no data, no claim)
- *  and the right group (#cf-status-right) with the billing-period progress
- *  bar (#cf-status-bar width = day/days) and the day count — hidden when the
- *  period is unknown. */
+/** updateStatusStrip paints one update into the age line (#cf-status-age,
+ *  empty when ageSec is null — no data, no claim). Views still pass
+ *  day/days; the period counter now lives in the Overview plan line and
+ *  Billing's dial, so those fields are accepted and ignored — no view
+ *  changes needed. */
 export function updateStatusStrip(info: { ageSec: number | null; day?: number; days?: number }): void {
   lastAgeSec = info.ageSec;
   lastSetAtMs = Date.now();
   const age = document.getElementById("cf-status-age");
   if (age) age.textContent = info.ageSec === null ? "" : `Updated ${formatAgeText(info.ageSec)}`;
-  const right = document.getElementById("cf-status-right");
-  const period = document.getElementById("cf-status-period");
-  const bar = document.getElementById("cf-status-bar");
-  const markup = periodMarkup(info.day, info.days);
-  if (period) {
-    period.innerHTML = markup ?? "";
-    period.hidden = markup === null;
-  }
-  if (right) right.hidden = markup === null;
-  if (bar && info.days !== undefined && info.days > 0) {
-    const pct = Math.min(1, Math.max(0, (info.day ?? 0) / info.days));
-    (bar as HTMLElement).style.transform = `scaleX(${pct})`;
-    // Near the cycle's end the track runs hot — the fill shifts toward
-    // critical and glows harder (same language as the usage gauges).
-    bar.closest(".cf-statusbar-progress")?.classList.toggle("is-hot", pct >= 0.8);
-  } else if (bar) {
-    (bar as HTMLElement).style.transform = "scaleX(0)";
-    bar.closest(".cf-statusbar-progress")?.classList.toggle("is-hot", false);
-  }
 }
 
 /** startStatusStripClock re-renders the age line every 60s by adding the
- *  elapsed wall time since the last update — the strip stays honest between
+ *  elapsed wall time since the last update — the line stays honest between
  *  data refreshes without refetching anything. */
 export function startStatusStripClock(): void {
   window.setInterval(() => {

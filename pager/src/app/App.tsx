@@ -204,7 +204,13 @@ function RefreshControl({ onRefresh }: { onRefresh: () => Promise<void> }): Reac
     }
   };
   return (
-    <motion.button
+    <span className="cf-refresh-wrap">
+      {/* The honest data age (operator 2026-10-14): the bottom status
+          strip is gone — the pill owns the bottom — so the age lives with
+          the control that refreshes, painted imperatively by
+          statusstrip.ts. */}
+      <span id="cf-status-age" className="cf-top-age" role="status" aria-live="polite" />
+      <motion.button
       type="button"
       className="cf-btn cf-refresh-btn"
       aria-label={failed ? `Refresh failed — ${failed}` : "Refresh data"}
@@ -241,7 +247,8 @@ function RefreshControl({ onRefresh }: { onRefresh: () => Promise<void> }): Reac
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
         </svg>
       </motion.span>
-    </motion.button>
+      </motion.button>
+    </span>
   );
 }
 
@@ -357,7 +364,7 @@ function BottomTabs({
       shape: "auto",
       tint: 0.25,
       tintTone: "dark",
-      frost: 0.3,
+      frost: 0.45,
       // The droplet lens (operator 2026-10-14): push the magnifying
       // character toward Apple's material — a stronger refraction body,
       // wider edge reach so the bend starts further from the rim, and
@@ -632,22 +639,6 @@ export default function App(): React.JSX.Element {
       {updateReady && !updateDismissed ? (
         <UpdateModal onReload={() => window.location.reload()} onDismiss={() => setUpdateDismissed(true)} />
       ) : null}
-
-      <footer className="cf-statusbar" role="status" aria-live="polite">        {/* Operator 2026-10-11: updated-ago small on the LEFT; the right
-            group carries the billing-period day count with a thin progress
-            bar. Both are fed imperatively by statusstrip.ts. */}
-        <span id="cf-status-age" className="cf-statusbar-age" />
-        <span className="cf-statusbar-right" id="cf-status-right" hidden>
-          <span
-            className="cf-statusbar-progress"
-            role="progressbar"
-            aria-label="Billing period progress"
-          >
-            <span className="cf-statusbar-fill" id="cf-status-bar" />
-          </span>
-          <span id="cf-status-period" className="cf-status-period" />
-        </span>
-      </footer>
     </>
   );
 }

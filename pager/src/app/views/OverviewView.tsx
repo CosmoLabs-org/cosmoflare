@@ -248,6 +248,7 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
           scale. Gray base reads as the standard price; the total closes.
           Zero-overage collapses to the base alone (critique P2). */}
       <p className="cf-plan-line">
+        <span className="cf-plan-day">{`day ${billing.period.day}/${billing.period.days}`}</span>
         <span className="cf-plan-name">{`${WORKERS_PAID_PLAN} ·`}</span>
         <span
           className="cf-cost-line"

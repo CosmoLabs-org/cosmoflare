@@ -380,9 +380,7 @@ body.cf-nav-open { overflow: hidden; }
 
 .cf-main {
   padding: var(--space-4);
-  /* Bottom padding carries the fixed status strip's height (UI-1, +48px)
-     so content is never hidden behind it. */
-  padding-bottom: calc(var(--space-4) + 48px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   padding-left: calc(var(--space-4) + env(safe-area-inset-left));
   padding-right: calc(var(--space-4) + env(safe-area-inset-right));
   max-width: 880px;
@@ -431,6 +429,22 @@ body.cf-nav-open { overflow: hidden; }
 
 /* Buttons. CTA system (operator 2026-10-12): Nunito brand face, pill
    radii matching the navcount chips, one base + intent variants. */
+/* Refresh cluster: the honest data age sits beside the control that
+   refreshes it (operator 2026-10-14 — the bottom strip is gone). */
+.cf-refresh-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.cf-top-age {
+  font-family: var(--font-indicator);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .cf-btn {
   font-family: var(--font-brand);
   font-size: 15px;
@@ -980,6 +994,11 @@ body.cf-nav-open { overflow: hidden; }
   font-variant-numeric: tabular-nums;
 }
 .cf-plan-name { color: var(--muted); }
+.cf-plan-day {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
 
 
 /* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
@@ -2283,8 +2302,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   top: 0;
   height: 3px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, transparent, var(--text), transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--text) 50%, transparent);
+  background: linear-gradient(90deg, transparent, var(--tab-hue, var(--text)), transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tab-hue, var(--text)) 50%, transparent);
   transform: scaleX(0);
   transform-origin: 50% 50%;
   transition: transform 320ms var(--ease-out);
@@ -2299,8 +2318,19 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   display: inline-flex;
   transition: transform 240ms var(--ease-out);
 }
+/* Section identity hues return to the PILL (operator 2026-10-14: don't
+   lose the unique colors) — scoped to the bottom tabs only, and moved
+   OFF the severity ramp so red still means exclusively over-limit:
+   alerts violet (not critical red), billing sky (not ok green), workers
+   indigo (not warning amber). Overview keeps the brand accent. */
+.cf-bottomtab[data-route="overview"] { --tab-hue: var(--accent); }
+.cf-bottomtab[data-route="billing"] { --tab-hue: #38bdf8; }
+.cf-bottomtab[data-route="workers"] { --tab-hue: #818cf8; }
+.cf-bottomtab[data-route="d1"] { --tab-hue: #60a5fa; }
+.cf-bottomtab[data-route="alerts"] { --tab-hue: #a78bfa; }
+.cf-bottomtab[data-route="more"] { --tab-hue: var(--accent); }
 .cf-bottomtab[aria-current="page"] {
-  color: var(--text);
+  color: var(--tab-hue, var(--text));
   font-weight: 600;
   /* More separation under the icon (operator 2026-10-13) and a little
      headroom so the grown icon never kisses the glow line. */
@@ -2363,8 +2393,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     z-index: -1;
     border-radius: inherit;
     background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.05);
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.05);
+    backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+    -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),
@@ -2418,109 +2448,16 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     flex: 1 1 0;
     min-height: 56px; /* comfortable tap target */
   }
-  /* The statusbar lifts above the tab bar; main content clears both. */
-  .cf-statusbar {
-    bottom: var(--cf-tabbar-h);
-  }
   .cf-main {
-    padding-bottom: calc(var(--space-4) + 48px + var(--cf-tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-4) + var(--cf-tabbar-h) + env(safe-area-inset-bottom));
   }
 }
 
-/* ---- Bottom status strip (UI-1): "Updated Xm ago · Day N of 30" pinned to
-   the viewport bottom, one global live region fed by the views. Was missing
-   from the UI-1 merge (the agent died before styling it) — the footer
-   rendered as unstyled inline text at the page end. Instrument readout role:
-   soft mono, tracked caps. ---- */
-.cf-statusbar {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-top: 1px solid var(--border);
-  font-family: var(--font-indicator);
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
-  color: var(--muted);
-}
-/* Updated-ago sits small on the left (operator 2026-10-11); the right group
-   carries the period day counter (IMP-pSZEMZP) with a thin gradient progress
-   bar beneath it. */
-.cf-statusbar-age {
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.cf-statusbar-right {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
-.cf-statusbar-progress {
-  display: inline-block;
-  width: 88px;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-raised);
-  /* Track edge via inset shadow — a 1px border would eat the height. */
-  box-shadow: inset 0 0 0 1px var(--border);
-  overflow: hidden;
-}
-/* Fill scales from the left (transform, not width — no layout thrash). */
-.cf-statusbar-fill {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-pill);
-  background-image: linear-gradient(90deg, rgba(245, 166, 35, 0.7), var(--accent));
-  box-shadow: 0 0 6px rgba(245, 166, 35, 0.4);
-  transform-origin: left center;
-  transform: scaleX(0);
-  transition: transform var(--dur-med) var(--ease-out);
-}
-/* The traveling head dot rides the fill's leading edge — the eye tracks a
-   moving point far better than a growing edge (operator 2026-10-12). */
-.cf-statusbar-fill::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 80%, transparent);
-}
-/* >=80% of the cycle: the track runs hot — critical-shifted fill, harder
-   glow (statusstrip toggles .is-hot; same language as the gauges). */
-.cf-statusbar-progress.is-hot .cf-statusbar-fill {
-  background-image: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, var(--sev-critical)), var(--sev-critical));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--sev-critical) 50%, transparent);
-}
-.cf-statusbar-progress.is-hot .cf-statusbar-fill::after {
-  background: var(--sev-critical);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--sev-critical) 80%, transparent);
-}
-/* IMP-pSZEMZP (operator 2026-10-12): the billing day is a counter lockup —
-   the day number large in the data face with tabular numerals, the "/total"
-   smaller and muted in the display face — replacing the old caps
-   "Day N of 30" line. */
-.cf-statusbar .cf-status-period {
-  display: inline-flex;
-  align-items: baseline;
-  color: var(--text);
-}
+/* The bottom status strip is retired (operator 2026-10-14): the liquid
+   glass pill owns the bottom. The data age lives beside the masthead's
+   Refresh control (.cf-top-age); the billing day lives in the Overview
+   plan line and Billing's dial. The cycle lockup styles stay — Billing's
+   big dial uses them. */
 .cf-cycle-day {
   font-family: var(--font-data);
   font-size: var(--text-base);
