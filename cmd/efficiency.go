@@ -53,7 +53,12 @@ var efficiencyCollectFn = func(windowDays int, now time.Time) (*cosmoflare.Effic
 	if zonesErr == nil {
 		zoneLister = zones
 	}
-	return cosmoflare.NewEfficiencyServiceWithZones(workers, kv, analytics, r2Lister, zoneLister).Report(context.Background(), w)
+	svc := cosmoflare.NewEfficiencyServiceWithZones(workers, kv, analytics, r2Lister, zoneLister)
+	// HTML cache-trap probe rides the zone loop (zones with real traffic).
+	if APIToken != "" {
+		svc = svc.WithCaching(cosmoflare.NewCachingService(APIToken))
+	}
+	return svc.Report(context.Background(), w)
 }
 
 var efficiencyCmd = &cobra.Command{
@@ -68,6 +73,8 @@ reports resources that do nothing:
   dead KV namespaces    0 reads AND 0 writes over the window
   empty R2 buckets      0 objects at window end
   low cache-hit zones   real traffic but <5% served from edge cache
+  HTML cache traps      origin s-maxage on HTML the edge is NOT honoring
+                         (cf-cache-status DYNAMIC with no zone Cache Rule)
 
 Every finding carries its evidence (counts and the window it was measured
 over) and an actionable fix. Numbers are always measured from the API —

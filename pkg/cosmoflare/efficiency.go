@@ -50,6 +50,7 @@ type EfficiencyService struct {
 	analytics *AnalyticsService
 	buckets   BucketLister // nil → empty-bucket checks are skipped
 	zones     ZoneLister   // nil → zone cache-coverage check is skipped
+	caching   *CachingService // nil → HTML cache-trap check is skipped
 }
 
 // NewEfficiencyService creates an EfficiencyService without R2 bucket
@@ -72,6 +73,12 @@ func NewEfficiencyServiceWithBuckets(workers *WorkerService, kv *KVService, anal
 // ZoneLister is the shared narrow consumer interface from limits.go.
 func NewEfficiencyServiceWithZones(workers *WorkerService, kv *KVService, analytics *AnalyticsService, buckets BucketLister, zones ZoneLister) *EfficiencyService {
 	return &EfficiencyService{workers: workers, kv: kv, analytics: analytics, buckets: buckets, zones: zones}
+}
+
+// WithCaching attaches the HTML cache-trap detector; nil keeps the check off.
+func (s *EfficiencyService) WithCaching(c *CachingService) *EfficiencyService {
+	s.caching = c
+	return s
 }
 
 // NewEfficiencyServiceFromCreds creates an EfficiencyService from account ID
@@ -223,6 +230,14 @@ func (s *EfficiencyService) Report(ctx context.Context, w AnalyticsWindow) (*Eff
 						sum.Requests, sum.HitRatePct, w.Start.Format("2006-01-02"), w.End.Format("2006-01-02")),
 					Fix: "origin Cache-Control headers on cacheable responses, or a zone Cache Rule (HTML needs a Cache Rule — s-maxage alone does nothing)",
 				})
+			}
+			// HTML cache-trap probe (P-08): only zones with real traffic.
+			// Best-effort — an unreachable apex is not a trap and must not
+			// fail the audit.
+			if s.caching != nil && sum.Requests >= 1000 {
+				if f, err := s.caching.DetectHTMLCacheTrap(ctx, *z); err == nil && f != nil {
+					rep.Findings = append(rep.Findings, *f)
+				}
 			}
 		}
 	}
