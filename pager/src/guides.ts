@@ -5,11 +5,13 @@
 
 /** One block of article body prose. Paragraphs, sub-headings and bullet
  *  lists carry text; kv rows carry a term + desc pair rendered with the
- *  cf-domain-field pattern. */
+ *  cf-domain-field pattern; tables carry a head row plus string rows for
+ *  reference material like rule-family quotas. */
 export type GuideBlock =
   | { kind: "p" | "h3"; text: string }
   | { kind: "list"; text: string[] }
-  | { kind: "kv"; term: string; desc: string };
+  | { kind: "kv"; term: string; desc: string }
+  | { kind: "table"; head: string[]; rows: string[][] };
 
 /** One guide article. `id` is the hash-route target (#/guides/<id>). */
 export interface Guide {

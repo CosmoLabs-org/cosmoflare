@@ -26,6 +26,20 @@ function KvRow({ term, desc }: { term: string; desc: string }): React.JSX.Elemen
  *  array never reorders at runtime. */
 function Block({ block }: { block: GuideBlock }): React.JSX.Element {
   if (block.kind === "kv") return <KvRow term={block.term} desc={block.desc} />;
+  if (block.kind === "table") {
+    return (
+      <table className="cf-guide-table">
+        <thead>
+          <tr>{block.head.map((h, i) => <th key={i}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {block.rows.map((row, r) => (
+            <tr key={r}>{row.map((cell, c) => <td key={c}>{cell}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
   if (block.kind === "list") {
     return (
       <ul className="cf-guide-list">
