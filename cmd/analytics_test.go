@@ -198,8 +198,8 @@ func TestAnalyticsKVCmd_JSONEnvelope(t *testing.T) {
 	analyticsKVCollectFn = func(windowDays int, now time.Time) ([]cosmoflare.KVOperationsSummary, error) {
 		return []cosmoflare.KVOperationsSummary{
 			{NamespaceID: "ns-quiet", Requests: 0},
-			{NamespaceID: "ns-busy", Requests: 900},
-			{NamespaceID: "ns-mid", Requests: 100},
+			{NamespaceID: "ns-busy", Reads: 850, Writes: 50, Requests: 900},
+			{NamespaceID: "ns-mid", Reads: 60, Writes: 40, Requests: 100},
 		}, nil
 	}
 	analyticsKVWindow = 7

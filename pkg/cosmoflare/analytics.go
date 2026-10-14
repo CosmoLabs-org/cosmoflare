@@ -505,17 +505,23 @@ func (s *AnalyticsService) DurableObjects(ctx context.Context, w AnalyticsWindow
 }
 
 // KVOperationsSummary is KV traffic for one namespace over a window.
-// Requests is the dataset's total-operations sum — the API exposes no
-// reads/writes split on kvOperationsAdaptiveGroups (verified live
-// 2026-10-14: only dimensions.namespaceId + sum.requests exist).
+// The dataset reports per-action rows; these fields aggregate them —
+// Requests is the total across actions. (Live schema 2026-10-14: the split
+// dimension is actionType with values read/write/list/... — the earlier
+// "no reads/writes split" finding came from probing `action`, which does
+// not exist; actionType does.)
 type KVOperationsSummary struct {
 	NamespaceID string `json:"namespace_id"`
+	Reads       uint64 `json:"reads"`
+	Writes      uint64 `json:"writes"`
+	Lists       uint64 `json:"lists"`
 	Requests    uint64 `json:"requests"`
 }
 
 // KVOperations returns per-namespace KV operation counts for the window,
-// one batched query. Namespaces with no traffic may be absent — absence
-// means zero, callers must not treat it as an error.
+// one batched query grouped by namespace + action. Namespaces with no
+// traffic may be absent — absence means zero, callers must not treat it as
+// an error.
 func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) ([]KVOperationsSummary, error) {
 	const op = "AnalyticsKVOperations"
 	if err := s.validateAccount(op); err != nil {
@@ -528,7 +534,7 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
   viewer {
     accounts(filter: {accountTag: $accountTag}) {
       kvOperationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
-        dimensions { namespaceId }
+        dimensions { namespaceId actionType }
         sum { requests }
       }
     }
@@ -540,6 +546,7 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
 				KVOperationsAdaptiveGroups []struct {
 					Dimensions struct {
 						NamespaceId string `json:"namespaceId"`
+						ActionType  string `json:"actionType"`
 					} `json:"dimensions"`
 					Sum struct {
 						Requests uint64 `json:"requests"`
@@ -551,14 +558,28 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
 	if err := s.query(ctx, op, gql, s.windowVars(w), &out); err != nil {
 		return nil, err
 	}
-	rows := make([]KVOperationsSummary, 0)
+	byNS := map[string]*KVOperationsSummary{}
 	for _, a := range out.Viewer.Accounts {
 		for _, g := range a.KVOperationsAdaptiveGroups {
-			rows = append(rows, KVOperationsSummary{
-				NamespaceID: g.Dimensions.NamespaceId,
-				Requests:    g.Sum.Requests,
-			})
+			row := byNS[g.Dimensions.NamespaceId]
+			if row == nil {
+				row = &KVOperationsSummary{NamespaceID: g.Dimensions.NamespaceId}
+				byNS[g.Dimensions.NamespaceId] = row
+			}
+			switch g.Dimensions.ActionType {
+			case "read":
+				row.Reads += g.Sum.Requests
+			case "write":
+				row.Writes += g.Sum.Requests
+			case "list":
+				row.Lists += g.Sum.Requests
+			}
+			row.Requests += g.Sum.Requests
 		}
+	}
+	rows := make([]KVOperationsSummary, 0, len(byNS))
+	for _, row := range byNS {
+		rows = append(rows, *row)
 	}
 	return rows, nil
 }

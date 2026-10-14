@@ -315,15 +315,18 @@ func TestAnalyticsDurableObjects(t *testing.T) {
 }
 
 // TestAnalyticsKVOperations verifies that KVOperations POSTs one batched
-// GraphQL query against kvOperationsAdaptiveGroups and flattens per-namespace
-// request sums (the live schema exposes only dimensions.namespaceId +
-// sum.requests — verified 2026-10-14).
+// GraphQL query against kvOperationsAdaptiveGroups and aggregates the
+// per-action rows into per-namespace reads/writes/lists + total (live
+// schema: dimensions { namespaceId actionType } + sum.requests — the split
+// dimension is actionType, verified 2026-10-14).
 func TestAnalyticsKVOperations(t *testing.T) {
 	t.Parallel()
 	var cap analyticsCapture
 	resp := `{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[` +
-		`{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":26600}},` +
-		`{"dimensions":{"namespaceId":"ns-dead"},"sum":{"requests":0}}]}]}}}`
+		`{"dimensions":{"namespaceId":"ns-live","actionType":"read"},"sum":{"requests":24100}},` +
+		`{"dimensions":{"namespaceId":"ns-live","actionType":"write"},"sum":{"requests":2500}},` +
+		`{"dimensions":{"namespaceId":"ns-live","actionType":"list"},"sum":{"requests":7}},` +
+		`{"dimensions":{"namespaceId":"ns-quiet","actionType":"list"},"sum":{"requests":3}}]}]}}}`
 	srv := analyticsServer(t, resp, &cap)
 	defer srv.Close()
 
@@ -335,14 +338,21 @@ func TestAnalyticsKVOperations(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("got %d rows, want 2: %+v", len(got), got)
 	}
-	if got[0].NamespaceID != "ns-live" || got[0].Requests != 26600 || got[1].Requests != 0 {
-		t.Fatalf("rows = %+v", got)
+	live, quiet := got[0], got[1]
+	if live.NamespaceID != "ns-live" {
+		live, quiet = quiet, live
+	}
+	if live.Reads != 24100 || live.Writes != 2500 || live.Lists != 7 || live.Requests != 26607 {
+		t.Fatalf("ns-live = %+v", live)
+	}
+	if quiet.Reads != 0 || quiet.Writes != 0 || quiet.Lists != 3 || quiet.Requests != 3 {
+		t.Fatalf("ns-quiet = %+v", quiet)
 	}
 	if !strings.Contains(cap.Body, "kvOperationsAdaptiveGroups") {
 		t.Errorf("query misses kvOperationsAdaptiveGroups: %s", cap.Body)
 	}
-	if !strings.Contains(cap.Body, "namespaceId") {
-		t.Errorf("query misses namespaceId dimension: %s", cap.Body)
+	if !strings.Contains(cap.Body, "namespaceId") || !strings.Contains(cap.Body, "actionType") {
+		t.Errorf("query misses the namespaceId/actionType dimensions: %s", cap.Body)
 	}
 }
 

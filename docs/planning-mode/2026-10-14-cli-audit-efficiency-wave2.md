@@ -55,7 +55,9 @@ implemented_commits:
 
 ---
 
-## Task W2-A: Zone cache coverage — the hit-rate finding (deliverable P-06 + P-10 cache alert)
+## Task W2-A: Zone cache coverage — the hit-rate finding (deliverable P-06; P-10 resolution below)
+
+**P-10 resolution (2026-10-14, verified in-tree):** the alert classes already exist — `zone-cache-miss-pct` and `zone-uncached-requests` (FEAT-049 wave 3a, zone-scoped) cover the cache-hit regression class, and `kv-writes` (per-namespace, fed by `analytics_kvwrites.go`) covers KV volume alerting. No new registry entries needed; this plan was written without checking the registry (plan gap, caught during execution).
 
 **Model:** sonnet · **Files:** modify `pkg/cosmoflare/analytics.go`, `pkg/cosmoflare/analytics_test.go`, `pkg/cosmoflare/efficiency.go`, `pkg/cosmoflare/efficiency_test.go`, `cmd/efficiency.go`, `cmd/efficiency_test.go`
 

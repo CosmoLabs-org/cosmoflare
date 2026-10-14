@@ -76,9 +76,8 @@ var analyticsKVCmd = &cobra.Command{
 	Long: `Show per-namespace KV operation totals from real Cloudflare Analytics.
 
 Queries the kvOperationsAdaptiveGroups GraphQL dataset (one batched query)
-and reports each namespace's total operations over the window, sorted by
-traffic. The API exposes only a combined request count — there is no
-reads/writes split on this dataset.
+and reports each namespace's reads, writes, lists, and total operations
+over the window, sorted by traffic.
 
 Flags:
   --window   Look-back window in days (default 7, max 90)
@@ -126,9 +125,9 @@ func writeAnalyticsKVTable(rows []cosmoflare.KVOperationsSummary) error {
 		return nil
 	}
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "NAMESPACE ID\tOPERATIONS")
+	fmt.Fprintln(tw, "NAMESPACE ID\tREADS\tWRITES\tLISTS\tTOTAL")
 	for _, r := range rows {
-		fmt.Fprintf(tw, "%s\t%d\n", r.NamespaceID, r.Requests)
+		fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\n", r.NamespaceID, r.Reads, r.Writes, r.Lists, r.Requests)
 	}
 	tw.Flush()
 	return nil
