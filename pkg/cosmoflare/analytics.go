@@ -504,6 +504,65 @@ func (s *AnalyticsService) DurableObjects(ctx context.Context, w AnalyticsWindow
 	return rows, nil
 }
 
+// KVOperationsSummary is KV traffic for one namespace over a window.
+type KVOperationsSummary struct {
+	NamespaceID string `json:"namespace_id"`
+	Reads       uint64 `json:"reads"`
+	Writes      uint64 `json:"writes"`
+}
+
+// KVOperations returns per-namespace KV reads/writes for the window, one
+// batched query. Namespaces with no traffic may be absent — absence means
+// zero, callers must not treat it as an error.
+func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) ([]KVOperationsSummary, error) {
+	const op = "AnalyticsKVOperations"
+	if err := s.validateAccount(op); err != nil {
+		return nil, err
+	}
+	if err := validateAnalyticsWindow(op, w, 92*24*time.Hour); err != nil {
+		return nil, err
+	}
+	gql := `query KVOperations($accountTag: String!, $start: Time!, $end: Time!) {
+  viewer {
+    accounts(filter: {accountTag: $accountTag}) {
+      kvOperationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
+        dims { namespaceID }
+        sum { reads writes }
+      }
+    }
+  }
+}`
+	var out struct {
+		Viewer struct {
+			Accounts []struct {
+				KVOperationsAdaptiveGroups []struct {
+					Dim struct {
+						NamespaceID string `json:"namespaceID"`
+					} `json:"dims"`
+					Sum struct {
+						Reads  uint64 `json:"reads"`
+						Writes uint64 `json:"writes"`
+					} `json:"sum"`
+				} `json:"kvOperationsAdaptiveGroups"`
+			} `json:"accounts"`
+		} `json:"viewer"`
+	}
+	if err := s.query(ctx, op, gql, s.windowVars(w), &out); err != nil {
+		return nil, err
+	}
+	rows := make([]KVOperationsSummary, 0)
+	for _, a := range out.Viewer.Accounts {
+		for _, g := range a.KVOperationsAdaptiveGroups {
+			rows = append(rows, KVOperationsSummary{
+				NamespaceID: g.Dim.NamespaceID,
+				Reads:       g.Sum.Reads,
+				Writes:      g.Sum.Writes,
+			})
+		}
+	}
+	return rows, nil
+}
+
 // validateAccount ensures account-scoped queries have credentials.
 func (s *AnalyticsService) validateAccount(op string) error {
 	if s.accountID == "" {
