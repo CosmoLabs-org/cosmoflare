@@ -2,7 +2,7 @@
 branch: master
 created: "2026-10-14T13:04:53+04:00"
 date: "2026-10-14T13:04:53+04:00"
-goals_completed: 3
+goals_completed: 4
 goals_total: 7
 priority: medium
 related_prompts: []
@@ -63,7 +63,7 @@ The CLI's flagship audit command (FEAT-047/069 first slice): `cosmoflare efficie
 **Model:** `glm-turbo` | **Files:** `cmd/cost.go`, `cmd/cost_test.go`
 The existing `cosmoflare cost` estimation gains a waste line: projected monthly dollars attributed to idle resources found by G-02's collectors (reused from `pkg/cosmoflare/efficiency.go` — no second collector). Test: `TestCostIncludesIdleWaste`. Acceptance: `go test ./cmd/ -run TestCost` green.
 
-### [ ] G-04 Worker-profile live tail (the G-06 stretch, unchanged)
+### [x] G-04 Worker-profile live tail (the G-06 stretch, unchanged)
 **Model:** `sonnet` | **Files:** `apps/ops/src/index.ts`, `pager/src/app/views/WorkerProfileView.tsx`
 Stretch carried from the profiles program: a "Tail" affordance on the worker profile streaming `wrangler tail`-class events through the ops worker. Verify the CF tail API's auth shape first (it needs its own scope); if the token can't support it, ship the profile's "Open in Cloudflare →" deep link to the live-tail view instead and note the gap in the issue.
 
