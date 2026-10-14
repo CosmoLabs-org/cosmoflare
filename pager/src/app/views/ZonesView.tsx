@@ -12,6 +12,7 @@ import { api, LoginExpiredError, type FetchResult, type Summary, type ZoneRow } 
 import { zoneAttentionLevel } from "../../attention";
 import { formatCount, formatPct } from "../../format";
 import { byStatusLegend, byStatusStack } from "../../tables";
+import { zoneHref } from "../../routes";
 import DataTable, { type DataTableColumn } from "../components/DataTable";
 import PurgeButton from "../components/PurgeButton";
 import type { ViewFetcher } from "./WorkersView";
@@ -34,7 +35,7 @@ function DomSlot({ build }: { build: () => HTMLElement }): React.JSX.Element {
 }
 
 const ZONE_COLUMNS: DataTableColumn<ZoneRow>[] = [
-  { key: "zone", label: "Zone", text: (z) => z.zone },
+  { key: "zone", label: "Zone", text: (z) => z.zone, cell: (z) => <a className="cf-link" href={zoneHref(z.zone)}>{z.zone}</a> },
   { key: "total", label: "Requests", numeric: true, text: (z) => formatCount(z.total), num: (z) => z.total },
   { key: "uncached", label: "Uncached", numeric: true, text: (z) => formatCount(z.uncached), num: (z) => z.uncached },
   { key: "missPct", label: "Miss %", numeric: true, text: (z) => (z.missPct === null ? "—" : formatPct(z.missPct)), num: (z) => z.missPct },

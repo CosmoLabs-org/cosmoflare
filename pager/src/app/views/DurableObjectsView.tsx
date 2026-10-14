@@ -13,13 +13,21 @@ import { levelForErrorPct } from "../../dashboard";
 import { formatCount, formatPct } from "../../format";
 import { usageSharePct } from "../../tables";
 import type { DOPayload, DORow } from "../../durable_objects";
+import { doHref } from "../../routes";
 import DataTable, { type DataTableColumn } from "../components/DataTable";
 import type { ViewFetcher } from "./WorkersView";
 
 // The table columns match durable_objects.ts's renderInto exactly (the
 // vanilla Column shape carries an HTMLElement cell; this view needs none).
 const DO_COLUMNS: DataTableColumn<DORow>[] = [
-  { key: "script", label: "Script", text: (r) => r.script },
+  // Profiles instance 3: the script cell taps through to the namespace's
+  // profile page, the same tap-through the Workers table has.
+  {
+    key: "script",
+    label: "Script",
+    text: (r) => r.script,
+    cell: (r) => <a className="cf-link" href={doHref(r.script)}>{r.script}</a>,
+  },
   { key: "requests", label: "Requests", numeric: true, text: (r) => formatCount(r.requests), num: (r) => r.requests },
   { key: "errors", label: "Errors", numeric: true, text: (r) => formatCount(r.errors), num: (r) => r.errors },
   { key: "errorPct", label: "Error %", numeric: true, text: (r) => formatPct(r.errorPct, 2), num: (r) => r.errorPct },
@@ -119,14 +127,12 @@ export default function DurableObjectsView({ refreshSeq = 0, fetcher }: { refres
         <p className="cf-empty cf-level-warning-text" role="alert">{`Refresh failed — ${refreshError}`}</p>
       ) : null}
 
-      <p className="cf-row-detail cf-view-intro">Requests, errors and duration per namespace. Graded bars show allowance headroom.</p>
+      <p className="cf-row-detail cf-view-intro">Requests, errors and duration per namespace over the last 24h. Graded bars show allowance headroom.</p>
 
       <section className="cf-card">
-        <p className="cf-row-detail">
-          {d.errors.length > 0
-            ? `(24h) · Partial load — ${d.errors[0]}`
-            : `(24h) · requests, errors and error rate per script`}
-        </p>
+        {d.errors.length > 0 ? (
+          <p className="cf-row-detail">{`Partial load — ${d.errors[0]}`}</p>
+        ) : null}
         {d.rows.length === 0 ? (
           <p className="cf-empty cf-empty-quiet">No namespaces or traffic found.</p>
         ) : (

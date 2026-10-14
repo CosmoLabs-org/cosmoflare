@@ -33,7 +33,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { hrefFor, parseHash, parseWorkerHash, ROUTES, type RouteId } from "../routes";
+import { hrefFor, parseD1Hash, parseDoHash, parseHash, parseWorkerHash, parseZoneHash, ROUTES, type RouteId } from "../routes";
 import { logoMark } from "../logo";
 import { api, type Billing, type Summary } from "../api";
 import type { DomainsPayload } from "../domains";
@@ -47,6 +47,9 @@ import ProjectsView from "./views/ProjectsView";
 import DomainsView from "./views/DomainsView";
 import WorkersView from "./views/WorkersView";
 import WorkerProfileView from "./views/WorkerProfileView";
+import D1ProfileView from "./views/D1ProfileView";
+import DoProfileView from "./views/DoProfileView";
+import ZoneProfileView from "./views/ZoneProfileView";
 import D1View from "./views/D1View";
 import ZonesView from "./views/ZonesView";
 import DurableObjectsView from "./views/DurableObjectsView";
@@ -99,7 +102,12 @@ const NAV_LABEL: Record<RouteId, string> = {
  *  unconditionally and the media query decides visibility. */
 const BOTTOM_TABS: RouteId[] = ["overview", "billing", "workers", "domains", "alerts"];
 
-type ViewKind = { kind: "route"; route: RouteId } | { kind: "worker"; name: string };
+type ViewKind =
+  | { kind: "route"; route: RouteId }
+  | { kind: "worker"; name: string }
+  | { kind: "d1"; name: string }
+  | { kind: "do"; name: string }
+  | { kind: "zone"; name: string };
 
 /** One entry per renderable target: a real React view component (P-04
  *  tier 1: Overview + Billing; P-05a tier 2a: the table family and worker
@@ -117,6 +125,30 @@ function viewEntry(v: ViewKind): ViewEntry {
       id: `worker/${v.name}`,
       Component: ({ refreshSeq }: { refreshSeq?: number }) => (
         <WorkerProfileView name={v.name} refreshSeq={refreshSeq} />
+      ),
+    };
+  }
+  if (v.kind === "d1") {
+    return {
+      id: `d1/${v.name}`,
+      Component: ({ refreshSeq }: { refreshSeq?: number }) => (
+        <D1ProfileView name={v.name} refreshSeq={refreshSeq} />
+      ),
+    };
+  }
+  if (v.kind === "do") {
+    return {
+      id: `do/${v.name}`,
+      Component: ({ refreshSeq }: { refreshSeq?: number }) => (
+        <DoProfileView name={v.name} refreshSeq={refreshSeq} />
+      ),
+    };
+  }
+  if (v.kind === "zone") {
+    return {
+      id: `zone/${v.name}`,
+      Component: ({ refreshSeq }: { refreshSeq?: number }) => (
+        <ZoneProfileView name={v.name} refreshSeq={refreshSeq} />
       ),
     };
   }
@@ -138,11 +170,18 @@ function viewEntry(v: ViewKind): ViewEntry {
   return map[v.route];
 }
 
-/** The current hash target: a section route or a worker profile. */
+/** The current hash target: a section route or an entity profile. */
 function readHash(): ViewKind {
-  const worker = parseWorkerHash(window.location.hash);
+  const hash = window.location.hash;
+  const worker = parseWorkerHash(hash);
   if (worker !== null) return { kind: "worker", name: worker };
-  return { kind: "route", route: parseHash(window.location.hash) };
+  const d1 = parseD1Hash(hash);
+  if (d1 !== null) return { kind: "d1", name: d1 };
+  const doName = parseDoHash(hash);
+  if (doName !== null) return { kind: "do", name: doName };
+  const zone = parseZoneHash(hash);
+  if (zone !== null) return { kind: "zone", name: zone };
+  return { kind: "route", route: parseHash(hash) };
 }
 
 function useHashView(): ViewKind {
@@ -510,7 +549,10 @@ export default function App(): React.JSX.Element {
   // mounted; with the bridge, one active host is enough — route changes
   // repaint, matching the old showRoute behavior).
   const entry = useMemo(() => viewEntry(view), [view]);
-  const activeKey = view.kind === "worker" ? `worker/${view.name}` : view.route;
+  const activeKey =
+    view.kind === "route"
+      ? view.route
+      : `${view.kind}/${view.name}`;
   const [refreshFn, setRefreshFn] = useState<() => void>(() => () => undefined);
   const onReady = useCallback((fn: () => void) => setRefreshFn(() => fn), []);
   const onRefresh = useCallback(async () => {

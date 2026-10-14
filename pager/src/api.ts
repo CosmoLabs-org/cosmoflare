@@ -79,6 +79,76 @@ export interface WorkerProfilePayload {
   cache?: CacheInfo;
 }
 
+// ---- Entity profile contracts (profiles program, ROAD-p7QJ0RX) — each
+// mirrors its apps/ops/src/*_profile.ts collector plus the cached()
+// envelope, the WorkerProfilePayload flow. ----
+
+export interface D1ReadReplicationRow {
+  mode: string;
+  parts: number | null;
+}
+
+export interface D1MetadataRow {
+  name: string;
+  createdAt: string | null;
+  version: string | null;
+  region: string | null;
+  numTables: number | null;
+  fileSize: number | null;
+  readReplication: D1ReadReplicationRow | null;
+}
+
+export interface D1ProfilePayload {
+  generatedAt: string;
+  /** null when the name->uuid lookup or the metadata GET fails — the
+   *  errors[] line carries why, the view renders no metadata card. */
+  metadata: D1MetadataRow | null;
+  errors: string[];
+  cache?: CacheInfo;
+}
+
+export interface DoProfilePayload {
+  generatedAt: string;
+  name: string;
+  /** True when the 24h analytics join produced a row for this script. */
+  found: boolean;
+  requests: number;
+  errors: number;
+  errorPct: number;
+  namespaceId: string | null;
+  /** One line per failed source — data absent, never invented. */
+  collectionErrors: string[];
+  cache?: CacheInfo;
+}
+
+export interface ZoneMetadataSection {
+  name: string;
+  status: string;
+  planName: string;
+  paused: boolean;
+  type: string;
+  nameServers: string[];
+  createdOn: string | null;
+}
+
+export interface ZoneDnssecSection {
+  status: string | null;
+  algorithm: string | null;
+}
+
+export interface ZoneProfilePayload {
+  generatedAt: string;
+  name: string;
+  /** Resolved from the cached zone list; null when the name is unknown. */
+  zoneId: string | null;
+  metadata: ZoneMetadataSection | null;
+  sslMode: string | null;
+  dnssec: ZoneDnssecSection | null;
+  /** One line per failed section — an omitted section is data absent, never invented. */
+  errors: string[];
+  cache?: CacheInfo;
+}
+
 export interface Summary {
   generatedAt: string;
   windowHours: number;

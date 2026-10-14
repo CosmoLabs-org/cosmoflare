@@ -15,6 +15,9 @@ import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProte
 import { collectWafRules, handleDnsToggle, handlePurge, handleWafToggle } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { collectWorkerProfile } from "./worker_profile";
+import { collectD1Profile } from "./d1_profile";
+import { collectDoProfile } from "./do_profile";
+import { collectZoneProfile } from "./zone_profile";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
@@ -60,11 +63,17 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}): 
 // reload but at most once per 60 s per key (refresh-storm guard, in cached()).
 // The REST lists are cached independently (1 h / 24 h) so a summary refresh
 // after the lists have been seen costs only the three GraphQL queries.
+/** The shared cached D1 name list — the summary and the D1 profile endpoint
+ *  ride one cache key, never a second /d1/database page per profile view. */
+function cachedD1List(ctx: ExecutionContext, env: Env): Promise<{ uuid: string; name: string }[]> {
+  return cached(ctx, env, "d1-list", LIST_TTL, () => fetchD1List(env.CF_API_TOKEN, env.CF_ACCOUNT_ID)).then((r) => r.value);
+}
+
 export async function summaryResponse(ctx: ExecutionContext, env: Env, refresh: boolean): Promise<Response> {
   const result = await cached(ctx, env, "summary", { ...SUMMARY_TTL, force: refresh }, () =>
     collectSummary(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, new Date(), {
       zonesList: (tok, acct) => cached(ctx, env, "zones-list", LIST_TTL, () => fetchZonesList(tok, acct)).then((r) => r.value),
-      d1List: (tok, acct) => cached(ctx, env, "d1-list", LIST_TTL, () => fetchD1List(tok, acct)).then((r) => r.value),
+      d1List: () => cachedD1List(ctx, env),
     }),
   );
   // cache metadata is filled here from the cache result, per the v2 contract.
@@ -226,6 +235,38 @@ export default {
         if (!name) return json({ error: "missing name" }, 400);
         const result = await cached(ctx, env, `worker-profile:${name}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
           collectWorkerProfile(env, name),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/d1-profile": {
+        // /api/d1-profile?name=<db> — one database's REST metadata (created,
+        // version, region, tables, file size, read replication), cached 5 min
+        // per database. The name->uuid lookup rides the shared cached
+        // d1-list, so a profile view costs one metadata GET.
+        const name = url.searchParams.get("name");
+        if (!name) return json({ error: "missing name" }, 400);
+        const result = await cached(ctx, env, `d1-profile:${name}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectD1Profile(env, name, { d1List: () => cachedD1List(ctx, env) }),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/do-profile": {
+        // /api/do-profile?name=<namespace script> — one DO namespace's 24h
+        // analytics, cached 5 min per namespace.
+        const name = url.searchParams.get("name");
+        if (!name) return json({ error: "missing name" }, 400);
+        const result = await cached(ctx, env, `do-profile:${name}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectDoProfile(env.CF_ACCOUNT_ID, env.CF_API_TOKEN, name),
+        );
+        return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/zone-profile": {
+        // /api/zone-profile?name=<zone> — one zone's metadata, SSL mode and
+        // DNSSEC status, cached 5 min per zone.
+        const name = url.searchParams.get("name");
+        if (!name) return json({ error: "missing name" }, 400);
+        const result = await cached(ctx, env, `zone-profile:${name}`, { ttlSec: 5 * 60, staleSec: 60 * 60 }, () =>
+          collectZoneProfile(env, name),
         );
         return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
       }

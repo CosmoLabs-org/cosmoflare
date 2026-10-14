@@ -10,11 +10,12 @@ import { api, LoginExpiredError, type Billing, type D1Row, type FetchResult, typ
 import { levelForD1 } from "../../dashboard";
 import { formatCount } from "../../format";
 import { usageSharePct } from "../../tables";
+import { d1Href } from "../../routes";
 import DataTable, { type DataTableColumn } from "../components/DataTable";
 import type { ViewFetcher } from "./WorkersView";
 
 const D1_COLUMNS: DataTableColumn<D1Row>[] = [
-  { key: "name", label: "Database", text: (d) => d.name },
+  { key: "name", label: "Database", text: (d) => d.name, cell: (d) => <a className="cf-link" href={d1Href(d.name)}>{d.name}</a> },
   { key: "rowsRead", label: "Rows read", numeric: true, text: (d) => formatCount(d.rowsRead), num: (d) => d.rowsRead },
   { key: "rowsWritten", label: "Rows written", numeric: true, text: (d) => formatCount(d.rowsWritten), num: (d) => d.rowsWritten },
   { key: "queries", label: "Queries", numeric: true, text: (d) => formatCount(d.readQueries), num: (d) => d.readQueries },

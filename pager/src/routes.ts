@@ -23,6 +23,20 @@ export function workerHref(name: string): string {
   return `#/worker/${encodeURIComponent(name)}`;
 }
 
+/** Entity drill-in hrefs (profiles program, ROAD-p7QJ0RX): D1 databases,
+ *  Durable Objects namespaces and zones follow the worker contract. */
+export function d1Href(name: string): string {
+  return `#/d1/${encodeURIComponent(name)}`;
+}
+
+export function doHref(name: string): string {
+  return `#/do/${encodeURIComponent(name)}`;
+}
+
+export function zoneHref(name: string): string {
+  return `#/zone/${encodeURIComponent(name)}`;
+}
+
 /** "#/guides/<id>" — a guides article (FEAT-pDQEFQV). Ids are the static
  *  ids in guides.ts. */
 export function guidesHref(id: string): string {
@@ -53,6 +67,37 @@ export function parseWorkerHash(hash: string): string | null {
     return decodeURIComponent(m[1]);
   } catch {
     // Malformed escape sequence: treat the raw text as the name.
+    return m[1];
+  }
+}
+
+/** Entity drill-in parsers — the worker contract, once per entity type. */
+export function parseD1Hash(hash: string): string | null {
+  const m = hash.match(/^#\/d1\/(.+)$/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
+    return m[1];
+  }
+}
+
+export function parseDoHash(hash: string): string | null {
+  const m = hash.match(/^#\/do\/(.+)$/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
+    return m[1];
+  }
+}
+
+export function parseZoneHash(hash: string): string | null {
+  const m = hash.match(/^#\/zone\/(.+)$/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
     return m[1];
   }
 }

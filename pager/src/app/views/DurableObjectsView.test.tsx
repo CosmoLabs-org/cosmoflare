@@ -101,9 +101,9 @@ describe("DurableObjectsView (P-05a)", () => {
     // Subtitle carries the "(24h)" signal only; the namespace count lives in
     // the masthead heading.
     expect(document.querySelector(".cf-card h2")).toBeNull();
-    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toContain(
-      "(24h) · requests, errors and error rate per script",
-    );
+    // The window lives in the intro line (2026-10-14 fold); the card
+    // carries no bare subtitle.
+    expect(document.querySelector(".cf-card .cf-row-detail")).toBeNull();
   });
 
   it("drops the usage bars when the billing fetch fails", async () => {
