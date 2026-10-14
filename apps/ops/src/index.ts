@@ -15,6 +15,7 @@ import { handleAttach, auditResponse, handleDetach, handleZoneRemove, parseProte
 import { collectWafRules, handleDnsToggle, handlePurge, handleWafToggle } from "./actions";
 import { collectSummary, fetchD1List, fetchZonesList } from "./summary";
 import { collectWorkerProfile } from "./worker_profile";
+import { handleWorkerTail } from "./tail";
 import { collectD1Profile } from "./d1_profile";
 import { collectDoProfile } from "./do_profile";
 import { collectZoneProfile } from "./zone_profile";
@@ -237,6 +238,15 @@ export default {
           collectWorkerProfile(env, name),
         );
         return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/worker-tail": {
+        // GET /api/worker-tail?name=<script> — one BOUNDED live-tail stream
+        // (NDJSON): per-isolate cap of one active tail, 30 s duration cutoff,
+        // 200-event cutoff (see tail.ts — the operator's paid-plan budget
+        // rule). Never cached; every stream pays its own mint POST. The
+        // Access check and rate limit above run first, exactly as for reads.
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        return handleWorkerTail(request, env, url.searchParams.get("name"));
       }
       case "/api/d1-profile": {
         // /api/d1-profile?name=<db> — one database's REST metadata (created,
