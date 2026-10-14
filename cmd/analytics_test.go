@@ -1,8 +1,14 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"strings"
 	"testing"
+	"time"
 
+	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 	"github.com/spf13/cobra"
 )
 
@@ -132,11 +138,121 @@ func TestAnalyticsCmd_LongDescription(t *testing.T) {
 	}
 }
 
-// --- No subcommands ---
+// --- Subcommands ---
 
-func TestAnalyticsCmd_NoSubcommands(t *testing.T) {
-	if len(analyticsCmd.Commands()) != 0 {
-		t.Errorf("analyticsCmd has %d subcommands, expected 0", len(analyticsCmd.Commands()))
+func TestAnalyticsCmd_KVSubcommandRegistered(t *testing.T) {
+	found := false
+	for _, sub := range analyticsCmd.Commands() {
+		if sub.Name() == "kv" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("analytics kv subcommand not registered on analyticsCmd")
+	}
+}
+
+// --- KV subcommand ---
+
+func TestAnalyticsKVCmd_Registered(t *testing.T) {
+	if analyticsKVCmd.Use != "kv" {
+		t.Errorf("analyticsKVCmd.Use = %q, want kv", analyticsKVCmd.Use)
+	}
+	if analyticsKVCmd.Short == "" {
+		t.Error("analyticsKVCmd.Short is empty")
+	}
+	if !strings.Contains(analyticsKVCmd.Long, "cosmoflare analytics kv") {
+		t.Error("analyticsKVCmd.Long should contain usage examples")
+	}
+	if analyticsKVCmd.RunE == nil {
+		t.Error("analyticsKVCmd has nil RunE")
+	}
+}
+
+func TestAnalyticsKVCmd_FlagDefaults(t *testing.T) {
+	f := analyticsKVCmd.Flags().Lookup("window")
+	if f == nil {
+		t.Fatal("--window flag not registered on analyticsKVCmd")
+	}
+	if f.DefValue != "7" {
+		t.Errorf("--window default = %q, want 7", f.DefValue)
+	}
+}
+
+func TestAnalyticsKVCmd_WindowValidation(t *testing.T) {
+	for _, bad := range []int{0, -1, 91} {
+		prev := analyticsKVWindow
+		analyticsKVWindow = bad
+		err := runAnalyticsKV(nil, nil)
+		if err == nil {
+			t.Errorf("--window %d should be rejected", bad)
+		}
+		analyticsKVWindow = prev
+	}
+}
+
+func TestAnalyticsKVCmd_JSONEnvelope(t *testing.T) {
+	prevCollect := analyticsKVCollectFn
+	prevWindow := analyticsKVWindow
+	analyticsKVCollectFn = func(windowDays int, now time.Time) ([]cosmoflare.KVOperationsSummary, error) {
+		return []cosmoflare.KVOperationsSummary{
+			{NamespaceID: "ns-quiet", Requests: 0},
+			{NamespaceID: "ns-busy", Requests: 900},
+			{NamespaceID: "ns-mid", Requests: 100},
+		}, nil
+	}
+	analyticsKVWindow = 7
+	t.Cleanup(func() {
+		analyticsKVCollectFn = prevCollect
+		analyticsKVWindow = prevWindow
+	})
+
+	var out bytes.Buffer
+	analyticsKVJSONOut = &out
+	prevJSON := analyticsKVJSON
+	analyticsKVJSON = true
+	t.Cleanup(func() { analyticsKVJSONOut = os.Stdout; analyticsKVJSON = prevJSON })
+
+	if err := runAnalyticsKV(nil, nil); err != nil {
+		t.Fatalf("runAnalyticsKV: %v", err)
+	}
+	var env struct {
+		Status string `json:"status"`
+		Data   struct {
+			WindowDays    int                                    `json:"window_days"`
+			TotalRequests uint64                                 `json:"total_requests"`
+			Namespaces    []cosmoflare.KVOperationsSummary      `json:"namespaces"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("envelope not JSON: %v\n%s", err, out.String())
+	}
+	if env.Status != "success" || env.Data.TotalRequests != 1000 || len(env.Data.Namespaces) != 3 {
+		t.Fatalf("envelope = %+v", env)
+	}
+	// sorted desc by requests
+	if env.Data.Namespaces[0].NamespaceID != "ns-busy" || env.Data.Namespaces[2].NamespaceID != "ns-quiet" {
+		t.Fatalf("namespaces not sorted desc: %+v", env.Data.Namespaces)
+	}
+}
+
+func TestAnalyticsKVCmd_EmptyAccount(t *testing.T) {
+	prevCollect := analyticsKVCollectFn
+	analyticsKVCollectFn = func(windowDays int, now time.Time) ([]cosmoflare.KVOperationsSummary, error) {
+		return nil, nil
+	}
+	t.Cleanup(func() { analyticsKVCollectFn = prevCollect })
+
+	var out bytes.Buffer
+	analyticsKVTextOut = &out
+	t.Cleanup(func() { analyticsKVTextOut = os.Stdout })
+
+	if err := runAnalyticsKV(nil, nil); err != nil {
+		t.Fatalf("runAnalyticsKV: %v", err)
+	}
+	if !strings.Contains(out.String(), "No KV operations") {
+		t.Fatalf("empty account must print a clean state:\n%s", out.String())
 	}
 }
 

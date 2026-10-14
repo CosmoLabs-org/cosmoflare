@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"text/tabwriter"
+	"time"
 
 	"github.com/CosmoLabs-org/cosmoflare/internal/utils"
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
@@ -39,6 +43,95 @@ func init() {
 	rootCmd.AddCommand(analyticsCmd)
 	analyticsCmd.Flags().StringVar(&analyticsBucket, "bucket", "", "Specific bucket to analyze")
 	analyticsCmd.Flags().StringVar(&analyticsPeriod, "period", "7d", "Time period (advisory)")
+	analyticsCmd.AddCommand(analyticsKVCmd)
+	analyticsKVCmd.Flags().IntVar(&analyticsKVWindow, "window", 7, "Look-back window in days (1-90)")
+}
+
+// --- analytics kv: per-namespace KV operation totals (FEAT-069) ---
+
+var (
+	analyticsKVWindow int
+	analyticsKVJSON   bool
+)
+
+var (
+	analyticsKVJSONOut io.Writer = os.Stdout
+	analyticsKVTextOut io.Writer = os.Stdout
+)
+
+// analyticsKVCollectFn is the collection seam (usageCollectFn pattern):
+// production queries the real GraphQL analytics dataset; tests stub it.
+var analyticsKVCollectFn = func(windowDays int, now time.Time) ([]cosmoflare.KVOperationsSummary, error) {
+	if AccountID == "" || APIToken == "" {
+		return nil, fmt.Errorf("account ID and API token are required (run 'cosmoflare account' to configure)")
+	}
+	analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
+	w := cosmoflare.AnalyticsWindow{Start: now.Add(-time.Duration(windowDays) * 24 * time.Hour).UTC(), End: now.UTC()}
+	return analytics.KVOperations(context.Background(), w)
+}
+
+var analyticsKVCmd = &cobra.Command{
+	Use:   "kv",
+	Short: "Show per-namespace KV operation totals",
+	Long: `Show per-namespace KV operation totals from real Cloudflare Analytics.
+
+Queries the kvOperationsAdaptiveGroups GraphQL dataset (one batched query)
+and reports each namespace's total operations over the window, sorted by
+traffic. The API exposes only a combined request count — there is no
+reads/writes split on this dataset.
+
+Flags:
+  --window   Look-back window in days (default 7, max 90)
+  --json     Machine-readable envelope
+
+Examples:
+  cosmoflare analytics kv                # per-namespace totals, last 7 days
+  cosmoflare analytics kv --window 30    # a month of traffic
+  cosmoflare analytics kv --json | jq -r '.data.namespaces[0]'`,
+	RunE: runAnalyticsKV,
+}
+
+func runAnalyticsKV(cmd *cobra.Command, args []string) error {
+	if analyticsKVWindow < 1 || analyticsKVWindow > 90 {
+		return fmt.Errorf("--window must be 1-90 days, got %d", analyticsKVWindow)
+	}
+	rows, err := analyticsKVCollectFn(analyticsKVWindow, time.Now())
+	if err != nil {
+		return err
+	}
+	sort.Slice(rows, func(i, j int) bool { return rows[i].Requests > rows[j].Requests })
+
+	if analyticsKVJSON || JSONOutput {
+		enc := json.NewEncoder(analyticsKVJSONOut)
+		var total uint64
+		for _, r := range rows {
+			total += r.Requests
+		}
+		return enc.Encode(map[string]interface{}{
+			"status": "success",
+			"data": map[string]interface{}{
+				"window_days":    analyticsKVWindow,
+				"total_requests": total,
+				"namespaces":     rows,
+			},
+		})
+	}
+	return writeAnalyticsKVTable(rows)
+}
+
+func writeAnalyticsKVTable(rows []cosmoflare.KVOperationsSummary) error {
+	w := analyticsKVTextOut
+	if len(rows) == 0 {
+		fmt.Fprintf(w, "No KV operations in the last %d day(s) — every namespace is idle.\n", analyticsKVWindow)
+		return nil
+	}
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, "NAMESPACE ID\tOPERATIONS")
+	for _, r := range rows {
+		fmt.Fprintf(tw, "%s\t%d\n", r.NamespaceID, r.Requests)
+	}
+	tw.Flush()
+	return nil
 }
 
 type BucketStat struct {
