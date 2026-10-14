@@ -12,6 +12,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LiquidGlass } from "apple-liquid-glass-webgl";
+
+/** The build stamp (stamp-sw.mjs writes it into index.html): identifies
+ *  the running build on-device — the drawer shows it. */
+const BUILD_ID = document.querySelector('meta[name="pager-build"]')?.getAttribute("content") ?? "";
 import {
   Bell,
   Boxes,
@@ -362,22 +366,39 @@ function BottomTabs({
     if (!navRef.current || !LiquidGlass.isSupported()) return;
     const glass = new LiquidGlass(navRef.current, {
       shape: "auto",
-      // Clearer glass (operator 2026-10-14, "reads too opaque"): the tint
-      // thins hard and frost backs off — the refraction carries the
-      // material, not milkiness.
-      tint: 0.12,
+      // Glass balance (operator 2026-10-14, two-step calibration: "too
+      // opaque" then "too clear"): frost heavy enough that content behind
+      // reads as blurred color, not detail — Apple's material frosts.
+      tint: 0.2,
       tintTone: "dark",
-      frost: 0.3,
-      // The droplet lens (operator 2026-10-14, tuned on-device): a wider
-      // edge band so the distortion carries further in from the rim —
-      // closer to Apple's material, where the bending reads as a lens
-      // edge, not a border.
-      material: { refraction: 110, edgeReach: 0.32, dispersion: 2.4 },
+      frost: 0.38,
+      // The droplet lens (operator 2026-10-14, round three): the edge band
+      // widens further and the bend strengthens — the distortion should
+      // read as a real lens rim, native-glass loud.
+      material: { refraction: 125, edgeReach: 0.45, dispersion: 2.6 },
       fallback: "none",
       maxDpr: 2,
       respectReducedTransparency: true,
     });
-    return () => glass.destroy();
+    // The backdrop is a DOM capture — iOS lets it go stale (the "burned
+    // image" from an earlier scroll). Re-capture on scroll and on
+    // foreground, coalesced to one per animation frame.
+    let raf = 0;
+    const refresh = (): void => {
+      if (raf !== 0) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        glass.refresh();
+      });
+    };
+    window.addEventListener("scroll", refresh, { passive: true });
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      if (raf !== 0) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      glass.destroy();
+    };
   }, []);
 
   return (
@@ -476,13 +497,21 @@ export default function App(): React.JSX.Element {
     refreshFn();
   }, [refreshFn]);
 
-  // Update checks on open (operator 2026-10-13): iOS only re-fetches sw.js
-  // on its own schedule; forcing reg.update() at every open means a deploy
-  // that landed while the app was closed still installs now — and the
-  // UpdateModal (controllerchange) offers the reload.
+  // Update checks on open AND on foreground (operator 2026-10-13; hardened
+  // 2026-10-14 after "not sure I see the latest"): iOS only re-fetches
+  // sw.js on its own schedule; forcing reg.update() whenever the app
+  // becomes visible means a deploy that landed while it was closed or
+  // backgrounded still installs now — and the UpdateModal
+  // (controllerchange) offers the reload.
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
-    void navigator.serviceWorker.getRegistration().then((reg) => reg?.update()).catch(() => undefined);
+    const check = (): void => {
+      if (document.visibilityState !== "visible") return;
+      void navigator.serviceWorker.getRegistration().then((reg) => reg?.update()).catch(() => undefined);
+    };
+    check();
+    document.addEventListener("visibilitychange", check);
+    return () => document.removeEventListener("visibilitychange", check);
   }, []);
 
   // Live alert appearance (operator 2026-10-12): when the service worker
@@ -621,6 +650,11 @@ export default function App(): React.JSX.Element {
                 <button type="button" className="cf-drawer-close" aria-label="Close menu" onClick={closeDrawer} ref={drawerCloseRef}>×</button>
               </div>
               <NavLinks variant="drawer" active={view.kind === "route" ? view.route : null} counts={counts} onNavigate={closeDrawer} />
+              {/* The build marker (operator 2026-10-14): stamped into
+                  index.html at build time — open the drawer, read the
+                  build, compare with the deploy. "Am I on the latest?"
+                  stays answerable on-device. */}
+              {BUILD_ID ? <p className="cf-drawer-build">{`build ${BUILD_ID}`}</p> : null}
             </motion.nav>
           </>
         ) : null}

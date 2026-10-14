@@ -16,4 +16,18 @@ const sw = readFileSync(swUrl, "utf8");
 const stamped = sw.replace(/pager-shell-v[0-9a-zA-Z_-]+/, `pager-shell-${hash.slice(0, 12)}`);
 if (stamped === sw) throw new Error("stamp-sw: CACHE_NAME literal not found in dist/sw.js");
 writeFileSync(swUrl, stamped);
-console.log(`stamp-sw: CACHE_NAME -> pager-shell-${hash.slice(0, 12)}`);
+
+// Build marker: index.html carries the same stamp as a meta tag so the
+// running app can SHOW which build it is (the "am I on the latest?"
+// question becomes answerable on-device).
+const indexUrl = new URL("index.html", dist);
+const id = hash.slice(0, 12);
+let html = readFileSync(indexUrl, "utf8");
+const meta = `<meta name="pager-build" content="${id}" />`;
+if (html.includes("pager-build")) {
+  html = html.replace(/<meta name="pager-build" content="[^"]*" \/>/, meta);
+} else {
+  html = html.replace("</head>", `  ${meta}\n</head>`);
+}
+writeFileSync(indexUrl, html);
+console.log(`stamp-sw: CACHE_NAME -> pager-shell-${id}, build marker -> ${id}`);
