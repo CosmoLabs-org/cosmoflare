@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -128,6 +131,39 @@ func getCostService() (*cosmoflare.CostService, error) {
 	return cosmoflare.NewCostService(AccountID, APIToken)
 }
 
+// printJSONOut is the writer seam for runCost's JSON path (usageJSONOut
+// pattern). nil means os.Stdout, resolved at call time so stdout-capture
+// tests keep working.
+var printJSONOut io.Writer
+
+// costJSONOut resolves the JSON output writer.
+func costJSONOut() io.Writer {
+	if printJSONOut != nil {
+		return printJSONOut
+	}
+	return os.Stdout
+}
+
+// costWasteFn is the idle-waste seam: production collects an efficiency
+// report ONLY when credentials exist and treats failure as "unavailable"
+// (cost must never break because analytics did). Tests stub it.
+var costWasteFn = func() (*cosmoflare.EfficiencyWasteSummary, error) {
+	if AccountID == "" || APIToken == "" {
+		return nil, nil // not configured — cost stays a pure estimator
+	}
+	rep, err := efficiencyCollectFn(7, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	return cosmoflare.SummarizeWaste(rep), nil
+}
+
+// costReport embeds the estimate and adds the best-effort idle-waste summary.
+type costReport struct {
+	*cosmoflare.TotalCostEstimate
+	Waste *cosmoflare.EfficiencyWasteSummary `json:"waste,omitempty"`
+}
+
 // validatePeriod checks that the period flag value is valid.
 func validatePeriod(period string) error {
 	switch period {
@@ -169,15 +205,17 @@ func runCost(cmd *cobra.Command, args []string) error {
 	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
 	total.Period = costPeriod
 
+	waste := costWasteBestEffort()
+
 	if JSONOutput || costFormat == "json" {
-		return printJSON(total)
+		return json.NewEncoder(costJSONOut()).Encode(costReport{TotalCostEstimate: total, Waste: waste})
 	}
 
 	if costFormat == "csv" {
-		return printCostCSV(total)
+		return printCostCSV(total, waste)
 	}
 
-	printCostSummary(total)
+	printCostSummary(total, waste)
 	return nil
 }
 
@@ -285,8 +323,10 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
 	total.Period = costPeriod
 
+	waste := costWasteBestEffort()
+
 	if JSONOutput || costFormat == "json" {
-		return printJSON(total)
+		return json.NewEncoder(costJSONOut()).Encode(costReport{TotalCostEstimate: total, Waste: waste})
 	}
 
 	if costFormat == "csv" {
@@ -298,10 +338,34 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 }
 
 // ---------------------------------------------------------------------------
+// Idle waste (best-effort enrichment)
+// ---------------------------------------------------------------------------
+
+// costWasteBestEffort collects the idle-waste summary, swallowing errors —
+// cost output must never break because the analytics side did (doctor
+// enrichment precedent).
+func costWasteBestEffort() *cosmoflare.EfficiencyWasteSummary {
+	waste, err := costWasteFn()
+	if err != nil {
+		return nil
+	}
+	return waste
+}
+
+// printWasteLine renders the waste line after TOTAL when any count is > 0.
+func printWasteLine(waste *cosmoflare.EfficiencyWasteSummary) {
+	if waste == nil || (waste.IdleWorkers == 0 && waste.DeadKVNamespaces == 0 && waste.EmptyR2Buckets == 0) {
+		return
+	}
+	fmt.Printf("\nWaste: %d idle workers, %d dead KV namespaces, %d empty R2 buckets — $%.2f/mo direct (run 'cosmoflare efficiency')\n",
+		waste.IdleWorkers, waste.DeadKVNamespaces, waste.EmptyR2Buckets, waste.EstimatedMonthlyUSD)
+}
+
+// ---------------------------------------------------------------------------
 // Table output
 // ---------------------------------------------------------------------------
 
-func printCostSummary(total *cosmoflare.TotalCostEstimate) {
+func printCostSummary(total *cosmoflare.TotalCostEstimate, waste *cosmoflare.EfficiencyWasteSummary) {
 	fmt.Printf("\nCloudflare Cost Estimate (period: %s)\n", total.Period)
 	fmt.Println("============================================")
 
@@ -313,6 +377,8 @@ func printCostSummary(total *cosmoflare.TotalCostEstimate) {
 	fmt.Fprintln(w, "\t")
 	fmt.Fprintf(w, "TOTAL\t$%.2f/mo\n", total.TotalMonthlyCost)
 	w.Flush()
+
+	printWasteLine(waste)
 
 	fmt.Printf("\n%s\n", total.Disclaimer)
 }
@@ -390,7 +456,7 @@ func printDetailTable(total *cosmoflare.TotalCostEstimate) {
 // CSV output
 // ---------------------------------------------------------------------------
 
-func printCostCSV(total *cosmoflare.TotalCostEstimate) error {
+func printCostCSV(total *cosmoflare.TotalCostEstimate, waste *cosmoflare.EfficiencyWasteSummary) error {
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
 
@@ -399,6 +465,12 @@ func printCostCSV(total *cosmoflare.TotalCostEstimate) error {
 	w.Write([]string{"Workers", fmt.Sprintf("%.2f", total.Workers.TotalCost)})
 	w.Write([]string{"KV", fmt.Sprintf("%.2f", total.KV.TotalCost)})
 	w.Write([]string{"TOTAL", fmt.Sprintf("%.2f", total.TotalMonthlyCost)})
+	if waste != nil {
+		w.Write([]string{"waste_idle_workers", fmt.Sprintf("%d", waste.IdleWorkers)})
+		w.Write([]string{"waste_dead_kv_namespaces", fmt.Sprintf("%d", waste.DeadKVNamespaces)})
+		w.Write([]string{"waste_empty_r2_buckets", fmt.Sprintf("%d", waste.EmptyR2Buckets)})
+		w.Write([]string{"waste_estimated_monthly_usd", fmt.Sprintf("%.2f", waste.EstimatedMonthlyUSD)})
+	}
 
 	return w.Error()
 }
