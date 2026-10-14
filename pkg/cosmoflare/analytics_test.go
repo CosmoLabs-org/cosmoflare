@@ -313,3 +313,52 @@ func TestAnalyticsDurableObjects(t *testing.T) {
 		t.Errorf("namespace bbbbbbbb2 = %+v, want requests=7 errors=7 wallTime=99ms", second)
 	}
 }
+
+// TestAnalyticsKVOperations verifies that KVOperations POSTs one batched
+// GraphQL query against kvOperationsAdaptiveGroups and flattens per-namespace
+// request sums (the live schema exposes only dimensions.namespaceId +
+// sum.requests — verified 2026-10-14).
+func TestAnalyticsKVOperations(t *testing.T) {
+	t.Parallel()
+	var cap analyticsCapture
+	resp := `{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[` +
+		`{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":26600}},` +
+		`{"dimensions":{"namespaceId":"ns-dead"},"sum":{"requests":0}}]}]}}}`
+	srv := analyticsServer(t, resp, &cap)
+	defer srv.Close()
+
+	s := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+	got, err := s.KVOperations(context.Background(), AnalyticsWindow{Start: time.Now().Add(-168 * time.Hour), End: time.Now()})
+	if err != nil {
+		t.Fatalf("KVOperations: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %d rows, want 2: %+v", len(got), got)
+	}
+	if got[0].NamespaceID != "ns-live" || got[0].Requests != 26600 || got[1].Requests != 0 {
+		t.Fatalf("rows = %+v", got)
+	}
+	if !strings.Contains(cap.Body, "kvOperationsAdaptiveGroups") {
+		t.Errorf("query misses kvOperationsAdaptiveGroups: %s", cap.Body)
+	}
+	if !strings.Contains(cap.Body, "namespaceId") {
+		t.Errorf("query misses namespaceId dimension: %s", cap.Body)
+	}
+}
+
+// TestAnalyticsKVOperationsEmpty verifies that an account with no KV traffic
+// in the window yields zero rows and no error — absence means zero.
+func TestAnalyticsKVOperationsEmpty(t *testing.T) {
+	t.Parallel()
+	srv := analyticsServer(t, `{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[]}]}}}`, &analyticsCapture{})
+	defer srv.Close()
+
+	s := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+	got, err := s.KVOperations(context.Background(), AnalyticsWindow{Start: time.Now().Add(-time.Hour), End: time.Now()})
+	if err != nil {
+		t.Fatalf("KVOperations: %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("want 0 rows, got %+v", got)
+	}
+}

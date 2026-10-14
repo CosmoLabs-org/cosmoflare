@@ -504,6 +504,65 @@ func (s *AnalyticsService) DurableObjects(ctx context.Context, w AnalyticsWindow
 	return rows, nil
 }
 
+// KVOperationsSummary is KV traffic for one namespace over a window.
+// Requests is the dataset's total-operations sum — the API exposes no
+// reads/writes split on kvOperationsAdaptiveGroups (verified live
+// 2026-10-14: only dimensions.namespaceId + sum.requests exist).
+type KVOperationsSummary struct {
+	NamespaceID string `json:"namespace_id"`
+	Requests    uint64 `json:"requests"`
+}
+
+// KVOperations returns per-namespace KV operation counts for the window,
+// one batched query. Namespaces with no traffic may be absent — absence
+// means zero, callers must not treat it as an error.
+func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) ([]KVOperationsSummary, error) {
+	const op = "AnalyticsKVOperations"
+	if err := s.validateAccount(op); err != nil {
+		return nil, err
+	}
+	if err := validateAnalyticsWindow(op, w, 92*24*time.Hour); err != nil {
+		return nil, err
+	}
+	gql := `query KVOperations($accountTag: String!, $start: Time!, $end: Time!) {
+  viewer {
+    accounts(filter: {accountTag: $accountTag}) {
+      kvOperationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
+        dimensions { namespaceId }
+        sum { requests }
+      }
+    }
+  }
+}`
+	var out struct {
+		Viewer struct {
+			Accounts []struct {
+				KVOperationsAdaptiveGroups []struct {
+					Dimensions struct {
+						NamespaceId string `json:"namespaceId"`
+					} `json:"dimensions"`
+					Sum struct {
+						Requests uint64 `json:"requests"`
+					} `json:"sum"`
+				} `json:"kvOperationsAdaptiveGroups"`
+			} `json:"accounts"`
+		} `json:"viewer"`
+	}
+	if err := s.query(ctx, op, gql, s.windowVars(w), &out); err != nil {
+		return nil, err
+	}
+	rows := make([]KVOperationsSummary, 0)
+	for _, a := range out.Viewer.Accounts {
+		for _, g := range a.KVOperationsAdaptiveGroups {
+			rows = append(rows, KVOperationsSummary{
+				NamespaceID: g.Dimensions.NamespaceId,
+				Requests:    g.Sum.Requests,
+			})
+		}
+	}
+	return rows, nil
+}
+
 // validateAccount ensures account-scoped queries have credentials.
 func (s *AnalyticsService) validateAccount(op string) error {
 	if s.accountID == "" {
