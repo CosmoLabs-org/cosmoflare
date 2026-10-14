@@ -26,6 +26,7 @@ deliverables:
       title: "Live smoke of efficiency + cost against the real account"
 implemented_commits:
     - {sha: 'a4459ea77cac', covers: [P-01, P-02, P-03, P-05]}
+    - {sha: 'ff5b1fd71a49', covers: [P-04]}
 ---
 
 # Cosmoflare `efficiency` — Wave 1 Implementation Plan
