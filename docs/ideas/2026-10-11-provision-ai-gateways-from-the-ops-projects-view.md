@@ -2,11 +2,14 @@
 ulid: 01M4M4P1SG7CYQTA3FK5AAQTRX
 title: Provision AI Gateways from the Ops Projects view
 created: "2026-10-11T04:09:28.112089+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 75
+promoted_to: FEAT-pAVXJZ4
 ---
+
+# Provision AI Gateways from the Ops Projects view
 
 # Provision AI Gateways from the Ops Projects view
 

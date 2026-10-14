@@ -2,11 +2,14 @@
 ulid: 01M4M5Y0RK3B5G9A3A3W098734
 title: WAF starter-rules guide in the Cosmoflare guides section
 created: "2026-10-11T04:31:17.779115+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 75
+promoted_to: FEAT-pAGY842
 ---
+
+# WAF starter-rules guide in the Cosmoflare guides section
 
 # WAF starter-rules guide in the Cosmoflare guides section
 

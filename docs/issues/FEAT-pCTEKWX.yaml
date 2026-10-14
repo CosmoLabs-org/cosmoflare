@@ -1,11 +1,14 @@
 id: FEAT-pCTEKWX
 type: feature
 created_at: 2026-10-14T00:31:11.887178+04:00
-updated_at: 2026-10-14T00:31:13.547395+04:00
+updated_at: 2026-10-14T00:31:17.170222+04:00
 source: local
 ulid: 01M4VFCK4BHGAZ9X1Y2ZCTEKWX
 provisional: true
 status: open
+origin:
+    idea_slug: 2026-10-13-liquid-glass-tab-navigation-pill-for-ops-pwa-cosmokit-glass
+    session: 77
 title: Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
 description: |-
     # Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module

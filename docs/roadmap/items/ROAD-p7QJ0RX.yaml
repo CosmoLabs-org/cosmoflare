@@ -1,11 +1,13 @@
 id: ROAD-p7QJ0RX
 created_at: 2026-10-13T21:06:12.658928+04:00
-updated_at: 2026-10-13T21:06:15.911471+04:00
+updated_at: 2026-10-13T21:06:16.090512+04:00
 title: Profile pages for every unique entity + future control actions
 description: |-
     # Profile pages for every unique entity + future control actions
 
     Every unique entry in Ops gets its own profile page with properly organized information: workers (shipped), domains (shipped), D1 databases (needed — rows read/written/read-queries/rows-per-query from the summary row, plus schema/size when D1 storage datasets are wired), zones, KV namespaces, DO namespaces. Future direction (explicitly deferred): control actions on profiles — stop/pause buttons, drain, scale-to-zero — turning Ops from read-only monitoring into an operations console. Explore per-service control surfaces and their API prerequisites (most need additional token scopes; some actions are destructive and need confirmation UX).
 status: captured
+origin:
+    idea_slug: 2026-10-10-profile-pages-for-every-unique-entity-future-control-actions
 ulid: 01M4V3N6HMPQW2J6JYJT7QJ0RX
 provisional: true

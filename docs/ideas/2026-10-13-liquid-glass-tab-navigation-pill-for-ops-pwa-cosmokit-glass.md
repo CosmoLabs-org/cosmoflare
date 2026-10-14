@@ -2,11 +2,14 @@
 ulid: 01M4V3PVHWKZ2T7ZMS4YZ9Q6WR
 title: Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
 created: "2026-10-13T21:07:06.940326+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 77
+promoted_to: FEAT-pCTEKWX
 ---
+
+# Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
 
 # Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
 

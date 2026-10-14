@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-13T03:45:56.611172+04:00
+last_updated: 2026-10-14T13:10:26.408201+04:00
 next_bug_id: 64
 next_feat_id: 81
 next_task_id: 18
@@ -813,6 +813,21 @@ issues:
       status: closed
       title: 'Pager push polish: volume, grouping, readable titles, live in-app appearance'
       created_at: 2026-10-12T03:39:51.93768+04:00
+    - id: FEAT-pAGY842
+      type: feature
+      status: open
+      title: WAF starter-rules guide in the Cosmoflare guides section
+      created_at: 2026-10-13T21:06:17.758466+04:00
+    - id: FEAT-pAVXJZ4
+      type: feature
+      status: open
+      title: Provision AI Gateways from the Ops Projects view
+      created_at: 2026-10-13T21:06:23.382424+04:00
+    - id: FEAT-pCTEKWX
+      type: feature
+      status: open
+      title: Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
+      created_at: 2026-10-14T00:31:11.887178+04:00
     - id: FEAT-pDQEFQV
       type: feature
       status: open

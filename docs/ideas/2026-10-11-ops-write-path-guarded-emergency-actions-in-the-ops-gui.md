@@ -2,11 +2,14 @@
 ulid: 01M4M4NSW2MV1QMYQQ6JCRWMKE
 title: 'Ops write-path: guarded emergency actions in the Ops GUI'
 created: "2026-10-11T04:09:20.002271+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 75
+promoted_to: ROAD-p5D96DE
 ---
+
+# Ops write-path: guarded emergency actions in the Ops GUI
 
 # Ops write-path: guarded emergency actions in the Ops GUI
 

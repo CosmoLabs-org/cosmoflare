@@ -1,11 +1,14 @@
 id: FEAT-pAVXJZ4
 type: feature
 created_at: 2026-10-13T21:06:23.382424+04:00
-updated_at: 2026-10-13T21:06:24.582801+04:00
+updated_at: 2026-10-13T21:06:26.696572+04:00
 source: local
 ulid: 01M4V3NJ66A0TTEMDC5KAVXJZ4
 provisional: true
 status: open
+origin:
+    idea_slug: 2026-10-11-provision-ai-gateways-from-the-ops-projects-view
+    session: 75
 title: Provision AI Gateways from the Ops Projects view
 description: |-
     # Provision AI Gateways from the Ops Projects view

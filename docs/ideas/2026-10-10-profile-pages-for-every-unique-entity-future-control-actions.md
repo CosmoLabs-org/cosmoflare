@@ -2,12 +2,15 @@
 ulid: 01M4KFCD5TRA6F9Z541W88YTCH
 title: Profile pages for every unique entity + future control actions
 created: "2026-10-10T21:57:11.99457+04:00"
-status: seed
+status: harvested
 source: human
 origin:
     session: 74
     trigger: operator 2026-10-10 session 2036
+promoted_to: ROAD-p7QJ0RX
 ---
+
+# Profile pages for every unique entity + future control actions
 
 # Profile pages for every unique entity + future control actions
 
