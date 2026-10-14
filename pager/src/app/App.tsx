@@ -362,9 +362,12 @@ function BottomTabs({
     if (!navRef.current || !LiquidGlass.isSupported()) return;
     const glass = new LiquidGlass(navRef.current, {
       shape: "auto",
-      tint: 0.25,
+      // Clearer glass (operator 2026-10-14, "reads too opaque"): the tint
+      // thins hard and frost backs off — the refraction carries the
+      // material, not milkiness.
+      tint: 0.12,
       tintTone: "dark",
-      frost: 0.45,
+      frost: 0.3,
       // The droplet lens (operator 2026-10-14, tuned on-device): a wider
       // edge band so the distortion carries further in from the rim —
       // closer to Apple's material, where the bending reads as a lens
