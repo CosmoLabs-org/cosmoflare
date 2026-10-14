@@ -46,6 +46,7 @@ Cosmoflare is a CLI tool for managing the full Cloudflare developer platform: R2
 - [Stream Commands](#stream-commands)
 - [Hyperdrive Management](#hyperdrive-management)
 - [Diff Commands](#diff-commands)
+- [Efficiency Audit](#efficiency-audit)
 - [Cost Estimation](#cost-estimation)
 - [Watch Command](#watch-command)
 - [Export / Import Commands](#export--import-commands)
@@ -2311,6 +2312,41 @@ Flags:
 - `--output=summary` — show change counts per service only
 - `--json` — structured JSON output (works with all subcommands)
 
+## Efficiency Audit
+
+Find idle Cloudflare resources wasting the account. Every number is measured from the real Cloudflare Analytics API — never estimated or modeled.
+
+### Audit the account for waste
+```bash
+cosmoflare efficiency                # audit: idle workers, dead KV, empty R2 buckets
+cosmoflare efficiency --window 30    # a month of patience before calling something idle
+cosmoflare efficiency --json         # machine-readable envelope
+```
+
+Checks performed (window defaults to 7 days, `--window 1-90`):
+
+| Check | Waste signal | Real data source |
+|-------|--------------|------------------|
+| `idle-worker` | 0 requests over the window | per-script GraphQL sums (`workersInvocationsAdaptive`) |
+| `dead-kv-namespace` | 0 KV operations over the window | `kvOperationsAdaptiveGroups` (per namespace) |
+| `empty-r2-bucket` | 0 objects at window end | `r2StorageAdaptiveGroups` (per bucket) |
+
+A resource absent from the analytics rows counts as zero usage — absence is never an error.
+
+Each finding carries its evidence (counts + the measured window), a severity (`warning` for idle workers and dead KV, `info` for empty buckets), and an actionable fix. JSON envelope:
+
+```json
+{"status":"success","data":{"window_start":"...","window_end":"...","findings":[{"resource":"worker:ghost","check":"idle-worker","severity":"warning","evidence":"0 requests between 2026-10-07 and 2026-10-14","fix":"delete it (cosmoflare worker delete ghost) or remove its routes if retired"}],"workers_checked":31,"kv_namespaces_checked":16,"buckets_checked":13}}
+```
+
+Agent recipes:
+```bash
+cosmoflare efficiency --json | jq -r '.data.findings[] | select(.check=="idle-worker") | .resource'
+cosmoflare efficiency --json | jq '.data.findings | length'
+```
+
+Exit code 0 in all healthy cases; findings are informational (this is an audit, not a health gate).
+
 ## Cost Estimation
 
 Estimate monthly Cloudflare costs based on current usage patterns. Provides per-service breakdowns for R2, Workers, and KV.
@@ -2323,6 +2359,8 @@ cosmoflare cost --period 90d            # Estimate based on last 90 days
 cosmoflare cost --json                  # JSON output
 cosmoflare cost --format csv            # CSV output (for spreadsheets)
 ```
+
+When account credentials are configured, `cost` and `cost detail` also append an idle-waste summary (counts from the same collectors as `cosmoflare efficiency`; JSON gains a sibling `waste` key). Direct dollar attribution is honest $0.00 for idle request-priced resources — storage-byte attribution for dead KV namespaces lands with wave-2 KV storage analytics.
 
 ### R2 storage costs
 ```bash
