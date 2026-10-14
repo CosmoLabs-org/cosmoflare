@@ -1,7 +1,7 @@
 // Hash route parser for the Ops shell (FEAT-052). Pure — tests hit it
 // directly.
 
-export const ROUTES = ["overview", "billing", "ai", "projects", "domains", "workers", "d1", "durable-objects", "zones", "alerts", "rules", "pairing"] as const;
+export const ROUTES = ["overview", "billing", "ai", "projects", "domains", "workers", "d1", "durable-objects", "zones", "alerts", "rules", "pairing", "guides"] as const;
 
 export type RouteId = (typeof ROUTES)[number];
 
@@ -21,6 +21,26 @@ export function hrefFor(id: RouteId): string {
  *  spaces and punctuation, so the name is percent-encoded. */
 export function workerHref(name: string): string {
   return `#/worker/${encodeURIComponent(name)}`;
+}
+
+/** "#/guides/<id>" — a guides article (FEAT-pDQEFQV). Ids are the static
+ *  ids in guides.ts. */
+export function guidesHref(id: string): string {
+  return `#/guides/${encodeURIComponent(id)}`;
+}
+
+/** The decoded guide id when `hash` targets a guides article
+ *  ("#/guides/<id>"), else null. "#/guides/" (empty id) and the
+ *  "#/guides" section hash are not article targets. */
+export function parseGuidesHash(hash: string): string | null {
+  const m = hash.match(/^#\/guides\/(.+)$/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
+    // Malformed escape sequence: treat the raw text as the id.
+    return m[1];
+  }
 }
 
 /** The decoded worker name when `hash` targets a profile page

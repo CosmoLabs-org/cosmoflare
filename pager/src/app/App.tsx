@@ -19,6 +19,7 @@ import { trapTab } from "./components/focus";
 const BUILD_ID = document.querySelector('meta[name="pager-build"]')?.getAttribute("content") ?? "";
 import {
   Bell,
+  BookOpen,
   Boxes,
   CreditCard,
   Database,
@@ -53,6 +54,7 @@ import AIView from "./views/AIView";
 import AlertsView from "./views/AlertsView";
 import RulesView from "./views/RulesView";
 import PairingView from "./views/PairingView";
+import GuidesView from "./views/GuidesView";
 import UpdateModal, { useSwUpdateReady } from "./components/UpdateModal";
 
 /** Nav labels per route (mirror of the old main.ts NAV). */
@@ -72,6 +74,7 @@ const NAV_ICON: Record<RouteId, LucideIcon> = {
   alerts: Bell,
   rules: SlidersHorizontal,
   pairing: Bell,
+  guides: BookOpen,
 };
 
 const NAV_LABEL: Record<RouteId, string> = {
@@ -87,6 +90,7 @@ const NAV_LABEL: Record<RouteId, string> = {
   alerts: "Alerts",
   rules: "Rules",
   pairing: "Pairing",
+  guides: "Guides",
 };
 
 /** Bottom tab bar set (operator 2026-10-12): the five primary sections +
@@ -129,6 +133,7 @@ function viewEntry(v: ViewKind): ViewEntry {
     alerts: { id: "alerts", Component: AlertsView },
     rules: { id: "rules", Component: RulesView },
     pairing: { id: "pairing", Component: PairingView },
+    guides: { id: "guides", Component: GuidesView },
   };
   return map[v.route];
 }
@@ -288,7 +293,7 @@ function NavLinks({
   if (variant === "quick") {
     return (
       <ul className="cf-quicknav-list">
-        {ROUTES.filter((r) => r !== "pairing").map((r) => {
+        {ROUTES.filter((r) => r !== "pairing" && r !== "guides").map((r) => {
           const Icon = NAV_ICON[r];
           return (
             <li key={`quick-${r}`}>

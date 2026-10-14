@@ -56,7 +56,7 @@ describe("App shell (P-03)", () => {
 });
 
 describe("App section identity (2026-10-11 shell pass)", () => {
-  it("nav anchors carry data-route attributes (quick nav drops pairing)", () => {
+  it("nav anchors carry data-route attributes (quick nav drops drawer-only routes)", () => {
     render(<App />);
     const sidebarLinks = document.querySelectorAll<HTMLAnchorElement>(".cf-navlink[data-route]");
     const quickLinks = document.querySelectorAll<HTMLAnchorElement>(".cf-quicknav-link[data-route]");
@@ -66,10 +66,12 @@ describe("App section identity (2026-10-11 shell pass)", () => {
       expect(ROUTES).toContain(a.getAttribute("data-route"));
       expect(a.getAttribute("href")).toBe(`#/${a.getAttribute("data-route")}`);
     }
-    // Quick variant: same tagging minus the drawer-only pairing route.
-    expect(quickLinks.length).toBe(ROUTES.length - 1);
+    // Quick variant: same tagging minus the drawer-only routes (pairing,
+    // and guides since 2026-10-14).
+    expect(quickLinks.length).toBe(ROUTES.length - 2);
     expect(document.querySelector('.cf-quicknav-link[data-route="domains"]')).toBeTruthy();
     expect(document.querySelector('.cf-quicknav-link[data-route="pairing"]')).toBeNull();
+    expect(document.querySelector('.cf-quicknav-link[data-route="guides"]')).toBeNull();
   });
 
   it("masthead renders the section label plus count when the counts fetch resolves", async () => {
