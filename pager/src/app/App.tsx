@@ -381,22 +381,26 @@ function BottomTabs({
       respectReducedTransparency: true,
     });
     // The backdrop is a DOM capture — iOS lets it go stale (the "burned
-    // image" from an earlier scroll). Re-capture on scroll and on
-    // foreground, coalesced to one per animation frame.
-    let raf = 0;
-    const refresh = (): void => {
-      if (raf !== 0) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        glass.refresh();
-      });
+    // image" from an earlier scroll). Re-capture when scrolling SETTLES,
+    // never mid-scroll: repainting the canvas every scroll frame is the
+    // WebKit compositing churn that breaks position:fixed tracking in
+    // home-screen PWAs (the 2026-10-12 drift class — the pill ended up
+    // stuck in page flow). Settled refresh keeps the backdrop honest
+    // without touching fixed positioning.
+    let settle = 0;
+    const refreshSettled = (): void => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => glass.refresh(), 140);
     };
-    window.addEventListener("scroll", refresh, { passive: true });
-    document.addEventListener("visibilitychange", refresh);
+    const refreshIfVisible = (): void => {
+      if (document.visibilityState === "visible") glass.refresh();
+    };
+    window.addEventListener("scroll", refreshSettled, { passive: true });
+    document.addEventListener("visibilitychange", refreshIfVisible);
     return () => {
-      if (raf !== 0) window.cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", refresh);
-      document.removeEventListener("visibilitychange", refresh);
+      window.clearTimeout(settle);
+      window.removeEventListener("scroll", refreshSettled);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
       glass.destroy();
     };
   }, []);
