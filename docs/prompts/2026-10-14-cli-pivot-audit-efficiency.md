@@ -2,7 +2,7 @@
 branch: master
 created: "2026-10-14T13:04:53+04:00"
 date: "2026-10-14T13:04:53+04:00"
-goals_completed: 0
+goals_completed: 2
 goals_total: 7
 priority: medium
 related_prompts: []
@@ -17,6 +17,9 @@ tags: []
 title: 'CLI pivot — indispensable Cloudflare integration: audit + efficiency program'
 type: prompt
 supersedes: "docs/prompts/2026-10-13-session-2040-continuation.md"
+implemented_commits:
+    - 'afff8bcda9b6'
+    - {sha: 'a4459ea77cac', covers: [P-01, P-02, P-03, P-05]}
 ---
 
 # CLI pivot — indispensable Cloudflare integration: audit + efficiency program
@@ -47,11 +50,11 @@ House rules that bind: real API numbers only (never modeled), `--json` on every 
 
 ## Goals
 
-### [ ] G-01 Sequence the audit + efficiency program (brainplan)
+### [x] G-01 Sequence the audit + efficiency program (brainplan)
 **Model:** main session | **Files:** `docs/brainstorming/2026-10-14-cli-audit-efficiency.md`, `docs/planning-mode/2026-10-14-cli-audit-efficiency.md`
 Run `/brainplan` over FEAT-047, FEAT-048, FEAT-067, FEAT-068, FEAT-069, FEAT-070 with the operator's vision as the brief. Output: one program doc that sequences the six FEATs into waves, names the first shippable user-facing slice, and writes tight GLM-executable goals for wave 1. Acceptance: `ccs prompts validate` passes on the plan; every wave-1 goal names exact files + test cases.
 
-### [ ] G-02 `cosmoflare efficiency` — the audit command, first slice
+### [x] G-02 `cosmoflare efficiency` — the audit command, first slice
 **Model:** `sonnet` | **Files:** `cmd/efficiency.go`, `cmd/efficiency_test.go`, `pkg/cosmoflare/efficiency.go`
 The CLI's flagship audit command (FEAT-047/069 first slice): `cosmoflare efficiency [--json]` reports resource waste from REAL API numbers only — idle workers (0 requests over 7d), KV namespaces with 0 reads/writes in 7d, R2 buckets with 0 objects. Follow `cmd/doctor.go`'s diagnostic-command pattern (cobra command, rich --help with examples, --json output, agent-readable findings "what/why/how to fix"). Every finding carries its evidence (counts, dates). Tests: `TestEfficiencyIdleWorkers`, `TestEfficiencyEmptyKV`, `TestEfficiencyJSONOutput`, `TestEfficiencyEmptyAccount` — happy, empty, error paths; `go test ./cmd/ -run TestEfficiency` green. Gate: `go vet ./...` clean.
 

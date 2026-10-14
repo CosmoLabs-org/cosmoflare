@@ -31,6 +31,8 @@ deliverables:
       title: "Wave-3 scope: patterns P1-P9 checks, patch emission, TTL strategy verdicts"
     - id: BR-06
       title: "Decision record D1-D6 with rejected alternatives"
+implemented_commits:
+    - {sha: 'afff8bcda9b6', covers: [BR-01, BR-02, BR-03, BR-04, BR-05, BR-06]}
 ---
 
 # CLI pivot — audit + efficiency program

@@ -24,6 +24,8 @@ deliverables:
       title: "cmd/cost.go idle-waste line reusing efficiency collectors — TestCostIncludesIdleWaste green"
     - id: P-05
       title: "Live smoke of efficiency + cost against the real account"
+implemented_commits:
+    - {sha: 'a4459ea77cac', covers: [P-01, P-02, P-03, P-05]}
 ---
 
 # Cosmoflare `efficiency` — Wave 1 Implementation Plan
