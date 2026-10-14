@@ -615,6 +615,9 @@ body.cf-nav-open { overflow: hidden; }
   line-height: 1.2;
 }
 .cf-cost-line-lg { font-size: 20px; margin: var(--space-2) 0 var(--space-3); }
+/* The missing text-md step (critique minor: referenced with a fallback,
+   never defined): 14px between sm and base. */
+:root { --text-md: 14px; }
 .cf-cost-line-base { font-size: 1em; font-weight: 500; color: var(--muted); }
 .cf-cost-line-op { font-size: 0.8em; color: var(--muted); }
 .cf-cost-line-over { font-size: 1em; font-weight: 700; color: var(--sev-warning); }

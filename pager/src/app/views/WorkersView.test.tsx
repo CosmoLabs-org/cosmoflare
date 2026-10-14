@@ -106,7 +106,7 @@ describe("WorkersView (P-05a)", () => {
     expect(document.querySelector(".cf-sort-icon.is-active")).toBeTruthy();
     // No "(24h)" h2 — the masthead owns the title; the card subtitle stays.
     expect(document.querySelector(".cf-card h2")).toBeNull();
-    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toBe("(24h)");
+    expect(document.querySelector(".cf-card .cf-row-detail")).toBeNull();
   });
 
   it("links the name cell and the whole row to the worker profile route", async () => {

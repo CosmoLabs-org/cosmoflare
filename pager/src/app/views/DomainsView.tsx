@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Pause, Play, Shield, ShieldOff } from "lucide-react";
+import { Lock, Pause, Play, Shield, ShieldOff } from "lucide-react";
 import { api, LoginExpiredError, type FetchResult, type Summary } from "../../api";
 import { formatCount } from "../../format";
 import {
@@ -559,7 +559,10 @@ function ZoneRemoveRow({ zone, mutate }: { zone: ZoneAttachment; mutate: ViewMut
           <div className="cf-zone-remove-panel">
             <p className="cf-zone-warning cf-level-warning-text">This cannot be undone — the zone and its DNS records are deleted.</p>
             {isProtected ? (
-              <p className="cf-zone-lock" role="note">{`🔒 ${zone.name} is a protected host — removal requires an operator override`}</p>
+              <p className="cf-zone-lock" role="note">
+                <Lock size={12} strokeWidth={2.2} aria-hidden="true" style={{ verticalAlign: "-1px" }} />
+                {` ${zone.name} is a protected host — removal requires an operator override`}
+              </p>
             ) : (
               <input
                 type="text"

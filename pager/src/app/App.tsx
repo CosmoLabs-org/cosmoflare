@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LiquidGlass } from "apple-liquid-glass-webgl";
+import { trapTab } from "./components/focus";
 
 /** The build stamp (stamp-sw.mjs writes it into index.html): identifies
  *  the running build on-device — the drawer shows it. */
@@ -542,17 +543,22 @@ export default function App(): React.JSX.Element {
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
-  // Drawer keyboard hardening (critique P1): Escape closes, focus moves in
-  // on open (the close button — the drawer's first control) and restores to
-  // whatever had focus before the drawer opened — the same contract the
-  // UpdateModal keeps.
+  // Drawer keyboard hardening (critique P1): Escape closes, Tab stays
+  // inside (the trap), focus moves in on open (the close button — the
+  // drawer's first control) and restores to whatever had focus before the
+  // drawer opened — the same contract the UpdateModal keeps.
   const drawerCloseRef = useRef<HTMLButtonElement | null>(null);
+  const drawerNavRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!drawerOpen) return;
     const restoreTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     drawerCloseRef.current?.focus();
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") setDrawerOpen(false);
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        return;
+      }
+      if (event.key === "Tab" && drawerNavRef.current) trapTab(drawerNavRef.current, event);
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -652,6 +658,7 @@ export default function App(): React.JSX.Element {
             <motion.nav
               key="drawer"
               id="cf-drawer"
+              ref={drawerNavRef}
               className="cf-drawer is-open"
               aria-label="Sections"
               initial={{ x: "-100%" }}

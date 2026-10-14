@@ -108,7 +108,7 @@ describe("D1View (P-05a)", () => {
       expect(document.querySelector(".cf-mini-bar")).toBeTruthy();
     });
     expect(document.querySelector(".cf-card h2")).toBeNull();
-    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toBe("(24h)");
+    expect(document.querySelector(".cf-card .cf-row-detail")).toBeNull();
   });
 
   it("renders the skeleton while the first fetch is in flight", async () => {

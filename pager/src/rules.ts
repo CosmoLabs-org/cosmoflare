@@ -37,6 +37,20 @@ export const KV_WRITES = "kv-writes";
 /** Count-valued conditions: their thresholds render with the count hint. */
 const COUNT_CONDITIONS: ReadonlySet<string> = new Set([D1_ROWS_READ, KV_WRITES]);
 
+/** Human labels for the condition <select> (critique: recognition — raw ids
+ *  like "d1-rows-read" force translation). Mirrors the Worker's CONDITIONS
+ *  labels (apps/ops/src/rules.ts); unknown ids fall back to themselves. */
+const CONDITION_LABELS: Readonly<Record<string, string>> = {
+  "zone-uncached-requests": "Uncached requests",
+  "zone-cache-miss-pct": "Cache miss rate",
+  "d1-rows-read": "D1 rows read",
+  "kv-writes": "KV writes",
+};
+
+export function conditionLabel(id: string): string {
+  return CONDITION_LABELS[id] ?? id;
+}
+
 /**
  * Validate one draft rule against the server's condition list. Returns the
  * error messages, empty when the draft is valid. The trimmed-name check

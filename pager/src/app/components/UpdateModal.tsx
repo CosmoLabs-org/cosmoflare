@@ -5,6 +5,7 @@
 // Event-driven by design: zero version polling, zero extra requests.
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { trapTab } from "./focus";
 
 /** True when a service worker took control of this page AFTER it loaded
  *  (a fresh first install also fires controllerchange — that is not an
@@ -40,9 +41,14 @@ export default function UpdateModal({ onReload, onDismiss }: { onReload: () => v
     setUpdating(true);
     reloadTimer.current = window.setTimeout(() => onReload(), reduced ? 150 : 950);
   };
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !updating) onDismiss();
+      if (event.key === "Escape" && !updating) {
+        onDismiss();
+        return;
+      }
+      if (event.key === "Tab" && dialogRef.current) trapTab(dialogRef.current, event);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -60,6 +66,7 @@ export default function UpdateModal({ onReload, onDismiss }: { onReload: () => v
         role="dialog"
         aria-modal="true"
         aria-labelledby="cf-update-title"
+        ref={dialogRef}
         className="cf-modal"
         initial={reduced ? false : { opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

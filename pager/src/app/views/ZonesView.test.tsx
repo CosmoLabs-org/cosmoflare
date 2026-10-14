@@ -98,7 +98,7 @@ describe("ZonesView (P-05a)", () => {
     expect(document.querySelectorAll(".cf-shared-legend").length).toBe(1);
     expect(document.querySelector(".cf-shared-legend")?.textContent).toContain("hit");
     expect(document.querySelector(".cf-card h2")).toBeNull();
-    expect(document.querySelector(".cf-card .cf-row-detail")?.textContent).toBe("(24h)");
+    expect(document.querySelector(".cf-card .cf-row-detail")).toBeNull();
   });
 
   it("renders the skeleton while the first fetch is in flight", async () => {

@@ -16,6 +16,7 @@ import { Plus, Save, Trash2, X } from "lucide-react";
 import { api, LoginExpiredError } from "../../api";
 import {
   addExclude,
+  conditionLabel,
   removeExclude,
   RulesHttpError,
   saveErrorLabel,
@@ -29,6 +30,11 @@ import type { ViewFetcher } from "./WorkersView";
 /** Deep-ish copy of the server's rules into editable drafts. */
 function copyRules(rules: AlertRule[]): AlertRule[] {
   return rules.map((r) => ({ ...r, exclude: r.exclude ? [...r.exclude] : undefined }));
+}
+
+/** One stable card key per draft row. */
+function freshKeys(n: number): string[] {
+  return Array.from({ length: n }, () => crypto.randomUUID());
 }
 
 // putRules PUTs the full draft set — the same wire contract as rules.ts's
@@ -161,7 +167,7 @@ function RuleCard({ draft, index, conditions, invalid, onChange, onDelete }: {
           onChange={(e) => onChange({ condition: e.target.value })}
         >
           {conditions.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{conditionLabel(c)}</option>
           ))}
         </select>
       </div>
@@ -241,6 +247,11 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
   const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [payload, setPayload] = useState<RulesPayload | null>(null);
   const [drafts, setDrafts] = useState<AlertRule[]>([]);
+  // Stable per-card keys (critique minor: key={i} let card-local state —
+  // the armed Delete, the chip input — follow POSITION after a delete).
+  // Keys regenerate whenever drafts come from the server (paint, echo);
+  // local edits keep their keys.
+  const [draftKeys, setDraftKeys] = useState<string[]>(() => []);
   const [loadError, setLoadError] = useState<{ message: string; expired: boolean } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
@@ -260,6 +271,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
     if (dirtyRef.current) return;
     setPayload(fresh);
     setDrafts(copyRules(fresh.rules));
+    setDraftKeys(freshKeys(fresh.rules.length));
   }, []);
 
   useEffect(() => {
@@ -272,6 +284,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
         dirtyRef.current = false;
         setPayload(res.data);
         setDrafts(copyRules(res.data.rules));
+        setDraftKeys(freshKeys(res.data.rules.length));
         setLoadError(null);
         setRefreshError(null);
       } catch (err) {
@@ -333,6 +346,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
 
   const addRule = (): void => {
     dirtyRef.current = true;
+    setDraftKeys((ks) => [...ks, crypto.randomUUID()]);
     setDrafts((ds) => [
       ...ds,
       {
@@ -348,6 +362,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
 
   const deleteRule = (index: number): void => {
     dirtyRef.current = true;
+    setDraftKeys((ks) => ks.filter((_, i) => i !== index));
     setDrafts((ds) => ds.filter((_, i) => i !== index));
     setHighlight(-1);
   };
@@ -380,6 +395,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
       .then((echo) => {
         // Adopt the server's echo so the next paint matches what is stored.
         setDrafts(copyRules(echo.rules));
+        setDraftKeys(freshKeys(echo.rules.length));
         // The saved set is customised: the starter note clears and the
         // cached copy must agree (BUG-057 defect 1) — the server's
         // condition list is preserved for the <select> options.
@@ -419,7 +435,7 @@ export default function RulesView({ refreshSeq = 0, fetcher }: { refreshSeq?: nu
         ) : (
           drafts.map((draft, i) => (
             <RuleCard
-              key={i}
+              key={draftKeys[i] ?? i}
               draft={draft}
               index={i}
               conditions={payload.conditions}
