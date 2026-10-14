@@ -2,7 +2,7 @@
 // 403 degradation (authorized:false, Page Rules still live), unknown zone,
 // and the 5-minute KV cache — global fetch stubbed, KV as an in-memory map.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { collectRulesQuota, RULE_ALLOWANCES } from "./rules_quota";
+import { collectRulesQuota, readRulesQuotaSummary, refreshRulesQuotaBatch, RULE_ALLOWANCES } from "./rules_quota";
 
 // Minimal env: the collector touches only these three fields (the sibling
 // worker_profile.test.ts pattern — untyped object, `as never` at call sites).
@@ -128,5 +128,54 @@ describe("collectRulesQuota", () => {
     const second = await collectRulesQuota(ENV as never, "example.com");
     expect(fetchCalls.length).toBe(callsAfterFirst);
     expect(second.families).toHaveLength(5);
+  });
+});
+
+// --- Overview strip: rotating batch summary ---
+
+describe("refreshRulesQuotaBatch / readRulesQuotaSummary", () => {
+  it("collects one batch, aggregates families, and advances the cursor", async () => {
+    // 10 zones; batch 3 → first batch = zones[0..2].
+    const routes: Record<string, unknown> = { [ZONES_ROUTE]: Array.from({ length: 10 }, (_, i) => ({ id: `z-${i}`, name: `zone-${i}.example` })) };
+    for (let i = 0; i < 10; i++) routes[`z-${i}/pagerules`] = [{ status: "active", targets: [{ constraint: { value: `www.zone-${i}.example/*` } }], actions: [{ id: "forwarding_url", value: { url: `https://zone-${i}.example/$1`, status_code: 301 } }] }];
+    stubFetch(routes);
+    const first = await refreshRulesQuotaBatch(ENV as never, 3);
+    const page = first.families.find((f) => f.family === "page-rules");
+    expect(page?.zonesTracked).toBe(3);
+    expect(page?.totalUsed).toBe(3);
+    const cursor = ENV.OPS_KV.store.get("ops:rules-quota-cursor");
+    expect(JSON.parse(cursor ?? "null")).toBe(3);
+  });
+
+  it("the read path aggregates without fetching and rotation accumulates zones", async () => {
+    const routes: Record<string, unknown> = { [ZONES_ROUTE]: Array.from({ length: 6 }, (_, i) => ({ id: `z-${i}`, name: `zone-${i}.example` })) };
+    for (let i = 0; i < 6; i++) routes[`z-${i}/pagerules`] = [];
+    stubFetch(routes);
+    await refreshRulesQuotaBatch(ENV as never, 4); // zones 0..3
+    const callsAfterFirst = fetchCalls.length;
+    await refreshRulesQuotaBatch(ENV as never, 4); // zones 4,5,0,1
+    expect(fetchCalls.length).toBeGreaterThan(callsAfterFirst);
+    const read = await readRulesQuotaSummary(ENV as never);
+    const page = read.families.find((f) => f.family === "page-rules");
+    expect(page?.zonesTracked).toBe(6); // both batches accumulated
+  });
+
+  it("flags a zone at cap in atCapZones", async () => {
+    stubFetch({
+      [ZONES_ROUTE]: [{ id: "z-cap", name: "capped.example" }],
+      "z-cap/pagerules": [1, 2, 3].map(() => ({ status: "active", targets: [{ constraint: { value: "x" } }], actions: [] })),
+    });
+    const summary = await refreshRulesQuotaBatch(ENV as never, 1);
+    const page = summary.families.find((f) => f.family === "page-rules");
+    expect(page?.atCapZones).toBe(1); // 3 of 3 used
+    expect(summary.zonesTracked).toBe(1);
+  });
+
+  it("returns an empty summary when the store is absent", async () => {
+    ENV.OPS_KV.store.clear();
+    stubFetch({});
+    const summary = await readRulesQuotaSummary(ENV as never);
+    expect(summary.zonesTracked).toBe(0);
+    expect(summary.families).toEqual([]); // nothing tracked: the strip stays hidden
   });
 });

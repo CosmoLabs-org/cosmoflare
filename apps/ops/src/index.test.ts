@@ -249,7 +249,9 @@ describe("api routes behind the Access gate", () => {
     const controller = { cron: "*/5 * * * *" } as unknown as ScheduledController;
     await worker.scheduled!(controller, env as never, ctx);
     expect(scheduledMocks.runScheduled).toHaveBeenCalledWith(env);
-    expect(waits.length).toBe(1);
+    // Two waitUntils since ROAD-p9X66J9: the alert engine plus the
+    // rule-quota rotation batch — both settle through their own catches.
+    expect(waits.length).toBe(2);
     await Promise.all(waits);
   });
   it("a rejected runScheduled logs a {cron:'alerts', error} audit line instead of becoming an unhandled rejection (BUG-058)", async () => {

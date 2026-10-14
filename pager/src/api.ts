@@ -169,6 +169,21 @@ export interface RulesQuotaPayload {
   errors: string[];
 }
 
+/** Fleet aggregate from the cron's rotating batch (Overview strip). */
+export interface RulesQuotaFamilySummary {
+  family: string;
+  label: string;
+  zonesTracked: number;
+  totalUsed: number;
+  atCapZones: number;
+}
+
+export interface RulesQuotaSummary {
+  generatedAt: string;
+  zonesTracked: number;
+  families: RulesQuotaFamilySummary[];
+}
+
 export interface Summary {
   generatedAt: string;
   windowHours: number;

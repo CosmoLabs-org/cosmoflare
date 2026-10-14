@@ -186,3 +186,120 @@ export async function collectRulesQuota(env: OpsEnv, zoneName: string, now = new
 
 /** Test hook: the published allowances, so tests pin the numbers they assert. */
 export const RULE_ALLOWANCES = ALLOWANCE;
+
+// --- Overview strip: rotating batch summary (ROAD-p9X66J9) ---
+//
+// The Overview reads ONE KV row, never a fan-out. Freshness comes from the
+// cron: each cycle collects the next batch of zones (their 5-min per-zone
+// caches serve when fresh), merges into the store, advances the cursor. A
+// 45-zone fleet rotates fully in ~6 five-minute cycles (~30 min).
+
+const SUMMARY_KEY = "ops:rules-quota-summary";
+const CURSOR_KEY = "ops:rules-quota-cursor";
+/** Zones per cron cycle — the enforced budget: at most this × 5 REST GETs. */
+export const QUOTA_BATCH_SIZE = 8;
+/** A zone's entry older than this drops from the summary (bounded store). */
+const ENTRY_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+
+/** One zone's quota entry in the fleet store (family → counters). */
+export interface RulesQuotaZoneEntry {
+  at: string;
+  families: Record<string, { used: number; allowance: number; authorized: boolean }>;
+}
+
+/** The aggregated family rows the Overview strip renders. */
+export interface RulesQuotaFamilySummary {
+  family: string;
+  label: string;
+  zonesTracked: number;
+  totalUsed: number;
+  atCapZones: number;
+}
+
+export interface RulesQuotaSummary {
+  generatedAt: string;
+  zonesTracked: number;
+  families: RulesQuotaFamilySummary[];
+}
+
+interface SummaryStore {
+  at: number;
+  zones: Record<string, RulesQuotaZoneEntry>;
+}
+
+/** Collect the next batch and merge into the store. Failures per zone are
+ *  skipped (that zone keeps its previous entry); the cursor still advances. */
+export async function refreshRulesQuotaBatch(env: OpsEnv, batchSize = QUOTA_BATCH_SIZE, now = new Date()): Promise<RulesQuotaSummary> {
+  const zones = await zonesFromCacheOrFetch(env);
+  if (zones.length === 0) return { generatedAt: now.toISOString(), zonesTracked: 0, families: [] };
+
+  const cursorRaw = (await env.OPS_KV.get<number>(CURSOR_KEY, "json")) ?? 0;
+  const cursor = ((cursorRaw % zones.length) + zones.length) % zones.length;
+
+  let store: SummaryStore = { at: Date.now(), zones: {} };
+  try {
+    const cached = await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json");
+    if (cached && typeof cached.at === "number" && cached.zones) store = cached;
+  } catch {
+    // KV read failure starts a fresh store.
+  }
+
+  const n = Math.min(batchSize, zones.length);
+  for (let i = 0; i < n; i++) {
+    const zone = zones[(cursor + i) % zones.length];
+    const payload = await collectRulesQuota(env, zone.name, now);
+    if (payload.families.length === 0) continue; // zone vanished or errored
+    const entry: RulesQuotaZoneEntry = { at: payload.generatedAt, families: {} };
+    for (const f of payload.families) {
+      entry.families[f.family] = { used: f.used, allowance: f.allowance, authorized: f.authorized };
+    }
+    store.zones[zone.name] = entry;
+  }
+
+  // Drop stale entries so the store stays bounded by the rotation window.
+  for (const [name, entry] of Object.entries(store.zones)) {
+    if (now.getTime() - Date.parse(entry.at) > ENTRY_MAX_AGE_MS) delete store.zones[name];
+  }
+  store.at = Date.now();
+  try {
+    await env.OPS_KV.put(SUMMARY_KEY, JSON.stringify(store));
+    await env.OPS_KV.put(CURSOR_KEY, JSON.stringify((cursor + n) % zones.length));
+  } catch {
+    // Cache-write failure is non-fatal; the aggregate below still returns.
+  }
+  return aggregateSummary(store, now);
+}
+
+/** Read the store and aggregate — the strip's read path (no fetches). */
+export async function readRulesQuotaSummary(env: OpsEnv, now = new Date()): Promise<RulesQuotaSummary> {
+  try {
+    const cached = await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json");
+    if (cached && typeof cached.at === "number" && cached.zones) return aggregateSummary(cached, now);
+  } catch {
+    // KV read failure: an empty summary, never a throw.
+  }
+  return { generatedAt: now.toISOString(), zonesTracked: 0, families: [] };
+}
+
+function aggregateSummary(store: SummaryStore, now: Date): RulesQuotaSummary {
+  const zones = Object.values(store.zones);
+  const families: RulesQuotaFamilySummary[] = [];
+  for (const family of Object.keys(ALLOWANCE)) {
+    let zonesTracked = 0;
+    let totalUsed = 0;
+    let atCapZones = 0;
+    for (const entry of zones) {
+      const f = entry.families[family];
+      if (!f || !f.authorized) continue;
+      zonesTracked += 1;
+      totalUsed += f.used;
+      if (f.used >= f.allowance) atCapZones += 1;
+    }
+    families.push({ family, label: LABEL[family], zonesTracked, totalUsed, atCapZones });
+  }
+  return {
+    generatedAt: now.toISOString(),
+    zonesTracked: Math.max(...families.map((f) => f.zonesTracked), 0),
+    families,
+  };
+}

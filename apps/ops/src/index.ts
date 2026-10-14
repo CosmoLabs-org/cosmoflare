@@ -19,7 +19,7 @@ import { handleWorkerTail } from "./tail";
 import { collectD1Profile } from "./d1_profile";
 import { collectDoProfile } from "./do_profile";
 import { collectZoneProfile } from "./zone_profile";
-import { collectRulesQuota } from "./rules_quota";
+import { collectRulesQuota, readRulesQuotaSummary, refreshRulesQuotaBatch } from "./rules_quota";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
@@ -290,6 +290,11 @@ export default {
         if (!name) return json({ error: "missing name" }, 400);
         return json(await collectRulesQuota(env, name));
       }
+      case "/api/rules-quota/summary": {
+        // Fleet aggregate for the Overview strip — one KV read, no fetches;
+        // freshness comes from the cron's rotating batch.
+        return json(await readRulesQuotaSummary(env));
+      }
       case "/api/billing":
         return billingResponse(ctx, env, url.searchParams.has("refresh"));
       case "/api/subscribe": // POST add / DELETE remove / GET count — auth already checked above
@@ -317,6 +322,15 @@ export default {
         // A rejected runScheduled (e.g. a KV failure) must still leave an
         // audit line, not become an unhandled rejection inside waitUntil.
         .catch((error: unknown) => console.log(JSON.stringify({ cron: "alerts", error: String(error) }))),
+    );
+    // Rule-quota rotation (ROAD-p9X66J9): one bounded batch per cycle keeps
+    // the Overview summary fresh; deliberately OUTSIDE runScheduled so the
+    // alert engine's telemetry-fetch contract stays untouched. A failure is
+    // an audit line only.
+    ctx.waitUntil(
+      refreshRulesQuotaBatch(env)
+        .then((s) => console.log(JSON.stringify({ cron: "rules-quota", zonesTracked: s.zonesTracked })))
+        .catch((error: unknown) => console.log(JSON.stringify({ cron: "rules-quota", error: String(error) }))),
     );
   },
 } satisfies ExportedHandler<Env>;

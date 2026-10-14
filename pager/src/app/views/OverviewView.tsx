@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { api, LoginExpiredError, totalAgeSec, type Billing, type FetchResult, type ProductUsage, type Summary } from "../../api";
 import type { EmailRoutingPayload } from "../../email";
+import type { RulesQuotaSummary } from "../../api";
 import { ATTENTION_CAP, capAttention, collectAttention, type AttentionItem } from "../../attention";
 import { isRollingStorage, projectedMonthlyTotal, WORKERS_PAID_BASE_USD, WORKERS_PAID_PLAN } from "../../billing";
 import { formatCount, formatPct, formatUsd } from "../../format";
@@ -98,6 +99,7 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
   const [showAllRings, setShowAllRings] = useState(false);
   const [retryTick, setRetryTick] = useState(0);
   const [email, setEmail] = useState<EmailRoutingPayload | null>(null);
+  const [quotaSummary, setQuotaSummary] = useState<RulesQuotaSummary | null>(null);
   const reduced = useReducedMotion();
 
   // A background revalidation repaints the view with the fresh data
@@ -160,6 +162,21 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
     void api.fetchJson<EmailRoutingPayload>("api/email", { refresh: refreshSeq > 0 }).then(
       (res) => {
         if (!cancelled) setEmail(res.data);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshSeq, retryTick]);
+
+  // Rule-quota strip (ROAD-p9X66J9): one cached read from the cron's
+  // rotating batch; a failed fetch or empty store leaves the card off.
+  useEffect(() => {
+    let cancelled = false;
+    void api.fetchJson<RulesQuotaSummary>("api/rules-quota/summary", { refresh: refreshSeq > 0 }).then(
+      (res) => {
+        if (!cancelled) setQuotaSummary(res.data);
       },
       () => undefined,
     );
@@ -296,6 +313,23 @@ export default function OverviewView({ refreshSeq = 0 }: { refreshSeq?: number }
           level={attention.some((i) => i.level === "critical") ? "critical" : attention.length ? "warning" : "ok"}
         />
       </div>
+
+      {/* Rule quotas (ROAD-p9X66J9): fleet strip from the cron's rotating
+          batch — rendered only when the summary has tracked zones; an
+          absent store (fresh deploy) keeps the overview unchanged. */}
+      {quotaSummary !== null && quotaSummary.zonesTracked > 0 ? (
+        <section className="cf-card" aria-label="Rule quotas">
+          <h2>Rule slots</h2>
+          <p className="cf-row-detail">{`Across ${quotaSummary.zonesTracked} tracked zones, refreshed in rotation.`}</p>
+          {quotaSummary.families
+            .filter((f) => f.zonesTracked > 0)
+            .map((f) => (
+              <p className={f.atCapZones > 0 ? "cf-empty cf-level-warning-text" : "cf-row-detail"} key={f.family}>
+                {`${f.label}: ${f.totalUsed} in use${f.atCapZones > 0 ? ` · ${f.atCapZones} zone${f.atCapZones === 1 ? "" : "s"} at the free cap` : ""}`}
+              </p>
+            ))}
+        </section>
+      ) : null}
 
       {/* Email Routing (FEAT-059): rendered ONLY when the collector returned
           zones — an errors-only payload (token without Email Routing Read)
