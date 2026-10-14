@@ -44,10 +44,16 @@ var efficiencyCollectFn = func(windowDays int, now time.Time) (*cosmoflare.Effic
 	analytics := cosmoflare.NewAnalyticsService(AccountID, APIToken)
 	w := cosmoflare.AnalyticsWindow{Start: now.Add(-time.Duration(windowDays) * 24 * time.Hour).UTC(), End: now.UTC()}
 	r2, r2Err := getR2ClientForStatus()
-	if r2Err != nil {
-		return cosmoflare.NewEfficiencyService(workers, kv, analytics).Report(context.Background(), w)
+	zones, zonesErr := getZoneService()
+	var r2Lister cosmoflare.BucketLister
+	if r2Err == nil {
+		r2Lister = r2
 	}
-	return cosmoflare.NewEfficiencyServiceWithBuckets(workers, kv, analytics, r2).Report(context.Background(), w)
+	var zoneLister cosmoflare.ZoneLister
+	if zonesErr == nil {
+		zoneLister = zones
+	}
+	return cosmoflare.NewEfficiencyServiceWithZones(workers, kv, analytics, r2Lister, zoneLister).Report(context.Background(), w)
 }
 
 var efficiencyCmd = &cobra.Command{
@@ -61,6 +67,7 @@ reports resources that do nothing:
   idle workers          0 requests over the window (per-script GraphQL sums)
   dead KV namespaces    0 reads AND 0 writes over the window
   empty R2 buckets      0 objects at window end
+  low cache-hit zones   real traffic but <5% served from edge cache
 
 Every finding carries its evidence (counts and the window it was measured
 over) and an actionable fix. Numbers are always measured from the API —
@@ -103,8 +110,8 @@ func writeEfficiencyTable(rep *cosmoflare.EfficiencyReport) error {
 	fmt.Fprintf(w, "Efficiency audit — window %s → %s\n\n",
 		rep.WindowStart.Format("Jan 02"), rep.WindowEnd.Format("Jan 02"))
 	if len(rep.Findings) == 0 {
-		fmt.Fprintf(w, "No waste found — checked %d workers, %d KV namespaces, %d R2 buckets.\n",
-			rep.WorkersChecked, rep.KVNamespacesChecked, rep.BucketsChecked)
+		fmt.Fprintf(w, "No waste found — checked %d workers, %d KV namespaces, %d R2 buckets, %d zones.\n",
+			rep.WorkersChecked, rep.KVNamespacesChecked, rep.BucketsChecked, rep.ZonesChecked)
 		return nil
 	}
 	fmt.Fprintf(w, "%-40s %-20s %-8s  %s\n", "RESOURCE", "CHECK", "SEV", "EVIDENCE")
@@ -115,7 +122,7 @@ func writeEfficiencyTable(rep *cosmoflare.EfficiencyReport) error {
 		}
 		fmt.Fprintf(w, "%-40s %-20s %-8s  %s\n      fix: %s\n", f.Resource, f.Check, sev, f.Evidence, f.Fix)
 	}
-	fmt.Fprintf(w, "\nChecked %d workers, %d KV namespaces, %d R2 buckets — %d finding(s).\n",
-		rep.WorkersChecked, rep.KVNamespacesChecked, rep.BucketsChecked, len(rep.Findings))
+	fmt.Fprintf(w, "\nChecked %d workers, %d KV namespaces, %d R2 buckets, %d zones — %d finding(s).\n",
+		rep.WorkersChecked, rep.KVNamespacesChecked, rep.BucketsChecked, rep.ZonesChecked, len(rep.Findings))
 	return nil
 }

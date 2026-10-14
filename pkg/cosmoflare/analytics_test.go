@@ -362,3 +362,63 @@ func TestAnalyticsKVOperationsEmpty(t *testing.T) {
 		t.Fatalf("want 0 rows, got %+v", got)
 	}
 }
+
+// TestAnalyticsZoneCacheCoverage verifies ZoneCacheCoverage posts ONE
+// httpRequests1dGroups query, sums per-day rows (requests + cachedRequests)
+// into a hit-rate summary, and decodes an empty zones array to a zero
+// summary. Response shape per the live-probed verified facts (FEAT-069
+// wave 2): dimensions{date} sum{requests cachedRequests}.
+func TestAnalyticsZoneCacheCoverage(t *testing.T) {
+	t.Parallel()
+	var cap analyticsCapture
+	resp := `{"data":{"viewer":{"zones":[{"httpRequests1dGroups":[` +
+		`{"sum":{"requests":2000,"cachedRequests":150},"dimensions":{"date":"2026-08-01"}},` +
+		`{"sum":{"requests":1500,"cachedRequests":50},"dimensions":{"date":"2026-08-02"}}` +
+		`]}]}}}`
+	srv := analyticsServer(t, resp, &cap)
+	defer srv.Close()
+
+	s := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(srv.URL))
+	w := analyticsWindow()
+	got, err := s.ZoneCacheCoverage(context.Background(), "z1", w)
+	if err != nil {
+		t.Fatalf("ZoneCacheCoverage: %v", err)
+	}
+	if got.ZoneID != "z1" {
+		t.Fatalf("ZoneID = %q, want z1", got.ZoneID)
+	}
+	if got.Requests != 3500 || got.CachedRequests != 200 {
+		t.Fatalf("sums = %d/%d, want 3500/200", got.Requests, got.CachedRequests)
+	}
+	want := 100 * float64(200) / float64(3500)
+	if got.HitRatePct < want-0.001 || got.HitRatePct > want+0.001 {
+		t.Fatalf("HitRatePct = %v, want ~%v", got.HitRatePct, want)
+	}
+	if !strings.Contains(cap.Body, "httpRequests1dGroups") {
+		t.Fatalf("query must use httpRequests1dGroups:\n%s", cap.Body)
+	}
+	if !strings.Contains(cap.Body, `"zoneTag":"z1"`) {
+		t.Fatalf("query must filter on the zone tag:\n%s", cap.Body)
+	}
+
+	// Empty zones array → zero summary, never an error.
+	empty := analyticsServer(t, `{"data":{"viewer":{"zones":[]}}}`, nil)
+	defer empty.Close()
+	emptySvc := NewAnalyticsService("acct", "tok", WithAnalyticsBaseURL(empty.URL))
+	z, err := emptySvc.ZoneCacheCoverage(context.Background(), "z1", w)
+	if err != nil {
+		t.Fatalf("empty zones: %v", err)
+	}
+	if z.Requests != 0 || z.CachedRequests != 0 || z.HitRatePct != 0 {
+		t.Fatalf("empty-zone summary = %+v, want zeros", z)
+	}
+
+	// Validation: zone tag required, window Start before End.
+	if _, err := s.ZoneCacheCoverage(context.Background(), "", w); err == nil {
+		t.Fatal("empty zone tag must error")
+	}
+	bad := AnalyticsWindow{Start: w.End, End: w.Start}
+	if _, err := s.ZoneCacheCoverage(context.Background(), "z1", bad); err == nil {
+		t.Fatal("inverted window must error")
+	}
+}

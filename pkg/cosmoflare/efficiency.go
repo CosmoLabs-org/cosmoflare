@@ -24,6 +24,8 @@ type EfficiencyReport struct {
 	WorkersChecked      int                 `json:"workers_checked"`
 	KVNamespacesChecked int                 `json:"kv_namespaces_checked"`
 	BucketsChecked      int                 `json:"buckets_checked"`
+	ZonesChecked        int                 `json:"zones_checked"`
+	ZoneCoverage        []ZoneCacheCoverageSummary `json:"zone_coverage,omitempty"`
 }
 
 // EfficiencyWasteSummary counts findings per check with an honest dollar
@@ -47,6 +49,7 @@ type EfficiencyService struct {
 	kv        *KVService
 	analytics *AnalyticsService
 	buckets   BucketLister // nil → empty-bucket checks are skipped
+	zones     ZoneLister   // nil → zone cache-coverage check is skipped
 }
 
 // NewEfficiencyService creates an EfficiencyService without R2 bucket
@@ -61,6 +64,14 @@ func NewEfficiencyService(workers *WorkerService, kv *KVService, analytics *Anal
 // it works, including test fakes.
 func NewEfficiencyServiceWithBuckets(workers *WorkerService, kv *KVService, analytics *AnalyticsService, buckets BucketLister) *EfficiencyService {
 	return &EfficiencyService{workers: workers, kv: kv, analytics: analytics, buckets: buckets}
+}
+
+// NewEfficiencyServiceWithZones creates an EfficiencyService that audits
+// per-zone cache hit rates on top of any of the other checks. Either of
+// buckets or zones may be nil — its check is skipped and its count stays 0.
+// ZoneLister is the shared narrow consumer interface from limits.go.
+func NewEfficiencyServiceWithZones(workers *WorkerService, kv *KVService, analytics *AnalyticsService, buckets BucketLister, zones ZoneLister) *EfficiencyService {
+	return &EfficiencyService{workers: workers, kv: kv, analytics: analytics, buckets: buckets, zones: zones}
 }
 
 // NewEfficiencyServiceFromCreds creates an EfficiencyService from account ID
@@ -180,6 +191,37 @@ func (s *EfficiencyService) Report(ctx context.Context, w AnalyticsWindow) (*Eff
 					Severity: "info",
 					Evidence: fmt.Sprintf("0 objects at %s", w.End.Format("2006-01-02")),
 					Fix:      fmt.Sprintf("delete it (cosmoflare bucket delete %s) — empty buckets cost nothing but clutter audits", b.Name),
+				})
+			}
+		}
+	}
+
+	// Zones: per-zone cache coverage from httpRequests1dGroups (P-06).
+	// Every zone gets a coverage row with its real hit rate; a zone with
+	// real traffic but a near-zero edge-cache hit rate is a finding. The
+	// 1,000-request floor keeps quiet zones out of the findings — 0 cached
+	// requests out of 5 is not a cache problem, it is no traffic.
+	if s.zones != nil && s.analytics != nil {
+		zs, err := s.zones.List(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("list zones: %w", err)
+		}
+		rep.ZonesChecked = len(zs)
+		for _, z := range zs {
+			sum, err := s.analytics.ZoneCacheCoverage(ctx, z.ID, w)
+			if err != nil {
+				return nil, fmt.Errorf("zone cache coverage (%s): %w", z.Name, err)
+			}
+			sum.Zone = z.Name
+			rep.ZoneCoverage = append(rep.ZoneCoverage, *sum)
+			if sum.Requests >= 1000 && sum.HitRatePct < 5 {
+				rep.Findings = append(rep.Findings, EfficiencyFinding{
+					Resource: "zone:" + z.Name,
+					Check:    "low-cache-hit",
+					Severity: "info",
+					Evidence: fmt.Sprintf("%d requests, %.1f%% edge-cache hit over %s → %s",
+						sum.Requests, sum.HitRatePct, w.Start.Format("2006-01-02"), w.End.Format("2006-01-02")),
+					Fix: "origin Cache-Control headers on cacheable responses, or a zone Cache Rule (HTML needs a Cache Rule — s-maxage alone does nothing)",
 				})
 			}
 		}

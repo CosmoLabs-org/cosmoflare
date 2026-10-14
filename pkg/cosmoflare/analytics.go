@@ -582,3 +582,77 @@ func (s *AnalyticsService) windowVars(w AnalyticsWindow) map[string]any {
 		"end":        w.End.Format(time.RFC3339),
 	}
 }
+
+// ZoneCacheCoverageSummary is one zone's cache hit-rate measurement: total
+// eyeball requests and the share served from edge cache, from
+// httpRequests1dGroups (FEAT-069 wave 2, deliverable P-06). Named apart
+// from ZoneCacheSummary (analytics_cache.go) — that type counts per
+// cacheStatus for the FEAT-049 alert conditions; this one carries the
+// dataset's own cachedRequests sum.
+type ZoneCacheCoverageSummary struct {
+	ZoneID         string  `json:"zone_id"`
+	Zone           string  `json:"zone,omitempty"`
+	Requests       uint64  `json:"requests"`
+	CachedRequests uint64  `json:"cached_requests"`
+	HitRatePct     float64 `json:"hit_rate_pct"`
+}
+
+// ZoneCacheCoverage returns one zone's cache hit rate over the window from
+// ONE batched httpRequests1dGroups query (sum requests + cachedRequests;
+// shape verified live 2026-10-14). HitRatePct is cachedRequests/requests
+// × 100 — 0 when the zone saw no requests. A zone absent from the response
+// decodes as zeros, never an error. Zone is left for the caller to fill
+// from the zone list.
+func (s *AnalyticsService) ZoneCacheCoverage(ctx context.Context, zoneID string, w AnalyticsWindow) (*ZoneCacheCoverageSummary, error) {
+	const op = "AnalyticsZoneCacheCoverage"
+	if s.apiToken == "" {
+		return nil, validationError(op, "API token is required")
+	}
+	if zoneID == "" {
+		return nil, validationError(op, "zone ID is required")
+	}
+	if err := validateAnalyticsWindow(op, w, 0); err != nil {
+		return nil, err
+	}
+	gql := `query($zoneTag: String!, $start: Time!, $end: Time!) {
+  viewer {
+    zones(filter: {zoneTag: $zoneTag}) {
+      httpRequests1dGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
+        sum { requests cachedRequests }
+        dimensions { date }
+      }
+    }
+  }
+}`
+	var out struct {
+		Viewer struct {
+			Zones []struct {
+				HTTPRequests1dGroups []struct {
+					Sum struct {
+						Requests       uint64 `json:"requests"`
+						CachedRequests uint64 `json:"cachedRequests"`
+					} `json:"sum"`
+				} `json:"httpRequests1dGroups"`
+			} `json:"zones"`
+		} `json:"viewer"`
+	}
+	vars := map[string]any{
+		"zoneTag": zoneID,
+		"start":   w.Start.Format(time.RFC3339),
+		"end":     w.End.Format(time.RFC3339),
+	}
+	if err := s.query(ctx, op, gql, vars, &out); err != nil {
+		return nil, err
+	}
+	sum := &ZoneCacheCoverageSummary{ZoneID: zoneID}
+	for _, z := range out.Viewer.Zones {
+		for _, g := range z.HTTPRequests1dGroups {
+			sum.Requests += g.Sum.Requests
+			sum.CachedRequests += g.Sum.CachedRequests
+		}
+	}
+	if sum.Requests > 0 {
+		sum.HitRatePct = 100 * float64(sum.CachedRequests) / float64(sum.Requests)
+	}
+	return sum, nil
+}
