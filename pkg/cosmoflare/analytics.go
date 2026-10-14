@@ -614,10 +614,10 @@ func (s *AnalyticsService) ZoneCacheCoverage(ctx context.Context, zoneID string,
 	if err := validateAnalyticsWindow(op, w, 0); err != nil {
 		return nil, err
 	}
-	gql := `query($zoneTag: String!, $start: Time!, $end: Time!) {
+	gql := `query($zoneTag: String!, $start: Date!, $end: Date!) {
   viewer {
     zones(filter: {zoneTag: $zoneTag}) {
-      httpRequests1dGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
+      httpRequests1dGroups(limit: 10000, filter: {date_geq: $start, date_lt: $end}) {
         sum { requests cachedRequests }
         dimensions { date }
       }
@@ -636,10 +636,13 @@ func (s *AnalyticsService) ZoneCacheCoverage(ctx context.Context, zoneID string,
 			} `json:"zones"`
 		} `json:"viewer"`
 	}
+	// httpRequests1dGroups is date-granular (verified live 2026-10-14: it
+	// rejects datetime_geq). Whole UTC days, d1_usage convention: end date
+	// exclusive, +1 day so the window's last day is fully covered.
 	vars := map[string]any{
 		"zoneTag": zoneID,
-		"start":   w.Start.Format(time.RFC3339),
-		"end":     w.End.Format(time.RFC3339),
+		"start":   w.Start.UTC().Format("2006-01-02"),
+		"end":     w.End.UTC().AddDate(0, 0, 1).Format("2006-01-02"),
 	}
 	if err := s.query(ctx, op, gql, vars, &out); err != nil {
 		return nil, err
