@@ -149,6 +149,26 @@ export interface ZoneProfilePayload {
   cache?: CacheInfo;
 }
 
+/** One rule family's inventory against the plan's free allowance. */
+export interface RuleFamilyQuota {
+  family: string;
+  label: string;
+  used: number;
+  allowance: number;
+  /** false when the token lacks the family's read scope — the UI shows a
+   *  scope note instead of a false "no rules". */
+  authorized: boolean;
+  rules: { name: string; detail: string }[];
+}
+
+/** /api/rules-quota?name=<zone> payload (ROAD-p9X66J9). */
+export interface RulesQuotaPayload {
+  zone: string;
+  generatedAt: string;
+  families: RuleFamilyQuota[];
+  errors: string[];
+}
+
 export interface Summary {
   generatedAt: string;
   windowHours: number;

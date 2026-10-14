@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { api, LoginExpiredError, type Summary, type ZoneProfilePayload, type ZoneRow } from "../../api";
+import { api, LoginExpiredError, type RulesQuotaPayload, type Summary, type ZoneProfilePayload, type ZoneRow } from "../../api";
 import { formatCount, formatPct } from "../../format";
 import type { ViewFetcher } from "./WorkersView";
 
@@ -55,6 +55,7 @@ export default function ZoneProfileView({ name, refreshSeq = 0, fetcher }: {
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
   const [profile, setProfile] = useState<ZoneProfilePayload | null>(null);
+  const [quota, setQuota] = useState<RulesQuotaPayload | null>(null);
   const reduced = useReducedMotion();
 
   const repaint = useCallback((fresh: Summary): void => {
@@ -101,6 +102,21 @@ export default function ZoneProfileView({ name, refreshSeq = 0, fetcher }: {
     void fetchJson<ZoneProfilePayload>(`api/zone-profile?name=${encodeURIComponent(name)}`, { refresh: refreshSeq > 0 }).then(
       (res) => {
         if (!cancelled) setProfile(res.data);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [name, refreshSeq, retryTick, fetchJson]);
+
+  // Side fetch (same silent-failure contract): the rule-quota payload must
+  // not gate the profile — an absent payload leaves the Rules card off.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJson<RulesQuotaPayload>(`api/rules-quota?name=${encodeURIComponent(name)}`, { refresh: refreshSeq > 0 }).then(
+      (res) => {
+        if (!cancelled) setQuota(res.data);
       },
       () => undefined,
     );
@@ -192,6 +208,30 @@ export default function ZoneProfileView({ name, refreshSeq = 0, fetcher }: {
           <h2>DNSSEC</h2>
           <Field label="Status" value={profile.dnssec.status ?? "—"} />
           {profile.dnssec.algorithm !== null ? <Field label="Algorithm" value={profile.dnssec.algorithm} /> : null}
+        </section>
+      ) : null}
+
+      {quota !== null && Array.isArray(quota.families) && quota.families.length > 0 ? (
+        <section className="cf-card">
+          <h2>Rules</h2>
+          <p className="cf-row-detail">Rule inventory against the plan's free allowances.</p>
+          {quota.families.map((f) => {
+            const atCap = f.authorized && f.used >= f.allowance;
+            return (
+              <div className="cf-quota-family" key={f.family}>
+                <Field label={f.label} value={f.authorized ? `${f.used} / ${f.allowance}` : "scope needed"} />
+                {atCap ? (
+                  <p className="cf-empty cf-level-warning-text">{`At the free allowance — the next ${f.label.replace(/s$/, "")} needs a plan upgrade or a slot freed.`}</p>
+                ) : null}
+                {!f.authorized ? (
+                  <p className="cf-empty cf-empty-quiet">Needs the Zone Rulesets read scope on the API token.</p>
+                ) : null}
+                {f.rules.map((r) => (
+                  <p className="cf-row-detail" key={r.name}>{r.name}</p>
+                ))}
+              </div>
+            );
+          })}
         </section>
       ) : null}
 

@@ -19,6 +19,7 @@ import { handleWorkerTail } from "./tail";
 import { collectD1Profile } from "./d1_profile";
 import { collectDoProfile } from "./do_profile";
 import { collectZoneProfile } from "./zone_profile";
+import { collectRulesQuota } from "./rules_quota";
 import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "./scheduled";
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
@@ -279,6 +280,15 @@ export default {
           collectZoneProfile(env, name),
         );
         return json({ ...result.value, cache: { ageSec: Math.round(result.ageSec), stale: result.stale } });
+      }
+      case "/api/rules-quota": {
+        // /api/rules-quota?name=<zone> — per-family rule inventory against
+        // the plan's free allowances (ROAD-p9X66J9). The collector caches
+        // 5 min per zone in KV itself; rulesets families degrade to
+        // authorized:false without the Zone Rulesets scope.
+        const name = url.searchParams.get("name");
+        if (!name) return json({ error: "missing name" }, 400);
+        return json(await collectRulesQuota(env, name));
       }
       case "/api/billing":
         return billingResponse(ctx, env, url.searchParams.has("refresh"));

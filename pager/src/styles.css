@@ -2853,3 +2853,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-guide-body .cf-guide-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--cf-hair, rgba(127,127,127,0.25)); }
 .cf-guide-body .cf-guide-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--cf-hair, rgba(127,127,127,0.12)); font-size: 13px; }
 .cf-guide-body .cf-guide-table tr:last-child td { border-bottom: none; }
+
+/* Rule-family quota rows in the zone profile (ROAD-p9X66J9): grouped
+   spacing only, hairline via the Field rows themselves. */
+.cf-quota-family { margin-bottom: 10px; }
+.cf-quota-family .cf-row-detail { margin: 2px 0 0; }

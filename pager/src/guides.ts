@@ -2,6 +2,17 @@
 // plain-language operator guidance — guidance prose only, never usage
 // claims, so the "real numbers only" rule does not apply. No fetching:
 // this module is the data.
+//
+// The education hub (ROAD-p9X66J9) adds topic sets authored in parallel —
+// one file per topic, concatenated here. New articles follow the operator's
+// style rules: direct, technical, no em-dashes.
+
+import { RULES_GUIDES } from "./guides-rules";
+import { CACHE_GUIDES } from "./guides-cache";
+import { COMPUTE_GUIDES } from "./guides-compute";
+import { STORAGE_GUIDES } from "./guides-storage";
+import { NETWORK_GUIDES } from "./guides-network";
+import { SECURITY_GUIDES } from "./guides-security";
 
 /** One block of article body prose. Paragraphs, sub-headings and bullet
  *  lists carry text; kv rows carry a term + desc pair rendered with the
@@ -25,7 +36,7 @@ export interface Guide {
  *  cannot drift between the intro and the close. */
 const GRANT_PATH = "My Profile → API Tokens → Edit";
 
-export const GUIDES: readonly Guide[] = [
+const BASE_GUIDES: readonly Guide[] = [
   {
     id: "permissions",
     title: "Token permissions: what Ops can see",
@@ -83,4 +94,14 @@ export const GUIDES: readonly Guide[] = [
       { kind: "p", text: "What: prefer temporary or scoped exceptions for your own addresses. Why: on a shared connection the IP is not yours alone — a permanent allow exempts everyone on it, permanently. Verify: the rule inventory in Ops makes the standing allow visible so it cannot be forgotten." },
     ],
   },
+];
+
+export const GUIDES: readonly Guide[] = [
+  ...BASE_GUIDES,
+  ...RULES_GUIDES,
+  ...CACHE_GUIDES,
+  ...COMPUTE_GUIDES,
+  ...STORAGE_GUIDES,
+  ...NETWORK_GUIDES,
+  ...SECURITY_GUIDES,
 ];
