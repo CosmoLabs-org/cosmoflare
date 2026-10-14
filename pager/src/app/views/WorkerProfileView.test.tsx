@@ -3,7 +3,10 @@
 // rules (cf-stat-value, zero-errors green, error-rate tint), the back
 // control, the dashboard link, and the not-found quiet state — with the
 // summary fetch injected (the worker_profile.test.ts pattern).
-import { cleanup, render, waitFor } from "@testing-library/react";
+// The live-tail describe (2026-10-14) covers the bounded NDJSON tail UI:
+// events render from a gated mock stream, a stream {error} line renders the
+// note, the end line auto-stops cleanly, and the Stop control aborts.
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { LoginExpiredError, type FetchResult, type Summary, type WorkerProfilePayload, type WorkerRow } from "../../api";
 import WorkerProfileView from "./WorkerProfileView";
@@ -63,6 +66,41 @@ function multiFetcher(endpoints: Record<string, unknown>): Parameters<typeof Wor
   };
 }
 
+// ---- live-tail stream mocks ----
+// A gated NDJSON stream: the test holds the controller and pushes lines, so
+// assertions run against exact render timing (no timers, no fake clocks).
+interface TailStream {
+  push: (line: string) => void;
+  close: () => void;
+}
+
+function gatedTailStreamFetch(): { tailFetch: typeof fetch; stream: TailStream; signal: () => AbortSignal | null } {
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  let captured: AbortSignal | null = null;
+  const body = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
+    },
+  });
+  const tailFetch: typeof fetch = async (_input, init) => {
+    captured = init?.signal ?? null;
+    return { ok: true, status: 200, body } as unknown as Response;
+  };
+  return {
+    tailFetch,
+    stream: {
+      push: (line) => controller.enqueue(new TextEncoder().encode(`${line}\n`)),
+      close: () => controller.close(),
+    },
+    signal: () => captured,
+  };
+}
+
+/** The view's tail button by its exact label. */
+function tailButton(label: string): HTMLButtonElement | null {
+  return Array.from(document.querySelectorAll("button")).find((b) => b.textContent === label) ?? null;
+}
+
 const PROFILE: WorkerProfilePayload = {
   generatedAt: "2026-10-13T00:00:00.000Z",
   bindings: [{ type: "kv_namespace", name: "CACHE" }, { type: "plain_text", name: "FLAG" }],
@@ -71,6 +109,107 @@ const PROFILE: WorkerProfilePayload = {
   versions: [{ number: 7, createdOn: "2026-10-05T00:00:00Z" }, { number: 6, createdOn: null }],
   errors: [],
 };
+
+describe("WorkerProfileView live tail", () => {
+  it("renders events from a mocked NDJSON stream with a running count", async () => {
+    const tail = gatedTailStreamFetch();
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": PROFILE })}
+        tailFetch={tail.tailFetch}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    fireEvent.click(tailButton("Start tail") as HTMLButtonElement);
+    tail.stream.push('{"type":"open"}');
+    tail.stream.push('{"type":"event","event":{"outcome":"ok","exceptions":[],"eventTimestamp":"2026-10-14T00:00:01.000Z"}}');
+    tail.stream.push('{"type":"event","event":{"outcome":"exceededCpu","exceptions":[{"message":"CPU time limit exceeded"}],"eventTimestamp":"2026-10-14T00:00:02.000Z"}}');
+    await waitFor(() => {
+      expect(document.querySelector(".cf-tail-count")?.textContent).toContain("2 events");
+    });
+    // Two compact rows: outcome + exceptions count, UTC time on the label side.
+    const rows = Array.from(document.querySelectorAll(".cf-domain-field")).filter((r) =>
+      r.textContent?.includes("exceededCpu") || r.textContent?.includes("00:00:01"),
+    );
+    expect(rows.length).toBe(2);
+    const labels = rows.map((r) => r.querySelector(".cf-domain-field-label")?.textContent);
+    expect(labels).toEqual(["00:00:01", "00:00:02"]);
+    // Exceptions render as a count on the compact row.
+    expect(rows[1].textContent).toContain("1 exception");
+    // Streaming state shows the Stop control.
+    expect(tailButton("Stop tail")).toBeTruthy();
+  });
+
+  it("renders a stream {error} line as the error note and stops", async () => {
+    const tail = gatedTailStreamFetch();
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": PROFILE })}
+        tailFetch={tail.tailFetch}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    fireEvent.click(tailButton("Start tail") as HTMLButtonElement);
+    tail.stream.push('{"error":"tail unavailable: authentication failed"}');
+    await waitFor(() => {
+      expect(document.querySelector(".cf-tail-error")?.textContent).toContain("tail unavailable: authentication failed");
+    });
+    // The stream stopped: Start is offered again.
+    expect(tailButton("Start tail")).toBeTruthy();
+  });
+
+  it("auto-stops cleanly at the end line (no hang, Start offered again)", async () => {
+    const tail = gatedTailStreamFetch();
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": PROFILE })}
+        tailFetch={tail.tailFetch}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    fireEvent.click(tailButton("Start tail") as HTMLButtonElement);
+    tail.stream.push('{"type":"open"}');
+    tail.stream.push('{"type":"end","reason":"duration-cutoff"}');
+    tail.stream.close();
+    await waitFor(() => {
+      expect(document.querySelector(".cf-tail-note")?.textContent).toContain("duration-cutoff");
+      expect(tailButton("Start tail")).toBeTruthy();
+    });
+    expect(tailButton("Stop tail")).toBeNull();
+  });
+
+  it("the Stop control aborts the stream and offers Start again", async () => {
+    const tail = gatedTailStreamFetch();
+    render(
+      <WorkerProfileView
+        name="api-gateway"
+        fetcher={multiFetcher({ "api/summary": SUMMARY([ROW]), "api/worker-profile": PROFILE })}
+        tailFetch={tail.tailFetch}
+      />,
+    );
+    await waitFor(() => {
+      expect(document.querySelector(".cf-profile")).toBeTruthy();
+    });
+    fireEvent.click(tailButton("Start tail") as HTMLButtonElement);
+    await waitFor(() => {
+      expect(tailButton("Stop tail")).toBeTruthy();
+    });
+    fireEvent.click(tailButton("Stop tail") as HTMLButtonElement);
+    // The fetch's abort signal fired; the UI is back to the idle affordance.
+    expect(tail.signal()?.aborted).toBe(true);
+    expect(tailButton("Start tail")).toBeTruthy();
+    expect(document.querySelector(".cf-tail-note")?.textContent).toContain("Stopped");
+  });
+});
 
 describe("WorkerProfileView worker-profile expansion", () => {
   it("renders the four configuration sections with a binding row and a version row", async () => {
