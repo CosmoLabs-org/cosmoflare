@@ -236,6 +236,25 @@
    "notes": "1 per second."
   },
   {
+   "id": "kv.requests_monthly",
+   "service": "kv",
+   "kind": "quota",
+   "unit": "ops_per_month",
+   "name": "Monthly KV operations (combined)",
+   "scope": "account",
+   "tiers": {
+    "free": null,
+    "paid": null,
+    "enterprise": null
+   },
+   "trackable": true,
+   "enforceability": "opaque",
+   "soft": true,
+   "source_url": "https://developers.cloudflare.com/kv/platform/limits/",
+   "verified_on": "2026-10-14T18:20:00Z",
+   "notes": "No monthly cap in any tier — paid KV is billed per operation (reads and writes at different rates), free is daily (100k reads / 1k writes per day). The kvOperationsAdaptiveGroups dataset exposes only a COMBINED request count, so no included-allowance comparison is possible without inventing a number; the row shows the measured total with limit unknown."
+  },
+  {
    "id": "kv.reads_daily",
    "service": "kv",
    "kind": "quota",

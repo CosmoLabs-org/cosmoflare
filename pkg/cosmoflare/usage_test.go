@@ -34,6 +34,10 @@ func usageMockServer(t *testing.T) *httptest.Server {
 		`{"sum":{"rowsRead":1000000000,"rowsWritten":0,"readQueries":10},"dimensions":{"databaseId":"db-a"}},` +
 		`{"sum":{"rowsRead":500000000,"rowsWritten":0,"readQueries":5},"dimensions":{"databaseId":"db-b"}}` +
 		`]}]}}}`
+	kvResp := `{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[` +
+		`{"sum":{"requests":24100},"dimensions":{"namespaceId":"ns-a"}},` +
+		`{"sum":{"requests":2500},"dimensions":{"namespaceId":"ns-b"}}` +
+		`]}]}}}`
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		q := string(body)
@@ -43,6 +47,8 @@ func usageMockServer(t *testing.T) *httptest.Server {
 			w.Write([]byte(workersResp))
 		case strings.Contains(q, "durableObjectsInvocationsAdaptiveGroups"):
 			w.Write([]byte(doResp))
+		case strings.Contains(q, "kvOperationsAdaptiveGroups"):
+			w.Write([]byte(kvResp))
 		case strings.Contains(q, "GetObject") || strings.Contains(q, "actionType"):
 			w.Write([]byte(opsResp))
 		case strings.Contains(q, "d1AnalyticsAdaptiveGroups"):
@@ -119,6 +125,12 @@ func TestCollectUsage(t *testing.T) {
 	approx(t, wr.Limit, 10000000, "workers requests limit")
 	approx(t, wr.Pct, 80, "workers requests pct")
 	approx(t, wr.ProjectedPct, 80*31.0/15.0, "workers requests projected")
+
+	kv := usageDim(snap, "kv.requests_monthly")
+	approx(t, kv.Used, 26600, "kv operations used")
+	if kv.Limit != 0 {
+		t.Errorf("kv limit = %v, want 0 (unknown — paid KV is billed per op, no monthly cap)", kv.Limit)
+	}
 
 	wc := usageDim(snap, "workers.cpu_ms_monthly")
 	approx(t, wc.Used, 20000000, "cpu ms used")

@@ -133,6 +133,14 @@ func CollectUsage(ctx context.Context, analytics *AnalyticsService, plan string,
 		d1Rows += r.RowsRead
 	}
 
+	// KV ops (FEAT-069): same additive rule as D1 — a KV analytics failure
+	// omits the row, never the snapshot.
+	var kvOps uint64
+	kvRows, kvErr := analytics.KVOperations(ctx, cycleWin)
+	for _, r := range kvRows {
+		kvOps += r.Requests
+	}
+
 	var reqs, cpuMS uint64
 	for _, s := range scripts {
 		reqs += s.Requests
@@ -171,6 +179,9 @@ func CollectUsage(ctx context.Context, analytics *AnalyticsService, plan string,
 	}
 	if d1Err == nil {
 		used["d1.rows_read_monthly"] = float64(d1Rows)
+	}
+	if kvErr == nil {
+		used["kv.requests_monthly"] = float64(kvOps)
 	}
 
 	ids := make([]string, 0, len(used))
