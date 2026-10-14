@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4GW3CJ19QVNB9WPYQPRK
+id: IDEA-078
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: cosmolabs.org/cosmoflare product page
 created: "2026-09-13T06:56:54.659561+04:00"
 status: harvested

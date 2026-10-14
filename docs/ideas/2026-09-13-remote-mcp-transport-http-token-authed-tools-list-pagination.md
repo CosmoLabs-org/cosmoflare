@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4CWXAM3CFRBGS7A1YQFC
+id: IDEA-076
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Remote MCP transport (HTTP, token-authed) + tools/list pagination
 created: "2026-09-13T06:56:50.589173+04:00"
 status: withered

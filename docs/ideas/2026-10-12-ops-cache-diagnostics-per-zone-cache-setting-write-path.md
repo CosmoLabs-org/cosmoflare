@@ -1,5 +1,7 @@
 ---
 ulid: 01M4PR0F7XVYQ3J6ZFB3AWVJHK
+id: IDEA-092
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Ops cache diagnostics per zone + cache-setting write path
 created: "2026-10-12T04:25:41.373881+04:00"
 status: harvested

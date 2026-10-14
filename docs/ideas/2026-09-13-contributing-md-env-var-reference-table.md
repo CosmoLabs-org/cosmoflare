@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4MPDVCN4A60MVRFQZ7NF
+id: IDEA-080
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: CONTRIBUTING.md + env-var reference table
 created: "2026-09-13T06:56:58.573748+04:00"
 status: withered

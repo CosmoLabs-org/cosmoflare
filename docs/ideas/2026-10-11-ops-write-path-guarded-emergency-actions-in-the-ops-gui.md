@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M4NSW2MV1QMYQQ6JCRWMKE
+id: IDEA-087
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'Ops write-path: guarded emergency actions in the Ops GUI'
 created: "2026-10-11T04:09:20.002271+04:00"
 status: harvested

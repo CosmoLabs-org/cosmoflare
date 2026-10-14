@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4RVRQ30FK45PT3HV57J6
+id: IDEA-082
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Notification severity system + light theme (desktop)
 created: "2026-09-13T06:57:02.840136+04:00"
 status: withered

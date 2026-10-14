@@ -1,5 +1,7 @@
 ---
 ulid: 01M4V3PVHWKZ2T7ZMS4YZ9Q6WR
+id: IDEA-094
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Liquid glass tab navigation pill for Ops PWA + CosmoKit glass-surface module
 created: "2026-10-13T21:07:06.940326+04:00"
 status: harvested

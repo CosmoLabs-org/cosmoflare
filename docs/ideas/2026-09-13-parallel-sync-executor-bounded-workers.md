@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB40KC4WT58346HX7JFFX6
+id: IDEA-070
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Parallel sync executor (bounded workers)
 created: "2026-09-13T06:56:37.996488+04:00"
 status: withered

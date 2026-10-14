@@ -1,5 +1,7 @@
 ---
 ulid: 01M4E2BEHWYPCBNGJKZPDN5VXR
+id: IDEA-084
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Baseline anomaly detection for Workers/DO usage (model B)
 created: "2026-10-08T19:33:16.988086+04:00"
 status: harvested

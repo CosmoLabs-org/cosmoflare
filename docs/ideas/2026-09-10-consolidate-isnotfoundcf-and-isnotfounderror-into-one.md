@@ -1,5 +1,7 @@
 ---
 ulid: 01M25W8AFZB4493Q9063MGMDH4
+id: IDEA-060
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Consolidate isNotFoundCF and isNotFoundError into one structured detector
 created: "2026-09-10T18:41:23.967639+04:00"
 status: withered

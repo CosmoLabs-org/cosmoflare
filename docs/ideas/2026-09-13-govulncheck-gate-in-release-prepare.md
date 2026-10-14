@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB46XQ33M11PCNQ6FCJZS2
+id: IDEA-073
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: govulncheck gate in release-prepare
 created: "2026-09-13T06:56:44.471747+04:00"
 status: withered

@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M3ZKZDTFEDT80PHRJNC5DY
+id: IDEA-086
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: In-app permissions guide — Ops tells the operator exactly what access it's missing and how to grant it
 created: "2026-10-11T03:57:13.069474+04:00"
 status: harvested

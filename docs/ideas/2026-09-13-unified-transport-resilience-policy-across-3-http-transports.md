@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB44PXQFVMSJD8586FR211
+id: IDEA-072
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Unified transport resilience policy across 3 HTTP transports
 created: "2026-09-13T06:56:42.205417+04:00"
 status: withered

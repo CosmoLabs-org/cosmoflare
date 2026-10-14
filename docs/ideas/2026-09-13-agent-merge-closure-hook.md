@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4TY5X70VPN5KPZS8012K
+id: IDEA-083
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Agent-merge closure hook
 created: "2026-09-13T06:57:04.965901+04:00"
 status: withered

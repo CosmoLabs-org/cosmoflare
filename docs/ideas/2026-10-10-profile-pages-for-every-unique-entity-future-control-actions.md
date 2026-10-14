@@ -1,5 +1,7 @@
 ---
 ulid: 01M4KFCD5TRA6F9Z541W88YTCH
+id: IDEA-085
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Profile pages for every unique entity + future control actions
 created: "2026-10-10T21:57:11.99457+04:00"
 status: harvested

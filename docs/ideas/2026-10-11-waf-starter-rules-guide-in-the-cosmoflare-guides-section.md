@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M5Y0RK3B5G9A3A3W098734
+id: IDEA-090
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: WAF starter-rules guide in the Cosmoflare guides section
 created: "2026-10-11T04:31:17.779115+04:00"
 status: harvested

@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB3W6DSRSX0K9R16JQ74WW
+id: IDEA-068
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Output presenter interface to collapse 618 JSONOutput branches
 created: "2026-09-13T06:56:33.485218+04:00"
 status: withered

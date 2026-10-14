@@ -1,5 +1,7 @@
 ---
 ulid: 01M26JE08JAF29DTECA5DZPBME
+id: IDEA-061
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'R2: bucket policy get/set + expose library multipart as CLI verbs'
 created: "2026-09-11T01:08:58.770118+04:00"
 status: withered

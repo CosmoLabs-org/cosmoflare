@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB48TT411HK9Q0EQ1TRDA4
+id: IDEA-074
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Homebrew tap + Scoop/winget manifests
 created: "2026-09-13T06:56:46.427012+04:00"
 status: withered

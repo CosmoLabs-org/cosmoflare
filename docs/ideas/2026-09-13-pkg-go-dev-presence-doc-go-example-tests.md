@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4JR5YDFRMYR6XHC799MD
+id: IDEA-079
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'pkg.go.dev presence: doc.go + example tests'
 created: "2026-09-13T06:56:56.581144+04:00"
 status: withered

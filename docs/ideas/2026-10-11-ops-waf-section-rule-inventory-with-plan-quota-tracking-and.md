@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M5XZPKRWTMGNS7Q2KN1A2F
+id: IDEA-089
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'Ops WAF section: rule inventory with plan-quota tracking and over-limit warnings'
 created: "2026-10-11T04:31:16.691323+04:00"
 status: withered

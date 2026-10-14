@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB42GA2Z0NKQCBJK8G86GZ
+id: IDEA-071
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Typed daemon wire contract + TS codegen
 created: "2026-09-13T06:56:39.946418+04:00"
 status: withered

@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4PMD5883M5EQ0ZQZPEQS
+id: IDEA-081
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: SSE announcement bus (WCAG 4.1.3)
 created: "2026-09-13T06:57:00.55725+04:00"
 status: withered

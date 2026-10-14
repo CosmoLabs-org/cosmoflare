@@ -1,5 +1,7 @@
 ---
 ulid: 01M26TFKXVCZ40ZJVYC61FFH2H
+id: IDEA-066
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'Auth modernization: token retrieval command + device-flow login'
 created: "2026-09-11T03:29:40.283637+04:00"
 status: withered

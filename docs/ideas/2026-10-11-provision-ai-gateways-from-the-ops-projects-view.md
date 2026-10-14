@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M4P1SG7CYQTA3FK5AAQTRX
+id: IDEA-088
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Provision AI Gateways from the Ops Projects view
 created: "2026-10-11T04:09:28.112089+04:00"
 status: harvested

@@ -1,5 +1,7 @@
 ---
 ulid: 01M29B9C4H5P8A7DFASH7C81CX
+id: IDEA-067
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: R2 manual multipart CLI verbs (create/upload-part/complete/abort/list-parts)
 created: "2026-09-12T03:01:50.353254+04:00"
 status: withered

@@ -1,5 +1,7 @@
 ---
 ulid: 01M4QX4BT11TXMQEYCNEVYMX43
+id: IDEA-093
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'Multi-user auth: connect your Cloudflare account + biometric app lock'
 created: "2026-10-12T15:14:26.241534+04:00"
 status: seed

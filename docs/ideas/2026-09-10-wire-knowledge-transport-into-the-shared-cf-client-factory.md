@@ -1,5 +1,7 @@
 ---
 ulid: 01M25W87Z6A8QTFXE9ZQFQQZ1A
+id: IDEA-059
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Wire knowledge.Transport into the shared CF client factory
 created: "2026-09-10T18:41:21.382929+04:00"
 status: withered

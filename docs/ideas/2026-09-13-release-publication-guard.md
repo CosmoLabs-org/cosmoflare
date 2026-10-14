@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4AVCXEWJCWKEDMJVR7KF
+id: IDEA-075
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Release publication guard
 created: "2026-09-13T06:56:48.492056+04:00"
 status: withered

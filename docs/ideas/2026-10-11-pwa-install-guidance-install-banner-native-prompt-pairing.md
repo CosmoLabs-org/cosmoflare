@@ -1,5 +1,7 @@
 ---
 ulid: 01M4M6QQT5P5KYGPMHM3QNFTQW
+id: IDEA-091
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: 'PWA install guidance: install banner, native prompt, pairing-as-funnel'
 created: "2026-10-11T04:45:20.58184+04:00"
 status: harvested

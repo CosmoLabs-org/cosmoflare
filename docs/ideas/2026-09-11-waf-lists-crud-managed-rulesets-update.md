@@ -1,5 +1,7 @@
 ---
 ulid: 01M26JE2S9JF2CMKZS767APAF3
+id: IDEA-062
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: WAF lists CRUD + managed-rulesets update
 created: "2026-09-11T01:09:01.353073+04:00"
 status: withered

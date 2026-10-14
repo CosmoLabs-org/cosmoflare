@@ -1,5 +1,7 @@
 ---
 ulid: 01M2CB4ETV38DCVNZ4HTKK97A3
+id: IDEA-077
+id_assigned_at: 2026-10-14T20:11:32.626364+04:00
 title: Opt-in env-gated update check
 created: "2026-09-13T06:56:52.571915+04:00"
 status: withered
