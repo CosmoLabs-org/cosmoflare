@@ -2448,8 +2448,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     z-index: -1;
     border-radius: inherit;
     background: rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(28px) saturate(170%) brightness(1.03);
-    -webkit-backdrop-filter: blur(28px) saturate(170%) brightness(1.03);
+    backdrop-filter: blur(22px) saturate(170%) brightness(1.03);
+    -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(1.03);
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),

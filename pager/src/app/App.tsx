@@ -366,40 +366,50 @@ function BottomTabs({
     if (!navRef.current || !LiquidGlass.isSupported()) return;
     const glass = new LiquidGlass(navRef.current, {
       shape: "auto",
-      // Glass balance (operator 2026-10-14, two-step calibration: "too
-      // opaque" then "too clear"): frost heavy enough that content behind
-      // reads as blurred color, not detail — Apple's material frosts.
+      // Glass balance (operator 2026-10-14, round six — "distortion too
+      // mild"): frost was EATING the refraction — you cannot see content
+      // bend if it is already blurred to mush. Frost drops so detail
+      // survives to be distorted; the bend strengthens toward the shader's
+      // ceiling. The tint carries the glass identity now, not the blur.
       tint: 0.2,
       tintTone: "dark",
-      frost: 0.38,
-      // The droplet lens (operator 2026-10-14, round five): the edge bands
-      // widen until they own the pill's full height — distortion climbs
-      // from BOTH rims toward the center (the distance field is symmetric),
-      // and the body bends harder so text behind never survives legible.
-      material: { refraction: 155, edgeReach: 0.9, dispersion: 3.0 },
+      frost: 0.22,
+      material: { refraction: 185, edgeReach: 1.1, dispersion: 3.6 },
       fallback: "none",
       maxDpr: 2,
       respectReducedTransparency: true,
     });
     // The backdrop is a DOM capture — iOS lets it go stale (the "burned
-    // image" from an earlier scroll). Re-capture when scrolling SETTLES,
-    // never mid-scroll: repainting the canvas every scroll frame is the
-    // WebKit compositing churn that breaks position:fixed tracking in
-    // home-screen PWAs (the 2026-10-12 drift class — the pill ended up
-    // stuck in page flow). Settled refresh keeps the backdrop honest
-    // without touching fixed positioning.
+    // image"). Two refresh paths, neither mid-scroll (per-frame canvas
+    // repaint is the WebKit fixed-tracking breaker, 2026-10-12 class):
+    // 1. scroll events settle-debounced at 140ms;
+    // 2. a position watch — iOS fires NO scroll event when the page snaps
+    //    back from an overscroll rubber-band (operator 2026-10-14: the pill
+    //    burnt at the last frame after pulling past the top/bottom), so a
+    //    500ms integer compare catches every settle the events miss. At
+    //    rest it is one number compare; it only refreshes when the page
+    //    actually moved.
     let settle = 0;
+    let lastY = window.scrollY;
+    const doRefresh = (): void => {
+      glass.refresh();
+      lastY = window.scrollY;
+    };
     const refreshSettled = (): void => {
       window.clearTimeout(settle);
-      settle = window.setTimeout(() => glass.refresh(), 140);
+      settle = window.setTimeout(doRefresh, 140);
     };
     const refreshIfVisible = (): void => {
-      if (document.visibilityState === "visible") glass.refresh();
+      if (document.visibilityState === "visible") doRefresh();
     };
+    const watch = window.setInterval((): void => {
+      if (window.scrollY !== lastY) doRefresh();
+    }, 500);
     window.addEventListener("scroll", refreshSettled, { passive: true });
     document.addEventListener("visibilitychange", refreshIfVisible);
     return () => {
       window.clearTimeout(settle);
+      window.clearInterval(watch);
       window.removeEventListener("scroll", refreshSettled);
       document.removeEventListener("visibilitychange", refreshIfVisible);
       glass.destroy();
