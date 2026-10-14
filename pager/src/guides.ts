@@ -13,6 +13,11 @@ import { COMPUTE_GUIDES } from "./guides-compute";
 import { STORAGE_GUIDES } from "./guides-storage";
 import { NETWORK_GUIDES } from "./guides-network";
 import { SECURITY_GUIDES } from "./guides-security";
+import { PAGES_GUIDES } from "./guides-pages";
+import { MEDIA_GUIDES } from "./guides-media";
+import { TRAFFIC_GUIDES } from "./guides-traffic";
+import { OBSERVABILITY_GUIDES } from "./guides-observability";
+import { PLATFORM_GUIDES } from "./guides-platform";
 
 /** One block of article body prose. Paragraphs, sub-headings and bullet
  *  lists carry text; kv rows carry a term + desc pair rendered with the
@@ -107,4 +112,9 @@ export const GUIDES: readonly Guide[] = [
   ...STORAGE_GUIDES,
   ...NETWORK_GUIDES,
   ...SECURITY_GUIDES,
+  ...PAGES_GUIDES,
+  ...MEDIA_GUIDES,
+  ...TRAFFIC_GUIDES,
+  ...OBSERVABILITY_GUIDES,
+  ...PLATFORM_GUIDES,
 ];
