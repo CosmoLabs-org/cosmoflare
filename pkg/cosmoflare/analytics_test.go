@@ -316,13 +316,14 @@ func TestAnalyticsDurableObjects(t *testing.T) {
 
 // TestAnalyticsKVOperations verifies that KVOperations POSTs one batched
 // GraphQL query against kvOperationsAdaptiveGroups and flattens per-namespace
-// reads/writes sums.
+// request sums (the live schema exposes only dimensions.namespaceId +
+// sum.requests — verified 2026-10-14).
 func TestAnalyticsKVOperations(t *testing.T) {
 	t.Parallel()
 	var cap analyticsCapture
 	resp := `{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[` +
-		`{"dims":{"namespaceID":"ns-live"},"sum":{"reads":24100,"writes":2500}},` +
-		`{"dims":{"namespaceID":"ns-dead"},"sum":{"reads":0,"writes":0}}]}]}}}`
+		`{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":26600}},` +
+		`{"dimensions":{"namespaceId":"ns-dead"},"sum":{"requests":0}}]}]}}}`
 	srv := analyticsServer(t, resp, &cap)
 	defer srv.Close()
 
@@ -334,11 +335,14 @@ func TestAnalyticsKVOperations(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("got %d rows, want 2: %+v", len(got), got)
 	}
-	if got[0].NamespaceID != "ns-live" || got[0].Reads != 24100 || got[1].Writes != 0 {
+	if got[0].NamespaceID != "ns-live" || got[0].Requests != 26600 || got[1].Requests != 0 {
 		t.Fatalf("rows = %+v", got)
 	}
 	if !strings.Contains(cap.Body, "kvOperationsAdaptiveGroups") {
 		t.Errorf("query misses kvOperationsAdaptiveGroups: %s", cap.Body)
+	}
+	if !strings.Contains(cap.Body, "namespaceId") {
+		t.Errorf("query misses namespaceId dimension: %s", cap.Body)
 	}
 }
 

@@ -139,7 +139,7 @@ func (s *EfficiencyService) Report(ctx context.Context, w AnalyticsWindow) (*Eff
 		}
 		byNS := map[string]uint64{}
 		for _, op := range ops {
-			byNS[op.NamespaceID] = op.Reads + op.Writes
+			byNS[op.NamespaceID] = op.Requests
 		}
 		rep.KVNamespacesChecked = len(namespaces)
 		for _, ns := range namespaces {
@@ -148,7 +148,7 @@ func (s *EfficiencyService) Report(ctx context.Context, w AnalyticsWindow) (*Eff
 					Resource: "kv:" + ns.ID,
 					Check:    "dead-kv-namespace",
 					Severity: "warning",
-					Evidence: fmt.Sprintf("0 reads, 0 writes between %s and %s", w.Start.Format("2006-01-02"), w.End.Format("2006-01-02")),
+					Evidence: fmt.Sprintf("0 KV operations between %s and %s", w.Start.Format("2006-01-02"), w.End.Format("2006-01-02")),
 					Fix:      fmt.Sprintf("export anything worth keeping, then delete it (cosmoflare kv namespace delete %s) — keys survive until deleted", ns.ID),
 				})
 				continue

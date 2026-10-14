@@ -505,15 +505,17 @@ func (s *AnalyticsService) DurableObjects(ctx context.Context, w AnalyticsWindow
 }
 
 // KVOperationsSummary is KV traffic for one namespace over a window.
+// Requests is the dataset's total-operations sum — the API exposes no
+// reads/writes split on kvOperationsAdaptiveGroups (verified live
+// 2026-10-14: only dimensions.namespaceId + sum.requests exist).
 type KVOperationsSummary struct {
 	NamespaceID string `json:"namespace_id"`
-	Reads       uint64 `json:"reads"`
-	Writes      uint64 `json:"writes"`
+	Requests    uint64 `json:"requests"`
 }
 
-// KVOperations returns per-namespace KV reads/writes for the window, one
-// batched query. Namespaces with no traffic may be absent — absence means
-// zero, callers must not treat it as an error.
+// KVOperations returns per-namespace KV operation counts for the window,
+// one batched query. Namespaces with no traffic may be absent — absence
+// means zero, callers must not treat it as an error.
 func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) ([]KVOperationsSummary, error) {
 	const op = "AnalyticsKVOperations"
 	if err := s.validateAccount(op); err != nil {
@@ -526,8 +528,8 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
   viewer {
     accounts(filter: {accountTag: $accountTag}) {
       kvOperationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_leq: $end}) {
-        dims { namespaceID }
-        sum { reads writes }
+        dimensions { namespaceId }
+        sum { requests }
       }
     }
   }
@@ -536,12 +538,11 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
 		Viewer struct {
 			Accounts []struct {
 				KVOperationsAdaptiveGroups []struct {
-					Dim struct {
-						NamespaceID string `json:"namespaceID"`
-					} `json:"dims"`
+					Dimensions struct {
+						NamespaceId string `json:"namespaceId"`
+					} `json:"dimensions"`
 					Sum struct {
-						Reads  uint64 `json:"reads"`
-						Writes uint64 `json:"writes"`
+						Requests uint64 `json:"requests"`
 					} `json:"sum"`
 				} `json:"kvOperationsAdaptiveGroups"`
 			} `json:"accounts"`
@@ -554,9 +555,8 @@ func (s *AnalyticsService) KVOperations(ctx context.Context, w AnalyticsWindow) 
 	for _, a := range out.Viewer.Accounts {
 		for _, g := range a.KVOperationsAdaptiveGroups {
 			rows = append(rows, KVOperationsSummary{
-				NamespaceID: g.Dim.NamespaceID,
-				Reads:       g.Sum.Reads,
-				Writes:      g.Sum.Writes,
+				NamespaceID: g.Dimensions.NamespaceId,
+				Requests:    g.Sum.Requests,
 			})
 		}
 	}

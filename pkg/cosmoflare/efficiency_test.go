@@ -86,12 +86,12 @@ func TestEfficiencyIdleWorkers(t *testing.T) {
 }
 
 func TestEfficiencyDeadKVNamespaces(t *testing.T) {
-	// ns-live has reads; ns-dead returns zeros; ns-absent never appears.
+	// ns-live has traffic; ns-dead returns zeros; ns-absent never appears.
 	m := newEffMock(t, []any{},
 		[]any{map[string]any{"id": "ns-live", "title": "live"}, map[string]any{"id": "ns-dead", "title": "dead"}, map[string]any{"id": "ns-absent", "title": "absent"}},
 		`{"data":{"viewer":{"accounts":[{"kvOperationsAdaptiveGroups":[`+
-			`{"dims":{"namespaceID":"ns-live"},"sum":{"reads":100,"writes":5}},`+
-			`{"dims":{"namespaceID":"ns-dead"},"sum":{"reads":0,"writes":0}}]}]}}}`,
+			`{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":105}},`+
+			`{"dimensions":{"namespaceId":"ns-dead"},"sum":{"requests":0}}]}]}}}`,
 	)
 	rep, err := m.svc.Report(context.Background(), effWindow())
 	if err != nil {
@@ -157,7 +157,7 @@ func TestEfficiencyCleanAccount(t *testing.T) {
 		[]any{map[string]any{"id": "ns-live", "title": "live"}},
 		`{"data":{"viewer":{"accounts":[{"workersInvocationsAdaptive":[`+
 			`{"sum":{"requests":10,"errors":0,"subrequests":0},"dimensions":{"scriptName":"busy"}}],`+
-			`"kvOperationsAdaptiveGroups":[{"dims":{"namespaceID":"ns-live"},"sum":{"reads":1,"writes":1}}]}]}}}`,
+			`"kvOperationsAdaptiveGroups":[{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":2}}]}]}}}`,
 	)
 	rep, err := m.svc.Report(context.Background(), effWindow())
 	if err != nil {
