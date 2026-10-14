@@ -1,12 +1,14 @@
 ---
 title: "Session 2040 Continuation — full design review + finish what we started"
 created: 2026-10-13T00:30:00+04:00
-status: PENDING
+status: SUPERSEDED
 branch: master
 goals_total: 10
-goals_completed: 0
+goals_completed: 8
 supersedes: "docs/prompts/2026-10-12-session-2037-continuation.md"
 schema_version: 1
+superseded_by: "docs/prompts/2026-10-14-cli-pivot-audit-efficiency.md"
+completed: "2026-10-14T13:06:18+04:00"
 ---
 
 ## Context
@@ -20,31 +22,31 @@ State at handoff:
 
 ## Goals
 
-### [ ] G-01 Land the stopped period-dial work
+### [x] G-01 Land the stopped period-dial work
 Review the three uncommitted files above; gates (pager vitest + tsc + build + impeccable detect 0); commit; deploy; have the operator close-reopen and confirm.
 
-### [ ] G-02 FULL design review pass (the operator's headline ask)
+### [x] G-02 FULL design review pass (the operator's headline ask)
 Every view, not just Billing: placement, layout, hierarchy, spacing, states, copy. Load the impeccable skill, read the critique snapshot, fix its open items AND find new ones on a fresh pass. Explicitly address the shortcomings the operator named but never got fully: view-intro description lines styling (only margins were fixed — they also asked for a better font there), billing card composition, Overview KPI row balance.
 
-### [ ] G-03 Drawer keyboard hardening (critique P1)
+### [x] G-03 Drawer keyboard hardening (critique P1)
 Escape closes the drawer; focus moves in on open and restores on close (UpdateModal already does this — mirror it).
 
-### [ ] G-04 Distill + typeset (critique P2)
+### [x] G-04 Distill + typeset (critique P2)
 Drop the billing-day KPI tile on Overview (status bar already carries it; KPI row drops to 4, fixing the chunking failure). Lever labels off 10px (≥11px); armed-state text must not reflow narrow rows (min-width or fixed label slot).
 
-### [ ] G-05 Theme wave 2 (FEAT-080 continues + FEAT-046)
+### [x] G-05 Theme wave 2 (FEAT-080 continues + FEAT-046)
 Micro-animations and shader-adjacent polish within house rules (severity-gated glows, reduced-motion safe, detector 0). One authored moment per screen, not scattered effects.
 
-### [ ] G-06 Workers profile expansion
+### [x] G-06 Workers profile expansion
 The profile exists but is shallow: add bindings, triggers, routes, deploy versions; live tail is the stretch. Follow DomainProfile's section patterns; real numbers only.
 
 ### [ ] G-07 On-device acceptance round
 Have the operator confirm: sticky tab bar under scroll (iOS backdrop-filter fix), mobile purge lever + worker drill-in, update modal on open, billing 24/30 dial + $5.00 cost lockup.
 
-### [ ] G-08 Critique minor items
+### [x] G-08 Critique minor items
 timeAgo goes stale on long-lived screens (needs a tick); card h2 hierarchy (12px uppercase muted vs masthead); RulesView draft Delete needs the arm/confirm convention.
 
-### [ ] G-09 Gate + merge the two in-flight quick-win agents
+### [x] G-09 Gate + merge the two in-flight quick-win agents
 Dispatched at session close (2026-10-13, not yet returned): one CSS craft agent (description-line font, lever label legibility, card heading weight) and one TSX agent (AlertsView 60s time-ago tick + RulesView two-step draft delete). Find them via `ccs glm-agent status` (the two newest, running/done), review each diff, re-run pager gates in the worktrees, S334-gate, and `ccs merge` both.
 
 ### [ ] G-10 Cron push from the Worker — finish delivery to the iPhone (carried from P-2026-10-09-cf-cli-review G-06)
