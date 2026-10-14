@@ -9,6 +9,7 @@ export const CACHE_GUIDES: readonly Guide[] = [
     id: "edge-cache-explained",
     title: "How the edge cache works",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cache/",
     body: [
       {
         kind: "p",
@@ -57,6 +58,7 @@ export const CACHE_GUIDES: readonly Guide[] = [
     id: "html-cache-trap",
     title: "Why s-maxage on HTML does nothing by default",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cache/concepts/cache-control/",
     body: [
       {
         kind: "p",
@@ -93,6 +95,7 @@ export const CACHE_GUIDES: readonly Guide[] = [
     id: "cache-control-layers",
     title: "Cache-Control and TTLs: which layer wins",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cache/concepts/cache-control/",
     body: [
       {
         kind: "p",
@@ -127,6 +130,7 @@ export const CACHE_GUIDES: readonly Guide[] = [
     id: "cache-rules-vs-headers",
     title: "Cache Rules vs origin headers",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cache/how-to/cache-rules/",
     body: [
       {
         kind: "p",
@@ -163,6 +167,7 @@ export const CACHE_GUIDES: readonly Guide[] = [
     id: "hit-rate-cost-lever",
     title: "Hit rate is a cost lever",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cache/performance/",
     body: [
       {
         kind: "p",

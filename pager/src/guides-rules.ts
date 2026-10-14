@@ -11,6 +11,7 @@ export const RULES_GUIDES: readonly Guide[] = [
     id: "rules-families",
     title: "Rules at Cloudflare: every family in one table",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/rules/",
     body: [
       {
         kind: "p",
@@ -52,6 +53,7 @@ export const RULES_GUIDES: readonly Guide[] = [
     id: "page-rules-vs-redirect-rules",
     title: "Page Rules vs Redirect Rules: which to use",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/rules/url-forwarding/",
     body: [
       {
         kind: "p",
@@ -87,6 +89,7 @@ export const RULES_GUIDES: readonly Guide[] = [
     id: "rate-limiting-rules",
     title: "Rate limiting rules: the first lines of defense",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/waf/rate-limiting-rules/",
     body: [
       {
         kind: "p",
@@ -120,6 +123,7 @@ export const RULES_GUIDES: readonly Guide[] = [
     id: "rules-expression-language",
     title: "The rules expression language in five minutes",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/ruleset-engine/rules-language/",
     body: [
       {
         kind: "p",
@@ -166,6 +170,7 @@ export const RULES_GUIDES: readonly Guide[] = [
     id: "snippets-and-transform",
     title: "Snippets and Transform Rules: small code, no Worker",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/rules/snippets/",
     body: [
       {
         kind: "p",

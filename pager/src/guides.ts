@@ -24,12 +24,15 @@ export type GuideBlock =
   | { kind: "kv"; term: string; desc: string }
   | { kind: "table"; head: string[]; rows: string[][] };
 
-/** One guide article. `id` is the hash-route target (#/guides/<id>). */
+/** One guide article. `id` is the hash-route target (#/guides/<id>);
+ *  `source`, when present, is the canonical Cloudflare docs page the
+ *  article draws on. */
 export interface Guide {
   id: string;
   title: string;
   updated: string;
   body: GuideBlock[];
+  source?: string;
 }
 
 /** The grant path, referenced twice in article 1 — one constant so it

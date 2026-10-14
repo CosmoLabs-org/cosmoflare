@@ -12,6 +12,7 @@ export const COMPUTE_GUIDES: readonly Guide[] = [
     id: "workers-model",
     title: "Workers: the execution model",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/workers/",
     body: [
       {
         kind: "p",
@@ -70,6 +71,7 @@ export const COMPUTE_GUIDES: readonly Guide[] = [
     id: "durable-objects",
     title: "Durable Objects: state with one owner",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/durable-objects/",
     body: [
       {
         kind: "p",
@@ -117,6 +119,7 @@ export const COMPUTE_GUIDES: readonly Guide[] = [
     id: "queues",
     title: "Queues: moving work off the request path",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/queues/",
     body: [
       {
         kind: "p",
@@ -157,6 +160,7 @@ export const COMPUTE_GUIDES: readonly Guide[] = [
     id: "workers-ai-gateway",
     title: "Workers AI and AI Gateway",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/ai-gateway/",
     body: [
       {
         kind: "p",
@@ -194,6 +198,7 @@ export const COMPUTE_GUIDES: readonly Guide[] = [
     id: "cron-triggers",
     title: "Cron Triggers",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/workers/configuration/cron-triggers/",
     body: [
       {
         kind: "p",

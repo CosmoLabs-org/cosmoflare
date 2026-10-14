@@ -28,16 +28,18 @@ function Block({ block }: { block: GuideBlock }): React.JSX.Element {
   if (block.kind === "kv") return <KvRow term={block.term} desc={block.desc} />;
   if (block.kind === "table") {
     return (
-      <table className="cf-guide-table">
-        <thead>
-          <tr>{block.head.map((h, i) => <th key={i}>{h}</th>)}</tr>
-        </thead>
-        <tbody>
-          {block.rows.map((row, r) => (
-            <tr key={r}>{row.map((cell, c) => <td key={c}>{cell}</td>)}</tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="cf-guide-table-wrap">
+        <table className="cf-guide-table">
+          <thead>
+            <tr>{block.head.map((h, i) => <th key={i}>{h}</th>)}</tr>
+          </thead>
+          <tbody>
+            {block.rows.map((row, r) => (
+              <tr key={r}>{row.map((cell, c) => <td key={c}>{cell}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
   if (block.kind === "list") {
@@ -70,6 +72,11 @@ function GuideArticle({ guide }: { guide: Guide }): React.JSX.Element {
           <Block key={i} block={block} />
         ))}
       </div>
+      {guide.source ? (
+        <a className="cf-link" href={guide.source} target="_blank" rel="noreferrer">
+          Source: Cloudflare docs →
+        </a>
+      ) : null}
     </section>
   );
 }

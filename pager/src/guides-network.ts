@@ -10,6 +10,7 @@ export const NETWORK_GUIDES: readonly Guide[] = [
     id: "proxied-vs-dns-only",
     title: "Proxied vs DNS-only: the orange cloud",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/",
     body: [
       {
         kind: "p",
@@ -58,6 +59,7 @@ export const NETWORK_GUIDES: readonly Guide[] = [
     id: "dns-record-types",
     title: "DNS record types you actually use",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/dns/manage-dns-records/reference/dns-record-types/",
     body: [
       {
         kind: "p",
@@ -101,6 +103,7 @@ export const NETWORK_GUIDES: readonly Guide[] = [
     id: "ssl-tls-modes",
     title: "SSL/TLS modes and what each guarantees",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/ssl/",
     body: [
       {
         kind: "p",
@@ -145,6 +148,7 @@ export const NETWORK_GUIDES: readonly Guide[] = [
     id: "custom-hostnames",
     title: "Custom hostnames: SaaS on your zone",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/",
     body: [
       {
         kind: "p",
@@ -178,6 +182,7 @@ export const NETWORK_GUIDES: readonly Guide[] = [
     id: "registrar-basics",
     title: "Registrar and transfer locks",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/registrar/",
     body: [
       {
         kind: "p",

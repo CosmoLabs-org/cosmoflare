@@ -10,6 +10,7 @@ export const SECURITY_GUIDES: readonly Guide[] = [
     id: "waf-managed-vs-custom",
     title: "WAF: managed rules vs custom rules",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/waf/",
     body: [
       {
         kind: "p",
@@ -58,6 +59,7 @@ export const SECURITY_GUIDES: readonly Guide[] = [
     id: "challenge-actions",
     title: "Block, challenge, log: choosing the action",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/waf/",
     body: [
       {
         kind: "p",
@@ -122,6 +124,7 @@ export const SECURITY_GUIDES: readonly Guide[] = [
     id: "zero-trust-quickstart",
     title: "Zero Trust in ten minutes: Access and Tunnels",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/cloudflare-one/",
     body: [
       {
         kind: "p",
@@ -169,6 +172,7 @@ export const SECURITY_GUIDES: readonly Guide[] = [
     id: "email-routing",
     title: "Email Routing",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/email-routing/",
     body: [
       {
         kind: "p",
@@ -210,6 +214,7 @@ export const SECURITY_GUIDES: readonly Guide[] = [
     id: "api-token-hygiene",
     title: "API tokens: scopes, least privilege, rotation",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/fundamentals/api/",
     body: [
       {
         kind: "p",

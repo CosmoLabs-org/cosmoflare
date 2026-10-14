@@ -10,6 +10,7 @@ export const STORAGE_GUIDES: readonly Guide[] = [
     id: "kv-essentials",
     title: "Workers KV: what it is good for",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/kv/",
     body: [
       {
         kind: "p",
@@ -52,6 +53,7 @@ export const STORAGE_GUIDES: readonly Guide[] = [
     id: "r2-essentials",
     title: "R2: storage without egress fees",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/r2/",
     body: [
       {
         kind: "p",
@@ -96,6 +98,7 @@ export const STORAGE_GUIDES: readonly Guide[] = [
     id: "d1-economics",
     title: "D1: rows read is the meter",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/d1/platform/pricing/",
     body: [
       {
         kind: "p",
@@ -137,6 +140,7 @@ export const STORAGE_GUIDES: readonly Guide[] = [
     id: "vectorize-hyperdrive",
     title: "Vectorize and Hyperdrive",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/vectorize/",
     body: [
       {
         kind: "p",
@@ -166,6 +170,7 @@ export const STORAGE_GUIDES: readonly Guide[] = [
     id: "choosing-storage",
     title: "Choosing between KV, R2 and D1",
     updated: "2026-10-14",
+    source: "https://developers.cloudflare.com/workers/platform/bindings/",
     body: [
       {
         kind: "p",
