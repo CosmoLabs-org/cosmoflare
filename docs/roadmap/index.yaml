@@ -1,8 +1,12 @@
 version: "1.0"
 project: ..
-last_updated: 2026-10-14T19:52:41.421987+04:00
-next_id: 119
+last_updated: 2026-10-14T20:40:30.144322+04:00
+next_id: 120
 items:
+    - id: ROAD-119
+      title: 'www-redirect automation: detect + alert + fix (three layers)'
+      status: captured
+      created_at: 2026-10-14T20:40:30.144103+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
