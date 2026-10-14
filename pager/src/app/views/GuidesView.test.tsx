@@ -35,7 +35,8 @@ describe("GuidesView", () => {
     render(<GuidesView />);
     for (const guide of GUIDES) {
       expect(screen.getByText(guide.title)).toBeTruthy();
-      expect(screen.getByText(`Updated ${guide.updated}`)).toBeTruthy();
+      // Both articles share the updated date — assert presence, not uniqueness.
+      expect(screen.getAllByText(`Updated ${guide.updated}`).length).toBeGreaterThan(0);
     }
   });
 
