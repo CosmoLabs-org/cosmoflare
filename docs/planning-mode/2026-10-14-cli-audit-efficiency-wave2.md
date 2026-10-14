@@ -20,6 +20,8 @@ deliverables:
       title: "KV ops dimension in the usage view (spend-vs-allowance row)"
     - id: P-10
       title: "Alert classes: kv-ops/day threshold + zone-cache-hit regression"
+implemented_commits:
+    - {sha: '8e1f72e9c5aa', covers: [P-07]}
 ---
 
 # Cosmoflare efficiency — Wave 2 Implementation Plan
