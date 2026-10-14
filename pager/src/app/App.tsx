@@ -372,10 +372,11 @@ function BottomTabs({
       tint: 0.2,
       tintTone: "dark",
       frost: 0.38,
-      // The droplet lens (operator 2026-10-14, round three): the edge band
-      // widens further and the bend strengthens — the distortion should
-      // read as a real lens rim, native-glass loud.
-      material: { refraction: 125, edgeReach: 0.45, dispersion: 2.6 },
+      // The droplet lens (operator 2026-10-14, round five): the edge bands
+      // widen until they own the pill's full height — distortion climbs
+      // from BOTH rims toward the center (the distance field is symmetric),
+      // and the body bends harder so text behind never survives legible.
+      material: { refraction: 155, edgeReach: 0.9, dispersion: 3.0 },
       fallback: "none",
       maxDpr: 2,
       respectReducedTransparency: true,
