@@ -22,6 +22,9 @@ deliverables:
       title: "Alert classes: kv-ops/day threshold + zone-cache-hit regression"
 implemented_commits:
     - {sha: '8e1f72e9c5aa', covers: [P-07]}
+    - {sha: '07289797e543', covers: [P-06]}
+    - {sha: 'a010281e48ad', covers: [P-08]}
+    - {sha: '56ffe135988a', covers: [P-09]}
 ---
 
 # Cosmoflare efficiency — Wave 2 Implementation Plan
