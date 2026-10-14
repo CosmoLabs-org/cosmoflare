@@ -1,20 +1,8 @@
 version: "1.0"
-project: cosmoflare
-last_updated: 2026-10-14T19:14:16.673351+04:00
-next_id: 122
+project: ..
+last_updated: 2026-10-14T19:52:41.421987+04:00
+next_id: 119
 items:
-    - id: ROAD-p9X66J9
-      title: 'Ops education hub: Cloudflare learning section + rule-quota usage display'
-      status: captured
-      created_at: 2026-10-14T19:14:14.666399+04:00
-    - id: ROAD-p5D96DE
-      title: 'Ops write-path: guarded emergency actions in the Ops GUI'
-      status: captured
-      created_at: 2026-10-13T21:06:26.783881+04:00
-    - id: ROAD-p7QJ0RX
-      title: Profile pages for every unique entity + future control actions
-      status: captured
-      created_at: 2026-10-13T21:06:12.658928+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -1025,3 +1013,16 @@ items:
       status: exploring
       category: core
       created_at: 2026-10-11T11:57:59.685894+04:00
+    - id: ROAD-p5D96DE
+      title: 'Ops write-path: guarded emergency actions in the Ops GUI'
+      status: captured
+      created_at: 2026-10-13T21:06:26.783881+04:00
+    - id: ROAD-p7QJ0RX
+      title: Profile pages for every unique entity + future control actions
+      status: captured
+      created_at: 2026-10-13T21:06:12.658928+04:00
+    - id: ROAD-p9X66J9
+      title: 'Ops education hub: Cloudflare learning section + rule-quota usage display'
+      status: captured
+      has_brainstorm: true
+      created_at: 2026-10-14T19:14:14.666399+04:00
