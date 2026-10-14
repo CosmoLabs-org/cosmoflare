@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseHash, hrefFor, workerHref, parseWorkerHash, ROUTES } from "./routes";
+import { parseHash, hrefFor, workerHref, parseWorkerHash, d1Href, parseD1Hash, doHref, parseDoHash, zoneHref, parseZoneHash, ROUTES } from "./routes";
 
 describe("parseHash", () => {
   it("accepts every declared route", () => {
@@ -55,5 +55,39 @@ describe("workerHref / parseWorkerHash (UI-3)", () => {
 
   it("rejects an empty name", () => {
     expect(parseWorkerHash("#/worker/")).toBeNull();
+  });
+});
+
+describe("entity drill-in parsers (profiles program)", () => {
+  it("round-trips D1, DO and zone names through their hrefs", () => {
+    expect(parseD1Hash(d1Href("sessions-db"))).toBe("sessions-db");
+    expect(parseDoHash(doHref("ccs-state-worker"))).toBe("ccs-state-worker");
+    expect(parseZoneHash(zoneHref("cosmolabs.org"))).toBe("cosmolabs.org");
+  });
+
+  it("round-trips names needing encoding", () => {
+    const name = "my db (prod)";
+    expect(parseD1Hash(d1Href(name))).toBe(name);
+    expect(parseDoHash(doHref(name))).toBe(name);
+    expect(parseZoneHash(zoneHref(name))).toBe(name);
+  });
+
+  it("returns null for section hashes and empty names", () => {
+    for (const parse of [parseD1Hash, parseDoHash, parseZoneHash]) {
+      expect(parse("#/d1")).toBeNull();
+      expect(parse("#/durable-objects")).toBeNull();
+      expect(parse("#/zones")).toBeNull();
+      expect(parse("#/overview")).toBeNull();
+      expect(parse("")).toBeNull();
+    }
+    expect(parseD1Hash("#/d1/")).toBeNull();
+    expect(parseDoHash("#/do/")).toBeNull();
+    expect(parseZoneHash("#/zone/")).toBeNull();
+  });
+
+  it("keeps the parsers disjoint — one prefix never matches another", () => {
+    expect(parseD1Hash(doHref("x"))).toBeNull();
+    expect(parseDoHash(zoneHref("x"))).toBeNull();
+    expect(parseZoneHash(workerHref("x"))).toBeNull();
   });
 });

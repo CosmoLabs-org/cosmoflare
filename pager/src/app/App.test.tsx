@@ -188,6 +188,24 @@ describe("Bottom tab bar (operator 2026-10-12)", () => {
     // Focus restored to the control that opened the drawer.
     expect(document.activeElement).toBe(more);
   });
+
+  it("Tab is trapped inside the drawer while it is open (critique P1 follow-up)", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "More sections" }));
+    const drawer = document.getElementById("cf-drawer")!;
+    // Focus starts on the close button (the first control). Tab wraps from
+    // the LAST focusable back to the first; Shift+Tab from the first wraps
+    // to the last — focus never leaves the drawer.
+    const close = screen.getByRole("button", { name: "Close menu" });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+    const focusables = drawer.querySelectorAll<HTMLElement>("a[href], button:not([disabled])");
+    expect(focusables.length).toBeGreaterThan(1);
+    expect(document.activeElement).toBe(focusables[focusables.length - 1]);
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(document.activeElement).toBe(focusables[0]);
+    expect(drawer.contains(document.activeElement)).toBe(true);
+  });
 });
 
 describe("Install banner mount (FEAT-pXNQ5GW)", () => {

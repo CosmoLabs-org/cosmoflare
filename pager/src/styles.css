@@ -853,7 +853,6 @@ body.cf-nav-open { overflow: hidden; }
 }
 .cf-mrow-action { display: inline-flex; }
 
-
 /* On phones the header buttons are cramped: show the sort select, keep the
    header tappable too (both work). */
 @media (max-width: 599.98px) {
@@ -1016,7 +1015,6 @@ body.cf-nav-open { overflow: hidden; }
   color: var(--muted);
   opacity: 0.7;
 }
-
 
 /* KPI tiles: large value, muted label — hierarchy by size, not boxes. */
 .cf-kpis {
@@ -1323,26 +1321,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   white-space: pre-line;
 }
 
-/* Graded per-row usage bars (operator ask 2026-10-10): this row's share of
-   the product allowance, 4px, level-colored, capped visually at 100%. */
-.cf-mini-bar {
-  margin-top: var(--space-1);
-  height: 4px;
-  border-radius: 999px;
-  background: var(--surface-raised);
-  overflow: hidden;
-  max-width: 220px;
-}
-.cf-mini-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
-}
-.cf-level-ok .cf-mini-fill { background: var(--accent); }
-.cf-level-warning .cf-mini-fill { background: var(--sev-warning); }
-.cf-level-critical .cf-mini-fill { background: var(--sev-critical); }
-.cf-mrow-top + .cf-mini-bar { margin-top: var(--space-1); }
-
 /* ---- Domains view: compact list + full-page profile drill-down ---- */
 .cf-domain-item + .cf-domain-item { border-top: 1px solid var(--border); }
 .cf-domain-row {
@@ -1364,13 +1342,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-domain-name { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
 .cf-domain-name strong { font-family: var(--font-display); font-size: 15px; overflow-wrap: anywhere; }
 .cf-domain-badges { display: inline-flex; gap: var(--space-1); }
-.cf-badge {
-  font-size: var(--text-xs, 11px);
-  padding: 1px var(--space-2);
-  border-radius: 999px;
-  background: var(--surface-raised);
-  color: var(--muted);
-}
 .cf-domain-expiry { font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--muted); }
 .cf-domain-chevron {
   color: var(--muted);
@@ -1394,13 +1365,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   padding: 0 0 var(--space-3);
 }
 .cf-domain-item.is-open .cf-domain-detail-inner { padding-bottom: var(--space-3); }
-.cf-domain-field {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-3);
-  font-size: var(--text-sm);
-}
 .cf-domain-field-label { color: var(--muted); }
 .cf-domain-field-value { text-align: end; overflow-wrap: anywhere; }
 
