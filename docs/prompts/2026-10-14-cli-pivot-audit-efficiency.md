@@ -6,7 +6,11 @@ goals_completed: 0
 goals_total: 7
 priority: medium
 related_prompts: []
-requires_reading: []
+requires_reading:
+    - cmd/doctor.go
+    - cmd/cost.go
+    - cmd/cost_test.go
+    - docs/prompts/2026-10-13-session-2040-continuation.md
 schema_version: 1
 status: PENDING
 tags: []
