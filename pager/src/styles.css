@@ -2873,3 +2873,12 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     transition: none;
   }
 }
+
+/* Guides (FEAT-pDQEFQV + FEAT-pAGY842): article prose inside a cf-card —
+   spacing only; color, type and chrome come from the existing classes. */
+.cf-guide-body { margin-top: 12px; }
+.cf-guide-body .cf-guide-p { margin: 0 0 0.75em; }
+.cf-guide-body .cf-guide-h { margin: 1.25em 0 0.4em; }
+.cf-guide-body .cf-guide-list { margin: 0 0 0.75em; padding-inline-start: 1.25em; }
+.cf-guide-back { margin-bottom: 10px; }
+
