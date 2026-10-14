@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
@@ -704,5 +705,41 @@ func TestCostConstants_KVPricing(t *testing.T) {
 	// Writes cost more than reads — this is a CF invariant
 	if cosmoflare.KVWritesPerMillion <= cosmoflare.KVReadsPerMillion {
 		t.Errorf("KVWritesPerMillion (%.2f) should be > KVReadsPerMillion (%.2f)", cosmoflare.KVWritesPerMillion, cosmoflare.KVReadsPerMillion)
+	}
+}
+
+// TestCostIncludesIdleWaste verifies the cost JSON carries the idle-waste
+// summary collected through the costWasteFn seam (efficiency collectors,
+// no second collector).
+func TestCostIncludesIdleWaste(t *testing.T) {
+	costRunGlobals(t)
+	costRunDefaults()
+
+	prev := costWasteFn
+	costWasteFn = func() (*cosmoflare.EfficiencyWasteSummary, error) {
+		return &cosmoflare.EfficiencyWasteSummary{
+			IdleWorkers: 2, DeadKVNamespaces: 1, EmptyR2Buckets: 3,
+			EstimatedMonthlyUSD: 0, Basis: "test basis",
+		}, nil
+	}
+	t.Cleanup(func() { costWasteFn = prev })
+
+	prevJSON, prevFmt := JSONOutput, costFormat
+	JSONOutput, costFormat = true, "json"
+	t.Cleanup(func() { JSONOutput, costFormat = prevJSON, prevFmt })
+
+	var buf bytes.Buffer
+	prevOut := printJSONOut
+	printJSONOut = &buf
+	t.Cleanup(func() { printJSONOut = prevOut })
+
+	if err := runCost(nil, nil); err != nil {
+		t.Fatalf("runCost: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{`"waste"`, `"idle_workers":2`, `"dead_kv_namespaces":1`, `"empty_r2_buckets":3`} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("cost JSON missing %s:\n%s", want, out)
+		}
 	}
 }

@@ -270,7 +270,7 @@ func TestRunCost_TablesRenderNumbers(t *testing.T) {
 			[]string{"Workers Cost Estimate", "1000000", "$0.50"}},
 		{"kv", func() string { return costRunCapture(t, func() { printKVCostTable(kv) }) },
 			[]string{"KV Cost Estimate", "$1.00", "$5.00", "$11.00"}},
-		{"summary", func() string { return costRunCapture(t, func() { printCostSummary(total) }) },
+		{"summary", func() string { return costRunCapture(t, func() { printCostSummary(total, nil) }) },
 			[]string{"period: 7d", "$21.10/mo", "Estimates are approximate"}},
 		{"detail", func() string { return costRunCapture(t, func() { printDetailTable(total) }) },
 			[]string{"Itemized Cost Breakdown (period: 7d)", "$21.10/mo"}},
@@ -326,7 +326,7 @@ func TestRunCost_CSVExactOutput(t *testing.T) {
 
 	wantTotal := "service,estimated_cost\n" +
 		"R2 Storage,9.60\nWorkers,0.50\nKV,11.00\nTOTAL,21.10\n"
-	if got := costRunCapture(t, func() { _ = printCostCSV(total) }); got != wantTotal {
+	if got := costRunCapture(t, func() { _ = printCostCSV(total, nil) }); got != wantTotal {
 		t.Errorf("summary CSV mismatch:\ngot:\n%s\nwant:\n%s", got, wantTotal)
 	}
 
