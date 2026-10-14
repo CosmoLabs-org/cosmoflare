@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,7 +27,10 @@ func effWrite(w http.ResponseWriter, result any) {
 	json.NewEncoder(w).Encode(map[string]any{"success": true, "errors": []any{}, "result": result})
 }
 
-func newEffMock(t *testing.T, workersList []any, kvList []any, gqlBody string) *effMock {
+// newEffMock spins the wave-1 mock. The variadic zones opt the service into
+// the zone cache-coverage check; coverage queries hit the same shared gql
+// server, so gqlBody must carry a viewer.zones array too when zones are set.
+func newEffMock(t *testing.T, workersList []any, kvList []any, gqlBody string, zones ...*Zone) *effMock {
 	t.Helper()
 	rest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -46,10 +51,11 @@ func newEffMock(t *testing.T, workersList []any, kvList []any, gqlBody string) *
 	workers, _ := NewWorkerService(cf, "acct-eff")
 	kv, _ := NewKVService(cf, "acct-eff")
 	analytics := NewAnalyticsService("acct-eff", "tok", WithAnalyticsBaseURL(gql.URL))
-	return &effMock{
-		svc:  NewEfficiencyService(workers, kv, analytics),
-		rest: rest, gql: gql,
+	svc := NewEfficiencyService(workers, kv, analytics)
+	if len(zones) > 0 {
+		svc = NewEfficiencyServiceWithZones(workers, kv, analytics, nil, stubEffZoneLister{zones: zones})
 	}
+	return &effMock{svc: svc, rest: rest, gql: gql}
 }
 
 func effWindow() AnalyticsWindow {
@@ -157,7 +163,10 @@ func TestEfficiencyCleanAccount(t *testing.T) {
 		[]any{map[string]any{"id": "ns-live", "title": "live"}},
 		`{"data":{"viewer":{"accounts":[{"workersInvocationsAdaptive":[`+
 			`{"sum":{"requests":10,"errors":0,"subrequests":0},"dimensions":{"scriptName":"busy"}}],`+
-			`"kvOperationsAdaptiveGroups":[{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":2}}]}]}}}`,
+			`"kvOperationsAdaptiveGroups":[{"dimensions":{"namespaceId":"ns-live"},"sum":{"requests":2}}]}],`+
+			`"zones":[{"httpRequests1dGroups":[`+
+			`{"sum":{"requests":4000,"cachedRequests":400},"dimensions":{"date":"2026-10-10"}}]}]}}}`,
+		&Zone{ID: "z1", Name: "busy.example"},
 	)
 	rep, err := m.svc.Report(context.Background(), effWindow())
 	if err != nil {
@@ -165,6 +174,9 @@ func TestEfficiencyCleanAccount(t *testing.T) {
 	}
 	if len(rep.Findings) != 0 {
 		t.Fatalf("want 0 findings, got %+v", rep.Findings)
+	}
+	if rep.ZonesChecked != 1 || len(rep.ZoneCoverage) != 1 || rep.ZoneCoverage[0].HitRatePct != 10 {
+		t.Fatalf("busy zone coverage = checked %d, rows %+v", rep.ZonesChecked, rep.ZoneCoverage)
 	}
 }
 
@@ -186,5 +198,77 @@ func TestSummarizeWaste(t *testing.T) {
 	}
 	if s.Basis == "" {
 		t.Fatal("Basis must explain the $0 attribution")
+	}
+}
+
+
+// stubEffZoneLister is the efficiency tests' zone lister stub (named apart
+// from limits_test.go's fakeZoneLister — one package, shared namespace).
+type stubEffZoneLister struct{ zones []*Zone }
+
+func (s stubEffZoneLister) List(ctx context.Context) ([]*Zone, error) { return s.zones, nil }
+
+// TestEfficiencyLowCacheHit: a zone with real traffic but a near-zero
+// edge-cache hit rate is a finding; busy-but-cached and quiet (below the
+// 1k request floor) zones are not.
+func TestEfficiencyLowCacheHit(t *testing.T) {
+	t.Parallel()
+	gql := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, _ := io.ReadAll(r.Body)
+		body := string(data)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.Contains(body, `"zoneTag":"z-low"`):
+			fmt.Fprint(w, `{"data":{"viewer":{"zones":[{"httpRequests1dGroups":[`+
+				`{"sum":{"requests":2000,"cachedRequests":5},"dimensions":{"date":"2026-10-08"}}]}]}}}`)
+		case strings.Contains(body, `"zoneTag":"z-good"`):
+			fmt.Fprint(w, `{"data":{"viewer":{"zones":[{"httpRequests1dGroups":[`+
+				`{"sum":{"requests":5000,"cachedRequests":500},"dimensions":{"date":"2026-10-08"}}]}]}}}`)
+		default:
+			fmt.Fprint(w, `{"data":{"viewer":{"zones":[]}}}`)
+		}
+	}))
+	defer gql.Close()
+	analytics := NewAnalyticsService("acct-eff", "tok", WithAnalyticsBaseURL(gql.URL))
+	zones := stubEffZoneLister{zones: []*Zone{
+		{ID: "z-low", Name: "low.example"},
+		{ID: "z-good", Name: "good.example"},
+		{ID: "z-quiet", Name: "quiet.example"},
+	}}
+	svc := NewEfficiencyServiceWithZones(nil, nil, analytics, nil, zones)
+	rep, err := svc.Report(context.Background(), effWindow())
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+	if rep.ZonesChecked != 3 {
+		t.Fatalf("ZonesChecked = %d, want 3", rep.ZonesChecked)
+	}
+	if len(rep.ZoneCoverage) != 3 {
+		t.Fatalf("ZoneCoverage rows = %d, want 3", len(rep.ZoneCoverage))
+	}
+	var findings []EfficiencyFinding
+	for _, f := range rep.Findings {
+		if f.Check == "low-cache-hit" {
+			findings = append(findings, f)
+		}
+	}
+	if len(findings) != 1 || findings[0].Resource != "zone:low.example" {
+		t.Fatalf("low-cache-hit findings = %+v, want exactly zone:low.example", findings)
+	}
+	if findings[0].Severity != "info" || findings[0].Evidence == "" || findings[0].Fix == "" {
+		t.Fatalf("finding lacks severity/evidence/fix: %+v", findings[0])
+	}
+	if !strings.Contains(findings[0].Evidence, "2000 requests") || !strings.Contains(findings[0].Evidence, "0.2%") {
+		t.Fatalf("evidence must quote real numbers: %q", findings[0].Evidence)
+	}
+	// busy-but-cached zone stays on the report with its real hit rate
+	var good *ZoneCacheCoverageSummary
+	for i := range rep.ZoneCoverage {
+		if rep.ZoneCoverage[i].ZoneID == "z-good" {
+			good = &rep.ZoneCoverage[i]
+		}
+	}
+	if good == nil || good.HitRatePct != 10 {
+		t.Fatalf("good.example coverage row = %+v, want 10%% hit rate", good)
 	}
 }
