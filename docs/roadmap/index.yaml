@@ -1,12 +1,8 @@
 version: "1.0"
 project: ..
-last_updated: 2026-10-14T20:40:30.144322+04:00
-next_id: 120
+last_updated: 2026-10-14T20:40:42.172607+04:00
+next_id: 119
 items:
-    - id: ROAD-119
-      title: 'www-redirect automation: detect + alert + fix (three layers)'
-      status: captured
-      created_at: 2026-10-14T20:40:30.144103+04:00
     - id: BASE-001
       title: Git remote configured
       status: completed
@@ -1017,6 +1013,11 @@ items:
       status: exploring
       category: core
       created_at: 2026-10-11T11:57:59.685894+04:00
+    - id: ROAD-p35S34J
+      title: 'www-redirect automation: detect + alert + fix (three layers)'
+      status: captured
+      has_plan: true
+      created_at: 2026-10-14T20:40:30.144103+04:00
     - id: ROAD-p5D96DE
       title: 'Ops write-path: guarded emergency actions in the Ops GUI'
       status: captured

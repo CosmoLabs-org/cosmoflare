@@ -1,8 +1,11 @@
 id: ROAD-p35S34J
 created_at: 2026-10-14T20:40:30.144103+04:00
-updated_at: 2026-10-14T20:40:31.969081+04:00
+updated_at: 2026-10-14T20:40:42.142419+04:00
 title: 'www-redirect automation: detect + alert + fix (three layers)'
 status: captured
+refs:
+    - type: plan
+      path: docs/planning-mode/2026-10-14-www-redirect-automation.md
 origin:
     session: 78
 ulid: 01M4XMJV62K1TERCWPNE35S34J
