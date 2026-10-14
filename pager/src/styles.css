@@ -2332,8 +2332,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     letter-spacing 320ms var(--ease-out);
 }
 .cf-bottomtab[aria-current="page"] .cf-bottomtab-label {
-  transform: scale(1.1);
-  letter-spacing: 0.04em;
+  transform: scale(1.06);
+  letter-spacing: 0.03em;
 }
 /* The underline: same gradient treatment as the quicknav's glow line, in
    the neutral text tone. Sits at the bar's top edge, under the tab segment.
@@ -2362,7 +2362,9 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 }
 .cf-bottomtab-icon {
   display: inline-flex;
-  transition: transform 320ms var(--ease-out);
+  /* The lift glides (operator 2026-10-14): longer, softer — ease-out-quint
+     so the icon arrives, it does not snap. */
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Section identity hues return to the PILL (operator 2026-10-14: don't
    lose the unique colors) — scoped to the bottom tabs only, and moved
@@ -2421,6 +2423,9 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
     z-index: 41;
     display: flex;
     align-items: stretch;
+    /* Breathing room inside the rounded ends (operator 2026-10-14):
+       tab content never kisses the pill's left/right curve. */
+    padding-inline: 9px;
     border-radius: 22px;
     isolation: isolate;
     /* Clip the tab sweep underlines to the pill's rounded corners. */
