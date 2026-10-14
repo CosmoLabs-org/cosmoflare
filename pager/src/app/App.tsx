@@ -366,14 +366,13 @@ function BottomTabs({
     if (!navRef.current || !LiquidGlass.isSupported()) return;
     const glass = new LiquidGlass(navRef.current, {
       shape: "auto",
-      // Glass balance (operator 2026-10-14, round six — "distortion too
-      // mild"): frost was EATING the refraction — you cannot see content
-      // bend if it is already blurred to mush. Frost drops so detail
-      // survives to be distorted; the bend strengthens toward the shader's
-      // ceiling. The tint carries the glass identity now, not the blur.
+      // Glass balance (operator 2026-10-14, round seven — "more blur
+      // too"): Apple's material is BOTH — heavily frosted content that
+      // still bends at the rim. Frost returns on top of the maxed
+      // refraction; the lensing reads through the blur's gradients.
       tint: 0.2,
       tintTone: "dark",
-      frost: 0.22,
+      frost: 0.42,
       material: { refraction: 185, edgeReach: 1.1, dispersion: 3.6 },
       fallback: "none",
       maxDpr: 2,
