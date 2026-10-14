@@ -12,7 +12,7 @@
 // not-found quiet state) carry over; the masthead owns the page title, so
 // the stats card drops its name heading and keeps the subtitle.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { api, LoginExpiredError, type Summary, type WorkerProfilePayload, type WorkerRow } from "../../api";
 import { levelForErrorPct } from "../../dashboard";
@@ -35,15 +35,208 @@ function StatRow({ label, value, valueClass }: { label: string; value: string; v
 
 /** Display-only ISO date from a version's created_on, "—" when absent. */
 function versionDate(createdOn: string | null): string {
-  return createdOn === null ? "—" : createdOn.slice(0, 10);
+  return createdOn === null ? "—" : createdOn.slice(0, 0 + 10);
+}
+
+// ---- Live tail (worker profile expansion, 2026-10-14) ----
+// One bounded NDJSON stream from /api/worker-tail?name=<script> (the Ops
+// Worker mints a tail WebSocket server-side and cuts off at 30s / 200
+// events / one concurrent tail). The UI parses lines as they arrive, shows
+// the last 50 events with a running count, renders a stream {error} line as
+// a note, and stops cleanly at the end line or on Stop — the server's
+// cutoffs close the stream, the client never hangs past it. No animation
+// beyond the view's standard fade; house style: no left borders, no tile
+// outlines.
+
+/** Rendered tail rows are capped — the newest 50 survive. */
+const TAIL_RENDER_CAP = 50;
+
+interface TailDisplayEvent {
+  /** Display-only UTC clock time, "—" when the event carries none. */
+  timestamp: string;
+  outcome: string | null;
+  exceptionCount: number | null;
+  /** HTTP status from the invocation's response tuple, when present. */
+  status: number | null;
+}
+
+/** Extract the compact display fields from one raw Cloudflare tail
+ *  invocation event — every field is presence-based, nothing is invented. */
+function tailDisplayEvent(raw: unknown): TailDisplayEvent {
+  const e = (raw ?? {}) as Record<string, unknown>;
+  const ts = typeof e.eventTimestamp === "string" ? e.eventTimestamp : null;
+  const evt = (e.event ?? {}) as Record<string, unknown>;
+  const response = evt.response;
+  return {
+    timestamp: ts !== null && ts.includes("T") ? ts.slice(11, 19) : "—",
+    outcome: typeof e.outcome === "string" ? e.outcome : null,
+    exceptionCount: Array.isArray(e.exceptions) ? e.exceptions.length : null,
+    status: Array.isArray(response) && response.length > 0 && typeof response[0] === "number" ? (response[0] as number) : null,
+  };
+}
+
+/** Compact one-line summary: outcome, exceptions, status — only what's there. */
+function tailRowText(ev: TailDisplayEvent): string {
+  const parts: string[] = [];
+  if (ev.outcome !== null) parts.push(ev.outcome);
+  if (ev.exceptionCount !== null && ev.exceptionCount > 0) {
+    parts.push(`${ev.exceptionCount} exception${ev.exceptionCount === 1 ? "" : "s"}`);
+  }
+  if (ev.status !== null) parts.push(`status ${ev.status}`);
+  return parts.length > 0 ? parts.join(" · ") : "—";
 }
 
 const defaultFetchJson: ViewFetcher = (endpoint, opts) => api.fetchJson(endpoint, opts);
+// Never the bare global: binding fetch to the client object is what makes
+// browsers throw "Illegal invocation" (see ApiClient's constructor comment).
+const defaultTailFetch: typeof fetch = (input, init) => fetch(input, init);
 
-export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
+function TailSection({ name, tailFetch }: { name: string; tailFetch: typeof fetch }): React.JSX.Element {
+  const [running, setRunning] = useState(false);
+  const [events, setEvents] = useState<TailDisplayEvent[]>([]);
+  const [total, setTotal] = useState(0);
+  // note = end reason / Stop confirmation; errorNote = a stream {error} or
+  // an HTTP error — the two render differently (note is quiet, error alerts).
+  const [note, setNote] = useState<string | null>(null);
+  const [errorNote, setErrorNote] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Unmount (or re-render navigation) always aborts — a tail never outlives
+  // the view.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  const stop = useCallback((): void => {
+    abortRef.current?.abort();
+    setRunning(false);
+    setNote("Stopped");
+  }, []);
+
+  const start = useCallback((): void => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setEvents([]);
+    setTotal(0);
+    setNote(null);
+    setErrorNote(null);
+    setRunning(true);
+    void (async () => {
+      try {
+        const res = await tailFetch(`/api/worker-tail?name=${encodeURIComponent(name)}`, { signal: controller.signal });
+        if (!res.ok) {
+          let message = `HTTP ${res.status}`;
+          try {
+            const body = (await res.json()) as { error?: unknown };
+            if (typeof body.error === "string") message = body.error
+          } catch {
+            // Non-JSON error body — the HTTP status stands in.
+          }
+          setErrorNote(message);
+          setRunning(false);
+          return;
+        }
+        if (res.body === null) {
+          setErrorNote("The tail stream carried no body.");
+          setRunning(false);
+          return;
+        }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        // The read loop IS the lifetime: when the server cuts off (end line
+        // + close) the loop resolves and the UI stops itself. Abort throws
+        // out of read() — the catch below settles the UI.
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          for (;;) {
+            const nl = buffer.indexOf("\n");
+            if (nl < 0) break;
+            const line = buffer.slice(0, nl).trim();
+            buffer = buffer.slice(nl + 1);
+            if (line === "") continue;
+            let parsed: unknown;
+            try {
+              parsed = JSON.parse(line);
+            } catch {
+              continue; // a torn/non-JSON line is skipped, not fatal
+            }
+            const obj = parsed as Record<string, unknown>;
+            if (typeof obj.error === "string") {
+              setErrorNote(obj.error);
+              setRunning(false);
+              return;
+            }
+            if (obj.type === "event") {
+              const ev = tailDisplayEvent(obj.event);
+              setTotal((t) => t + 1);
+              setEvents((prev) => [...prev, ev].slice(-TAIL_RENDER_CAP));
+            } else if (obj.type === "end") {
+              const reason = typeof obj.reason === "string" ? obj.reason : "ended";
+              const endError = typeof obj.error === "string" ? ` — ${obj.error}` : "";
+              setNote(`Stream ended — ${reason}${endError}`);
+              setRunning(false);
+              return;
+            }
+          }
+        }
+        // done without an end line (upstream close, ws error before a line):
+        setNote("Stream ended");
+        setRunning(false);
+        return;
+      } catch (err) {
+        // Abort is the Stop button / unmount — already settled. Anything
+        // else is a transport failure (fetch reject, torn stream).
+        if (controller.signal.aborted) return;
+        setErrorNote(err instanceof Error ? err.message : String(err));
+        setRunning(false);
+      }
+    })();
+  }, [name, tailFetch]);
+
+  return (
+    <section className="cf-card">
+      <h2>Live tail</h2>
+      <p className="cf-row-detail">Last 50 invocation events · 30s server cutoff · one tail at a time</p>
+      <div className="cf-domain-field">
+        <span className="cf-domain-field-label">Tail</span>
+        {running ? (
+          <button type="button" className="cf-btn" onClick={stop}>Stop tail</button>
+        ) : (
+          <button type="button" className="cf-btn" onClick={start}>Start tail</button>
+        )}
+      </div>
+      {total > 0 ? (
+        <p className="cf-row-detail cf-tail-count">{`${total} event${total === 1 ? "" : "s"} — last ${Math.min(total, TAIL_RENDER_CAP)} shown`}</p>
+      ) : null}
+      {errorNote !== null ? <p className="cf-empty cf-tail-error" role="alert">{errorNote}</p> : null}
+      {note !== null ? <p className="cf-empty cf-empty-quiet cf-tail-note">{note}</p> : null}
+      {total > 0 ? (
+        events.map((ev, i) => (
+          <div className="cf-domain-field" key={`tail-${total - events.length + i}`}>
+            <span className="cf-domain-field-label">{ev.timestamp}</span>
+            <span className="cf-domain-field-value cf-stat-value">{tailRowText(ev)}</span>
+          </div>
+        ))
+      ) : running === false && errorNote === null && note !== null && total === 0 ? (
+        <p className="cf-empty cf-empty-quiet">
+          No invocation events — the worker was quiet for the whole tail.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+export default function WorkerProfileView({ name, refreshSeq = 0, fetcher, tailFetch }: {
   name: string;
   refreshSeq?: number;
   fetcher?: ViewFetcher;
+  tailFetch?: typeof fetch;
 }): React.JSX.Element {
   const fetchJson: ViewFetcher = fetcher ?? defaultFetchJson;
   const [worker, setWorker] = useState<WorkerRow | null>(null);
@@ -231,6 +424,8 @@ export default function WorkerProfileView({ name, refreshSeq = 0, fetcher }: {
           ))}
         </section>
       ) : null}
+
+      <TailSection name={name} tailFetch={tailFetch ?? defaultTailFetch} />
 
       <section className="cf-card">
         <h2>About this worker</h2>
