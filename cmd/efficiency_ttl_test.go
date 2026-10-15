@@ -48,8 +48,9 @@ func ttlFixture() *cosmoflare.ProjectCacheInventory {
 
 // withTTLSeam stubs the scan, cadence, and list seams plus the text and
 // JSON writers for the duration of one test. A nil inv leaves the scan
-// seam untouched.
-func withTTLSeam(t *testing.T, inv *cosmoflare.ProjectCacheInventory, cadence int64, cadenceErr error, databases []*cosmoflare.D1Database, listErr error) (*bytes.Buffer, *[]string) {
+// seam untouched. cadence is the total rows written; daysUsed is the
+// complete-day count the seam reports (today's partial day excluded).
+func withTTLSeam(t *testing.T, inv *cosmoflare.ProjectCacheInventory, cadence int64, daysUsed int, cadenceErr error, databases []*cosmoflare.D1Database, listErr error) (*bytes.Buffer, *[]string) {
 	t.Helper()
 	if inv != nil {
 		prevScan := efficiencyTTLScanFn
@@ -60,9 +61,9 @@ func withTTLSeam(t *testing.T, inv *cosmoflare.ProjectCacheInventory, cadence in
 	}
 	cadenceCalls := &[]string{}
 	prevCadence := efficiencyTTLCadenceFn
-	efficiencyTTLCadenceFn = func(databaseID string, days int) (int64, error) {
+	efficiencyTTLCadenceFn = func(databaseID string, days int) (int64, int, error) {
 		*cadenceCalls = append(*cadenceCalls, databaseID)
-		return cadence, cadenceErr
+		return cadence, daysUsed, cadenceErr
 	}
 	t.Cleanup(func() { efficiencyTTLCadenceFn = prevCadence })
 	prevList := efficiencyTTLListFn
@@ -124,7 +125,7 @@ func TestEfficiencyTTLCmdRegistered(t *testing.T) {
 func TestEfficiencyTTLVerdictsJSON(t *testing.T) {
 	withTTLCreds(t)
 	withTTLFlags(t, "/proj", "db-1", 7, true)
-	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 3500, nil, nil, nil)
+	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 3500, 7, nil, nil, nil)
 	if err := execEfficiencyTTL(t); err != nil {
 		t.Fatalf("RunE: %v", err)
 	}
@@ -221,7 +222,7 @@ func TestEfficiencyTTLRaiseVerdict(t *testing.T) {
 		{File: "routes/cities.ts", Line: 30, Route: "GET /meta/cities",
 			KeyFn: true, QueryAware: true, TTL: 3600, KeyPrefix: "api:meta:cities"},
 	}
-	buf, _ := withTTLSeam(t, inv, 0, nil, nil, nil) // 0 writes/day → rare
+	buf, _ := withTTLSeam(t, inv, 0, 1, nil, nil, nil) // 0 writes/day → rare
 	if err := execEfficiencyTTL(t); err != nil {
 		t.Fatalf("RunE: %v", err)
 	}
@@ -249,7 +250,7 @@ func TestEfficiencyTTLRaiseVerdict(t *testing.T) {
 
 func TestEfficiencyTTLWindowValidation(t *testing.T) {
 	withTTLCreds(t)
-	withTTLSeam(t, ttlFixture(), 0, nil, nil, nil)
+	withTTLSeam(t, ttlFixture(), 0, 1, nil, nil, nil)
 	for _, window := range []int{0, 91} {
 		withTTLFlags(t, ".", "", window, false)
 		err := execEfficiencyTTL(t)
@@ -268,7 +269,7 @@ func TestEfficiencyTTLDatabaseAutoResolve(t *testing.T) {
 	withTTLFlags(t, "/proj", "", 7, false)
 
 	// Single database: auto-picked and passed to the cadence seam.
-	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 70, nil,
+	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 70, 7, nil,
 		[]*cosmoflare.D1Database{{UUID: "db-only", Name: "churches"}}, nil)
 	if err := execEfficiencyTTL(t); err != nil {
 		t.Fatalf("single-db RunE: %v", err)
@@ -281,7 +282,7 @@ func TestEfficiencyTTLDatabaseAutoResolve(t *testing.T) {
 	}
 
 	// Two databases: refuse, naming both candidates.
-	buf2, _ := withTTLSeam(t, ttlFixture(), 0, nil,
+	buf2, _ := withTTLSeam(t, ttlFixture(), 0, 1, nil,
 		[]*cosmoflare.D1Database{
 			{UUID: "db-a", Name: "churches"},
 			{UUID: "db-b", Name: "analytics"},
@@ -307,7 +308,7 @@ func TestEfficiencyTTLRequiresCreds(t *testing.T) {
 	prevAccount, prevToken := AccountID, APIToken
 	AccountID, APIToken = "", ""
 	t.Cleanup(func() { AccountID, APIToken = prevAccount, prevToken })
-	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 0, nil, nil, nil)
+	buf, cadenceCalls := withTTLSeam(t, ttlFixture(), 0, 1, nil, nil, nil)
 	withTTLFlags(t, ".", "", 7, false)
 	err := execEfficiencyTTL(t)
 	if err == nil {
@@ -328,9 +329,57 @@ func TestEfficiencyTTLRequiresCreds(t *testing.T) {
 func TestEfficiencyTTLCadenceError(t *testing.T) {
 	withTTLCreds(t)
 	withTTLFlags(t, "/proj", "db-1", 7, false)
-	withTTLSeam(t, ttlFixture(), 0, errors.New("analytics down"), nil, nil)
+	withTTLSeam(t, ttlFixture(), 0, 1, errors.New("analytics down"), nil, nil)
 	err := execEfficiencyTTL(t)
 	if err == nil || !strings.Contains(err.Error(), "analytics down") {
 		t.Errorf("err = %v, want cadence error surfaced", err)
+	}
+}
+
+// TestEfficiencyTTLCompleteDaysDivisor pins the cadence seam contract: the
+// seam reports the complete-day count (today's partial UTC day excluded), and
+// runEfficiencyTTL divides the total by THAT count — not by the raw window.
+func TestEfficiencyTTLCompleteDaysDivisor(t *testing.T) {
+	withTTLCreds(t)
+	withTTLFlags(t, "/proj", "db-1", 7, true)
+	// 3000 rows over 6 complete days (7-day window minus today) = 500/day.
+	// Dividing by the raw window would yield 428.
+	buf, _ := withTTLSeam(t, ttlFixture(), 3000, 6, nil, nil, nil)
+	if err := execEfficiencyTTL(t); err != nil {
+		t.Fatalf("RunE: %v", err)
+	}
+	var env struct {
+		Data struct {
+			WritesPerDay int64 `json:"writes_per_day"`
+			WindowDays   int   `json:"window_days"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(buf.Bytes(), &env); err != nil {
+		t.Fatalf("envelope JSON: %v\nraw: %s", err, buf.String())
+	}
+	if env.Data.WindowDays != 7 {
+		t.Errorf("window_days = %d, want 7", env.Data.WindowDays)
+	}
+	if env.Data.WritesPerDay != 500 {
+		t.Errorf("writes_per_day = %d, want 500 (3000 over 6 complete days, not 428 over 7)", env.Data.WritesPerDay)
+	}
+}
+
+// TestEfficiencyTTLJSONEmptyFindings pins the non-nil findings slice: with
+// no verdicts, the JSON envelope must emit findings [] — not null — so
+// jq iteration works on the happy path.
+func TestEfficiencyTTLJSONEmptyFindings(t *testing.T) {
+	withTTLCreds(t)
+	withTTLFlags(t, "/proj", "db-1", 7, true)
+	buf, _ := withTTLSeam(t, &cosmoflare.ProjectCacheInventory{Root: "/proj"}, 0, 1, nil, nil, nil)
+	if err := execEfficiencyTTL(t); err != nil {
+		t.Fatalf("RunE: %v", err)
+	}
+	raw := buf.String()
+	if !strings.Contains(raw, `"findings":[]`) {
+		t.Errorf("findings emitted as null, want []:\n%s", raw)
+	}
+	if !strings.Contains(raw, `"verdicts":[]`) {
+		t.Errorf("verdicts emitted as null, want []:\n%s", raw)
 	}
 }

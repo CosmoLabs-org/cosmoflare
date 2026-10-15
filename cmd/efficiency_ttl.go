@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -25,25 +26,43 @@ var efficiencyTTLScanFn = cosmoflare.ScanProjectCache
 
 // efficiencyTTLCadenceFn is the cadence seam: production sums real
 // D1UsageService.DailyUsage rows-written over the window (never modeled);
-// tests stub it. Returns total rows written, not the per-day average —
-// the caller divides by the window length.
-var efficiencyTTLCadenceFn = func(databaseID string, days int) (int64, error) {
+// tests stub it. Returns the total rows written over the COMPLETE days in
+// the window and the number of days used — today's partial UTC day is
+// excluded from both sum and divisor when the window is longer than one
+// day (divisor minimum 1; a quiet morning on a busy DB must not read as
+// rare cadence). The caller divides total by daysUsed.
+var efficiencyTTLCadenceFn = func(databaseID string, days int) (int64, int, error) {
 	if AccountID == "" || APIToken == "" {
-		return 0, fmt.Errorf("account ID and API token are required (run 'cosmoflare account' to configure)")
+		return 0, 0, fmt.Errorf("account ID and API token are required (run 'cosmoflare account' to configure)")
 	}
 	svc, err := cosmoflare.NewD1UsageServiceFromCreds(AccountID, APIToken)
 	if err != nil {
-		return 0, fmt.Errorf("failed to create D1 usage service: %w", err)
+		return 0, 0, fmt.Errorf("failed to create D1 usage service: %w", err)
 	}
 	usage, err := svc.DailyUsage(context.Background(), databaseID, days)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	var total int64
-	for _, day := range usage {
-		total += day.RowsWritten
+	if days == 1 {
+		for _, day := range usage {
+			total += day.RowsWritten
+		}
+		return total, 1, nil
 	}
-	return total, nil
+	today := time.Now().UTC().Format("2006-01-02")
+	used := 0
+	for _, day := range usage {
+		if day.Date == today {
+			continue
+		}
+		total += day.RowsWritten
+		used++
+	}
+	if used == 0 {
+		used = 1 // never divide by zero
+	}
+	return total, used, nil
 }
 
 // efficiencyTTLListFn is the database auto-resolve seam: production lists
@@ -144,11 +163,14 @@ func runEfficiencyTTL(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	totalWrites, err := efficiencyTTLCadenceFn(databaseID, efficiencyTTLWindow)
+	totalWrites, daysUsed, err := efficiencyTTLCadenceFn(databaseID, efficiencyTTLWindow)
 	if err != nil {
 		return err
 	}
-	writesPerDay := totalWrites / int64(efficiencyTTLWindow)
+	if daysUsed < 1 {
+		daysUsed = 1 // defensive: never divide by zero
+	}
+	writesPerDay := totalWrites / int64(daysUsed)
 	verdicts := cosmoflare.GradeTTLs(inv, writesPerDay)
 	findings := efficiencyTTLFindings(verdicts)
 	if efficiencyTTLJSON {
@@ -171,7 +193,9 @@ func runEfficiencyTTL(cmd *cobra.Command, args []string) error {
 // a warning; raise and no-invalidation are informational. Each fix quotes
 // the verdict's upgrade path and the KV/Cache-Control asymmetry note.
 func efficiencyTTLFindings(verdicts []cosmoflare.TTLVerdict) []cosmoflare.EfficiencyFinding {
-	var findings []cosmoflare.EfficiencyFinding
+	// Non-nil from the start: an empty slice marshals to [] so the JSON
+	// envelope never emits null findings.
+	findings := make([]cosmoflare.EfficiencyFinding, 0, len(verdicts))
 	for _, v := range verdicts {
 		switch v.Verdict {
 		case "stale-risk":

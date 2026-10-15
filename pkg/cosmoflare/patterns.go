@@ -84,7 +84,7 @@ func ScanProjectCache(root string) (*ProjectCacheInventory, error) {
 		if !strings.HasSuffix(name, ".ts") {
 			return nil
 		}
-		if strings.HasSuffix(name, "_test.ts") || strings.HasSuffix(name, ".spec.ts") {
+		if strings.HasSuffix(name, "_test.ts") || strings.HasSuffix(name, ".spec.ts") || strings.HasSuffix(name, ".test.ts") {
 			return nil
 		}
 		// Path filters use '/'-separated subpaths on every platform.
@@ -142,6 +142,13 @@ func scanFileRoutes(inv *ProjectCacheInventory, file string, lines []string) {
 	// churches.get( with the path literal on the next line.
 	routeRe := regexp.MustCompile(`\.(get|post|put|patch|delete)\(\s*['"\x60]/([^'"\x60]*)['"\x60]`)
 
+	// Auth markers need a word boundary: a lowercase substring 'auth' test
+	// false-positives on 'authors'/'oauth' table names and phantom-flags a
+	// CRITICAL p2 that also suppresses P1. (?i) case-folds, and the [^a-z]
+	// classes fold with it, so 'AUTH' inside an uppercase identifier is not
+	// a marker either.
+	authRe := regexp.MustCompile(`(?i)(authmiddleware|requireauth|authguard|useauth|getauth|[^a-z]auth[^a-z]|^auth)`)
+
 	for i := 0; i < len(lines); i++ {
 		// The .get( call open must sit on this line (comment banners above
 		// multi-line route defs quote route-looking text and must not match).
@@ -171,8 +178,15 @@ func scanFileRoutes(inv *ProjectCacheInventory, file string, lines []string) {
 		}
 		window := []string{}
 		for j := i; j < winEnd; j++ {
+			// The next route's def line must NOT be absorbed into this
+			// window: a one-line def whose close never matches closeRe
+			// would otherwise claim the next route's kvCache options as a
+			// phantom cached route.
+			if j > i && routeRe.MatchString(lines[j]) {
+				break
+			}
 			window = append(window, lines[j])
-			if j > i && (closeRe.MatchString(lines[j]) || routeRe.MatchString(lines[j])) {
+			if j > i && closeRe.MatchString(lines[j]) {
 				break
 			}
 		}
@@ -196,7 +210,7 @@ func scanFileRoutes(inv *ProjectCacheInventory, file string, lines []string) {
 				route.TTL, _ = strconv.Atoi(ttl[1])
 			}
 			route.KeyPrefix = keyPrefix(optsText)
-			route.HasAuth = strings.Contains(strings.ToLower(windowText), "auth")
+			route.HasAuth = authRe.MatchString(windowText)
 			// HandlerQuery: .query( outside the kvCache options span.
 			outside := windowText
 			if optsEnd >= 0 && optsEnd <= len(windowText) {
@@ -282,9 +296,12 @@ func kvCacheOptions(windowText string, kvIdx int) (string, int) {
 	return tail[:end], kvIdx + end + 2
 }
 
-// keyPrefix finds the keyFn's value literal: first literal after `=>` for
-// expression arrows, first literal after `return` for block bodies, head
-// truncated at `${` or the closing quote. Function-call keys yield "".
+// keyPrefix finds the keyFn's value literal, head truncated at `${` or the
+// closing quote. Block bodies: the FIRST return whose remainder starts with
+// a literal — null/identifier early-returns are skipped (coverage must not
+// read as known when the key template never appears). Expression arrows:
+// the first literal after `=>`, with the block-body guard below.
+// Function-call keys yield "".
 func keyPrefix(optsText string) string {
 	kvRe := regexp.MustCompile(`keyFn\s*:`)
 	loc := kvRe.FindStringIndex(optsText)
@@ -292,18 +309,30 @@ func keyPrefix(optsText string) string {
 		return ""
 	}
 	value := optsText[loc[1]:]
-	// Block body: the literal after the LAST `return` — corpus block keyFns
-	// early-return null and run .replace(' ', ...) before the real key
-	// template, so the first return is not the key.
-	if idx := strings.LastIndex(value, "return"); idx >= 0 {
-		return literalHead(value[idx+len("return"):])
+
+	// Block bodies: iterate ALL return statements — `return\s` (whitespace
+	// after the keyword, so a trailing '// returns all...' comment never
+	// matches) — and take the FIRST whose remainder starts with a quote or
+	// backtick. A LastIndex('return') shape breaks when the key template
+	// comes first and `return null` is the fallback (yielding an empty
+	// prefix = silent coverage-unknown).
+	retRe := regexp.MustCompile(`return\s`)
+	for _, ret := range retRe.FindAllStringIndex(value, -1) {
+		rem := strings.TrimLeft(value[ret[1]:], " \t")
+		if rem != "" && (rem[0] == '\'' || rem[0] == '"' || rem[0] == '`') {
+			return literalHead(rem)
+		}
 	}
 	// Expression arrow: the first TEMPLATE literal after `=>` — the corpus's
 	// ternary shape (`(c) => (c.req.query('cc') ? \`api:...\` : null)`) puts a
 	// query-argument string literal before the key template, and the query arg
-	// is not the key prefix.
+	// is not the key prefix. Reached only when the body is not a block — a
+	// block body without a literal return derives its key from code.
 	if idx := strings.Index(value, "=>"); idx >= 0 {
 		arrow := value[idx+2:]
+		if strings.HasPrefix(strings.TrimLeft(arrow, " \t\n"), "{") {
+			return ""
+		}
 		if bt := strings.IndexByte(arrow, '`'); bt >= 0 {
 			// Template literal present: it is the key (the corpus's ternary
 			// shape puts query-argument strings before the template).
