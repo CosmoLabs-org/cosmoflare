@@ -124,7 +124,10 @@ func writeEfficiencyTable(rep *cosmoflare.EfficiencyReport) error {
 	fmt.Fprintf(w, "%-40s %-20s %-8s  %s\n", "RESOURCE", "CHECK", "SEV", "EVIDENCE")
 	for _, f := range rep.Findings {
 		sev := "⚠"
-		if f.Severity == "info" {
+		switch f.Severity {
+		case "critical":
+			sev = "‼"
+		case "info":
 			sev = "ℹ"
 		}
 		fmt.Fprintf(w, "%-40s %-20s %-8s  %s\n      fix: %s\n", f.Resource, f.Check, sev, f.Evidence, f.Fix)
