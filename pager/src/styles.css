@@ -1896,11 +1896,32 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 .cf-ring-used {
   fill: none;
   stroke: var(--accent);
+  /* color tracks stroke so the bloom's drop-shadow(currentColor) glows in
+     the level hue. Deliberately SUBTLE (3px/28%): the bloom is a backlight,
+     never a fog — and critical rings opt out below, where the pulse-glow
+     layer already owns the light (stacking both read as phosphor smear in
+     the 2026-10-16 visual pass). */
+  color: var(--accent);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 28%, transparent));
   stroke-width: 10;
   stroke-linecap: butt;
 }
-.cf-level-warning .cf-ring-used { stroke: var(--sev-warning); }
-.cf-level-critical .cf-ring-used { stroke: var(--sev-critical); }
+.cf-level-warning .cf-ring-used { stroke: var(--sev-warning); color: var(--sev-warning); }
+.cf-level-critical .cf-ring-used {
+  stroke: var(--sev-critical);
+  color: var(--sev-critical);
+  filter: none; /* the cf-ring-glow pulse layer is critical's light source */
+}
+/* The glow head: the arc's leading point carries its own light — the
+   capsule-end feel without round caps (operator 2026-10-10: butt caps keep
+   every dash endpoint mathematically exact). Rides the level color. */
+.cf-ring-head {
+  fill: currentColor;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 55%, transparent));
+  stroke: var(--bg);
+  stroke-width: 2.5;
+  animation: cf-ring-dot 420ms var(--ease-out) 680ms both;
+}
 .cf-ring-glow {
   fill: none;
   stroke: var(--sev-critical);
@@ -1910,34 +1931,48 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   animation: cf-pulse 1.6s ease-in-out infinite;
 }
 .cf-ring-value {
+  /* The luminous readout: the number is the instrument. Glow via CSS
+     filter (Safari does not render text-shadow on SVG text); weight 600
+     is the heaviest Spline Sans Mono actually loaded — 700 was a faux
+     bold that fuzzed under the bloom. */
   fill: var(--accent);
+  color: var(--accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 50%, transparent));
   font-family: var(--font-data);
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.cf-level-warning .cf-ring-value { fill: var(--sev-warning); }
-.cf-level-critical .cf-ring-value { fill: var(--sev-critical); }
-/* Ring band text: the all-caps instrument role — soft mono, tracked. */
+.cf-level-warning .cf-ring-value { fill: var(--sev-warning); color: var(--sev-warning); }
+.cf-level-critical .cf-ring-value { fill: var(--sev-critical); color: var(--sev-critical); }
+/* Ring band text: the all-caps instrument role — soft mono, tracked. The
+   readout speaks; labels whisper (operator 2026-10-16 hierarchy pass). */
 .cf-ring-usedpct {
   fill: var(--muted);
   font-family: var(--font-indicator);
-  font-size: 10.5px;
-  letter-spacing: 0.05em;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+/* Capacity lines wider than the ring's inner opening (mono width ∝ chars:
+>14 at the 132 ring) drop to the tight cut so they never run under the
+arcs — the "25.0 GB OF 10.0 GB" class of lines (2026-10-16 pass). */
+.cf-ring-usedpct-tight {
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
 }
 .cf-ring-sub {
   fill: var(--muted);
   font-family: var(--font-indicator);
-  font-size: 10.5px;
-  letter-spacing: 0.05em;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .cf-ring-label {
   fill: var(--muted);
   font-family: var(--font-indicator);
   font-size: 11px;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 /* Today dot: a 3px point ON the track at the expected-to-date angle — not
@@ -2175,6 +2210,8 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   .cf-anim-used,
   .cf-anim-projected,
   .cf-ring-glow,
+  .cf-ring-head,
+  .cf-ring-today,
   .cf-gauge-fill,
   .cf-gauge-projected,
   .cf-flow .cf-gauge-fill,

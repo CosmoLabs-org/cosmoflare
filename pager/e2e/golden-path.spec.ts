@@ -17,7 +17,9 @@ test.describe("Ops golden path", () => {
   test("navigation: quicknav chip to Workers, row through to profile", async ({ page }) => {
     await page.goto("/");
     await page.locator(".cf-quicknav-link", { hasText: "Workers" }).click();
-    await expect(page.locator(".cf-sectionhead-title")).toHaveText("Workers");
+    // The section head carries the live count span ("Workers (3)") since the
+    // critique-minors sweep — match the name, not the fixture-dependent count.
+    await expect(page.locator(".cf-sectionhead-title")).toHaveText(/^Workers/);
     // Tap the first script link in the workers table → the profile masthead
     // names the worker and the profile paints stat rows.
     const scriptLink = page.locator(".cf-link").first();

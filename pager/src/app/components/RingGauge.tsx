@@ -46,8 +46,22 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
     ({ "--ring-c": String(geom.circumference), ...extra }) as React.CSSProperties;
 
   const lines = labelLines(props.label);
-  const ys = lines.length === 1 ? [size + 12] : [size + 8, size + 20];
+  // Label band spacing (operator 2026-10-16 hierarchy pass): more air below
+  // the ring so the band reads as its own group, clear of the arcs.
+  const ys = lines.length === 1 ? [size + 16] : [size + 12, size + 23];
   const today = props.expectedPct !== undefined ? todayDotPos(props.expectedPct, cx, cy, r) : null;
+  // The glow head rides the used arc's end angle — same polar helper as the
+  // today dot (todayDotPos is generic pct→point math), driven by usedPct.
+  // Zero usage renders no head: an empty arc must not paint a start dot.
+  const head = props.usedPct > 0 ? todayDotPos(props.usedPct, cx, cy, r) : null;
+  // Inner capacity line fit: the ring's inner opening is 2*(r - stroke)
+  // viewBox units. Mono width is ∝ char count, so long lines take the tight
+  // cut (8.5px), and any line still wider gets SVG textLength — an exact
+  // squeeze to the opening. No measured-text heuristics, pure string math.
+  const second = ringSecondLine(props.usedPct, props.usedLineText);
+  const innerD = 2 * (r - stroke);
+  const tight = second.length * 6.8 > innerD; // 10px mono ≈ 6.8 units/char
+  const squeezed = tight && second.length * 5.44 > innerD; // 8.5px ≈ 5.44/char
 
   return (
     <svg
@@ -96,6 +110,9 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
         style={circleStyle({ "--arc-len": String(geom.usedLen) })}
       />
 
+      {/* Glow head: the leading point of the used arc, lit. */}
+      {head !== null ? <circle cx={head.x} cy={head.y} r="4" className="cf-ring-head" /> : null}
+
       {/* Glow filter definition (appended last, as the vanilla builder does). */}
       {level === "critical" ? (
         <defs>
@@ -124,11 +141,19 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
       {/* Center: the projected % big and level-colored, one muted line under
           it (used %, or the size for storage metrics) — spaced so neither
           line touches the arcs (operator 2026-10-10 overlap fix). */}
-      <text x={cx} y={cy - 9} textAnchor="middle" dominantBaseline="central" className="cf-ring-value">
+      <text x={cx} y={cy - 11} textAnchor="middle" dominantBaseline="central" className="cf-ring-value">
         {ringCenterValue(props.projectedPct)}
       </text>
-      <text x={cx} y={cy + 16} textAnchor="middle" dominantBaseline="central" className="cf-ring-usedpct">
-        {ringSecondLine(props.usedPct, props.usedLineText)}
+      <text
+        x={cx}
+        y={cy + 21}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className={tight ? "cf-ring-usedpct cf-ring-usedpct-tight" : "cf-ring-usedpct"}
+        textLength={squeezed ? innerD : undefined}
+        lengthAdjust={squeezed ? "spacingAndGlyphs" : undefined}
+      >
+        {second}
       </text>
 
       {/* Label band below the ring: the (up to two-line) product label, then
@@ -143,7 +168,7 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
       {props.sublabel ? (
         <text
           x={cx}
-          y={String((lines.length === 1 ? size + 12 : size + 20) + 12)}
+          y={String((lines.length === 1 ? size + 16 : size + 23) + 14)}
           textAnchor="middle"
           className="cf-ring-sub"
         >
