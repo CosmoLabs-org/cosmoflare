@@ -69,19 +69,21 @@ describe("ringPropsFor", () => {
     const empty: ProductUsage = { ...d1, included: 0 };
     expect(ringPropsFor(empty, period).usedPct).toBe(0);
   });
-  it("storage rings carry the size as the second line, not a repeated % (IMP-002)", () => {
+  it("concrete-number rings: the interior value is the measured used amount with units (2026-10-16)", () => {
     const kv: ProductUsage = {
       id: "kv.storage", product: "KV", metric: "Storage", unit: "GB",
       included: 1, used: 3.888, projected: 3.888, unitPriceUsd: 0.15,
       priceUnit: 1e6, projectedOverageUsd: 0.43, topConsumers: [],
     };
     const props = ringPropsFor(kv, period);
-    expect(props.usedLineText).toBe("3.9 GB of 1.0 GB");
-    // The sublabel would duplicate the allowance right under the size line.
-    expect(props.sublabel).toBeUndefined();
-  });
-  it("non-storage rings keep the default used-% line", () => {
-    expect(ringPropsFor(d1, period).usedLineText).toBeUndefined();
+    expect(props.centerValueText).toBe("3.9 GB");
+    // IMP-002 evolved: the interior no longer carries capacity text, so the
+    // band states the allowance for storage too (component adds "of").
+    expect(props.sublabel).toBe("1.0 GB");
+    expect(props.usedLineText).toBeUndefined();
+    // Count metrics abbreviate the used value; the unit lives in the band.
+    expect(ringPropsFor(d1, period).centerValueText).toBe("640.0M");
+    expect(ringPropsFor(d1, period).sublabel).toBe("25.0B rows");
   });
 });
 

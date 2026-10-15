@@ -225,6 +225,10 @@ export interface RingGaugeProps {
   /** Overrides the "N% used so far" line with the size for storage metrics
    *  (IMP-002: projected === used, so the % would repeat the center value). */
   usedLineText?: string;
+  /** Concrete center value with units ("3.9 GB", "7.4M") — replaces the
+   *  projected-% readout as the ring's hero. Interior shows this + "USED";
+   *  the used % and allowance move to the band below (2026-10-16). */
+  centerValueText?: string;
   /** Square ring size in px; default 120. */
   size?: number;
   /** Expected-to-date position 0..100 (period.day/period.days) — 3px dot on the ring. */

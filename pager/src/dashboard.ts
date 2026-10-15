@@ -53,20 +53,24 @@ export function pacingSublabel(p: ProductUsage): string {
 // expected-to-date share of the period, and the sublabel reads "10M requests".
 export function ringPropsFor(p: ProductUsage, period: BillingPeriod): RingGaugeProps {
   const included = p.included > 0 ? p.included : 0;
+  const storage = p.id.endsWith(".storage");
   return {
     usedPct: included > 0 ? (p.used / included) * 100 : 0,
     projectedPct: pacingPct(p),
     expectedPct: periodProgress(period.day, period.days).elapsedPct,
     label: productLabel(p.id, p.product, p.metric),
-    // IMP-002: storage projection === usage, so the size line under the
-    // center value carries BOTH numbers ("3.9 GB of 1.0 GB") — the sublabel
-    // would repeat the allowance 14px below it.
-    sublabel: p.id.endsWith(".storage")
-      ? undefined
-      : `${formatCount(p.included)} ${p.unit}`,
-    usedLineText: p.id.endsWith(".storage")
-      ? `${formatAmount(p.used, p.unit)} of ${formatAmount(p.included, p.unit)}`
-      : undefined,
+    // Concrete-number interior (2026-10-16): the ring's hero is the measured
+    // used value with units, not the projected %. Storage carries the unit in
+    // the number ("3.9 GB"); counts abbreviate ("7.4M") with the unit spelled
+    // out in the band below.
+    centerValueText: storage
+      ? formatAmount(p.used, p.unit)
+      : formatCount(p.used),
+    // The band holds the allowance; storage now sets it too — the old
+    // IMP-002 suppression existed because the interior line would have
+    // repeated it, and the interior no longer carries capacity text.
+    // (The component renders the "of" prefix.)
+    sublabel: storage ? formatAmount(p.included, p.unit) : `${formatCount(p.included)} ${p.unit}`,
   };
 }
 
