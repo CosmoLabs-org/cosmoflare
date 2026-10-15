@@ -5,6 +5,7 @@ status: PENDING
 branch: master
 goals_total: 2
 goals_completed: 0
+supersedes: "docs/prompts/2026-10-15-session-1-continuation.md"
 ---
 
 ## Context
