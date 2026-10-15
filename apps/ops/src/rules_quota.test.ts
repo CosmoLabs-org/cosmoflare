@@ -205,6 +205,10 @@ describe("BUG-pP1YH9W: shared paginated active-only zone list", () => {
   it("rotates all 45 active zones and excludes paused ones (server-side status=active filter)", async () => {
     const active = Array.from({ length: 45 }, (_, i) => ({ id: `z-${i}`, name: `zone-${i}.example`, status: "active" }));
     const paused = { id: "z-paused", name: "paused.example", status: "paused" };
+    // A 45-zone fleet fits the API's per_page=50, so it is ONE full page —
+    // the multi-page walk is pinned by the 120-zone test below (restPages
+    // treats a short page as the last one, so splitting 45 across pages
+    // would exercise nothing but that heuristic).
     stubZonesPages([[...active, paused]]);
     // 6 cycles × 8 = 48 ≥ 45 → the full fleet has rotated.
     for (let i = 0; i < 6; i++) await refreshRulesQuotaBatch(ENV as never, 8);
@@ -287,7 +291,7 @@ describe("BUG-p9GM11M: summary age honesty and corrupt-entry tolerance", () => {
     const summary = await refreshRulesQuotaBatch(ENV as never, 1, new Date(now));
     expect(summary.zonesTracked).toBe(2); // good.example survived + fresh.example collected
     expect(summary.entries["good.example"]).toBeDefined();
-    expect(summary.entries["fresh.example"]).toBe(now.toISOString());
+    expect(summary.entries["fresh.example"]).toBe(new Date(now).toISOString());
   });
 
   it("tolerates a corrupt CURSOR_KEY value (guarded like every other OPS_KV read)", async () => {
