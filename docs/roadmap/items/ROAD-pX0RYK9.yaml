@@ -1,9 +1,9 @@
 id: ROAD-pX0RYK9
 created_at: 2026-10-15T15:22:38.793456+04:00
-updated_at: 2026-10-15T19:15:55.659997+04:00
+updated_at: 2026-10-15T19:36:45.234513+04:00
 title: Commands to AI Agent — deterministic advisory briefs in Ops
 description: 'Per-domain advisories in the Ops app: measured facts (cache coverage, HTML trap, alerts, quotas) compiled deterministically into copy-paste agent briefs via a Commands-to-AI-Agent modal. Expandable message-template architecture (kinds x formats x scopes). Implements FEAT-pC1EV32; future: direct agent integration (idea 2026-10-15).'
-status: captured
+status: in_progress
 priority: 80
 effort: medium
 refs:

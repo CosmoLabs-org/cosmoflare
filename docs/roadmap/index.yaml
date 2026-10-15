@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-15T19:15:55.687319+04:00
+last_updated: 2026-10-15T19:36:45.265036+04:00
 next_id: 119
 items:
     - id: BASE-001
@@ -1033,7 +1033,7 @@ items:
       created_at: 2026-10-14T19:14:14.666399+04:00
     - id: ROAD-pX0RYK9
       title: Commands to AI Agent — deterministic advisory briefs in Ops
-      status: captured
+      status: in_progress
       priority: 80
       effort: medium
       has_plan: true
