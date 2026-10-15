@@ -14,6 +14,7 @@
 import { cached } from "../cache";
 import { collectRulesQuota } from "../rules_quota";
 import { activeZones, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEnv } from "../scheduled";
+import type { ZoneFacts } from "./types";
 
 /** The brief's measurement window, in whole days (httpRequests1dGroups is
  *  date-granular — it rejects datetime filters, verified live 2026-10-14). */
@@ -27,10 +28,11 @@ const PROBE_TIMEOUT_MS = 10_000;
 
 // cached() refreshes stale entries through ctx.waitUntil; the optional ctx
 // defaults to a no-op so tests and future callers can pass just (env, zone).
-const NOOP_CTX: ExecutionContext = {
+// Same synthetic-ExecutionContext cast the test suites use (actions.test.ts).
+const NOOP_CTX = {
   waitUntil: () => undefined,
   passThroughOnException: () => undefined,
-};
+} as unknown as ExecutionContext;
 
 // Private GraphQL helper — the summary.ts gql() pattern (scheduled.ts keeps
 // the same private copy; the helper is deliberately not shared).
@@ -88,7 +90,7 @@ async function loadCoverage(token: string, zoneId: string): Promise<ZoneFacts["c
 // different from what the CLI measured). Never throws: a dead origin is a
 // missing probe field, and the null is cached so a downed origin is not
 // re-probed on every advisory read.
-async function probeOrigin(zoneName: string): Promise<ZoneFacts["probe"]> {
+async function probeOrigin(zoneName: string): Promise<ZoneFacts["probe"] | null> {
   try {
     const res = await fetch(`https://${zoneName}/`, {
       headers: { "User-Agent": "cosmoflare-efficiency/1.0", Accept: "text/html,application/xhtml+xml" },

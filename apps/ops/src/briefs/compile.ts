@@ -109,11 +109,12 @@ export function compileBrief(facts: ZoneFacts, templates: TemplateMap): Brief {
   // 3. cache-rule-gap — cacheable HTML the edge already serves, yet zero
   // zone Cache Rules exist (default cache behavior is doing the work).
   // Dedupe: when the trap fired, the gap is the same story — skip it.
-  if (!trap && isCacheableHTML(facts.probe) && facts.cacheRuleCount === 0) {
+  const gapProbe = facts.probe;
+  if (!trap && gapProbe && isCacheableHTML(gapProbe) && facts.cacheRuleCount === 0) {
     findings.push({
       kind: "cache-rule-gap",
       severity: "info",
-      evidence: `origin "${facts.probe.cacheControl}" on HTML; cf-cache-status ${facts.probe.cfCacheStatus || "absent"}; no zone Cache Rule exists`,
+      evidence: `origin "${gapProbe.cacheControl}" on HTML; cf-cache-status ${gapProbe.cfCacheStatus || "absent"}; no zone Cache Rule exists`,
     });
   }
 
