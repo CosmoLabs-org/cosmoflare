@@ -10,9 +10,9 @@ func TestLoadEntryCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	// 74 embedded corpus entries + 2 appended local constants.
-	if len(entries) != 76 {
-		t.Fatalf("Load returned %d entries, want 76 (74 catalog + 2 local)", len(entries))
+	// 75 embedded corpus entries + 2 appended local constants.
+	if len(entries) != 77 {
+		t.Fatalf("Load returned %d entries, want 77 (75 catalog + 2 local)", len(entries))
 	}
 }
 
@@ -78,9 +78,9 @@ func TestStale(t *testing.T) {
 		t.Fatalf("Stale(fresh cutoff) = %v, want exactly the 2 local constants", fresh)
 	}
 
-	// Cutoff after every verification date (last batch: FEAT-048 monthly rows
-	// verified 2026-10-08): everything is stale.
-	old := Stale(time.Date(2026, 10, 9, 0, 0, 0, 0, time.UTC))
+	// Cutoff after every verification date (latest: kv.requests_monthly
+	// verified 2026-10-14T18:20Z): everything is stale.
+	old := Stale(time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC))
 	if len(old) != len(entries) {
 		t.Fatalf("Stale(post-verification cutoff) = %d ids, want all %d", len(old), len(entries))
 	}
