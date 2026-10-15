@@ -3,17 +3,15 @@
 // come from the legacy REST endpoint, the other four from the Ruleset Engine
 // entrypoints (needs Zone Rulesets Read on the token — every rulesets family
 // degrades to authorized:false on 403, the Page Rules row still renders).
-// Budget: one cached zone-list lookup (shared "cron:zones" key) + up to 5
+// Budget: one cached zone-list lookup (the shared "cron:zones" key, written
+// only by scheduled.ts's paginated active-only list — BUG-pP1YH9W) + up to 5
 // GETs per zone, KV-cached 5 min per zone — never per request.
 
 import { fetchRetry } from "./retry";
-import type { OpsEnv } from "./scheduled";
+import { activeZones, type OpsEnv } from "./scheduled";
 
 const API = "https://api.cloudflare.com/client/v4";
 
-const ZONES_CACHE_KEY = "cron:zones";
-const ZONES_TTL_MS = 60 * 60 * 1000;
-const ZONES_KV_TTL_SEC = 86400;
 const QUOTA_KV_PREFIX = "ops:rules-quota:";
 const QUOTA_KV_TTL_SEC = 300;
 
@@ -69,35 +67,9 @@ export interface RulesQuotaPayload {
   errors: string[];
 }
 
-interface CachedZones {
-  at: number;
-  value: { id: string; name: string }[];
-}
-
 interface CachedQuota {
   at: number;
   value: RulesQuotaPayload;
-}
-
-async function zonesFromCacheOrFetch(env: OpsEnv): Promise<{ id: string; name: string }[]> {
-  try {
-    const cached = await env.OPS_KV.get<CachedZones>(ZONES_CACHE_KEY, "json");
-    if (cached && typeof cached.at === "number" && Date.now() - cached.at < ZONES_TTL_MS) return cached.value;
-  } catch {
-    // KV read failure falls through to a live fetch.
-  }
-  const res = await fetchRetry(`${API}/zones?account.id=${env.CF_ACCOUNT_ID}`, {
-    headers: { Authorization: `Bearer ${env.CF_API_TOKEN}` },
-  });
-  const body = (await res.json()) as { success?: boolean; result?: { id: string; name: string }[] };
-  if (!res.ok || body.success !== true) throw new Error(`zone list: HTTP ${res.status}`);
-  const zones = body.result ?? [];
-  try {
-    await env.OPS_KV.put(ZONES_CACHE_KEY, JSON.stringify({ at: Date.now(), value: zones }), { expirationTtl: ZONES_KV_TTL_SEC });
-  } catch {
-    // Cache-write failure is non-fatal.
-  }
-  return zones;
 }
 
 async function restGet<T>(token: string, path: string): Promise<T> {
@@ -164,7 +136,7 @@ export async function collectRulesQuota(env: OpsEnv, zoneName: string, now = new
 
   const out: RulesQuotaPayload = { zone: zoneName, generatedAt: now.toISOString(), families: [], errors: [] };
   try {
-    const zones = await zonesFromCacheOrFetch(env);
+    const zones = await activeZones(env);
     const zone = zones.find((z) => z.name === zoneName);
     if (!zone) throw new Error(`zone ${zoneName} not found`);
 
@@ -220,6 +192,9 @@ export interface RulesQuotaSummary {
   generatedAt: string;
   zonesTracked: number;
   families: RulesQuotaFamilySummary[];
+  /** Per-zone collected-at (ISO) — the store's validated `at` exposed so
+   *  staleness is visible per zone instead of masked by generatedAt. */
+  entries: Record<string, string>;
 }
 
 interface SummaryStore {
@@ -230,16 +205,23 @@ interface SummaryStore {
 /** Collect the next batch and merge into the store. Failures per zone are
  *  skipped (that zone keeps its previous entry); the cursor still advances. */
 export async function refreshRulesQuotaBatch(env: OpsEnv, batchSize = QUOTA_BATCH_SIZE, now = new Date()): Promise<RulesQuotaSummary> {
-  const zones = await zonesFromCacheOrFetch(env);
-  if (zones.length === 0) return { generatedAt: now.toISOString(), zonesTracked: 0, families: [] };
+  const zones = await activeZones(env);
+  if (zones.length === 0) return { generatedAt: now.toISOString(), zonesTracked: 0, families: [], entries: {} };
 
-  const cursorRaw = (await env.OPS_KV.get<number>(CURSOR_KEY, "json")) ?? 0;
-  const cursor = ((cursorRaw % zones.length) + zones.length) % zones.length;
+  // Guarded like every other OPS_KV access (BUG-p9GM11M): a corrupt cursor
+  // value must not throw the cycle — it just restarts the rotation.
+  let cursorRaw: number | null = null;
+  try {
+    cursorRaw = (await env.OPS_KV.get<number>(CURSOR_KEY, "json")) ?? 0;
+  } catch {
+    cursorRaw = 0;
+  }
+  const cursor = (((cursorRaw as number) % zones.length) + zones.length) % zones.length;
 
   let store: SummaryStore = { at: Date.now(), zones: {} };
   try {
-    const cached = await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json");
-    if (cached && typeof cached.at === "number" && cached.zones) store = cached;
+    const cached = readStore(await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json"));
+    if (cached) store = cached;
   } catch {
     // KV read failure starts a fresh store.
   }
@@ -261,11 +243,21 @@ export async function refreshRulesQuotaBatch(env: OpsEnv, batchSize = QUOTA_BATC
     if (now.getTime() - Date.parse(entry.at) > ENTRY_MAX_AGE_MS) delete store.zones[name];
   }
   store.at = Date.now();
+  // Overlap safety (BUG-p9GM11M): the store write strictly precedes the
+  // cursor advance. A cycle killed between the two writes leaves the cursor
+  // unmoved, so the next cycle re-processes the batch and re-merges it —
+  // the merge is idempotent, so nothing is lost. The old all-or-nothing
+  // order (cursor advancing alongside the store) is preserved but now the
+  // cursor only moves after the merged store is durably in KV.
   try {
     await env.OPS_KV.put(SUMMARY_KEY, JSON.stringify(store));
-    await env.OPS_KV.put(CURSOR_KEY, JSON.stringify((cursor + n) % zones.length));
   } catch {
     // Cache-write failure is non-fatal; the aggregate below still returns.
+  }
+  try {
+    await env.OPS_KV.put(CURSOR_KEY, JSON.stringify((cursor + n) % zones.length));
+  } catch {
+    // Cursor-advance failure is non-fatal: the next cycle re-merges.
   }
   return aggregateSummary(store, now);
 }
@@ -273,22 +265,54 @@ export async function refreshRulesQuotaBatch(env: OpsEnv, batchSize = QUOTA_BATC
 /** Read the store and aggregate — the strip's read path (no fetches). */
 export async function readRulesQuotaSummary(env: OpsEnv, now = new Date()): Promise<RulesQuotaSummary> {
   try {
-    const cached = await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json");
-    if (cached && typeof cached.at === "number" && cached.zones) return aggregateSummary(cached, now);
+    const cached = readStore(await env.OPS_KV.get<SummaryStore>(SUMMARY_KEY, "json"));
+    if (cached) return aggregateSummary(cached, now);
   } catch {
     // KV read failure: an empty summary, never a throw.
   }
-  return { generatedAt: now.toISOString(), zonesTracked: 0, families: [] };
+  return { generatedAt: now.toISOString(), zonesTracked: 0, families: [], entries: {} };
+}
+
+/** Deep-validate one store entry (BUG-p9GM11M): entries are untrusted KV
+ *  JSON, and a malformed one used to throw every cron cycle behind a
+ *  swallowed catch. Returns null when the entry is unusable. */
+function validEntry(entry: unknown): entry is RulesQuotaZoneEntry {
+  if (!entry || typeof entry !== "object") return false;
+  const e = entry as Partial<RulesQuotaZoneEntry>;
+  if (typeof e.at !== "string" || Number.isNaN(Date.parse(e.at))) return false;
+  if (!e.families || typeof e.families !== "object") return false;
+  for (const f of Object.values(e.families)) {
+    if (!f || typeof f !== "object") return false;
+    if (typeof f.used !== "number" || typeof f.allowance !== "number" || typeof f.authorized !== "boolean") return false;
+  }
+  return true;
+}
+
+/** Deep-validate a raw KV store value, dropping corrupt entries per-zone
+ *  (skip-and-log) instead of throwing the whole cycle. Returns null when the
+ *  wrapper itself is unusable. */
+function readStore(raw: unknown): SummaryStore | null {
+  if (!raw || typeof raw !== "object") return null;
+  const { at, zones } = raw as { at?: unknown; zones?: unknown };
+  if (typeof at !== "number" || !zones || typeof zones !== "object") return null;
+  const clean: Record<string, RulesQuotaZoneEntry> = {};
+  let skipped = 0;
+  for (const [name, entry] of Object.entries(zones as Record<string, unknown>)) {
+    if (validEntry(entry)) clean[name] = entry;
+    else skipped += 1;
+  }
+  if (skipped > 0) console.warn(`rules-quota summary: skipped ${skipped} corrupt zone ${skipped === 1 ? "entry" : "entries"}`);
+  return { at, zones: clean };
 }
 
 function aggregateSummary(store: SummaryStore, now: Date): RulesQuotaSummary {
-  const zones = Object.values(store.zones);
+  const zones = Object.entries(store.zones);
   const families: RulesQuotaFamilySummary[] = [];
   for (const family of Object.keys(ALLOWANCE)) {
     let zonesTracked = 0;
     let totalUsed = 0;
     let atCapZones = 0;
-    for (const entry of zones) {
+    for (const [, entry] of zones) {
       const f = entry.families[family];
       if (!f || !f.authorized) continue;
       zonesTracked += 1;
@@ -297,9 +321,20 @@ function aggregateSummary(store: SummaryStore, now: Date): RulesQuotaSummary {
     }
     families.push({ family, label: LABEL[family], zonesTracked, totalUsed, atCapZones });
   }
+  // generatedAt is the NEWEST entry's collected-at (BUG-p9GM11M): stamping
+  // read-time now presented up-to-48h-old data as current. Per-entry ages
+  // are exposed so the client can render staleness per zone.
+  const entries: Record<string, string> = {};
+  let newest = 0;
+  for (const [name, entry] of zones) {
+    entries[name] = entry.at;
+    const t = Date.parse(entry.at);
+    if (!Number.isNaN(t) && t > newest) newest = t;
+  }
   return {
-    generatedAt: now.toISOString(),
+    generatedAt: (newest > 0 ? new Date(newest) : now).toISOString(),
     zonesTracked: Math.max(...families.map((f) => f.zonesTracked), 0),
     families,
+    entries,
   };
 }

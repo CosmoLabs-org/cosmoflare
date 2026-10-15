@@ -179,3 +179,158 @@ describe("refreshRulesQuotaBatch / readRulesQuotaSummary", () => {
     expect(summary.families).toEqual([]); // nothing tracked: the strip stays hidden
   });
 });
+
+// --- BUG-pP1YH9W: full-fleet zone list (paginated, active-only, shared key) ---
+
+/** Stub fetch with real per-page /zones pagination honouring status=active
+ *  the way the v4 API does: rows with status != "active" are filtered out
+ *  server-side when the query asks for status=active. */
+function stubZonesPages(pages: { id: string; name: string; status: string }[][]): void {
+  fetchCalls = [];
+  vi.stubGlobal("fetch", async (input: RequestInfo | URL): Promise<Response> => {
+    const url = String(input);
+    fetchCalls.push(url);
+    if (url.includes("/zones?account.id=acct")) {
+      const activeOnly = url.includes("status=active");
+      const m = url.match(/[?&]page=(\d+)/);
+      const page = m ? Number(m[1]) : 1;
+      const rows = (pages[page - 1] ?? []).filter((z) => !activeOnly || z.status === "active");
+      return new Response(JSON.stringify({ success: true, result: rows, result_info: { total_pages: pages.length, total_count: pages.flat().length } }));
+    }
+    return new Response(JSON.stringify({ success: true, result: [] }));
+  });
+}
+
+describe("BUG-pP1YH9W: shared paginated active-only zone list", () => {
+  it("rotates all 45 active zones and excludes paused ones (server-side status=active filter)", async () => {
+    const active = Array.from({ length: 45 }, (_, i) => ({ id: `z-${i}`, name: `zone-${i}.example`, status: "active" }));
+    const paused = { id: "z-paused", name: "paused.example", status: "paused" };
+    // A 45-zone fleet fits the API's per_page=50, so it is ONE full page —
+    // the multi-page walk is pinned by the 120-zone test below (restPages
+    // treats a short page as the last one, so splitting 45 across pages
+    // would exercise nothing but that heuristic).
+    stubZonesPages([[...active, paused]]);
+    // 6 cycles × 8 = 48 ≥ 45 → the full fleet has rotated.
+    for (let i = 0; i < 6; i++) await refreshRulesQuotaBatch(ENV as never, 8);
+    const read = await readRulesQuotaSummary(ENV as never);
+    expect(read.zonesTracked).toBe(45);
+    expect(read.families.find((f) => f.family === "page-rules")?.zonesTracked).toBe(45);
+    // The fetch asked the API for active zones only (the paused zone never enters the store).
+    expect(fetchCalls.some((u) => u.includes("status=active"))).toBe(true);
+    expect(JSON.parse(ENV.OPS_KV.store.get("ops:rules-quota-summary") ?? "{}").zones["paused.example"]).toBeUndefined();
+  });
+
+  it("walks every page for fleets larger than one page (120 zones over 3 pages)", async () => {
+    const zones = Array.from({ length: 120 }, (_, i) => ({ id: `z-${i}`, name: `zone-${i}.example`, status: "active" }));
+    stubZonesPages([zones.slice(0, 50), zones.slice(50, 100), zones.slice(100)]);
+    await refreshRulesQuotaBatch(ENV as never, 120);
+    expect(fetchCalls.some((u) => u.includes("page=2"))).toBe(true);
+    expect(fetchCalls.some((u) => u.includes("page=3"))).toBe(true);
+    const read = await readRulesQuotaSummary(ENV as never);
+    expect(read.zonesTracked).toBe(120);
+  });
+});
+
+// --- BUG-p9GM11M: summary honesty ---
+
+describe("BUG-p9GM11M: summary age honesty and corrupt-entry tolerance", () => {
+  it("stamps generatedAt from the newest entry and exposes per-entry collected-at", async () => {
+    const now = Date.now();
+    const newestAt = new Date(now - 30 * 60 * 1000).toISOString();
+    ENV.OPS_KV.store.set(
+      "ops:rules-quota-summary",
+      JSON.stringify({
+        at: now,
+        zones: {
+          "old.example": { at: new Date(now - 2 * 60 * 60 * 1000).toISOString(), families: { "page-rules": { used: 1, allowance: 3, authorized: true } } },
+          "new.example": { at: newestAt, families: { "page-rules": { used: 0, allowance: 3, authorized: true } } },
+        },
+      }),
+    );
+    const read = await readRulesQuotaSummary(ENV as never, new Date(now));
+    expect(read.generatedAt).toBe(newestAt); // read-time now, not the 2h-old entry's stamp
+    expect(read.entries["old.example"]).toBe(new Date(now - 2 * 60 * 60 * 1000).toISOString());
+    expect(read.entries["new.example"]).toBe(newestAt);
+  });
+
+  it("skips corrupt store entries instead of throwing the cycle", async () => {
+    const now = Date.now();
+    ENV.OPS_KV.store.set(
+      "ops:rules-quota-summary",
+      JSON.stringify({
+        at: now,
+        zones: {
+          "good.example": { at: new Date(now - 60 * 1000).toISOString(), families: { "page-rules": { used: 2, allowance: 3, authorized: true } } },
+          "bad-at.example": { at: "not-a-date", families: { "page-rules": { used: 1, allowance: 3, authorized: true } } },
+          "bad-families.example": { at: new Date(now).toISOString(), families: { "page-rules": { used: "many", allowance: 3, authorized: true } } },
+          "null.example": null,
+        },
+      }),
+    );
+    const read = await readRulesQuotaSummary(ENV as never, new Date(now));
+    expect(read.zonesTracked).toBe(1);
+    expect(read.families.find((f) => f.family === "page-rules")?.totalUsed).toBe(2);
+  });
+
+  it("a corrupt store entry does not throw the refresh cycle and keeps the good zones", async () => {
+    const now = Date.now();
+    ENV.OPS_KV.store.set(
+      "ops:rules-quota-summary",
+      JSON.stringify({
+        at: now,
+        zones: {
+          "good.example": { at: new Date(now - 60 * 1000).toISOString(), families: { "page-rules": { used: 1, allowance: 3, authorized: true } } },
+          "bad.example": { at: 42, families: "nope" },
+        },
+      }),
+    );
+    stubFetch({
+      [ZONES_ROUTE]: [{ id: ZONE_ID, name: "fresh.example" }],
+      [`${ZONE_ID}/pagerules`]: [],
+    });
+    const summary = await refreshRulesQuotaBatch(ENV as never, 1, new Date(now));
+    expect(summary.zonesTracked).toBe(2); // good.example survived + fresh.example collected
+    expect(summary.entries["good.example"]).toBeDefined();
+    expect(summary.entries["fresh.example"]).toBe(new Date(now).toISOString());
+  });
+
+  it("tolerates a corrupt CURSOR_KEY value (guarded like every other OPS_KV read)", async () => {
+    ENV.OPS_KV.store.set("ops:rules-quota-cursor", "{not json");
+    stubFetch({
+      [ZONES_ROUTE]: [
+        { id: "z-0", name: "zone-0.example" },
+        { id: "z-1", name: "zone-1.example" },
+      ],
+      "z-0/pagerules": [],
+      "z-1/pagerules": [],
+    });
+    const summary = await refreshRulesQuotaBatch(ENV as never, 1);
+    expect(summary.zonesTracked).toBe(1); // started from cursor 0, no throw
+    expect(JSON.parse(ENV.OPS_KV.store.get("ops:rules-quota-cursor") ?? "null")).toBe(1);
+  });
+
+  it("writes the store before advancing the cursor (killed cycle re-merges, never loses the batch)", async () => {
+    const writes: string[] = [];
+    const orderEnv = {
+      CF_ACCOUNT_ID: "acct",
+      CF_API_TOKEN: "tok",
+      OPS_KV: {
+        store: ENV.OPS_KV.store,
+        get: ENV.OPS_KV.get,
+        put: async (key: string, value: string): Promise<void> => {
+          writes.push(key);
+          await ENV.OPS_KV.put(key, value);
+        },
+      },
+    };
+    stubFetch({
+      [ZONES_ROUTE]: [{ id: ZONE_ID, name: "example.com" }],
+      [`${ZONE_ID}/pagerules`]: [],
+    });
+    await refreshRulesQuotaBatch(orderEnv as never, 1);
+    const storeIdx = writes.indexOf("ops:rules-quota-summary");
+    const cursorIdx = writes.indexOf("ops:rules-quota-cursor");
+    expect(storeIdx).toBeGreaterThanOrEqual(0);
+    expect(cursorIdx).toBeGreaterThan(storeIdx);
+  });
+});
