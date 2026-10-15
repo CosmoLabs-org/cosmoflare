@@ -1,12 +1,14 @@
 id: BUG-pN2NX4K
 type: bug
 created_at: 2026-10-15T19:32:01.880683+04:00
-updated_at: 2026-10-15T19:32:02.436121+04:00
+updated_at: 2026-10-15T19:32:03.787762+04:00
 source: local
 ulid: 01M50326R4X7HPB66GJTN2NX4K
 provisional: true
 severity: medium
 status: open
+origin:
+    session: 79
 title: 'dns update: --content flag documented in help but not implemented'
 description: cosmoflare dns update's own help (cmd/dns.go:34,105) and docs/USAGE.md:727-728 show 'dns update ZONE_ID RECORD_ID --content=5.6.7.8' but the command registers only --comment/--priority/--proxied/--ttl — a record's content cannot be changed via the CLI despite the docs promising it. Found by doc-lint at session-end 2026-10-15. USAGE.md examples corrected to real-flag forms; the command help and (ideally) the missing --content flag remain.
 fix_direction: Add dnsContent flag to dnsUpdateCmd (mirror dnsCreateCmd's --content wiring into the update payload), or strip the flag from both help examples until implemented.
