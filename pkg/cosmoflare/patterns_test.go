@@ -271,3 +271,168 @@ fRoutes.get(
 		t.Fatalf("TotalGETRoutes = %d, want 2 (banners must not count)", inv.TotalGETRoutes)
 	}
 }
+
+// TestScanProjectCacheOneLinerDoesNotAbsorbNextRoute pins the window-break
+// rule: a one-line route def whose close never matches closeRe must break at
+// the next route's def line WITHOUT absorbing it — otherwise the next
+// route's kvCache options land in the one-liner's window and it is reported
+// as a phantom cached route.
+func TestScanProjectCacheOneLinerDoesNotAbsorbNextRoute(t *testing.T) {
+	dir := t.TempDir()
+	src := `app.get("/health", (c) => c.json("ok"))
+cities.get('/cities', kvCache({
+  ttl: 43200,
+  keyFn: (c) => ` + "`api:faux:cities:${cc}`" + `,
+}),
+async (c) => c.json({})
+)
+`
+	if err := os.WriteFile(filepath.Join(dir, "routes.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	inv, err := ScanProjectCache(dir)
+	if err != nil {
+		t.Fatalf("ScanProjectCache: %v", err)
+	}
+	if len(inv.Routes) != 1 {
+		t.Fatalf("routes count = %d, want 1 (the kvCache route only, no phantom GET /health):\n%+v", len(inv.Routes), inv.Routes)
+	}
+	if inv.Routes[0].Route != "GET /cities" {
+		t.Errorf("route = %q, want GET /cities", inv.Routes[0].Route)
+	}
+	if inv.Routes[0].TTL != 43200 || inv.Routes[0].KeyPrefix != "api:faux:cities:" {
+		t.Errorf("cities route = %+v, want ttl 43200, prefix api:faux:cities: (options must be attributed to it, not the one-liner)", inv.Routes[0])
+	}
+}
+
+// TestScanProjectCacheAuthWordBoundary pins the HasAuth word boundary:
+// lowercase substring 'auth' false-positives on 'authors'/'oauth'; only real
+// auth markers (authMiddleware, requireAuth, a bare auth identifier) may
+// flag a route.
+func TestScanProjectCacheAuthWordBoundary(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, content string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// 'authors' appears in a SQL literal AND in a key prefix — neither may
+	// trigger HasAuth.
+	write("authors.ts", `aRoutes.get(
+  '/list',
+  kvCache({ ttl: 600, keyFn: (c) => ` + "`api:authors:list:${page}`" + ` }),
+  async (c) => c.json(await db.prepare(` + "`SELECT name FROM authors`" + `).all())
+)
+`)
+	write("auth.ts", `uRoutes.get(
+  '/me',
+  authMiddleware,
+  kvCache({ ttl: 300, keyFn: (c) => ` + "`api:user:me:${id}`" + ` }),
+  async (c) => c.json({})
+)
+rRoutes.get(
+  '/admin',
+  requireAuth,
+  kvCache({ ttl: 300, keyFn: (c) => ` + "`api:admin:${id}`" + ` }),
+  async (c) => c.json({})
+)
+pRoutes.get(
+  '/profile',
+  kvCache({ ttl: 300, keyFn: (c) => ` + "`api:profile:${id}`" + ` }),
+  async (c) => {
+    const auth = c.get('user')
+    return c.json(auth)
+  }
+)
+`)
+	inv, err := ScanProjectCache(dir)
+	if err != nil {
+		t.Fatalf("ScanProjectCache: %v", err)
+	}
+	byRoute := map[string]CachedRoute{}
+	for _, r := range inv.Routes {
+		byRoute[r.Route] = r
+	}
+	if r, ok := byRoute["GET /list"]; !ok {
+		t.Fatalf("GET /list not found: %+v", inv.Routes)
+	} else if r.HasAuth {
+		t.Errorf("GET /list HasAuth = true, want false ('authors' must not match)")
+	}
+	for _, tc := range []struct{ route, marker string }{
+		{"GET /me", "authMiddleware"},
+		{"GET /admin", "requireAuth"},
+		{"GET /profile", "bare auth identifier"},
+	} {
+		r, ok := byRoute[tc.route]
+		if !ok {
+			t.Fatalf("%s not found: %+v", tc.route, inv.Routes)
+		}
+		if !r.HasAuth {
+			t.Errorf("%s HasAuth = false, want true (%s must match)", tc.route, tc.marker)
+		}
+	}
+}
+
+// TestScanProjectCacheSkipsVitestTestFiles pins the vitest default '*.test.ts'
+// exclusion: a .test.ts fixture must contribute nothing to the inventory.
+func TestScanProjectCacheSkipsVitestTestFiles(t *testing.T) {
+	dir := t.TempDir()
+	src := `xRoutes.get('/secret', kvCache({ ttl: 60, keyFn: tKey }), async (c) => c.json({}))
+export const t = async () => cache.delete('api:test:')
+`
+	if err := os.WriteFile(filepath.Join(dir, "x.test.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	inv, err := ScanProjectCache(dir)
+	if err != nil {
+		t.Fatalf("ScanProjectCache: %v", err)
+	}
+	if inv.FilesScanned != 0 {
+		t.Errorf("FilesScanned = %d, want 0 (x.test.ts must be excluded)", inv.FilesScanned)
+	}
+	if len(inv.Routes) != 0 || len(inv.Invalidation) != 0 || len(inv.Aggregates) != 0 || len(inv.Middleware) != 0 {
+		t.Errorf(".test.ts content leaked into the inventory: %+v / %+v / %+v / %+v",
+			inv.Routes, inv.Invalidation, inv.Aggregates, inv.Middleware)
+	}
+}
+
+// TestKeyPrefixFirstLiteralReturn pins the keyFn prefix extraction rules:
+// block bodies use the FIRST literal-returning return (null/identifier early
+// returns are skipped), a comment word like '// returns all' never reads as
+// a return statement, and a block body without a literal return stays "".
+func TestKeyPrefixFirstLiteralReturn(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "block body: template return before return null",
+			in:   "keyFn: (c) => { if (cc) return `api:lookup:`; return null }",
+			want: "api:lookup:",
+		},
+		{
+			name: "expression arrow with trailing '// returns' comment",
+			in:   "keyFn: (c) => `api:all:${id}` // returns all when empty",
+			want: "api:all:",
+		},
+		{
+			name: "block body with only a function-call return stays empty",
+			in:   "keyFn: (c) => { if (cc) return churchCacheKey(x) }",
+			want: "",
+		},
+		{
+			name: "ternary expression arrow still yields the template head",
+			in:   "keyFn: (c) => (c.req.query('cc') ? `api:q:${cc}` : null)",
+			want: "api:q:",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := keyPrefix(tt.in); got != tt.want {
+				t.Fatalf("keyPrefix(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}

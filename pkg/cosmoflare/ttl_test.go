@@ -141,3 +141,21 @@ func TestGradeTTLsAsymmetryNote(t *testing.T) {
 		}
 	}
 }
+
+// TestGradeTTLsZeroTTLNotSpecified pins the TTL==0 handling: 0 means the
+// middleware default was not specified, so the route is graded AT the
+// reference default (3600s) and the reason says so — it must not read as a
+// known short TTL that can never be stale-risk.
+func TestGradeTTLsZeroTTLNotSpecified(t *testing.T) {
+	got := GradeTTLs(inv([]CachedRoute{{Route: "GET /cold", KeyPrefix: "cold:v1", TTL: 0}}, nil), 500)
+	if len(got) != 1 {
+		t.Fatalf("len = %d, want 1", len(got))
+	}
+	v := got[0]
+	if v.Verdict != "no-invalidation" {
+		t.Fatalf("verdict = %q, want no-invalidation (graded at the 3600s default)", v.Verdict)
+	}
+	if !strings.Contains(v.Reason, "not specified") {
+		t.Fatalf("reason %q does not state the TTL was not specified", v.Reason)
+	}
+}

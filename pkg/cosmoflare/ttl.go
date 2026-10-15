@@ -90,19 +90,28 @@ func GradeTTLs(inv *ProjectCacheInventory, writesPerDay int64) []TTLVerdict {
 		default:
 			v.CoverageKnown = true
 			v.Covered = InvalidationCovered(route.KeyPrefix, inv.Invalidation)
+			// TTL==0 means the middleware default was not specified, not a
+			// known short TTL — grade at the reference default so an
+			// unspecified route can be stale-risk like any other.
+			effectiveTTL := route.TTL
+			reasonPrefix := ""
+			if effectiveTTL == 0 {
+				effectiveTTL = 3600
+				reasonPrefix = "TTL not specified — graded at the reference middleware default (3600s). "
+			}
 			switch {
-			case !v.Covered && route.TTL > TTLStaleRiskAbove && cadence != "rare":
+			case !v.Covered && effectiveTTL > TTLStaleRiskAbove && cadence != "rare":
 				v.Verdict = "stale-risk"
-				v.Reason = "nothing purges this prefix; entries can serve data up to TTL old after a write. " + TTLAsymmetryNote
-			case !v.Covered && cadence != "rare" && route.TTL <= TTLStaleRiskAbove:
+				v.Reason = reasonPrefix + "nothing purges this prefix; entries can serve data up to TTL old after a write. " + TTLAsymmetryNote
+			case !v.Covered && cadence != "rare" && effectiveTTL <= TTLStaleRiskAbove:
 				v.Verdict = "no-invalidation"
-				v.Reason = "safe today only because the TTL is short; adding invalidation is the upgrade path to longer TTLs. " + TTLAsymmetryNote
-			case v.Covered && cadence == "rare" && route.TTL < TTLRaiseBelow:
+				v.Reason = reasonPrefix + "safe today only because the TTL is short; adding invalidation is the upgrade path to longer TTLs. " + TTLAsymmetryNote
+			case v.Covered && cadence == "rare" && effectiveTTL < TTLRaiseBelow:
 				v.Verdict = "raise"
-				v.Reason = "rare-change data with invalidation covered can safely take 6-24h. " + TTLAsymmetryNote
+				v.Reason = reasonPrefix + "rare-change data with invalidation covered can safely take 6-24h. " + TTLAsymmetryNote
 			default:
 				v.Verdict = "appropriate"
-				v.Reason = "coverage and cadence are consistent with this TTL. " + TTLAsymmetryNote
+				v.Reason = reasonPrefix + "coverage and cadence are consistent with this TTL. " + TTLAsymmetryNote
 			}
 		}
 		verdicts = append(verdicts, v)

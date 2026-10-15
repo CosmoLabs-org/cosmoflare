@@ -204,3 +204,28 @@ func TestEfficiencyCachingSummary(t *testing.T) {
 		t.Errorf("summary line missing from output:\n%s", buf.String())
 	}
 }
+
+// TestEfficiencyCachingJSONEmptyFindings pins the non-nil findings slice: a
+// clean inventory must emit findings [] — not null — so jq iteration works
+// on the happy path.
+func TestEfficiencyCachingJSONEmptyFindings(t *testing.T) {
+	inv := &cosmoflare.ProjectCacheInventory{
+		Root:           "/proj",
+		TotalGETRoutes: 3,
+	}
+	buf := withCachingSeam(t, inv, nil)
+	prevJSONFlag, prevJSONOut := efficiencyCachingJSON, efficiencyJSONOut
+	efficiencyCachingJSON = true
+	jsonBuf := &bytes.Buffer{}
+	efficiencyJSONOut = jsonBuf
+	t.Cleanup(func() {
+		efficiencyCachingJSON, efficiencyJSONOut = prevJSONFlag, prevJSONOut
+	})
+	if err := runCaching(t); err != nil {
+		t.Fatalf("RunE: %v", err)
+	}
+	if !strings.Contains(jsonBuf.String(), `"findings":[]`) {
+		t.Errorf("findings emitted as null, want []:\n%s", jsonBuf.String())
+	}
+	_ = buf
+}

@@ -81,7 +81,9 @@ func runEfficiencyCaching(cmd *cobra.Command, args []string) error {
 // Resource convention: route:GET /path for route-level checks,
 // middleware:<file> for middleware-level ones; Evidence carries file:line.
 func efficiencyCachingFindings(inv *cosmoflare.ProjectCacheInventory) []cosmoflare.EfficiencyFinding {
-	var findings []cosmoflare.EfficiencyFinding
+	// Non-nil from the start: an empty slice marshals to [] so the JSON
+	// envelope never emits null findings.
+	findings := make([]cosmoflare.EfficiencyFinding, 0, len(inv.Routes)+len(inv.Aggregates))
 	for _, r := range inv.Routes {
 		ev := fmt.Sprintf("%s:%d", r.File, r.Line)
 		switch {
