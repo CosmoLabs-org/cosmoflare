@@ -2314,7 +2314,7 @@ Flags:
 
 ## Efficiency Audit
 
-Find idle Cloudflare resources wasting the account. Every number is measured from the real Cloudflare Analytics API — never estimated or modeled.
+Find idle Cloudflare resources wasting the account. Every number is measured from the real Cloudflare Analytics API — never estimated or modeled. The family has three commands: the account-wide audit (`cosmoflare efficiency`), static source analysis (`cosmoflare efficiency caching`), and TTL grading (`cosmoflare efficiency ttl`).
 
 ### Audit the account for waste
 ```bash
@@ -2330,13 +2330,15 @@ Checks performed (window defaults to 7 days, `--window 1-90`):
 | `idle-worker` | 0 requests over the window | per-script GraphQL sums (`workersInvocationsAdaptive`) |
 | `dead-kv-namespace` | 0 KV operations over the window | `kvOperationsAdaptiveGroups` (per namespace) |
 | `empty-r2-bucket` | 0 objects at window end | `r2StorageAdaptiveGroups` (per bucket) |
+| `low-cache-hit` | real traffic but <5% served from edge cache | `httpRequests1dGroups` (per zone, 1,000-request floor keeps quiet zones out) |
+| `html-cache-trap` | origin s-maxage on HTML the edge is NOT honoring (`cf-cache-status DYNAMIC` with no zone Cache Rule) | best-effort apex probe + zone Cache Rule count; an unreachable apex is never a trap verdict |
 
 A resource absent from the analytics rows counts as zero usage — absence is never an error.
 
-Each finding carries its evidence (counts + the measured window), a severity (`warning` for idle workers and dead KV, `info` for empty buckets), and an actionable fix. JSON envelope:
+Each finding carries its evidence (counts + the measured window), a severity (`critical` for p2-auth-cache-leak, `warning` for idle workers, dead KV, and HTML cache traps, `info` for empty buckets and low-cache-hit zones), and an actionable fix. JSON envelope:
 
 ```json
-{"status":"success","data":{"window_start":"...","window_end":"...","findings":[{"resource":"worker:ghost","check":"idle-worker","severity":"warning","evidence":"0 requests between 2026-10-07 and 2026-10-14","fix":"delete it (cosmoflare worker delete ghost) or remove its routes if retired"}],"workers_checked":31,"kv_namespaces_checked":16,"buckets_checked":13}}
+{"status":"success","data":{"window_start":"...","window_end":"...","findings":[{"resource":"worker:ghost","check":"low-cache-hit","severity":"info","evidence":"...","fix":"..."}],"workers_checked":31,"kv_namespaces_checked":16,"buckets_checked":13,"zones_checked":13,"zone_coverage":[...]}}
 ```
 
 Agent recipes:
@@ -2346,6 +2348,60 @@ cosmoflare efficiency --json | jq '.data.findings | length'
 ```
 
 Exit code 0 in all healthy cases; findings are informational (this is an audit, not a health gate).
+
+### Find caching pattern violations (`efficiency caching`)
+
+Scans the project's TypeScript Worker source for caching anti-patterns — pure static analysis, **no Cloudflare API credentials needed**.
+
+```bash
+cosmoflare efficiency caching --source ./workers/src
+cosmoflare efficiency caching --json | jq '.data.findings[] | select(.severity=="critical")'
+```
+
+Checks (route findings use resource `route:<path>` with `file:line` evidence; middleware findings use `middleware:<file>`):
+
+| Check | Severity | Anti-pattern |
+|-------|----------|--------------|
+| `p1-path-only-cache-key` | `warning` | path-only KV key collapses query variants onto one entry |
+| `p1-key-misses-query` | `warning` | handler reads query params the key does not include |
+| `p2-auth-cache-leak` | `critical` | cached route behind auth — cross-user leak by construction |
+| `p3-unmaterialized-aggregate` | `warning` | whole-table aggregate per request instead of a cron snapshot |
+| `p4-no-cache-control` | `warning` | cache middleware never emits `Cache-Control` |
+| `p5-caches-non-200` | `warning` | cache middleware stores errors and 404s |
+
+Route paths are as written at the sub-router — mount prefixes from `index.ts app.route(...)` are not resolved.
+
+Flags:
+- `--source` (default `.`) — project source directory to scan
+- `--json` — machine-readable envelope (`source`, `findings`, `cached_routes`, `total_get_routes`)
+
+### Grade cached-route TTLs (`efficiency ttl`)
+
+Scans for `kvCache`'d routes (same scanner as `efficiency caching`), measures the backing D1 database's real write cadence from Cloudflare analytics over the look-back window, and grades each route. **Requires credentials** — real numbers only (`AccountID` + `APIToken`).
+
+```bash
+cosmoflare efficiency ttl --source ./workers/src --database <uuid>
+cosmoflare efficiency ttl --json | jq '.data.verdicts[] | select(.verdict=="stale-risk")'
+```
+
+Verdicts:
+
+| Verdict | Meaning |
+|---------|---------|
+| `stale-risk` | nothing purges this prefix and the TTL outlives the data's freshness — readers can see day-old data |
+| `no-invalidation` | safe today only because the TTL is short — add invalidation to unlock longer TTLs |
+| `raise` | rarely-changing data with invalidation covered can safely take a longer TTL (6-24h) |
+| `appropriate` | coverage and cadence are consistent with this TTL |
+
+Findings map from verdicts: `ttl-stale-risk` (`warning`), `ttl-raise` and `ttl-no-invalidation` (`info`). Every fix quotes the KV/Cache-Control asymmetry: KV entries are purgeable from code, the edge layer is not.
+
+Writes/day is measured database-wide — D1 analytics has no table dimension, so per-route cadence is an upper bound, never a guess. When the window is longer than one day, today's partial UTC day is excluded from the sum and divisor.
+
+Flags:
+- `--source` (default `.`) — project source directory to scan
+- `--database` — D1 database ID; omitted, auto-resolves when the account has exactly one database (multiple or zero → error naming the candidates)
+- `--window` — look-back window in days (default 7, 1-90)
+- `--json` — machine-readable envelope (`verdicts`, `findings`, `database`, `writes_per_day`, `window_days`)
 
 ## Cost Estimation
 
