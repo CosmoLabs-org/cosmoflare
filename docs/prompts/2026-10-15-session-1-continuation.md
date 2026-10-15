@@ -5,6 +5,7 @@ status: PENDING
 branch: master
 goals_total: 0
 goals_completed: 0
+schema_version: 1
 ---
 
 ## Context

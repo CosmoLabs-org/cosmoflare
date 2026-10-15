@@ -1,24 +1,49 @@
 ---
-title: 'CLI audit + efficiency — wave 3: remediation (FEAT-067 patterns + FEAT-068 TTL strategy)'
-status: PLANNED
-branch: master
-created: "2026-10-15T10:05:00+04:00"
 brainstorm_ref: docs/brainstorming/2026-10-14-cli-audit-efficiency.md
+branch: master
+completed: "2026-10-15T07:48:12+04:00"
+created: "2026-10-15T10:05:00+04:00"
+deliverables:
+    - id: P-11
+      title: ProjectCacheScanner in pkg/cosmoflare/patterns.go — source-derived cached-route/invalidation/aggregate inventory
+    - id: P-12
+      title: TTL verdict engine in pkg/cosmoflare/ttl.go — cadence × invalidation coverage grades with the asymmetry rule
+    - id: P-13
+      title: cosmoflare efficiency caching — P1-P5 pattern findings from source, --json, severity 'critical' for P2
+    - id: P-14
+      title: cosmoflare efficiency ttl — verdicts wired to real D1 write cadence + live calibration on Churches-app
+goals_completed: 8
+goals_total: 8
+implemented_commits:
+    - covers:
+        - P-11
+      sha: 2ec88aa84a19
+    - covers:
+        - P-12
+      sha: 43831a7e5b51
+    - covers:
+        - P-13
+      sha: 2ba53e436a38
+    - covers:
+        - P-14
+      sha: 80371fe3e537
 plan_ref: docs/planning-mode/2026-10-14-cli-audit-efficiency-wave2.md
 related_issues:
     - FEAT-067
     - FEAT-068
     - FEAT-070
-tags: [efficiency, remediation, cli, wave-3, caching, ttl]
-deliverables:
-    - id: P-11
-      title: "ProjectCacheScanner in pkg/cosmoflare/patterns.go — source-derived cached-route/invalidation/aggregate inventory"
-    - id: P-12
-      title: "TTL verdict engine in pkg/cosmoflare/ttl.go — cadence × invalidation coverage grades with the asymmetry rule"
-    - id: P-13
-      title: "cosmoflare efficiency caching — P1-P5 pattern findings from source, --json, severity 'critical' for P2"
-    - id: P-14
-      title: "cosmoflare efficiency ttl — verdicts wired to real D1 write cadence + live calibration on Churches-app"
+related_prompts: []
+requires_reading: []
+schema_version: 1
+status: COMPLETED
+tags:
+    - efficiency
+    - remediation
+    - cli
+    - wave-3
+    - caching
+    - ttl
+title: 'CLI audit + efficiency — wave 3: remediation (FEAT-067 patterns + FEAT-068 TTL strategy)'
 ---
 
 # Cosmoflare efficiency — Wave 3 Implementation Plan (remediation)
@@ -130,11 +155,11 @@ func ScanProjectCache(root string) (*ProjectCacheInventory, error)
 
 **TDD (red→green each):**
 
-- [ ] **Step 1 — fixtures:** create `pkg/cosmoflare/testdata/project/` mirroring the corpus shapes: `routes/meta.ts` (static-key route ttl 600, query-aware template route ttl 21600, null-escape route), `routes/user.ts` (route with `authMiddleware` + kvCache → P2 shape), `routes/stats.ts` (uncached route with backtick SQL `` `SELECT COUNT(*) FROM churches GROUP BY country` ``), `middleware/cache.ts` (kvCache definition emitting Cache-Control + 200-guard), plus `routes/old.spec.ts` (must be skipped). Copy the Verified-facts-3 lines verbatim where possible.
-- [ ] **Step 2 — failing tests:** `TestScanProjectCacheInventory` (routes count, per-route fields incl. QueryAware on the cities shape, KeyPrefix `api:meta:stats`, HasAuth on user.ts), `TestScanProjectCacheSkipsTestFiles` (spec file absent), `TestScanProjectCacheInvalidation` (both delete sites found — the `page:/church/${slug}` template yields literal head `page:/church/`, and the `churchCacheKey(slug)` function-call arg yields `churchCacheKey`), `TestScanProjectCacheAggregates` (stats route found, WHERE'd SQL not), `TestScanProjectCacheMiddlewareBehavior` (both booleans true), `TestScanProjectCacheMissingRoot` (error mentions path).
-- [ ] **Step 3:** run `go test ./pkg/cosmoflare/ -run TestScanProjectCache -v` — all FAIL (undefined).
-- [ ] **Step 4 — implement** `patterns.go` per the rules above. Re-run — all PASS. Add `go vet ./...`.
-- [ ] **Step 5 — commit:** `feat(efficiency): project cache scanner — source-derived route/invalidation/aggregate inventory (P-11, FEAT-067)`
+- [x] **Step 1 — fixtures:** create `pkg/cosmoflare/testdata/project/` mirroring the corpus shapes: `routes/meta.ts` (static-key route ttl 600, query-aware template route ttl 21600, null-escape route), `routes/user.ts` (route with `authMiddleware` + kvCache → P2 shape), `routes/stats.ts` (uncached route with backtick SQL `` `SELECT COUNT(*) FROM churches GROUP BY country` ``), `middleware/cache.ts` (kvCache definition emitting Cache-Control + 200-guard), plus `routes/old.spec.ts` (must be skipped). Copy the Verified-facts-3 lines verbatim where possible.
+- [x] **Step 2 — failing tests:** `TestScanProjectCacheInventory` (routes count, per-route fields incl. QueryAware on the cities shape, KeyPrefix `api:meta:stats`, HasAuth on user.ts), `TestScanProjectCacheSkipsTestFiles` (spec file absent), `TestScanProjectCacheInvalidation` (both delete sites found — the `page:/church/${slug}` template yields literal head `page:/church/`, and the `churchCacheKey(slug)` function-call arg yields `churchCacheKey`), `TestScanProjectCacheAggregates` (stats route found, WHERE'd SQL not), `TestScanProjectCacheMiddlewareBehavior` (both booleans true), `TestScanProjectCacheMissingRoot` (error mentions path).
+- [x] **Step 3:** run `go test ./pkg/cosmoflare/ -run TestScanProjectCache -v` — all FAIL (undefined).
+- [x] **Step 4 — implement** `patterns.go` per the rules above. Re-run — all PASS. Add `go vet ./...`.
+- [x] **Step 5 — commit:** `feat(efficiency): project cache scanner — source-derived route/invalidation/aggregate inventory (P-11, FEAT-067)`
 
 ## Task W3-B: TTL verdict engine (deliverable P-12)
 
@@ -187,9 +212,9 @@ Every Reason ends with the fixed asymmetry string (export it as `TTLAsymmetryNot
 
 **TDD:**
 
-- [ ] **Step 1 — failing tests:** `TestInvalidationCovered` (depth-1 shared `api` NOT covered; `api:meta:countries` vs invalidation `api:meta:` head covered; empty prefix → false), `TestGradeTTLsStaleRisk` (meta-countries shape: prefix `api:meta:countries`, ttl 21600, uncovered, writesPerDay 500 → `stale-risk` — the live corpus case), `TestGradeTTLsNoInvalidation` (ttl 600, uncovered, daily → `no-invalidation`), `TestGradeTTLsRaise` (covered, writesPerDay 0 — sub-daily cadence, the int64 seam cannot carry 0.2 → `raise`), `TestGradeTTLsAppropriate` (covered, daily, ttl 3600), `TestGradeTTLsUnknownCoverage` (KeyPrefix "" → appropriate + coverage_known false), `TestGradeTTLsAsymmetryNote` (every Reason contains `TTLAsymmetryNote`).
-- [ ] **Step 2:** run — FAIL (undefined). **Step 3 — implement** `ttl.go`; re-run — PASS; `go vet ./...`.
-- [ ] **Step 4 — commit:** `feat(efficiency): TTL verdict engine — cadence × invalidation coverage grades (P-12, FEAT-068)`
+- [x] **Step 1 — failing tests:** `TestInvalidationCovered` (depth-1 shared `api` NOT covered; `api:meta:countries` vs invalidation `api:meta:` head covered; empty prefix → false), `TestGradeTTLsStaleRisk` (meta-countries shape: prefix `api:meta:countries`, ttl 21600, uncovered, writesPerDay 500 → `stale-risk` — the live corpus case), `TestGradeTTLsNoInvalidation` (ttl 600, uncovered, daily → `no-invalidation`), `TestGradeTTLsRaise` (covered, writesPerDay 0 — sub-daily cadence, the int64 seam cannot carry 0.2 → `raise`), `TestGradeTTLsAppropriate` (covered, daily, ttl 3600), `TestGradeTTLsUnknownCoverage` (KeyPrefix "" → appropriate + coverage_known false), `TestGradeTTLsAsymmetryNote` (every Reason contains `TTLAsymmetryNote`).
+- [x] **Step 2:** run — FAIL (undefined). **Step 3 — implement** `ttl.go`; re-run — PASS; `go vet ./...`.
+- [x] **Step 4 — commit:** `feat(efficiency): TTL verdict engine — cadence × invalidation coverage grades (P-12, FEAT-068)`
 
 ## Task W3-C: `cosmoflare efficiency caching` (deliverable P-13)
 
@@ -232,7 +257,7 @@ go build -o build/cosmoflare . && ./build/cosmoflare efficiency caching --source
 ./build/cosmoflare efficiency --json | jq '.data.findings | length'   # wave-1/2 regression check
 ```
 
-Expected: caching reports `19 of 47 GET routes cached` (cached: meta 8 + dioceses 6 + churches 4 + mass 1; uncached: health, admin, enrichment, media, user, preview-codes, mass `/next`, churches `/` and `/nearby` — 47 measured 2026-10-15 with rule 3's `/`-anchored regex; a bare quote match yields 70 via `c.get('user')`-style getters), zero P1/P2/P3/P4/P5 findings (the corpus is clean — it IS the pattern source; any P-finding on the corpus is a scanner false positive to fix before merge; P3 is zero because every `GROUP BY`/`COUNT(` literal sits inside a kvCache'd route or carries a WHERE/`${where}` — the WHERE-less whole-table aggregates live in `jobs/stats-materialize.ts`, which is a cron job, not a route window). ttl reports `stale-risk` (or `no-invalidation`) on `api:meta:*` prefixes — the known live case (Verified fact 4) — and `appropriate`+coverage_known=false on function-keyed church routes. Full `go test ./pkg/cosmoflare/ ./cmd/` green; `go vet ./...` clean.
+Expected: caching reports `19 of 28 GET routes cached` (cached: meta 8 + dioceses 6 + churches 4 + mass 1 — all multi-line defs, `.get(` at line end with the path on the next line; uncached: 9 single-line defs across index/media/churches/user/admin/preview-codes/mass — 28 is the directly measured corpus truth 2026-10-15: 19 multiline + 9 single-line; the pre-calibration draft's "47" was an overcount), zero P1/P2/P3/P4/P5 findings (the corpus is clean — it IS the pattern source; any P-finding on the corpus is a scanner false positive to fix before merge; P3 is zero because every `GROUP BY`/`COUNT(` literal sits inside a kvCache'd route or carries a WHERE/`${where}` — the WHERE-less whole-table aggregates live in `jobs/stats-materialize.ts`, which is a cron job, not a route window). ttl reports `stale-risk` (or `no-invalidation`) on `api:meta:*` prefixes — the known live case (Verified fact 4) — and `appropriate`+coverage_known=false on function-keyed church routes. Full `go test ./pkg/cosmoflare/ ./cmd/` green; `go vet ./...` clean.
 
 **Commit:** `feat(efficiency): efficiency ttl — verdicts from real D1 write cadence (P-14, FEAT-068/070)`
 

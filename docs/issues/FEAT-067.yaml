@@ -1,16 +1,19 @@
 ---
 id: FEAT-067
-title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
 type: feature
-status: open
+created: "2026-10-10"
+updated: "2026-10-15T07:39:35.228615+04:00"
 priority: 70
-created: 2026-10-10
-updated: 2026-10-10
+status: open
 origin:
-  feedback_id: FB-18
-  from_project: Churches-app
-  received: 2026-10-09
-  converted: 2026-10-10
+    feedback_id: FB-18
+    from_project: Churches-app
+    received: "2026-10-09"
+    converted: "2026-10-10"
+title: 'Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)'
+resolution:
+    notes: 'Wave 3 partial (P-13, commit 2ba53e4): P1-P5 detection shipped as cosmoflare efficiency caching — zero false positives on the Churches-app calibration corpus, P2 severity critical. Remaining: --fix patch emission, P6 media gate, audit --watch.'
+
 ---
 
 # FEAT-067: Patterns + auto-remediation: what two days of CF hardening taught (reference implementation matured, cosmoflare should detect AND fix)

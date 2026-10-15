@@ -1,16 +1,19 @@
 ---
 id: FEAT-070
-title: 'Encode MyCarGuide''s CF best-practices corpus as cosmoflare audit classes (reading list attached)'
 type: feature
-status: open
+created: "2026-10-10"
+updated: "2026-10-15T07:39:35.277356+04:00"
 priority: 70
-created: 2026-10-10
-updated: 2026-10-10
+status: open
 origin:
-  feedback_id: FB-23
-  from_project: MyCarGuide
-  received: 2026-10-10
-  converted: 2026-10-10
+    feedback_id: FB-23
+    from_project: MyCarGuide
+    received: "2026-10-10"
+    converted: "2026-10-10"
+title: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)
+resolution:
+    notes: 'Caching-rule portion shipped across waves 2-3: HTML-needs-Cache-Rule trap (a010281), TTL asymmetry + invalidation model (80371fe), spend/snapshot rules (wave 2 usage row). Remaining: d1-indexing discipline (EXPLAIN verification, PRAGMA optimize guardrail).'
+
 ---
 
 # FEAT-070: Encode MyCarGuide's CF best-practices corpus as cosmoflare audit classes (reading list attached)

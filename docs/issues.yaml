@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-14T13:10:26.408201+04:00
+last_updated: 2026-10-15T07:39:34.96226+04:00
 next_bug_id: 64
 next_feat_id: 81
 next_task_id: 18
@@ -745,7 +745,7 @@ issues:
       priority: 70
     - id: FEAT-068
       type: feature
-      status: open
+      status: implemented
       title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
       priority: 70
     - id: FEAT-069

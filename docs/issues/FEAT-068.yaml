@@ -1,16 +1,24 @@
 ---
 id: FEAT-068
-title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
 type: feature
-status: open
+created: "2026-10-10"
+updated: "2026-10-15T07:39:34.956832+04:00"
 priority: 70
-created: 2026-10-10
-updated: 2026-10-10
+status: implemented
 origin:
-  feedback_id: FB-19
-  from_project: Churches-app
-  received: 2026-10-09
-  converted: 2026-10-10
+    feedback_id: FB-19
+    from_project: Churches-app
+    received: "2026-10-09"
+    converted: "2026-10-10"
+title: 'TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)'
+resolution:
+    notes: 'Shipped as cosmoflare efficiency ttl (wave 3, P-14, commit 80371fe): cadence from real D1UsageService.DailyUsage rows-written x invalidation coverage from source scan -> stale-risk/no-invalidation/raise/appropriate verdicts, KV-vs-Cache-Control asymmetry note on every finding. Live-calibrated on Churches-app: reproduced the api:meta:* stale-key case at 59,002 measured writes/day; function-keyed routes degrade to coverage-unknown.'
+    resolved_at: 2026-10-15T07:39:34.955187+04:00
+revisions:
+    - date: "2026-10-15T07:39:34.95513+04:00"
+      action: closed
+      context: 'Shipped as cosmoflare efficiency ttl (wave 3, P-14, commit 80371fe): cadence from real D1UsageService.DailyUsage rows-written x invalidation coverage from source scan -> stale-risk/no-invalidation/raise/appropriate verdicts, KV-vs-Cache-Control asymmetry note on every finding. Live-calibrated on Churches-app: reproduced the api:meta:* stale-key case at 59,002 measured writes/day; function-keyed routes degrade to coverage-unknown.'
+
 ---
 
 # FEAT-068: TTL strategy engine: recommend cache lifetimes from data-change cadence + invalidation coverage (owner-requested)
