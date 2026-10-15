@@ -15,6 +15,7 @@ import { api } from "../../api";
 import { acknowledge, listAlerts, snooze, type AlertRecord } from "../../store";
 import { relativeTime } from "../../views";
 import type { AlertFeed, AlertFeedEntry } from "../../alerts";
+import AgentCommandsModal from "../components/AgentCommandsModal";
 import type { ViewFetcher } from "./WorkersView";
 
 /** Same mapping as views.ts's alertCard: unknown severities read as info. */
@@ -126,9 +127,18 @@ function AlertCard({ record, onChanged }: { record: AlertRecord; onChanged: () =
   );
 }
 
+/** The zone a feed entry fired for: the scope segment of the ruleId
+ *  ("<ruleName>/<zoneKey>", zoneKey = zone id or name — rules.ts alertId).
+ *  Everything after the LAST slash: rule names are operator-chosen and may
+ *  contain slashes just as they contain spaces. */
+function zoneOf(entry: AlertFeedEntry): string {
+  return entry.ruleId.slice(entry.ruleId.lastIndexOf("/") + 1);
+}
+
 /** Inline detail under an expanded feed row: the numbers table, the
- *  plain-language explanation, and the muted rule id + delivery footer. */
-function FeedDetail({ entry }: { entry: AlertFeedEntry }): React.JSX.Element {
+ *  plain-language explanation, the Commands-to-AI-Agent entry point, and the
+ *  muted rule id + delivery footer. */
+function FeedDetail({ entry, onAdvisory }: { entry: AlertFeedEntry; onAdvisory: (zone: string) => void }): React.JSX.Element {
   const reduced = useReducedMotion();
   return (
     <motion.div
@@ -147,6 +157,11 @@ function FeedDetail({ entry }: { entry: AlertFeedEntry }): React.JSX.Element {
       </table>
       {entry.context ? <p className="cf-feed-context">{entry.context}</p> : null}
       <p className="cf-feed-explanation">{explanationFor(entry.condition)}</p>
+      <div className="cf-feed-actions">
+        <button type="button" className="cf-btn" onClick={() => onAdvisory(zoneOf(entry))}>
+          Commands to AI Agent
+        </button>
+      </div>
       <p className="cf-feed-footer">
         {entry.ruleId} · {entry.sent ? "push delivered" : "push not delivered"}
       </p>
@@ -156,11 +171,12 @@ function FeedDetail({ entry }: { entry: AlertFeedEntry }): React.JSX.Element {
 
 /** One feed row: unread dot, relative time, rule title, value line; clicking
  *  toggles the inline detail. */
-function FeedRow({ entry, unread, expanded, onToggle }: {
+function FeedRow({ entry, unread, expanded, onToggle, onAdvisory }: {
   entry: AlertFeedEntry;
   unread: boolean;
   expanded: boolean;
   onToggle: () => void;
+  onAdvisory: (zone: string) => void;
 }): React.JSX.Element {
   return (
     <div className="cf-feed-item" data-rule-id={entry.ruleId}>
@@ -170,7 +186,7 @@ function FeedRow({ entry, unread, expanded, onToggle }: {
         <strong className="cf-feed-title">{entry.title}</strong>
         <span className="cf-feed-value">{feedNum(entry.value, entry.unit)} / {feedNum(entry.threshold, entry.unit)} {entry.unit}</span>
       </button>
-      {expanded ? <FeedDetail entry={entry} /> : null}
+      {expanded ? <FeedDetail entry={entry} onAdvisory={onAdvisory} /> : null}
     </div>
   );
 }
@@ -192,6 +208,9 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
   const [, setTick] = useState(0);
   const seenMarkedRef = useRef(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // The Commands-to-AI-Agent modal opens per firing card: the zone comes
+  // from the entry's ruleId scope segment; null = no modal open.
+  const [advisoryZone, setAdvisoryZone] = useState<string | null>(null);
 
   const load = useCallback((): void => {
     void listAlerts().then((visible) => setRecords(visible));
@@ -273,10 +292,13 @@ export default function AlertsView({ refreshSeq = 0, fetcher }: { refreshSeq?: n
               unread={Date.parse(entry.ts) > seenAt}
               expanded={expandedId === entry.ruleId + entry.ts}
               onToggle={() => setExpandedId((cur) => (cur === entry.ruleId + entry.ts ? null : entry.ruleId + entry.ts))}
+              onAdvisory={setAdvisoryZone}
             />
           ))}
         </div>
       )}
+
+      {advisoryZone !== null ? <AgentCommandsModal zone={advisoryZone} onClose={() => setAdvisoryZone(null)} /> : null}
 
       {records === null ? null : records.length === 0 ? (
         <p className="cf-empty cf-empty-quiet">No alerts. Your daemon will page you here.</p>

@@ -1576,6 +1576,10 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   overflow-wrap: anywhere;
 }
 
+/* Commands-to-AI-Agent entry point inside the expanded feed detail (P-18):
+   the same action row the push-history cards use, scoped to the feed. */
+.cf-feed-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+
 /* ---- Pairing view ---- */
 
 /* Pairing: one centered ritual — glyph, three true steps, live status. */
@@ -2862,3 +2866,40 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
 /* Guide tables on phones: horizontal scroll inside the card instead of
    breaking the layout; tables stay readable at full width on desktop. */
 .cf-guide-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---- AgentCommandsModal (P-18, FEAT-pC1EV32): the advisory brief block and
+   the Copy→checkmark crossfade. Same vocabulary as cf-modal — surfaces,
+   radius, mono instrument face; no tile outlines, no left borders. ---- */
+
+/* The brief itself: selectable mono text, the paste target for the
+   operator's coding agent. Scrolls inside the dialog on phones. */
+.cf-agent-brief {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  background: var(--surface);
+  border-radius: var(--radius);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-sm);
+  line-height: var(--lh-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 42vh;
+  overflow-y: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Copy face: the two labels stack in one grid cell and crossfade — 150ms
+   ease-out opacity only (no bounce/elastic — the check is a confirmation,
+   not a performance). */
+.cf-agent-copy { display: inline-grid; place-items: center; }
+.cf-agent-face {
+  grid-area: 1 / 1;
+  transition: opacity 150ms var(--ease-out);
+}
+.cf-agent-face.is-off { opacity: 0; }
+.cf-agent-check { white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-agent-face { transition: none; }
+}
