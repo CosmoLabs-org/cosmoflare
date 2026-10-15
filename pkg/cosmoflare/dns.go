@@ -32,6 +32,7 @@ type dnsConfig struct {
 	proxied  *bool
 	priority *uint16
 	comment  *string
+	content  *string
 }
 
 // WithDNSProxied sets the proxied status for a DNS record.
@@ -52,6 +53,12 @@ func WithDNSPriority(priority uint16) DNSOption {
 // WithDNSComment sets a comment on a DNS record.
 func WithDNSComment(comment string) DNSOption {
 	return func(c *dnsConfig) { c.comment = &comment }
+}
+
+// WithDNSUpdateContent sets new record content on update.
+// Distinct from WithDNSContent, which filters list results by content.
+func WithDNSUpdateContent(content string) DNSOption {
+	return func(c *dnsConfig) { c.content = &content }
 }
 
 // DNSListOption is a functional option for DNS record list operations.
@@ -210,6 +217,9 @@ func (s *DNSService) Update(ctx context.Context, recordID string, opts ...DNSOpt
 		Proxied:  cfg.proxied,
 		Priority: cfg.priority,
 		Comment:  cfg.comment,
+	}
+	if cfg.content != nil {
+		params.Content = *cfg.content
 	}
 
 	rc := cloudflare.ZoneIdentifier(s.zoneID)

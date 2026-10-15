@@ -719,3 +719,59 @@ func TestDNSNewFromCredsSuccess(t *testing.T) {
 		t.Errorf("expected zoneID=zone123, got %s", svc.zoneID)
 	}
 }
+
+// TestDNSUpdateContent verifies WithDNSUpdateContent puts the new content in
+// the PATCH body, and that Update without it sends no content key (BUG-pN2NX4K).
+func TestDNSUpdateContent(t *testing.T) {
+	var gotBody map[string]interface{}
+	svc, server := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPatch {
+			t.Errorf("expected PATCH, got %s", r.Method)
+		}
+		gotBody = map[string]interface{}{}
+		if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+			t.Errorf("decoding PATCH body: %v", err)
+		}
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id": "rec-upd-001", "type": "A", "name": "test.example.com",
+				"content": "5.6.7.8", "ttl": 300, "proxied": false,
+			},
+		})
+	})
+	defer server.Close()
+
+	ctx := context.Background()
+	if _, err := svc.Update(ctx, "rec-upd-001", WithDNSUpdateContent("5.6.7.8")); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got, want := gotBody["content"], "5.6.7.8"; got != want {
+		t.Errorf("request content = %v, want %q", got, want)
+	}
+
+	// Control: without the option the PATCH body must not contain a content key.
+	var hadContent bool
+	svc2, server2 := dnsMockSetup(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]interface{}
+		json.NewDecoder(r.Body).Decode(&body)
+		_, hadContent = body["content"]
+		dnsWriteJSON(w, map[string]interface{}{
+			"success": true,
+			"errors":  []interface{}{},
+			"result": map[string]interface{}{
+				"id": "rec-upd-001", "type": "A", "name": "test.example.com",
+				"content": "1.2.3.4", "ttl": 300, "proxied": false,
+			},
+		})
+	})
+	defer server2.Close()
+
+	if _, err := svc2.Update(ctx, "rec-upd-001", WithDNSTTL(300)); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if hadContent {
+		t.Error("PATCH body unexpectedly contains content key when WithDNSUpdateContent not given")
+	}
+}

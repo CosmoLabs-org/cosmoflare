@@ -724,11 +724,9 @@ cosmoflare dns get <zone-id> <record-id> --json
 
 ### Update a DNS record
 ```bash
-cosmoflare dns update <zone-id> <record-id> --ttl=300 --proxied --json
-cosmoflare dns update <zone-id> <record-id> --comment="Adjusted TTL" --json
+cosmoflare dns update <zone-id> <record-id> --content=5.6.7.8
+cosmoflare dns update <zone-id> <record-id> --content=5.6.7.8 --ttl=300 --json
 ```
-
-> Note: changing a record's `--content` is not yet implemented (BUG-pN2NX4K) — recreate the record (`dns delete` + `dns create`) until it lands.
 JSON output:
 ```json
 {"success":true,"message":"DNS record updated successfully","data":{"id":"rec-abc123","type":"A","name":"www.example.com","content":"5.6.7.8","proxied":true,"ttl":300}}
