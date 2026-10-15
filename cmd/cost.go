@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -184,6 +185,54 @@ func validateCostFormat(format string) error {
 	}
 }
 
+// costDays maps a validated --period value to its trailing-day window
+// (validatePeriod gates the input upstream).
+func costDays(period string) int {
+	switch period {
+	case "7d":
+		return 7
+	case "90d":
+		return 90
+	default:
+		return 30
+	}
+}
+
+// collectCostUsage is the measured-usage seam (printJSONOut writer-seam
+// precedent): production delegates to CostService.CollectMeasuredUsage;
+// tests override it so no test ever hits the network.
+var collectCostUsage = func(ctx context.Context, svc *cosmoflare.CostService, days int) (*cosmoflare.MeasuredCostUsage, error) {
+	return svc.CollectMeasuredUsage(ctx, days)
+}
+
+// collectMeasured gathers the measured usage inputs for one cost run. Any
+// collector failure is an error — cost must never fall back to silently
+// estimating from zero-value usage.
+func collectMeasured(cmd *cobra.Command, svc *cosmoflare.CostService) (*cosmoflare.MeasuredCostUsage, error) {
+	ctx := context.Background()
+	if cmd != nil { // older tests call the run functions with a nil command
+		ctx = cmd.Context()
+	}
+	m, err := collectCostUsage(ctx, svc, costDays(costPeriod))
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect measured usage: %w — cost reads real account analytics; the API token needs Account Analytics:Read", err)
+	}
+	return m, nil
+}
+
+// printMeasuredLine states the window the usage was measured over. Table
+// format only — JSON and CSV shapes stay unchanged.
+func printMeasuredLine(m *cosmoflare.MeasuredCostUsage) {
+	if m == nil {
+		return
+	}
+	if m.ProjectedTo30d {
+		fmt.Printf("Usage measured %s to %s, projected to 30d\n", m.WindowStart.Format(time.RFC3339), m.WindowEnd.Format(time.RFC3339))
+		return
+	}
+	fmt.Printf("Usage measured %s to %s\n", m.WindowStart.Format(time.RFC3339), m.WindowEnd.Format(time.RFC3339))
+}
+
 func runCost(cmd *cobra.Command, args []string) error {
 	if err := validatePeriod(costPeriod); err != nil {
 		return err
@@ -197,12 +246,12 @@ func runCost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	// Estimate with placeholder usage (real API-based fetching is a future enhancement)
-	r2Usage := cosmoflare.R2Usage{}
-	workersUsage := cosmoflare.WorkersUsage{}
-	kvUsage := cosmoflare.KVUsage{}
+	m, err := collectMeasured(cmd, svc)
+	if err != nil {
+		return err
+	}
 
-	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
+	total := svc.EstimateTotal(m.R2, m.Workers, m.KV)
 	total.Period = costPeriod
 
 	waste := costWasteBestEffort()
@@ -215,7 +264,7 @@ func runCost(cmd *cobra.Command, args []string) error {
 		return printCostCSV(total, waste)
 	}
 
-	printCostSummary(total, waste)
+	printCostSummary(total, waste, m)
 	return nil
 }
 
@@ -232,8 +281,12 @@ func runCostR2(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := cosmoflare.R2Usage{}
-	est := svc.EstimateR2Cost(usage)
+	m, err := collectMeasured(cmd, svc)
+	if err != nil {
+		return err
+	}
+
+	est := svc.EstimateR2Cost(m.R2)
 
 	if JSONOutput || costFormat == "json" {
 		return printJSON(est)
@@ -260,8 +313,12 @@ func runCostWorkers(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := cosmoflare.WorkersUsage{}
-	est := svc.EstimateWorkersCost(usage)
+	m, err := collectMeasured(cmd, svc)
+	if err != nil {
+		return err
+	}
+
+	est := svc.EstimateWorkersCost(m.Workers)
 
 	if JSONOutput || costFormat == "json" {
 		return printJSON(est)
@@ -288,8 +345,12 @@ func runCostKV(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	usage := cosmoflare.KVUsage{}
-	est := svc.EstimateKVCost(usage)
+	m, err := collectMeasured(cmd, svc)
+	if err != nil {
+		return err
+	}
+
+	est := svc.EstimateKVCost(m.KV)
 
 	if JSONOutput || costFormat == "json" {
 		return printJSON(est)
@@ -316,11 +377,12 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create cost service: %w", err)
 	}
 
-	r2Usage := cosmoflare.R2Usage{}
-	workersUsage := cosmoflare.WorkersUsage{}
-	kvUsage := cosmoflare.KVUsage{}
+	m, err := collectMeasured(cmd, svc)
+	if err != nil {
+		return err
+	}
 
-	total := svc.EstimateTotal(r2Usage, workersUsage, kvUsage)
+	total := svc.EstimateTotal(m.R2, m.Workers, m.KV)
 	total.Period = costPeriod
 
 	waste := costWasteBestEffort()
@@ -333,7 +395,7 @@ func runCostDetail(cmd *cobra.Command, args []string) error {
 		return printDetailCSV(total)
 	}
 
-	printDetailTable(total)
+	printDetailTable(total, m)
 	return nil
 }
 
@@ -365,9 +427,11 @@ func printWasteLine(waste *cosmoflare.EfficiencyWasteSummary) {
 // Table output
 // ---------------------------------------------------------------------------
 
-func printCostSummary(total *cosmoflare.TotalCostEstimate, waste *cosmoflare.EfficiencyWasteSummary) {
+func printCostSummary(total *cosmoflare.TotalCostEstimate, waste *cosmoflare.EfficiencyWasteSummary, m *cosmoflare.MeasuredCostUsage) {
 	fmt.Printf("\nCloudflare Cost Estimate (period: %s)\n", total.Period)
 	fmt.Println("============================================")
+
+	printMeasuredLine(m)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "SERVICE\tESTIMATED COST")
@@ -425,9 +489,11 @@ func printKVCostTable(est *cosmoflare.KVCostEstimate) {
 	w.Flush()
 }
 
-func printDetailTable(total *cosmoflare.TotalCostEstimate) {
+func printDetailTable(total *cosmoflare.TotalCostEstimate, m *cosmoflare.MeasuredCostUsage) {
 	fmt.Printf("\nItemized Cost Breakdown (period: %s)\n", total.Period)
 	fmt.Println("============================================")
+
+	printMeasuredLine(m)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "SERVICE\tITEM\tUSAGE\tRATE\tCOST")

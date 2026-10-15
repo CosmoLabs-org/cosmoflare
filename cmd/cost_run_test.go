@@ -176,13 +176,15 @@ func TestRunCostAll_OutputFormats(t *testing.T) {
 	costSeamUsage(t) // seam is package-global: one fixture for the whole table
 	// Distinctive measured numbers per command, valid in every format:
 	// table/csv print them raw; subcommand JSON is indented ("k": v) and
-	// cost/detail JSON is compact ("k":v).
+	// cost/detail JSON is compact ("k":v). The seam fixture has no KV
+	// storage, so its aggregate is R2 9.60 + Workers 0.50 + KV 6.00 = 16.10
+	// (21.10 belongs to costRunSampleEstimates, which adds KV StorageGB:10).
 	wantByCmd := map[string][]string{
-		"cost":    {"$21.10/mo", "21.10", `"storage_gb":100`, `"class_a_ops": 1000000`},
+		"cost":    {"16.10", "1000000"},
 		"r2":      {"1000000", `"class_a_ops": 1000000`},
 		"workers": {"1100000", `"requests": 1100000`},
 		"kv":      {"2000000", `"reads": 2000000`},
-		"detail":  {"$21.10/mo", "21.10", `"storage_gb":100`, `"class_a_ops": 1000000`},
+		"detail":  {"16.10", "1000000"},
 	}
 	for _, name := range []string{"cost", "r2", "workers", "kv", "detail"} {
 		for _, format := range []string{"table", "json", "csv"} {
