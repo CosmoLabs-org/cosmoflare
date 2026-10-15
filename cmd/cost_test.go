@@ -248,6 +248,24 @@ func TestCostCmd_SubcommandsInheritFlags(t *testing.T) {
 
 // --- Period validation ---
 
+// TestCostDays verifies the period→days mapping mirrors validatePeriod's
+// accepted values exactly (validatePeriod gates the input upstream).
+func TestCostDays(t *testing.T) {
+	cases := []struct {
+		period string
+		want   int
+	}{
+		{"7d", 7},
+		{"30d", 30},
+		{"90d", 90},
+	}
+	for _, tc := range cases {
+		if got := costDays(tc.period); got != tc.want {
+			t.Errorf("costDays(%q) = %d, want %d", tc.period, got, tc.want)
+		}
+	}
+}
+
 func TestCostCmd_ValidatePeriod(t *testing.T) {
 	cases := []struct {
 		input string
@@ -714,6 +732,7 @@ func TestCostConstants_KVPricing(t *testing.T) {
 func TestCostIncludesIdleWaste(t *testing.T) {
 	costRunGlobals(t)
 	costRunDefaults()
+	costSeamUsage(t) // hermetic measured usage — the run must not hit analytics
 
 	prev := costWasteFn
 	costWasteFn = func() (*cosmoflare.EfficiencyWasteSummary, error) {
