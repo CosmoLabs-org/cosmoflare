@@ -11,11 +11,23 @@ import type { ZoneFacts } from "./briefs/types";
 
 // Switchable collector stub: each test sets `next` to fixture facts or a
 // throwing function; the default fixture is a low-cache-hit + firing-alert
-// zone (a brief that MUST render non-empty).
-const collect = vi.hoisted(() => ({
-  next: null as null | ((env: unknown, zone: string) => Promise<ZoneFacts>),
-}));
+// zone (a brief that MUST render non-empty). ZoneNotFoundError is hoisted
+// so the mock factory and the tests share ONE class identity — the route's
+// instanceof check must see the same class the test throws.
+const collect = vi.hoisted(() => {
+  class ZoneNotFoundError extends Error {
+    constructor(zone: string) {
+      super(`zone ${zone} not found`);
+      this.name = "ZoneNotFoundError";
+    }
+  }
+  return {
+    ZoneNotFoundError,
+    next: null as null | ((env: unknown, zone: string) => Promise<ZoneFacts>),
+  };
+});
 vi.mock("./briefs/collect", () => ({
+  ZoneNotFoundError: collect.ZoneNotFoundError,
   collectZoneFacts: (env: unknown, zone: string) => {
     if (!collect.next) throw new Error("test bug: no collector fixture set");
     return collect.next(env, zone);
@@ -110,16 +122,14 @@ describe("GET /api/advisory", () => {
     }
   });
 
-  it("unknown zone is a 404", async () => {
+  it("unknown zone is a 404 — ZoneNotFoundError maps, it never leaks as a 502 partial", async () => {
     authBypass.value = true;
-    const restore = mockZones();
-    try {
-      const res = await worker.fetch(new Request("https://ops.example/api/advisory?zone=nope.example"), env as never, fakeCtx());
-      expect(res.status).toBe(404);
-      expect(await res.json()).toMatchObject({ error: expect.stringContaining("nope.example") });
-    } finally {
-      restore();
-    }
+    collect.next = async () => {
+      throw new collect.ZoneNotFoundError("nope.example");
+    };
+    const res = await worker.fetch(new Request("https://ops.example/api/advisory?zone=nope.example"), env as never, fakeCtx());
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: expect.stringContaining("nope.example") });
   });
 
   it("returns the full envelope with the rendered brief for a firing zone", async () => {

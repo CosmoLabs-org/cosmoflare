@@ -128,10 +128,12 @@ export function compileBrief(facts: ZoneFacts, templates: TemplateMap): Brief {
     for (const f of facts.quota.families) {
       if (!(f.allowance > 0) || !f.authorized) continue;
       const usedPct = (100 * f.used) / f.allowance;
-      if (usedPct >= QUOTA_CRIT_PCT) {
-        findings.push({ kind: "quota-pressure", severity: "critical", evidence: `${f.label}: ${f.used}/${f.allowance} used (${fmtNum(usedPct)}% of allowance)` });
-      } else if (usedPct >= QUOTA_WARN_PCT) {
-        findings.push({ kind: "quota-pressure", severity: "warning", evidence: `${f.label}: ${f.used}/${f.allowance} used (${fmtNum(usedPct)}% of allowance)` });
+      if (usedPct >= QUOTA_WARN_PCT) {
+        findings.push({
+          kind: "quota-pressure",
+          severity: usedPct >= QUOTA_CRIT_PCT ? "critical" : "warning",
+          evidence: `${f.label}: ${f.used}/${f.allowance} used (${fmtNum(usedPct)}% of allowance)`,
+        });
       }
     }
   }

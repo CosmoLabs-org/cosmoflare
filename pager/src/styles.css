@@ -1954,13 +1954,6 @@ a.cf-attention-more { display: block; font-size: var(--text-xs); color: var(--mu
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-/* Capacity lines wider than the ring's inner opening (mono width ∝ chars:
->14 at the 132 ring) drop to the tight cut so they never run under the
-arcs — the "25.0 GB OF 10.0 GB" class of lines (2026-10-16 pass). */
-.cf-ring-usedpct-tight {
-  font-size: 8.5px;
-  letter-spacing: 0.04em;
-}
 .cf-ring-sub {
   fill: var(--muted);
   font-family: var(--font-indicator);

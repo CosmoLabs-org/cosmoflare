@@ -15,24 +15,33 @@ test("overview rings: glow head present, capacity lines fit, luminous readout re
   // At least one ring has usage, so at least one glow head paints.
   expect(await heads.count()).toBeGreaterThan(0);
 
-  // Ground truth for the inner-line fit: every capacity line's rendered
-  // bbox must fit inside its ring's true inner opening (r - stroke/2).
+  // Ground truth for the interior fit: the VALUE line and the interior
+  // "USED" line must fit inside their ring's true inner opening
+  // (r - stroke/2). The value is the hero — it gets measured too, not just
+  // the small lines.
   const overflows = await page.evaluate(() => {
     const bad: string[] = [];
     for (const svg of Array.from(document.querySelectorAll<SVGSVGElement>(".cf-ring-svg"))) {
       const track = svg.querySelector(".cf-ring-track");
-      const line = svg.querySelector(".cf-ring-usedpct");
-      if (!track || !line) continue;
+      if (!track) continue;
       const r = Number(track.getAttribute("r"));
-      const sw = Number(getComputedStyle(track).strokeWidth.replace("px", "")) || 11;
-      // bbox + computed stroke are render-space; normalize r to the same
-      // space via the viewBox ratio before comparing.
+      // Stroke width is computed in render px; getBBox is viewBox units —
+      // normalize the stroke through the viewBox scale, then everything is
+      // viewBox-space and exact.
       const vb = svg.viewBox.baseVal;
       const rect = svg.getBoundingClientRect();
       const scale = rect.width / vb.width;
-      const opening = 2 * (r * scale - sw / 2);
-      const w = (line as SVGGraphicsElement).getBBox().width * scale;
-      if (w > opening + 1) bad.push(`${line.textContent} (${w.toFixed(1)} > ${opening.toFixed(1)})`);
+      const swVB = (Number(getComputedStyle(track).strokeWidth.replace("px", "")) || 11) / scale;
+      const opening = 2 * (r - swVB / 2);
+      const cx = vb.width / 2;
+      const cy = vb.width / 2; // ring center — the band grows below it
+      for (const t of Array.from(svg.querySelectorAll<SVGTextElement>(".cf-ring-value, .cf-ring-usedpct"))) {
+        const bb = (t as SVGGraphicsElement).getBBox();
+        const dx = bb.x + bb.width / 2 - cx;
+        const dy = bb.y + bb.height / 2 - cy;
+        if (Math.hypot(dx, dy) > r) continue; // outside the circle → band line
+        if (bb.width > opening + 1) bad.push(`${t.textContent} (${bb.width.toFixed(1)} > ${opening.toFixed(1)})`);
+      }
     }
     return bad;
   });

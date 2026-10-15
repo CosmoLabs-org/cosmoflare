@@ -14,11 +14,14 @@ import {
   dashedPattern,
   gaugeLevel,
   labelLines,
-  ringCenterValue,
   ringSecondLine,
   todayDotPos,
   type RingGaugeProps,
 } from "../../gauges";
+
+/** 24px mono value advance (0.6em + no tracking) in viewBox units — the one
+ *  width constant the interior squeeze needs; lives beside its only user. */
+const VALUE_CHAR_W = 14.4;
 
 export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
   // Ring sizing (operator 2026-10-10): 132 default — the 120 ring let the
@@ -46,41 +49,33 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
     ({ "--ring-c": String(geom.circumference), ...extra }) as React.CSSProperties;
 
   const lines = labelLines(props.label);
-  // Label band spacing (operator 2026-10-16 hierarchy pass): more air below
-  // the ring so the band reads as its own group, clear of the arcs.
-  const ys = lines.length === 1 ? [size + 16] : [size + 12, size + 23];
   const today = props.expectedPct !== undefined ? todayDotPos(props.expectedPct, cx, cy, r) : null;
   // The glow head rides the used arc's end angle — same polar helper as the
   // today dot (todayDotPos is generic pct→point math), driven by usedPct.
   // Zero usage renders no head: an empty arc must not paint a start dot.
   const head = props.usedPct > 0 ? todayDotPos(props.usedPct, cx, cy, r) : null;
-  // Concrete-number mode (2026-10-16): the interior is the measured value
-  // with units plus one always-fitting "USED" line; the used % and the
-  // allowance become band lines below the ring. Fallback (no
-  // centerValueText) keeps the projected-% interior unchanged.
-  const concrete = props.centerValueText !== undefined;
-  const second = ringSecondLine(props.usedPct, props.usedLineText);
+  // Interior: the measured value with units plus one always-fitting "USED"
+  // line; the used % and the allowance are band lines below the ring.
+  const second = ringSecondLine(props.usedPct);
   const innerD = 2 * (r - stroke);
-  // Interior fit is string math (mono width ∝ chars): the fallback capacity
-  // line takes the tight cut then an exact textLength squeeze; a long
-  // concrete value ("1234.5 GB") squeezes the same way at full size.
-  const tight = !concrete && second.length * 6.8 > innerD; // 10px ≈ 6.8/char
-  const squeezed = tight && second.length * 5.44 > innerD; // 8.5px ≈ 5.44/char
-  const valueSqueeze = concrete && props.centerValueText!.length >= 6; // 24px ≈ 14.4/char; "695.0K" is already borderline at 6
-  // Concrete-mode band geometry: label line(s) → used % line → allowance,
-  // 13-unit pitch; the tail grows with the lines actually present.
+  // ONE width rule (mono advance ∝ font size): a value wider than the ring's
+  // inner opening gets an exact SVG textLength squeeze. Size-aware — scales
+  // with the ring, unlike the char-count threshold it replaces.
+  const valueSqueeze = props.centerValueText.length * VALUE_CHAR_W > innerD;
+  // Band geometry: label line(s) → used % line → allowance, 13-unit pitch;
+  // the tail grows with the lines actually present.
   const bandStart = lines.length === 1 ? size + 15 : size + 12;
   const bandYs = lines.length === 1 ? [bandStart] : [bandStart, bandStart + 13];
   const capY = bandYs[bandYs.length - 1] + 13;
   const subY = capY + 13;
-  const concreteTail = (props.sublabel ? subY : capY) + 7;
+  const tail = (props.sublabel ? subY : capY) + 7;
 
   return (
     <svg
       className={`cf-ring-svg ${levelClass}`}
       role="img"
       aria-label={ariaLabelFor(props)}
-      viewBox={`0 0 ${size} ${size + (concrete ? concreteTail : props.sublabel ? 46 : 32)}`}
+      viewBox={`0 0 ${size} ${size + tail}`}
     >
       {/* Track (full circle, neutral). */}
       <circle
@@ -150,54 +145,37 @@ export default function RingGauge(props: RingGaugeProps): React.JSX.Element {
         />
       ) : null}
 
-      {/* Interior. Concrete mode: the measured value with units is the hero,
-          one always-fitting "USED" line under it. Fallback: the projected %
-          with the capacity line (tight cut + exact squeeze when long). */}
+      {/* Interior: the measured value with units is the hero; one
+          always-fitting "USED" line under it. */}
       <text
         x={cx}
-        y={cy - (concrete ? 10 : 11)}
+        y={cy - 10}
         textAnchor="middle"
         dominantBaseline="central"
         className="cf-ring-value"
         textLength={valueSqueeze ? innerD : undefined}
         lengthAdjust={valueSqueeze ? "spacingAndGlyphs" : undefined}
       >
-        {concrete ? props.centerValueText : ringCenterValue(props.projectedPct)}
+        {props.centerValueText}
       </text>
-      <text
-        x={cx}
-        y={cy + (concrete ? 13 : 21)}
-        textAnchor="middle"
-        dominantBaseline="central"
-        className={tight ? "cf-ring-usedpct cf-ring-usedpct-tight" : "cf-ring-usedpct"}
-        textLength={squeezed ? innerD : undefined}
-        lengthAdjust={squeezed ? "spacingAndGlyphs" : undefined}
-      >
-        {concrete ? "USED" : second}
+      <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="central" className="cf-ring-usedpct">
+        USED
       </text>
 
-      {/* Label band below the ring. Concrete mode stacks: product label,
-          used % so far, allowance — the band holds what the interior doesn't.
-          Fallback keeps the label + allowance pair. */}
+      {/* Label band below the ring: product label, used % so far, allowance —
+          the band holds what the interior doesn't. */}
       <text x={cx} textAnchor="middle" className="cf-ring-label">
-        {(concrete ? bandYs : ys).map((y, i) => (
+        {bandYs.map((y, i) => (
           <tspan key={i} x={cx} y={String(y)}>
             {lines[i]}
           </tspan>
         ))}
       </text>
-      {concrete ? (
-        <text x={cx} y={String(capY)} textAnchor="middle" className="cf-ring-usedpct">
-          {second}
-        </text>
-      ) : null}
+      <text x={cx} y={String(capY)} textAnchor="middle" className="cf-ring-usedpct">
+        {second}
+      </text>
       {props.sublabel ? (
-        <text
-          x={cx}
-          y={String(concrete ? subY : (lines.length === 1 ? size + 16 : size + 23) + 14)}
-          textAnchor="middle"
-          className="cf-ring-sub"
-        >
+        <text x={cx} y={String(subY)} textAnchor="middle" className="cf-ring-sub">
           {`of ${props.sublabel}`}
         </text>
       ) : null}

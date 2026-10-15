@@ -24,7 +24,7 @@ import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEn
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
-import { collectZoneFacts } from "./briefs/collect";
+import { collectZoneFacts, ZoneNotFoundError } from "./briefs/collect";
 import { compileBrief } from "./briefs/compile";
 import { renderAgentBrief } from "./briefs/render";
 import { TEMPLATES } from "./briefs/templates";
@@ -297,33 +297,33 @@ export default {
       case "/api/advisory": {
         // GET /api/advisory?zone=<zone> — the deterministic advisory brief
         // (P-17, FEAT-pC1EV32): collectZoneFacts → compileBrief(TEMPLATES) →
-        // renderAgentBrief. The zone name→id resolution rides the SHARED
-        // cached "zones-list" (the same key /api/summary and the lifecycle
-        // handlers use — never a second /zones page per advisory read);
-        // unknown names 404. generatedAt lives ONLY in this envelope — the
-        // rendered text carries no clock, so identical facts yield a
-        // byte-identical agentBrief.
+        // renderAgentBrief. Zone resolution has ONE owner: collectZoneFacts
+        // (the shared "cron:zones" cached list) — the route does NOT resolve
+        // against a second zones-list, whose divergence once turned a
+        // not-found into a fake 502 partial (integration review 2026-10-16).
+        // ZoneNotFoundError maps to 404; anything else is a collector
+        // hard-fault. generatedAt lives ONLY in this envelope — the rendered
+        // text carries no clock, so identical facts yield a byte-identical
+        // agentBrief.
         if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
         const zone = url.searchParams.get("zone");
         if (!zone) return json({ error: "missing zone" }, 400);
         try {
-          const zones = (
-            await cached(ctx, env, "zones-list", LIST_TTL, () => fetchZonesList(env.CF_API_TOKEN, env.CF_ACCOUNT_ID))
-          ).value;
-          const zoneId = zones.find((z) => z.name === zone)?.id;
-          if (!zoneId) return json({ error: `zone not found: ${zone}` }, 404);
           const facts = await collectZoneFacts(env, zone, ctx);
           const brief = compileBrief(facts, TEMPLATES);
           const hasFindings = brief.findings.length > 0;
           return json({
             zone,
-            zoneId,
+            zoneId: facts.zoneId,
             generatedAt: new Date().toISOString(),
             facts,
             brief: hasFindings ? brief : null,
             rendered: { agentBrief: hasFindings ? renderAgentBrief(brief) : "" },
           });
         } catch (error) {
+          if (error instanceof ZoneNotFoundError) {
+            return json({ error: `zone not found: ${zone}` }, 404);
+          }
           // Coverage is the collectors' hard spine (briefs/collect.ts): probe,
           // quota, and alerts already degrade inside the facts, so reaching
           // this catch means the brief's spine failed — 502 + partial, never

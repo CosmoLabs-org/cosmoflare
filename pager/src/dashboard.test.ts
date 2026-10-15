@@ -80,7 +80,6 @@ describe("ringPropsFor", () => {
     // IMP-002 evolved: the interior no longer carries capacity text, so the
     // band states the allowance for storage too (component adds "of").
     expect(props.sublabel).toBe("1.0 GB");
-    expect(props.usedLineText).toBeUndefined();
     // Count metrics abbreviate the used value; the unit lives in the band.
     expect(ringPropsFor(d1, period).centerValueText).toBe("640.0M");
     expect(ringPropsFor(d1, period).sublabel).toBe("25.0B rows");

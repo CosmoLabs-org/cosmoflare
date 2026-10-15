@@ -99,10 +99,12 @@ export function fmtGaugePct(v: number): string {
   return String(n);
 }
 
-/** "Workers requests: 4% used, projected 7% of 10M requests" (the task's example). */
-export function ariaLabelFor(p: { label: string; usedPct: number; projectedPct: number; sublabel?: string }): string {
+/** "Workers requests: 695K used, projected 7% of 10M requests" — the concrete
+ * value leads when the ring shows one (matching the visible hero), else % . */
+export function ariaLabelFor(p: { label: string; usedPct: number; projectedPct: number; sublabel?: string; centerValueText?: string }): string {
   const tail = p.sublabel ? ` of ${p.sublabel}` : " of allowance";
-  return `${p.label}: ${fmtGaugePct(p.usedPct)}% used, projected ${fmtGaugePct(p.projectedPct)}%${tail}`;
+  const used = p.centerValueText ?? `${fmtGaugePct(p.usedPct)}%`;
+  return `${p.label}: ${used} used, projected ${fmtGaugePct(p.projectedPct)}%${tail}`;
 }
 
 /**
@@ -220,15 +222,12 @@ export interface RingGaugeProps {
   projectedPct: number;
   /** "Workers requests" — below the ring and inside the aria-label. */
   label: string;
-  /** "10M requests" — under the center value and inside the aria-label. */
+  /** "10M requests" — inside the aria-label and the band's allowance line. */
   sublabel?: string;
-  /** Overrides the "N% used so far" line with the size for storage metrics
-   *  (IMP-002: projected === used, so the % would repeat the center value). */
-  usedLineText?: string;
-  /** Concrete center value with units ("3.9 GB", "7.4M") — replaces the
-   *  projected-% readout as the ring's hero. Interior shows this + "USED";
-   *  the used % and allowance move to the band below (2026-10-16). */
-  centerValueText?: string;
+  /** Concrete center value with units ("3.9 GB", "7.4M") — the ring's hero.
+   *  Interior shows this + "USED"; the used % and allowance live in the band
+   *  below (2026-10-16). Required: every producer sets it (ringPropsFor). */
+  centerValueText: string;
   /** Square ring size in px; default 120. */
   size?: number;
   /** Expected-to-date position 0..100 (period.day/period.days) — 3px dot on the ring. */
@@ -351,7 +350,7 @@ export function ringGauge(props: RingGaugeProps): SVGSVGElement {
   usedLine.setAttribute("text-anchor", "middle");
   usedLine.setAttribute("dominant-baseline", "central");
   usedLine.classList.add("cf-ring-usedpct");
-  usedLine.textContent = ringSecondLine(props.usedPct, props.usedLineText);
+  usedLine.textContent = ringSecondLine(props.usedPct);
   svg.append(usedLine);
 
   // Label band below the ring: the (up to two-line) product label, then the

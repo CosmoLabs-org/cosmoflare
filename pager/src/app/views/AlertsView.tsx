@@ -157,11 +157,16 @@ function FeedDetail({ entry, onAdvisory }: { entry: AlertFeedEntry; onAdvisory: 
       </table>
       {entry.context ? <p className="cf-feed-context">{entry.context}</p> : null}
       <p className="cf-feed-explanation">{explanationFor(entry.condition)}</p>
-      <div className="cf-feed-actions">
-        <button type="button" className="cf-btn" onClick={() => onAdvisory(zoneOf(entry))}>
-          Commands to AI Agent
-        </button>
-      </div>
+      {/* Advisory dispatch is zone-scoped; a telemetry-gap row's ruleId
+          segment is a dataset name, not a zone — the button can never
+          succeed there (integration review 2026-10-16). */}
+      {entry.condition !== "telemetry-gap" ? (
+        <div className="cf-feed-actions">
+          <button type="button" className="cf-btn" onClick={() => onAdvisory(zoneOf(entry))}>
+            Commands to AI Agent
+          </button>
+        </div>
+      ) : null}
       <p className="cf-feed-footer">
         {entry.ruleId} · {entry.sent ? "push delivered" : "push not delivered"}
       </p>

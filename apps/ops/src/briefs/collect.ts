@@ -126,17 +126,26 @@ async function readFiringAlerts(env: OpsEnv, zone: string, zoneId: string): Prom
   }
 }
 
+/** Zone resolution failed inside collectZoneFacts — the endpoint maps this
+ * to 404; every other failure is a collector hard-fault (502, partial). */
+export class ZoneNotFoundError extends Error {
+  constructor(zone: string) {
+    super(`zone ${zone} not found`);
+    this.name = "ZoneNotFoundError";
+  }
+}
+
 /**
  * Collect one zone's advisory facts. The zone name is resolved against the
  * shared "cron:zones" KV-cached list (activeZones — the same list
- * rules_quota.ts reads, so no extra REST call); an unknown zone throws so
- * the endpoint can 404. Coverage is the one hard-failing read; probe,
- * quota, and alerts degrade inside the facts.
+ * rules_quota.ts reads, so no extra REST call); an unknown zone throws
+ * ZoneNotFoundError so the endpoint can 404. Coverage is the one
+ * hard-failing read; probe, quota, and alerts degrade inside the facts.
  */
 export async function collectZoneFacts(env: OpsEnv, zone: string, ctx: ExecutionContext = NOOP_CTX): Promise<ZoneFacts> {
   const zones = await activeZones(env);
   const match = zones.find((z) => z.name === zone);
-  if (!match) throw new Error(`zone ${zone} not found`);
+  if (!match) throw new ZoneNotFoundError(zone);
   const zoneId = match.id;
 
   const [coverage, probe, quota, firingAlerts] = await Promise.all([
