@@ -1,11 +1,17 @@
 ---
-title: "Session 2040 Continuation Prompt"
-created: 2026-10-15
-status: PENDING
 branch: master
+completed: "2026-10-15T22:43:25+04:00"
+created: "2026-10-15T12:00:00+04:00"
+goals_completed: 2
 goals_total: 2
-goals_completed: 0
-supersedes: "docs/prompts/2026-10-15-session-1-continuation.md"
+related_prompts: []
+requires_reading:
+    - docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml
+schema_version: 1
+status: COMPLETED
+supersedes: docs/prompts/2026-10-15-session-1-continuation.md
+tags: []
+title: Session 2040 Continuation Prompt
 ---
 
 ## Context
@@ -41,11 +47,11 @@ supersedes: "docs/prompts/2026-10-15-session-1-continuation.md"
 
 ## Goals
 
-### [ ] G-01 Execute Commands-to-AI-Agent B1-B4 + B5 live pass
+### [x] G-01 Execute Commands-to-AI-Agent B1-B4 + B5 live pass
 
 Dispatch `ccs glm-agent exec-batch docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml` (B1→B4 sequential, gate each merge), then run B5 in-session: Playwright on the dev URL proves the modal opens, renders a real zone's advisory, and copies byte-identical text. Acceptance: two `GET /api/advisory?zone=<real>` calls return identical `agentBrief`; impeccable detect 0 on new UI files; ops suite green.
 
-### [ ] G-02 Cost real-usage wave
+### [x] G-02 Cost real-usage wave
 
 `cosmoflare cost` currently estimates from zero-value placeholder usage structs. Wire real usage fetching (the wave-2 deferred item, decision D-cost). Acceptance: cost output shows measured numbers for usage inputs; TestCost* green; live smoke diff vs before recorded.
 
