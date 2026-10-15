@@ -11,7 +11,7 @@ import (
 type EfficiencyFinding struct {
 	Resource string `json:"resource"`
 	Check    string `json:"check"`
-	Severity string `json:"severity"` // "warning" | "info"
+	Severity string `json:"severity"` // "critical" | "warning" | "info"
 	Evidence string `json:"evidence"`
 	Fix      string `json:"fix"`
 }
