@@ -239,3 +239,4 @@ docs/feedback/outgoing/
 # Local analysis artifacts
 .impeccable/
 pager/e2e-results/
+speedcc.fit
