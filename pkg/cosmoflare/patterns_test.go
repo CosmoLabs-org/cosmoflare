@@ -397,6 +397,52 @@ export const t = async () => cache.delete('api:test:')
 	}
 }
 
+// TestScanProjectCacheInnerClosureInKeyFn pins the kvCache options-span rule:
+// a block-bodied keyFn whose body contains an inner closure ending in an
+// inline `})` (a .map block chained into .join) must NOT have its options
+// truncated at that inline close — the ttl declared after it must still
+// parse, and the key prefix must be the real key.
+func TestScanProjectCacheInnerClosureInKeyFn(t *testing.T) {
+	dir := t.TempDir()
+	src := `// banner
+iRoutes.get(
+  '/inner',
+  kvCache({
+    keyFn: (c) => {
+      const names = list.map((x) => { return x.name }).join(',');
+      if (!names) return null;
+      return ` + "`api:x:inner:${id}`" + `;
+    },
+    ttl: 21600,
+  }),
+  async (c) => c.json({})
+)
+`
+	if err := os.WriteFile(filepath.Join(dir, "inner.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	inv, err := ScanProjectCache(dir)
+	if err != nil {
+		t.Fatalf("ScanProjectCache: %v", err)
+	}
+	if len(inv.Routes) != 1 {
+		t.Fatalf("routes count = %d, want 1:\n%+v", len(inv.Routes), inv.Routes)
+	}
+	r := inv.Routes[0]
+	if r.Route != "GET /inner" {
+		t.Errorf("route = %q, want GET /inner", r.Route)
+	}
+	if r.TTL != 21600 {
+		t.Errorf("TTL = %d, want 21600 (inline inner-closure `})` must not truncate the options)", r.TTL)
+	}
+	if r.KeyPrefix != "api:x:inner:" {
+		t.Errorf("KeyPrefix = %q, want %q", r.KeyPrefix, "api:x:inner:")
+	}
+	if !r.KeyFn {
+		t.Errorf("KeyFn = false, want true")
+	}
+}
+
 // TestKeyPrefixFirstLiteralReturn pins the keyFn prefix extraction rules:
 // block bodies use the FIRST literal-returning return (null/identifier early
 // returns are skipped), a comment word like '// returns all' never reads as

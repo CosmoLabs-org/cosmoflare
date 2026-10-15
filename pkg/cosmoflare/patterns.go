@@ -275,10 +275,15 @@ func scanFileMiddleware(inv *ProjectCacheInventory, file string, text string) {
 	})
 }
 
-// kvCacheOptions extracts the kvCache options text starting at kvCache( up to
-// the next `})`, capped at 10 lines. Returns the options text and the index
-// just past the options in windowText coordinates (-1-safe: an unterminated
-// options block consumes the whole tail).
+// kvCacheOptions extracts the kvCache options text starting at kvCache( up
+// to the line-terminating attachment close, capped at 10 lines. The options
+// end is the FIRST line (within the cap) matching the attachment-terminator
+// shape `})`/`}),`/`});` at END of line — not the first `})` anywhere:
+// block-bodied keyFns contain inner closures (.map(x => { ... }),
+// .replace(..., () => ...)) whose inline `})` would otherwise truncate the
+// options early and drop a ttl declared after them. Returns the options text
+// and the index just past the terminator in windowText coordinates (-1-safe:
+// an unterminated options block consumes the whole tail).
 func kvCacheOptions(windowText string, kvIdx int) (string, int) {
 	tail := windowText[kvIdx:]
 	// Cap: the corpus's longest block keyFn (mass /city-window, ttl declared
@@ -288,12 +293,19 @@ func kvCacheOptions(windowText string, kvIdx int) (string, int) {
 	lines := strings.SplitN(tail, "\n", optCap+1)
 	if len(lines) == optCap+1 {
 		tail = strings.Join(lines[:optCap], "\n")
+		lines = lines[:optCap]
 	}
-	end := strings.Index(tail, "})")
-	if end < 0 {
-		return tail, len(windowText)
+	// `\s` never spans lines here (the text is already split), so `$` is the
+	// line end: only a line-terminating `}),`/`})`/`});` closes the options.
+	attachCloseRe := regexp.MustCompile(`\}\s*\)\s*[,);]?\s*$`)
+	offset := 0
+	for _, line := range lines {
+		if loc := attachCloseRe.FindStringIndex(line); loc != nil {
+			return tail[:offset+loc[0]], kvIdx + offset + loc[1]
+		}
+		offset += len(line) + 1 // +1 restores the newline SplitN consumed
 	}
-	return tail[:end], kvIdx + end + 2
+	return tail, len(windowText)
 }
 
 // keyPrefix finds the keyFn's value literal, head truncated at `${` or the
