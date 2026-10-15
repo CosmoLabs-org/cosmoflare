@@ -727,3 +727,49 @@ func TestDNSRunners_ErrorCodes(t *testing.T) {
 		})
 	}
 }
+
+// TestDNSUpdate_ContentFlag verifies the documented --content flag is wired
+// into dnsUpdateCmd and accepted by runDNSUpdate (BUG-pN2NX4K).
+func TestDNSUpdate_ContentFlag(t *testing.T) {
+	f := dnsUpdateCmd.Flags().Lookup("content")
+	if f == nil {
+		t.Fatal("--content flag not registered on dnsUpdateCmd")
+	}
+	if f.DefValue != "" {
+		t.Errorf("--content default = %q, want %q", f.DefValue, "")
+	}
+	if f.Value.Type() != "string" {
+		t.Errorf("--content type = %q, want %q", f.Value.Type(), "string")
+	}
+
+	// With only --content set, runDNSUpdate must get past its no-flags guard
+	// and reach the service. No network: DryRun short-circuits after service
+	// construction, mirroring TestDNSUpdate_DryRun.
+	origDryRun := DryRun
+	origJSON := JSONOutput
+	origAPIToken := APIToken
+	defer func() {
+		DryRun = origDryRun
+		JSONOutput = origJSON
+		APIToken = origAPIToken
+	}()
+	DryRun = true
+	JSONOutput = false
+	APIToken = "test-token"
+
+	// Reset Changed state so flags leaked from earlier tests cannot satisfy
+	// the guard, and defer a reset so --content cannot leak out.
+	resetChanged := func() {
+		dnsUpdateCmd.Flags().VisitAll(func(fl *pflag.Flag) { fl.Changed = false })
+	}
+	resetChanged()
+	defer resetChanged()
+
+	if err := dnsUpdateCmd.Flags().Set("content", "5.6.7.8"); err != nil {
+		t.Fatalf("failed to set --content: %v", err)
+	}
+
+	if err := runDNSUpdate(dnsUpdateCmd, []string{"zone123", "record456"}); err != nil {
+		t.Errorf("runDNSUpdate with only --content returned error: %v", err)
+	}
+}

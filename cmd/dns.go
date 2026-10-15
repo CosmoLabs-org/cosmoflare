@@ -151,6 +151,7 @@ func init() {
 	dnsListCmd.Flags().StringVar(&dnsFilterContent, "content", "", "Filter by record content")
 
 	// Update flags
+	dnsUpdateCmd.Flags().StringVar(&dnsContent, "content", "", "New record content (IP address, hostname, text, etc.)")
 	dnsUpdateCmd.Flags().IntVar(&dnsTTL, "ttl", 0, "TTL in seconds (1 = automatic)")
 	dnsUpdateCmd.Flags().BoolVar(&dnsProxied, "proxied", false, "Enable Cloudflare proxy (orange cloud)")
 	dnsUpdateCmd.Flags().Uint16Var(&dnsPriority, "priority", 0, "Record priority (for MX, SRV records)")
@@ -337,6 +338,9 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 	zoneID, recordID := args[0], args[1]
 
 	var opts []cosmoflare.DNSOption
+	if cmd.Flags().Changed("content") {
+		opts = append(opts, cosmoflare.WithDNSUpdateContent(dnsContent))
+	}
 	if cmd.Flags().Changed("ttl") {
 		opts = append(opts, cosmoflare.WithDNSTTL(dnsTTL))
 	}
@@ -351,7 +355,7 @@ func runDNSUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(opts) == 0 {
-		return outErrCodef(cli.CodeValidationError, "at least one update flag is required (--ttl, --proxied, --priority, --comment)")
+		return outErrCodef(cli.CodeValidationError, "at least one update flag is required (--content, --ttl, --proxied, --priority, --comment)")
 	}
 
 	svc, err := getDNSService(zoneID)
