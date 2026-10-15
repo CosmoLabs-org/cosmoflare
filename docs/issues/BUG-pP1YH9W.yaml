@@ -1,12 +1,12 @@
 id: BUG-pP1YH9W
 type: bug
 created_at: 2026-10-15T15:12:52.496947+04:00
-updated_at: 2026-10-15T15:12:54.6137+04:00
+updated_at: 2026-10-15T19:30:56.112185+04:00
 source: local
 ulid: 01M4ZM7NV99DWCA38KP3P1YH9W
 provisional: true
 severity: high
-status: open
+status: fixed
 origin:
     session: 79
 title: 'Ops rules_quota: unpaginated zones fetch caps fleet at 20 and clobbers the alert engine''s cron:zones KV entry'
@@ -14,3 +14,10 @@ description: 'zonesFromCacheOrFetch (apps/ops/src/rules_quota.ts:89) re-uses sch
 fix_direction: Reuse scheduled.ts's paginated active-only zone list (restPages + status=active) via the shared cached()/kvCache helper instead of re-implementing under the same key; never write cron:zones from rules_quota with different semantics.
 affected_files:
     - apps/ops/src/rules_quota.ts
+resolution:
+    notes: 'Fixed in 2edf2de: zonesFromCacheOrFetch deleted; rules_quota now imports scheduled.ts''s activeZones (paginated, status=active) — one writer, one semantics for the cron:zones key. Verified: 120-zone 3-page mock test; full ops suite 238/238, tsc clean.'
+    resolved_at: 2026-10-15T19:30:56.110918+04:00
+revisions:
+    - date: "2026-10-15T19:30:56.110914+04:00"
+      action: closed
+      context: 'Fixed in 2edf2de: zonesFromCacheOrFetch deleted; rules_quota now imports scheduled.ts''s activeZones (paginated, status=active) — one writer, one semantics for the cron:zones key. Verified: 120-zone 3-page mock test; full ops suite 238/238, tsc clean.'

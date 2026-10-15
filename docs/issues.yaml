@@ -1,6 +1,6 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-15T15:21:53.587188+04:00
+last_updated: 2026-10-15T19:30:56.378005+04:00
 next_bug_id: 65
 next_feat_id: 82
 next_task_id: 18
@@ -397,13 +397,13 @@ issues:
       created_at: 2026-10-12T05:28:39.310973+04:00
     - id: BUG-p9GM11M
       type: bug
-      status: open
+      status: fixed
       title: 'Ops rules_quota summary: stale/poisoned KV state presented as current; corrupt entry throw-loops cron in swallowed catches'
       severity: medium
       created_at: 2026-10-15T15:12:55.315551+04:00
     - id: BUG-pP1YH9W
       type: bug
-      status: open
+      status: fixed
       title: 'Ops rules_quota: unpaginated zones fetch caps fleet at 20 and clobbers the alert engine''s cron:zones KV entry'
       severity: high
       created_at: 2026-10-15T15:12:52.496947+04:00
