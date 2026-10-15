@@ -1,8 +1,8 @@
 version: "1.0"
 project: cosmoflare
-last_updated: 2026-10-15T07:39:34.96226+04:00
-next_bug_id: 64
-next_feat_id: 81
+last_updated: 2026-10-15T15:21:53.587188+04:00
+next_bug_id: 65
+next_feat_id: 82
 next_task_id: 18
 next_imp_id: 6
 issues:
@@ -395,6 +395,18 @@ issues:
       title: 'Cache-miss alert rides a tiny base: percentage alerts page without volume floor or absolute numbers'
       severity: medium
       created_at: 2026-10-12T05:28:39.310973+04:00
+    - id: BUG-p9GM11M
+      type: bug
+      status: open
+      title: 'Ops rules_quota summary: stale/poisoned KV state presented as current; corrupt entry throw-loops cron in swallowed catches'
+      severity: medium
+      created_at: 2026-10-15T15:12:55.315551+04:00
+    - id: BUG-pP1YH9W
+      type: bug
+      status: open
+      title: 'Ops rules_quota: unpaginated zones fetch caps fleet at 20 and clobbers the alert engine''s cron:zones KV entry'
+      severity: high
+      created_at: 2026-10-15T15:12:52.496947+04:00
     - id: FEAT-001
       type: feature
       status: closed
@@ -823,6 +835,11 @@ issues:
       status: open
       title: Provision AI Gateways from the Ops Projects view
       created_at: 2026-10-13T21:06:23.382424+04:00
+    - id: FEAT-pC1EV32
+      type: feature
+      status: open
+      title: Ops Commands-to-AI-Agent modal — deterministic per-domain advisory briefs, copy-paste ready for Claude Code / Codex / agentic sessions
+      created_at: 2026-10-15T15:21:51.720675+04:00
     - id: FEAT-pCTEKWX
       type: feature
       status: open

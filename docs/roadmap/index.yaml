@@ -1,9 +1,9 @@
 version: "1.0"
 project: ..
-last_updated: 2026-10-15T15:22:38.793741+04:00
+last_updated: 2026-10-15T15:22:40.088397+04:00
 next_id: 120
 items:
-    - id: ROAD-119
+    - id: ROAD-pX0RYK9
       title: Commands to AI Agent — deterministic advisory briefs in Ops
       status: captured
       priority: 80

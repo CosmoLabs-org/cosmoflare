@@ -1,12 +1,14 @@
 id: BUG-pP1YH9W
 type: bug
 created_at: 2026-10-15T15:12:52.496947+04:00
-updated_at: 2026-10-15T15:12:53.097234+04:00
+updated_at: 2026-10-15T15:12:54.6137+04:00
 source: local
 ulid: 01M4ZM7NV99DWCA38KP3P1YH9W
 provisional: true
 severity: high
 status: open
+origin:
+    session: 79
 title: 'Ops rules_quota: unpaginated zones fetch caps fleet at 20 and clobbers the alert engine''s cron:zones KV entry'
 description: 'zonesFromCacheOrFetch (apps/ops/src/rules_quota.ts:89) re-uses scheduled.ts''s KV key ''cron:zones'' but fetches GET /zones unpaginated (CF v4 default per_page=20) without status=active, unlike scheduled.ts''s restPages(20x50) active-only list. On the 45-zone fleet: whichever writer refreshes after the 1h window wins — rules_quota writes a ~20-zone paused-inclusive list that runScheduled then consumes as fresh (missed telemetry zones), the rotation cursor indexes an array flip-flopping 20<->45 so zones 21+ never rotate through the Overview strip, and GET /api/rules-quota?name=<zone 21+> returns a cached ''zone not found''. Found by max-effort review of the 2026-10-15 window (commit 5555936).'
 fix_direction: Reuse scheduled.ts's paginated active-only zone list (restPages + status=active) via the shared cached()/kvCache helper instead of re-implementing under the same key; never write cron:zones from rules_quota with different semantics.
