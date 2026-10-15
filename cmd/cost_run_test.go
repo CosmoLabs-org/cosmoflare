@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	cosmoflare "github.com/CosmoLabs-org/cosmoflare/pkg/cosmoflare"
 )
@@ -54,7 +56,35 @@ func costRunFns() map[string]func() error {
 	}
 }
 
-// TestRunCost_InvalidPeriod verifies the period guard rejects bad values with
+// costSeamUsage overrides collectCostUsage with a deterministic
+// MeasuredCostUsage fixture (hermetic — no test may hit the network) and
+// restores the seam via t.Cleanup. The closure rejects days outside the
+// 7d/30d/90d flag mapping, so a wiring regression fails loudly. Mutate the
+// returned fixture (e.g. ProjectedTo30d) before running the command.
+func costSeamUsage(t *testing.T) *cosmoflare.MeasuredCostUsage {
+	t.Helper()
+	m := &cosmoflare.MeasuredCostUsage{
+		R2:             cosmoflare.R2Usage{StorageGB: 100, ClassAOps: 1_000_000, ClassBOps: 10_000_000},
+		Workers:        cosmoflare.WorkersUsage{Requests: 1_100_000, CPUTimeMs: 123_000},
+		KV:             cosmoflare.KVUsage{Reads: 2_000_000, Writes: 1_000_000},
+		WindowStart:    time.Date(2026, 10, 8, 0, 0, 0, 0, time.UTC),
+		WindowEnd:      time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC),
+		ProjectedTo30d: true,
+	}
+	prev := collectCostUsage
+	collectCostUsage = func(ctx context.Context, svc *cosmoflare.CostService, days int) (*cosmoflare.MeasuredCostUsage, error) {
+		switch days {
+		case 7, 30, 90:
+		default:
+			t.Errorf("collectCostUsage days = %d, want 7/30/90", days)
+		}
+		return m, nil
+	}
+	t.Cleanup(func() { collectCostUsage = prev })
+	return m
+}
+
+// TestRunCostAll_InvalidPeriod verifies the period guard rejects bad values with
 // the exact message before any service is built.
 func TestRunCost_InvalidPeriod(t *testing.T) {
 	costRunGlobals(t)
@@ -138,9 +168,24 @@ func TestRunCostAll_MissingAPIToken(t *testing.T) {
 }
 
 // TestRunCostAll_OutputFormats verifies every command renders each output
-// format offline (estimation uses placeholder empty usage — no network).
+// format offline: the collectCostUsage seam is stubbed with a fixture
+// MeasuredCostUsage (no network) and the measured numbers must appear in
+// every format (JSON shape unchanged — usage values are now measured).
 func TestRunCostAll_OutputFormats(t *testing.T) {
 	fns := costRunFns()
+	costSeamUsage(t) // seam is package-global: one fixture for the whole table
+	// Distinctive measured numbers per command, valid in every format:
+	// table/csv print them raw; subcommand JSON is indented ("k": v) and
+	// cost/detail JSON is compact ("k":v). The seam fixture has no KV
+	// storage, so its aggregate is R2 9.60 + Workers 0.50 + KV 6.00 = 16.10
+	// (21.10 belongs to costRunSampleEstimates, which adds KV StorageGB:10).
+	wantByCmd := map[string][]string{
+		"cost":    {"16.10", "1000000"},
+		"r2":      {"1000000", `"class_a_ops": 1000000`},
+		"workers": {"1100000", `"requests": 1100000`},
+		"kv":      {"2000000", `"reads": 2000000`},
+		"detail":  {"16.10", "1000000"},
+	}
 	for _, name := range []string{"cost", "r2", "workers", "kv", "detail"} {
 		for _, format := range []string{"table", "json", "csv"} {
 			t.Run(name+"-"+format, func(t *testing.T) {
@@ -156,16 +201,27 @@ func TestRunCostAll_OutputFormats(t *testing.T) {
 				if strings.TrimSpace(out) == "" {
 					t.Fatalf("runCost(%s, %s) produced no output", name, format)
 				}
+				var matched int
+				for _, want := range wantByCmd[name] {
+					if strings.Contains(out, want) {
+						matched++
+					}
+				}
+				if matched == 0 {
+					t.Errorf("runCost(%s, %s) output carries none of the measured numbers %v:\n%s", name, format, wantByCmd[name], out)
+				}
 			})
 		}
 	}
 }
 
 // TestRunCost_JSONFlagOverridesFormat verifies the global --json flag routes
-// to JSON even when the format flag says table.
+// to JSON even when the format flag says table, and that the JSON carries the
+// measured usage from the seam fixture.
 func TestRunCost_JSONFlagOverridesFormat(t *testing.T) {
 	costRunGlobals(t)
 	costRunDefaults()
+	costSeamUsage(t)
 	JSONOutput = true
 
 	out := costRunCapture(t, func() {
@@ -175,6 +231,9 @@ func TestRunCost_JSONFlagOverridesFormat(t *testing.T) {
 	})
 	if !strings.Contains(out, "\"period\": \"30d\"") && !strings.Contains(out, "\"period\":\"30d\"") {
 		t.Fatalf("expected period field in JSON output, got: %s", out)
+	}
+	if !strings.Contains(out, `"class_a_ops":1000000`) {
+		t.Fatalf("expected measured class_a_ops in JSON output, got: %s", out)
 	}
 }
 
@@ -270,9 +329,9 @@ func TestRunCost_TablesRenderNumbers(t *testing.T) {
 			[]string{"Workers Cost Estimate", "1000000", "$0.50"}},
 		{"kv", func() string { return costRunCapture(t, func() { printKVCostTable(kv) }) },
 			[]string{"KV Cost Estimate", "$1.00", "$5.00", "$11.00"}},
-		{"summary", func() string { return costRunCapture(t, func() { printCostSummary(total, nil) }) },
+		{"summary", func() string { return costRunCapture(t, func() { printCostSummary(total, nil, nil) }) },
 			[]string{"period: 7d", "$21.10/mo", "Estimates are approximate"}},
-		{"detail", func() string { return costRunCapture(t, func() { printDetailTable(total) }) },
+		{"detail", func() string { return costRunCapture(t, func() { printDetailTable(total, nil) }) },
 			[]string{"Itemized Cost Breakdown (period: 7d)", "$21.10/mo"}},
 	}
 	for _, tc := range cases {
@@ -333,5 +392,153 @@ func TestRunCost_CSVExactOutput(t *testing.T) {
 	wantDetail := "TOTAL,,,,21.10\n"
 	if got := costRunCapture(t, func() { _ = printDetailCSV(total) }); !strings.HasSuffix(got, wantDetail) {
 		t.Errorf("detail CSV must end with %q, got:\n%s", wantDetail, got)
+	}
+}
+
+// TestRunCostAll_CollectErrorIsActionable verifies the seam-error path: when
+// measured-usage collection fails, every cost command returns the actionable
+// error naming the analytics permission, wrapping the collector's cause.
+func TestRunCostAll_CollectErrorIsActionable(t *testing.T) {
+	fns := costRunFns()
+	for _, name := range []string{"cost", "r2", "workers", "kv", "detail"} {
+		t.Run(name, func(t *testing.T) {
+			costRunGlobals(t)
+			costRunDefaults()
+			prev := collectCostUsage
+			collectCostUsage = func(ctx context.Context, svc *cosmoflare.CostService, days int) (*cosmoflare.MeasuredCostUsage, error) {
+				return nil, fmt.Errorf("analytics dataset exploded")
+			}
+			t.Cleanup(func() { collectCostUsage = prev })
+
+			err := fns[name]()
+			if err == nil {
+				t.Fatal("want collect error, got nil")
+			}
+			for _, want := range []string{
+				"failed to collect measured usage",
+				"analytics dataset exploded",
+				"Account Analytics:Read",
+			} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error %q missing %q", err, want)
+				}
+			}
+		})
+	}
+}
+
+// TestRunCost_MeasuredWindowLine verifies the table honesty line
+// printCostSummary/printDetailTable gain after the header: the measured
+// window in RFC3339, with ", projected to 30d" only when the trailing window
+// was scaled — and that JSON/CSV shapes stay free of it.
+func TestRunCost_MeasuredWindowLine(t *testing.T) {
+	const wantProjected = "Usage measured 2026-10-08T00:00:00Z to 2026-10-15T00:00:00Z, projected to 30d"
+	const wantExact = "Usage measured 2026-10-08T00:00:00Z to 2026-10-15T00:00:00Z"
+
+	t.Run("summary-7d-projected", func(t *testing.T) {
+		costRunGlobals(t)
+		costRunDefaults()
+		costPeriod = "7d"
+		costSeamUsage(t)
+
+		out := costRunCapture(t, func() {
+			if err := runCost(costCmd, nil); err != nil {
+				t.Fatalf("runCost: %v", err)
+			}
+		})
+		if !strings.Contains(out, wantProjected) {
+			t.Errorf("summary missing projected measured line:\n%s", out)
+		}
+	})
+
+	t.Run("summary-30d-exact", func(t *testing.T) {
+		costRunGlobals(t)
+		costRunDefaults()
+		costPeriod = "30d"
+		costSeamUsage(t).ProjectedTo30d = false
+
+		out := costRunCapture(t, func() {
+			if err := runCost(costCmd, nil); err != nil {
+				t.Fatalf("runCost: %v", err)
+			}
+		})
+		if !strings.Contains(out, wantExact) {
+			t.Errorf("summary missing measured line:\n%s", out)
+		}
+		if strings.Contains(out, "projected to 30d") {
+			t.Errorf("30d summary must not claim projection:\n%s", out)
+		}
+	})
+
+	t.Run("detail-7d-projected", func(t *testing.T) {
+		costRunGlobals(t)
+		costRunDefaults()
+		costPeriod = "7d"
+		costSeamUsage(t)
+
+		out := costRunCapture(t, func() {
+			if err := runCostDetail(costDetailCmd, nil); err != nil {
+				t.Fatalf("runCostDetail: %v", err)
+			}
+		})
+		if !strings.Contains(out, wantProjected) {
+			t.Errorf("detail missing projected measured line:\n%s", out)
+		}
+	})
+
+	t.Run("json-and-csv-stay-clean", func(t *testing.T) {
+		costRunGlobals(t)
+		costRunDefaults()
+		costSeamUsage(t)
+
+		costFormat = "json"
+		out := costRunCapture(t, func() {
+			if err := runCost(costCmd, nil); err != nil {
+				t.Fatalf("runCost json: %v", err)
+			}
+		})
+		if strings.Contains(out, "Usage measured") {
+			t.Errorf("JSON shape must not gain the measured line:\n%s", out)
+		}
+
+		costFormat = "csv"
+		out = costRunCapture(t, func() {
+			if err := runCost(costCmd, nil); err != nil {
+				t.Fatalf("runCost csv: %v", err)
+			}
+		})
+		if strings.Contains(out, "Usage measured") {
+			t.Errorf("CSV shape must not gain the measured line:\n%s", out)
+		}
+	})
+}
+
+// TestRunCostDaysWindowIsWired verifies runCost passes the flag-derived day
+// count to the collector: overriding the seam captures the days argument for
+// each period value.
+func TestRunCostDaysWindowIsWired(t *testing.T) {
+	cases := map[string]int{"7d": 7, "30d": 30, "90d": 90}
+	for period, wantDays := range cases {
+		t.Run(period, func(t *testing.T) {
+			costRunGlobals(t)
+			costRunDefaults()
+			costPeriod = period
+			costSeamUsage(t)
+
+			got := 0
+			prev := collectCostUsage
+			collectCostUsage = func(ctx context.Context, svc *cosmoflare.CostService, days int) (*cosmoflare.MeasuredCostUsage, error) {
+				got = days
+				return prev(ctx, svc, days)
+			}
+			t.Cleanup(func() { collectCostUsage = prev })
+
+			if err := runCost(costCmd, nil); err != nil {
+				t.Fatalf("runCost: %v", err)
+			}
+			if got != wantDays {
+				t.Errorf("collector days = %d, want %d", got, wantDays)
+			}
+		})
 	}
 }

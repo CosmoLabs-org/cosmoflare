@@ -1,5 +1,11 @@
 package cosmoflare
 
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
 // ---------------------------------------------------------------------------
 // Cloudflare Pricing Constants (as of 2025)
 // ---------------------------------------------------------------------------
@@ -170,4 +176,113 @@ func (s *CostService) EstimateTotal(r2 R2Usage, workers WorkersUsage, kv KVUsage
 		Period:           "30d",
 		Disclaimer:       "Estimates are approximate and based on Cloudflare published pricing. Actual costs may vary based on your plan, contract, and usage patterns.",
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Measured usage collection (FEAT-069/070) — real analytics inputs for cost
+// estimation
+// ---------------------------------------------------------------------------
+
+// MeasuredCostUsage bundles measured cost-estimation inputs with the window
+// they were measured over.
+type MeasuredCostUsage struct {
+	R2             R2Usage      `json:"r2"`
+	Workers        WorkersUsage `json:"workers"`
+	KV             KVUsage      `json:"kv"`
+	WindowStart    time.Time    `json:"window_start"`
+	WindowEnd      time.Time    `json:"window_end"`
+	ProjectedTo30d bool         `json:"projected_to_30d"`
+}
+
+// costAnalyticsFn builds the analytics client CollectMeasuredUsage queries.
+// Production builds it from the CostService credentials via
+// NewAnalyticsService(accountID, apiToken); tests redirect it to an
+// httptest server (printJSONOut-style writer seam precedent).
+var costAnalyticsFn = func(accountID, apiToken string) *AnalyticsService {
+	return NewAnalyticsService(accountID, apiToken)
+}
+
+// CollectMeasuredUsage reads real account analytics over a trailing-days
+// window and scales cumulative dimensions to a 30-day month. days must be
+// 1..90. R2 storage is a gauge (trailing 24h read, NOT scaled). KV storage
+// has no API source and stays 0 — never modeled.
+//
+// Unlike CollectUsage's additive-omission rule, ANY dataset error is
+// returned immediately: cost must not silently under-report.
+func (s *CostService) CollectMeasuredUsage(ctx context.Context, days int) (*MeasuredCostUsage, error) {
+	const op = "CostService.CollectMeasuredUsage"
+	if days < 1 || days > 90 {
+		return nil, validationError(op, fmt.Sprintf("days must be between 1 and 90, got %d", days))
+	}
+	analytics := costAnalyticsFn(s.accountID, s.apiToken)
+
+	now := time.Now().UTC()
+	window := AnalyticsWindow{Start: now.AddDate(0, 0, -days), End: now}
+
+	workers, err := analytics.Workers(ctx, window)
+	if err != nil {
+		return nil, fmt.Errorf("%s: workers analytics: %w", op, err)
+	}
+	var reqs, cpuMS int64
+	for _, sc := range workers { // usage.go:144-148 sum pattern
+		reqs += int64(sc.Requests)
+		cpuMS += int64(sc.CPUTimeMS)
+	}
+
+	ops, err := analytics.R2Operations(ctx, window)
+	if err != nil {
+		return nil, fmt.Errorf("%s: r2 operations analytics: %w", op, err)
+	}
+	var classA, classB uint64
+	for _, o := range ops {
+		switch {
+		case r2ClassA[o.Action]:
+			classA += o.Requests
+		case r2ClassB[o.Action]:
+			classB += o.Requests
+		}
+	}
+
+	// Storage is a gauge: trailing 24h snapshot, never scaled.
+	buckets, err := analytics.R2Storage(ctx, AnalyticsWindow{Start: now.Add(-24 * time.Hour), End: now})
+	if err != nil {
+		return nil, fmt.Errorf("%s: r2 storage analytics: %w", op, err)
+	}
+	var storageBytes uint64
+	for _, b := range buckets {
+		storageBytes += b.PayloadSize
+	}
+
+	// KV prices reads and writes differently — sum the actionType split,
+	// never Requests (lists and storage have no cost line here).
+	kvRows, err := analytics.KVOperations(ctx, window)
+	if err != nil {
+		return nil, fmt.Errorf("%s: kv operations analytics: %w", op, err)
+	}
+	var kvReads, kvWrites uint64
+	for _, r := range kvRows {
+		kvReads += r.Reads
+		kvWrites += r.Writes
+	}
+
+	scale := 30.0 / float64(days)
+	return &MeasuredCostUsage{
+		R2: R2Usage{
+			StorageGB: float64(storageBytes) / 1e9,
+			ClassAOps: int64(float64(classA) * scale),
+			ClassBOps: int64(float64(classB) * scale),
+		},
+		Workers: WorkersUsage{
+			Requests:  int64(float64(reqs) * scale),
+			CPUTimeMs: int64(float64(cpuMS) * scale),
+		},
+		KV: KVUsage{
+			Reads:  int64(float64(kvReads) * scale),
+			Writes: int64(float64(kvWrites) * scale),
+			// StorageGB stays 0: no API source, never modeled.
+		},
+		WindowStart:    window.Start,
+		WindowEnd:      window.End,
+		ProjectedTo30d: days != 30,
+	}, nil
 }
