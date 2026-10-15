@@ -24,6 +24,10 @@ import { runScheduled, testFire, ALERT_FEED_KEY, type AlertFeedEntry, type OpsEn
 import { rateLimited } from "./ratelimit";
 import { handleRules } from "./rules-api";
 import { handleSubscribe } from "./subscriptions";
+import { collectZoneFacts } from "./briefs/collect";
+import { compileBrief } from "./briefs/compile";
+import { renderAgentBrief } from "./briefs/render";
+import { TEMPLATES } from "./briefs/templates";
 
 // Env is the OpsEnv shape (OPS_KV required, VAPID keypair + contact, Access
 // config, assets binding) plus the standalone billing anchor override and the
@@ -289,6 +293,43 @@ export default {
         const name = url.searchParams.get("name");
         if (!name) return json({ error: "missing name" }, 400);
         return json(await collectRulesQuota(env, name));
+      }
+      case "/api/advisory": {
+        // GET /api/advisory?zone=<zone> — the deterministic advisory brief
+        // (P-17, FEAT-pC1EV32): collectZoneFacts → compileBrief(TEMPLATES) →
+        // renderAgentBrief. The zone name→id resolution rides the SHARED
+        // cached "zones-list" (the same key /api/summary and the lifecycle
+        // handlers use — never a second /zones page per advisory read);
+        // unknown names 404. generatedAt lives ONLY in this envelope — the
+        // rendered text carries no clock, so identical facts yield a
+        // byte-identical agentBrief.
+        if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+        const zone = url.searchParams.get("zone");
+        if (!zone) return json({ error: "missing zone" }, 400);
+        try {
+          const zones = (
+            await cached(ctx, env, "zones-list", LIST_TTL, () => fetchZonesList(env.CF_API_TOKEN, env.CF_ACCOUNT_ID))
+          ).value;
+          const zoneId = zones.find((z) => z.name === zone)?.id;
+          if (!zoneId) return json({ error: `zone not found: ${zone}` }, 404);
+          const facts = await collectZoneFacts(env, zone, ctx);
+          const brief = compileBrief(facts, TEMPLATES);
+          const hasFindings = brief.findings.length > 0;
+          return json({
+            zone,
+            zoneId,
+            generatedAt: new Date().toISOString(),
+            facts,
+            brief: hasFindings ? brief : null,
+            rendered: { agentBrief: hasFindings ? renderAgentBrief(brief) : "" },
+          });
+        } catch (error) {
+          // Coverage is the collectors' hard spine (briefs/collect.ts): probe,
+          // quota, and alerts already degrade inside the facts, so reaching
+          // this catch means the brief's spine failed — 502 + partial, never
+          // a fabricated brief.
+          return json({ error: `advisory collection failed: ${String(error)}`, partial: true }, 502);
+        }
       }
       case "/api/rules-quota/summary": {
         // Fleet aggregate for the Overview strip — one KV read, no fetches;
