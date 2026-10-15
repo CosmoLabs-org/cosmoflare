@@ -15,7 +15,7 @@ deliverables:
     - id: BR-03
       title: "agent-brief v1 format — deterministic paste-text template with golden tests"
     - id: BR-04
-      title: "GET /api/advisory/:zone endpoint — parallel collectors, pure compile, Access auth"
+      title: "GET /api/advisory?zone=<zone> endpoint — parallel collectors, pure compile, Access auth"
     - id: BR-05
       title: "Commands-to-AI-Agent modal — entry points on alerts + domain rows, instant copy UX"
     - id: BR-06
@@ -68,11 +68,11 @@ briefs/
 |---|---|---|---|
 | Zone cache coverage | GraphQL `httpRequests1dGroups` per zone (7d window; the CLI `ZoneCacheCoverage` query ported to TS) | 1h via `cached()` | `low-cache-hit` |
 | Origin probe | `GET https://<zone>/` — content-type, cache-control, cf-cache-status | 1h | `html-cache-trap` |
-| Cache Rules count | `GET /zones/:id/cache/rules` | 1h | `cache-rule-gap` |
-| Firing alerts | existing alert store filtered by zone | live | `alert-firing` |
+| Cache Rules count | derived from the rules-quota collector's `cache-rules` family (`rules_quota.ts` reads the `rulesets/phases/http_request_cache_settings/entrypoint`) | 5 min (self-cached) | `cache-rule-gap` |
+| Firing alerts | KV `alert-feed` (live `AlertFeedEntry[]`), filtered by the scope segment of `ruleId` (`<ruleName>/<zoneKey>`) | live | `alert-firing` |
 | Rule-quota state | existing rules-quota collector | existing | `quota-pressure` |
 
-Thresholds mirror the CLI (e.g. low-cache-hit: requests >= 1000 && hitRate < 5%) so Ops and `cosmoflare efficiency` never disagree.
+Thresholds mirror the CLI (low-cache-hit: requests >= 1000 && hitRate < 5%) so Ops and `cosmoflare efficiency` never disagree. Ops then grades severity for dispatch priority (the CLI's own finding severities are `info`/`warning`): low-cache-hit < 5% → warning, < 1% → critical; html-cache-trap → warning, critical when the zone has zero Cache Rules; quota-pressure ≥ 80% of an allowance → warning, ≥ 95% → critical.
 
 ### 3. agent-brief format v1
 
@@ -97,7 +97,7 @@ Prose derives from the FEAT-067/068/070 rulebook already encoded in the CLI's Fi
 
 ### 4. API
 
-`GET /api/advisory/:zone` -> `{ zone, generatedAt, facts, brief, rendered: { agentBrief } }`. Collectors read through their KV caches; compile is pure per-request. Access-JWT auth like every `/api/*` route; `Cache-Control: private, no-store` envelope. Registered in the worker's route table following the existing pattern (see `/api/dns/records`). Fleet index (`GET /api/advisory`, "N domains need attention") is v2.
+`GET /api/advisory?zone=<zone>` -> `{ zone, generatedAt, facts, brief, rendered: { agentBrief } }`. Collectors read through their KV caches; compile is pure per-request. Access-JWT auth like every `/api/*` route; `Cache-Control: private, no-store` envelope. Registered as a `switch (url.pathname)` case with a query param, following the existing per-entity pattern (see `/api/zone-profile?name=` and `/api/dns/records?id=` — the worker has no path-param routing). Fleet index (`GET /api/advisory` with no params, "N domains need attention") is v2.
 
 ### 5. UI — the modal
 
