@@ -1,15 +1,32 @@
 id: FEAT-047
 type: feature
 created_at: 2026-10-08T19:32:13.867253+04:00
-updated_at: 2026-10-08T19:32:18.598385+04:00
+updated_at: 2026-10-15T21:50:28.337346+04:00
 source: local
 ulid: 01M4E29HDSGM3K4MBWKHPN3G9J
-status: open
+status: implemented
 area: reliability
 origin:
     session: 67
 title: 'Usage-waste alerting wave 1: stuck-work thresholds for Workers and Durable Objects'
 description: 'Extend the FEAT-045 alerts spine with per-script usage-waste detection: thresholds (model A) for Workers and Durable Objects that are overworking or stuck and burning plan usage. Operator motivation (2026-10-08): ''a durable object or some worker that is overworking and getting stuck and wasting our usage'' — prevention, not post-mortem. Detection: sustained CPU p99 per script, invocation spikes, error loops, sustained DO invocation/CPU. Data: new GraphQL analytics queries (workersInvocationsAdaptive per-script, durableObjectsAnalytics) batched one query per watch cycle, never per-script N+1. Runs inside the existing alerts watch daemon on the fast loop (30-60s, analytics API is free). Baselines/anomaly detection (model B) deliberately deferred.'
+user_story: |
+    As an operator of a large Cloudflare account
+    I want to be alerted the moment a Worker or Durable Object starts
+    overworking, stuck-looping, or otherwise burning usage
+    So that waste is caught in minutes, not on the monthly invoice.
+fix_direction: |
+    1) Extend AnalyticsService with per-script Workers + DO datasets (one
+    batched GraphQL query). 2) Widen EvalMetrics to carry per-script rows.
+    3) Add registry conditions: worker-cpu-sustained, worker-error-loop,
+    worker-invocation-spike, do-cpu-sustained (names provisional). 4)
+    Evaluator: window-count state per script, threshold compare, alert text
+    names the script. 5) TDD: mock analytics fixture with an over-CPU script.
+affected_files:
+    - pkg/cosmoflare/alerts.go
+    - pkg/cosmoflare/analytics.go
+    - internal/webhook/evaluator.go
+    - cmd/alerts_watch.go
 acceptance_criteria:
     - criterion: Per-script Workers and per-DO threshold conditions exist in alertConditionRegistry
       met: true
@@ -21,40 +38,30 @@ acceptance_criteria:
       met: true
     - criterion: --json + help present
       met: true
-user_story: |
-  As an operator of a large Cloudflare account
-  I want to be alerted the moment a Worker or Durable Object starts
-  overworking, stuck-looping, or otherwise burning usage
-  So that waste is caught in minutes, not on the monthly invoice.
-session_ref: "Session 67 (2026-10-08): operator brainstorm — 'I keep thinking about the many applications cosmoflare will have to help us with ambitious Cloudflare accounts... we should do more to alert of high usage'. Design settled: model A (thresholds) now, model B (baselines) later; waves 1→2→3 under the alerts watch daemon with dual cadence."
-affected_files:
-    - pkg/cosmoflare/alerts.go
-    - pkg/cosmoflare/analytics.go
-    - internal/webhook/evaluator.go
-    - cmd/alerts_watch.go
-technical_considerations: |
-  Detection model A (thresholds), not B (baselines) — B deferred (see linked
-  idea). Per-script granularity required: EvalMetrics today is account-flat;
-  needs per-script rows so alerts NAME the offender ("worker api-proxy CPU
-  p99 812ms for 3 windows"). Analytics queries via GraphQL
-  workersInvocationsAdaptive (per-script) and durableObjectsAnalytics —
-  batch as ONE multi-dataset query per cycle, never per-script N+1.
-  API cost: GraphQL analytics is free (rate-limited, not billed); REST list
-  calls for limits snapshot are Class B — cacheable, fractions of a cent.
-  Dual cadence in alerts watch: fast loop 30-60s (analytics only, free),
-  slow loop 5-15min (limits snapshot + usage counters). Window counting for
-  "sustained" conditions (N consecutive windows) needs small in-memory
-  state in the evaluator, keyed by script id, capped.
-fix_direction: |
-  1) Extend AnalyticsService with per-script Workers + DO datasets (one
-  batched GraphQL query). 2) Widen EvalMetrics to carry per-script rows.
-  3) Add registry conditions: worker-cpu-sustained, worker-error-loop,
-  worker-invocation-spike, do-cpu-sustained (names provisional). 4)
-  Evaluator: window-count state per script, threshold compare, alert text
-  names the script. 5) TDD: mock analytics fixture with an over-CPU script.
+resolution:
+    notes: 'Scope reconciliation (session 2041, 2026-10-15): every acceptance criterion verified against the tree, not prose. FEAT-047: registry carries script-scoped worker-cpu/worker-errors/worker-requests/worker-subrequests and do-scoped do-cpu/do-requests (pkg/cosmoflare/alerts.go:156-161); EvalMetrics carries per-script rows (internal/webhook/evaluator.go:30,564); evaluator_test.go:511 covers the over-CPU script naming its offender. FEAT-048: cmd/usage.go renders table+--json+help; usage-pct/usage-projected-pct registered (alerts.go:162-163) and evaluated (evaluator.go:177-182); usage snapshot cached ~15min in the watch (alerts_watch.go:59). Extra classes filed under these IDs beyond the original asks (zone-cache-miss-pct, zone-uncached-requests, d1-rows-read, kv-writes) are also live — surplus scope, not missing scope.'
+    resolved_at: 2026-10-15T21:50:28.335732+04:00
+revisions:
+    - date: "2026-10-15T21:50:28.335725+04:00"
+      action: closed
+      context: 'Scope reconciliation (session 2041, 2026-10-15): every acceptance criterion verified against the tree, not prose. FEAT-047: registry carries script-scoped worker-cpu/worker-errors/worker-requests/worker-subrequests and do-scoped do-cpu/do-requests (pkg/cosmoflare/alerts.go:156-161); EvalMetrics carries per-script rows (internal/webhook/evaluator.go:30,564); evaluator_test.go:511 covers the over-CPU script naming its offender. FEAT-048: cmd/usage.go renders table+--json+help; usage-pct/usage-projected-pct registered (alerts.go:162-163) and evaluated (evaluator.go:177-182); usage snapshot cached ~15min in the watch (alerts_watch.go:59). Extra classes filed under these IDs beyond the original asks (zone-cache-miss-pct, zone-uncached-requests, d1-rows-read, kv-writes) are also live — surplus scope, not missing scope.'
 scope_boundaries: |
-  In scope: threshold conditions, per-script analytics, dual-cadence watch,
-  naming the offender in the alert.
-  Out of scope: baselines/anomaly detection (model B — separate idea),
-  usage pacing + `cosmoflare usage` view (wave 2, FEAT-048 when promoted),
-  cache-miss warning (wave 3), desktop dashboard graphs (desktop tier).
+    In scope: threshold conditions, per-script analytics, dual-cadence watch,
+    naming the offender in the alert.
+    Out of scope: baselines/anomaly detection (model B — separate idea),
+    usage pacing + `cosmoflare usage` view (wave 2, FEAT-048 when promoted),
+    cache-miss warning (wave 3), desktop dashboard graphs (desktop tier).
+session_ref: 'Session 67 (2026-10-08): operator brainstorm — ''I keep thinking about the many applications cosmoflare will have to help us with ambitious Cloudflare accounts... we should do more to alert of high usage''. Design settled: model A (thresholds) now, model B (baselines) later; waves 1→2→3 under the alerts watch daemon with dual cadence.'
+technical_considerations: |
+    Detection model A (thresholds), not B (baselines) — B deferred (see linked
+    idea). Per-script granularity required: EvalMetrics today is account-flat;
+    needs per-script rows so alerts NAME the offender ("worker api-proxy CPU
+    p99 812ms for 3 windows"). Analytics queries via GraphQL
+    workersInvocationsAdaptive (per-script) and durableObjectsAnalytics —
+    batch as ONE multi-dataset query per cycle, never per-script N+1.
+    API cost: GraphQL analytics is free (rate-limited, not billed); REST list
+    calls for limits snapshot are Class B — cacheable, fractions of a cent.
+    Dual cadence in alerts watch: fast loop 30-60s (analytics only, free),
+    slow loop 5-15min (limits snapshot + usage counters). Window counting for
+    "sustained" conditions (N consecutive windows) needs small in-memory
+    state in the evaluator, keyed by script id, capped.

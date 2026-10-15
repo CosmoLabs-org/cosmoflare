@@ -1,0 +1,60 @@
+# Carry-over BUG-pN2NX4K — dns update --content. Independent of the briefs (B*) and cost agents —
+# no shared files. Fixes docs/issues/BUG-pN2NX4K.yaml (read it first).
+- task: |
+    BUG-pN2NX4K: `cosmoflare dns update` help documents `--content` (cmd/dns.go Long examples, lines ~102-107)
+    but the command registers only --comment/--priority/--proxied/--ttl. Add the flag for real.
+
+    1) pkg/cosmoflare/dns.go:
+    - Extend `dnsConfig` (line ~30) with `content *string`.
+    - Add a NEW record-op option (NOTE: `WithDNSContent` already exists at line ~77 but it is a
+      DNSListOption for list FILTERING — do not touch it; this one needs a distinct name):
+      ```go
+      // WithDNSUpdateContent sets new record content on update.
+      func WithDNSUpdateContent(content string) DNSOption {
+          return func(c *dnsConfig) { c.content = &content }
+      }
+      ```
+    - In `(s *DNSService) Update` (line ~197): add `Content: cfg.content,` to the
+      cloudflare.UpdateDNSRecordParams literal (the SDK field is *string — matches).
+
+    2) cmd/dns.go:
+    - Register the flag on dnsUpdateCmd (init(), next to line ~154):
+      `dnsUpdateCmd.Flags().StringVar(&dnsContent, "content", "", "New record content (IP address, hostname, text, etc.)")`
+      — dnsContent is the existing shared var dnsCreateCmd uses.
+    - runDNSUpdate (~line 333): add, in the same Changed() style as its siblings:
+      `if cmd.Flags().Changed("content") { opts = append(opts, cosmoflare.WithDNSUpdateContent(dnsContent)) }`
+      and extend the no-flags error message to `(--content, --ttl, --proxied, --priority, --comment)`.
+
+    3) docs/USAGE.md — the "Update a DNS record" section (~line 722): restore content examples and drop
+    the workaround note. Target exactly:
+    ```bash
+    cosmoflare dns update <zone-id> <record-id> --content=5.6.7.8
+    cosmoflare dns update <zone-id> <record-id> --content=5.6.7.8 --ttl=300 --json
+    ```
+    Remove the `> Note: changing a record's --content is not yet implemented (BUG-pN2NX4K)...` line entirely.
+
+    TDD — failing tests FIRST:
+    - pkg/cosmoflare/dns_test.go (follow its existing httptest stub patterns): TestDNSUpdateContent —
+      stub server captures the PATCH body; call Update with WithDNSUpdateContent("5.6.7.8"); assert the
+      request JSON contains "content":"5.6.7.8"; and a control: Update WITHOUT the option sends no
+      content key.
+    - cmd/dns_test.go: TestDNSUpdate_ContentFlag — flag is registered on dnsUpdateCmd with right default;
+      and runDNSUpdate with only --content set reaches the service (mirror how existing tests exercise
+      flag wiring; no network).
+
+    Verify:
+      go test ./pkg/cosmoflare/ ./cmd/ -run 'DNSUpdate|TestDNS' -count=1
+      go test ./pkg/cosmoflare/ ./cmd/ -timeout 180s
+    Commit via: ccs commit -m 'fix(dns): implement update --content flag documented in help (BUG-pN2NX4K)'
+  files:
+    - pkg/cosmoflare/dns.go
+    - pkg/cosmoflare/dns_test.go
+    - cmd/dns.go
+    - cmd/dns_test.go
+    - docs/USAGE.md
+  context_files:
+    - docs/issues/BUG-pN2NX4K.yaml
+    - cmd/dns.go
+    - pkg/cosmoflare/dns.go
+  max_turns: 20
+  verify: "go build ./... && go vet ./pkg/cosmoflare/ ./cmd/"

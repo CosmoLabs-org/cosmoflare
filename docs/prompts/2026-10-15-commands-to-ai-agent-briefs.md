@@ -26,6 +26,11 @@ schema_version: 1
 status: PENDING
 title: Commands to AI Agent — Full Implementation
 type: prompt
+implemented_commits:
+    - {sha: 'f3686b54951d', covers: [P-15]}
+    - {sha: '47c22907087a', covers: [P-16]}
+    - {sha: '206b0196bb40', covers: [P-17]}
+    - {sha: '8e616176b95a', covers: [P-18]}
 ---
 # Commands to AI Agent — Full Implementation
 

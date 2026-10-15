@@ -1,12 +1,12 @@
 id: BUG-pN2NX4K
 type: bug
 created_at: 2026-10-15T19:32:01.880683+04:00
-updated_at: 2026-10-15T19:32:03.787762+04:00
+updated_at: 2026-10-15T22:16:12.369111+04:00
 source: local
 ulid: 01M50326R4X7HPB66GJTN2NX4K
 provisional: true
 severity: medium
-status: open
+status: fixed
 origin:
     session: 79
 title: 'dns update: --content flag documented in help but not implemented'
@@ -15,3 +15,10 @@ fix_direction: Add dnsContent flag to dnsUpdateCmd (mirror dnsCreateCmd's --cont
 affected_files:
     - cmd/dns.go
     - docs/USAGE.md
+resolution:
+    notes: 'Fixed via _glm-agent-0459 worktree (merge 27f7d18): WithDNSUpdateContent library option (distinct from the list-filter WithDNSContent), --content flag on dns update with Changed() partial-update wiring, no-flags error message updated, USAGE.md workaround note removed and content examples restored. Full cmd+pkg suites green; TestDNSUpdateContent asserts the PATCH body carries the content key.'
+    resolved_at: 2026-10-15T22:16:12.367719+04:00
+revisions:
+    - date: "2026-10-15T22:16:12.367714+04:00"
+      action: closed
+      context: 'Fixed via _glm-agent-0459 worktree (merge 27f7d18): WithDNSUpdateContent library option (distinct from the list-filter WithDNSContent), --content flag on dns update with Changed() partial-update wiring, no-flags error message updated, USAGE.md workaround note removed and content examples restored. Full cmd+pkg suites green; TestDNSUpdateContent asserts the PATCH body carries the content key.'

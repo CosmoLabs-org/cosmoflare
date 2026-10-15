@@ -1,0 +1,37 @@
+# B4 of 4 — split from docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml (S313 per-agent isolation)
+# Dispatch ONLY after B1, B2, AND B3 are merged to master.
+- task: |
+    Implement Task B4 (deliverable P-18) from docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md.
+    B3 merged: GET /api/advisory?zone=<zone> returns the envelope.
+
+    Create pager/src/app/components/AgentCommandsModal.tsx + colocated AgentCommandsModal.test.tsx;
+    modify pager/src/app/views/AlertsView.tsx (wire the button on the firing cards — FeedRow/FeedDetail render
+    the feed entries; AlertCard is the push-history section, do not touch it).
+
+    Button: "Commands to AI Agent" (secondary style on alert cards). Modal: fetch
+    /api/advisory?zone=<encodeURIComponent(zone)> on open; shimmer while loading; Retry on error; mono brief block
+    (selectable); header 'Commands to AI Agent · <zone>' + subtitle 'measured <window> · CosmoLabs Ops'; primary
+    Copy button -> navigator.clipboard.writeText(rendered.agentBrief), label flips to a checkmark with a 150ms
+    ease-out opacity fade (NO bounce/elastic easing), auto-revert after 1.5s; Esc and overlay-click close; basic
+    focus trap. Taste rules (hard): no tile outlines, no left borders, reuse the pager's existing color/spacing
+    vocabulary (pattern-match UpdateModal.tsx). Zero-findings case (brief null): show the empty-state line and a
+    disabled Copy.
+    Tests: vitest + @testing-library/react — pattern-match pager/src/app/components/UpdateModal.test.tsx and
+    pager/src/app/views/AlertsView.test.tsx: open -> loading -> text -> copy called with the exact string ->
+    checkmark state -> Esc close.
+    Gate: `npx impeccable detect pager/src/app/components/AgentCommandsModal.tsx pager/src/app/views/AlertsView.tsx`
+    reports 0 findings — paste the output in your report.
+    Verify: cd pager && bun test src/app/components/AgentCommandsModal.test.tsx ; bun x tsc --noEmit
+    Commit via: ccs commit -m 'feat(ops): Commands-to-AI-Agent modal — copy-paste advisory dispatch (P-18, FEAT-pC1EV32)'
+  files:
+    - pager/src/app/components/AgentCommandsModal.tsx
+    - pager/src/app/components/AgentCommandsModal.test.tsx
+    - pager/src/app/views/AlertsView.tsx
+  context_files:
+    - docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md
+    - pager/src/app/components/UpdateModal.tsx
+    - pager/src/app/components/UpdateModal.test.tsx
+    - pager/src/app/views/AlertsView.tsx
+    - pager/src/app/views/AlertsView.test.tsx
+  max_turns: 30
+  verify: "cd pager && bun x tsc --noEmit"

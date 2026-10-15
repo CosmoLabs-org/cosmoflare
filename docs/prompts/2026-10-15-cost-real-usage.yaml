@@ -1,0 +1,99 @@
+# G-02 — Cost real-usage wiring (decision D-cost from docs/brainstorming/2026-10-14-cli-audit-efficiency.md,
+# deferred from wave 2). Independent of the briefs B1-B4 wave — no shared files.
+# House rules that bind: real numbers only (never model/invent usage), reuse analytics collectors (D5 —
+# no second GraphQL implementation), every command keeps --json + agent-readable errors.
+- task: |
+    Wire `cosmoflare cost` to measured account usage. Today cmd/cost.go estimates from zero-value
+    placeholder structs (lines ~200-203, 235, 263, 291, 319-321: `cosmoflare.R2Usage{}` etc. with the
+    comment "Estimate with placeholder usage"). Replace with real collection. Read
+    pkg/cosmoflare/usage.go (CollectUsage) first — it is the reference for window handling and dataset
+    reuse; DO NOT modify it.
+
+    1) pkg/cosmoflare/cost.go — add (same file as the existing CostService):
+
+    ```go
+    // MeasuredCostUsage bundles measured cost-estimation inputs with the window
+    // they were measured over.
+    type MeasuredCostUsage struct {
+        R2            R2Usage     `json:"r2"`
+        Workers       WorkersUsage `json:"workers"`
+        KV            KVUsage     `json:"kv"`
+        WindowStart   time.Time   `json:"window_start"`
+        WindowEnd     time.Time   `json:"window_end"`
+        ProjectedTo30d bool       `json:"projected_to_30d"`
+    }
+
+    // CollectMeasuredUsage reads real account analytics over a trailing-days
+    // window and scales cumulative dimensions to a 30-day month. days must be
+    // 1..90. R2 storage is a gauge (trailing 24h read, NOT scaled). KV storage
+    // has no API source and stays 0 — never modeled.
+    func (s *CostService) CollectMeasuredUsage(ctx context.Context, days int) (*MeasuredCostUsage, error)
+    ```
+
+    Implementation constraints (EXACT):
+    - Build the analytics client with the existing NewAnalyticsService(s.accountID, s.apiToken).
+    - window := AnalyticsWindow{Start: now.AddDate(0, 0, -days), End: now}, now := time.Now().UTC().
+    - workers, err := analytics.Workers(ctx, window) → sum Requests + CPUTimeMS (usage.go:144-148 pattern).
+    - ops, err := analytics.R2Operations(ctx, window) → classify with the EXISTING r2ClassA/r2ClassB maps
+      (usage.go:57-71) into ClassAOps/ClassBOps.
+    - buckets, err := analytics.R2Storage(ctx, AnalyticsWindow{Start: now.Add(-24h), End: now}) →
+      StorageGB = sum PayloadSize / 1e9 (gauge, NOT scaled).
+    - kv, err := analytics.KVOperations(ctx, window) → sum Reads and Writes separately
+      (KVOperationsSummary already splits actionType; do NOT sum Requests — reads and writes price
+      differently). Lists and KVUsage.StorageGB stay out — KVUsage has no fields for them and no API
+      source exists for KV storage; never invent one.
+    - ANY dataset error → return the wrapped error immediately (cost must not silently under-report;
+      this intentionally differs from CollectUsage's additive-omission rule).
+    - Scaling: cumulative fields (Workers.Requests, Workers.CPUTimeMs, R2.ClassAOps, R2.ClassBOps,
+      KV.Reads, KV.Writes) multiply by 30.0/float64(days). ProjectedTo30d = days != 30.
+    - days < 1 || days > 90 → validationError("CostService.CollectMeasuredUsage", ...).
+
+    2) cmd/cost.go — replace the five zero-value call sites:
+    - Add `func costDays(period string) int` mapping "7d"→7, "30d"→30, "90d"→90 (validatePeriod already
+      gates the input; mirror it exactly).
+    - Add a package-level seam (precedent: printJSONOut at cost.go:134):
+      `var collectCostUsage = func(ctx context.Context, svc *cosmoflare.CostService, days int) (*cosmoflare.MeasuredCostUsage, error) { return svc.CollectMeasuredUsage(ctx, days) }`
+    - runCost + runCostDetail: m, err := collectCostUsage(cmd.Context(), svc, costDays(costPeriod));
+      on error return fmt.Errorf("failed to collect measured usage: %w — cost reads real account analytics; the API token needs Account Analytics:Read", err).
+      Then r2Usage, workersUsage, kvUsage := m.R2, m.Workers, m.KV.
+    - runCostR2 / runCostWorkers / runCostKV: same collect call, use only the relevant struct field
+      (m.R2 / m.Workers / m.KV) — ONE collector, D5.
+    - Table format honesty: printCostSummary and printDetailTable each gain one line after the header:
+      "Usage measured <WindowStart.Format(time.RFC3339)> to <WindowEnd...>, projected to 30d" — only
+      when m.ProjectedTo30d, else "Usage measured <start> to <end>". JSON shape unchanged (usage values
+      become measured). CSV unchanged.
+    - Do NOT touch validatePeriod, flags, or the estimate math.
+
+    TDD — failing tests FIRST:
+    - pkg/cosmoflare/cost_test.go: TestCollectMeasuredUsage using an httptest server that routes by
+      query content (extend the analyticsServer pattern from analytics_test.go:24 — handler inspects
+      the GraphQL query name, e.g. contains "workersInvocationsAdaptiveGroups" / "r2StorageAdaptiveGroups"
+      / "r2OperationsAdaptiveGroups" / "kvOperationsAdaptiveGroups", and returns the matching fixture).
+      Cover: sums; ClassA/B classification; KV reads/writes split; 7d scaling ×30/7 exact; StorageGB
+      NOT scaled (gauge); ProjectedTo30d true@7d false@30d; days bounds validation; one dataset 500 →
+      hard error. TestCollectMeasuredUsageStorageGauge for the 24h window (assert the R2Storage request
+      carried a 24h window — capture vars like analyticsCapture does).
+    - cmd/cost_test.go: TestCostDays; and AUDIT every existing TestCost* that reaches a runCost* path —
+      each must override the collectCostUsage seam with a fixture *MeasuredCostUsage (hermetic, no
+      network) and assert output contains the measured numbers; add one test asserting the seam-error
+      path returns the actionable error string. No test may hit the network.
+
+    Verify:
+      go test ./pkg/cosmoflare/ ./cmd/ -run Cost -count=1
+      go test ./pkg/cosmoflare/ ./cmd/ -timeout 180s
+      go vet ./pkg/cosmoflare/ ./cmd/
+    Commit via: ccs commit -m 'feat(cost): measured R2/Workers/KV usage replaces zero-value placeholders (D-cost, FEAT-069/070)'
+  files:
+    - pkg/cosmoflare/cost.go
+    - pkg/cosmoflare/cost_test.go
+    - cmd/cost.go
+    - cmd/cost_test.go
+  context_files:
+    - docs/brainstorming/2026-10-14-cli-audit-efficiency.md
+    - pkg/cosmoflare/usage.go
+    - pkg/cosmoflare/analytics.go
+    - pkg/cosmoflare/analytics_test.go
+    - cmd/cost.go
+    - cmd/cost_test.go
+  max_turns: 30
+  verify: "go build ./... && go vet ./pkg/cosmoflare/ ./cmd/"

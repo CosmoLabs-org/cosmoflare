@@ -25,6 +25,15 @@ stays closed even if the Access app is later removed.
   capped at 100): `{ feed: [{ ts, ruleId, condition, title, value, threshold,
   unit, message, sent }] }`. The pager's Notifications center reads this.
   Other methods: 405.
+- `GET /api/advisory?zone=<zone>` — deterministic per-zone advisory brief
+  (FEAT-pC1EV32): `{ zone, zoneId, generatedAt, facts, brief, rendered:
+  { agentBrief } }`. Collects measured facts (7d cache coverage, origin
+  probe, rules quota, firing alerts), compiles severity-ordered findings,
+  and renders the copy-paste agent directive — byte-identical for unchanged
+  facts; zero findings answer `brief: null` with an empty `agentBrief`.
+  Unknown zone: 404; collector hard failure: 502 `{ error, partial: true }`.
+  Served `private, no-store`; the pager's Commands-to-AI-Agent modal reads
+  this. Other methods: 405.
 - `POST /api/zones/purge` — purge a zone's edge cache (`{ zone: name-or-id }`,
   `purge_everything`; needs `Zone > Cache Purge` on the write token; audited).
 - `GET /api/dns/records?id=` — one zone's DNS records (cached 5 min; type,

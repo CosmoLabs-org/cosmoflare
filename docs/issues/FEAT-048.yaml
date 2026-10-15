@@ -1,10 +1,10 @@
 id: FEAT-048
 type: feature
 created_at: 2026-10-08T20:28:55.24882+04:00
-updated_at: 2026-10-08T23:21:55.918203+04:00
+updated_at: 2026-10-15T21:50:28.575435+04:00
 source: local
 ulid: 01M4E5HB1218XJ2G14J953FGHF
-status: open
+status: implemented
 area: reliability
 origin:
     roadmap_items:
@@ -23,3 +23,10 @@ acceptance_criteria:
       met: true
     - criterion: --json + help present
       met: true
+resolution:
+    notes: 'Scope reconciliation (session 2041, 2026-10-15): every acceptance criterion verified against the tree, not prose. FEAT-047: registry carries script-scoped worker-cpu/worker-errors/worker-requests/worker-subrequests and do-scoped do-cpu/do-requests (pkg/cosmoflare/alerts.go:156-161); EvalMetrics carries per-script rows (internal/webhook/evaluator.go:30,564); evaluator_test.go:511 covers the over-CPU script naming its offender. FEAT-048: cmd/usage.go renders table+--json+help; usage-pct/usage-projected-pct registered (alerts.go:162-163) and evaluated (evaluator.go:177-182); usage snapshot cached ~15min in the watch (alerts_watch.go:59). Extra classes filed under these IDs beyond the original asks (zone-cache-miss-pct, zone-uncached-requests, d1-rows-read, kv-writes) are also live — surplus scope, not missing scope.'
+    resolved_at: 2026-10-15T21:50:28.574226+04:00
+revisions:
+    - date: "2026-10-15T21:50:28.574223+04:00"
+      action: closed
+      context: 'Scope reconciliation (session 2041, 2026-10-15): every acceptance criterion verified against the tree, not prose. FEAT-047: registry carries script-scoped worker-cpu/worker-errors/worker-requests/worker-subrequests and do-scoped do-cpu/do-requests (pkg/cosmoflare/alerts.go:156-161); EvalMetrics carries per-script rows (internal/webhook/evaluator.go:30,564); evaluator_test.go:511 covers the over-CPU script naming its offender. FEAT-048: cmd/usage.go renders table+--json+help; usage-pct/usage-projected-pct registered (alerts.go:162-163) and evaluated (evaluator.go:177-182); usage snapshot cached ~15min in the watch (alerts_watch.go:59). Extra classes filed under these IDs beyond the original asks (zone-cache-miss-pct, zone-uncached-requests, d1-rows-read, kv-writes) are also live — surplus scope, not missing scope.'

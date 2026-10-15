@@ -1,0 +1,73 @@
+# B1 of 4 — split from docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml (S313 per-agent isolation)
+# Sequential: B1 -> B2 -> B3 -> B4, gated merge between each. brainstorm_ref/plan_ref in the parent manifest.
+- task: |
+    Implement Task B1 (deliverable P-15) from docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md.
+    Read that plan first — its Global Constraints and Reference files are binding.
+
+    Create apps/ops/src/briefs/types.ts, briefs/collect.ts, briefs/compile.ts + tests
+    (briefs/collect.test.ts, briefs/compile.test.ts). EXACT interfaces (from the plan):
+
+    types.ts:
+      export type BriefKind = 'low-cache-hit' | 'html-cache-trap' | 'cache-rule-gap' | 'alert-firing' | 'quota-pressure';
+      export type BriefScope = 'zone';
+      export type BriefFormat = 'agent-brief';
+      export interface BriefFinding { kind: BriefKind; severity: 'critical' | 'warning' | 'info'; evidence: string }
+      export interface BriefAction { directive: string; command?: string }
+      export interface Brief { scope: BriefScope; zone: string; zoneId: string; window: string; findings: BriefFinding[]; actions: BriefAction[]; verify: string[] }
+      export interface ZoneFacts {
+        zone: string; zoneId: string; window: string;
+        coverage?: { requests: number; cached: number; hitRatePct: number };
+        probe?: { contentType: string; cacheControl: string; cfCacheStatus: string };
+        cacheRuleCount?: number;
+        firingAlerts: AlertFeedEntry[];   // import the REAL type from ../scheduled
+        quota?: { families: { family: string; label: string; used: number; allowance: number; authorized: boolean }[] };
+      }
+
+    collect.ts: `collectZoneFacts(env, zone): Promise<ZoneFacts>` — five collectors via Promise.all:
+      coverage: port AnalyticsService.ZoneCacheCoverage from pkg/cosmoflare/analytics.go — ONE httpRequests1dGroups
+        GraphQL query summing requests+cachedRequests over 7d, hitRatePct = cached/requests*100 (0 when requests==0).
+        Model the fetch on summary.ts's private gql() helper pattern. Wrap in cached() ttlSec 3600.
+      probe: plain fetch https://<zone>/ with 10s timeout, response HEADERS only (content-type, cache-control,
+        cf-cache-status). Wrap in cached() ttlSec 3600. Probe failure -> probe undefined, never throws.
+      quota: call the existing collectRulesQuota(env, zone) from ../rules_quota.ts — it self-caches 5 min; do NOT
+        double-wrap. cacheRuleCount = the 'cache-rules' family's `used` field.
+      firingAlerts: live KV read of ALERT_FEED_KEY from ../scheduled.ts, filtered by the zone scope segment of
+        ruleId (format '<ruleName>/<zoneKey>', zoneKey = zone id or name — read rules.ts:230 area for the exact
+        mechanism). NOT cached.
+    compile.ts: `compileBrief(facts: ZoneFacts, templates: TemplateMap): Brief` — PURE (no env/fetch/Date.now).
+      Templates parameter is injected (registry import lives in the endpoint task B3, avoiding a cycle).
+      Thresholds EXACTLY: low-cache-hit = requests >= 1000 && hitRatePct < 5 (warning; < 1 -> critical);
+      html-cache-trap ports assessHTMLCacheTrap from pkg/cosmoflare/caching.go (HTML + public + s-maxage or
+        max-age>=60 + cf-cache-status not in HIT/STALE/REVALIDATED/UPDATING; warning; critical when cacheRuleCount === 0);
+      cache-rule-gap (info; skip when html-cache-trap already fired); alert-firing (warning, evidence from the
+        entry's value/threshold/unit); quota-pressure (per family with allowance > 0 && authorized:
+        usedPct = 100*used/allowance; >= 80 warning, >= 95 critical). Findings ordered critical -> warning -> info,
+      then kind alphabetical. Zero findings -> brief with empty arrays.
+
+    Testability: compileBrief is a pure helper — tests MUST call it directly with fixture ZoneFacts; never re-derive
+      thresholds in test bodies (assert on the verdict/severity outputs).
+    TDD: failing tests FIRST (TestCompileBriefLowCacheHit incl. the <1% critical tier and sub-1000 suppression;
+    TestCompileBriefHTMLTrap covering caching.go's trap/clean/edge matrix; TestCompileBriefDedupe;
+    TestCompileBriefAlertAndQuota; TestCompileBriefOrdering; TestCollectZoneFacts with mocked fetch + cached()
+    short-circuit + probe-error degradation), then implement.
+
+    Verify:
+      bun test apps/ops/src/briefs/ (or the suite's runner per apps/ops/package.json)
+      bun x tsc --noEmit (in apps/ops)
+    Commit via: ccs commit -m 'feat(ops): briefs core — zone fact collectors + pure advisory compiler (P-15, FEAT-pC1EV32)'
+  files:
+    - apps/ops/src/briefs/types.ts
+    - apps/ops/src/briefs/collect.ts
+    - apps/ops/src/briefs/compile.ts
+    - apps/ops/src/briefs/collect.test.ts
+    - apps/ops/src/briefs/compile.test.ts
+  context_files:
+    - docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md
+    - apps/ops/src/summary.ts
+    - apps/ops/src/rules_quota.ts
+    - apps/ops/src/scheduled.ts
+    - apps/ops/src/cache.ts
+    - pkg/cosmoflare/analytics.go
+    - pkg/cosmoflare/caching.go
+  max_turns: 30
+  verify: "cd apps/ops && bun x tsc --noEmit"

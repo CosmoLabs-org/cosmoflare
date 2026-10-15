@@ -1,0 +1,39 @@
+# B2 of 4 — split from docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml (S313 per-agent isolation)
+# Dispatch ONLY after B1 is merged to master.
+- task: |
+    Implement Task B2 (deliverable P-16) from docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md.
+    B1 is merged: apps/ops/src/briefs/types.ts defines ZoneFacts/Brief/BriefFinding/BriefAction.
+
+    Create apps/ops/src/briefs/templates.ts + render.ts + templates.test.ts + render.test.ts.
+
+    templates.ts: `export type TemplateMap = Record<BriefKind, (f: ZoneFacts) => { findings: BriefFinding[]; actions: BriefAction[]; verify: string[] }>` —
+    one entry per v1 kind. Directives derive from the FEAT-067/068/070 rulebook (imperative agent direction,
+    e.g. low-cache-hit: origin Cache-Control on cacheable responses or a zone Cache Rule — HTML NEEDS a Cache Rule,
+    s-maxage alone does nothing). VERIFIED CLI surface ONLY (never invent flags):
+      - `cosmoflare efficiency --json | jq '.data.zone_coverage[] | select(.zone=="<zone>")'` (valid: envelope
+        {status,data}, data.zone_coverage[].zone, --window N)
+      - `cosmoflare pagerules list <zone-id>` (Page Rules only — there is NO zone cache-rules list command)
+      - the Ops endpoint `/api/rules-quota?name=<zone>` for rule-family inventories
+    render.ts: `export function renderAgentBrief(b: Brief): string` — pure string build (NO Date.now — generatedAt
+    lives in the API envelope, that is what makes goldens byte-stable). Format EXACTLY:
+      '# <zone> — Cloudflare optimization directive' / blank / '## Problem' + one '- ' bullet per finding (evidence
+    inline) / '## Actions' + numbered '1.' lines / '## Verify' + '- ' bullets / '## Context' footer line
+    'Zone <name> (<id>) — measured <window> by CosmoLabs Ops.'
+
+    Testability: renderAgentBrief pure — golden tests assert FULL literal expected strings, not shape snapshots.
+    Tests: one golden per kind + one mixed-zone brief + TestRenderDeterministic (render twice, expect(a).toBe(b),
+    and equals the golden).
+    Verify: bun test apps/ops/src/briefs/ ; bun x tsc --noEmit (in apps/ops)
+    Commit via: ccs commit -m 'feat(ops): agent-brief templates + renderer with byte-identical goldens (P-16, FEAT-pC1EV32)'
+  files:
+    - apps/ops/src/briefs/templates.ts
+    - apps/ops/src/briefs/render.ts
+    - apps/ops/src/briefs/templates.test.ts
+    - apps/ops/src/briefs/render.test.ts
+  context_files:
+    - docs/planning-mode/2026-10-15-commands-to-ai-agent-briefs.md
+    - apps/ops/src/briefs/types.ts
+    - cmd/efficiency.go
+    - cmd/pagerules.go
+  max_turns: 25
+  verify: "cd apps/ops && bun x tsc --noEmit"
