@@ -8,10 +8,11 @@ related_prompts: []
 requires_reading:
     - docs/prompts/2026-10-15-commands-to-ai-agent-briefs-glm-tasks.yaml
 schema_version: 1
-status: COMPLETED
+status: SUPERSEDED
 supersedes: docs/prompts/2026-10-15-session-1-continuation.md
 tags: []
 title: Session 2040 Continuation Prompt
+superseded_by: "docs/prompts/2026-10-16-session-2041-continuation.md"
 ---
 
 ## Context
