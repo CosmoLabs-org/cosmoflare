@@ -172,6 +172,19 @@ async function kvCache<T>(env: OpsEnv, key: string, fetcher: () => Promise<T>): 
   return value;
 }
 
+// activeZones is the ONE writer of the shared "cron:zones" key (BUG-pP1YH9W):
+// the paginated (restPages 20×50) active-only zone list through kvCache. Both
+// the cron engine and rules_quota's rotation consume this exact list, so the
+// key can never flip between different semantics (20-zone unpaginated vs the
+// full active fleet).
+export async function activeZones(env: OpsEnv): Promise<{ id: string; name: string }[]> {
+  return kvCache<{ id: string; name: string }[]>(env, ZONES_CACHE_KEY, async () =>
+    restPages<{ id: string; name: string; status: string }>(env.CF_API_TOKEN, `/zones?account.id=${env.CF_ACCOUNT_ID}&status=active`).then((rows) =>
+      rows.map(({ id, name }) => ({ id, name })),
+    ),
+  );
+}
+
 // restPages walks the v4 REST API's page/per_page pagination like
 // summary.ts's rest(); returns every result row.
 async function restPages<T>(token: string, path: string): Promise<T[]> {
@@ -242,9 +255,7 @@ export async function runScheduled(env: OpsEnv, now: Date = new Date()): Promise
 
   if (needZones) {
     try {
-      const list = await kvCache<{ id: string; name: string }[]>(env, ZONES_CACHE_KEY, async () =>
-        restPages<{ id: string; name: string; status: string }>(env.CF_API_TOKEN, `/zones?account.id=${env.CF_ACCOUNT_ID}&status=active`).then((rows) => rows.map(({ id, name }) => ({ id, name }))),
-      );
+      const list = await activeZones(env);
       const names = Object.fromEntries(list.map((z) => [z.id, z.name]));
       const ids = list.map((z) => z.id);
       const batches: Promise<ZoneGroups[]>[] = [];
